@@ -31,6 +31,7 @@ var scenarioFixes = []scenarioFix{
 	{"AN4", noPasswordFromTheNextLine},
 	{"AN7", noCodesInOtherLists},
 	{"AN8", strictSecrets},
+	{"S12", oneCredentialWriter},
 	{"AL4", maskNamesInSignInLogs},
 	{"AN6", logTheWrittenCredentialsPath},
 }

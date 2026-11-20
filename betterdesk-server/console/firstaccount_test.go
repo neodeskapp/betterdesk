@@ -33,7 +33,7 @@ func TestStartLooksAfterTheFirstAccountUnlessNodeDoes(t *testing.T) {
 	if err := alone.s.Start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if hash := adminHash(t, alone); !strings.HasPrefix(hash, "$2b$12$") {
+	if hash := adminHash(t, alone); !strings.HasPrefix(hash, "pbkdf2-sha256$") {
 		t.Errorf("without the Node console the admin's password was not set at start: %q", hash)
 	}
 

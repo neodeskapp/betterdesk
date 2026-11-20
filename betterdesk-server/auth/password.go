@@ -8,6 +8,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 
@@ -16,10 +17,10 @@ import (
 )
 
 const (
-	// currentIterations is the cost factor for newly created hashes.
-	// 600_000 matches the OWASP 2023 recommendation for PBKDF2-HMAC-SHA256.
-	// Increase periodically as compute power rises.
-	currentIterations = 600_000
+	// PasswordIterations is the cost factor of newly created password
+	// hashes. 600_000 matches the OWASP 2023 recommendation for
+	// PBKDF2-HMAC-SHA256. Increase periodically as compute power rises.
+	PasswordIterations = 600_000
 
 	// legacyIterations is used to verify hashes produced by the older single-block
 	// custom PBKDF2 implementation. Hashes in the legacy "hex(salt):hex(hash)" form
@@ -42,15 +43,25 @@ const (
 //
 // VerifyPassword also accepts hashes in the legacy "hex(salt):hex(hash)" form
 // (100_000 iterations) for backwards compatibility with existing user records.
+//
+// It is the one way new password hashes are made: the API server and the
+// web console both store what it returns.
 func HashPassword(password string) (string, error) {
+	return HashPasswordFrom(rand.Reader, PasswordIterations, password)
+}
+
+// HashPasswordFrom is HashPassword with the salt read from random and the
+// given number of iterations: PasswordIterations for every stored
+// password. Tests pass fewer; NeedsRehash reports such a hash.
+func HashPasswordFrom(random io.Reader, iterations int, password string) (string, error) {
 	salt := make([]byte, saltLength)
-	if _, err := rand.Read(salt); err != nil {
+	if _, err := io.ReadFull(random, salt); err != nil {
 		return "", fmt.Errorf("auth: generate salt: %w", err)
 	}
-	hash := pbkdf2.Key([]byte(password), salt, currentIterations, keyLength, sha256.New)
+	hash := pbkdf2.Key([]byte(password), salt, iterations, keyLength, sha256.New)
 	return fmt.Sprintf("%s$%d$%s$%s",
 		hashScheme,
-		currentIterations,
+		iterations,
 		hex.EncodeToString(salt),
 		hex.EncodeToString(hash),
 	), nil
@@ -91,7 +102,7 @@ func NeedsRehash(stored string) bool {
 	if err != nil {
 		return true
 	}
-	return iter < currentIterations
+	return iter < PasswordIterations
 }
 
 func verifyModern(stored, password string) bool {

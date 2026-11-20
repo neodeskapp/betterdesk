@@ -122,6 +122,9 @@ type scenarioVector struct {
 	// skipTables leaves the rows at the end uncompared: a fix changed a
 	// step whose effect on them the recording cannot tell.
 	skipTables bool
+	// normalize, when a fix sets it, turns values of the rows at the end
+	// that the run makes its own way into the recording's terms.
+	normalize func(got map[string][]map[string]any)
 }
 
 // ---- the random stream of a step
@@ -631,7 +634,7 @@ func runScenario(t *testing.T, db *store.DB, sc *scenarioVector, changed map[str
 	if err != nil {
 		t.Fatal(err)
 	}
-	svc.bcryptCost, svc.dummy, svc.windows = bcryptMinCost, testDummyHash, sc.Platform == "win32"
+	svc.hashIterations, svc.recoveryCost, svc.dummy, svc.windows = testIterations, testRecoveryCost, testDummyHash, sc.Platform == "win32"
 	r.svc = svc
 
 	for i := range sc.Steps {
@@ -648,6 +651,9 @@ func runScenario(t *testing.T, db *store.DB, sc *scenarioVector, changed map[str
 	got := dumpTables(t, db)
 	want := sc.Tables
 	alignTimes(got, want)
+	if sc.normalize != nil {
+		sc.normalize(got)
+	}
 	if !sc.skipTables && (len(got) != 0 || len(want) != 0) {
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("rows at the end:\n got %s\nwant %s", toJSON(got), toJSON(want))

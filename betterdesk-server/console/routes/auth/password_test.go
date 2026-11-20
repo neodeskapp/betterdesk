@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/auth"
 )
 
 func change(current, next, confirm string) string {
@@ -23,8 +25,9 @@ func TestPasswordChange(t *testing.T) {
 
 		res := a.post("/api/auth/password", change(password, otherPassword, otherPassword))
 		want(t, "change", res, http.StatusOK, `{"success":true}`)
-		if hash := w.text(`SELECT password_hash FROM users WHERE id = ?`, alice); !strings.HasPrefix(hash, "$2b$12$") || len(hash) != 60 {
-			t.Errorf("the new hash is not bcrypt with cost 12")
+		// The API server's form of hash, which its sign-in keeps (BUGS S12)
+		if hash := w.text(`SELECT password_hash FROM users WHERE id = ?`, alice); !strings.HasPrefix(hash, "pbkdf2-sha256$600000$") || !auth.VerifyPassword(hash, otherPassword) || auth.NeedsRehash(hash) {
+			t.Errorf("the new hash is not the API server's PBKDF2 hash")
 		}
 		rows := w.audit()
 		equal(t, "audit", rows[len(rows)-1:], []string{fmt.Sprintf("password_changed|Password changed|127.0.0.1|%d", alice)})

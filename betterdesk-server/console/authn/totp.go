@@ -6,7 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/base32"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,11 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/store"
 )
 
 // Two-factor sign-in with time-based codes: HMAC-SHA1, 6 digits, a step
@@ -36,9 +32,6 @@ const (
 	totpStepMillis = 30_000
 	totpDigits     = 6
 	totpKeyLength  = 20
-	// recoveryCodeCount is the number of recovery codes made when
-	// two-factor sign-in is turned on.
-	recoveryCodeCount = 8
 )
 
 var errNotBase32 = errors.New("the two-factor secret is not base32 text")
@@ -173,8 +166,10 @@ func (s *Service) GenerateTOTPSetup(ctx context.Context, userID int64) (*TOTPSet
 
 // VerifyAndEnableTOTP finishes the set-up: when token is the current code
 // of the stored secret it turns two-factor sign-in on and returns the 8
-// new recovery codes. It returns ErrTOTPNotSetUp when the account has no
-// secret and ErrInvalidTOTPCode for a wrong code.
+// new recovery codes (auth.GenerateRecoveryCodesFrom). Only their hashes
+// are stored, as the API server stores them (auth.HashRecoveryCodes). It
+// returns ErrTOTPNotSetUp when the account has no secret and
+// ErrInvalidTOTPCode for a wrong code.
 func (s *Service) VerifyAndEnableTOTP(ctx context.Context, userID int64, token string) ([]string, error) {
 	user, err := getUserByID(ctx, s.db, userID)
 	if err != nil {
@@ -190,11 +185,15 @@ func (s *Service) VerifyAndEnableTOTP(ctx context.Context, userID int64, token s
 	if !valid {
 		return nil, ErrInvalidTOTPCode
 	}
-	codes, err := s.generateRecoveryCodes(recoveryCodeCount)
+	codes, err := auth.GenerateRecoveryCodesFrom(s.rand)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("recovery codes: %w", err)
 	}
-	if err := enableTOTP(ctx, s.db, userID, stringifyCodes(codes)); err != nil {
+	hashes, err := auth.HashRecoveryCodesCost(codes, s.recoveryCost)
+	if err != nil {
+		return nil, fmt.Errorf("hash the recovery codes: %w", err)
+	}
+	if err := enableTOTP(ctx, s.db, userID, hashes); err != nil {
 		return nil, err
 	}
 	return codes, nil
@@ -214,9 +213,12 @@ func (s *Service) VerifyTOTPCode(ctx context.Context, userID int64, token string
 }
 
 // VerifyRecoveryCode checks a recovery code in place of the second factor
-// and uses it up. White space around the code and the case of its letters
-// do not matter; the dash does. It is false for an account without
-// two-factor sign-in.
+// and uses it up, with the API server's check (auth.ConsumeRecoveryCode):
+// the stored list holds hashes, or on older installs the codes as they
+// were shown, which keep working until they are used or made anew. White
+// space, dashes and the case of the letters do not matter. Stored text
+// that is not a JSON list of texts holds no codes. It is false for an
+// account without two-factor sign-in.
 func (s *Service) VerifyRecoveryCode(ctx context.Context, userID int64, code string) (bool, error) {
 	user, err := getUserByID(ctx, s.db, userID)
 	if err != nil {
@@ -225,7 +227,10 @@ func (s *Service) VerifyRecoveryCode(ctx context.Context, userID int64, code str
 	if user == nil || !user.TOTPEnabled.True() || user.TOTPRecoveryCodes.String == "" {
 		return false, nil
 	}
-	left, matched, err := takeRecoveryCode(user.TOTPRecoveryCodes.String, code)
+	left, matched, err := auth.ConsumeRecoveryCode(user.TOTPRecoveryCodes.String, toWellFormed(code))
+	if errors.Is(err, auth.ErrMalformedRecoveryCodes) {
+		return false, nil
+	}
 	if err != nil || !matched {
 		return false, err
 	}
@@ -233,63 +238,6 @@ func (s *Service) VerifyRecoveryCode(ctx context.Context, userID int64, code str
 		return false, err
 	}
 	return true, nil
-}
-
-// takeRecoveryCode looks for code in the stored JSON list of codes. When
-// it is there, matched is true and left is the list without it.
-//
-// Stored text that is not a JSON list of texts holds no codes: text that
-// is not JSON, JSON that is not a list, and a list with an entry that is
-// not text (null included) match nothing.
-func takeRecoveryCode(stored, code string) (left string, matched bool, err error) {
-	var entries []any
-	if err := json.Unmarshal([]byte(stored), &entries); err != nil || entries == nil {
-		return "", false, nil
-	}
-	list := make([]string, len(entries))
-	for i, entry := range entries {
-		text, isText := entry.(string)
-		if !isText {
-			return "", false, nil
-		}
-		list[i] = text
-	}
-	upper := cases.Upper(language.Und)
-	wanted := upper.String(jsTrim(toWellFormed(code)))
-	for i, text := range list {
-		if upper.String(text) == wanted {
-			left, err := withoutElement(stored, i)
-			return left, err == nil, err
-		}
-	}
-	return "", false, nil
-}
-
-// withoutElement returns the JSON array in text without the element at
-// index, written compactly as JSON.stringify writes it.
-func withoutElement(text string, index int) (string, error) {
-	var elements []json.RawMessage
-	if err := json.Unmarshal([]byte(text), &elements); err != nil {
-		return "", err
-	}
-	var b strings.Builder
-	b.WriteByte('[')
-	for i, element := range elements {
-		if i == index {
-			continue
-		}
-		if b.Len() > 1 {
-			b.WriteByte(',')
-		}
-		b.Write(element)
-	}
-	b.WriteByte(']')
-	var normal store.JSONParsed
-	if err := normal.Scan(b.String()); err != nil {
-		return "", err
-	}
-	out, err := normal.MarshalJSON()
-	return string(out), err
 }
 
 // DisableTOTP turns two-factor sign-in off and deletes the secret and the
@@ -306,34 +254,4 @@ func (s *Service) IsTOTPEnabled(ctx context.Context, userID int64) (bool, error)
 		return false, err
 	}
 	return user != nil && user.TOTPEnabled.True(), nil
-}
-
-// generateRecoveryCodes makes count codes of the form "3FA9-0C7E": four
-// random bytes as upper-case hex with a dash in the middle.
-func (s *Service) generateRecoveryCodes(count int) ([]string, error) {
-	codes := make([]string, 0, count)
-	for i := 0; i < count; i++ {
-		raw, err := s.randomHex(4)
-		if err != nil {
-			return nil, fmt.Errorf("recovery code: %w", err)
-		}
-		raw = strings.ToUpper(raw)
-		codes = append(codes, raw[:4]+"-"+raw[4:])
-	}
-	return codes, nil
-}
-
-// stringifyCodes writes the codes as the JSON array the column holds.
-func stringifyCodes(codes []string) string {
-	var b strings.Builder
-	b.WriteByte('[')
-	for i, code := range codes {
-		if i > 0 {
-			b.WriteByte(',')
-		}
-		quoted, _ := store.NullString{String: code, Valid: true}.MarshalJSON()
-		b.Write(quoted)
-	}
-	b.WriteByte(']')
-	return b.String()
 }

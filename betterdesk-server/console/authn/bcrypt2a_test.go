@@ -20,7 +20,7 @@ func TestBcrypt2aLongPasswordUsesTheFirst72Bytes(t *testing.T) {
 	first72 := strings.Repeat("abcdefgh", 9)
 	// For 72 bytes the three versions hash the same key: the closing zero
 	// byte is the 73rd and falls off
-	hash, err := s.HashPassword(ctx, first72)
+	hash, err := bcryptHash(ctx, s.rand, first72, bcryptMinCost)
 	if err != nil {
 		t.Fatal(err)
 	}

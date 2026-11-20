@@ -348,8 +348,8 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 //     the signal server is asked, because it may hold a newer hash; if it
 //     accepts through a directory or single sign-on, or if the directory
 //     alone accepts the password, the outcome is the failure
-//     FailureUsernameCollision. A right password on a PBKDF2 hash replaces
-//     the hash with a bcrypt hash.
+//     FailureUsernameCollision. A hash the password fits stays as it is,
+//     whatever its form.
 //   - An unknown user is refused, unless single sign-on is on or
 //     Settings.AutoCreate is set and the signal server accepts the
 //     credentials: then a local row is made.
@@ -412,12 +412,12 @@ func (s *Service) authenticateLocal(ctx context.Context, user *Account, username
 	if !user.PasswordHash.Valid {
 		return Outcome{}, errNoHash
 	}
-	check, err := s.VerifyPasswordEx(ctx, password, user.PasswordHash.String)
+	valid, err := s.VerifyPassword(ctx, password, user.PasswordHash.String)
 	if err != nil {
 		return Outcome{}, err
 	}
 
-	if !check.Valid {
+	if !valid {
 		accept := s.tryGoServerAuth(ctx, username, password)
 		switch {
 		case accept != nil:
@@ -442,31 +442,14 @@ func (s *Service) authenticateLocal(ctx context.Context, user *Account, username
 		}
 	} else {
 		s.log.Info(fmt.Sprintf("[AUTH] Login successful for '%s'", logName(username)))
-		if check.NeedsMigration {
-			if err := s.migrateHash(ctx, user, password); err != nil {
-				s.log.Warn("[AUTH] Failed to migrate password hash for user id", user.ID.V, ":", err.Error())
-			} else {
-				s.log.Info("[AUTH] Migrated password hash from PBKDF2 to bcrypt for user: " + logName(username))
-			}
-		}
 	}
 	return s.finish(ctx, user, nil)
-}
-
-// migrateHash replaces a PBKDF2 hash with the bcrypt hash of the password
-// that just fitted it.
-func (s *Service) migrateHash(ctx context.Context, user *Account, password string) error {
-	hash, err := s.HashPassword(ctx, password)
-	if err != nil {
-		return err
-	}
-	return updateUserPassword(ctx, s.db, user.ID.V, hash)
 }
 
 // authenticateUnknown is the sign-in of a name without a local row.
 func (s *Service) authenticateUnknown(ctx context.Context, username, password string, sso ssoStatus) (Outcome, error) {
 	// The compare keeps an unknown name as slow as a wrong password.
-	if _, err := bcryptCompare(ctx, toWellFormed(password), s.dummy); err != nil {
+	if _, err := s.VerifyPassword(ctx, password, s.dummy); err != nil {
 		return Outcome{}, err
 	}
 

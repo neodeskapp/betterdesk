@@ -176,7 +176,7 @@ func TestInteropHashes(t *testing.T) {
 	node := startNode(t, db)
 	ctx := context.Background()
 	fast := interopService(t, db)
-	fast.bcryptCost = bcryptMinCost
+	fast.hashIterations = testIterations
 	real := interopService(t, db)
 
 	passwords := interopPasswords()
@@ -211,8 +211,8 @@ func TestInteropHashes(t *testing.T) {
 		check(real, password)
 	}
 	hash, err := real.HashPassword(ctx, "form")
-	if err != nil || !strings.HasPrefix(hash, "$2b$12$") || len(hash) != 60 {
-		t.Errorf("Go's hash %q, %v: want $2b$12$ and 60 characters", hash, err)
+	if err != nil || !strings.HasPrefix(hash, "pbkdf2-sha256$600000$") || auth.NeedsRehash(hash) {
+		t.Errorf("Go's hash %q, %v: want the API server's form (BUGS S12)", hash, err)
 	}
 }
 
@@ -253,15 +253,6 @@ func TestInteropTOTP(t *testing.T) {
 			}
 		}
 	}
-}
-
-func userID(t *testing.T, db *store.DB, username string) int64 {
-	t.Helper()
-	user, err := getUserByUsername(context.Background(), db, username)
-	if err != nil || user == nil {
-		t.Fatalf("user %s: %v", username, err)
-	}
-	return user.ID.V
 }
 
 // TestInteropSharedDatabase: Go and Node on one database, for each way the
@@ -344,7 +335,8 @@ func TestInteropSharedDatabase(t *testing.T) {
 			sameSignIn("nobody", "x", false)
 
 			// The signal server's own hash: Node replaces it at sign-in, and
-			// Go signs in with what Node stored. Then the other way round.
+			// Go signs in with what Node stored. Then the other way round:
+			// Go keeps the hash (BUGS S12), and Node signs in with it.
 			for _, name := range []string{"pbkdf2-node-first", "pbkdf2-go-first"} {
 				serverHash, err := auth.HashPassword("Server-made-1")
 				if err != nil {
@@ -362,8 +354,8 @@ func TestInteropSharedDatabase(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if !strings.HasPrefix(stored.PasswordHash.String, "$2b$12$") {
-					t.Errorf("%s: the hash was not replaced by bcrypt: %q", name, stored.PasswordHash.String)
+				if replaced := stored.PasswordHash.String != serverHash; replaced != (name == "pbkdf2-node-first") {
+					t.Errorf("%s: the hash is %q", name, stored.PasswordHash.String)
 				}
 				sameSignIn(name, "Server-made-1", true)
 			}
@@ -401,21 +393,19 @@ func TestInteropSharedDatabase(t *testing.T) {
 				t.Errorf("Node accepts the code one step late: %s", got)
 			}
 			sameSignIn("totp-go", "pw", true)
-			// A recovery code works once, whoever takes it.
-			if got := node.value(now, "verifyRecoveryCode", goSide, codes[0]); got != "true" {
-				t.Errorf("Node refuses Go's recovery code: %s", got)
+			// Go stores hashes of its recovery codes (BUGS S12), which Node
+			// compared as plain text: Node takes none of them, Go each once.
+			if got := node.value(now, "verifyRecoveryCode", goSide, codes[0]); got != "false" {
+				t.Errorf("Node takes Go's hashed recovery code: %s", got)
+			}
+			if ok, err := s.VerifyRecoveryCode(ctx, goSide, codes[0]); err != nil || !ok {
+				t.Errorf("Go refuses its own recovery code: %v, %v", ok, err)
 			}
 			if ok, err := s.VerifyRecoveryCode(ctx, goSide, codes[0]); err != nil || ok {
-				t.Errorf("Go accepts a recovery code Node used up: %v, %v", ok, err)
+				t.Errorf("Go takes a recovery code twice: %v, %v", ok, err)
 			}
 			if ok, err := s.VerifyRecoveryCode(ctx, goSide, " "+strings.ToLower(codes[1])+"\n"); err != nil || !ok {
 				t.Errorf("Go refuses its own recovery code in lower case: %v, %v", ok, err)
-			}
-			if got := node.value(now, "verifyRecoveryCode", goSide, codes[1]); got != "false" {
-				t.Errorf("Node accepts a recovery code Go used up: %s", got)
-			}
-			if got := node.value(now, "verifyRecoveryCode", goSide, strings.ReplaceAll(codes[2], "-", "")); got != "false" {
-				t.Errorf("Node accepts a recovery code without its dash: %s", got)
 			}
 
 			var nodeSetup struct {

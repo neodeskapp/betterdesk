@@ -188,8 +188,7 @@ func (s *Service) waitForDockerBootstrapAdmin(ctx context.Context) (bool, error)
 // file.
 //
 // When there are users it creates nothing. If the password is known and
-// an account of that name exists, a PBKDF2 hash that fits the password is
-// replaced by a bcrypt hash, and a bcrypt hash is overwritten only when an
+// an account of that name exists, its hash is overwritten only when an
 // installer asked for it (checkForcePasswordUpdate).
 //
 // When there are none it creates the account with the role "admin". With
@@ -274,7 +273,7 @@ func (s *Service) EnsureDefaultAdmin(ctx context.Context) (created bool, err err
 		case "recovered":
 			s.log.Info("[AUTH] Admin password self-test recovered after re-hash")
 		case "failed":
-			s.log.Error("[AUTH] CRITICAL: Admin password self-test STILL FAILING — bcrypt may be broken")
+			s.log.Error("[AUTH] CRITICAL: Admin password self-test STILL FAILING — password hashing may be broken")
 		}
 	}
 
@@ -298,32 +297,23 @@ func (s *Service) reviewExistingAdmin(ctx context.Context, username, password st
 	if err != nil || admin == nil {
 		return err
 	}
-	if isPBKDF2Hash(admin.PasswordHash.String) {
-		s.log.Info("[AUTH] Found admin user with PBKDF2 hash (created by Go server). Migrating to bcrypt...")
-		fits, err := verifyPBKDF2(toWellFormed(password), admin.PasswordHash.String)
+	if force {
+		s.log.Info("[AUTH] Force password update requested — updating admin password")
+		hash, err := s.HashPassword(ctx, password)
 		if err != nil {
 			return err
 		}
-		if !fits {
-			s.log.Warn("[AUTH] DEFAULT_ADMIN_PASSWORD does not match existing PBKDF2 hash — skipping migration")
-			return nil
-		}
-		if err := s.migrateHash(ctx, admin, password); err != nil {
-			return err
-		}
-		s.log.Info("[AUTH] Admin password hash migrated from PBKDF2 to bcrypt successfully")
-		return nil
-	}
-	if force {
-		s.log.Info("[AUTH] Force password update requested — updating admin password")
-		if err := s.migrateHash(ctx, admin, password); err != nil {
+		if err := updateUserPassword(ctx, s.db, admin.ID.V, hash); err != nil {
 			return err
 		}
 		s.log.Info("[AUTH] Admin password hash force-updated to match DEFAULT_ADMIN_PASSWORD")
 		return nil
 	}
 	hashType := "unknown"
-	if strings.HasPrefix(admin.PasswordHash.String, "$2") {
+	switch {
+	case isPBKDF2Hash(admin.PasswordHash.String):
+		hashType = "PBKDF2"
+	case strings.HasPrefix(admin.PasswordHash.String, "$2"):
 		hashType = "bcrypt"
 	}
 	s.log.Info(fmt.Sprintf("[AUTH] Default admin account exists (%s) — password unchanged", hashType))
@@ -365,7 +355,7 @@ func (s *Service) verifyAdminPasswordHash(ctx context.Context, admin *Account, p
 	if !admin.PasswordHash.Valid {
 		return "", errNoHash
 	}
-	ok, err := bcryptCompare(ctx, toWellFormed(password), admin.PasswordHash.String)
+	ok, err := s.VerifyPassword(ctx, password, admin.PasswordHash.String)
 	if err != nil {
 		return "", err
 	}
@@ -379,7 +369,7 @@ func (s *Service) verifyAdminPasswordHash(ctx context.Context, admin *Account, p
 	if err := updateUserPassword(ctx, s.db, admin.ID.V, retry); err != nil {
 		return "", err
 	}
-	ok, err = bcryptCompare(ctx, toWellFormed(password), retry)
+	ok, err = s.VerifyPassword(ctx, password, retry)
 	if err != nil {
 		return "", err
 	}

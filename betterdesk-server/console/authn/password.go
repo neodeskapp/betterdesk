@@ -8,15 +8,19 @@ import (
 	"errors"
 	"io"
 	"strings"
+
+	"github.com/unitronix/betterdesk-server/auth"
 )
 
 const (
-	// saltRounds is the bcrypt cost of every hash the console makes.
-	saltRounds = 12
+	// resetCost is the bcrypt cost of the reset-password command's hashes.
+	resetCost = 12
 
 	// dummyHash is compared with the password of an unknown user, so that
-	// an unknown name takes as long as a wrong password.
-	dummyHash = "$2b$12$KiXeOj5vHpJRJHGMhWzadeKfRJLvJRaRHQbMGBBdkpu.jQfXAzgWS"
+	// an unknown name takes as long as a wrong password: a hash of the
+	// form and cost HashPassword makes, which no password fits.
+	dummyHash = "pbkdf2-sha256$600000$9f3c2a1e7b5d4c6f8a0e1d2c3b4a5968$" +
+		"4d1e7a9c3b5f2e8d6a0c4b7e1f9d3a5c8e2b6f0a4d7c1e9b3f5a8d2c6e0b4f7a"
 
 	pbkdf2LegacyIterations = 100_000
 	pbkdf2KeyLength        = 32
@@ -80,17 +84,21 @@ func pbkdf2Equal(password string, salt []byte, iterations int, expected []byte) 
 	return subtle.ConstantTimeCompare(expected, derived) == 1, nil
 }
 
-// HashPassword makes the hash the console stores for a password: bcrypt
-// with cost 12, "$2b$12$" and 53 more letters. bcrypt reads at most the
-// first 72 bytes of a password.
-func (s *Service) HashPassword(ctx context.Context, password string) (string, error) {
-	return bcryptHash(ctx, s.rand, toWellFormed(password), s.bcryptCost)
+// HashPassword makes the hash the console stores for a password, with the
+// API server's code (auth.HashPasswordFrom): PBKDF2-HMAC-SHA256,
+// "pbkdf2-sha256$600000$" with a hex salt and hash. The API server stores
+// the same form, so a sign-in on either side leaves the hash as it is.
+func (s *Service) HashPassword(_ context.Context, password string) (string, error) {
+	return auth.HashPasswordFrom(s.rand, s.hashIterations, toWellFormed(password))
 }
 
-// NewPasswordHash is HashPassword without a Service, with the salt from
-// random: for the reset-password command, which opens no console.
+// NewPasswordHash is the hash the reset-password command writes, which
+// opens no console: bcrypt with cost 12 and the salt from random, "$2b$12$"
+// and 53 more letters. bcrypt reads at most the first 72 bytes of a
+// password. Both sides check such a hash; the API server replaces it with
+// its own form at its next sign-in.
 func NewPasswordHash(ctx context.Context, random io.Reader, password string) (string, error) {
-	return bcryptHash(ctx, random, toWellFormed(password), saltRounds)
+	return bcryptHash(ctx, random, toWellFormed(password), resetCost)
 }
 
 // CheckPassword is VerifyPassword without a Service.
@@ -98,35 +106,17 @@ func CheckPassword(ctx context.Context, password, hash string) (bool, error) {
 	return (&Service{}).VerifyPassword(ctx, password, hash)
 }
 
-// PasswordCheck is the outcome of checking a password against a stored
-// hash.
-type PasswordCheck struct {
-	// Valid says the password is the right one.
-	Valid bool
-	// NeedsMigration says the stored hash is one of the signal server's
-	// PBKDF2 forms. Sign-in replaces such a hash with a bcrypt hash once
-	// the password was right.
-	NeedsMigration bool
-}
-
-// VerifyPasswordEx checks password against a stored hash in any of the
-// formats an account can have: bcrypt ("$2a$", "$2b$" and the old "$2$")
-// and the signal server's two PBKDF2 forms. Anything else is a hash no
-// password fits, also "$2y$".
-func (s *Service) VerifyPasswordEx(ctx context.Context, password, hash string) (PasswordCheck, error) {
+// VerifyPassword reports whether password fits the stored hash in any of
+// the formats an account can have: the API server's two PBKDF2 forms and
+// bcrypt ("$2a$", "$2b$" and the old "$2$"), which older consoles wrote.
+// Anything else is a hash no password fits, also "$2y$". A hash that fits
+// stays as it is.
+func (s *Service) VerifyPassword(ctx context.Context, password, hash string) (bool, error) {
 	password = toWellFormed(password)
 	if isPBKDF2Hash(hash) {
-		valid, err := verifyPBKDF2(password, hash)
-		return PasswordCheck{Valid: valid, NeedsMigration: true}, err
+		return verifyPBKDF2(password, hash)
 	}
-	valid, err := bcryptCompare(ctx, password, hash)
-	return PasswordCheck{Valid: valid}, err
-}
-
-// VerifyPassword reports whether password fits the stored hash.
-func (s *Service) VerifyPassword(ctx context.Context, password, hash string) (bool, error) {
-	check, err := s.VerifyPasswordEx(ctx, password, hash)
-	return check.Valid, err
+	return bcryptCompare(ctx, password, hash)
 }
 
 // PasswordStrength is the rating of a new password.

@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -8,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/qr"
 )
 
@@ -292,8 +294,20 @@ func TestTwoFactorEnrolment(t *testing.T) {
 		if res.status != http.StatusOK || !regexp.MustCompile(`^\{"success":true,"recoveryCodes":\["[0-9A-F]{4}-[0-9A-F]{4}"(,"[0-9A-F]{4}-[0-9A-F]{4}"){7}\]\}$`).MatchString(res.body) {
 			t.Fatalf("enable: %d %s", res.status, res.body)
 		}
-		if stored := w.text(`SELECT totp_recovery_codes FROM users WHERE id = ?`, alice); !strings.Contains(res.body, `"recoveryCodes":`+stored) {
-			t.Error("the recovery codes of the answer are not the stored ones")
+		// Only hashes of the codes are stored, which the API server's check
+		// takes (BUGS S12)
+		stored := w.text(`SELECT totp_recovery_codes FROM users WHERE id = ?`, alice)
+		var answer struct{ RecoveryCodes []string }
+		if err := json.Unmarshal([]byte(res.body), &answer); err != nil {
+			t.Fatal(err)
+		}
+		for _, code := range answer.RecoveryCodes {
+			if strings.Contains(stored, code) {
+				t.Errorf("the recovery code %s is stored as it is", code)
+			}
+		}
+		if _, matched, err := auth.ConsumeRecoveryCode(stored, answer.RecoveryCodes[7]); err != nil || !matched {
+			t.Errorf("the stored codes do not hold the answer's last code: %v, %v", matched, err)
 		}
 		want(t, "status enabled", a.get("/api/auth/totp/status"), http.StatusOK, on)
 		want(t, "set-up when enabled", a.post("/api/auth/totp/setup", `{}`), http.StatusBadRequest, `{"success":false,"error":"Two-factor authentication is already enabled"}`)

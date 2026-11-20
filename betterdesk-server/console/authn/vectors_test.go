@@ -53,7 +53,7 @@ func (o outcome) bool(t *testing.T) bool {
 
 // pureService is a service for the functions that need no database.
 func pureService() *Service {
-	return &Service{rand: bytes.NewReader(nil), bcryptCost: bcryptMinCost, dummy: dummyHash, log: discardLogger{}, now: time.Now, zone: time.UTC}
+	return &Service{rand: bytes.NewReader(nil), hashIterations: testIterations, recoveryCost: testRecoveryCost, dummy: dummyHash, log: discardLogger{}, now: time.Now, zone: time.UTC}
 }
 
 func TestHashVectors(t *testing.T) {

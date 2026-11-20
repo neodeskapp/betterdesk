@@ -11,13 +11,22 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
+// The costs of the hashes tests make: PBKDF2 with 1000 iterations for
+// passwords, bcrypt with cost 4 for recovery codes.
+const (
+	testIterations   = 1000
+	testRecoveryCost = 4
+)
+
 // testService is a service on db whose Go server answers what the script
-// says. Hashes are made with cost 4.
+// says. Hashes are made with the test costs.
 func testService(t *testing.T, db *store.DB, mutate func(*Options)) (*Service, *goStub, *logCapture) {
 	t.Helper()
 	stub, logs := &goStub{}, &logCapture{}
@@ -36,7 +45,7 @@ func testService(t *testing.T, db *store.DB, mutate func(*Options)) (*Service, *
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.bcryptCost, s.dummy = bcryptMinCost, testDummyHash
+	s.hashIterations, s.recoveryCost, s.dummy = testIterations, testRecoveryCost, testDummyHash
 	return s, stub, logs
 }
 
@@ -233,8 +242,14 @@ func TestTOTPSetup(t *testing.T) {
 			}
 		}
 		stored, _ = getUserByID(ctx, db, id)
-		if want := stringifyCodes(codes); stored.TOTPRecoveryCodes.String != want || !stored.TOTPEnabled.True() {
-			t.Errorf("stored codes %q, want %q; enabled %v", stored.TOTPRecoveryCodes.String, want, stored.TOTPEnabled.True())
+		var hashes []string
+		if err := json.Unmarshal([]byte(stored.TOTPRecoveryCodes.String), &hashes); err != nil || len(hashes) != len(codes) || !stored.TOTPEnabled.True() {
+			t.Errorf("stored codes %q (%v); enabled %v", stored.TOTPRecoveryCodes.String, err, stored.TOTPEnabled.True())
+		}
+		for i, hash := range hashes {
+			if bcrypt.CompareHashAndPassword([]byte(hash), []byte(strings.ReplaceAll(codes[i], "-", ""))) != nil {
+				t.Errorf("stored entry %d %q is no hash of %s", i, hash, codes[i])
+			}
 		}
 
 		if _, err := s.GenerateTOTPSetup(ctx, id+100); !errors.Is(err, ErrUserNotFound) {
@@ -362,7 +377,7 @@ func TestOIDCUser(t *testing.T) {
 		if err != nil || created == nil {
 			t.Fatalf("new user: %+v, %v", created, err)
 		}
-		if created.Role.String != "operator" || created.AuthProvider.String != "oidc" || !strings.HasPrefix(created.PasswordHash.String, "$2b$") {
+		if created.Role.String != "operator" || created.AuthProvider.String != "oidc" || !strings.HasPrefix(created.PasswordHash.String, "pbkdf2-sha256$") {
 			t.Errorf("new user: %+v", created)
 		}
 		if outcome, _ := s.Authenticate(ctx, "sso-new", ""); outcome.User != nil {
@@ -461,23 +476,6 @@ func TestKeptDefects(t *testing.T) {
 		}
 		if outcome, err := s.Authenticate(ctx, "alice", "pw"); err != nil || outcome.User == nil {
 			t.Errorf("sign-in of the locked account: %+v, %v; Authenticate does not look at lockouts", outcome, err)
-		}
-	})
-
-	t.Run("S12: recovery codes are stored as they are, and the Go server's are not understood", func(t *testing.T) {
-		db := storetest.Migrated(t)
-		ctx := context.Background()
-		s, _, _ := testService(t, db, nil)
-		id := addUser(t, s, "alice", "pw", "admin", "local")
-		// What the Go server stores: bcrypt hashes of codes like ABCD-EFGH-IJ.
-		hash, _ := s.HashPassword(ctx, "ABCD-EFGH-IJ")
-		mustExec(t, db, `UPDATE users SET totp_secret = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', totp_enabled = `+db.Pick("1", "TRUE")+`, totp_recovery_codes = ? WHERE id = ?`,
-			stringifyCodes([]string{hash}), id)
-		if ok, err := s.VerifyRecoveryCode(ctx, id, "ABCD-EFGH-IJ"); err != nil || ok {
-			t.Errorf("a code of the Go server: %v, %v; the console cannot check those", ok, err)
-		}
-		if ok, err := s.VerifyRecoveryCode(ctx, id, hash); err != nil || !ok {
-			t.Errorf("the stored text itself: %v, %v; codes are compared as plain text", ok, err)
 		}
 	})
 }

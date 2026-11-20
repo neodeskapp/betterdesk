@@ -14,6 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
@@ -233,10 +234,12 @@ type Service struct {
 	fs        FS
 	sleep     func(ctx context.Context, d time.Duration) error
 
-	// bcryptCost is the cost of new hashes and dummy the hash an unknown
-	// user's password is compared with. Tests lower both.
-	bcryptCost uint
-	dummy      string
+	// hashIterations is the cost of new password hashes, recoveryCost the
+	// bcrypt cost of stored recovery codes, and dummy the hash an unknown
+	// user's password is compared with. Tests lower all three.
+	hashIterations int
+	recoveryCost   int
+	dummy          string
 	// windows says the process runs on Windows, which adds places to look
 	// for .admin_credentials.
 	windows bool
@@ -258,19 +261,20 @@ func New(opts Options) (*Service, error) {
 		return nil, errors.New("authn: Options.GoAPI is required")
 	}
 	s := &Service{
-		db:         opts.DB,
-		goAPI:      opts.GoAPI,
-		set:        opts.Settings.withDefaults(),
-		qr:         opts.QR,
-		log:        opts.Log,
-		now:        opts.Now,
-		rand:       opts.Rand,
-		fs:         opts.FS,
-		sleep:      opts.Sleep,
-		bcryptCost: saltRounds,
-		dummy:      dummyHash,
-		windows:    runtime.GOOS == "windows",
-		zone:       time.Local,
+		db:             opts.DB,
+		goAPI:          opts.GoAPI,
+		set:            opts.Settings.withDefaults(),
+		qr:             opts.QR,
+		log:            opts.Log,
+		now:            opts.Now,
+		rand:           opts.Rand,
+		fs:             opts.FS,
+		sleep:          opts.Sleep,
+		hashIterations: auth.PasswordIterations,
+		recoveryCost:   auth.RecoveryCodeCost,
+		dummy:          dummyHash,
+		windows:        runtime.GOOS == "windows",
+		zone:           time.Local,
 	}
 	s.tokenDays.Store(int64(s.set.TokenExpiryDays))
 	if s.log == nil {

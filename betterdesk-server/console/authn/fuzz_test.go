@@ -10,12 +10,11 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	xbcrypt "golang.org/x/crypto/bcrypt"
 	xpbkdf2 "golang.org/x/crypto/pbkdf2"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	"github.com/unitronix/betterdesk-server/auth"
 )
@@ -131,15 +130,12 @@ func FuzzStoredHash(f *testing.F) {
 		if tooCostly(stored) || len(password) > 4096 {
 			t.Skip()
 		}
-		check, err := s.VerifyPasswordEx(ctx, password, stored)
+		valid, err := s.VerifyPassword(ctx, password, stored)
 		if err != nil {
-			t.Fatalf("VerifyPasswordEx(%q, %q): %v", password, stored, err)
+			t.Fatalf("VerifyPassword(%q, %q): %v", password, stored, err)
 		}
-		if check.NeedsMigration != isPBKDF2Hash(stored) {
-			t.Fatalf("NeedsMigration = %v for %q", check.NeedsMigration, stored)
-		}
-		if want := independentVerify(toWellFormed(password), stored); check.Valid != want {
-			t.Fatalf("VerifyPasswordEx(%q, %q) = %v, the second reading says %v", password, stored, check.Valid, want)
+		if want := independentVerify(toWellFormed(password), stored); valid != want {
+			t.Fatalf("VerifyPassword(%q, %q) = %v, the second reading says %v", password, stored, valid, want)
 		}
 	})
 }
@@ -187,9 +183,12 @@ func FuzzTOTPCode(f *testing.F) {
 	})
 }
 
+// FuzzRecoveryCode checks the recovery code check the console uses
+// (auth.ConsumeRecoveryCode) on lists of codes stored as they were shown,
+// as older consoles stored them.
 func FuzzRecoveryCode(f *testing.F) {
-	for _, stored := range []string{`["3FA9-0C7E","AB12-CD34"]`, `[]`, `not json`, `{}`, `"x"`, `null`, `[1,"A"]`, `["A",1]`, ` ["a" , "B"] `, `["ß"]`, `[["A"]]`, `["A","A"]`} {
-		for _, code := range []string{"3FA9-0C7E", "3fa9-0c7e", " AB12-CD34\n", "A", "a", "", "SS", "1"} {
+	for _, stored := range []string{`["3FA9-0C7E","AB12-CD34"]`, `[]`, `not json`, `{}`, `"x"`, `null`, `[1,"A"]`, `["A",1]`, ` ["a" , "B"] `, `["ß"]`, `[["A"]]`, `["A","A"]`, `["A-B"]`, `[""]`} {
+		for _, code := range []string{"3FA9-0C7E", "3fa9-0c7e", " AB12-CD34\n", "3FA90C7E", "A", "a", "", "-", "SS", "1"} {
 			f.Add(stored, code)
 		}
 	}
@@ -197,9 +196,9 @@ func FuzzRecoveryCode(f *testing.F) {
 		if len(stored) > 1<<16 {
 			t.Skip()
 		}
-		left, matched, err := takeRecoveryCode(stored, code)
+		left, matched, err := auth.ConsumeRecoveryCode(stored, code)
 		if !matched {
-			if left != "" {
+			if left != strings.TrimSpace(stored) {
 				t.Fatalf("no match but a new list %q", left)
 			}
 			return
@@ -207,10 +206,11 @@ func FuzzRecoveryCode(f *testing.F) {
 		if err != nil {
 			t.Fatalf("a match with an error: %v", err)
 		}
-		// A match means: the stored text is a list, one of its texts is the
-		// code without regard to case and outer white space, and the new
-		// list is the old one without exactly that entry.
-		var before, after []json.RawMessage
+		// A match means: the stored text is a list of texts, one of them is
+		// the code without regard to white space, dashes and the case of
+		// ASCII letters, and the new list is the old one without exactly the
+		// first such entry.
+		var before, after []string
 		if json.Unmarshal([]byte(stored), &before) != nil || json.Unmarshal([]byte(left), &after) != nil {
 			t.Fatalf("lists do not parse: %q -> %q", stored, left)
 		}
@@ -219,38 +219,32 @@ func FuzzRecoveryCode(f *testing.F) {
 		}
 		gone := -1
 		for i := range before {
-			if i >= len(after) || !sameJSONValue(before[i], after[i]) {
+			if plainCode(before[i]) == plainCode(code) {
 				gone = i
 				break
 			}
 		}
-		for i := gone + 1; i < len(before); i++ {
-			if !sameJSONValue(before[i], after[i-1]) {
-				t.Fatalf("more than one entry changed: %q -> %q", stored, left)
-			}
+		if gone < 0 || plainCode(code) == "" {
+			t.Fatalf("the code %q took an entry of %q that is not it", code, stored)
 		}
-		var taken string
-		if err := json.Unmarshal(before[gone], &taken); err != nil {
-			t.Fatalf("the entry taken is not text: %s", before[gone])
-		}
-		if upper := cases.Upper(language.Und); upper.String(taken) != upper.String(jsTrim(toWellFormed(code))) {
-			t.Fatalf("the code %q took the entry %q", code, taken)
-		}
-		for i := 0; i < gone; i++ {
-			var earlier string
-			if json.Unmarshal(before[i], &earlier) != nil {
-				t.Fatalf("an entry before the match is not text: %s", before[i])
-			}
+		if strings.Join(append(append([]string{}, before[:gone]...), before[gone+1:]...), "\x00") != strings.Join(after, "\x00") {
+			t.Fatalf("the new list is not the old one without entry %d: %q -> %q", gone, stored, left)
 		}
 	})
 }
 
-func sameJSONValue(a, b json.RawMessage) bool {
-	var x, y any
-	if json.Unmarshal(a, &x) != nil || json.Unmarshal(b, &y) != nil {
-		return false
-	}
-	return toJSON(x) == toJSON(y)
+// plainCode is a recovery code with white space and dashes left out and
+// ASCII letters in upper case.
+func plainCode(code string) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case r == '-' || unicode.IsSpace(r) || r == 0xfeff:
+			return -1
+		case r >= 'a' && r <= 'z':
+			return r - 'a' + 'A'
+		}
+		return r
+	}, code)
 }
 
 // plainOrigin is scheme and host with nothing after it: no path, no user,

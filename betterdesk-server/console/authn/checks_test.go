@@ -72,9 +72,9 @@ func TestLegacyPBKDF2NeedsItsExactForm(t *testing.T) {
 			t.Fatal(err)
 		}
 		stored := hex.EncodeToString(salt) + ":" + hex.EncodeToString(key)
-		check, err := pureService().VerifyPasswordEx(ctx, "pw", stored)
-		if want := saltLength == 16; err != nil || check.Valid != want || check.NeedsMigration != want {
-			t.Errorf("salt of %d bytes: %+v, %v; want valid and to be replaced = %v", saltLength, check, err, want)
+		valid, err := pureService().VerifyPassword(ctx, "pw", stored)
+		if want := saltLength == 16; err != nil || valid != want || isPBKDF2Hash(stored) != want {
+			t.Errorf("salt of %d bytes: %v, %v; want valid and PBKDF2 = %v", saltLength, valid, err, want)
 		}
 	}
 }
