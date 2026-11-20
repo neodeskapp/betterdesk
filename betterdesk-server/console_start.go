@@ -45,8 +45,8 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		return nil, fmt.Errorf("console schema: %w", err)
 	}
 	srv, err := console.New(ctx, console.Options{
-		Config:  ccfg,
-		Store:   sdb,
+		Config:      ccfg,
+		Store:       sdb,
 		API:         apiSrv.InternalHandler(),
 		APIListener: apiSrv.ListenerHandler(),
 		Events:      bus,
