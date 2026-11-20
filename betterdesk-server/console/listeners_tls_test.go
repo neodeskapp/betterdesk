@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -103,10 +104,13 @@ func chainOf(t *testing.T, addr string) []string {
 }
 
 // plainOnTLS sends plain bytes to a TLS port. Node never answered them in
-// HTTP, nor does Go; where Node closed the connection, Go closes it too.
+// HTTP; where Node closed the connection, Go closes it too. The console's
+// HTTPS port does not answer them either; the client API port answers a
+// plain HTTP request with the hint Node meant to send and never did
+// (BUGS LS4).
 func plainOnTLS(t *testing.T, g *goStack, scenario oracleScenario, listener string) int {
 	t.Helper()
-	n := 0
+	n, hints := 0, 0
 	for _, e := range scenario.Exchanges {
 		if e.Secure || e.Listener != listener {
 			continue
@@ -116,7 +120,15 @@ func plainOnTLS(t *testing.T, g *goStack, scenario oracleScenario, listener stri
 			t.Fatalf("%s: Node answered in plain HTTP: %q", e.ID, raw)
 		}
 		got, closed, _ := send(g.ports[listener], false, e.Parts, 4*time.Second)
-		if bytes.HasPrefix(got, []byte("HTTP/")) {
+		switch {
+		case !bytes.HasPrefix(got, []byte("HTTP/")):
+		case listener == "api":
+			// The hint has its body also for HEAD
+			if msg := plainHTTPHint(t, parseReplies(got, http.MethodGet), closed); msg != "" {
+				t.Errorf("%s: %s", e.ID, msg)
+			}
+			hints++
+		default:
 			t.Errorf("%s: answered in plain HTTP: %q", e.ID, got)
 		}
 		if e.Closed && !closed {
@@ -124,7 +136,25 @@ func plainOnTLS(t *testing.T, g *goStack, scenario oracleScenario, listener stri
 		}
 		n++
 	}
+	if listener == "api" && hints < 8 {
+		t.Errorf("%d plain HTTP requests got the https hint", hints)
+	}
 	return n
+}
+
+var plainHTTPHintBody = regexp.MustCompile(`^\{"error":"RustDesk Client API on port ([0-9]+) requires HTTPS\. Use https://<server>:([0-9]+)\."\}$`)
+
+// plainHTTPHint checks the client API port's answer to plain HTTP on TLS:
+// 400 with the error that asks for https on its port, and a close.
+func plainHTTPHint(_ *testing.T, got []reply, closed bool) string {
+	if len(got) != 1 || got[0].status != http.StatusBadRequest || !closed {
+		return fmt.Sprintf("want one 400 and a close, got %v closed %v", statuses(got), closed)
+	}
+	m := plainHTTPHintBody.FindStringSubmatch(string(got[0].body))
+	if m == nil || m[1] != m[2] || got[0].header.Get("Content-Type") != "application/json; charset=utf-8" {
+		return fmt.Sprintf("want the https hint, got %q %v", got[0].body, got[0].header)
+	}
+	return ""
 }
 
 func secureOnly(s oracleScenario) oracleScenario {
@@ -184,7 +214,16 @@ func TestClientAPITLSModes(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: %v", scenario.Name, err)
 		}
-		checkReplay(t, scenario.Name, g.replayExchanges(t, scenario, nil))
+		known := map[string]func(t *testing.T, got []reply, closed bool) string{}
+		if g.s.net.apiCert != nil {
+			// Plain HTTP on the port with TLS gets the https hint (BUGS LS4)
+			for _, e := range scenario.Exchanges {
+				if !e.Secure {
+					known[e.ID] = plainHTTPHint
+				}
+			}
+		}
+		checkReplay(t, scenario.Name, g.replayExchanges(t, scenario, known))
 		n++
 	}
 	if n != 11 {
@@ -447,8 +486,17 @@ func TestFallbackAgainstNode(t *testing.T) {
 			t.Fatalf("%s: listeners %v, Node's HTTPS port open %v", scenario.Name, g.ports, *scenario.HTTPSPortOpen)
 		}
 		checkConsoleCookies(t, g, scenario.Name, filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "console" }), "console")
-		api := oracleScenario{Exchanges: filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "api" })}
-		checkReplay(t, scenario.Name, g.replayExchanges(t, api, nil))
+		api := oracleScenario{Env: scenario.Env, Exchanges: filter(scenario.Exchanges, func(e oracleExchange) bool { return e.Listener == "api" })}
+		known := map[string]func(t *testing.T, got []reply, closed bool) string{}
+		if g.s.net.apiCert != nil {
+			// Plain HTTP on the port with TLS gets the https hint (BUGS LS4)
+			for _, e := range api.Exchanges {
+				if !e.Secure {
+					known[e.ID] = plainHTTPHint
+				}
+			}
+		}
+		checkReplay(t, scenario.Name, g.replayExchanges(t, api, known))
 		n++
 	}
 	if n != 6 {

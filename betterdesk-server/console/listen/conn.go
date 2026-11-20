@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -21,17 +23,36 @@ import (
 // without an answer, as the old console's TLS listeners did; Go's own
 // "Client sent an HTTP request to an HTTPS server" is never sent.
 func TLSListener(inner net.Listener, cfg *tls.Config) net.Listener {
-	return tls.NewListener(sniffListener{inner}, cfg)
+	return tls.NewListener(sniffListener{Listener: inner}, cfg)
 }
 
-type sniffListener struct{ net.Listener }
+// ClientAPITLSListener is TLSListener for the client API port: a plain
+// HTTP request gets 400 with a JSON error that asks for https on the
+// port the listener has, then the connection closes.
+func ClientAPITLSListener(inner net.Listener, cfg *tls.Config) net.Listener {
+	port := 0
+	if addr, ok := inner.Addr().(*net.TCPAddr); ok {
+		port = addr.Port
+	}
+	body := fmt.Sprintf(`{"error":"RustDesk Client API on port %d requires HTTPS. Use https://<server>:%d."}`, port, port)
+	hint := "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\nConnection: close\r\n" +
+		"Content-Length: " + strconv.Itoa(len(body)) + "\r\n\r\n" + body
+	return tls.NewListener(sniffListener{Listener: inner, hint: []byte(hint), port: port}, cfg)
+}
+
+type sniffListener struct {
+	net.Listener
+	// hint is the answer to plain HTTP, none when nil
+	hint []byte
+	port int
+}
 
 func (l sniffListener) Accept() (net.Conn, error) {
 	c, err := l.Listener.Accept()
 	if err != nil {
 		return nil, err
 	}
-	return &sniffConn{Conn: c}, nil
+	return &sniffConn{Conn: c, hint: l.hint, port: l.port}, nil
 }
 
 var errPlainHTTP = errors.New("plain HTTP on a TLS port")
@@ -41,6 +62,8 @@ type sniffConn struct {
 	net.Conn
 	checked bool
 	head    []byte
+	hint    []byte
+	port    int
 }
 
 func (c *sniffConn) Read(p []byte) (int, error) {
@@ -49,11 +72,16 @@ func (c *sniffConn) Read(p []byte) (int, error) {
 		head := make([]byte, 5)
 		n, err := io.ReadFull(c.Conn, head)
 		c.head = head[:n]
-		if err == nil && looksLikeHTTP(c.head) {
+		if err == nil && (looksLikeHTTP(c.head) || c.hint != nil && looksLikeMethod(c.head)) {
 			// What else the client sent is read first, so the close is a
 			// clean one and not a reset
 			_ = c.Conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 			_, _ = io.CopyN(io.Discard, c.Conn, 64<<10)
+			if c.hint != nil {
+				_ = c.Conn.SetWriteDeadline(time.Now().Add(time.Second))
+				_, _ = c.Conn.Write(c.hint)
+				logging.Logf("client-api", "WARN: RustDesk API: rejected plain HTTP on HTTPS port %d", c.port)
+			}
 			return 0, errPlainHTTP
 		}
 		if err != nil && n == 0 {
@@ -76,6 +104,22 @@ func looksLikeHTTP(head []byte) bool {
 		return true
 	}
 	return false
+}
+
+// looksLikeMethod reports bytes that start a request line of any method:
+// upper-case letters, then a space or more letters. A TLS record never
+// starts so.
+func looksLikeMethod(head []byte) bool {
+	for i, b := range head {
+		switch {
+		case b >= 'A' && b <= 'Z':
+		case b == ' ' && i > 0:
+			return true
+		default:
+			return false
+		}
+	}
+	return len(head) > 0
 }
 
 // PlainListener wraps a listener for plain HTTP. A connection that times

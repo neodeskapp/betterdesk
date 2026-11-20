@@ -210,7 +210,7 @@ func (c *ClientAPI) Start(ctx context.Context, host string, port int, cert *tls.
 		return fmt.Errorf("client API listen on %s: %w", addr, err)
 	}
 	if cert != nil {
-		ln = TLSListener(ln, ServerTLS(cert))
+		ln = ClientAPITLSListener(ln, ServerTLS(cert))
 	} else {
 		ln = PlainListener(ln)
 	}

@@ -343,6 +343,42 @@ func TestPlainHTTPOnTLSIsClosedWithoutAnAnswer(t *testing.T) {
 	if string(body) != "over TLS" || res.ProtoMajor != 1 {
 		t.Errorf("over TLS: %q %s", body, res.Proto)
 	}
+
+	// The client API port tells a client that sent plain HTTP to use https
+	// on its port, then closes
+	inner, err = net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := inner.Addr().(*net.TCPAddr).Port
+	api := &http.Server{Handler: srv.Handler, ErrorLog: ErrorLog("test"), ReadHeaderTimeout: 2 * time.Second}
+	go func() { _ = api.Serve(ClientAPITLSListener(inner, ServerTLS(cert))) }()
+	defer api.Close()
+	hintBody := fmt.Sprintf(`{"error":"RustDesk Client API on port %d requires HTTPS. Use https://<server>:%d."}`, port, port)
+	want := "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\nConnection: close\r\n" +
+		fmt.Sprintf("Content-Length: %d\r\n\r\n", len(hintBody)) + hintBody
+	for _, text := range []string{"GET /api/health HTTP/1.1\r\nHost: x\r\n\r\n", "POST /api/login HTTP/1.1\r\nHost: x\r\nContent-Length: 2\r\n\r\n{}", "DELETE /api/ab HTTP/1.1\r\n\r\n", "PATCH /x HTTP/1.1\r\n\r\n"} {
+		conn, err := net.Dial("tcp", inner.Addr().String())
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _ = io.WriteString(conn, text)
+		_ = conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+		got, err := io.ReadAll(conn)
+		conn.Close()
+		if string(got) != want || err != nil {
+			t.Errorf("client API port, %q: got %q, %v; want the hint and a close", text, got, err)
+		}
+	}
+	res, err = client.Get("https://" + inner.Addr().String() + "/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, _ = io.ReadAll(res.Body)
+	res.Body.Close()
+	if string(body) != "over TLS" {
+		t.Errorf("client API port over TLS: %q", body)
+	}
 }
 
 func TestRequestTimeoutBeforeTheFirstRequest(t *testing.T) {

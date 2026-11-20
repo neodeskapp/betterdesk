@@ -16,7 +16,8 @@
 // TLS 1.2 and 1.3 with the TLS 1.2 suites Node's default list accepted
 // that Go implements, and no protocol negotiation (HTTP/1.1 only).
 // TLSListener closes a connection that starts with plain HTTP without an
-// answer.
+// answer; ClientAPITLSListener, the client API port's, first answers it
+// 400 with a JSON error that asks for https.
 //
 // # The client API port
 //
