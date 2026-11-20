@@ -106,17 +106,18 @@ func (s *Service) consume(ctx context.Context, g *guestGrant) error {
 }
 
 // registerGrant adds a bridge to the bridges of its link, so taking the
-// link back ends it. Only a link whose id is a non-empty text can be
-// taken back by id; others are not listed.
-func (s *Service) registerGrant(g *guestGrant, b *bridge) func() {
+// link back ends it, and sets the bridge's unregister, which takes it off
+// the list again. The bridge is listed only after unregister is set, so a
+// revoke that finds it calls the right one. Only a link whose id is a
+// non-empty text can be taken back by id; others are not listed.
+func (s *Service) registerGrant(g *guestGrant, b *bridge) {
 	id, isText := g.id().(string)
 	if !isText || id == "" {
-		return func() {}
+		return
 	}
 	s.mu.Lock()
-	s.grants[id] = append(s.grants[id], b)
-	s.mu.Unlock()
-	return func() {
+	defer s.mu.Unlock()
+	b.unregister = func() {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		list := s.grants[id]
@@ -132,6 +133,7 @@ func (s *Service) registerGrant(g *guestGrant, b *bridge) func() {
 			s.grants[id] = list
 		}
 	}
+	s.grants[id] = append(s.grants[id], b)
 }
 
 // InvalidateGuestGrant ends at once every bridge of a link that was taken

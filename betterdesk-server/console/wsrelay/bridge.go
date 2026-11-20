@@ -92,7 +92,7 @@ func (s *Service) bridge(conn *ws.Conn, ip, label, target string, messageTranspo
 		b.frames = &frameDecoder{}
 	}
 	if guest != nil && guest.token != "" && guest.peerID != "" {
-		b.unregister = s.registerGrant(guest, b)
+		s.registerGrant(guest, b)
 	}
 	b.wg.Add(2)
 	go b.dialAndRead(ctx)
