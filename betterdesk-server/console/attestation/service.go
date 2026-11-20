@@ -139,8 +139,8 @@ func (s *Service) Serve(ctx context.Context) {
 // Status is the state of the capacity test (getStatus).
 type Status struct {
 	Running bool
-	// Phase is idle before the first test, then baseline, ramp-up,
-	// stabilize, done, and cool-down from the end of a test on.
+	// Phase is idle when no test runs, else baseline, ramp-up, stabilize
+	// or done.
 	Phase string
 	// Progress is what the test reported last (*branding.Object), nil
 	// before the first test.
@@ -187,6 +187,7 @@ func (s *Service) Start() bool {
 	s.running = true
 	s.abortRequested = false
 	s.phase = "baseline"
+	s.progress = nil
 	s.pool = &pool{}
 	r := &run{s: s, started: s.opts.Clock.Now(), abort: make(chan struct{})}
 	s.current = r
@@ -276,7 +277,7 @@ var errAborted = errors.New("aborted")
 func (s *Service) execute(ctx context.Context, r *run) (*branding.Object, error) {
 	result, err := r.loadTest(ctx)
 	s.mu.Lock()
-	s.phase = "cool-down"
+	s.phase = "idle"
 	if s.pool != nil {
 		s.pool.closeAll()
 	}

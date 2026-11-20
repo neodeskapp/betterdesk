@@ -438,8 +438,14 @@ func play(t *testing.T, db *store.DB, sc *scenarioRecord, start time.Time) []str
 		if string(gotAborts) != string(wantAborts) && !(len(aborts) == 0 && len(node.Aborts) == 0) {
 			differ("run %d aborts %s, node %s", i, gotAborts, wantAborts)
 		}
-		if got := statusString(s.Status(ctx)); got != node.StatusAfter {
-			differ("run %d status after:\n  node %s\n    go %s", i, node.StatusAfter, got)
+		// SA4: after a run the phase is idle again, where Node's stayed at
+		// cool-down
+		statusAfter := strings.Replace(node.StatusAfter, `"phase":"cool-down"`, `"phase":"idle"`, 1)
+		if statusAfter != node.StatusAfter {
+			idleAfterRun++
+		}
+		if got := statusString(s.Status(ctx)); got != statusAfter {
+			differ("run %d status after:\n  node %s\n    go %s", i, statusAfter, got)
 		}
 		if got := s.RequestAbort(); got != node.AbortAfter {
 			differ("run %d abort after the run = %v", i, got)
@@ -539,10 +545,16 @@ func TestRunsAsNodeRanThem(t *testing.T) {
 		}
 		t.Logf("%s: %d scenarios, %d runs", f.Dialect, len(f.Scenarios), runs)
 	})
+	if idleAfterRun == 0 {
+		t.Error("no run ends at cool-down: the fix of SA4 changes no run")
+	}
 	if recording {
 		writeFixedRuns(t, written)
 	}
 }
+
+// idleAfterRun counts the runs whose state after the run SA4 changed.
+var idleAfterRun int
 
 // runFixes are the scenarios a bug fix of BUGS.md changed on purpose, with
 // the bug. A scenario that several fixes change stays with the first.

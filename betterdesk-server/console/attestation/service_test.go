@@ -7,6 +7,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/unitronix/betterdesk-server/console/branding"
 )
 
 // hangingDialer never connects: Dial waits until its context ends.
@@ -56,7 +58,7 @@ func TestServeEndsARunWhenTheConsoleStops(t *testing.T) {
 	cancel()
 	<-done
 	st := s.Status(context.Background())
-	if st.Running || st.Phase != "cool-down" {
+	if st.Running || st.Phase != "idle" {
 		t.Errorf("after the stop: running %v, phase %s", st.Running, st.Phase)
 	}
 	if len(settings.writes) != 0 {
@@ -223,5 +225,36 @@ func TestAHalfOpenRelayPairIsClosed(t *testing.T) {
 	}
 	if _, _, pairs, _, attempts := r.counts(); pairs != 0 || attempts != 2*batchRelay || s.pool.failures != batchRelay {
 		t.Errorf("%d pairs, %d attempts, %d failures", pairs, attempts, s.pool.failures)
+	}
+}
+
+// After a run the phase is idle again, and the next run starts with an
+// empty progress: nothing of the run before shows while it runs (BUGS
+// SA4).
+func TestANewRunStartsWithEmptyProgress(t *testing.T) {
+	ctx := context.Background()
+	s := New(Options{Settings: newMapSettings(), Clock: &fakeClock{now: time.UnixMilli(1_700_000_000_000)}, Snapshot: func() Snapshot { return Snapshot{} }})
+	s.progress = branding.NewObject()
+	s.progress.Set("phase", "done")
+	s.progress.Set("result", "of the run before")
+	if !s.Start() {
+		t.Fatal("did not start")
+	}
+	if st := s.Status(ctx); st.Phase != "baseline" || st.Progress != nil {
+		t.Errorf("after the start: phase %s, progress %v", st.Phase, st.Progress)
+	}
+	r := <-s.starts
+	stopped, stop := context.WithCancel(ctx)
+	stop()
+	if _, err := s.execute(stopped, r); err == nil {
+		t.Fatal("the stopped run did not fail")
+	}
+	st := s.Status(ctx)
+	progress, _ := st.Progress.(*branding.Object)
+	if st.Phase != "idle" || progress == nil {
+		t.Fatalf("after the run: phase %s, progress %v", st.Phase, st.Progress)
+	}
+	if _, kept := progress.Get("result"); kept {
+		t.Errorf("the progress keeps the result of the run before: %s", branding.Stringify(progress))
 	}
 }
