@@ -274,18 +274,24 @@ func TestStep9StaticFilesComeBeforeGuardLimitersAndCacheHeader(t *testing.T) {
 	if res.status != 200 || res.body != "<svg/>" || res.header.Get("Content-Type") != "image/svg+xml" {
 		t.Fatalf("file: %d %q %q", res.status, res.body, res.header.Get("Content-Type"))
 	}
-	if res.header.Get("Cache-Control") != "no-store" {
-		t.Errorf("Cache-Control of a file = %q, want the no-store of step 1", res.header.Get("Cache-Control"))
+	// The folder's max-age replaces the Cache-Control of step 1 (BUGS
+	// S15): none outside production, a week in production
+	if res.header.Get("Cache-Control") != "public, max-age=0" {
+		t.Errorf("Cache-Control of a file = %q, want the folder's max-age", res.header.Get("Cache-Control"))
 	}
 	if res.cookie("__csrf_h") == "" || res.cookie("bd.sid") == "" {
 		t.Errorf("a file answer must carry the cookies of steps 6 and 8: %q", res.header.Values("Set-Cookie"))
 	}
-	if res := a.get("/img/logo.png"); res.header.Get("Cache-Control") != "public, max-age=3600" {
-		t.Errorf("Cache-Control under /img/ = %q", res.header.Get("Cache-Control"))
+	for _, target := range []string{"/img/logo.png", "/notes.txt"} {
+		if res := a.get(target); res.header.Get("Cache-Control") != "public, max-age=0" {
+			t.Errorf("Cache-Control of %s = %q", target, res.header.Get("Cache-Control"))
+		}
 	}
-	// A file that is not one of the file types keeps step 1's header too: step 15 is never reached
-	if res := a.get("/notes.txt"); res.header.Get("Cache-Control") != "no-store" {
-		t.Errorf("Cache-Control of notes.txt = %q", res.header.Get("Cache-Control"))
+	production := goOnly(t, setup{public: publicFolder(t), production: true}).agent()
+	for _, target := range []string{"/favicon.svg", "/img/logo.png", "/notes.txt"} {
+		if res := production.get(target); res.status != 200 || res.header.Get("Cache-Control") != "public, max-age=604800" {
+			t.Errorf("production, %s: %d, Cache-Control %q", target, res.status, res.header.Get("Cache-Control"))
+		}
 	}
 	// A file under /api/ is answered before the limiters count
 	res = a.get("/api/file.json")

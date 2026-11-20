@@ -307,24 +307,28 @@ func TestFileTimeIsRoundedToMilliseconds(t *testing.T) {
 	}
 }
 
-// A header that is set before Handle runs stays, as it did behind the old
-// console's security middleware.
-func TestFileKeepsHeadersSetBefore(t *testing.T) {
+// The steps before Handle set Cache-Control for every request; a file of
+// the build replaces it with its own (S15, W7).
+func TestFileReplacesTheCacheControlSetBefore(t *testing.T) {
 	h, _ := testHost(t, "")
-	send := func(target string) answer {
+	send := func(target, before string) answer {
 		r := rawRequest("GET", target, nil)
 		return record(func(w http.ResponseWriter) {
-			w.Header().Set("Cache-Control", "no-store")
+			w.Header().Set("Cache-Control", before)
 			h.Handle(w, r)
 		})
 	}
-	if a := send("/licenses.txt"); a.status != 200 || a.get("Cache-Control") != "no-store" {
-		t.Errorf("a plain file: %d, Cache-Control %q", a.status, a.get("Cache-Control"))
+	for _, before := range []string{"no-store", "no-cache, no-store, must-revalidate", "public, max-age=3600"} {
+		for _, target := range []string{"/licenses.txt", "/routes.json", "/fonts/test.woff2", "/img/logo.svg"} {
+			if a := send(target, before); a.status != 200 || a.get("Cache-Control") != "public, max-age=3600" {
+				t.Errorf("%s after %q: %d, Cache-Control %q", target, before, a.status, a.get("Cache-Control"))
+			}
+		}
 	}
-	if a := send("/_ui/version.json"); a.get("Cache-Control") != "no-cache" {
+	if a := send("/_ui/version.json", "no-store"); a.get("Cache-Control") != "no-cache" {
 		t.Errorf("version.json: Cache-Control %q", a.get("Cache-Control"))
 	}
-	if a := send(startJS); a.get("Cache-Control") != "public, max-age=31536000, immutable" {
+	if a := send(startJS, "no-store"); a.get("Cache-Control") != "public, max-age=31536000, immutable" {
 		t.Errorf("a hashed file: Cache-Control %q", a.get("Cache-Control"))
 	}
 }

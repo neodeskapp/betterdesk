@@ -1608,14 +1608,6 @@ func TestStaticFoldersMaxAge(t *testing.T) {
 			t.Errorf("development %s: %q, want %q", target, got, want)
 		}
 	}
-	// Behind the security headers the files keep what those set
-	secured := SecurityHeaders(SecurityOptions{})(StaticFolders(production)(next))
-	for target, want := range map[string]string{"/favicon.svg": "no-store", "/img/logo.png": "public, max-age=3600", "/uploads/logo.png": "no-store"} {
-		rec := get(secured, target)
-		if rec.Code != 200 || rec.Header().Get("Cache-Control") != want {
-			t.Errorf("%s behind the security headers: %d %q, want %q", target, rec.Code, rec.Header().Get("Cache-Control"), want)
-		}
-	}
 	// What is no file goes on
 	for _, target := range []string{"/missing.png", "/api/devices", "/uploads/../public/favicon.svg", "/wallpapers/"} {
 		if rec := get(StaticFolders(opts)(next), target); rec.Code != http.StatusTeapot {
@@ -1697,5 +1689,54 @@ func TestStaticFoldersAnswerPreconditionAndRange(t *testing.T) {
 	rec := serve(StaticFolders(broken)(next), httptest.NewRequest("GET", "/uploads/big.bin", nil))
 	if rec.Code != 500 || len(called) != 1 || called[0] != 500 {
 		t.Errorf("a file that cannot be opened: %d, OnError %v", rec.Code, called)
+	}
+}
+
+// The security headers run first and set Cache-Control for everything;
+// the folders' max-age replaces it on their files (S15). What is no file
+// keeps the security headers' rule.
+func TestStaticFoldersMaxAgeAppliesBehindSecurityHeaders(t *testing.T) {
+	site := t.TempDir()
+	for _, f := range []string{"public/favicon.svg", "public/img/logo.png", "fonts/a.woff2", "protos/message.proto", "uploads/logo.png", "wallpapers/w.jpg"} {
+		full := filepath.Join(site, filepath.FromSlash(f))
+		_ = os.MkdirAll(filepath.Dir(full), 0o755)
+		_ = os.WriteFile(full, []byte("x"), 0o644)
+	}
+	opts := StaticFoldersOptions{PublicDir: filepath.Join(site, "public"), FontsDir: filepath.Join(site, "fonts"), ProtosDir: filepath.Join(site, "protos"),
+		UploadsDir: filepath.Join(site, "uploads"), WallpapersDir: filepath.Join(site, "wallpapers")}
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusTeapot) })
+	production := opts
+	production.Production = true
+	cases := []struct {
+		opts   StaticFoldersOptions
+		target string
+		want   string
+	}{
+		{production, "/favicon.svg", "public, max-age=604800"},
+		{production, "/img/logo.png", "public, max-age=604800"},
+		{production, "/fonts/a.woff2", "public, max-age=604800"},
+		{production, "/protos/message.proto", "public, max-age=604800"},
+		{production, "/uploads/logo.png", "public, max-age=2592000"},
+		{production, "/wallpapers/w.jpg", "public, max-age=2592000, immutable"},
+		{opts, "/favicon.svg", "public, max-age=0"},
+		{opts, "/img/logo.png", "public, max-age=0"},
+		{opts, "/uploads/logo.png", "public, max-age=0"},
+		{opts, "/wallpapers/w.jpg", "public, max-age=0, immutable"},
+	}
+	for _, c := range cases {
+		for _, https := range []bool{false, true} {
+			h := SecurityHeaders(SecurityOptions{HTTPS: https})(StaticFolders(c.opts)(next))
+			rec := serve(h, httptest.NewRequest("GET", c.target, nil))
+			if rec.Code != 200 || rec.Header().Get("Cache-Control") != c.want {
+				t.Errorf("production %v, HTTPS %v, %s: %d %q, want %q", c.opts.Production, https, c.target, rec.Code, rec.Header().Get("Cache-Control"), c.want)
+			}
+		}
+	}
+	h := SecurityHeaders(SecurityOptions{})(StaticFolders(production)(next))
+	for target, want := range map[string]string{"/img/missing.png": "public, max-age=3600", "/missing.png": "no-store"} {
+		rec := serve(h, httptest.NewRequest("GET", target, nil))
+		if rec.Code != http.StatusTeapot || rec.Header().Get("Cache-Control") != want {
+			t.Errorf("%s: %d %q, want the next handler with %q", target, rec.Code, rec.Header().Get("Cache-Control"), want)
+		}
 	}
 }

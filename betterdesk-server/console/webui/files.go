@@ -281,10 +281,13 @@ func (h *Host) serveStatic(w http.ResponseWriter, r *http.Request, decoded strin
 	if info.IsDir() {
 		return false, nil
 	}
+	// The file's own rule replaces the one the steps before have set
+	cacheControl := "public, max-age=3600"
 	if strings.HasSuffix(name, "version.json") {
-		w.Header().Set("Cache-Control", "no-cache")
+		cacheControl = "no-cache"
 	}
-	if err := h.sendFile(w, r, name, info, "public, max-age=3600"); err != nil {
+	w.Header().Set("Cache-Control", cacheControl)
+	if err := h.sendFile(w, r, name, info, cacheControl); err != nil {
 		return true, err
 	}
 	return true, nil

@@ -65,6 +65,10 @@ type StaticOptions struct {
 	NoLastModified bool
 	NoAcceptRanges bool
 	NoCacheControl bool
+	// OwnCacheControl makes a file's Cache-Control (MaxAge, Immutable)
+	// replace one an earlier step has set. SetHeaders can still set its
+	// own.
+	OwnCacheControl bool
 	// OnError answers a failed request: 412 and 416 for a file that was
 	// found, 5xx for a disk error, and every 4xx with NoFallthrough.
 	// Headers of the file (ETag, Content-Range, ...) are already set.
@@ -437,6 +441,9 @@ func (q *staticRequest) send(full string, info fs.FileInfo) {
 	h := q.w.Header()
 	osPath := filepath.FromSlash(full)
 
+	if s.opts.OwnCacheControl {
+		h.Del("Cache-Control")
+	}
 	if s.opts.SetHeaders != nil {
 		s.opts.SetHeaders(q.w, osPath, info)
 	}

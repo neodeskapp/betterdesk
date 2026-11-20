@@ -660,6 +660,23 @@ func clientFileError(v vector) bool {
 		(v.Error.Status == http.StatusPreconditionFailed || v.Error.Status == http.StatusRequestedRangeNotSatisfiable)
 }
 
+// fileCacheControl is the Cache-Control of an answer of the static
+// folders, where Node sent the security headers' rule (S15): the max-age
+// of the folder that holds the file. production is NODE_ENV=production.
+func fileCacheControl(path string, production bool) string {
+	week, month := "604800", "2592000"
+	if !production {
+		week, month = "0", "0"
+	}
+	if _, _, ok := httpx.StripMount(path, "/wallpapers"); ok {
+		return "public, max-age=" + month + ", immutable"
+	}
+	if _, _, ok := httpx.StripMount(path, "/uploads"); ok {
+		return "public, max-age=" + month
+	}
+	return "public, max-age=" + week
+}
+
 // bugFix matches the reason of a difference a bug fix makes: it starts
 // with the bug's id from BUGS.md.
 var bugFix = regexp.MustCompile(`^[A-Z]+[0-9]+: `)
@@ -677,7 +694,7 @@ func replay(t *testing.T, mode string, minimum int) {
 	p, server := startPipeline(t, file)
 	addr := server.Listener.Addr().String()
 	skipped := map[string]int{}
-	aborts, fileErrors := 0, 0
+	aborts, fileErrors, fixedHeaders := 0, 0, 0
 	for _, v := range file.Vectors {
 		name := v.ID + " " + v.Name
 		resp, body := exchange(t, addr, v.requestBytes(t), v.Method, v.AbortAfter)
@@ -724,6 +741,10 @@ func replay(t *testing.T, mode string, minimum int) {
 			delete(wantHeaders, "content-type")
 			wantHeaders["content-length"] = "0"
 			fileErrors++
+		}
+		if _, file := wantHeaders["last-modified"]; file && strings.HasPrefix(v.Name, "static ") {
+			wantHeaders["cache-control"] = fileCacheControl(v.Path, p.production)
+			fixedHeaders++
 		}
 		var skipHeaders []string
 		if _, has := wantHeaders["content-length"]; !has {
@@ -784,6 +805,7 @@ func replay(t *testing.T, mode string, minimum int) {
 		t.Logf("%d vectors not compared: %s", n, reason)
 	}
 	t.Logf("%d failed preconditions and ranges of files compared as the static step's own answer (M6)", fileErrors)
+	t.Logf("%d file answers compared with the folder's Cache-Control in place of Node's (S15)", fixedHeaders)
 	// A difference a bug fix makes on purpose names its bug first; those are
 	// counted apart from what Go cannot answer as Node did
 	total, fixed := 0, 0

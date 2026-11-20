@@ -239,6 +239,12 @@ func TestAnswersMatchNode(t *testing.T) {
 // bug fix changed it on purpose, and names the bug ("" for an answer no
 // fix changed).
 func intended(base string, c *goldenCase) string {
+	// S15: a file of the build replaces the Cache-Control the steps before
+	// set (the recording's preset) with its own hour
+	if preset := c.Headers["X-Test-Preset"]; preset != "" && c.Answer["cache-control"] == preset && c.Answer["last-modified"] != "" {
+		c.Answer["cache-control"] = "public, max-age=3600"
+		return "S15"
+	}
 	// W1: the way back after sign-in is checked with its dot segments
 	// resolved; one the check refuses sends to the start
 	if loc := c.Answer["location"]; c.Status == http.StatusFound && strings.Contains(loc, "/.") {

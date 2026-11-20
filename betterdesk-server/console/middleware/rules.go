@@ -119,9 +119,8 @@ type StaticFoldersOptions struct {
 // names no file goes on to next; a folder without a trailing slash is
 // redirected to the address with one.
 //
-// Cache-Control is only set when it is missing. Behind SecurityHeaders it
-// never is, so the files answer no-store, or one hour under /img/ and
-// /fonts/, and the max-age of this step has no effect.
+// A file's Cache-Control is the folder's max-age; it replaces the one
+// SecurityHeaders set before.
 func StaticFolders(opts StaticFoldersOptions) func(http.Handler) http.Handler {
 	week, month := time.Duration(0), time.Duration(0)
 	if opts.Production {
@@ -150,6 +149,7 @@ func StaticFolders(opts StaticFoldersOptions) func(http.Handler) http.Handler {
 			m.options.OnError = onError
 			m.options.AnswerClientErrors = true
 			m.options.FS = opts.FS
+			m.options.OwnCacheControl = true
 			root := filepath.Clean(m.dir)
 			switch {
 			case m.dir != "":
