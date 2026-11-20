@@ -631,3 +631,56 @@ func TestCleanersRemoveWordsWrappedAroundThemselves(t *testing.T) {
 		t.Errorf("a plain picture address in custom CSS: %q", out)
 	}
 }
+
+// TestFontsMoveIntoTheDataFolder: the fonts installed in the folder of
+// the program are copied once into FontsDir in the data folder, where
+// they survive a new container, and are listed from there; a font
+// deleted afterwards does not come back at the next start (BUGS BR8,
+// the branding half).
+func TestFontsMoveIntoTheDataFolder(t *testing.T) {
+	dir := t.TempDir()
+	legacy := filepath.Join(dir, "public", "fonts")
+	for name, text := range map[string]string{
+		"inter/font.css":            "@font-face {}",
+		"inter/inter-400.woff2":     "w",
+		"my-font/meta.json":         `{"family":"My Font","source":"upload"}`,
+		"my-font/font.css":          "@font-face {}",
+		"my-font/my-font-400.woff2": "w",
+	} {
+		path := filepath.Join(legacy, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Symlink(filepath.Join(dir, "elsewhere"), filepath.Join(legacy, "inter", "link.woff2")); err != nil {
+		t.Fatal(err)
+	}
+	start := func() *Service {
+		opts := fixtureOptions(dir)
+		opts.FontsDir = filepath.Join(dir, "data", "fonts")
+		opts.LegacyFontsDir = legacy
+		s, err := New(opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return s
+	}
+	s := start()
+	fonts, err := s.ListLocalFonts()
+	if err != nil || len(fonts) != 2 || property(fonts[0], "safeName") != "inter" || property(fonts[1], "family") != "My Font" {
+		t.Fatalf("fonts after the start: %s, %v", Stringify(fonts), err)
+	}
+	if _, err := os.Lstat(filepath.Join(dir, "data", "fonts", "inter", "link.woff2")); !os.IsNotExist(err) {
+		t.Errorf("a link was copied: %v", err)
+	}
+	if deleted, err := s.DeleteLocalFont("Inter"); !deleted || err != nil {
+		t.Fatalf("delete: %v, %v", deleted, err)
+	}
+	s = start()
+	if fonts, _ := s.ListLocalFonts(); len(fonts) != 1 || property(fonts[0], "safeName") != "my-font" {
+		t.Errorf("fonts after the next start: %s", Stringify(fonts))
+	}
+}

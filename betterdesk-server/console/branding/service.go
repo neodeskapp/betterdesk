@@ -33,6 +33,11 @@ type Options struct {
 	// FontsDir holds one folder per installed font, served as
 	// /fonts/<name>/: DATA_DIR/fonts. Node: <console>/public/fonts.
 	FontsDir string
+	// LegacyFontsDir is the folder installed fonts were kept in before
+	// FontsDir moved into the data folder (<console>/public/fonts). New
+	// copies its font folders into FontsDir once; a failure is logged.
+	// Empty copies nothing.
+	LegacyFontsDir string
 	// FontCacheFile is an optional JSON list of further font families for
 	// the font search. Node: <console>/data/google-fonts-cache.json.
 	FontCacheFile string
@@ -140,6 +145,9 @@ func New(opts Options) (*Service, error) {
 	}
 	if opts.Logf == nil {
 		opts.Logf = func(format string, args ...any) { logging.Logf("branding", format, args...) }
+	}
+	if err := copyLegacyFonts(opts.LegacyFontsDir, opts.FontsDir); err != nil {
+		opts.Logf("[Fonts] Could not copy the installed fonts of %s: %v", opts.LegacyFontsDir, err)
 	}
 	if opts.UploadsDir != "" {
 		if err := os.MkdirAll(opts.UploadsDir, 0o777); err != nil {
