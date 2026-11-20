@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/base64"
@@ -327,6 +328,76 @@ func (h *harness) runUntilSent(t *testing.T) {
 	}
 }
 
+// localHost is the host name Go publishes for a machine's name: its first
+// label with .local.
+func localHost(hostname string) string {
+	label, _, _ := strings.Cut(strings.Trim(decodeUTF8([]byte(hostname)), "."), ".")
+	return label + tld
+}
+
+// withLocalHost is a datagram Node sent with the host name of its records
+// as Go writes it, localHost, where Node wrote the machine's name as it
+// was (BUGS JB5). The owner names of the records and the targets of SRV
+// records change; Node wrote names without compression.
+func withLocalHost(t *testing.T, packet []byte, hostname string) []byte {
+	t.Helper()
+	bare, local := appendName(nil, decodeUTF8([]byte(hostname))), appendName(nil, localHost(hostname))
+	end := func(off int) int {
+		for off < len(packet) && packet[off] != 0 {
+			n := int(packet[off])
+			if n&0xc0 == 0xc0 || off+1+n > len(packet) {
+				t.Fatalf("name at %d of %x is not a plain name", off, packet)
+			}
+			off += 1 + n
+		}
+		return off + 1
+	}
+	if len(packet) < 12 {
+		return packet
+	}
+	out := append([]byte(nil), packet[:12]...)
+	off := 12
+	questions := int(packet[4])<<8 | int(packet[5])
+	for range questions {
+		next := end(off) + 4
+		out = append(out, packet[off:next]...)
+		off = next
+	}
+	records := int(packet[6])<<8 | int(packet[7]) + int(packet[8])<<8 | int(packet[9]) + int(packet[10])<<8 | int(packet[11])
+	for range records {
+		nameEnd := end(off)
+		if bytes.Equal(packet[off:nameEnd], bare) {
+			out = append(out, local...)
+		} else {
+			out = append(out, packet[off:nameEnd]...)
+		}
+		typ := int(packet[nameEnd])<<8 | int(packet[nameEnd+1])
+		length := int(packet[nameEnd+8])<<8 | int(packet[nameEnd+9])
+		rdata := packet[nameEnd+10 : nameEnd+10+length]
+		if typ == 33 && length > 6 && bytes.Equal(rdata[6:], bare) {
+			rdata = append(append([]byte(nil), rdata[:6]...), local...)
+		}
+		out = append(out, packet[nameEnd:nameEnd+8]...)
+		out = append(out, byte(len(rdata)>>8), byte(len(rdata)))
+		out = append(out, rdata...)
+		off = nameEnd + 10 + length
+	}
+	return append(out, packet[off:]...)
+}
+
+// localized are Node's events with the datagrams it sent as withLocalHost
+// makes them.
+func localized(t *testing.T, events []nodeEvent, hostname string) []nodeEvent {
+	t.Helper()
+	out := make([]nodeEvent, len(events))
+	for i, e := range events {
+		raw, _ := base64.StdEncoding.DecodeString(e.Bytes)
+		e.Bytes = base64.StdEncoding.EncodeToString(withLocalHost(t, raw, hostname))
+		out[i] = e
+	}
+	return out
+}
+
 func nodeSends(events []nodeEvent) []nodeEvent {
 	var out []nodeEvent
 	for _, e := range events {
@@ -361,7 +432,7 @@ func TestMDNSScheduleAgainstNode(t *testing.T) {
 	}
 	for i, s := range rec.Scenarios {
 		settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
-		want := nodeSends(s.Events)
+		want := localized(t, nodeSends(s.Events), s.Hostname)
 		h := startHarness(settings, s.Random, len(want))
 		if len(want) > 0 {
 			<-h.opened
@@ -416,6 +487,7 @@ func TestMDNSSaysGoodbyeAtStop(t *testing.T) {
 	settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
 	conflict := nodeSends(rec.Conflict.Events)
 	nodeGoodbye, _ := base64.StdEncoding.DecodeString(conflict[len(conflict)-1].Bytes)
+	nodeGoodbye = withLocalHost(t, nodeGoodbye, s.Hostname)
 
 	h := startHarness(settings, s.Random, probeCount+1)
 	h.runUntilSent(t)
@@ -447,7 +519,7 @@ func TestMDNSConflictAgainstNode(t *testing.T) {
 	settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
 	packet, _ := base64.StdEncoding.DecodeString(rec.Conflict.Packet)
 
-	want := nodeSends(rec.Conflict.Events)
+	want := localized(t, nodeSends(rec.Conflict.Events), s.Hostname)
 	h := startHarness(settings, s.Random, len(want))
 	h.clock.fire(t)
 	h.sock.packets <- packet
@@ -462,7 +534,7 @@ func TestMDNSConflictAgainstNode(t *testing.T) {
 		t.Errorf("log %q, Node %q", got, rec.Conflict.Logs)
 	}
 
-	want = nodeSends(rec.Early.Events)
+	want = localized(t, nodeSends(rec.Early.Events), s.Hostname)
 	h = startHarness(settings, s.Random, len(want))
 	h.sock.packets <- packet
 	h.runUntilSent(t)
@@ -528,6 +600,10 @@ func TestMDNSAnswersAgainstNode(t *testing.T) {
 		ifaces, _ := settings.interfaces()
 		reg := newRegistry()
 		reg.register(svc.records(ifaces))
+		nodeSvc := *svc
+		nodeSvc.host = decodeUTF8([]byte(a.Hostname))
+		nodeReg := newRegistry()
+		nodeReg.register(nodeSvc.records(ifaces))
 		for i, p := range a.Packets {
 			total++
 			raw, _ := base64.StdEncoding.DecodeString(p.Packet)
@@ -546,12 +622,47 @@ func TestMDNSAnswersAgainstNode(t *testing.T) {
 						p.Decoded.Type, p.Decoded.Questions, p.Decoded.Answers, p.Decoded.Additionals)
 				}
 			}
-			var got []string
+			// The host's records are named <first label>.local, where Node
+			// named them by the machine's name as it was (BUGS JB5): a
+			// question that names either form with a dot is answered
+			// otherwise than Node did; every other answer is Node's with the
+			// host's name as Go writes it. nodeReg is the registry under
+			// Node's name, which tells which questions Node answered.
+			var all, each []string
 			for _, out := range reg.respond(raw) {
-				got = append(got, base64.StdEncoding.EncodeToString(out))
+				all = append(all, base64.StdEncoding.EncodeToString(out))
 			}
-			if strings.Join(got, " ") != strings.Join(p.Sent, " ") {
-				t.Errorf("datagram %d %x: answers\n got %q\nwant %q", i, raw, got, p.Sent)
+			nodeSent := append([]string(nil), p.Sent...)
+			if err == nil && !msg.Response {
+				for _, q := range msg.Questions {
+					packet := reg.answer(q)
+					if packet != nil {
+						each = append(each, base64.StdEncoding.EncodeToString(packet))
+					}
+					var node []byte
+					if nodeReg.answer(q) != nil && len(nodeSent) > 0 {
+						node, _ = base64.StdEncoding.DecodeString(nodeSent[0])
+						nodeSent = nodeSent[1:]
+					}
+					if strings.Contains(q.Name, ".") && (dnsEqual(q.Name, svc.host) || dnsEqual(q.Name, nodeSvc.host)) {
+						if address := q.Type == "A" || q.Type == "AAAA"; dnsEqual(q.Name, svc.host) && address && packet == nil && len(reg.recordsFor(svc.host, q.Type)) > 0 {
+							t.Errorf("datagram %d: no answer to %v", i, q)
+						}
+						continue
+					}
+					if node != nil {
+						node = withLocalHost(t, node, a.Hostname)
+					}
+					if string(packet) != string(node) {
+						t.Errorf("datagram %d %x, question %v: answer\n got %x\nwant %x", i, raw, q, packet, node)
+					}
+				}
+			}
+			if len(nodeSent) > 0 {
+				t.Errorf("datagram %d: %d of Node's answers left over", i, len(nodeSent))
+			}
+			if strings.Join(all, " ") != strings.Join(each, " ") {
+				t.Errorf("datagram %d: respond gave %q, the answers to its questions are %q", i, all, each)
 			}
 			if len(p.Sent) > 0 {
 				answered++

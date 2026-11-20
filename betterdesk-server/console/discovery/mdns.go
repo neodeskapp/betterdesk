@@ -266,9 +266,12 @@ func (m *MDNS) prepare() (*service, bool) {
 		m.logf("WARN: [server] mDNS panel discovery disabled: %v", err)
 		return nil, false
 	}
+	// The host goes out as the first label of the machine's name with
+	// .local, the name mDNS resolves
+	label, _, _ := strings.Cut(strings.Trim(decodeUTF8([]byte(host)), "."), ".")
 	svc := &service{
 		fqdn: strings.ReplaceAll(instanceName, ".", "-") + "." + serviceType + tld,
-		host: decodeUTF8([]byte(host)),
+		host: label + tld,
 		port: uint16(port),
 		txt: [][]byte{
 			[]byte("url=" + strings.TrimSuffix(panelURL, "/")),
