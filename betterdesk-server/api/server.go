@@ -540,6 +540,7 @@ func (s *Server) routes() *http.ServeMux {
 
 	// Help requests — operator panel (raised by agents via CDAP or REST self endpoint)
 	mux.HandleFunc("GET /api/help/requests", s.requirePermission(auth.PermChatAccess, s.handleListHelpRequests))
+	mux.HandleFunc("POST /api/help/requests", s.requirePermission(auth.PermChatAccess, s.handleCreateHelpRequest))
 	mux.HandleFunc("GET /api/help/requests/{id}", s.requirePermission(auth.PermChatAccess, s.handleGetHelpRequest))
 	mux.HandleFunc("POST /api/help/requests/{id}/acknowledge", s.requirePermission(auth.PermChatAccess, s.handleAcknowledgeHelpRequest))
 	mux.HandleFunc("POST /api/help/requests/{id}/resolve", s.requirePermission(auth.PermChatAccess, s.handleResolveHelpRequest))

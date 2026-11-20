@@ -40,16 +40,10 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "request_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "request_id": "<volatile>",
+     "request_id": "5",
      "success": true
     }
    }

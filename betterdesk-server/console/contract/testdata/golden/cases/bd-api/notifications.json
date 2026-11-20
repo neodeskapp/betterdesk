@@ -87,6 +87,19 @@
        "device_id": "900100001",
        "hostname": "demo-reception-01",
        "icon": "support_agent",
+       "id": "5",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "Contract: the printer",
+       "read": false,
+       "status": "pending",
+       "title": "demo-reception-01"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "icon": "support_agent",
        "id": "1",
        "kind": "help_request",
        "link": "/help-requests",
@@ -136,7 +149,7 @@
       }
      ],
      "success": true,
-     "unread_count": 4
+     "unread_count": 5
     }
    }
   },
@@ -180,6 +193,19 @@
     "kind": "json",
     "json": {
      "items": [
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "icon": "support_agent",
+       "id": "5",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "Contract: the printer",
+       "read": false,
+       "status": "pending",
+       "title": "demo-reception-01"
+      },
       {
        "created_at": "<volatile>",
        "device_id": "900300001",
@@ -394,7 +420,7 @@
       }
      ],
      "success": true,
-     "unread_count": 14
+     "unread_count": 15
     }
    }
   }

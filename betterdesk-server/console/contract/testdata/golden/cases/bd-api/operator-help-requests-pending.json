@@ -51,6 +51,16 @@
        "created_at": 0,
        "device_id": "900100001",
        "hostname": "demo-reception-01",
+       "id": "5",
+       "message": "Contract: the printer",
+       "resolved_by": "",
+       "status": "pending"
+      },
+      {
+       "accepted_by": "",
+       "created_at": 0,
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
        "id": "1",
        "message": "Printer does not show up",
        "resolved_by": "",

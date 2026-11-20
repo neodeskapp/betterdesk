@@ -137,8 +137,7 @@ func (h *handlers) helpList(ctx context.Context, filter *goapi.Object) (items []
 // helpRequest answers POST /api/bd/help-request {device_id, hostname,
 // message} from a device: the request goes to the API server, and the
 // console writes it into its audit log. The answer's request_id is the
-// API server's id, or a random UUID when the API server gave none (it has
-// no route to create one, BUGS RG12).
+// API server's id, or a random UUID when the API server gave none.
 func (h *handlers) helpRequest(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	deviceID, ok := jsreq.Prop(body, "device_id").(string)

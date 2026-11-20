@@ -6,6 +6,7 @@
 //
 // Endpoints:
 //   GET  /api/help/requests                  — list (filter by status, device)
+//   POST /api/help/requests                  — create, for the console's device route
 //   GET  /api/help/requests/{id}             — single request
 //   POST /api/help/requests/{id}/acknowledge — operator picks it up
 //   POST /api/help/requests/{id}/resolve     — operator closes it
