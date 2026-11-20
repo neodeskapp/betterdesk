@@ -317,6 +317,37 @@ func TestSlowReaderIsDropped(t *testing.T) {
 	}
 }
 
+// TestSlowReaderIsDroppedByBytes: the queue of a client that does not
+// read is bounded by its bytes too: messages of 2 MiB fill 16 MiB long
+// before 1,024 of them wait, and the client is let go (BUGS WS12).
+func TestSlowReaderIsDroppedByBytes(t *testing.T) {
+	queued := make(chan int, 1)
+	addr := newEcho(t, ws.AcceptOptions{}, func(c *ws.Conn) {
+		big := make([]byte, 2<<20)
+		n := 0
+		for ; n < 200 && c.Open(); n++ {
+			c.Send(true, big)
+		}
+		queued <- n
+		<-c.Context().Done()
+	})
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	_, _ = io.WriteString(conn, "GET /ws/x HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
+	// The client reads nothing.
+	select {
+	case n := <-queued:
+		if n == 200 {
+			t.Errorf("the server took %d messages of 2 MiB for a client that does not read", n)
+		}
+	case <-time.After(20 * time.Second):
+		t.Fatal("the server kept sending")
+	}
+}
+
 func TestProtocolError(t *testing.T) {
 	for err, want := range map[error]bool{
 		nil:                     false,
@@ -345,32 +376,6 @@ func TestAddrCounter(t *testing.T) {
 	c.Done("a")
 	if c.Count("a") != 0 {
 		t.Errorf("count below zero: %d", c.Count("a"))
-	}
-}
-
-// TestClientAddr: the first X-Forwarded-For entry as sent, else the
-// connection's address.
-func TestClientAddr(t *testing.T) {
-	reg := ws.New(ws.Options{})
-	got := make(chan string, 4)
-	reg.Handle("/ws/x", func(u *ws.Upgrade) {
-		got <- u.ClientAddr()
-		u.Refuse(http.StatusForbidden)
-	})
-	srv := httptest.NewServer(reg)
-	defer srv.Close()
-	defer reg.Close()
-	addr := strings.TrimPrefix(srv.URL, "http://")
-	for header, want := range map[string]string{
-		"": "127.0.0.1",
-		"X-Forwarded-For: 10.0.0.1, 10.0.0.2\r\n":      "10.0.0.1",
-		"X-Forwarded-For: , 10.0.0.2\r\n":              "127.0.0.1",
-		"X-Forwarded-For: a\r\nX-Forwarded-For: b\r\n": "a",
-	} {
-		_, _ = wstest.Raw(addr, "GET /ws/x HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"+header+"\r\n")
-		if g := <-got; g != want {
-			t.Errorf("%q: %q, want %q", header, g, want)
-		}
 	}
 }
 

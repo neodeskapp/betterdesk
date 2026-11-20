@@ -8,7 +8,6 @@ import (
 
 	"github.com/coder/websocket"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/logging"
 )
@@ -186,22 +185,6 @@ func (u *Upgrade) Accept(opts AcceptOptions) (*Conn, bool) {
 		return nil, false
 	}
 	return newConn(u.reg.ctx, c, opts.MaxPayload, h.protocol), true
-}
-
-// ClientAddr is the address the old relay services counted connections
-// by: the first entry of X-Forwarded-For as the client sent it, else the
-// connection's address.
-func (u *Upgrade) ClientAddr() string {
-	if forwarded := headerText(u.R, "X-Forwarded-For"); forwarded != "" {
-		first, _, _ := strings.Cut(forwarded, ",")
-		if first = jsbind.Trim(first); first != "" {
-			return first
-		}
-	}
-	if addr := u.SocketAddr(); addr != "" {
-		return addr
-	}
-	return "unknown"
 }
 
 // ClientIP is the client's address as the console's TRUST_PROXY setting

@@ -26,10 +26,14 @@ const (
 // when a service set no limit: 100 MiB.
 const DefaultMaxPayload = 100 << 20
 
-// sendQueue is how many messages may wait for a client that does not
-// read. The old console buffered without a limit; a client that lets this
-// many pile up is closed.
-const sendQueue = 1024
+// sendQueue and sendQueueBytes bound what may wait for a client that does
+// not read: 1,024 messages and 16 MiB, one message of any size when
+// nothing else waits. The old console buffered without a limit; a client
+// that lets more pile up is closed.
+const (
+	sendQueue      = 1024
+	sendQueueBytes = 16 << 20
+)
 
 // writeTimeout is how long one message may take to go out.
 const writeTimeout = 30 * time.Second
@@ -55,6 +59,8 @@ type Conn struct {
 
 	mu      sync.Mutex
 	closing bool
+	// queued is the bytes of the messages in out
+	queued int
 	// ended is closed when the writer is done and the connection is gone.
 	ended chan struct{}
 	wg    sync.WaitGroup
@@ -103,6 +109,9 @@ func (c *Conn) writer() {
 				_ = c.ws.Close(websocket.StatusCode(m.code), m.reason)
 				return
 			}
+			c.mu.Lock()
+			c.queued -= len(m.data)
+			c.mu.Unlock()
 			ctx, cancel := context.WithTimeout(c.ctx, writeTimeout)
 			err := c.ws.Write(ctx, m.typ, m.data)
 			cancel()
@@ -137,13 +146,18 @@ func (c *Conn) send(typ websocket.MessageType, data []byte) {
 	if !c.openLocked() {
 		return
 	}
-	select {
-	case c.out <- outgoing{typ: typ, data: data}:
-	default:
-		// The client has not read for a long time: give up on it.
-		c.closing = true
-		c.cancel()
+	full := c.queued > 0 && c.queued+len(data) > sendQueueBytes
+	if !full {
+		select {
+		case c.out <- outgoing{typ: typ, data: data}:
+			c.queued += len(data)
+			return
+		default:
+		}
 	}
+	// The client has not read for a long time: give up on it.
+	c.closing = true
+	c.cancel()
 }
 
 // Open reports whether the socket can still take messages: it is not
