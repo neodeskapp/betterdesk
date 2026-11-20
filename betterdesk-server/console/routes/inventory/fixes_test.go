@@ -29,9 +29,9 @@ var unreadable = map[string]map[string]string{
 func withUnreadableMembers(noJSON ...string) map[string]string {
 	disk, mount := `"disk_count":1`, `"disk_max_used_percent":20,"disk_max_mount":"","disk_max_free_bytes":4,`
 	reports := map[string]string{
-		"F-NAME":           `"os":"","os_name":{"toString":1}`,
+		"F-NAME":           "",
 		"F-VERSION":        `"os":"OS","os_name":"OS"`,
-		"F-NAME-IN-LIST":   `"os":"","os_name":[1,[2,{"toString":"x"}]]`,
+		"F-NAME-IN-LIST":   "",
 		"F-TOTAL":          "",
 		"F-USED":           "",
 		"F-DISK-TOTAL":     disk,
@@ -172,6 +172,154 @@ func TestOneBadReportDoesNotFailTheList(t *testing.T) {
 		}
 		if got := w.Do(replay.Request{Role: "admin", Path: "/api/inventory/NAME"}); got.Status != 200 {
 			t.Errorf("the report with a name that cannot be read: %d %s, want 200", got.Status, got.Body)
+		}
+	})
+}
+
+// typedMembers are the members of a list entry that the list reads by
+// type (BUGS AI2), and how each is read.
+var typedMembers = map[string]string{
+	"hostname": "name", "os": "text", "os_name": "name", "cpu": "name",
+	"cpu_cores": "number", "cpu_usage": "number", "disk_count": "length", "software_count": "length",
+}
+
+// listedByType checks the list steps whose answer the typed reading
+// changes (BUGS AI2): the list holds Node's devices in Node's order, every
+// entry with Node's members in Node's order, and only the typed members
+// may differ from Node's. Each of those holds what the web app's row
+// takes: a name is a text, the same as Node's where Node's was a text, a
+// number's text where Node's was a number; a number is Node's where
+// Node's was a number and null for any other value; a length is a whole
+// number from 0. changed counts the entries that differ.
+func listedByType(changed map[string]int) replay.Check {
+	return func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		if step.Status != 200 || got.Status != 200 || !strings.HasPrefix(step.Answer, `{"devices":[`) || got.Body == step.Answer {
+			return false
+		}
+		var node, have struct {
+			Devices []json.RawMessage `json:"devices"`
+		}
+		rest := func(body string) string { return body[strings.LastIndex(body, "]"):] }
+		if json.Unmarshal([]byte(step.Answer), &node) != nil || json.Unmarshal([]byte(got.Body), &have) != nil ||
+			len(node.Devices) != len(have.Devices) || rest(step.Answer) != rest(got.Body) {
+			t.Errorf("%s (AI2): the list differs beyond its entries:\n   node: %s\n     go: %s", step.Name, step.Answer, got.Body)
+			return true
+		}
+		for i := range node.Devices {
+			if string(node.Devices[i]) == string(have.Devices[i]) {
+				continue
+			}
+			if problem := typedEntry(node.Devices[i], have.Devices[i]); problem != "" {
+				t.Errorf("%s (AI2): entry %d: %s\n   node: %s\n     go: %s", step.Name, i, problem, node.Devices[i], have.Devices[i])
+				continue
+			}
+			changed[step.Name]++
+		}
+		return true
+	}
+}
+
+// typedEntry says what is wrong with the Go entry of a device beside
+// Node's, "" when nothing is.
+func typedEntry(nodeEntry, goEntry json.RawMessage) string {
+	nodeKeys, node := members(nodeEntry)
+	goKeys, have := members(goEntry)
+	if strings.Join(nodeKeys, ",") != strings.Join(goKeys, ",") {
+		return "the members differ"
+	}
+	for _, key := range nodeKeys {
+		was, is := node[key], have[key]
+		var kind any
+		_ = json.Unmarshal(was, &kind)
+		switch typedMembers[key] {
+		case "":
+			if string(was) != string(is) {
+				return key + " differs"
+			}
+		case "text":
+			if !strings.HasPrefix(string(is), `"`) {
+				return key + " is no text"
+			}
+		case "name":
+			switch kind.(type) {
+			case string:
+				if string(was) != string(is) {
+					return key + " was a text and differs"
+				}
+			case float64:
+				if `"`+string(was)+`"` != string(is) {
+					return key + " is not the text of Node's number"
+				}
+			default:
+				if fallback := map[string]string{"hostname": string(node["device_id"]), "os_name": `""`, "cpu": `"Unknown"`}[key]; string(is) != fallback {
+					return key + " is not " + fallback
+				}
+			}
+		case "number":
+			_, isNumber := kind.(float64)
+			if isNumber && string(was) != string(is) || !isNumber && string(is) != "null" {
+				return key + " is not Node's number or null"
+			}
+		case "length":
+			var n int
+			if json.Unmarshal(is, &n) != nil || n < 0 {
+				return key + " is no length"
+			}
+		}
+	}
+	return ""
+}
+
+// members reads an object's members and their order.
+func members(object json.RawMessage) ([]string, map[string]json.RawMessage) {
+	var values map[string]json.RawMessage
+	_ = json.Unmarshal(object, &values)
+	dec := json.NewDecoder(strings.NewReader(string(object)))
+	var keys []string
+	_, _ = dec.Token()
+	for dec.More() {
+		key, _ := dec.Token()
+		keys = append(keys, key.(string))
+		var skip json.RawMessage
+		_ = dec.Decode(&skip)
+	}
+	return keys, values
+}
+
+// The list reads each member it shows by type, so that one value of an
+// unexpected type does not make the web app's page fail (BUGS AI2): names
+// are text (a number as its text), the numbers of cores and the load are
+// numbers or null, the numbers of disks and apps are the length of a
+// list.
+func TestListMembersHaveTheirTypes(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		second := 0
+		insert := func(id, hardware, software string) {
+			second++
+			w.Exec("INSERT INTO device_inventory (device_id, hardware, software, collected_at, received_at) VALUES (?, ?, ?, ?, ?)",
+				[]any{id, hardware, software, "2019-03-04T00:00:00.000Z", "2019-03-05 00:00:0" + string(rune('0'+second))})
+		}
+		insert("OTHER-TYPES", `{"hostname":["pc"],"os_name":{"name":"Linux"},"os_version":true,"cpu":{"brand":["Intel"],"logical_cores":"8","usage_percent":"5"},"disks":"abc"}`,
+			`{"apps":{"length":4}}`)
+		insert("NUMBERS", `{"hostname":42,"os_name":11,"os_version":"Pro","cpu":{"brand":7,"logical_cores":8,"usage_percent":12.5},"disks":[{},{}]}`, `{"apps":[1,2,3]}`)
+		insert("NOTHING", `{"hostname":"","cpu":{"brand":0,"logical_cores":0,"usage_percent":0}}`, `{"apps":"abc"}`)
+		insert("FALSE", `{"hostname":false,"os_name":0,"cpu":{"logical_cores":false,"usage_percent":false}}`, `{}`)
+
+		got := w.Do(replay.Request{Role: "admin", Path: "/api/inventory"})
+		if got.Status != 200 {
+			t.Fatalf("the list: %d %s", got.Status, got.Body)
+		}
+		entries := times.ReplaceAllString(got.Body, "")
+		for _, want := range []string{
+			`{"device_id":"FALSE","hostname":"FALSE","os":"","os_name":"","cpu":"Unknown","cpu_cores":0,"cpu_usage":null,"memory_total_mb":0,"memory_used_mb":0,"disk_count":0,"software_count":0}`,
+			`{"device_id":"NOTHING","hostname":"NOTHING","os":"","os_name":"","cpu":"Unknown","cpu_cores":0,"cpu_usage":0,"memory_total_mb":0,"memory_used_mb":0,"disk_count":0,"software_count":0}`,
+			`{"device_id":"NUMBERS","hostname":"42","os":"11 Pro","os_name":"11","cpu":"7","cpu_cores":8,"cpu_usage":12.5,"memory_total_mb":0,"memory_used_mb":0,"disk_count":2,"software_count":3}`,
+			`{"device_id":"OTHER-TYPES","hostname":"OTHER-TYPES","os":"","os_name":"","cpu":"Unknown","cpu_cores":null,"cpu_usage":null,"memory_total_mb":0,"memory_used_mb":0,"disk_count":0,"software_count":0}`,
+		} {
+			if !strings.Contains(entries, want) {
+				t.Errorf("the list lacks the entry %s:\n%s", want, entries)
+			}
 		}
 	})
 }

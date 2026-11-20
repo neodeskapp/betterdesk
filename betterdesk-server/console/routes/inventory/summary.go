@@ -7,11 +7,12 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
 )
 
-// A report is whatever JSON a device sent. The list reads it the way the
-// old console's JavaScript did, member by member and without asking for a
-// type, so every member can hold any JSON value and still has a defined
-// result: a text where a number is expected is the number it spells, a
-// list has a length, an object in the place of a name is shown as it is.
+// A report is whatever JSON a device sent. The list reads each member it
+// shows by type, so an entry holds what the web app's row takes: names as
+// text (a number as its text), counts and the load as numbers or null,
+// the numbers of disks and apps as the length of a list. A value of
+// another type is no value there. The sizes of memory and disks are read
+// as Number() reads them, a text as the number it spells.
 
 // number is a JavaScript number in an answer: null when it is no number
 // or infinite.
@@ -25,6 +26,9 @@ func (n number) MarshalJSON() ([]byte, error) {
 	}
 	return []byte(jsbind.NumberString(f)), nil
 }
+
+// noNumber is null in an answer.
+var noNumber = number(math.NaN())
 
 // round is Math.round: the nearest whole number, a half going up.
 func round(x float64) float64 {
@@ -41,17 +45,17 @@ type summary struct {
 	DeviceID           any            `json:"device_id"`
 	Hostname           any            `json:"hostname"`
 	OS                 jsjson.Quoted  `json:"os"`
-	OSName             any            `json:"os_name"`
+	OSName             jsjson.Quoted  `json:"os_name"`
 	DiskMaxUsedPercent *number        `json:"disk_max_used_percent,omitempty"`
 	DiskMaxMount       *jsjson.Quoted `json:"disk_max_mount,omitempty"`
 	DiskMaxFreeBytes   *number        `json:"disk_max_free_bytes,omitempty"`
-	CPU                any            `json:"cpu"`
-	CPUCores           any            `json:"cpu_cores"`
-	CPUUsage           jsjson.Value   `json:"cpu_usage"`
+	CPU                jsjson.Quoted  `json:"cpu"`
+	CPUCores           number         `json:"cpu_cores"`
+	CPUUsage           number         `json:"cpu_usage"`
 	MemoryTotalMB      number         `json:"memory_total_mb"`
 	MemoryUsedMB       number         `json:"memory_used_mb"`
-	DiskCount          any            `json:"disk_count"`
-	SoftwareCount      any            `json:"software_count"`
+	DiskCount          int            `json:"disk_count"`
+	SoftwareCount      int            `json:"software_count"`
 	LastSeen           any            `json:"last_seen"`
 	CollectedAt        any            `json:"collected_at"`
 }
@@ -68,64 +72,78 @@ func megabytes(bytes jsjson.Value) (number, error) {
 	return number(round(n / megabyte)), err
 }
 
-// textOf is the text of a value that counts as true, and the empty text
-// for every other value.
-func textOf(value jsjson.Value) (string, error) {
-	if !value.Truthy() {
-		return "", nil
+// nameOf reads a member that names something: a text, or a finite number
+// as its text. A value that is false for JavaScript (missing, null, 0,
+// the empty text) and a value of another type is no name: "".
+func nameOf(v jsjson.Value) string {
+	if v.Truthy() {
+		switch v.Kind() {
+		case jsjson.String:
+			return v.Str()
+		case jsjson.Number:
+			if !math.IsInf(v.Float(), 0) {
+				return jsbind.NumberString(v.Float())
+			}
+		}
 	}
-	return value.Text()
+	return ""
 }
 
-// summaryOf makes the list entry of a report. A member it cannot make
-// text or a number of (an object that has a member named toString) is
-// left empty in the entry, and why is in the errors, so that one report
-// never takes the list away from everyone.
+// countOf reads a member that holds a number: the number, missing where
+// the report has no value there (one that is false for JavaScript), and
+// null for a value of another type.
+func countOf(v jsjson.Value, missing number) number {
+	switch {
+	case v.Kind() == jsjson.Number:
+		return number(v.Float())
+	case !v.Truthy():
+		return missing
+	}
+	return noNumber
+}
+
+// summaryOf makes the list entry of a report. A size it cannot make a
+// number of, or a disk name it cannot make text of (an object that has a
+// member named toString), is left empty in the entry, and why is in the
+// errors, so that one report never takes the list away from everyone.
 func summaryOf(inv inventory) (summary, []error) {
 	hw := inv.hardware
 	cpu, memory, disks := hw.Get("cpu"), hw.Get("memory"), hw.Get("disks")
-	zero, empty := jsjson.OfNumber(0), jsjson.OfText("")
-	var problems []error
-	note := func(err error) {
-		if err != nil {
-			problems = append(problems, err)
-		}
-	}
-
+	osName := nameOf(hw.Get("os_name"))
 	s := summary{
 		DeviceID:      inv.deviceID,
 		Hostname:      inv.deviceID,
-		OSName:        hw.Get("os_name").Or(empty),
-		CPU:           cpu.Get("brand").Or(jsjson.OfText("Unknown")),
-		CPUCores:      cpu.Get("logical_cores").Or(zero),
-		CPUUsage:      cpu.Get("usage_percent"),
-		DiskCount:     disks.Get("length").Or(zero),
-		SoftwareCount: inv.software.Get("apps").Get("length").Or(zero),
+		OS:            jsjson.Quoted(jsbind.Trim(osName + " " + nameOf(hw.Get("os_version")))),
+		OSName:        jsjson.Quoted(osName),
+		CPU:           "Unknown",
+		CPUCores:      countOf(cpu.Get("logical_cores"), 0),
+		CPUUsage:      countOf(cpu.Get("usage_percent"), noNumber),
+		DiskCount:     len(disks.Items()),
+		SoftwareCount: len(inv.software.Get("apps").Items()),
 		LastSeen:      inv.receivedAt,
 		CollectedAt:   inv.collectedAt,
 	}
-	if hostname := hw.Get("hostname"); hostname.Truthy() {
-		s.Hostname = hostname
+	if hostname := nameOf(hw.Get("hostname")); hostname != "" {
+		s.Hostname = jsjson.Quoted(hostname)
 	}
-	if s.CPUUsage.IsNullish() {
-		s.CPUUsage = jsjson.NullValue
+	if brand := nameOf(cpu.Get("brand")); brand != "" {
+		s.CPU = jsjson.Quoted(brand)
 	}
-	name, err := textOf(hw.Get("os_name"))
-	note(err)
-	version, err := textOf(hw.Get("os_version"))
-	note(err)
-	s.OS = jsjson.Quoted(jsbind.Trim(name + " " + version))
 
-	fullest, unread := fullestDisk(disks)
-	problems = append(problems, unread...)
+	fullest, problems := fullestDisk(disks)
 	if fullest != nil {
 		used, free, mount := number(round(fullest.percent*10)/10), number(round(fullest.free)), jsjson.Quoted(fullest.mount)
 		s.DiskMaxUsedPercent, s.DiskMaxMount, s.DiskMaxFreeBytes = &used, &mount, &free
 	}
-	s.MemoryTotalMB, err = megabytes(memory.Get("total_bytes"))
-	note(err)
-	s.MemoryUsedMB, err = megabytes(memory.Get("used_bytes"))
-	note(err)
+	var err error
+	for _, m := range []struct {
+		into  *number
+		bytes jsjson.Value
+	}{{&s.MemoryTotalMB, memory.Get("total_bytes")}, {&s.MemoryUsedMB, memory.Get("used_bytes")}} {
+		if *m.into, err = megabytes(m.bytes); err != nil {
+			problems = append(problems, err)
+		}
+	}
 	return s, problems
 }
 
