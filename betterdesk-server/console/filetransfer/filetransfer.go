@@ -268,9 +268,9 @@ var ErrNotText = errors.New("Cannot convert object to primitive value")
 //
 // Errors: "File too large: <size> bytes (max 4294967296)" for a size
 // above MaxFileSize, ErrNotText for a size, a file name, a direction or a
-// device that has no text, and the errors of package safepath. With
-// ErrNotText for the direction or the device the transfer exists all the
-// same, pending, and nothing returned its id.
+// device that has no text, and the errors of package safepath. A refused
+// transfer is not stored. The safe file name is cut to maxFileName
+// bytes, so the transfer's file can be written.
 func (s *Service) CreateTransfer(p Params) (*Transfer, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -300,7 +300,14 @@ func (s *Service) create(p Params) (*Transfer, error) {
 	if !ok {
 		return nil, ErrNotText
 	}
-	safeName := safeFileName(text)
+	// The log line names the direction, the size and the device as text
+	var parts [3]string
+	for i, value := range []any{p.Direction, p.Size, p.DeviceID} {
+		if parts[i], ok = jsText(value); !ok {
+			return nil, ErrNotText
+		}
+	}
+	safeName := shortName(safeFileName(text))
 	tempPath, err := safepath.ResolveChild(s.opts.Dir, id+"_"+safeName)
 	if err != nil {
 		return nil, err
@@ -329,15 +336,6 @@ func (s *Service) create(p Params) (*Transfer, error) {
 		s.order = append(s.order, id)
 	}
 	s.transfers[id] = record
-	// The log line names the direction, the size and the device as text.
-	// A value without a text fails the call, with the transfer already
-	// in the registry.
-	var parts [3]string
-	for i, value := range []any{p.Direction, p.Size, p.DeviceID} {
-		if parts[i], ok = jsText(value); !ok {
-			return nil, ErrNotText
-		}
-	}
 	s.opts.Logger.Info(fmt.Sprintf("[FileTransfer] Created transfer %s: %s %s (%s bytes) for %s", id, parts[0], safeName, parts[1], parts[2]))
 	return record, nil
 }
@@ -782,6 +780,24 @@ func safeFileName(name string) string {
 		return "file"
 	}
 	return b.String()
+}
+
+// maxFileName is the longest safe file name: with the id and the
+// underscore in front, a transfer's file name stays below the 255 bytes
+// file systems allow.
+const maxFileName = 200
+
+// shortName cuts a safe file name to maxFileName bytes. An extension of
+// up to 16 bytes stays at the end.
+func shortName(name string) string {
+	if len(name) <= maxFileName {
+		return name
+	}
+	ext := ""
+	if dot := strings.LastIndexByte(name, '.'); dot > 0 && len(name)-dot <= 16 {
+		ext = name[dot:]
+	}
+	return name[:maxFileName-len(ext)] + ext
 }
 
 // truthy is !!v.

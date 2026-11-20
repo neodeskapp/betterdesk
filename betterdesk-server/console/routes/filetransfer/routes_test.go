@@ -120,7 +120,7 @@ func TestVectors(t *testing.T) {
 	}
 	w := newWorld(t)
 	etags := map[string]string{}
-	failures := 0
+	failures, unstored := 0, 0
 	for i, v := range vectors {
 		switch {
 		case v.Feed != nil:
@@ -191,9 +191,15 @@ func TestVectors(t *testing.T) {
 		}
 		gotText, wantText := string(got), string(want)
 		if isJSON {
+			// FT5: a transfer whose device has no text is not stored, where
+			// Node listed it although its request failed
+			if kept, dropped := withoutUnstored(wantText); dropped {
+				wantText = kept
+				unstored++
+			}
 			// A transfer that was made by a request that failed all the same
-			// (a device without a text) shows up in the lists only: pair
-			// the unknown ids of the two lists by their places
+			// shows up in Node's lists only: pair the unknown ids of the two
+			// lists by their places
 			ours, theirs := recordID.FindAllStringSubmatch(gotText, -1), recordID.FindAllStringSubmatch(wantText, -1)
 			if len(ours) == len(theirs) {
 				for n := range ours {
@@ -223,6 +229,46 @@ func TestVectors(t *testing.T) {
 	if failures > 15 {
 		t.Errorf("%d of %d vectors differ; the first 15 are shown", failures, len(vectors))
 	}
+	if unstored == 0 {
+		t.Error("no list holds a transfer without a text: the fix of FT5 changes no vector")
+	}
+}
+
+// withoutUnstored is a list of transfers of the Node run without the
+// ones whose device or direction has no text (an object with a member
+// named toString), and whether it had any.
+func withoutUnstored(list string) (string, bool) {
+	var records []json.RawMessage
+	if !strings.HasPrefix(list, "[") || json.Unmarshal([]byte(list), &records) != nil {
+		return list, false
+	}
+	kept := make([]string, 0, len(records))
+	for _, record := range records {
+		var fields struct {
+			DeviceID  json.RawMessage `json:"deviceId"`
+			Direction json.RawMessage `json:"direction"`
+		}
+		_ = json.Unmarshal(record, &fields)
+		if noText(fields.DeviceID) || noText(fields.Direction) {
+			continue
+		}
+		kept = append(kept, string(record))
+	}
+	if len(kept) == len(records) {
+		return list, false
+	}
+	return "[" + strings.Join(kept, ",") + "]", true
+}
+
+// noText reports whether a JSON value is an object with a member named
+// toString.
+func noText(value json.RawMessage) bool {
+	var object map[string]json.RawMessage
+	if json.Unmarshal(value, &object) != nil {
+		return false
+	}
+	_, has := object["toString"]
+	return has
 }
 
 // around is the part of text where it starts to differ from other, with

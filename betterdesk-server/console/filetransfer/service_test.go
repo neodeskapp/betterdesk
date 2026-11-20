@@ -462,3 +462,33 @@ func TestAMessageReachesOnlyTheDevicesOwnTransfers(t *testing.T) {
 		t.Errorf("a chunk into a transfer of no device: %s", got)
 	}
 }
+
+// A transfer whose direction or device has no text is refused before it
+// is stored, and a long file name is cut so the transfer's file can be
+// written (BUGS FT5).
+func TestATransferWithoutTextIsNotStored(t *testing.T) {
+	s, _ := newService(t)
+	noText := goapi.NewObject("toString", float64(1))
+	for name, p := range map[string]Params{
+		"device":    {Filename: "a.txt", DeviceID: noText},
+		"direction": {Filename: "a.txt", DeviceID: "d", Direction: noText},
+	} {
+		if _, err := s.CreateTransfer(p); err != ErrNotText {
+			t.Errorf("a %s without a text: %v", name, err)
+		}
+	}
+	if list := s.ListTransfers(Filter{}); len(list) != 0 {
+		t.Errorf("%d transfers stored, the first %+v", len(list), list[0])
+	}
+
+	record, err := s.CreateTransfer(Params{Filename: strings.Repeat("n", 300) + ".txt", DeviceID: "d", Size: float64(2)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(record.Filename) != 200 || !strings.HasPrefix(record.Filename, "nnn") || !strings.HasSuffix(record.Filename, "n.txt") {
+		t.Errorf("a file name of %d characters: %q", len(record.Filename), record.Filename)
+	}
+	if _, err := s.ReceiveChunk(record.ID, float64(0), "QUI="); err != nil {
+		t.Errorf("a chunk for a transfer with a long name: %v", err)
+	}
+}
