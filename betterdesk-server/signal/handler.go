@@ -229,6 +229,37 @@ func (s *Server) isPendingEnrollment(peerID string) bool {
 	return err == nil && pending != ""
 }
 
+// pendingEnrollmentIDs returns the ids in the managed approval queue, read
+// in one query, or nil when the mode is not managed or no peer in the
+// online bitmap states is online.
+func (s *Server) pendingEnrollmentIDs(states []byte) map[string]struct{} {
+	if s == nil || s.db == nil || s.cfg.EnrollmentMode != config.EnrollmentModeManaged {
+		return nil
+	}
+	anyOnline := false
+	for _, b := range states {
+		if b != 0 {
+			anyOnline = true
+			break
+		}
+	}
+	if !anyOnline {
+		return nil
+	}
+	rows, err := s.db.ListConfigByPrefix("pending_device_")
+	if err != nil {
+		log.Printf("[signal] Pending enrollment lookup failed: %v", err)
+		return nil
+	}
+	ids := make(map[string]struct{}, len(rows))
+	for _, row := range rows {
+		if row.Value != "" {
+			ids[strings.TrimPrefix(row.Key, "pending_device_")] = struct{}{}
+		}
+	}
+	return ids
+}
+
 // retainPendingSignalPeer keeps the client's live signal transport while it
 // waits for approval. The transport is not usable for sessions until
 // targetAcceptsInboundSession sees the approved DB peer row. This removes the
@@ -2369,18 +2400,24 @@ func splitAndTrim(s string) []string {
 	return parts
 }
 
+// maxOnlineRequestPeers caps the ids one OnlineRequest is answered for; the
+// answer covers the first ones.
+const maxOnlineRequestPeers = 10000
+
 // handleOnlineRequest checks which peers are online (TCP port 21115).
 func (s *Server) handleOnlineRequest(msg *pb.OnlineRequest) *pb.RendezvousMessage {
-	states := s.peers.OnlineStates(msg.Peers, config.RegTimeout)
+	ids := msg.Peers
+	if len(ids) > maxOnlineRequestPeers {
+		ids = ids[:maxOnlineRequestPeers]
+	}
+	states := s.peers.OnlineStates(ids, config.RegTimeout)
 	// A retained pending transport is only an internal bridge for the
 	// approval transition. Do not advertise it as online to other clients.
-	for i, id := range msg.Peers {
-		if !s.isPendingEnrollment(id) {
-			continue
-		}
-		byteIndex := i / 8
-		if byteIndex < len(states) {
-			states[byteIndex] &^= 1 << uint(7-(i%8))
+	if pending := s.pendingEnrollmentIDs(states); len(pending) > 0 {
+		for i, id := range ids {
+			if _, ok := pending[id]; ok {
+				states[i/8] &^= 1 << uint(7-(i%8))
+			}
 		}
 	}
 
