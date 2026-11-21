@@ -10,7 +10,7 @@ ensure_betterdesk_user
 
 echo "========================================"
 echo "  BetterDesk"
-echo "  Version: ${BETTERDESK_IMAGE_VERSION:-3.5.266}"
+echo "  Version: ${BETTERDESK_IMAGE_VERSION:-3.5.267}"
 echo "========================================"
 echo ""
 echo "  Server:       signal + relay + API (ports 21115-21121)"
