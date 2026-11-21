@@ -124,11 +124,13 @@ func TestRelayHandlersEnd(t *testing.T) {
 	agent := func(id, p string) string { return "p=" + p + "&id=" + id + "&rauth=" + w.cookie(t, "nodeA") }
 	browser := func(id, p string) string { return "browser=1&p=" + p + "&id=" + id + "&auth=" + w.cookie(t, "nodeA") }
 
-	// A waiting peer whose client goes away.
-	c, _ := w.open(t, agent(w.tunnel(t, relayProtocolTerminal), "1"))
-	w.handlers(t, 1, time.Second, "a waiting peer")
+	// A waiting peer whose client goes away ends at once, long before its
+	// partner's time is over.
+	patient := newRelayWorld(t, time.Minute)
+	c, _ := patient.open(t, "p=1&id="+patient.tunnel(t, relayProtocolTerminal)+"&rauth="+patient.cookie(t, "nodeA"))
+	patient.handlers(t, 1, time.Second, "a waiting peer")
 	c.Close(websocket.StatusNormalClosure, "")
-	w.handlers(t, 0, wait/2+time.Second, "a waiting peer that closed")
+	patient.handlers(t, 0, 2*time.Second, "a waiting peer that closed")
 
 	// A waiting peer whose partner never comes.
 	w.open(t, agent(w.tunnel(t, relayProtocolTerminal), "1"))
