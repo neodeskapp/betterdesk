@@ -66,13 +66,18 @@ func (h *handlers) chatSend(w http.ResponseWriter, r *http.Request) {
 // device: the newest messages of its conversation (100 unless limit says
 // otherwise, at most 200), oldest first, as {id, device_id, sender,
 // content, timestamp}. An empty list when the API server fails.
+//
+// The conversation is the one of the device the token is bound to. The
+// query still has to name a device, but the guard in front takes the
+// body's device_id before the query's, so the query's value decides
+// nothing.
 func (h *handlers) chatHistory(w http.ResponseWriter, r *http.Request) {
 	id, err := textOr(jsreq.Query(r, "device_id"), "")
-	device := cut(id, 64)
-	if err != nil || device == "" {
+	if err != nil || cut(id, 64) == "" {
 		fail(w, r, http.StatusBadRequest, "Missing device_id")
 		return
 	}
+	device := cut(kit.Device(r).DeviceID, 64)
 	limit := 100
 	if n, ok := jsreq.ParseInt(jsreq.Query(r, "limit"), 10); ok && n >= 1 {
 		limit = int(math.Min(n, 200))
