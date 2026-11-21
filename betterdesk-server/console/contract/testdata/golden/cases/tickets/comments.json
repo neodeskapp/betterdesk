@@ -84,14 +84,6 @@
        "id": 12,
        "is_internal": 0,
        "ticket_id": 13
-      },
-      {
-       "author": "e2e_admin",
-       "body": "An internal note",
-       "created_at": "<volatile>",
-       "id": 13,
-       "is_internal": 1,
-       "ticket_id": 13
       }
      ]
     }
@@ -323,14 +315,6 @@
        "created_at": "<volatile>",
        "id": 22,
        "is_internal": 0,
-       "ticket_id": 19
-      },
-      {
-       "author": "e2e_admin",
-       "body": "An internal note",
-       "created_at": "<volatile>",
-       "id": 23,
-       "is_internal": 1,
        "ticket_id": 19
       }
      ]
