@@ -87,8 +87,12 @@ func (s *Service) NewBundleID() (string, error) { return GenerateBundleID(s.opts
 // port, the server's public key, the names, and the marks of the
 // template generator. The enrollment fields are removed. Branding colours
 // and logos are not compiled into the client; the client asks for them.
+// An input that is no object counts as an empty profile.
 func (s *Service) FinalizeSupportBranding(ctx context.Context, input any) *goapi.Object {
-	branding := spread(goapi.NewObject(), or(input, goapi.NewObject()))
+	branding := goapi.NewObject()
+	if profile, isObject := input.(*goapi.Object); isObject {
+		spread(branding, profile)
+	}
 	si := s.opts.ServerInfo
 	hostInput := or(or(branding.Get("server_host"), si.ResolveClientFacingHost(nil, "")), si.DefaultServerHost())
 	hostText, _ := hostInput.(string)

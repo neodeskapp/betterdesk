@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/goapi"
 )
 
 // TestTemplateInstallChecksRepo refuses a repository that is no
@@ -45,5 +47,21 @@ func TestTemplateInstallChecksRepo(t *testing.T) {
 				t.Fatalf("requests %v", gh.requests)
 			}
 		})
+	}
+}
+
+// TestFinalizeTakesOnlyAnObject completes a profile that is no object as
+// the empty profile, without a key per character or item (BUGS RV53).
+func TestFinalizeTakesOnlyAnObject(t *testing.T) {
+	s := New(Options{ServerInfo: fakeServerInfo{}, DataDir: t.TempDir(), Env: func() []string { return nil }})
+	want := stringify(s.FinalizeSupportBranding(context.Background(), goapi.NewObject()))
+	for _, input := range []any{"abc", []any{"x", "y"}, float64(5), nil} {
+		if got := stringify(s.FinalizeSupportBranding(context.Background(), input)); got != want {
+			t.Errorf("%#v: %s, want %s", input, got, want)
+		}
+	}
+	got := s.FinalizeSupportBranding(context.Background(), goapi.NewObject("company_name", "Acme", "server_host", "h.example"))
+	if got.Get("company_name") != "Acme" || got.Get("server_host") != "h.example" {
+		t.Errorf("an object's fields are lost: %s", stringify(got))
 	}
 }

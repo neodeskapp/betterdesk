@@ -663,9 +663,14 @@ func (h *handlers) deleteBundle(w http.ResponseWriter, r *http.Request) {
 }
 
 // preview answers POST /api/generator/preview: a profile as it would be
-// stored, and what is wrong with it.
+// stored, and what is wrong with it. A profile that is no object counts
+// as an empty one.
 func (h *handlers) preview(w http.ResponseWriter, r *http.Request) {
-	finalized := h.gen.FinalizeSupportBranding(r.Context(), or(prop(requestBody(r), "branding"), goapi.NewObject()))
+	profile, isObject := prop(requestBody(r), "branding").(*goapi.Object)
+	if !isObject || profile == nil {
+		profile = goapi.NewObject()
+	}
+	finalized := h.gen.FinalizeSupportBranding(r.Context(), profile)
 	validation, err := gen.ValidateBranding(finalized, h.serverInfo.DefaultRelayPort)
 	if err != nil {
 		h.serverError(w, r, "preview", err)
