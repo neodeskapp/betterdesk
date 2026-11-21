@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -643,5 +644,67 @@ func TestPG2SQLiteFailsOnARowItCannotRead(t *testing.T) {
 	}
 	if exists(dst) {
 		t.Error("the failed migration left a destination")
+	}
+}
+
+func TestTimesGoToSQLiteAsUTC(t *testing.T) {
+	// pgx hands timestamptz values over in the process's zone.
+	east := time.FixedZone("UTC+1", 3600)
+	at := time.Date(2026, 1, 1, 13, 0, 0, 0, east)
+	if got := formatTime(&at); got != "2026-01-01 12:00:00" {
+		t.Errorf("formatTime: %q, want the UTC time 2026-01-01 12:00:00", got)
+	}
+	if got := formatTimeDefault(&at); got != "2026-01-01 12:00:00" {
+		t.Errorf("formatTimeDefault: %q, want the UTC time 2026-01-01 12:00:00", got)
+	}
+	now, err := time.Parse("2006-01-02 15:04:05", formatTimeDefault(nil))
+	if err != nil || time.Since(now) > time.Minute || time.Until(now) > time.Minute {
+		t.Errorf("formatTimeDefault(nil) = %v (%v), want the current UTC time", now, err)
+	}
+}
+
+func TestParseTimeReadsTheConsolesTimeText(t *testing.T) {
+	for text, want := range map[string]time.Time{
+		"2026-11-17 01:05:51.694":       time.Date(2026, 11, 17, 1, 5, 51, 694000000, time.UTC),
+		"2026-11-17 01:05:51":           time.Date(2026, 11, 17, 1, 5, 51, 0, time.UTC),
+		"2026-11-17T01:05:51.694Z":      time.Date(2026, 11, 17, 1, 5, 51, 694000000, time.UTC),
+		"2026-11-17T02:05:51+01:00":     time.Date(2026, 11, 17, 1, 5, 51, 0, time.UTC),
+		"2026-11-17T01:05:51.123456789": time.Date(2026, 11, 17, 1, 5, 51, 123456789, time.UTC),
+		"2026-11-17":                    time.Date(2026, 11, 17, 0, 0, 0, 0, time.UTC),
+	} {
+		got := parseTime(text)
+		if got == nil || !got.Equal(want) {
+			t.Errorf("parseTime(%q) = %v, want %v", text, got, want)
+		}
+	}
+	if got := parseTime("not a time"); got != nil {
+		t.Errorf("parseTime of junk = %v, want nil", got)
+	}
+}
+
+func TestSQLite2PGKeepsTimesTheConsoleWrites(t *testing.T) {
+	dsn := pgDSN(t)
+	src := filepath.Join(t.TempDir(), "db_v2.sqlite3")
+	execSQLite(t, src, sqliteSchemaStatements()...)
+	execSQLite(t, src,
+		`INSERT INTO api_keys (key_hash, created_at, expires_at) VALUES ('kh', '2026-11-17 01:05:51.694', '2026-12-01T00:00:00.5')`)
+	if err := runSQLite2PG(src, dsn); err != nil {
+		t.Fatal(err)
+	}
+	pool, err := pgxpool.New(context.Background(), dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	var created time.Time
+	var expires *time.Time
+	if err := pool.QueryRow(context.Background(), "SELECT created_at, expires_at FROM api_keys").Scan(&created, &expires); err != nil {
+		t.Fatal(err)
+	}
+	if want := time.Date(2026, 11, 17, 1, 5, 51, 694000000, time.UTC); !created.Equal(want) {
+		t.Errorf("created_at = %v, want %v", created, want)
+	}
+	if want := time.Date(2026, 12, 1, 0, 0, 0, 500000000, time.UTC); expires == nil || !expires.Equal(want) {
+		t.Errorf("expires_at = %v, want %v", expires, want)
 	}
 }

@@ -39,6 +39,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "modernc.org/sqlite"
+
+	"github.com/unitronix/betterdesk-server/console/store"
 )
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -1814,21 +1816,18 @@ func contains(s []string, e string) bool {
 
 // ── Time Conversion Helpers ───────────────────────────────────────────
 
-// parseTime converts a SQLite TEXT timestamp to *time.Time for PostgreSQL.
-// Returns nil for empty strings (maps to NULL in PG).
+// parseTime converts a SQLite TEXT timestamp to *time.Time for PostgreSQL:
+// every form the console writes (store.ParseTime), or a bare date. Text
+// without a zone is UTC. Empty or unreadable text gives nil (NULL in PG).
 func parseTime(s string) *time.Time {
 	if s == "" {
 		return nil
 	}
-	for _, layout := range []string{
-		"2006-01-02 15:04:05",
-		time.RFC3339,
-		"2006-01-02T15:04:05Z",
-		"2006-01-02",
-	} {
-		if t, err := time.Parse(layout, s); err == nil {
-			return &t
-		}
+	if t, ok := store.ParseTime(s); ok {
+		return &t
+	}
+	if t, err := time.Parse("2006-01-02", s); err == nil {
+		return &t
 	}
 	return nil
 }
@@ -1850,20 +1849,23 @@ func parseNullTime(ns sql.NullString) *time.Time {
 	return parseTime(ns.String)
 }
 
-// formatTime converts a *time.Time to SQLite TEXT format.
+// formatTime converts a *time.Time to SQLite TEXT in UTC, the zone the
+// server and the console read such text in. pgx returns timestamptz
+// values in the process's zone.
 func formatTime(t *time.Time) string {
 	if t == nil {
 		return ""
 	}
-	return t.Format("2006-01-02 15:04:05")
+	return t.UTC().Format("2006-01-02 15:04:05")
 }
 
-// formatTimeDefault converts a *time.Time to SQLite TEXT, defaulting to now().
+// formatTimeDefault is formatTime with the current time for nil.
 func formatTimeDefault(t *time.Time) string {
 	if t == nil {
-		return time.Now().Format("2006-01-02 15:04:05")
+		now := time.Now()
+		t = &now
 	}
-	return t.Format("2006-01-02 15:04:05")
+	return formatTime(t)
 }
 
 // boolToInt converts a bool to 0/1 for SQLite storage.
