@@ -261,3 +261,25 @@ func TestEnsureOIDCUserAppliesExplicitGroupRole(t *testing.T) {
 		t.Fatalf("role = %q, want %q", got.Role, auth.RoleAdmin)
 	}
 }
+
+// TestEnsureOIDCUserLeavesOtherAccountsAlone: a single sign-on whose name
+// belongs to a local or directory account is refused with
+// username_collision and leaves the account as it was (RV116).
+func TestEnsureOIDCUserLeavesOtherAccountsAlone(t *testing.T) {
+	database := testSetupDB(t)
+	defer database.Close()
+	s := &Server{db: database}
+	for _, provider := range []string{db.AuthProviderLocal, db.AuthProviderLDAP} {
+		name := "boss-" + provider
+		if err := database.CreateUser(&db.User{Username: name, PasswordHash: "hash", Role: auth.RoleAdmin, AuthProvider: provider}); err != nil {
+			t.Fatal(err)
+		}
+		got, code := s.ensureOIDCUser(&auth.OIDCResult{Username: name, Role: auth.RoleViewer}, &auth.OIDCConfig{AllowSignup: true})
+		if got != nil || code != "username_collision" {
+			t.Errorf("sign-on as a %q account: user %v, code %q, want username_collision", provider, got, code)
+		}
+		if u, _ := database.GetUser(name); u == nil || u.AuthProvider != provider || u.Role != auth.RoleAdmin {
+			t.Errorf("the %q account after the refused sign-on: %+v", provider, u)
+		}
+	}
+}

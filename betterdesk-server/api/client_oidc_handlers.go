@@ -209,6 +209,13 @@ func (s *Server) ensureOIDCUser(result *auth.OIDCResult, cfg *auth.OIDCConfig) (
 		return user, ""
 	}
 
+	// A single sign-on never takes over a local or directory account of the
+	// same name, like the password sign-in, which refuses such a name.
+	if user.AuthProvider != db.AuthProviderOIDC {
+		log.Printf("[OIDC] Refused sign-on as %q: the account signs in with %q", result.Username, user.AuthProvider)
+		return nil, "username_collision"
+	}
+
 	changed := false
 	// A group mapping is an explicit IdP authorization decision. The default
 	// role is only for provisioning and must not undo a role chosen by a
@@ -217,10 +224,6 @@ func (s *Server) ensureOIDCUser(result *auth.OIDCResult, cfg *auth.OIDCConfig) (
 		user.Role = result.Role
 		changed = true
 		log.Printf("[OIDC] Updated role for %s to %s", result.Username, result.Role)
-	}
-	if user.AuthProvider != db.AuthProviderOIDC {
-		user.AuthProvider = db.AuthProviderOIDC
-		changed = true
 	}
 	if changed {
 		_ = s.db.UpdateUser(user)
@@ -258,6 +261,8 @@ func clientOIDCErrorMessage(code string) string {
 		return "OIDC authentication failed. Check client secret and redirect URL."
 	case "oidc_no_account":
 		return "Your account was not found and auto-provisioning is disabled."
+	case "username_collision":
+		return "An account with this name exists and does not sign in through SSO."
 	default:
 		return "An error occurred during SSO login."
 	}
