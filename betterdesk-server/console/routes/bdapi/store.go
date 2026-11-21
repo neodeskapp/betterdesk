@@ -487,10 +487,10 @@ type auditEntry struct {
 }
 
 // auditConnections are the newest rows of the connection audit that the
-// operator's sessions wrote (host_id is the operator's name), newest
-// first.
+// operator's sessions wrote (host_id is the operator's name and conn_type
+// operatorSessionType), newest first.
 func auditConnections(ctx context.Context, db *store.DB, operator string, limit int) ([]auditEntry, error) {
-	rows, err := store.Select(ctx, db, "SELECT id, host_id, peer_id, peer_name, action, session_id, created_at FROM audit_connections WHERE host_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?", operator, limit, 0)
+	rows, err := store.Select(ctx, db, "SELECT id, host_id, peer_id, peer_name, action, session_id, created_at FROM audit_connections WHERE host_id = ? AND conn_type = ? ORDER BY created_at DESC LIMIT ? OFFSET ?", operator, operatorSessionType, limit, 0)
 	if err != nil {
 		return nil, fmt.Errorf("load the connection audit: %w", err)
 	}

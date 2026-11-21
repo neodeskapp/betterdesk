@@ -537,8 +537,9 @@ func TestOperatorLoginNamesTheClientsAddressToTheAPIServer(t *testing.T) {
 	}
 }
 
-// sessionRows writes start and end rows of the connection audit: host,
-// session, action, and the time as each database stores it.
+// sessionRows writes start and end rows of the connection audit as the
+// operator's sessions write them (connection type 100): host, session,
+// action, and the time as each database stores it.
 func sessionRows(t *testing.T, db *store.DB, rows [][4]string) {
 	t.Helper()
 	for _, row := range rows {
@@ -549,7 +550,7 @@ func sessionRows(t *testing.T, db *store.DB, rows [][4]string) {
 			at = at[:i]
 		}
 		if _, err := db.Exec(context.Background(), `INSERT INTO audit_connections (host_id, host_uuid, peer_id, peer_name, action, conn_type, session_id, ip, created_at)
-			VALUES (?, '', 'DEV1', 'pc-1', ?, 1, ?, '', ?)`, row[0], row[2], row[1], at); err != nil {
+			VALUES (?, '', 'DEV1', 'pc-1', ?, 100, ?, '', ?)`, row[0], row[2], row[1], at); err != nil {
 			t.Fatal(err)
 		}
 	}

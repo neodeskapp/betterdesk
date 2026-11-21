@@ -82,3 +82,25 @@ func TestOperatorDevicesFollowTheScope(t *testing.T) {
 		}
 	})
 }
+
+// A connection record that the client audit route takes without a
+// credential does not show in an operator's session history, even when it
+// names the operator as its host; the operator's own records do (BUGS
+// RV3).
+func TestSessionHistoryIsNotForgedThroughTheClientAudit(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		forged := w.SignedOut().Do("POST", "/api/audit/conn", `{"host_id":"e2e_operator","peer_id":"DEV9","action":"session_start","conn_type":1,"session_id":"forged-1"}`)
+		if forged.Status != 200 {
+			t.Fatalf("client audit record: %d %s", forged.Status, forged.Body)
+		}
+		auth := []string{"Authorization", "Bearer " + operatorToken(t, w, "tok-history-forged-01")}
+		if got := w.SignedOut().Do("POST", "/api/bd/operator/sessions", `{"action":"start","device_id":"DEV1","session_id":"own-1"}`, auth...); got.Status != 200 {
+			t.Fatalf("own session: %d %s", got.Status, got.Body)
+		}
+		got := w.SignedOut().Do("GET", "/api/bd/operator/sessions", "", auth...)
+		if got.Status != 200 || strings.Contains(got.Body, "forged-1") || !strings.Contains(got.Body, `"id":"own-1"`) {
+			t.Errorf("history: %d %s", got.Status, got.Body)
+		}
+	})
+}

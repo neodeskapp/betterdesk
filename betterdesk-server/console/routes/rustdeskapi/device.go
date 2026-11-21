@@ -63,14 +63,59 @@ func (t *logThrottle) allow(id string, now time.Time) bool {
 	return true
 }
 
+// metricsPerMinute is the most load figures the heartbeats of one device
+// store in a minute. RustDesk clients send a heartbeat about every 15
+// seconds; a heartbeat past the limit still marks the device online.
+const metricsPerMinute = 6
+
+// metricLimit counts the load figures stored per device in the current
+// minute of each device.
+type metricLimit struct {
+	mu      sync.Mutex
+	windows map[string]metricWindow
+}
+
+type metricWindow struct {
+	start time.Time
+	n     int
+}
+
+// allow reports whether the device may store another row of load figures
+// now, and counts it.
+func (l *metricLimit) allow(id string, now time.Time) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.windows == nil {
+		l.windows = map[string]metricWindow{}
+	}
+	w := l.windows[id]
+	if now.Sub(w.start) >= time.Minute {
+		w = metricWindow{start: now}
+	}
+	if w.n >= metricsPerMinute {
+		return false
+	}
+	w.n++
+	l.windows[id] = w
+	if len(l.windows) > 10000 {
+		for key, old := range l.windows {
+			if now.Sub(old.start) >= time.Minute {
+				delete(l.windows, key)
+			}
+		}
+	}
+	return true
+}
+
 type heartbeatAnswer struct {
 	ModifiedAt string `json:"modified_at"`
 	Sysinfo    bool   `json:"sysinfo,omitempty"`
 }
 
-// heartbeat answers POST /api/heartbeat. It stores the load figures, marks
-// the device online and asks for system information (sysinfo: true) when
-// it has none or none from the last hour.
+// heartbeat answers POST /api/heartbeat. It stores the load figures (at
+// most metricsPerMinute rows a minute per device), marks the device online
+// and asks for system information (sysinfo: true) when it has none or none
+// from the last hour.
 func (h *handlers) heartbeat(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	body := kit.Body(r)
@@ -102,7 +147,9 @@ func (h *handlers) heartbeat(w http.ResponseWriter, r *http.Request) {
 		return 0
 	}
 	cpu, memory, disk := load("cpu"), load("memory"), load("disk")
-	err = h.store.insertMetric(ctx, id, cpu, memory, disk)
+	if h.metrics.allow(id, h.now()) {
+		err = h.store.insertMetric(ctx, id, cpu, memory, disk)
+	}
 	if err == nil {
 		err = h.store.markOnline(ctx, id)
 	}
@@ -303,6 +350,9 @@ func (h *handlers) sysinfo(w http.ResponseWriter, r *http.Request) {
 	}
 	if utf16Len(stringify(features)) > 4096 {
 		features = goapi.NewObject()
+	}
+	if utf16Len(stringify(additions)) > 4096 {
+		additions = goapi.NewObject()
 	}
 	si.features, si.platformAdditions = features, additions
 	if err := h.store.upsertSysinfo(ctx, id, si); err != nil {

@@ -215,6 +215,13 @@
   ]
  },
  {
+  "step": "158 connections",
+  "bugs": [
+   "RV3"
+  ],
+  "rows": "[{\"host_id\":\"e2e_operator\",\"host_uuid\":\"OPDESK\",\"peer_id\":\"DEV1\",\"peer_name\":\"pc-1\",\"action\":\"session_start\",\"conn_type\":100,\"session_id\":\"s-9\",\"ip\":\"127.0.0.1\"},{\"host_id\":\"e2e_operator\",\"host_uuid\":\"OPDESK\",\"peer_id\":\"DEV1\",\"peer_name\":\"\",\"action\":\"session_end\",\"conn_type\":100,\"session_id\":\"s-9\",\"ip\":\"127.0.0.1\"}]"
+ },
+ {
   "step": "159 GET /api/bd/operator/sessions",
   "bugs": [
    "BD12",

@@ -213,10 +213,17 @@ func sessionAction(v any) (string, error) {
 	return "", nil
 }
 
+// operatorSessionType is the connection type of the rows an operator's
+// sessions write into the connection audit. The client audit routes take
+// only the types 0 to 4, so no one without an operator's token can write a
+// row of this type, and the session history reads only rows of it.
+const operatorSessionType = 100
+
 // recordSession answers POST /api/bd/operator/sessions {action,
 // device_id, hostname, session_id}: the start or end of an operator's
 // session with a device goes into the connection audit, under the
-// operator's name and the client id of the token.
+// operator's name and the client id of the token, with the connection
+// type operatorSessionType.
 func (h *handlers) recordSession(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	field := func(name, fallback string) (string, error) { return textOr(jsreq.Prop(body, name), fallback) }
@@ -258,7 +265,7 @@ func (h *handlers) recordSession(w http.ResponseWriter, r *http.Request) {
 	}
 	err = insertConnection(r.Context(), h.d.Store, connection{
 		hostID: operator, hostUUID: clientID, peerID: deviceID, peerName: hostname,
-		action: action, connType: 1, sessionID: sessionID, ip: clientIP(r),
+		action: action, connType: operatorSessionType, sessionID: sessionID, ip: clientIP(r),
 	})
 	if err != nil {
 		h.serverError(w, r, "Record operator session error:", err, "Failed to record operator session")
@@ -291,9 +298,9 @@ type historyAnswer struct {
 
 // sessionHistory answers GET /api/bd/operator/sessions?limit=: the
 // calling operator's sessions put together from the newest rows of the
-// connection audit that the operator recorded (four rows for each session
-// asked for), the newest first, 100 unless limit says otherwise, at most
-// 200.
+// connection audit that the operator recorded through recordSession (four
+// rows for each session asked for), the newest first, 100 unless limit
+// says otherwise, at most 200.
 func (h *handlers) sessionHistory(w http.ResponseWriter, r *http.Request) {
 	limit := 100
 	raw := jsreq.Query(r, "limit")

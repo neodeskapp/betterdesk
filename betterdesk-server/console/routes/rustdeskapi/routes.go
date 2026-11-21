@@ -40,6 +40,7 @@ type handlers struct {
 	auditFromGo bool
 
 	sysinfoLog                               *logThrottle
+	metrics                                  *metricLimit
 	log, ab, peersLog, groupLog, strategyLog *kit.Logger
 }
 
@@ -71,6 +72,7 @@ func Register(d *kit.Deps) {
 		totpBypass:  isTrue("RUSTDESK_API_DISABLE_TOTP") && isTrue("RUSTDESK_API_DISABLE_TOTP_ACKNOWLEDGED"),
 		auditFromGo: d.Config == nil || !d.Config.APIEnabled,
 		sysinfoLog:  &logThrottle{},
+		metrics:     &metricLimit{},
 		log:         log,
 		ab:          d.Log.Child("API:AB"),
 		peersLog:    d.Log.Child("API:PEERS"),

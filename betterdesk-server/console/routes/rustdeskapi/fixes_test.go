@@ -212,3 +212,51 @@ func TestStrategiesFollowTheScopeAndTheProRule(t *testing.T) {
 		}
 	})
 }
+
+// What a client reports without a credential is bounded: an alarm's
+// details longer than 4,096 UTF-16 units are stored as {}, and so are the
+// system information's platform_additions, as its features are; and the heartbeats of one device store at
+// most six rows of load figures a minute while each still marks the
+// device online (BUGS RV3).
+func TestClientReportsAreBounded(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
+		long := strings.Repeat("y", 5000)
+		for _, body := range []string{
+			`{"alarm_type":1,"host_id":"big-object","details":{"k":"` + long + `"}}`,
+			`{"alarm_type":1,"host_id":"big-list","details":["` + long + `"]}`,
+			`{"alarm_type":1,"host_id":"small-object","details":{"k":"v"}}`,
+		} {
+			if got := w.SignedOut().Do("POST", "/api/audit/alarm", body); got.Status != 200 {
+				t.Fatalf("alarm: %d %s", got.Status, got.Body)
+			}
+		}
+		for host, want := range map[string]string{"big-object": "{}", "big-list": "{}", "small-object": `{"k":"v"}`} {
+			var details string
+			if err := db.QueryRow(ctx, `SELECT CAST(details AS TEXT) FROM audit_alarms WHERE host_id = ?`, host).Scan(&details); err != nil || strings.ReplaceAll(details, " ", "") != want {
+				t.Errorf("%s: details of %d characters (%v), want %d", host, len(details), err, len(want))
+			}
+		}
+
+		mustExec(t, db, `INSERT INTO peer (id, uuid, info) VALUES ('900300001', 'u-1', '{}')`)
+		sysinfo := `{"id":"900300001","hostname":"h","platform_additions":{"k":"` + long + `"}}`
+		if got := w.SignedOut().Do("POST", "/api/sysinfo", sysinfo); got.Status != 200 || got.Body != "SYSINFO_UPDATED" {
+			t.Fatalf("sysinfo: %d %s", got.Status, got.Body)
+		}
+		var additions string
+		if err := db.QueryRow(ctx, `SELECT CAST(platform_additions AS TEXT) FROM peer_sysinfo WHERE peer_id = '900300001'`).Scan(&additions); err != nil || additions != "{}" {
+			t.Errorf("platform_additions of %d characters (%v), want {}", len(additions), err)
+		}
+
+		for i := 0; i < 8; i++ {
+			if got := w.SignedOut().Do("POST", "/api/heartbeat", `{"id":"900300001","cpu":10}`); got.Status != 200 {
+				t.Fatalf("heartbeat %d: %d %s", i, got.Status, got.Body)
+			}
+		}
+		var rows int
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM peer_metrics WHERE peer_id = '900300001'`).Scan(&rows); err != nil || rows != 6 {
+			t.Errorf("%d rows of load figures after eight heartbeats (%v), want 6", rows, err)
+		}
+	})
+}

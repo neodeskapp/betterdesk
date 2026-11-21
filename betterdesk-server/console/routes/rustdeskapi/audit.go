@@ -176,6 +176,10 @@ func (h *handlers) reportFile(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, struct{}{})
 }
 
+// maxDetailsLen is the most UTF-16 units of an alarm's details, the limit
+// the system information has for its features.
+const maxDetailsLen = 4096
+
 // reportAlarm answers POST /api/audit/alarm.
 func (h *handlers) reportAlarm(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
@@ -191,6 +195,12 @@ func (h *handlers) reportAlarm(w http.ResponseWriter, r *http.Request) {
 	detailsText, isText := details.(string)
 	if !isText {
 		detailsText = stringify(details)
+	}
+	// Details longer than the limit are stored as {}, as the features of
+	// the system information are: a text cut short would no longer be the
+	// JSON the PostgreSQL column takes
+	if utf16Len(detailsText) > maxDetailsLen {
+		detailsText = "{}"
 	}
 	err := h.store.exec(r.Context(), `
                 INSERT INTO audit_alarms (alarm_type, alarm_name, host_id, peer_id, ip, details)
