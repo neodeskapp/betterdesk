@@ -39,9 +39,20 @@ export interface PackageInput {
 	currency: string;
 }
 
-/** Needs billing.manage */
-export function createPackage(p: PackageInput) {
-	return api(Any, '/api/panel/billing/packages', { method: 'POST', body: p });
+const IdText = v.pipe(v.union([v.string(), v.number()]), v.transform(String));
+
+/** The id of a created package: the answer is the package, bare or under data */
+const Created = v.pipe(
+	v.looseObject({
+		id: v.optional(IdText),
+		data: v.optional(v.looseObject({ id: v.optional(IdText) }))
+	}),
+	v.transform((o) => o.id ?? o.data?.id ?? '')
+);
+
+/** Needs billing.manage; resolves the new package's id ('' when the answer has none) */
+export function createPackage(p: PackageInput): Promise<string> {
+	return api(Created, '/api/panel/billing/packages', { method: 'POST', body: p });
 }
 
 /** Attach a package to a device group (needs billing.manage) */

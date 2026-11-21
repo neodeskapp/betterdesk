@@ -24,6 +24,8 @@
 	const uid = $props.id();
 	let packages = $state.raw<Package[] | null>(null);
 	let loadError = $state('');
+	/** The package this sheet created: a retry after a failed assign uses it instead of creating one more */
+	let created: { input: string; id: string } | null = null;
 
 	type Mode = 'existing' | 'new';
 	const form = createForm({
@@ -44,18 +46,21 @@
 		submit: async (v) => {
 			let packageId = v.packageId;
 			if (v.mode === 'new') {
-				const name = v.name.trim();
-				await createPackage({
-					name,
+				const input = {
+					name: v.name.trim(),
 					description: v.description.trim(),
 					included_minutes: parseInt(v.minutes, 10) || 600,
 					overage_rate: parseFloat(v.overage) || 0,
 					currency: (v.currency || 'PLN').trim().toUpperCase()
-				});
-				// The create answer has no id: find the package by its name
-				const list = await listPackages();
-				packageId = list.find((p) => p.name === name)?.id ?? '';
-				if (!packageId) throw new FormError(t('errors.server_error'));
+				};
+				const key = JSON.stringify(input);
+				if (created?.input !== key) {
+					// Names are not unique: the package is the one the answer names by id
+					const id = await createPackage(input);
+					if (!id) throw new FormError(t('errors.server_error'));
+					created = { input: key, id };
+				}
+				packageId = created.id;
 			}
 			await assignPackageToGroup(group.guid ?? '', packageId);
 			toast.success(t('devices.group_commercialization_saved'));
