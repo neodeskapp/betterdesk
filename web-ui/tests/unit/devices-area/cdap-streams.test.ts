@@ -312,8 +312,11 @@ describe('video, files and audio sessions', () => {
 		expect(lists[0]).toEqual(['/', [{ name: 'var', dir: true, size: null, modified: '' }]]);
 		f.enter('var');
 		expect(ws.sent.at(-1)).toEqual({ type: 'file_list', path: '/var' });
+		ws.serverSend({ type: 'file_list_response', entries: [] });
+		expect(lists.at(-1)).toEqual(['/var', []]);
 		f.up();
 		expect(ws.sent.at(-1)).toEqual({ type: 'file_list', path: '/' });
+		ws.serverSend({ type: 'file_list_response', entries: [] });
 		f.download('a.txt');
 		const req = ws.sent.at(-1) as { request_id: string; path: string };
 		expect(req.path).toBe('/a.txt');
@@ -327,6 +330,42 @@ describe('video, files and audio sessions', () => {
 		ws.serverSend({ type: 'file_delete_response', error: 'read-only' });
 		expect(errors).toEqual(['read-only']);
 		expect(ws.sent.at(-1)).toEqual({ type: 'file_list', path: '/' });
+	});
+
+	test('files: while a listing loads, actions stay in the folder shown and only the last listing asked for is shown', () => {
+		const lists: [string, string[]][] = [];
+		const f = new FileSession(
+			'ws://x/files',
+			() => undefined,
+			{
+				onlist: (p, e) => lists.push([p, e.map((x) => x.name)]),
+				onloading: () => undefined,
+				onerror: () => undefined,
+				ondownload: () => undefined
+			},
+			'en',
+			create
+		);
+		f.open();
+		const ws = sockets[0]!;
+		ws.serverOpen();
+		ws.serverSend({ type: 'file_list_response', entries: [{ name: 'a', is_dir: true }, { name: 'x' }] });
+		f.enter('a');
+		expect(ws.sent.at(-1)).toEqual({ type: 'file_list', path: '/a' });
+		// The device has not answered: the page still shows / and x is in /
+		f.remove('x');
+		expect(ws.sent.at(-1)).toEqual({ type: 'file_delete', path: '/x' });
+		// A second folder asked for before the first answer: it goes out after that answer, which is dropped
+		f.enter('b');
+		expect(ws.sent.filter((m) => (m as { type: string }).type === 'file_list')).toHaveLength(2);
+		ws.serverSend({ type: 'file_list_response', entries: [{ name: 'in-a' }] });
+		expect(lists.at(-1)).toEqual(['/', ['a', 'x']]);
+		expect(ws.sent.at(-1)).toEqual({ type: 'file_list', path: '/b' });
+		ws.serverSend({ type: 'file_list_response', entries: [{ name: 'in-b' }] });
+		expect(lists.at(-1)).toEqual(['/b', ['in-b']]);
+		expect(f.path).toBe('/b');
+		f.download('in-b');
+		expect((ws.sent.at(-1) as { path: string }).path).toBe('/b/in-b');
 	});
 
 	test('audio data: base64 checked, 16-bit PCM to floats, loudness', () => {

@@ -345,8 +345,19 @@ export interface FileEvents {
 	ondownload(name: string, bytes: Uint8Array): void;
 }
 
+/**
+ * The file browser of a device. Answers carry no path, so one listing is
+ * out at a time: a folder asked for meanwhile goes out after the answer,
+ * which is then dropped. `path` is the folder whose listing is shown, and
+ * every action acts in it, also while another listing loads.
+ */
 export class FileSession extends Channel {
+	/** The folder whose listing is shown */
 	path = '/';
+	/** The folder of the listing that is out; null when none is */
+	#asked: string | null = null;
+	/** The folder asked for while a listing was out, sent after its answer */
+	#queued: string | null = null;
 	#ready = false;
 	#pending = new Map<string, string>();
 	#seq = 0;
@@ -374,9 +385,24 @@ export class FileSession extends Channel {
 
 	list(path: string): void {
 		if (!this.#ready) return;
-		this.path = path || '/';
-		this.events.onloading(this.path);
-		this.send({ type: 'file_list', path: this.path });
+		const wanted = path || '/';
+		this.events.onloading(wanted);
+		if (this.#asked !== null) {
+			this.#queued = wanted;
+			return;
+		}
+		this.#asked = wanted;
+		this.send({ type: 'file_list', path: wanted });
+	}
+
+	/** The listing that was out is answered or failed: send the one asked for meanwhile */
+	#next(): boolean {
+		this.#asked = null;
+		const queued = this.#queued;
+		this.#queued = null;
+		if (queued === null) return false;
+		this.list(queued);
+		return true;
 	}
 
 	/** Open a folder in the current one */
@@ -406,9 +432,13 @@ export class FileSession extends Channel {
 		switch (m.type) {
 			case 'ready':
 				break;
-			case 'file_list_response':
+			case 'file_list_response': {
+				const asked = this.#asked;
+				if (asked === null || this.#next()) return;
+				this.path = asked;
 				this.events.onlist(this.path, readEntries(m.entries, this.locale));
 				break;
+			}
 			case 'file_read_response': {
 				const id = typeof m.request_id === 'string' ? m.request_id : '';
 				const name = this.#pending.get(id);
@@ -427,6 +457,8 @@ export class FileSession extends Channel {
 				this.list(this.path);
 				break;
 			case 'error':
+				// A listing that failed gets no answer of its own
+				if (this.#asked !== null) this.#next();
 				this.events.onerror(typeof m.error === 'string' ? m.error : '');
 				break;
 			case 'end':

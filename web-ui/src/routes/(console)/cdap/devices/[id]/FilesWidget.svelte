@@ -79,8 +79,8 @@
 				}
 			},
 			{
-				onloading(p) {
-					livePath = p;
+				onloading() {
+					// The folder shown stays until its listing comes: actions act in it
 					loading = true;
 				},
 				onlist(p, list) {
