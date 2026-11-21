@@ -265,6 +265,41 @@ func (s *Server) handleListBillingSessions(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, map[string]any{"sessions": sessions})
 }
 
+// handleGetBillingSession answers one billing session with the device it
+// belongs to: {"session": ..., "device": ...}. device is null when the
+// device has no row or lies outside the caller's device scope.
+// GET /api/billing/sessions/{id}
+func (s *Server) handleGetBillingSession(w http.ResponseWriter, r *http.Request) {
+	sess, err := s.db.GetBillingSession(strings.TrimSpace(r.PathValue("id")))
+	if err != nil && strings.Contains(err.Error(), "no rows in result set") {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "billing session not found"})
+		return
+	}
+	if err != nil {
+		writeInternalError(w, err, "GetBillingSession")
+		return
+	}
+	var device *db.Peer
+	if sess.DeviceID != "" {
+		p, err := s.db.GetPeer(sess.DeviceID)
+		if err != nil {
+			writeInternalError(w, err, "GetPeer")
+			return
+		}
+		if p != nil {
+			visible, err := s.visiblePeerSet(r, []*db.Peer{p})
+			if err != nil {
+				writeInternalError(w, err, "device scope")
+				return
+			}
+			if visible == nil || visible[p.ID] {
+				device = p
+			}
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"session": sess, "device": device})
+}
+
 // GET /api/billing/reports
 func (s *Server) handleListBillingReports(w http.ResponseWriter, r *http.Request) {
 	limit := 100

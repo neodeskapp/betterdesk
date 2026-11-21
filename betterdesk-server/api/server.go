@@ -616,6 +616,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("DELETE /api/billing/contracts/{id}", s.requirePermission(auth.PermBillingManage, s.handleDeleteBillingContract))
 	mux.HandleFunc("GET /api/billing/stats", s.requirePermission(auth.PermBillingView, s.handleBillingStats))
 	mux.HandleFunc("GET /api/billing/sessions", s.requirePermission(auth.PermBillingView, s.handleListBillingSessions))
+	mux.HandleFunc("GET /api/billing/sessions/{id}", s.requirePermission(auth.PermBillingView, s.handleGetBillingSession))
 	mux.HandleFunc("GET /api/billing/sessions/pending", s.requirePermission(auth.PermBillingReports, s.handleGetPendingBillingSession))
 	mux.HandleFunc("GET /api/billing/sessions/export", s.requirePermission(auth.PermBillingExport, s.handleExportBillingSessions))
 	mux.HandleFunc("GET /api/billing/reports", s.requirePermission(auth.PermBillingView, s.handleListBillingReports))
