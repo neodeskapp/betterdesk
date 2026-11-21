@@ -581,7 +581,8 @@
             ws.addEventListener('message', (ev) => {
                 try {
                     const frame = JSON.parse(ev.data);
-                    if (frame.type === 'message' && frame.text) {
+                    // The relay echoes the operator's own messages back: only the device's are received
+                    if (frame.type === 'message' && frame.text && frame.from !== 'operator') {
                         this._emit('chat', frame.text);
                     } else if (frame.type === 'history' && Array.isArray(frame.messages)) {
                         for (const m of frame.messages) {

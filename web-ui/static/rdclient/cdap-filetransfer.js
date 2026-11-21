@@ -202,7 +202,8 @@ class CDAPFileTransfer {
                     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
                     const blob = new Blob([bytes]);
                     if (typeof this._saveDownload === 'function') {
-                        this._saveDownload(blob, fileEntry.name);
+                        // Same hook as RDFileTransfer: (fileName, blob)
+                        this._saveDownload(fileEntry.name, blob);
                     } else {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');

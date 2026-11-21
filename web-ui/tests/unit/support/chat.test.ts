@@ -9,7 +9,6 @@ import {
 	matchesName,
 	memberCount,
 	normalizeMessage,
-	parseCommand,
 	presenceOf,
 	searchLoaded,
 	sortContacts,
@@ -82,17 +81,6 @@ describe('messages', () => {
 			{ text: 'javascript:alert(1) <img src=x>' }
 		]);
 		expect(linkParts('')).toEqual([]);
-	});
-
-	test('quick commands', () => {
-		expect(parseCommand('/restart now')).toMatchObject({
-			name: '/restart',
-			args: 'now',
-			def: { confirm: true }
-		});
-		expect(parseCommand('/RESTART')?.name).toBe('/restart');
-		expect(parseCommand('/nope')).toBeNull();
-		expect(parseCommand('hello /restart')).toBeNull();
 	});
 
 	test('days for the separators', () => {

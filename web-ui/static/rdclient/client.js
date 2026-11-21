@@ -99,6 +99,8 @@ class RDClient {
         this._sessionStartedAt = null;
         this._lastDisconnect = null;
         this._lastError = null;
+        // Bumped by disconnect(): a connect still on its way stops at its next step
+        this._connectRun = 0;
 
         // Settings
         this.renderer.setScaleMode(opts.scaleMode || 'fit');
@@ -189,12 +191,15 @@ class RDClient {
      *   7. We decrypt, show password prompt
      */
     async connect() {
+        const run = ++this._connectRun;
+        const cancelled = () => run !== this._connectRun;
         try {
             this._setState('connecting');
             this._emit('log', 'Loading protocol definitions...');
 
             // Step 1: Load protobuf definitions
             await this.proto.load();
+            if (cancelled()) return;
 
             // Step 2: Check WebCodecs support (non-blocking, fallback available)
             if (!RDVideo.isSupported()) {
@@ -219,6 +224,7 @@ class RDClient {
                 }));
             }
             await this.conn.connectRendezvous();
+            if (cancelled()) return;
 
             // Step 5: Send PunchHoleRequest (with server public key for licence validation)
             // Browser Web Remote always force_relay=true (no UDP hole punch).
@@ -229,6 +235,7 @@ class RDClient {
 
             // Step 6: Wait for PunchHoleResponse / RelayResponse from hbbs
             const rendezvousResponse = await this._waitForRendezvousResponse();
+            if (cancelled()) return;
 
             if (rendezvousResponse.error) {
                 throw new Error(`Connection refused: ${rendezvousResponse.error}`);
@@ -278,6 +285,7 @@ class RDClient {
 
                 // Step 9: Wait for RelayResponse from hbbs confirming the relay setup
                 const relayConfirm = await this._waitForSignalRelayResponse();
+                if (cancelled()) return;
                 if (relayConfirm.error) {
                     throw new Error(`Relay refused: ${relayConfirm.error}`);
                 }
@@ -295,6 +303,7 @@ class RDClient {
 
             this._emit('log', 'Connecting to relay server...');
             await this.conn.connectRelay();
+            if (cancelled()) return;
 
             // Step 11: Setup relay message handler BEFORE sending anything
             this.conn.on('relay:message', (data) => this._handleRelayData(data));
@@ -334,6 +343,8 @@ class RDClient {
             this._setState('waiting_password');
 
         } catch (err) {
+            // Cancel or a closed tab ended it: no error to show
+            if (cancelled()) return;
             this._handleError(err);
         }
     }
@@ -539,6 +550,7 @@ class RDClient {
      * Disconnect from remote device
      */
     disconnect() {
+        this._connectRun++;
         this._cleanup();
         this._setState('disconnected');
         this._emit('log', 'Disconnected');

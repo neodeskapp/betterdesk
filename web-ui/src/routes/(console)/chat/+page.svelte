@@ -37,7 +37,6 @@
 	import Tag from '#lib/ui/Tag.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
 	import Time from '#lib/ui/Time.svelte';
-	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS, type PersonLike } from '#lib/util/display.ts';
 	import {
@@ -45,7 +44,6 @@
 		dayOf,
 		EMOJI_SET,
 		matchesName,
-		parseCommand,
 		presenceOf,
 		searchLoaded,
 		sortContacts,
@@ -290,44 +288,6 @@
 		}
 		sendStatus = '';
 		askNotifyPermission();
-
-		const cmd = parseCommand(text);
-		if (cmd && !pendingFile) {
-			draft = '';
-			const label = tf(`chat.cmd_${cmd.def.action}`, cmd.def.label);
-			if (cmd.def.confirm) {
-				const ok = await confirm({
-					title: t('chat.command_confirm', { command: label, device: conv }),
-					message: t('chat.command_confirm_hint', { device: conv }),
-					confirmLabel: label,
-					danger: true
-				});
-				if (!ok) return;
-			}
-			send({
-				type: 'quick_command',
-				conversation_id: conv,
-				device_id: conv,
-				action: cmd.def.action,
-				args: cmd.args
-			});
-			chat.add({
-				id: `local-cmd-${Date.now()}`,
-				from: 'system',
-				from_name: '',
-				text: tf('chat.command_sent', 'Command sent: {command}', {
-					command: `${cmd.name} ${cmd.args}`.trim()
-				}),
-				timestamp: Date.now(),
-				conversation_id: conv,
-				system: true,
-				file: null,
-				reactions: {},
-				read: false
-			});
-			void scrollToEnd();
-			return;
-		}
 
 		if (pendingFile) {
 			const file = pendingFile;

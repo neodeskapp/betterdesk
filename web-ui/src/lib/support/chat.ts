@@ -1,8 +1,7 @@
 /**
  * Chat rules without state: message, contact and group shapes from the
- * operator socket, who wrote a message, sorting, search, links, quick
- * commands and day separators. ChatState (chat.svelte.ts) and the page use
- * these.
+ * operator socket, who wrote a message, sorting, search, links and day
+ * separators. ChatState (chat.svelte.ts) and the page use these.
  *
  * Message senders: "operator" (or "panel") is someone in the console; the
  * relay adds their name in from_name. Console users chatting from the
@@ -81,31 +80,6 @@ export const EMOJI_SET = [
 	'🔒',
 	'⚡'
 ] as const;
-
-export interface QuickCommand {
-	action: string;
-	/** Asks before it runs (it restarts or shuts the device down) */
-	confirm?: boolean;
-	label: string;
-}
-
-/** Slash commands typed into a device conversation (the old page's set) */
-export const QUICK_COMMANDS: Record<string, QuickCommand> = {
-	'/screenshot': { action: 'screenshot', label: 'Screenshot' },
-	'/restart': { action: 'restart', label: 'Restart', confirm: true },
-	'/lock': { action: 'lock', label: 'Lock screen' },
-	'/shutdown': { action: 'shutdown', label: 'Shutdown', confirm: true },
-	'/deploy': { action: 'deploy', label: 'Deploy script' },
-	'/info': { action: 'info', label: 'Device info' }
-};
-
-export function parseCommand(text: string): { name: string; def: QuickCommand; args: string } | null {
-	if (!text.startsWith('/')) return null;
-	const parts = text.trim().split(/\s+/);
-	const name = (parts[0] ?? '').toLowerCase();
-	const def = QUICK_COMMANDS[name];
-	return def ? { name, def, args: parts.slice(1).join(' ') } : null;
-}
 
 export type Raw = Record<string, unknown>;
 export const str = (v: unknown): string => (v === null || v === undefined ? '' : String(v));

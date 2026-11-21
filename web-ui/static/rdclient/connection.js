@@ -36,6 +36,8 @@ class RDConnection {
         this._state = 'disconnected'; // disconnected | rendezvous | relay | connected | error
         this._listeners = {};
         this._lastClose = null;
+        /** @type {Set<Function>} Rejects of the connects still waiting for their socket to open */
+        this._pendingConnects = new Set();
     }
 
     get state() { return this._state; }
@@ -102,20 +104,26 @@ class RDConnection {
 
             const ws = new WebSocket(url);
             ws.binaryType = 'arraybuffer';
+            // Kept from the start, so close() also stops a socket that is still connecting
+            this.rendezvousWs = ws;
+            const settle = this._trackConnect(reject);
 
             ws.onopen = () => {
-                this.rendezvousWs = ws;
+                if (this.rendezvousWs !== ws) return;
+                settle();
                 this._lastClose = null;
                 this._emit('rendezvous:open');
                 resolve(ws);
             };
 
             ws.onerror = (e) => {
+                settle();
                 this._emit('rendezvous:error', e);
                 reject(new Error('Rendezvous connection failed'));
             };
 
             ws.onclose = (e) => {
+                if (this.rendezvousWs !== ws) return;
                 this.rendezvousWs = null;
                 const info = this._recordClose('rendezvous', e);
                 this._emit('rendezvous:close', info.code, info.reason, info);
@@ -161,20 +169,25 @@ class RDConnection {
 
             const ws = new WebSocket(url);
             ws.binaryType = 'arraybuffer';
+            this.relayWs = ws;
+            const settle = this._trackConnect(reject);
 
             ws.onopen = () => {
-                this.relayWs = ws;
+                if (this.relayWs !== ws) return;
+                settle();
                 this._lastClose = null;
                 this._emit('relay:open');
                 resolve(ws);
             };
 
             ws.onerror = (e) => {
+                settle();
                 this._emit('relay:error', e);
                 reject(new Error('Relay connection failed'));
             };
 
             ws.onclose = (e) => {
+                if (this.relayWs !== ws) return;
                 this.relayWs = null;
                 const info = this._recordClose('relay', e);
                 this._emit('relay:close', info.code, info.reason, info);
@@ -216,7 +229,21 @@ class RDConnection {
             this.relayWs.close();
             this.relayWs = null;
         }
+        // Connects still waiting for their socket end here (Cancel, a closed tab)
+        const pending = [...this._pendingConnects];
+        this._pendingConnects.clear();
+        for (const reject of pending) reject(new Error('Connection cancelled'));
         this._setState('disconnected');
+    }
+
+    /**
+     * Remember a connect's reject until its socket opens or fails
+     * @param {Function} reject
+     * @returns {Function} call when the connect settled
+     */
+    _trackConnect(reject) {
+        this._pendingConnects.add(reject);
+        return () => this._pendingConnects.delete(reject);
     }
 
     _setState(state) {
