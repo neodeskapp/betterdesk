@@ -47,7 +47,12 @@ type Runner interface {
 // ExecRunner runs tools with os/exec.
 type ExecRunner struct{}
 
-// Run implements Runner.
+// pipeWait is how long Run waits for the output pipes after the tool
+// ended or was killed: a process that left its group may hold them.
+const pipeWait = 2 * time.Second
+
+// Run implements Runner. When the timeout passes or ctx ends, the tool
+// and every process it started are killed.
 func (ExecRunner) Run(ctx context.Context, c Command) (Result, error) {
 	if c.Timeout > 0 {
 		var cancel context.CancelFunc
@@ -57,6 +62,8 @@ func (ExecRunner) Run(ctx context.Context, c Command) (Result, error) {
 	cmd := exec.CommandContext(ctx, c.Name, c.Args...)
 	cmd.Dir = c.Dir
 	cmd.Env = c.Env
+	killTreeOnCancel(cmd)
+	cmd.WaitDelay = pipeWait
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	if c.Stdout != nil {
@@ -65,16 +72,12 @@ func (ExecRunner) Run(ctx context.Context, c Command) (Result, error) {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	res := Result{Stdout: decodeUTF8(stdout.Bytes()), Stderr: decodeUTF8(stderr.Bytes())}
-	var exitErr *exec.ExitError
-	switch {
-	case err == nil:
-	case errors.As(err, &exitErr):
-		res.Code = exitErr.ExitCode()
-		if c.Timeout > 0 && ctx.Err() == context.DeadlineExceeded {
-			res.TimedOut = true
-		}
-	default:
+	if cmd.ProcessState == nil {
 		return res, spawnError(c, err)
+	}
+	res.Code = cmd.ProcessState.ExitCode()
+	if err != nil && c.Timeout > 0 && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		res.TimedOut = true
 	}
 	return res, nil
 }
