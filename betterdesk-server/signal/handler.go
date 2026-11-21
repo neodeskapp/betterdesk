@@ -316,7 +316,7 @@ func (s *Server) handleUDPMessage(msg *pb.RendezvousMessage, raddr *net.UDPAddr)
 	case msg.GetRequestRelay() != nil:
 		s.handleRequestRelay(msg.GetRequestRelay(), raddr)
 	case msg.GetFetchLocalAddr() != nil:
-		s.handleFetchLocalAddr(msg.GetFetchLocalAddr(), raddr)
+		logClientFetchLocalAddr("UDP", raddr.String())
 	case msg.GetLocalAddr() != nil:
 		s.handleLocalAddr(msg.GetLocalAddr(), raddr)
 	case msg.GetHc() != nil:
@@ -410,11 +410,7 @@ func (s *Server) handleMessage(msg *pb.RendezvousMessage, raddr net.Addr) *pb.Re
 		s.handlePunchHoleSent(msg.GetPunchHoleSent(), udpAddr, false)
 		return nil
 	case msg.GetFetchLocalAddr() != nil:
-		// Forward FetchLocalAddr via UDP (fire-and-forget)
-		udpAddr, _ := net.ResolveUDPAddr("udp", raddr.String())
-		if udpAddr != nil {
-			s.handleFetchLocalAddr(msg.GetFetchLocalAddr(), udpAddr)
-		}
+		logClientFetchLocalAddr("TCP", raddr.String())
 		return nil
 	case msg.GetLocalAddr() != nil:
 		// Forward LocalAddr via UDP (fire-and-forget)
@@ -719,6 +715,16 @@ func (s *Server) handleRegisterPkTCP(msg *pb.RegisterPk, raddr net.Addr) *pb.Ren
 	return s.processRegisterPk(msg, raddr.String())
 }
 
+// RegisterPk size limits. The pk is an Ed25519 public key (32 bytes); the
+// uuid is the machine id stock clients read from the system (36 characters
+// on Windows and macOS, 32 on Linux) or the public key where there is none.
+// A stored key is signed into every punch and relay answer, so its size is
+// what the server sends to whoever asks.
+const (
+	maxRegisterPkKey  = 32
+	maxRegisterPkUUID = 128
+)
+
 // processRegisterPk is the shared logic for RegisterPk handling.
 func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.RendezvousMessage {
 	id := msg.Id
@@ -730,6 +736,10 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 	// Validate peer ID format (S7)
 	if !isValidPeerID(id) {
 		log.Printf("[signal] Rejected invalid peer ID format in RegisterPk: %q", id)
+		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
+	}
+	if len(msg.Pk) > maxRegisterPkKey || len(msg.Uuid) > maxRegisterPkUUID {
+		log.Printf("[signal] Rejected RegisterPk for %s from %s: pk %d bytes, uuid %d bytes", id, clientHost, len(msg.Pk), len(msg.Uuid))
 		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 	}
 
@@ -1308,8 +1318,9 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 
 	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole", "")
 
-	// Correlate initiator identity for a later RelayResponse on shared NAT (#399).
-	s.storePendingUUID(targetID, raddr, "", initiatorID)
+	// Correlate initiator identity for a later RelayResponse on shared NAT
+	// (#399), and the address the target sees for a later PunchHoleSent.
+	s.storePendingRelay(targetID, raddr, relayAdvertisedAddr(s, raddr, initiatorID, initiatorHint), "", initiatorID)
 
 	// ForceRelay or AlwaysUseRelay: return PunchHoleResponse with SYMMETRIC NAT
 	// type instead of RelayResponse. This tells the client that direct P2P is
@@ -1493,12 +1504,9 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	if viaUDP {
 		transport = "UDP"
 	}
-	log.Printf("[signal] %s PunchHoleSent from %s for initiator %s (id=%s)",
+	log.Printf("[signal] %s PunchHoleSent from %s for initiator %s (id=%q)",
 		transport, senderAddr, initiatorAddr, phs.Id)
 
-	// Look up the target's public key and sign it for E2E encryption verification.
-	// RustDesk clients expect signed IdPk in NaCl format: [ signature | IdPk protobuf ]
-	var signedPk []byte
 	targetID := phs.Id
 
 	// Fallback: if phs.Id is empty, try to identify the sender by IP lookup.
@@ -1512,18 +1520,30 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 		}
 	}
 
-	if targetID != "" {
-		target := s.peers.Get(targetID)
-		targetPK := s.peerPublicKey(targetID, target)
-		if target != nil && len(targetPK) > 0 {
-			// Sign the PK with server's Ed25519 key (enables client E2E verification)
-			signed, err := s.kp.SignIdPk(targetID, targetPK)
-			if err != nil {
-				log.Printf("[signal] Failed to sign PK for %s: %v", targetID, err)
-			} else {
-				signedPk = signed
-				log.Printf("[signal] Signed PK for %s: %d bytes", targetID, len(signedPk))
-			}
+	// The answer goes to the address inside the packet, so only the peer it
+	// names may send it, and only for a punch that initiator asked for.
+	// Stock clients send PunchHoleSent from a new socket: the IP is the
+	// target's registered one, the port is not.
+	if !s.punchHoleSentFromTarget(targetID, senderAddr) {
+		log.Printf("[signal] PunchHoleSent for %q from %s dropped: not the target's address", targetID, senderAddr)
+		return
+	}
+	if s.getPendingRelay(targetID, initiatorAddr) == nil && s.getPendingRelayByAdvertised(targetID, initiatorAddr) == nil {
+		log.Printf("[signal] PunchHoleSent from %s for %q dropped: no punch of initiator %s pending", senderAddr, targetID, initiatorAddr)
+		return
+	}
+
+	// Sign the target's public key for E2E verification. RustDesk clients
+	// expect signed IdPk in NaCl format: [ signature | IdPk protobuf ]
+	var signedPk []byte
+	target := s.peers.Get(targetID)
+	if targetPK := s.peerPublicKey(targetID, target); target != nil && len(targetPK) > 0 {
+		signed, err := s.kp.SignIdPk(targetID, targetPK)
+		if err != nil {
+			log.Printf("[signal] Failed to sign PK for %s: %v", targetID, err)
+		} else {
+			signedPk = signed
+			log.Printf("[signal] Signed PK for %s: %d bytes", targetID, len(signedPk))
 		}
 	}
 
@@ -1549,7 +1569,7 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	// The peer validates an incoming relay request against this value, so it must
 	// not be rewritten: check_port() normalises a portless host to RELAY_PORT, so
 	// storing what the peer sent is always the best match for its own config.
-	if targetID != "" && phs.RelayServer != "" {
+	if phs.RelayServer != "" {
 		s.peers.SetRelayServer(targetID, phs.RelayServer)
 	}
 
@@ -1566,7 +1586,7 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	} else {
 		phr.Union = &pb.PunchHoleResponse_NatType{NatType: phs.NatType}
 	}
-	phr = ensurePunchHoleSocketAddr(phr, phs.Id, relayServer)
+	phr = ensurePunchHoleSocketAddr(phr, targetID, relayServer)
 
 	resp := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_PunchHoleResponse{
@@ -1585,14 +1605,14 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 
 	// Try TCP then WebSocket delivery (initiator may be on either transport).
 	if s.forwardToInitiator(addrStr, resp) {
-		log.Printf("[signal] PunchHoleResponse forwarded to %s (target=%s)", addrStr, phs.Id)
+		log.Printf("[signal] PunchHoleResponse forwarded to %s (target=%s)", addrStr, targetID)
 		return
 	}
 
 	// UDP delivery — send directly if we came from UDP, or look up the peer.
 	if viaUDP {
 		s.sendUDP(resp, initiatorAddr)
-		log.Printf("[signal] PunchHoleResponse sent via UDP to %s (target=%s)", initiatorAddr, phs.Id)
+		log.Printf("[signal] PunchHoleResponse sent via UDP to %s (target=%s)", initiatorAddr, targetID)
 		return
 	}
 
@@ -1600,11 +1620,11 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	entry := s.peers.FindByIP(initiatorAddr.IP)
 	if entry != nil && entry.UDPAddr != nil {
 		s.sendUDP(resp, entry.UDPAddr)
-		log.Printf("[signal] PunchHoleResponse sent to peer %s at %s via UDP (target=%s)", entry.ID, entry.UDPAddr, phs.Id)
+		log.Printf("[signal] PunchHoleResponse sent to peer %s at %s via UDP (target=%s)", entry.ID, entry.UDPAddr, targetID)
 		return
 	}
 
-	log.Printf("[signal] PunchHoleResponse: cannot deliver to %s (target=%s)", addrStr, phs.Id)
+	log.Printf("[signal] PunchHoleResponse: cannot deliver to %s (target=%s)", addrStr, targetID)
 }
 
 // handleRequestRelay forwards relay setup request to target peer.
@@ -2177,6 +2197,19 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		forwardAddrStr, initiatorAddr, rr.Uuid)
 }
 
+// punchHoleSentFromTarget reports whether senderAddr may speak for targetID:
+// an address bound to another peer may not, and the IP must be the target's
+// registered one.
+func (s *Server) punchHoleSentFromTarget(targetID string, senderAddr *net.UDPAddr) bool {
+	if targetID == "" || senderAddr == nil {
+		return false
+	}
+	if senderID := s.peerIDForAddr(senderAddr); senderID != "" && senderID != targetID {
+		return false
+	}
+	return s.relayResponseSourceMatchesTarget(targetID, senderAddr)
+}
+
 // relayResponseSourceMatchesTarget applies the strongest source correlation
 // available for legacy clients whose response has no registered TCP identity.
 // It deliberately checks the observed public IP only; an IP-only match is not
@@ -2200,35 +2233,12 @@ func (s *Server) relayResponseSourceMatchesTarget(targetID string, senderAddr *n
 	return targetIP != nil && targetIP.Equal(senderAddr.IP)
 }
 
-// handleFetchLocalAddr forwards a local address fetch request to the target peer.
-// The FetchLocalAddr message carries socket_addr (who is asking), not an ID.
-// We decode the socket_addr to identify the requester's origin, then forward.
-func (s *Server) handleFetchLocalAddr(msg *pb.FetchLocalAddr, raddr *net.UDPAddr) {
-	// FetchLocalAddr contains the target's socket_addr from a previous PunchHole.
-	// Resolve the registered target first so TCP-only native peers are not
-	// forced through a decoded UDP endpoint.
-	targetAddr, err := crypto.DecodeAddr(msg.SocketAddr)
-	if err != nil || targetAddr == nil {
-		return
-	}
-
-	// Forward to target with requester's address.
-	fetch := &pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_FetchLocalAddr{
-			FetchLocalAddr: &pb.FetchLocalAddr{
-				SocketAddr:        crypto.EncodeAddr(raddr),
-				RelayServer:       msg.RelayServer,
-				SocketAddrV6:      copyBytes(msg.SocketAddrV6),
-				ControlledContext: msg.ControlledContext,
-			},
-		},
-	}
-	if target := s.peers.FindByAddr(targetAddr); target != nil &&
-		target.ConnType != peer.ConnWS &&
-		s.sendToPeer(target.ID, fetch) {
-		return
-	}
-	s.sendUDP(fetch, targetAddr)
+// logClientFetchLocalAddr notes a FetchLocalAddr sent by a client. Only the
+// server sends FetchLocalAddr (to the target of a LAN punch); one from a
+// client would make the server send the client's text to an address of its
+// choice, so it is dropped.
+func logClientFetchLocalAddr(transport, remote string) {
+	log.Printf("[signal] %s FetchLocalAddr from client %q dropped: only the server sends it", transport, remote)
 }
 
 // handleLocalAddr completes the FetchLocalAddr→LocalAddr exchange and returns

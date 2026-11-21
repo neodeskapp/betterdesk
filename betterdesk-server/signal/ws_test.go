@@ -944,6 +944,7 @@ func TestWSPunchHoleSentForwardsToWSInitiator(t *testing.T) {
 		ConnType: peer.ConnUDP,
 		LastReg:  time.Now(),
 	})
+	srv.storePendingUUID("TARGWS01", initiatorAddr, "", "INITWS01")
 
 	srv.handlePunchHoleSent(&pb.PunchHoleSent{
 		Id:         "TARGWS01",
@@ -1051,6 +1052,7 @@ func TestWSPunchHoleSentExactPortNotSiblingNAT(t *testing.T) {
 		ConnType: peer.ConnUDP,
 		LastReg:  time.Now(),
 	})
+	srv.storePendingUUID("TARGNAT1", initiatorAddr, "", "NATA0001")
 
 	srv.handlePunchHoleSent(&pb.PunchHoleSent{
 		Id:         "TARGNAT1",

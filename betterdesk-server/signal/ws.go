@@ -310,12 +310,7 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 			}
 
 		case msg.GetFetchLocalAddr() != nil:
-			fakeAddr, err := net.ResolveUDPAddr("udp", remoteAddr)
-			if err != nil || fakeAddr == nil {
-				log.Printf("[signal] WS FetchLocalAddr: invalid remote addr %q: %v", remoteAddr, err)
-				continue
-			}
-			s.handleFetchLocalAddr(msg.GetFetchLocalAddr(), fakeAddr)
+			logClientFetchLocalAddr("WS", remoteAddr)
 
 		case msg.GetLocalAddr() != nil:
 			fakeAddr, err := net.ResolveUDPAddr("udp", remoteAddr)

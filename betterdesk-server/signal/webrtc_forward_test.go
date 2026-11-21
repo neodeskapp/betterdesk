@@ -62,11 +62,13 @@ func TestHandlePunchHoleSentForwardsWebRTCSDPAnswer(t *testing.T) {
 	srv.udpConn = send
 
 	putOnlinePeer(srv, "WSRTCINI01", initiatorAddr.IP.String(), initiatorAddr.Port, peer.ConnUDP)
+	putOnlinePeer(srv, "WSRTCTGT01", "203.0.113.80", 52100, peer.ConnUDP)
+	srv.storePendingUUID("WSRTCTGT01", initiatorAddr, "", "WSRTCINI01")
 
 	const answer = "v=0\r\no=- 2 2 IN IP4 127.0.0.1\r\na=fingerprint:sha-256 AB:CD\r\n"
 
 	srv.handlePunchHoleSent(&pb.PunchHoleSent{
-		Id:              "WSRTCINI01",
+		Id:              "WSRTCTGT01",
 		SocketAddr:      cryptopkg.EncodeAddr(initiatorAddr),
 		WebrtcSdpAnswer: answer,
 	}, udpAddr("203.0.113.80", 52100), true)

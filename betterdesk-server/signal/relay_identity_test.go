@@ -61,6 +61,7 @@ func TestHandlePunchHoleSentRecordsPeerRelayVerbatim(t *testing.T) {
 	srv.peers.Put(target)
 
 	initiatorAddr := udpAddr("203.0.113.90", 51000)
+	srv.storePendingUUID("TGTREP1", initiatorAddr, "", "INIREP1")
 	// The failing agent reports the API port as its relay.
 	srv.handlePunchHoleSent(&pb.PunchHoleSent{
 		Id:          "TGTREP1",
