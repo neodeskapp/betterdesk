@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,6 +40,17 @@ func (s *Server) handleGuestAccessCreate(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	}
+	if body.ViewOnly {
+		if id, err := s.firstRustDeskDevice(body.PeerIDs); err != nil {
+			writeInternalError(w, err, "firstRustDeskDevice")
+			return
+		} else if id != "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{
+				"error": "view_only is not available for RustDesk devices: the server cannot keep a guest from controlling " + id,
+			})
+			return
+		}
+	}
 	token, grant, err := s.guestAccessStore().Create(body.PeerIDs, username, body.TTLMinutes, body.ViewOnly, body.Label, body.MaxUses)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -65,6 +77,63 @@ func (s *Server) handleGuestAccessCreate(w http.ResponseWriter, r *http.Request)
 		"label":        grant.Label,
 		"token_prefix": grant.TokenPrefix,
 	})
+}
+
+// firstRustDeskDevice returns the first of ids that is a RustDesk device,
+// "" when all are mesh agents or CDAP devices. A view_only link holds only
+// for those: their gateway opens the session in view only, while a RustDesk
+// guest's input goes inside the encrypted stream. A device counts as a mesh
+// agent or a CDAP device while its gateway has it connected, or by what the
+// gateway stored: the device type mesh_agent, a CDAP manifest. When an id
+// does not have the form of a device id, it returns "" and Create refuses
+// the list as before.
+func (s *Server) firstRustDeskDevice(ids []string) (string, error) {
+	var trimmed []string
+	for _, raw := range ids {
+		id := strings.TrimSpace(raw)
+		if id == "" {
+			continue
+		}
+		if !guestPeerIDForm(id) {
+			return "", nil
+		}
+		trimmed = append(trimmed, id)
+	}
+	for _, id := range trimmed {
+		if (s.meshGw != nil && s.meshGw.IsConnected(id)) || (s.cdapGw != nil && s.cdapGw.IsConnected(id)) {
+			continue
+		}
+		p, err := s.db.GetPeer(id)
+		if err != nil {
+			return "", fmt.Errorf("load device %s: %w", id, err)
+		}
+		if p != nil && p.DeviceType == "mesh_agent" {
+			continue
+		}
+		manifest, err := s.db.GetConfig("cdap_manifest_" + id)
+		if err != nil {
+			return "", fmt.Errorf("load CDAP manifest of %s: %w", id, err)
+		}
+		if manifest != "" {
+			continue
+		}
+		return id, nil
+	}
+	return "", nil
+}
+
+// guestPeerIDForm is the form guestaccess.Store.Create takes a device id
+// in: 3 to 64 letters, digits, _ and -.
+func guestPeerIDForm(id string) bool {
+	if len(id) < 3 || len(id) > 64 {
+		return false
+	}
+	for _, c := range id {
+		if !((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-') {
+			return false
+		}
+	}
+	return true
 }
 
 // GET /api/guest/access-links/validate?token=&peer_id=
