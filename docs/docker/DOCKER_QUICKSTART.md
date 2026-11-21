@@ -8,7 +8,7 @@ Versioned tags match [CHANGELOG.md](../../CHANGELOG.md) and git releases (e.g. `
 
 - Docker 20.10+
 - docker-compose v2.0+ (or `docker compose` plugin)
-- Open ports: 21115-21119, 21121, 5000 (official single-container layout)
+- Open ports: 21115-21119, 21121, 5000
 
 ## 🏃 Quick Start
 
@@ -23,8 +23,8 @@ curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.s
 **Common variants:**
 
 ```bash
-# Legacy two-container layout (server + console images)
-curl -fsSL .../install.sh | sudo bash -s -- --split
+# Move an older two-container install (server + console) to the one container
+curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
 
 # LAN-only deployment
 curl -fsSL .../install.sh | sudo bash -s -- --relay-mode local
@@ -41,7 +41,7 @@ curl -fsSL .../install.sh | sudo bash -s -- --uninstall --purge
 
 Files are stored under `/opt/betterdesk/docker/` (`docker-compose.yml`, `.env`).
 
-### Quick Start (3 Commands) — official single container
+### Quick Start (3 Commands)
 
 ```bash
 # 1. Download docker-compose file
@@ -59,24 +59,20 @@ docker compose exec betterdesk betterdesk-show-admin-credentials
 
 If `cat /opt/rustdesk/.admin_credentials` returns **Permission denied**, use `betterdesk-show-admin-credentials` above (or `docker compose exec -u betterdesk betterdesk …`) — see [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-permission-denied-reading-admin_credentials).
 
-### Legacy split layout (two images)
+### One container, one process
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
-docker compose pull && docker compose up -d
-docker compose exec console betterdesk-show-admin-credentials
-```
+The `betterdesk` container runs signal, relay, Client API and web console in one process (`MODE=all`, the default). The signal and relay servers cannot run apart: the relay only pairs connections that the signal server of the same process authorized. A container started with `MODE=signal` or `MODE=relay` stops at start with a message that names `MODE=all`.
 
-Split layout uses API port **21114**; the official single container uses **21121**.
+**Web Remote:** the console's bridge for the browser client connects to the signal server in the same process and proves itself with a secret the server makes at start. Nothing needs to be configured for it. `PANEL_SIGNAL_PROXY_CIDRS` (default `127.0.0.0/8,::1/128`) is an extra condition: the bridge's source address must be in it as well. Change it only when `WS_HBBS_HOST` points the bridge at an address other than loopback.
 
-**Web Remote:** the Go `server` service defaults `PANEL_SIGNAL_PROXY_CIDRS` to `172.16.0.0/12,127.0.0.0/8,::1/128` so browser remote from the console container is allowed (#465 / #313). On a shared Docker host, override to the console container IP `/32`. See [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-web-remote-fails-on-split-docker-initiator_not_registered).
+An install from before the single container (separate `server` and `console` containers) moves over with `install.sh --migrate-split`; the named volumes are kept.
 
 ### Source build vs prebuilt GHCR (do not mix update commands)
 
 | Compose file | Images | How to update |
 |--------------|--------|----------------|
-| `docker-compose.quick.single.yml` / `docker-compose.quick.yml` | `ghcr.io/unitronix/…` | `docker compose pull && docker compose up -d` |
-| `docker-compose.yml` / `docker-compose.single.yml` | `betterdesk-*:local` (`pull_policy: never`) | `git pull` then `docker compose up -d --build` |
+| `docker-compose.quick.single.yml` / `docker-compose.quick.single.macvlan.yml` | `ghcr.io/unitronix/betterdesk` | `docker compose pull && docker compose up -d` |
+| `docker-compose.single.yml` | `betterdesk:local` (`pull_policy: never`) | `git pull` then `docker compose up -d --build` |
 
 `docker compose pull` on a source-build compose **does nothing useful** for BetterDesk — local tags are never pulled from a registry. If you cloned the repo and built locally, always rebuild after `git pull`. Discussion reports of “I pulled but still see an old reject” usually mean this mismatch (see [initiator_token_rejected](DOCKER_TROUBLESHOOTING.md#problem-logged-in-client-fails-with-initiator_token_rejected)).
 
@@ -97,11 +93,11 @@ export BETTERDESK_IMAGE_TAG=latest
 docker compose pull && docker compose up -d
 ```
 
-Browse tags: GitHub repo → **Packages** → `betterdesk` (official), or legacy `betterdesk-server` / `betterdesk-console`, or [releases](https://github.com/UNITRONIX/BetterDesk/releases).
+Browse tags: GitHub repo → **Packages** → `betterdesk`, or [releases](https://github.com/UNITRONIX/BetterDesk/releases).
 
 ---
 
-## 📦 What Gets Installed (single container — default)
+## 📦 What Gets Installed
 
 | Port | Description |
 |------|-------------|
@@ -111,17 +107,17 @@ Browse tags: GitHub repo → **Packages** → `betterdesk` (official), or legacy
 | 21121 | HTTP Client API (RustDesk login, AB, REST) |
 | 5000 | Web management panel only — **not** the Client API |
 
-Legacy **split** layout: Go Client API on **21114**; Node may expose a **21121** compat proxy → Go. Point the RustDesk client **API Server** at `:21114` (split) or `:21121` (single), never at panel `:5000`.
+Point the RustDesk client **API Server** at `:21121`, never at panel `:5000`.
 
 ### Client settings (Docker + reverse proxy)
 
-| Client field | Single container | Split (`server` + `console`) |
-|--------------|------------------|------------------------------|
-| ID / Relay | public host or DNS | same |
-| API Server | `http://HOST:21121` (or HTTPS if you terminate TLS for the API) | `http://HOST:21114` (preferred) or `http://HOST:21121` if the console proxy is enabled |
-| Use WebSocket | optional; `/ws/id` → `:21118`, `/ws/relay` → `:21119` | same |
+| Client field | Value |
+|--------------|-------|
+| ID / Relay | public host or DNS |
+| API Server | `http://HOST:21121` (or HTTPS if you terminate TLS for the API) |
+| Use WebSocket | optional; `/ws/id` → `:21118`, `/ws/relay` → `:21119` |
 
-Do **not** set `TLS_API=Y` / `TLS_SIGNAL=Y` / `TLS_RELAY=Y` on the Go container when Nginx/Caddy already terminates TLS — upstream stays plain HTTP. Production defaults: `ENCRYPTED_ONLY=1`, `ALLOW_LEGACY_OUTBOUND=N`, prefer `ENROLLMENT_MODE=managed` after initial device approval.
+Do **not** set `TLS_API=Y` / `TLS_SIGNAL=Y` / `TLS_RELAY=Y` on the container when Nginx/Caddy already terminates TLS — upstream stays plain HTTP. Production defaults: `ENCRYPTED_ONLY=1`, `ALLOW_LEGACY_OUTBOUND=N`, prefer `ENROLLMENT_MODE=managed` after initial device approval.
 
 ## 🔧 Configuration
 
@@ -175,14 +171,13 @@ container (issue #385).
 
 | Image | `:dev` platforms | Notes |
 |-------|------------------|-------|
-| `ghcr.io/unitronix/betterdesk` (AIO) | amd64 + arm64 | Native ARM runners; ARM phase runs after amd64 (#476) |
-| `betterdesk-server` / `betterdesk-console` | amd64 + arm64 | Same publish pipeline |
+| `ghcr.io/unitronix/betterdesk` | amd64 + arm64 | Native ARM runners; ARM phase runs after amd64 (#476) |
 | `betterdesk` `latest` / release tags | amd64 + arm64 | Stable channel |
 
 CI builds **amd64 first**, then **ARM**. If an ARM job fails, GHCR may briefly
 publish **amd64-only** tags (with an Actions warning) until the next green ARM
 run. On **linux/arm64**, `docker compose pull` of `:dev` / `:latest` is the
-normal path; split compose or a local AIO build remain optional.
+normal path; a local build (`docker-compose.single.yml`) remains optional.
 
 ### PostgreSQL Instead of SQLite
 
@@ -190,7 +185,7 @@ normal path; split compose or a local AIO build remain optional.
 # Add to docker-compose.yml
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: betterdesk
       POSTGRES_USER: betterdesk
@@ -198,9 +193,10 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  server:
+  betterdesk:
     environment:
-      - DB_URL=postgres://betterdesk:secretpassword@postgres:5432/betterdesk
+      - DB_TYPE=postgres
+      - DATABASE_URL=postgres://betterdesk:secretpassword@postgres:5432/betterdesk
     depends_on:
       - postgres
 
@@ -257,22 +253,18 @@ docker compose down -v  # -v removes volumes (data)
 # All services running?
 docker compose ps
 
-# Logs (single container)
+# Logs
 docker compose logs betterdesk
 
-# Health check (single container)
+# Health check
 curl http://localhost:21121/api/health
 ```
-
-Legacy split: `docker compose logs server` / `console`, health on `:21114`.
 
 ---
 
 ## MACVLAN (dedicated LAN IP)
 
 Use this when the stack must listen on a **macvlan** address (no host port mappings).
-
-**Single container (recommended):**
 
 ```bash
 docker network create -d macvlan \
@@ -285,27 +277,7 @@ curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-co
 docker compose pull && docker compose up -d
 ```
 
-**Legacy split:** `docker-compose.quick.macvlan.yml`
-
 Web console: `http://MACVLAN_IPV4:5000`
-
-### Upgrading a custom macvlan compose (issue #186)
-
-If you customized an older quick-start file before **3.0.0**, apply these changes after pulling new images:
-
-| Setting | Required in 3.0.0+ |
-|---------|-------------------|
-| `depends_on` | `condition: service_started` — **not** `service_healthy` |
-| Server healthcheck | Keep enabled, or remove `service_healthy` from `depends_on` |
-| Console `DB_PATH` | `/app/data/db_v2.sqlite3` |
-| Server `AUTH_DB_PATH` | `/app/data/auth.db` only for legacy panel sync |
-| Server volume | `console-data:/app/data:ro` |
-| `network_mode: service:server` | Use `127.0.0.1` in `BETTERDESK_API_URL`, `WS_HBBS_HOST`, `WS_HBBR_HOST` (Docker DNS is unavailable) |
-| Image tag | Pin `BETTERDESK_IMAGE_TAG` (e.g. `3.2.14`), not unversioned `latest` |
-
-**Symptom:** server logs look healthy but the console never starts — check `docker compose ps -a` and `docker compose logs console`. The usual cause is `depends_on: service_healthy` while the server healthcheck is disabled.
-
-Optional: copy `docker-compose.quick.macvlan.yml` from this repo as a maintained baseline.
 
 ---
 
@@ -317,10 +289,10 @@ This means the pre-built images are not yet published to GitHub Container Regist
 
 **Solution A — Build locally (recommended):**
 ```bash
-# Use the full docker-compose.yml which builds images from source
-git clone https://github.com/UNITRONIX/Rustdesk-FreeConsole.git
-cd Rustdesk-FreeConsole
-docker compose -f docker-compose.yml up -d --build
+# docker-compose.single.yml builds the image from source
+git clone https://github.com/UNITRONIX/BetterDesk.git
+cd BetterDesk
+docker compose -f docker-compose.single.yml up -d --build
 ```
 
 **Solution B — Wait for images to be published:**
@@ -341,24 +313,19 @@ docker compose up -d
 ### "Cannot connect to devices"
 
 1. Check firewall allows ports 21116-21117
-2. Verify server is healthy: `curl http://localhost:21114/api/health`
-3. Check the advertised relay address: `docker compose logs server | grep 'relay='`
+2. Verify server is healthy: `curl http://localhost:21121/api/health`
+3. Check the advertised relay address: `docker compose logs betterdesk | grep 'relay='`
 4. If logs show a Docker/container IP such as `10.x.x.x` or `172.x.x.x`, restart with `RELAY_SERVERS=YOUR_HOST_IP:21117 docker compose up -d`
 
-### Browser Web Remote fails on every device (split Docker)
+### Browser Web Remote fails on every device
 
-Audit shows `connection_denied` / `initiator_not_registered` with a `172.x` actor IP — set `PANEL_SIGNAL_PROXY_CIDRS` on the Go server (see [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-web-remote-fails-on-split-docker-initiator_not_registered)).
-
-### "Web console shows 0 devices"
-
-1. Verify API key sync: `docker compose exec console cat /opt/rustdesk/.api_key`
-2. Restart console: `docker compose restart console`
+Audit shows `connection_denied` / `initiator_not_registered` for the browser sessions — see [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md#problem-web-remote-fails-on-every-device-initiator_not_registered).
 
 ### "Connection refused on port 21116"
 
 1. Wait 30 seconds for server to start
 2. Check server health: `docker compose ps`
-3. View server logs: `docker compose logs server`
+3. View server logs: `docker compose logs betterdesk`
 
 ### Need more help?
 
@@ -371,9 +338,9 @@ See [DOCKER_TROUBLESHOOTING.md](../docker/DOCKER_TROUBLESHOOTING.md) for advance
 If you need custom modifications:
 
 ```bash
-git clone https://github.com/UNITRONIX/Rustdesk-FreeConsole.git
-cd Rustdesk-FreeConsole
-docker compose -f docker-compose.yml up -d --build
+git clone https://github.com/UNITRONIX/BetterDesk.git
+cd BetterDesk
+docker compose -f docker-compose.single.yml up -d --build
 ```
 
 ---
@@ -391,4 +358,4 @@ Configure your RustDesk clients with:
 
 Or scan the QR code from the web console Settings page.
 
-For a public hostname that differs from the Docker service name (`betterdesk-server` / `127.0.0.1`), configure **Settings → Public client endpoints** (persisted on the `console-data` volume) or set `PUBLIC_*` in compose — see [Public Client Endpoints](#public-client-endpoints-survive-container-recreate).
+For a public hostname that differs from the Docker service name (`betterdesk` / `127.0.0.1`), configure **Settings → Public client endpoints** (persisted on the `console-data` volume) or set `PUBLIC_*` in compose — see [Public Client Endpoints](#public-client-endpoints-survive-container-recreate).

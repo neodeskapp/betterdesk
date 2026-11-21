@@ -1,159 +1,14 @@
-# 🚀 Docker Quick Start for BetterDesk Console
+# 🐳 Docker Troubleshooting for BetterDesk
 
-## Problem: "Pull Access Denied" for betterdesk-hbbs / betterdesk-hbbr
-
-### Symptom
-```
-! Image betterdesk-hbbs:latest pull access denied for betterdesk-hbbs, repository does not exist
-! Image betterdesk-hbbr:latest pull access denied for betterdesk-hbbr, repository does not exist
-Error response from daemon: pull access denied for betterdesk-hbbr, repository does not exist
-```
-
-### Cause
-BetterDesk images are **NOT published to Docker Hub**. They must be **built locally** from the provided Dockerfiles.
-
-> **Note**: This issue is now fixed in the latest docker-compose.yml with `pull_policy: never`. If you still see this error, update your files.
-
-### ✅ Solution
-
-**Option 1: Use docker compose build (REQUIRED)**
-```bash
-# Build images locally first - THIS IS REQUIRED
-docker compose build
-
-# Then start services
-docker compose up -d
-```
-
-**Option 2: Build and start in one command**
-```bash
-docker compose up -d --build
-```
-
-**Option 3: Use the quick setup script**
-```bash
-chmod +x docker-quickstart.sh
-./docker-quickstart.sh
-```
-
-This is the expected behavior - the images are built from:
-- `Dockerfile.hbbs` - Signal server with BetterDesk API
-- `Dockerfile.hbbr` - Relay server
-- `Dockerfile.console` - Web console
-
----
-
-## Problem: "no such table: peer" Error
-
-### Symptom
-The Dashboard shows an error every few seconds:
-```
-Error loading devices: no such table: peer
-```
-Or HTTP 500 errors to `/api/*` endpoints.
-
-### Cause
-This happens when you're using **original RustDesk binaries** instead of **BetterDesk enhanced binaries**. The original binaries don't create the `peer` table with the columns BetterDesk Console expects.
-
-**Root causes:**
-1. Using an outdated Dockerfile that copies from `rustdesk/rustdesk-server:latest`
-2. Not rebuilding images after updating the repository
-3. Manual installation with original RustDesk binaries
-
-### ✅ Solution
-
-**For Docker users:**
-```bash
-# 1. Update repository to get latest Dockerfiles
-git pull origin main
-
-# 2. Remove old images
-docker compose down
-docker rmi betterdesk-hbbs:local betterdesk-hbbr:local 2>/dev/null || true
-
-# 3. Rebuild with new BetterDesk binaries
-docker compose build --no-cache
-
-# 4. Start fresh
-docker compose up -d
-
-# 5. Wait 30 seconds for database to be created, then check
-docker compose exec hbbs ls -la /root/db_v2.sqlite3
-```
-
-**For manual installation (Linux):**
-```bash
-# Use the fix command to replace binaries
-sudo ./install-improved.sh --fix
-
-# Or full reinstall
-sudo ./install-improved.sh
-```
-
-The BetterDesk binaries in `hbbs-patch-v2/` include:
-- HTTP API on port 21114
-- Extended `peer` table with `is_banned`, `is_deleted`, `last_online` columns
-- Device tracking and management features
-
----
-
-## Problem: Build Fails on Oracle Cloud VM (Read-only resolv.conf)
-
-### Symptom
-```
-/bin/sh: 1: cannot create /etc/resolv.conf: Read-only file system
-target betterdesk-console: failed to solve: process "/bin/sh -c echo \"nameserver 8.8.8.8\" >> /etc/resolv.conf...
-```
-
-### Cause
-Oracle Cloud VMs have `/etc/resolv.conf` managed by `oraclevcn` service and it's **read-only**. The Dockerfile tries to modify DNS settings which fails.
-
-### ✅ Solution
-
-**This is now fixed in the latest version.** The Dockerfile.console now checks if the file is writable before attempting to modify it:
-
-```dockerfile
-RUN if [ -w /etc/resolv.conf ] && ! grep -q "oraclevcn" /etc/resolv.conf 2>/dev/null; then \
-        echo "nameserver 8.8.8.8" >> /etc/resolv.conf; \
-        echo "nameserver 1.1.1.1" >> /etc/resolv.conf; \
-    fi && \
-    apt-get update && apt-get install -y ...
-```
-
-If you have an older version:
-```bash
-# Update to latest
-git pull origin main
-
-# Rebuild images
-docker compose build --no-cache
-docker compose up -d
-```
-
-**Alternative for Oracle Cloud (if DNS issues persist):**
-```bash
-# Configure Docker daemon to use Google DNS
-sudo mkdir -p /etc/docker
-sudo tee /etc/docker/daemon.json > /dev/null <<EOF
-{
-    "dns": ["8.8.8.8", "1.1.1.1"]
-}
-EOF
-sudo systemctl restart docker
-```
-
----
+BetterDesk runs as one container, `betterdesk`, with one process: signal, relay, Client API and web console. The commands below use that service name.
 
 ## Problem: DNS Failure During Build (AlmaLinux/CentOS)
 
 ### Symptom
-```
-=> => # Temporary failure resolving 'deb.debian.org'
-target betterdesk-console: failed to solve: ...exit code: 100
-```
+The local build (`docker compose -f docker-compose.single.yml up -d --build`) stops while it downloads packages or modules, with a name resolution error.
 
 ### Cause
-Docker on some RHEL-based systems (AlmaLinux, CentOS, Rocky Linux) can have DNS resolution issues during build.
+Docker on some RHEL-based systems (AlmaLinux, CentOS, Rocky Linux) and on Oracle Cloud VMs can have DNS resolution issues during build.
 
 ### ✅ Solutions
 
@@ -171,18 +26,16 @@ EOF
 sudo systemctl restart docker
 
 # Rebuild
-docker compose build --no-cache
+docker compose -f docker-compose.single.yml build --no-cache
 ```
 
 **Option 2: Use host network during build**
 ```bash
 # Build with host network
-docker build --network=host -f Dockerfile.console -t betterdesk-console:local .
-docker build --network=host -f Dockerfile.hbbs -t betterdesk-hbbs:local .
-docker build --network=host -f Dockerfile.hbbr -t betterdesk-hbbr:local .
+docker build --network=host -t betterdesk:local .
 
 # Then start normally
-docker compose up -d
+docker compose -f docker-compose.single.yml up -d
 ```
 
 **Option 3: Disable IPv6 in Docker (if IPv6 issues)**
@@ -269,150 +122,6 @@ sudo setenforce 1
 
 ---
 
-## Problem: Missing Admin Login Credentials
-
-If you started BetterDesk Console using Docker Compose following "Option 2" and don't see admin login credentials in the logs, it means the **database migration was not automatically executed**.
-
-## ✅ Quick Solution
-
-### Step 1: Check container status
-```bash
-docker compose ps
-docker compose logs betterdesk-console | grep -i admin
-```
-
-### Step 2: Run migration manually
-```bash
-# Run migration directly in the console container
-docker compose exec betterdesk-console python3 -c "
-import sqlite3
-import secrets
-import bcrypt
-from datetime import datetime
-import os
-
-DB_PATH = '/opt/rustdesk/db_v2.sqlite3'
-DEFAULT_ADMIN_USERNAME = 'admin'
-DEFAULT_ADMIN_PASSWORD = secrets.token_urlsafe(12)
-
-print('📦 Running BetterDesk Console migration...')
-
-# Connect to database
-conn = sqlite3.connect(DB_PATH)
-cursor = conn.cursor()
-
-# Check if users table exists
-cursor.execute(\"SELECT name FROM sqlite_master WHERE type='table' AND name='users'\")
-if cursor.fetchone():
-    print('ℹ️  Migration already applied')
-    exit(0)
-
-print('🔧 Creating authentication tables...')
-
-# Create authentication tables
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        role VARCHAR(20) NOT NULL DEFAULT 'viewer',
-        created_at DATETIME NOT NULL,
-        last_login DATETIME,
-        is_active BOOLEAN NOT NULL DEFAULT 1
-    )
-''')
-
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS sessions (
-        token VARCHAR(64) PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        created_at DATETIME NOT NULL,
-        expires_at DATETIME NOT NULL,
-        last_activity DATETIME NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-''')
-
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS audit_log (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        action VARCHAR(50) NOT NULL,
-        device_id VARCHAR(100),
-        details TEXT,
-        ip_address VARCHAR(50),
-        timestamp DATETIME NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-    )
-''')
-
-# Check if admin already exists
-cursor.execute('SELECT id FROM users WHERE username = ?', (DEFAULT_ADMIN_USERNAME,))
-if cursor.fetchone():
-    print('ℹ️  Admin user already exists')
-else:
-    # Create default admin
-    print('👤 Creating default admin user...')
-    salt = bcrypt.gensalt()
-    password_hash = bcrypt.hashpw(DEFAULT_ADMIN_PASSWORD.encode('utf-8'), salt).decode('utf-8')
-    
-    cursor.execute('''
-        INSERT INTO users (username, password_hash, role, created_at, is_active)
-        VALUES (?, ?, 'admin', ?, 1)
-    ''', (DEFAULT_ADMIN_USERNAME, password_hash, datetime.now()))
-    
-    print('✅ Created default admin user')
-    print('')
-    print('=' * 60)
-    print('🔐 DEFAULT ADMIN CREDENTIALS:')
-    print('=' * 60)
-    print(f'   Username: {DEFAULT_ADMIN_USERNAME}')
-    print(f'   Password: {DEFAULT_ADMIN_PASSWORD}')
-    print('=' * 60)
-    print('⚠️  IMPORTANT: Change this password after first login!')
-    print('=' * 60)
-
-conn.commit()
-conn.close()
-print('✅ Migration completed successfully')
-"
-```
-
-### Step 3: Check the result
-After running the above script you should see:
-```
-🔐 DEFAULT ADMIN CREDENTIALS:
-============================================================
-   Username: admin
-   Password: XyZ1aB2cD3eF4g
-============================================================
-```
-
-### Step 4: Login
-1. Open browser: http://localhost:5000
-2. Use credentials: `admin` / `generated-password`
-3. **Immediately change password** in settings!
-
-## 🐳 Automatic Solution (improved configuration)
-
-To prevent this issue in the future, you can use the improved configuration:
-
-### 1. Get improved files
-Replace your current `Dockerfile.console` with the improved version that automatically runs migration.
-
-### 2. Rebuild container
-```bash
-docker compose down
-docker compose build betterdesk-console
-docker compose up -d
-```
-
-The improved version automatically:
-✅ Detects if database exists  
-✅ Runs migration on first startup  
-✅ Displays login credentials in container logs  
-✅ Saves credentials to `/app/data/admin_credentials.txt` file
-
 ## 📋 Troubleshooting
 
 ### Problem: Permission denied reading `.admin_credentials`
@@ -420,39 +129,39 @@ The improved version automatically:
 **Symptom:** After install, this fails:
 
 ```bash
-docker compose exec console sh -c 'cat /opt/rustdesk/.admin_credentials'
+docker compose exec betterdesk sh -c 'cat /opt/rustdesk/.admin_credentials'
 # cat: can't open '/opt/rustdesk/.admin_credentials': Permission denied
 ```
 
-**Cause:** Hardened Docker images use `cap_drop: [ALL]`. `docker compose exec` runs as root, but without `CAP_DAC_OVERRIDE` root cannot read `.admin_credentials` (mode `0600`, owned by the `betterdesk` user). The web panel still works because Node.js runs as `betterdesk`.
+**Cause:** Hardened Docker images use `cap_drop: [ALL]`. `docker compose exec` runs as root, but without `CAP_DAC_OVERRIDE` root cannot read `.admin_credentials` (mode `0600`, owned by the `betterdesk` user). The web panel still works because the server runs as `betterdesk`.
 
 **Fix (recommended):**
 
 ```bash
-docker compose exec console betterdesk-show-admin-credentials
+docker compose exec betterdesk betterdesk-show-admin-credentials
 ```
 
 **Fix (works on images before the helper was added):**
 
 ```bash
-docker compose exec -u betterdesk console sh -c 'cat /opt/rustdesk/.admin_credentials 2>/dev/null || cat /app/data/.admin_credentials'
+docker compose exec -u betterdesk betterdesk sh -c 'cat /opt/rustdesk/.admin_credentials 2>/dev/null || cat /app/data/.admin_credentials'
 ```
 
 **Do not** run `chmod 777` on the credentials file — that makes the bootstrap password world-readable.
 
-If no file is found yet, wait for first boot to finish and check `docker compose logs server` for the bootstrap message. On a running installation, the file is only a recovery aid; it is not the database of users.
+If no file is found yet, wait for first boot to finish and check `docker compose logs betterdesk` for the bootstrap message. On a running installation, the file is only a recovery aid; it is not the database of users.
 
 ### Problem: Panel login fails but `/opt/rustdesk/.admin_credentials` looks correct (#385)
 
-**Symptom:** Fresh Docker install (`docker-compose.single.yml`, `docker-compose.quick.yml`, or `install.sh`). You read the bootstrap password from `/opt/rustdesk/.admin_credentials` (or `betterdesk-show-admin-credentials`), but the web panel at `:5000` returns **Invalid username or password**.
+**Symptom:** Fresh Docker install (`docker-compose.quick.single.yml`, `docker-compose.single.yml` or `install.sh`). You read the bootstrap password from `/opt/rustdesk/.admin_credentials` (or `betterdesk-show-admin-credentials`), but the web panel at `:5000` returns **Invalid username or password**.
 
-**Cause:** On first boot without `ADMIN_PASSWORD`, the Go server and Node.js console could each generate a random password. The credentials file then did not match the password hash stored for the admin user. Fresh SQLite installations use the centralized `/opt/rustdesk/db_v2.sqlite3` store (and PostgreSQL installations use the primary PostgreSQL database); `auth.db` is only a legacy migration path.
+**Cause:** On first boot without `ADMIN_PASSWORD`, the server generates a random password for the first admin and writes it to the credentials file. The file is a recovery aid, not the user database: when the stored admin was made by another start (another volume, an older install), the file does not match the password hash stored for the admin user. Fresh SQLite installations use the centralized `/opt/rustdesk/db_v2.sqlite3` store (and PostgreSQL installations use the primary PostgreSQL database); `auth.db` is only a legacy migration path.
 
-**Also common:** wiping only the `/opt/rustdesk` bind mount or volume while keeping `/app/data` (`console-data`). An old `auth.db` forces legacy panel authentication with a stale password hash, while bootstrap regenerates `.admin_credentials` on the RustDesk volume. Current `:dev` images fail fast on the most dangerous split state at container start.
+**Also common:** wiping only the `/opt/rustdesk` bind mount or volume while keeping `/app/data` (`console-data`). An old `auth.db` forces legacy panel authentication with a stale password hash, while bootstrap regenerates `.admin_credentials` on the RustDesk volume.
 
 **Also common:** commenting out `INIT_ADMIN_PASS` / `DEFAULT_ADMIN_PASSWORD` / `ADMIN_PASSWORD` in `docker-compose*.yml`. `ADMIN_PASSWORD=… docker compose up -d` on the host only passes the password into the container when those `${ADMIN_PASSWORD}` lines are present in the compose file.
 
-**Also common on ARM64:** after a failed ARM CI phase, `:dev` / tip tags may briefly be **amd64-only** (soft-merge keeps the amd64 channel publishing). Confirm with `docker buildx imagetools inspect ghcr.io/unitronix/betterdesk:dev` — expect both `linux/amd64` and `linux/arm64` on a healthy publish. If only amd64 is listed, wait for the next green Docker publish or use split compose / a local AIO build meanwhile.
+**Also common on ARM64:** after a failed ARM CI phase, `:dev` / tip tags may briefly be **amd64-only** (soft-merge keeps the amd64 channel publishing). Confirm with `docker buildx imagetools inspect ghcr.io/unitronix/betterdesk:dev` — expect both `linux/amd64` and `linux/arm64` on a healthy publish. If only amd64 is listed, wait for the next green Docker publish or use a local build (`docker-compose.single.yml`) meanwhile.
 
 **Workaround (existing broken install):**
 
@@ -468,27 +177,22 @@ ADMIN_PASSWORD='YourSecurePassword123' docker compose up -d
 
 Do not delete only the `/opt/rustdesk` bind mount while keeping `console-data`: that is not a clean reset. Do not use a credentials file to overwrite an existing user's password; use the normal password-reset procedure instead.
 
-**Fix:** Pull/rebuild current `:dev` images (or wait for the next GHCR tag). On ARM64 prefer the split layout images. The split entrypoints elect one creator for the shared credentials file, and the Node.js console now waits for the Go server to create the first admin in the consolidated database instead of creating a competing account. Setting `ADMIN_PASSWORD` before first start remains the deterministic option — keep the `INIT_ADMIN_*` / `DEFAULT_ADMIN_*` / `ADMIN_PASSWORD` env mappings in your compose file. Check `docker logs` for `Bootstrap: INIT_ADMIN_PASS/DEFAULT_ADMIN_PASSWORD set=yes|no` (password itself is never logged).
+**Fix:** Setting `ADMIN_PASSWORD` before first start is the deterministic option — keep the `INIT_ADMIN_*` / `DEFAULT_ADMIN_*` / `ADMIN_PASSWORD` env mappings in your compose file. Check `docker logs` for `Bootstrap: INIT_ADMIN_PASS/DEFAULT_ADMIN_PASSWORD set=yes|no` (password itself is never logged).
 
 **Diagnose before wiping data:** First determine whether the failure is authentication, CSRF, rate limiting, or session persistence. Run this against a disposable or maintenance window deployment; replace `<PASSWORD>` locally and do not paste it into an issue:
 
 ```bash
-# Confirm the effective paths in both services. A credentials file is not
-# itself an identity store, and a custom split compose must keep these paths
-# aligned.
-docker compose exec server sh -lc '
-  printf "server DB_TYPE=%s DB_URL=%s DB_PATH=%s AUTH_DB_PATH=%s\n" \
+# Confirm the effective paths. A credentials file is not itself an
+# identity store.
+docker compose exec betterdesk sh -lc '
+  printf "DB_TYPE=%s DB_URL=%s DB_PATH=%s AUTH_DB_PATH=%s\n" \
     "$DB_TYPE" "$DB_URL" "$DB_PATH" "$AUTH_DB_PATH"
-'
-docker compose exec console sh -lc '
-  printf "console DB_TYPE=%s DB_URL=%s DB_PATH=%s AUTH_DB_PATH=%s SQLITE_AUTH_DB_MODE=%s\n" \
-    "$DB_TYPE" "$DB_URL" "$DB_PATH" "$AUTH_DB_PATH" "$SQLITE_AUTH_DB_MODE"
 '
 
 # Inspect every possible identity store and the credential file. On a fresh
 # consolidated SQLite install, db_v2.sqlite3 contains the admin row and
 # /app/data/auth.db should be absent.
-docker compose exec console sh -lc '
+docker compose exec -u betterdesk betterdesk sh -lc '
   for db in /opt/rustdesk/db_v2.sqlite3 /app/data/db_v2.sqlite3 /app/data/auth.db; do
     if [ -f "$db" ]; then
       echo "=== $db ==="
@@ -502,21 +206,9 @@ docker compose exec console sh -lc '
   ls -la /opt/rustdesk/.admin_credentials /app/data/.admin_credentials 2>&1
 '
 
-# Also inspect the paths from the server container. This catches a custom
-# compose file where Go and Node.js resolve different SQLite files.
-docker compose exec server sh -lc '
-  for db in /opt/rustdesk/db_v2.sqlite3 /app/data/db_v2.sqlite3 /app/data/auth.db; do
-    if [ -f "$db" ]; then
-      echo "=== $db ==="
-      sqlite3 "$db" \
-        "SELECT username, substr(password_hash,1,30), role FROM users;"
-    fi
-  done
-'
-
 # Capture the CSRF token from the login page, then log in from inside the
-# console container so Nginx Proxy Manager is not part of this test.
-docker compose exec console sh -lc '
+# container so Nginx Proxy Manager is not part of this test.
+docker compose exec betterdesk sh -lc '
   curl -sS -c /tmp/bd-cookies http://127.0.0.1:5000/login > /tmp/bd-login.html
   grep -o "csrfToken: '[^']*'" /tmp/bd-login.html
   # Copy the token printed above into <CSRF_TOKEN>.
@@ -528,7 +220,7 @@ docker compose exec console sh -lc '
   curl -i -sS -b /tmp/bd-cookies http://127.0.0.1:5000/api/auth/verify
 '
 
-docker compose logs console 2>&1 | grep -E '\[AUTH\]|CSRF|Too many login|rate'
+docker compose logs betterdesk 2>&1 | grep -E '\[AUTH\]|CSRF|Too many login|rate'
 ```
 
 Interpret the result as follows:
@@ -539,26 +231,7 @@ Interpret the result as follows:
 - `200` from login followed by `401` from `/api/auth/verify`: session/cookie persistence or proxy headers.
 - `200` from both requests: the database credentials work; compare NPM access, forwarded headers, and browser cookies.
 
-When the console is behind Nginx Proxy Manager, set `TRUST_PROXY=1` in the console service and ensure NPM forwards `X-Forwarded-Proto`, `X-Forwarded-For`, and WebSocket upgrade headers. This fixes proxy/session diagnostics and rate-limit attribution; it does not by itself repair a mismatched SQLite password hash.
-
-For a custom split Compose file, keep the database contract explicit on both
-services:
-
-```yaml
-services:
-  server:
-    environment:
-      - DB_URL=/opt/rustdesk/db_v2.sqlite3
-  console:
-    environment:
-      - DB_PATH=/opt/rustdesk/db_v2.sqlite3
-      - TRUST_PROXY=${TRUST_PROXY:-}
-```
-
-Do not set only the console `DB_PATH` and rely on the Go server's working
-directory. Do not point the console at `/app/data/db_v2.sqlite3` while the
-server uses `/opt/rustdesk/db_v2.sqlite3`; those are independent SQLite files
-even when both containers share the same host deployment.
+When the console is behind Nginx Proxy Manager, set `TRUST_PROXY=1` on the `betterdesk` service and ensure NPM forwards `X-Forwarded-Proto`, `X-Forwarded-For`, and WebSocket upgrade headers. This fixes proxy/session diagnostics and rate-limit attribution; it does not by itself repair a mismatched SQLite password hash.
 
 ### Problem: `betterdesk-show-admin-credentials: executable file not found`
 
@@ -578,15 +251,12 @@ cd /opt/betterdesk/docker   # or your compose directory
 # Ensure .env has BETTERDESK_IMAGE_TAG=<current VERSION>, e.g. 3.5.37
 docker compose pull && docker compose up -d
 
-# Official single-container service name:
 docker compose exec betterdesk betterdesk-show-admin-credentials
 
 # Until you can pull a newer image:
 docker compose exec -u betterdesk betterdesk \
   sh -c 'cat /opt/rustdesk/.admin_credentials 2>/dev/null || cat /app/data/.admin_credentials'
 ```
-
-For the legacy two-container layout, replace `betterdesk` with `console`.
 
 ### Problem: Password reset says `No such container: betterdesk-console`
 
@@ -596,61 +266,12 @@ For the legacy two-container layout, replace `betterdesk` with `console`.
 Error response from daemon: No such container: betterdesk-console
 ```
 
-**Cause:** Official install uses the all-in-one container named `betterdesk`. Older script paths always exec'd `betterdesk-console` (#299).
+**Cause:** The install runs one container named `betterdesk`; an older `betterdesk-docker.sh` looked for `betterdesk-console` (#299).
 
-**Fix:** Update to a build that includes `resolve_panel_container`, or reset manually:
-
-```bash
-docker exec betterdesk node /app/scripts/reset-password.js 'YourNewPassword' admin
-```
-
-### Problem: Split layout console exits with `SQLITE_READONLY` / `readonly database`
-
-**Symptom:** `betterdesk-console` logs:
-
-```text
-Failed to start server: SqliteError: attempt to write a readonly database
-```
-
-**Cause:** Legacy `docker-compose.quick.yml` briefly pointed `DB_PATH` at `/app/data/db_v2.sqlite3` on the console volume while the Go server mounts that volume read-only for `auth.db` sync — wrong path for the shared peer DB (#299).
-
-**Fix:** Use current `docker-compose.quick.yml` (`DB_PATH=/opt/rustdesk/db_v2.sqlite3`), then:
+**Fix:** Update `betterdesk-docker.sh`, or reset manually (the password goes on stdin):
 
 ```bash
-docker compose pull && docker compose up -d
-```
-
-Fresh volumes are simplest. If you already wrote peers only into an orphan `/app/data/db_v2.sqlite3`, copy it into the shared Go data volume at `/opt/rustdesk/db_v2.sqlite3` before recreating, or re-enroll devices.
-
-### Problem: All-in-one exits with `ENV_NTP_SERVERS` / supervisord format string error
-
-**Symptom:** Fresh AIO container logs end with:
-
-```text
-Error: Format string '…NTP_SERVERS="%(ENV_NTP_SERVERS)s"…' for 'environment'
-contains names ('ENV_NTP_SERVERS') which cannot be expanded.
-```
-
-**Cause:** `supervisord.conf` interpolates billing/NTP env vars for the Go server. Older images / Portainer stacks / bare `docker run` that omit `NTP_SERVERS`, `BILLING_MAX_CLOCK_SKEW_MS`, `BILLING_REQUIRE_SYNCED_CLOCK`, and `BILLING_TRUST_OS_NTP` crash at supervisord parse time (#299).
-
-**Fix (current images):** entrypoint and Dockerfile supply defaults — pull/rebuild the AIO image and recreate the container.
-
-**Workaround (until you can update the image):** add the vars to your compose/stack (official `docker-compose.quick.single.yml` already includes them), then:
-
-```bash
-cd /opt/betterdesk/docker   # or your compose directory
-docker compose up -d --force-recreate
-```
-
-Or for a one-off:
-
-```bash
-docker run ... \
-  -e NTP_SERVERS=pool.ntp.org,time.google.com,time.cloudflare.com \
-  -e BILLING_MAX_CLOCK_SKEW_MS=2000 \
-  -e BILLING_REQUIRE_SYNCED_CLOCK=1 \
-  -e BILLING_TRUST_OS_NTP=Y \
-  ghcr.io/unitronix/betterdesk:<tag>
+printf '%s\n' 'YourNewPassword' | docker exec -i -u betterdesk betterdesk /usr/local/bin/betterdesk-server reset-password admin
 ```
 
 ### Problem: Hardened bind mounts regenerate `.api_key` or restart after credentials cleanup (#424)
@@ -667,8 +288,7 @@ format-string error.
 for files as root, so existing app-owned files looked absent. Older bootstrap
 paths could also leave the variables required by supervisord undefined.
 
-**Fix:** Pull/rebuild the current all-in-one or split images and recreate the
-container:
+**Fix:** Pull or rebuild the current image and recreate the container:
 
 ```bash
 docker compose pull
@@ -735,17 +355,8 @@ Chrome/Edge often report `ERR_SSL_PROTOCOL_ERROR` for the same case.
 
 ### Problem: "Database not found"
 ```bash
-# Check volumes
-docker compose exec betterdesk-console ls -la /opt/rustdesk/
-
-# Check if HBBS created database
-docker compose exec hbbs ls -la /root/
-```
-
-### Problem: "bcrypt not available"
-```bash
-# Install bcrypt in container
-docker compose exec betterdesk-console pip install bcrypt
+# The SQLite database and keys live on the betterdesk-data volume
+docker compose exec -u betterdesk betterdesk ls -la /opt/rustdesk/
 ```
 
 ### Problem: Container won't start
@@ -760,20 +371,20 @@ docker compose ps
 ## 🔧 Useful commands
 
 ```bash
-# Check console container logs
-docker compose logs -f betterdesk-console
+# Logs
+docker compose logs -f betterdesk
 
-# Access container
-docker compose exec betterdesk-console bash
+# Shell in the container (Alpine: sh, not bash)
+docker compose exec -u betterdesk betterdesk sh
 
-# Restart entire stack
-docker compose restart
+# Restart
+docker compose restart betterdesk
 
 # Check database status
-docker compose exec betterdesk-console sqlite3 /opt/rustdesk/db_v2.sqlite3 ".tables"
+docker compose exec -u betterdesk betterdesk sqlite3 /opt/rustdesk/db_v2.sqlite3 ".tables"
 
 # Check users in database
-docker compose exec betterdesk-console sqlite3 /opt/rustdesk/db_v2.sqlite3 "SELECT username, role FROM users;"
+docker compose exec -u betterdesk betterdesk sqlite3 /opt/rustdesk/db_v2.sqlite3 "SELECT username, role FROM users;"
 ```
 
 ## 🔒 Security & Updates
@@ -788,9 +399,9 @@ docker compose exec betterdesk-console sqlite3 /opt/rustdesk/db_v2.sqlite3 "SELE
 # Method 1: Manual updates (recommended)
 docker-compose pull && docker-compose down && docker-compose up -d
 
-# Method 2: Update specific services
-docker-compose pull betterdesk-console
-docker-compose up -d betterdesk-console
+# Method 2: Update the one service
+docker-compose pull betterdesk
+docker-compose up -d betterdesk
 
 # Method 3: Check for updates first
 docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.CreatedAt}}\t{{.Size}}"
@@ -824,7 +435,7 @@ fi
 
 ---
 
-## Problem: Web Remote fails on split Docker (`initiator_not_registered`)
+## Problem: Web Remote fails on every device (`initiator_not_registered`)
 
 ### Symptom
 
@@ -836,33 +447,31 @@ reason=initiator_not_registered
 target_id=<peer id>
 ```
 
-Actor IP is a Docker bridge address such as `172.18.0.28` (not `127.0.0.1`).
-
-Desktop↔desktop may still work. Single-container (AIO) installs are usually unaffected.
+Desktop↔desktop may still work.
 
 ### Cause
 
-Web Remote PunchHole is proxied by the **console** container to Go `:21116`. The panel never registers as a RustDesk peer, so Go accepts those punches only when the source IP is in `PANEL_SIGNAL_PROXY_CIDRS` (Go default: loopback only). In the **split** layout the console source IP is the bridge address, so every browser session is denied (#465 / #313 / #302).
+The browser's Web Remote goes through the console's bridge, which opens a TCP connection to the signal server on `:21116`. The panel never registers as a RustDesk peer, so the signal server lets the bridge start connections only when both hold:
+
+- The bridge's first message carries the secret the signal server made at start. The bridge runs in the same process and knows it; nothing else does.
+- The bridge's source address is in `PANEL_SIGNAL_PROXY_CIDRS` (default `127.0.0.0/8,::1/128`).
+
+A loopback address alone does not count. Every other connection is treated as any client, which needs a registered peer.
+
+The second condition fails when `WS_HBBS_HOST` points the bridge at an address other than loopback, so its connection comes from that interface's address.
 
 ### Solution
 
-On the **Go `server`** service (not only the console), set:
+Leave `WS_HBBS_HOST` unset (the bridge then uses `localhost`), or add the bridge's source address to `PANEL_SIGNAL_PROXY_CIDRS` on the `betterdesk` service:
 
 ```env
-PANEL_SIGNAL_PROXY_CIDRS=172.16.0.0/12,127.0.0.0/8,::1/128
+PANEL_SIGNAL_PROXY_CIDRS=<source-ip>/32,127.0.0.0/8,::1/128
 ```
 
-Official [`docker-compose.quick.yml`](../../docker-compose.quick.yml) / [`docker-compose.yml`](../../docker-compose.yml) now default to that value. Recreate the server after changing env:
+Recreate the container after changing env:
 
 ```bash
 docker compose up -d
-```
-
-On a **shared Docker host**, prefer the console container IP `/32` instead of the whole `172.16.0.0/12` range:
-
-```bash
-docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' betterdesk-console
-# then: PANEL_SIGNAL_PROXY_CIDRS=<that-ip>/32,127.0.0.0/8,::1/128
 ```
 
 ### Verify
@@ -890,10 +499,10 @@ Approving the **target** device does not fix this — the reject is about the **
 
 The signal server received a 64-character opaque client login token on PunchHole/RequestRelay, but that token hash is missing, expired, or revoked in the **same** database Go uses (`client_sessions`). Common Docker/VPS causes:
 
-1. **Source-build compose not rebuilt** — `docker-compose.yml` uses `betterdesk-*:local` + `pull_policy: never`. `docker compose pull` does not update those images; use `git pull` + `docker compose up -d --build`, or switch to `docker-compose.quick.yml` (GHCR) and pull there.
+1. **Source-build compose not rebuilt** — `docker-compose.single.yml` uses `betterdesk:local` + `pull_policy: never`. `docker compose pull` does not update that image; use `git pull` + `docker compose up -d --build`, or switch to `docker-compose.quick.single.yml` (GHCR) and pull there.
 2. **Wrong Client API URL** — API Server pointed at panel `:5000` or only a partial Nginx path (e.g. `/api/ws/` → Go while `/api/login` still hits the panel). Login may “succeed” in the UI without writing a Go `client_sessions` row that PunchHole can validate.
-3. **Split DB / stale token** — Go and console not on the same SQLite/Postgres store, or an old local token after image/DB recreate. Env paths alone (`DB_URL` / `DB_PATH`) are not enough; both containers must see the same file/DSN content.
-4. **Misconfigured TLS on Go behind Nginx** — `TLS_API=Y` (or signal/relay TLS) without certs, or double TLS when the reverse proxy already terminates HTTPS. Upstream to Go should stay plain HTTP.
+3. **Stale token** — an old local token after image/DB recreate.
+4. **Misconfigured TLS behind Nginx** — `TLS_API=Y` (or signal/relay TLS) without certs, or double TLS when the reverse proxy already terminates HTTPS. Upstream to Go should stay plain HTTP.
 
 This is usually **not** a pure WSS/firewall failure: if WebSockets were completely broken, anonymous (logged-out) connections would typically fail too.
 
@@ -913,40 +522,24 @@ docker compose up -d --build --force-recreate
 Confirm the running version matches what you expect:
 
 ```bash
-curl -sS http://127.0.0.1:21114/api/health   # split Go API
-# or: curl -sS http://127.0.0.1:21121/api/health   # single / compat proxy
+curl -sS http://127.0.0.1:21121/api/health
 docker compose ps
 ```
 
 2. **Point the RustDesk client at the Client API, not the panel**
 
-| Layout | API Server |
-|--------|------------|
-| Official single container | `http://YOUR_HOST:21121` (or HTTPS if you terminate TLS for that port) |
-| Split `server` + `console` | `http://YOUR_HOST:21114` (preferred) or `:21121` if the Node compat proxy is enabled |
+API Server: `http://YOUR_HOST:21121` (or HTTPS if you terminate TLS for that port).
 
-Do **not** use panel port `5000` as API Server. Behind Nginx, either expose `:21114`/`:21121` directly, or proxy **Client API** paths to Go (or the `:21121` proxy) — not only `/api/ws/`. Prefer a separate API hostname; see [REVERSE_PROXY.md](../setup/REVERSE_PROXY.md#client-api-vs-panel-on-the-same-hostname).
+Do **not** use panel port `5000` as API Server. Behind Nginx, either expose `:21121` directly, or proxy **Client API** paths to it — not only `/api/ws/`. Prefer a separate API hostname; see [REVERSE_PROXY.md](../setup/REVERSE_PROXY.md#client-api-vs-panel-on-the-same-hostname).
 
-3. **Same primary database (split Docker)**
-
-```bash
-docker compose exec server sh -lc 'printf "DB_URL=%s\n" "$DB_URL"'
-docker compose exec console sh -lc 'printf "DB_PATH=%s\n" "$DB_PATH"'
-# Same path string is necessary but not sufficient — compare the file:
-docker compose exec server sh -lc 'ls -la /opt/rustdesk/db_v2.sqlite3; sha256sum /opt/rustdesk/db_v2.sqlite3 2>/dev/null || cksum /opt/rustdesk/db_v2.sqlite3'
-docker compose exec console sh -lc 'ls -la /opt/rustdesk/db_v2.sqlite3; sha256sum /opt/rustdesk/db_v2.sqlite3 2>/dev/null || cksum /opt/rustdesk/db_v2.sqlite3'
-```
-
-Both services should share the volume that mounts `/opt/rustdesk` (writable for SQLite WAL).
-
-4. **Re-login after recreate**
+3. **Re-login after recreate**
 
 In the Windows RustDesk client: sign out → sign in again with a panel user allowed to connect. Old tokens after image/DB changes produce exactly this log line.
 
-5. **Reverse-proxy / production env hygiene**
+4. **Reverse-proxy / production env hygiene**
 
 - Native WSS: `/ws/id` → host `21118`, `/ws/relay` → host `21119` (Upgrade headers on). Do not send those paths to panel `:5000`.
-- When Nginx terminates TLS: leave Go `TLS_API` / `TLS_SIGNAL` / `TLS_RELAY` unset unless you configure `TLS_CERT`/`TLS_KEY` for Enterprise dual-TLS.
+- When Nginx terminates TLS: leave `TLS_API` / `TLS_SIGNAL` / `TLS_RELAY` unset unless you configure `TLS_CERT`/`TLS_KEY` for Enterprise dual-TLS.
 - Prefer `ENCRYPTED_ONLY=1`, `ALLOW_LEGACY_OUTBOUND=N`, and `ENROLLMENT_MODE=managed` after devices are approved.
 - Set a reachable relay: `RELAY_SERVERS=YOUR_PUBLIC_IP_OR_DNS:21117`.
 
@@ -956,47 +549,22 @@ In the Windows RustDesk client: sign out → sign in again with a panel user all
 docker compose ps
 docker compose config | grep -E 'image:|pull_policy|DB_URL|DB_PATH|RELAY_SERVERS|TLS_|ALLOW_LEGACY'
 
-curl -sS http://127.0.0.1:21114/api/health || curl -sS http://127.0.0.1:21121/api/health
-curl -sS http://127.0.0.1:21114/api/login-options || curl -sS http://127.0.0.1:21121/api/login-options
+curl -sS http://127.0.0.1:21121/api/health
+curl -sS http://127.0.0.1:21121/api/login-options
 
 # After a failed logged-in connect (redact secrets; do not paste access tokens):
 docker compose logs --tail=300 | grep -E 'initiator_token_rejected|/api/login|issueClientSession|Token generation'
 ```
 
-A healthy logged-in flow shows a successful `/api/login` (or `issueClientSession`) shortly before PunchHole. If PunchHole rejects with `initiator_token_rejected` and there is **no** matching login/issue line for that attempt, the client is not talking to the Go Client API you think it is.
+A healthy logged-in flow shows a successful `/api/login` (or `issueClientSession`) shortly before PunchHole. If PunchHole rejects with `initiator_token_rejected` and there is **no** matching login/issue line for that attempt, the client is not talking to the Client API you think it is.
 
 ### What to paste when asking for help
 
 Redact passwords, keys, and bearer tokens. Include:
 
-- single vs split compose (and whether images are `ghcr.io/…` or `*:local`)
+- which compose file (and whether the image is `ghcr.io/…` or `betterdesk:local`)
 - RustDesk client version; ID / Relay / API host+ports only (no key)
 - whether a reverse proxy fronts WSS / API
 - a few log lines around the next `initiator_token_rejected` plus any `/api/login` / `issueClientSession` lines from the same attempt
 
 Related: [API port consolidation](../important/betterdesk-api-port-consolidation.md), [REVERSE_PROXY.md](../setup/REVERSE_PROXY.md), [Client Setup — login](../wiki/Client-Setup.md#client-login).
-
----
-
-## Problem: Shell Not Available in HBBS/HBBR Containers
-
-### Symptom
-When trying to exec into the hbbs or hbbr containers, you get errors like:
-```
-OCI runtime exec failed: exec failed: unable to start container process: exec: "sh": executable file not found in $PATH
-```
-
-### Cause
-The official `rustdesk/rustdesk-server:latest` image is based on `FROM scratch` which contains only the binaries without any shell or utilities.
-
-### Solution
-BetterDesk Console now uses custom Dockerfiles (`Dockerfile.hbbs` and `Dockerfile.hbbr`) that:
-1. Copy binaries from the official RustDesk image
-2. Use `busybox:musl` as base for shell support
-3. Provide essential tools: `sh`, `nc`, `wget`, `cat`, `ls`, `echo`, etc.
-
-If you're upgrading from an older version, rebuild the images:
-```bash
-docker-compose build --no-cache hbbs hbbr
-docker-compose up -d
-```
