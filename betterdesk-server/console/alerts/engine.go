@@ -32,6 +32,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -49,6 +50,14 @@ const DefaultCooldownSecs = 300
 
 // SweepInterval is how often the offline sweep runs.
 const SweepInterval = time.Minute
+
+// The alert mails: how many are sent at a time, and how many may wait. A
+// sweep that finds many devices offline at once fills the queue, and the
+// mails beyond it are dropped instead of opening a connection each.
+const (
+	DefaultMailWorkers = 4
+	DefaultMailQueue   = 500
+)
 
 // Mailer sends the mail for an alert. *mail.Service is one.
 type Mailer interface {
@@ -88,6 +97,12 @@ type Options struct {
 	// MailTimeout is how long one alert mail may take. Zero means ten
 	// minutes, the longest nodemailer itself waited on a silent server.
 	MailTimeout time.Duration
+	// MailWorkers is how many alert mails are sent at a time. Zero means
+	// DefaultMailWorkers.
+	MailWorkers int
+	// MailQueue is how many alert mails may wait to be sent. Zero means
+	// DefaultMailQueue.
+	MailQueue int
 	// BackgroundTimeout is how long one background evaluation may take.
 	// Zero means five minutes.
 	BackgroundTimeout time.Duration
@@ -104,8 +119,13 @@ type Engine struct {
 	now   func() time.Time
 	base  context.Context
 
-	// background counts evaluations and mails still running
+	// background counts evaluations and mails still running or waiting
 	background sync.WaitGroup
+	// mailQueue holds the alert mails waiting to be sent, mailWorkers is
+	// the number of goroutines sending them
+	mailMu      sync.Mutex
+	mailQueue   []alertMail
+	mailWorkers int
 	// sweeping is set while a sweep runs
 	sweeping atomic.Bool
 }
@@ -128,6 +148,12 @@ func New(opts Options) *Engine {
 	}
 	if e.opts.MailTimeout <= 0 {
 		e.opts.MailTimeout = 10 * time.Minute
+	}
+	if e.opts.MailWorkers <= 0 {
+		e.opts.MailWorkers = DefaultMailWorkers
+	}
+	if e.opts.MailQueue <= 0 {
+		e.opts.MailQueue = DefaultMailQueue
 	}
 	if e.opts.BackgroundTimeout <= 0 {
 		e.opts.BackgroundTimeout = 5 * time.Minute
@@ -307,18 +333,52 @@ func ruleCooldown(stored jsbind.Value) (float64, error) {
 	return secs, nil
 }
 
-// mailAlert sends the alert mail beside the evaluation, which does not
-// wait for it. A failure is logged.
+// alertMail is an alert mail waiting to be sent.
+type alertMail struct {
+	alert mail.Alert
+	rule  mail.AlertRule
+}
+
+// mailAlert queues the alert mail; the evaluation does not wait for it.
+// At most MailWorkers mails are sent at a time, each over a connection of
+// its own, and at most MailQueue wait: a mail that finds the queue full
+// is dropped and logged. A failure is logged.
 func (e *Engine) mailAlert(alert mail.Alert, rule mail.AlertRule) {
+	e.mailMu.Lock()
+	defer e.mailMu.Unlock()
+	if len(e.mailQueue) >= e.opts.MailQueue {
+		e.log.Error("Email dropped: " + strconv.Itoa(len(e.mailQueue)) + " alert mails are waiting already")
+		return
+	}
 	e.background.Add(1)
-	go func() {
-		defer e.background.Done()
+	e.mailQueue = append(e.mailQueue, alertMail{alert, rule})
+	if e.mailWorkers < e.opts.MailWorkers {
+		e.mailWorkers++
+		go e.sendMails()
+	}
+}
+
+// sendMails sends queued alert mails until the queue is empty.
+func (e *Engine) sendMails() {
+	for {
+		e.mailMu.Lock()
+		if len(e.mailQueue) == 0 {
+			e.mailWorkers--
+			e.mailMu.Unlock()
+			return
+		}
+		next := e.mailQueue[0]
+		e.mailQueue[0] = alertMail{}
+		e.mailQueue = e.mailQueue[1:]
+		e.mailMu.Unlock()
+
 		ctx, cancel := context.WithTimeout(e.base, e.opts.MailTimeout)
-		defer cancel()
-		if _, err := e.opts.Mail.SendAlertEmail(ctx, alert, rule); err != nil {
+		if _, err := e.opts.Mail.SendAlertEmail(ctx, next.alert, next.rule); err != nil {
 			e.log.Error("Email failed: " + err.Error())
 		}
-	}()
+		cancel()
+		e.background.Done()
+	}
 }
 
 // EvalOptions are the options of EvaluateRules.
