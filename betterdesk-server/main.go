@@ -451,6 +451,7 @@ func main() {
 
 	// Initialize admin TCP interface
 	adminSrv := admin.New(cfg, database, nil, Version) // peer map set per mode
+	adminSrv.SetAdminPassword(cfg.AdminPassword)
 	adminSrv.SetBlocklist(blocklist)
 	adminSrv.SetReloadFunc(reloadHandler.Execute)
 
@@ -643,9 +644,6 @@ func main() {
 		}
 
 		adminSrv.SetPeerMap(sig.PeerMap())
-		if cfg.AdminPassword != "" {
-			adminSrv.SetAdminPassword(cfg.AdminPassword)
-		}
 		if err := adminSrv.Start(ctx); err != nil {
 			log.Printf("WARN: Failed to start admin interface: %v", err)
 		}

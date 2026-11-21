@@ -161,3 +161,22 @@ func TestAdminRejectsEnabledPortWithoutPassword(t *testing.T) {
 		t.Fatal("expected enabled admin interface without password to be rejected")
 	}
 }
+
+// The password the connection handler asks for is the one set on the
+// server; a server that has none must not listen, whatever the config holds.
+func TestAdminRefusesToListenWithoutServerPassword(t *testing.T) {
+	cfg := config.DefaultConfig()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.AdminPort = ln.Addr().(*net.TCPAddr).Port
+	ln.Close()
+	cfg.AdminPassword = testAdminPassword
+
+	srv := New(cfg, nil, peer.NewMap(), "test")
+	if err := srv.Start(context.Background()); err == nil {
+		srv.Stop()
+		t.Fatal("the admin interface listened without a password to ask for")
+	}
+}

@@ -73,6 +73,11 @@ func (s *Server) Start(ctx context.Context) error {
 	if s.cfg.AdminPort == 0 {
 		return nil // Admin interface disabled
 	}
+	// handleConn asks for the password set here and skips the prompt when
+	// there is none, so never listen without one.
+	if strings.TrimSpace(s.adminPassword) == "" {
+		return fmt.Errorf("admin: no admin password set on the server")
+	}
 
 	s.ctx, s.cancel = context.WithCancel(ctx)
 
