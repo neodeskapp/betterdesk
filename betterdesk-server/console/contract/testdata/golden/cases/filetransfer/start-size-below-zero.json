@@ -17,7 +17,7 @@
    "roles": [
     "admin"
    ],
-   "status": 201,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -38,36 +38,10 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "createdAt",
-     "integer": true
-    },
-    {
-     "path": "id",
-     "pattern": "^[9aA+/_=-]{32}$"
-    },
-    {
-     "path": "updatedAt",
-     "integer": true
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "bytesTransferred": 0,
-     "chunksReceived": 0,
-     "createdAt": 0,
-     "createdBy": "e2e_admin",
-     "deviceId": "900100003",
-     "direction": "upload",
-     "filename": "file",
-     "id": "<volatile>",
-     "mimeType": "application/octet-stream",
-     "size": -5,
-     "status": "pending",
-     "totalChunks": 1,
-     "updatedAt": 0
+     "error": "Invalid file size: -5"
     }
    }
   }

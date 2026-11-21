@@ -119,7 +119,7 @@ func TestVectors(t *testing.T) {
 	}
 	w := newWorld(t)
 	etags := map[string]string{}
-	failures, unstored, noPath, refusedDownloads, deviceRefusals := 0, 0, 0, 0, 0
+	failures, unstored, noPath, refusedDownloads, deviceRefusals, sizeRefusals := 0, 0, 0, 0, 0, 0
 	for i, v := range vectors {
 		switch {
 		case v.Feed != nil:
@@ -154,6 +154,9 @@ func TestVectors(t *testing.T) {
 		rec, _ := w.Do(req, nil)
 		if deviceNotText(&v) {
 			deviceRefusals++
+		}
+		if negativeSize(&v) {
+			sizeRefusals++
 		}
 		if refusedDownload(&v) {
 			refusedDownloads++
@@ -251,6 +254,9 @@ func TestVectors(t *testing.T) {
 	if deviceRefusals == 0 {
 		t.Error("no start names a device that is no text: the fix of FT10 changes no vector")
 	}
+	if sizeRefusals == 0 {
+		t.Error("no start names a negative size: the fix of RV42 changes no vector")
+	}
 }
 
 // downloadFailed is the body Node answered a download with that failed
@@ -292,7 +298,8 @@ func withoutTempPath(text string) (string, bool) {
 
 // withoutUnstored is a list of transfers of the Node run without the
 // ones whose device is no text or whose direction has none (an object
-// with a member named toString), and whether it had any.
+// with a member named toString), or whose size is below 0 (RV42), and
+// whether it had any.
 func withoutUnstored(list string) (string, bool) {
 	var records []json.RawMessage
 	if !strings.HasPrefix(list, "[") || json.Unmarshal([]byte(list), &records) != nil {
@@ -303,9 +310,10 @@ func withoutUnstored(list string) (string, bool) {
 		var fields struct {
 			DeviceID  json.RawMessage `json:"deviceId"`
 			Direction json.RawMessage `json:"direction"`
+			Size      any             `json:"size"`
 		}
 		_ = json.Unmarshal(record, &fields)
-		if noText(fields.DeviceID) || noText(fields.Direction) || !isText(fields.DeviceID) {
+		if size, isNumber := fields.Size.(float64); noText(fields.DeviceID) || noText(fields.Direction) || !isText(fields.DeviceID) || isNumber && size < 0 {
 			continue
 		}
 		kept = append(kept, string(record))
@@ -426,5 +434,29 @@ func deviceNotText(v *vector) bool {
 	}
 	headers["content-type"] = "application/json; charset=utf-8"
 	v.Headers = headers
+	return true
+}
+
+// negativeSize is the fix of RV42 on a vector: a start that Node made
+// with a size below 0, which a request's size such as -5.5 becomes, answers
+// 400 and stores nothing.
+func negativeSize(v *vector) bool {
+	if v.Request == nil || v.Request.Method != http.MethodPost || v.Request.Body == nil || v.Status != http.StatusCreated ||
+		!strings.HasSuffix(strings.ToLower(strings.TrimSuffix(v.Request.Path, "/")), "/transfer") {
+		return false
+	}
+	body, _ := base64.StdEncoding.DecodeString(v.Body)
+	var record struct {
+		Size any `json:"size"`
+	}
+	if json.Unmarshal(body, &record) != nil {
+		return false
+	}
+	size, isNumber := record.Size.(float64)
+	if !isNumber || size >= 0 {
+		return false
+	}
+	v.Status = http.StatusBadRequest
+	v.Body = base64.StdEncoding.EncodeToString([]byte(`{"error":"Invalid file size: ` + strconv.FormatFloat(size, 'f', -1, 64) + `"}`))
 	return true
 }

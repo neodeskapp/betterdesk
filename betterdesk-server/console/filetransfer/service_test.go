@@ -192,9 +192,9 @@ func TestRecordsAreCopies(t *testing.T) {
 
 func TestMarshalledShapes(t *testing.T) {
 	s, _ := newService(t)
-	record, _ := s.CreateTransfer(Params{Filename: "a.txt", DeviceID: Undefined, Size: "abc"})
+	record, _ := s.CreateTransfer(Params{Filename: "a.txt", DeviceID: Undefined, Size: "12"})
 	raw, _ := json.Marshal(record)
-	if strings.Contains(string(raw), "deviceId") || !strings.HasPrefix(string(raw), `{"id":"`+record.ID+`","direction":"download","filename":"a.txt","size":"abc"`) {
+	if strings.Contains(string(raw), "deviceId") || !strings.HasPrefix(string(raw), `{"id":"`+record.ID+`","direction":"download","filename":"a.txt","size":"12"`) {
 		t.Errorf("record: %s", raw)
 	}
 	// The record names no path on the server (BUGS FT6)
@@ -202,7 +202,7 @@ func TestMarshalledShapes(t *testing.T) {
 		t.Errorf("record with the path of its file: %s", raw)
 	}
 	progress, _ := json.Marshal(s.GetProgress(record.ID))
-	want := `{"transferId":"` + record.ID + `","status":"pending","bytesTransferred":0,"totalBytes":"abc","chunksReceived":0,"totalChunks":1,"percent":null,"filename":"a.txt","direction":"download"}`
+	want := `{"transferId":"` + record.ID + `","status":"pending","bytesTransferred":0,"totalBytes":"12","chunksReceived":0,"totalChunks":1,"percent":0,"filename":"a.txt","direction":"download"}`
 	if string(progress) != want {
 		t.Errorf("progress:\n  %s\nwant:\n  %s", progress, want)
 	}
@@ -526,6 +526,32 @@ func TestAChunkThatIsNotBase64IsRefused(t *testing.T) {
 			t.Errorf("chunk %q: %v", text, err)
 		} else if got := s.GetTransfer(record.ID).BytesTransferred - before; got != bytes {
 			t.Errorf("chunk %q gave %d bytes, want %d", text, got, bytes)
+		}
+	}
+}
+
+// A transfer's size is a number from 0 up, or 0 when none is given. Any
+// other size is refused before the transfer is stored, from a device's
+// init as from a caller, so a transfer always has a limit and an end
+// (BUGS RV42).
+func TestASizeThatIsNoNumberIsRefused(t *testing.T) {
+	s, _ := newService(t)
+	for _, size := range []any{"abc", "12abc", goapi.NewObject(), []any{float64(1), float64(2)}, float64(-1), "-5"} {
+		if _, err := s.CreateTransfer(Params{Filename: "x.bin", DeviceID: "d", Size: size}); err == nil || !strings.HasPrefix(err.Error(), "Invalid file size") {
+			t.Errorf("CreateTransfer with the size %#v: %v", size, err)
+		}
+		message := goapi.NewObject("action", "init", "filename", "x.bin", "size", size)
+		raw, _ := json.Marshal(s.HandleMessage("dev", message))
+		if !strings.HasPrefix(string(raw), `{"action":"error","error":"Invalid file size`) {
+			t.Errorf("init with the size %#v: %s", size, raw)
+		}
+	}
+	if list := s.ListTransfers(Filter{}); len(list) != 0 {
+		t.Fatalf("%d transfers stored, the first %+v", len(list), list[0])
+	}
+	for _, size := range []any{Undefined, nil, "", float64(0), "12", float64(MaxFileSize)} {
+		if _, err := s.CreateTransfer(Params{Filename: "x.bin", DeviceID: "d", Size: size}); err != nil {
+			t.Errorf("CreateTransfer with the size %#v: %v", size, err)
 		}
 	}
 }

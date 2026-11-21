@@ -214,7 +214,7 @@ type Progress struct {
 	ChunksReceived int64
 	TotalChunks    float64
 	// Percent is BytesTransferred of TotalBytes; a transfer of no bytes
-	// counts as one byte long. It is NaN for a size that is no number.
+	// counts as one byte long.
 	Percent   float64
 	Filename  string
 	Direction any
@@ -265,8 +265,9 @@ var ErrNotText = errors.New("Cannot convert object to primitive value")
 
 // CreateTransfer starts a transfer and returns its record.
 //
-// Errors: "File too large: <size> bytes (max 4294967296)" for a size
-// above MaxFileSize, ErrNotText for a size, a file name, a direction or a
+// Errors: "Invalid file size: <size>" for a size that is no number from 0
+// up, "File too large: <size> bytes (max 4294967296)" for a size above
+// MaxFileSize, ErrNotText for a size, a file name, a direction or a
 // device that has no text, and the errors of package safepath. A refused
 // transfer is not stored. The safe file name is cut to maxFileName
 // bytes, so the transfer's file can be written.
@@ -290,6 +291,13 @@ func (s *Service) create(p Params) (*Transfer, error) {
 		return nil, fmt.Errorf("File too large: %s bytes (max %d)", text, int64(MaxFileSize))
 	}
 	id := hex.EncodeToString(s.randomBytes(16))
+	// The size the transfer keeps, 0 when none was given, must be a number
+	// from 0 up: any other would give its chunks no limit and it no end
+	storedSize := or(p.Size, float64(0))
+	if n := number(storedSize); math.IsNaN(n) || n < 0 {
+		text, _ := jsText(storedSize)
+		return nil, fmt.Errorf("Invalid file size: %s", text)
+	}
 
 	var name any = "file"
 	if truthy(p.Filename) {
@@ -321,7 +329,7 @@ func (s *Service) create(p Params) (*Transfer, error) {
 		Direction:   or(p.Direction, "download"),
 		DeviceID:    p.DeviceID,
 		Filename:    safeName,
-		Size:        or(p.Size, float64(0)),
+		Size:        storedSize,
 		MimeType:    or(p.MimeType, defaultMimeType),
 		Status:      StatusPending,
 		TotalChunks: chunks,

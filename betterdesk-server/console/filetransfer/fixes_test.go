@@ -37,6 +37,8 @@ var stepFixes = []struct{ bug, steps string }{
 	{"FT5", "64-129,454,473-474,602-610,1383-1388,2192-2196,2352-2377,3507-3518,3664-3680,3937-3951,4210,4338-4359,4658-4675,4776-4793,5226-5228,5231-5236"},
 	// A chunk is plain base64 or refused
 	{"FT9", "1787-1795"},
+	// A transfer whose size is no number from 0 up is refused and not stored
+	{"RV42", "11-63,444-453,470-472,743,919-940,2452,2915-2921,4337,4522-4525,4631-4634,5027-5046"},
 }
 
 // rewrite is a fix that changes Node's answer of every step alike. It
