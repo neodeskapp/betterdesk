@@ -470,7 +470,7 @@ func (s *Server) handleClientAddressBook(w http.ResponseWriter, r *http.Request)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal error"})
 			return
 		}
-		s.syncAddressBookTagsToPeers(username, role, "legacy", dataStr)
+		s.syncAddressBookTagsToPeers(r, "legacy", dataStr)
 		log.Printf("[api] Saved legacy address book for %s (%d bytes)", username, len(dataStr))
 		writeJSON(w, http.StatusOK, map[string]any{})
 
@@ -526,7 +526,7 @@ func (s *Server) handleClientAddressBookPersonal(w http.ResponseWriter, r *http.
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal error"})
 			return
 		}
-		s.syncAddressBookTagsToPeers(username, role, "personal", dataStr)
+		s.syncAddressBookTagsToPeers(r, "personal", dataStr)
 		log.Printf("[api] Saved personal address book for %s (%d bytes)", username, len(dataStr))
 		writeJSON(w, http.StatusOK, map[string]any{})
 
@@ -586,8 +586,12 @@ func normalizeClientTags(value any) []string {
 	return tags
 }
 
-func (s *Server) syncAddressBookTagsToPeers(username, role, abType, data string) {
-	if role == auth.RolePro || !auth.RoleHasPermission(role, auth.PermDeviceEdit) {
+// syncAddressBookTagsToPeers copies the tags of the address book's entries
+// onto the devices, for a caller that holds device.edit and only for the
+// devices in its scope.
+func (s *Server) syncAddressBookTagsToPeers(r *http.Request, abType, data string) {
+	username, role := getUsernameFromCtx(r), getRoleFromCtx(r)
+	if role == auth.RolePro || !s.roleHolds(role, auth.PermDeviceEdit) {
 		return
 	}
 
@@ -610,6 +614,9 @@ func (s *Server) syncAddressBookTagsToPeers(username, role, abType, data string)
 			continue
 		}
 		seenPeers[id] = true
+		if visible, err := s.deviceVisible(r, id); err != nil || !visible {
+			continue
+		}
 		tags := normalizeClientTags(peer["tags"])
 		if err := s.db.UpdatePeerTags(id, strings.Join(tags, ",")); err != nil {
 			log.Printf("[api] Address book tag sync failed for peer %s user=%s: %v", id, username, err)

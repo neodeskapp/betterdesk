@@ -5,13 +5,17 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/unitronix/betterdesk-server/auth"
 )
 
 // injectOrgPeerCredentialsIntoAB decrypts org vault passwords and injects the
 // RustDesk shared-AB "password" field into the in-memory GET /api/ab response only.
-// Secrets are never written back to org_address_books JSON (#367).
+// Secrets are never written back to org_address_books JSON (#367). Only a
+// caller that holds device.connect, which GET /api/peers/{id}/connect-password
+// asks for the same secret, gets them, and only for devices in its scope.
 func (s *Server) injectOrgPeerCredentialsIntoAB(r *http.Request, data string) string {
-	if s.peerVault == nil || s.db == nil {
+	if s.peerVault == nil || s.db == nil || !s.roleHolds(getRoleFromCtx(r), auth.PermDeviceConnect) {
 		return data
 	}
 	orgIDs := s.resolveUserOrgIDsForAB(r)
@@ -62,6 +66,9 @@ func (s *Server) injectOrgPeerCredentialsIntoAB(r *http.Request, data string) st
 		}
 		secret, ok := secrets[id]
 		if !ok {
+			continue
+		}
+		if visible, err := s.deviceVisible(r, id); err != nil || !visible {
 			continue
 		}
 		// Prefer shared-AB "password"; only fill when empty so personal entries win.

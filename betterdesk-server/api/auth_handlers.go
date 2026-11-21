@@ -100,6 +100,25 @@ func (s *Server) resolvePermission(role, permission string) (bool, bool, error) 
 	return auth.RoleHasPermission(role, permission), false, nil
 }
 
+// roleHolds reports whether role holds perm as requirePermission decides
+// it: never for device credentials or a permission pro may not hold, always
+// for super admins, else the stored override or the built-in map. A failed
+// override lookup counts as not held.
+func (s *Server) roleHolds(role, perm string) bool {
+	if auth.IsDeviceRole(role) || (auth.IsProRole(role) && auth.ProRoleBlocksPermission(perm)) {
+		return false
+	}
+	if auth.IsSuperAdminRole(role) {
+		return true
+	}
+	granted, _, err := s.resolvePermission(role, perm)
+	if err != nil {
+		log.Printf("api: permission lookup failed for role %q permission %q: %v", role, perm, err)
+		return false
+	}
+	return granted
+}
+
 // requirePermission wraps a handler to enforce a specific granular permission.
 // Checks custom DB overrides first, then falls back to default role permissions.
 func (s *Server) requirePermission(perm string, handler http.HandlerFunc) http.HandlerFunc {
