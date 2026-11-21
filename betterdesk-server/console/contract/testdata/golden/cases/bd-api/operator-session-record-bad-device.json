@@ -8,7 +8,7 @@
    "device_id": "9 0"
   },
   "notes": [
-   "header Authorization: Bearer {secret:device_token}",
+   "header Authorization: Bearer {secret:operator_token}",
    "no CSRF token",
    "no cookies"
   ]
@@ -19,7 +19,7 @@
    "roles": [
     "signed-out"
    ],
-   "status": 403,
+   "status": 400,
    "headers": {
     "cache-control": "no-store",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -42,7 +42,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Insufficient permissions"
+     "error": "Invalid device_id"
     }
    }
   }

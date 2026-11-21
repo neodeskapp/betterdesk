@@ -115,10 +115,6 @@
    },
    "volatile": [
     {
-     "path": "data.access_token",
-     "pattern": "^[9aA+/_=-]{64}$"
-    },
-    {
      "path": "data.approved_at",
      "format": "9999-99-99 99:99:99"
     },
@@ -140,7 +136,7 @@
     "kind": "json",
     "json": {
      "data": {
-      "access_token": "<volatile>",
+      "access_token": "",
       "approved_at": "<volatile>",
       "approved_by": "e2e_global_admin",
       "console_url": "<volatile>",
@@ -190,10 +186,6 @@
    },
    "volatile": [
     {
-     "path": "data.access_token",
-     "pattern": "^[9aA+/_=-]{64}$"
-    },
-    {
      "path": "data.approved_at",
      "format": "9999-99-99 99:99:99"
     },
@@ -215,7 +207,7 @@
     "kind": "json",
     "json": {
      "data": {
-      "access_token": "<volatile>",
+      "access_token": "",
       "approved_at": "<volatile>",
       "approved_by": "e2e_super_admin",
       "console_url": "<volatile>",
@@ -265,10 +257,6 @@
    },
    "volatile": [
     {
-     "path": "data.access_token",
-     "pattern": "^[9aA+/_=-]{64}$"
-    },
-    {
      "path": "data.approved_at",
      "format": "9999-99-99 99:99:99"
     },
@@ -290,7 +278,7 @@
     "kind": "json",
     "json": {
      "data": {
-      "access_token": "<volatile>",
+      "access_token": "",
       "approved_at": "<volatile>",
       "approved_by": "e2e_admin",
       "console_url": "<volatile>",

@@ -138,7 +138,19 @@ func init() {
 		},
 		contract.Case{Name: "panel-changed", Path: "/ws/panel-events", As: "admin", Socket: &contract.Socket{Name: "panel", Expect: 1, Filter: changed, Close: true}},
 		contract.Case{Name: "approve-again", Method: "PUT", Path: "/api/registrations/{registration}/approve", Body: map[string]any{}},
-		status("device-status-approved", "900100021"),
+		// The first status after the approval carries the device's device
+		// token, which the device routes take; the next carries none
+		func() contract.Case {
+			c := status("device-status-approved", "900100021")
+			c.CaptureSecret = map[string]string{"lan_device_token": "config.access_token"}
+			return c
+		}(),
+		status("device-status-delivered", "900100021"),
+		setupDevice(contract.Case{
+			Name: "device-route-with-the-delivered-token", Path: bd + "/session/contract-none",
+			Headers: map[string]string{"Authorization": "Bearer {secret:lan_device_token}"},
+			Roles:   contract.Roles("global_admin", "super_admin", "admin"),
+		}),
 		setupDevice(contract.Case{Name: "device-request-after-approval", Method: "POST", Path: bd + "/register-request", Body: request("900100021", "contract-lan-kiosk-late")}),
 		contract.Case{Name: "approved-device", Path: "/api/devices/900100021", As: "admin", Volatile: []string{"data.folder_id", "data.groups[*].id"}},
 		contract.Case{

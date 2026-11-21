@@ -10,11 +10,11 @@ import (
 
 // The device API under /api/bd (routes/bd-api.routes.js): the routes the
 // BetterDesk agent and the desktop client call with a device token
-// (device_token is bound to 900100001, device_token_other to 900100002,
-// both access tokens of the instance's admin account), the operator
-// routes that take any live access token of an admin or operator, the
-// public identity and branding routes, and the notification bell of the
-// web app, which takes the session.
+// (device_token is issued for 900100001, device_token_other for 900100002,
+// both by the instance's admin account), the operator routes that take a
+// live account token of an admin or operator (operator_token, the admin's
+// own) and refuse a device token, the public identity and branding routes,
+// and the notification bell of the web app, which takes the session.
 //
 // Device requests carry no cookies and run signed out. The relay flows
 // with an agent on its signal socket are in ws-bd-relay; here are the
@@ -29,6 +29,7 @@ func init() {
 	signedOut := contract.Roles("signed-out")
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
+	operator := map[string]string{"Authorization": "Bearer {secret:operator_token}"}
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
 	basic := map[string]string{"Authorization": "Basic ZTJlX2FkbWluOmNvbnRyYWN0"}
 	header := func(id string) map[string]string { return map[string]string{"X-Device-Id": id} }
@@ -172,21 +173,22 @@ func init() {
 		dev(contract.Case{Name: "operator-devices-without-token", Path: "/api/bd/operator/devices"}),
 		dev(contract.Case{Name: "operator-devices-basic", Path: "/api/bd/operator/devices", Headers: basic}),
 		dev(contract.Case{
-			Name: "operator-devices", Path: "/api/bd/operator/devices", Headers: device,
+			Name: "operator-devices", Path: "/api/bd/operator/devices", Headers: operator,
 			Volatile: []string{"~devices[*].online", "~devices[*].last_online"},
 		}),
-		dev(contract.Case{Name: "operator-help-requests", Path: "/api/bd/help-requests", Headers: device}),
-		dev(contract.Case{Name: "operator-help-requests-pending", Path: "/api/bd/help-requests", Query: map[string][]string{"status": {"pending"}}, Headers: device}),
+		dev(contract.Case{Name: "operator-devices-with-a-device-token", Path: "/api/bd/operator/devices", Headers: device}),
+		dev(contract.Case{Name: "operator-help-requests", Path: "/api/bd/help-requests", Headers: operator}),
+		dev(contract.Case{Name: "operator-help-requests-pending", Path: "/api/bd/help-requests", Query: map[string][]string{"status": {"pending"}}, Headers: operator}),
 		dev(contract.Case{Name: "operator-help-requests-without-token", Path: "/api/bd/help-requests"}),
-		dev(contract.Case{Name: "operator-help-request-accept-unknown", Method: "POST", Path: "/api/bd/help-requests/999999999/accept", Headers: device}),
-		dev(contract.Case{Name: "operator-help-request-resolve-unknown", Method: "POST", Path: "/api/bd/help-requests/999999999/resolve", Headers: device}),
-		dev(contract.Case{Name: "operator-help-request-delete-unknown", Method: "DELETE", Path: "/api/bd/help-requests/999999999", Headers: device}),
+		dev(contract.Case{Name: "operator-help-request-accept-unknown", Method: "POST", Path: "/api/bd/help-requests/999999999/accept", Headers: operator}),
+		dev(contract.Case{Name: "operator-help-request-resolve-unknown", Method: "POST", Path: "/api/bd/help-requests/999999999/resolve", Headers: operator}),
+		dev(contract.Case{Name: "operator-help-request-delete-unknown", Method: "DELETE", Path: "/api/bd/help-requests/999999999", Headers: operator}),
 		dev(contract.Case{Name: "operator-help-request-accept-without-token", Method: "POST", Path: "/api/bd/help-requests/1/accept"}),
 		dev(contract.Case{Name: "operator-sessions-without-token", Path: "/api/bd/operator/sessions"}),
-		dev(contract.Case{Name: "operator-session-record-bad-action", Method: "POST", Path: "/api/bd/operator/sessions", Headers: device, Body: map[string]any{"action": "pause", "device_id": "900100001"}}),
-		dev(contract.Case{Name: "operator-session-record-bad-device", Method: "POST", Path: "/api/bd/operator/sessions", Headers: device, Body: map[string]any{"action": "start", "device_id": "9 0"}}),
+		dev(contract.Case{Name: "operator-session-record-bad-action", Method: "POST", Path: "/api/bd/operator/sessions", Headers: operator, Body: map[string]any{"action": "pause", "device_id": "900100001"}}),
+		dev(contract.Case{Name: "operator-session-record-bad-device", Method: "POST", Path: "/api/bd/operator/sessions", Headers: operator, Body: map[string]any{"action": "start", "device_id": "9 0"}}),
 		dev(contract.Case{
-			Name: "operator-sessions", Path: "/api/bd/operator/sessions", Query: map[string][]string{"limit": {"5"}}, Headers: device,
+			Name: "operator-sessions", Path: "/api/bd/operator/sessions", Query: map[string][]string{"limit": {"5"}}, Headers: operator,
 			Volatile: []string{"~sessions[*].duration_secs"},
 		}),
 

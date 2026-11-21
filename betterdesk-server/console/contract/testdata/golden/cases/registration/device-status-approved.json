@@ -222,10 +222,6 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "config.access_token",
-     "pattern": "^[9aA+/_=-]{64}$"
-    },
     "config.console_url",
     {
      "path": "config.server_key",
@@ -236,7 +232,7 @@
     "kind": "json",
     "json": {
      "config": {
-      "access_token": "<volatile>",
+      "access_token": "{secret:lan_device_token}",
       "console_url": "<volatile>",
       "server_address": "<hostname>:21116",
       "server_key": "<volatile>"
@@ -310,10 +306,6 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "config.access_token",
-     "pattern": "^[9aA+/_=-]{64}$"
-    },
     "config.console_url",
     {
      "path": "config.server_key",
@@ -324,7 +316,7 @@
     "kind": "json",
     "json": {
      "config": {
-      "access_token": "<volatile>",
+      "access_token": "{secret:lan_device_token}",
       "console_url": "<volatile>",
       "server_address": "<hostname>:21116",
       "server_key": "<volatile>"
@@ -361,10 +353,6 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "config.access_token",
-     "pattern": "^[9aA+/_=-]{64}$"
-    },
     "config.console_url",
     {
      "path": "config.server_key",
@@ -375,7 +363,7 @@
     "kind": "json",
     "json": {
      "config": {
-      "access_token": "<volatile>",
+      "access_token": "{secret:lan_device_token}",
       "console_url": "<volatile>",
       "server_address": "<hostname>:21116",
       "server_key": "<volatile>"
