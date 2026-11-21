@@ -293,19 +293,6 @@
         "allowed_users": [
          "e2e_viewer"
         ],
-        "color": "#123456",
-        "created_at": "<volatile>",
-        "device_count": 0,
-        "icon": "star",
-        "id": 10,
-        "name": "Contract folder",
-        "sort_order": 0
-       },
-       {
-        "allowed_groups": [],
-        "allowed_users": [
-         "e2e_viewer"
-        ],
         "color": "#6366f1",
         "created_at": "<volatile>",
         "device_count": 0,
@@ -365,12 +352,12 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 11,
+        "id": 10,
         "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "sort_order": 0
        }
       ],
-      "total": 7
+      "total": 6
      },
      "success": true
     }
@@ -426,7 +413,7 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "star",
-        "id": 13,
+        "id": 12,
         "name": "Contract folder",
         "sort_order": 0
        },
@@ -439,7 +426,7 @@
         "created_at": "<volatile>",
         "device_count": 1,
         "icon": "folder",
-        "id": 12,
+        "id": 11,
         "name": "Contract restricted",
         "sort_order": 0
        },
@@ -494,7 +481,7 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 14,
+        "id": 13,
         "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "sort_order": 0
        }
@@ -553,7 +540,7 @@
         "created_at": "<volatile>",
         "device_count": 1,
         "icon": "folder",
-        "id": 15,
+        "id": 14,
         "name": "Contract restricted",
         "sort_order": 0
        },
@@ -658,7 +645,7 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "star",
-        "id": 17,
+        "id": 16,
         "name": "Contract folder",
         "sort_order": 0
        },
@@ -671,7 +658,7 @@
         "created_at": "<volatile>",
         "device_count": 1,
         "icon": "folder",
-        "id": 16,
+        "id": 15,
         "name": "Contract restricted",
         "sort_order": 0
        },
@@ -726,7 +713,7 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 18,
+        "id": 17,
         "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "sort_order": 0
        }
@@ -787,7 +774,7 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "star",
-        "id": 20,
+        "id": 19,
         "name": "Contract folder",
         "sort_order": 0
        },
@@ -800,7 +787,7 @@
         "created_at": "<volatile>",
         "device_count": 1,
         "icon": "folder",
-        "id": 19,
+        "id": 18,
         "name": "Contract restricted",
         "sort_order": 0
        },
@@ -855,7 +842,7 @@
         "created_at": "<volatile>",
         "device_count": 0,
         "icon": "folder",
-        "id": 21,
+        "id": 20,
         "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "sort_order": 0
        }

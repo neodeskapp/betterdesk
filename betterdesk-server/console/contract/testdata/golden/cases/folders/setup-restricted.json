@@ -260,7 +260,7 @@
       ],
       "color": "#6366f1",
       "icon": "folder",
-      "id": 12,
+      "id": 11,
       "name": "Contract restricted"
      },
      "success": true
@@ -302,7 +302,7 @@
       ],
       "color": "#6366f1",
       "icon": "folder",
-      "id": 15,
+      "id": 14,
       "name": "Contract restricted"
      },
      "success": true
@@ -344,7 +344,7 @@
       ],
       "color": "#6366f1",
       "icon": "folder",
-      "id": 16,
+      "id": 15,
       "name": "Contract restricted"
      },
      "success": true
@@ -386,7 +386,7 @@
       ],
       "color": "#6366f1",
       "icon": "folder",
-      "id": 19,
+      "id": 18,
       "name": "Contract restricted"
      },
      "success": true

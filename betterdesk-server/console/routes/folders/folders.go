@@ -237,6 +237,47 @@ func (h *handlers) setAccess(ctx context.Context, body middleware.JSONObject, id
 	return nil
 }
 
+// folderRights returns the device group that carries the folder's access
+// lists (nil when there is none) and what the account may do with it
+// (access.GroupRightsForUser).
+func (h *handlers) folderRights(ctx context.Context, r *http.Request, id any) (*access.DeviceGroup, access.GroupRights, error) {
+	group, err := h.d.Access.DeviceGroupByGUID(ctx, groupGUID(id))
+	if err != nil {
+		return nil, access.GroupRights{}, err
+	}
+	rights, err := h.d.Access.GroupRightsForUser(ctx, devicegroups.ScopeUser(kit.User(r)), group)
+	return group, rights, err
+}
+
+// changesLists reports whether the body's access lists differ from the
+// group's (none when group is nil). A list the body leaves out stays.
+func changesLists(body middleware.JSONObject, group *access.DeviceGroup) bool {
+	var users, groups []string
+	if group != nil {
+		users, groups = group.AllowedUsers, group.AllowedGroups
+	}
+	return body.Has("allowed_users") && !sameEntries(access.NormalizeUsernames(decoded(body.Get("allowed_users"))), access.StoredUsernames(users)) ||
+		body.Has("allowed_groups") && !sameEntries(access.NormalizeGroupGUIDs(decoded(body.Get("allowed_groups"))), access.StoredGroupGUIDs(groups))
+}
+
+// sameEntries reports whether two lists without repeats hold the same
+// entries, in any order.
+func sameEntries(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	have := make(map[string]bool, len(a))
+	for _, entry := range a {
+		have[entry] = true
+	}
+	for _, entry := range b {
+		if !have[entry] {
+			return false
+		}
+	}
+	return true
+}
+
 // decoded is a body value decoded the way the access rules read values:
 // nil, bool, float64, string, []any, map[string]any.
 func decoded(v middleware.Value) any {
@@ -315,6 +356,17 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	if !h.checkLook(w, r, body) || !h.checkAccessLists(w, r, body) {
 		return
 	}
+	if changesLists(body, nil) {
+		rights, err := h.d.Access.GroupRightsForUser(ctx, devicegroups.ScopeUser(kit.User(r)), nil)
+		if err != nil {
+			h.serverError(w, r, "Create folder error:", err)
+			return
+		}
+		if !rights.ChangeAccess {
+			fail(w, r, http.StatusForbidden, "errors.no_permission")
+			return
+		}
+	}
 	color, icon := jsbind.Of(body.Get("color")), jsbind.Of(body.Get("icon"))
 	id, err := h.groups.CreateFolder(ctx, jsbind.String(trimmed), color.Or(jsbind.String(defaultColor)), icon.Or(jsbind.String(defaultIcon)))
 	if err != nil {
@@ -364,6 +416,15 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusNotFound, "folders.not_found")
 		return
 	}
+	group, rights, err := h.folderRights(ctx, r, id)
+	if err != nil {
+		h.serverError(w, r, "Update folder error:", err)
+		return
+	}
+	if !rights.Change || !rights.ChangeAccess && changesLists(body, group) {
+		fail(w, r, http.StatusForbidden, "errors.no_permission")
+		return
+	}
 	name := jsbind.Undefined
 	newName := folder.Get("name")
 	if given := body.Get("name"); given.Exists() {
@@ -410,6 +471,13 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	}
 	if folder == nil {
 		fail(w, r, http.StatusNotFound, "folders.not_found")
+		return
+	}
+	if _, rights, err := h.folderRights(ctx, r, id); err != nil {
+		h.serverError(w, r, "Delete folder error:", err)
+		return
+	} else if !rights.Change {
+		fail(w, r, http.StatusForbidden, "errors.no_permission")
 		return
 	}
 	if err := h.groups.UnassignDevicesFromFolder(ctx, id); err != nil {

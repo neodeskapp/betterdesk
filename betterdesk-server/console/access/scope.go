@@ -461,6 +461,40 @@ func (s *Service) DeviceScopeForUser(ctx context.Context, user *ScopeUser, devic
 	return visible, nil
 }
 
+// GroupRights is what an account may do with a device group, a folder's
+// group included.
+type GroupRights struct {
+	// Change is renaming, restyling or deleting the group (or its folder).
+	Change bool
+	// ChangeAccess is changing the group's access lists.
+	ChangeAccess bool
+}
+
+// GroupRightsForUser returns what an account may do with a device group;
+// group is nil for one that does not exist yet. An account the device
+// scope does not limit (DeviceScopeForUser) may do both. An account with a
+// limited scope may change a group that is open to it: one whose access
+// list names it or one of its user groups, or one without an access list
+// while the default mode is open. It never changes an access list, which
+// would open devices to it or close them to others.
+func (s *Service) GroupRightsForUser(ctx context.Context, user *ScopeUser, group *DeviceGroup) (GroupRights, error) {
+	scope, err := s.DeviceScopeForUser(ctx, user, nil)
+	if err != nil {
+		return GroupRights{}, err
+	}
+	if scope == nil {
+		return GroupRights{Change: true, ChangeAccess: true}, nil
+	}
+	if group == nil || !hasAccessList(*group) {
+		return GroupRights{Change: !s.DeviceScopeRestrictedDefault(ctx)}, nil
+	}
+	accessUser, err := s.withUserGroups(ctx, user)
+	if err != nil {
+		return GroupRights{}, err
+	}
+	return GroupRights{Change: GroupAllowedForUser(*group, accessUser)}, nil
+}
+
 // FilterByScope returns the items whose id is in the scope; all of them
 // when the scope has no limit.
 func FilterByScope[T any](items []T, scope *DeviceScope, id func(T) string) []T {

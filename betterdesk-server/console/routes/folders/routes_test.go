@@ -193,6 +193,42 @@ func TestFolderRoutes(t *testing.T) {
 	})
 }
 
+// RV11: an account the device scope limits may not change or delete a
+// folder that is closed to it, nor change who may see a folder's devices.
+// The web app sends both lists with every save, so a save that keeps them
+// as they are passes.
+func TestLimitedScopeKeepsToItsFolders(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db)
+		admin, operator := w.As("admin"), w.As("operator")
+		want(t, "create a folder for the admin", admin.Do("POST", "/api/folders", `{"name":"Closed","allowed_users":["e2e_admin"]}`),
+			200, `{"success":true,"data":{"id":1,"name":"Closed","color":"#6366f1","icon":"folder","allowed_users":["e2e_admin"],"allowed_groups":[]}}`)
+		want(t, "create a folder for the operator", admin.Do("POST", "/api/folders", `{"name":"Open","allowed_users":["e2e_operator"]}`),
+			200, `{"success":true,"data":{"id":2,"name":"Open","color":"#6366f1","icon":"folder","allowed_users":["e2e_operator"],"allowed_groups":[]}}`)
+		want(t, "assign", admin.Do("POST", "/api/folders/1/devices", `{"deviceIds":["A"]}`), 200, `{"success":true,"data":{"count":1}}`)
+
+		const refused = `{"success":false,"error":"You don't have permission to do this. Ask an administrator."}`
+		want(t, "put itself on a closed folder", operator.Do("PATCH", "/api/folders/1", `{"allowed_users":["e2e_admin","e2e_operator"]}`), 403, refused)
+		want(t, "open a closed folder to all", operator.Do("PATCH", "/api/folders/1", `{"allowed_users":[],"allowed_groups":[]}`), 403, refused)
+		want(t, "rename a closed folder", operator.Do("PATCH", "/api/folders/1", `{"name":"Mine"}`), 403, refused)
+		want(t, "delete a closed folder", operator.Do("DELETE", "/api/folders/1", ""), 403, refused)
+		want(t, "change the list of its own folder", operator.Do("PATCH", "/api/folders/2", `{"allowed_users":"e2e_operator, e2e_viewer"}`), 403, refused)
+		want(t, "create a folder with a list", operator.Do("POST", "/api/folders", `{"name":"New","allowed_users":["e2e_operator"]}`), 403, refused)
+		want(t, "create a folder for a user group", operator.Do("POST", "/api/folders", `{"name":"New","allowed_groups":["g-1"]}`), 403, refused)
+		if got := rows(t, db, `SELECT name FROM folders ORDER BY id`); got != "Closed,Open" {
+			t.Errorf("folders after the refusals: %q", got)
+		}
+		want(t, "the device stays closed", operator.Do("PATCH", "/api/devices/A/folder", `{"folderId":null}`), 403, forbidden)
+
+		want(t, "save its own folder as the web app does", operator.Do("PATCH", "/api/folders/2", `{"name":"Mine","color":"#123","allowed_users":"e2e_operator","allowed_groups":[]}`), 200, ok)
+		want(t, "create a folder without lists as the web app does", operator.Do("POST", "/api/folders", `{"name":"New","allowed_users":"","allowed_groups":[]}`),
+			200, `{"success":true,"data":{"id":3,"name":"New","color":"#6366f1","icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
+		want(t, "delete its own folder", operator.Do("DELETE", "/api/folders/2", ""), 200, ok)
+		want(t, "the admin changes the closed folder", admin.Do("PATCH", "/api/folders/1", `{"name":"Lab","allowed_users":["e2e_operator"]}`), 200, ok)
+		want(t, "the operator may now change it", operator.Do("PATCH", "/api/folders/1", `{"name":"Lab 2"}`), 200, ok)
+	})
+}
+
 // TestTheDeviceScopeCheckComesFirst checks that PATCH /api/devices/{id}/folder
 // is behind the device group's scope check, which looks for deleted
 // devices too: for E, a deleted device in a group only e2e_viewer may see,
