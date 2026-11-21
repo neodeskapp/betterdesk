@@ -117,6 +117,14 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
+     "path": "data.tokens[*].last_used_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[*].revoked_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.tokens[*].token_prefix",
      "pattern": "^[9aA+/_=-]{8}$"
     }
@@ -132,10 +140,12 @@
         "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 1,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "changed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -182,11 +192,19 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
+     "path": "data.tokens[*].revoked_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.tokens[*].token_prefix",
      "pattern": "^[9aA+/_=-]{8}$"
     },
     {
      "path": "data.tokens[1].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[1].last_used_at",
      "format": "9999-99-99A99:99:99A"
     },
     {
@@ -199,6 +217,10 @@
     },
     {
      "path": "data.tokens[4].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[4].last_used_at",
      "format": "9999-99-99A99:99:99A"
     }
    ],
@@ -214,6 +236,7 @@
         "id": 5,
         "max_uses": 2,
         "name": "contract fraction twice",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -223,10 +246,12 @@
         "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 4,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "trimmed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -238,6 +263,7 @@
         "id": 3,
         "max_uses": 1,
         "name": "contract-bulk-2",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -249,6 +275,7 @@
         "id": 2,
         "max_uses": 1,
         "name": "contract-bulk-1",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -258,10 +285,12 @@
         "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 1,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "changed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -308,11 +337,19 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
+     "path": "data.tokens[*].revoked_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.tokens[*].token_prefix",
      "pattern": "^[9aA+/_=-]{8}$"
     },
     {
      "path": "data.tokens[0].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[0].last_used_at",
      "format": "9999-99-99A99:99:99A"
     },
     {
@@ -328,6 +365,10 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
+     "path": "data.tokens[4].last_used_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.tokens[5].expires_at",
      "format": "9999-99-99A99:99:99A"
     },
@@ -337,6 +378,10 @@
     },
     {
      "path": "data.tokens[7].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[7].last_used_at",
      "format": "9999-99-99A99:99:99A"
     }
    ],
@@ -351,10 +396,12 @@
         "created_by": "e2e_super_admin",
         "expires_at": "<volatile>",
         "id": 8,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "changed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -366,6 +413,7 @@
         "id": 7,
         "max_uses": 1,
         "name": "contract-bulk-2",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -377,6 +425,7 @@
         "id": 6,
         "max_uses": 1,
         "name": "contract-bulk-1",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -387,6 +436,7 @@
         "id": 5,
         "max_uses": 2,
         "name": "contract fraction twice",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -396,10 +446,12 @@
         "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 4,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "trimmed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -411,6 +463,7 @@
         "id": 3,
         "max_uses": 1,
         "name": "contract-bulk-2",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -422,6 +475,7 @@
         "id": 2,
         "max_uses": 1,
         "name": "contract-bulk-1",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -431,10 +485,12 @@
         "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 1,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "changed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -481,6 +537,10 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
+     "path": "data.tokens[*].revoked_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.tokens[*].token_prefix",
      "pattern": "^[9aA+/_=-]{8}$"
     },
@@ -493,7 +553,15 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
+     "path": "data.tokens[11].last_used_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.tokens[1].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[1].last_used_at",
      "format": "9999-99-99A99:99:99A"
     },
     {
@@ -509,6 +577,10 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
+     "path": "data.tokens[4].last_used_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "data.tokens[5].expires_at",
      "format": "9999-99-99A99:99:99A"
     },
@@ -518,6 +590,10 @@
     },
     {
      "path": "data.tokens[8].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[8].last_used_at",
      "format": "9999-99-99A99:99:99A"
     },
     {
@@ -537,6 +613,7 @@
         "id": 12,
         "max_uses": 2,
         "name": "contract fraction twice",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -546,10 +623,12 @@
         "created_by": "e2e_admin",
         "expires_at": "<volatile>",
         "id": 11,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "trimmed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -561,6 +640,7 @@
         "id": 10,
         "max_uses": 1,
         "name": "contract-bulk-2",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -572,6 +652,7 @@
         "id": 9,
         "max_uses": 1,
         "name": "contract-bulk-1",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -581,10 +662,12 @@
         "created_by": "e2e_super_admin",
         "expires_at": "<volatile>",
         "id": 8,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "changed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -596,6 +679,7 @@
         "id": 7,
         "max_uses": 1,
         "name": "contract-bulk-2",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -607,6 +691,7 @@
         "id": 6,
         "max_uses": 1,
         "name": "contract-bulk-1",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -617,6 +702,7 @@
         "id": 5,
         "max_uses": 2,
         "name": "contract fraction twice",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -626,10 +712,12 @@
         "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
         "id": 4,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "trimmed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -641,6 +729,7 @@
         "id": 3,
         "max_uses": 1,
         "name": "contract-bulk-2",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -652,6 +741,7 @@
         "id": 2,
         "max_uses": 1,
         "name": "contract-bulk-1",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
@@ -661,10 +751,12 @@
         "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
         "id": 1,
+        "last_used_at": "<volatile>",
         "max_uses": 5,
         "name": "contract token renamed",
         "note": "changed",
         "peer_id": "900100001",
+        "revoked_at": "<volatile>",
         "status": "revoked",
         "token_prefix": "<volatile>",
         "use_count": 0
