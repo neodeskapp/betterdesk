@@ -77,6 +77,7 @@ vi.mock('../../../src/lib/remote/secure-store.ts', () => ({
 
 const { Viewer } = await import('../../../src/lib/remote/viewer.svelte.ts');
 const remoteApi = await import('../../../src/lib/api/remote.ts');
+const devicesApi = await import('../../../src/lib/api/devices.ts');
 type ViewerData = ConstructorParameters<typeof Viewer>[0]['data'];
 
 function data(extra: Partial<ViewerData> = {}): ViewerData {
@@ -347,5 +348,30 @@ describe('remote viewer sessions', () => {
 		v.setToggle('blockInput', true);
 		expect(c.setBlockInput).toHaveBeenCalledWith(true);
 		expect(s.toggles.blockInput).toBe(true);
+	});
+});
+
+describe('remote target or device', () => {
+	test('a device whose id starts with rt_ is a device when the server says so', async () => {
+		vi.mocked(devicesApi.getDevice).mockClear();
+		const v = new Viewer({
+			data: data({ deviceId: 'rt_device1', capabilities: { transport: 'rd' } }),
+			onleave: vi.fn()
+		});
+		v.open('rt_device1');
+		await vi.waitFor(() => expect(devicesApi.getDevice).toHaveBeenCalledWith('rt_device1'));
+		expect(v.remoteTarget).toBe(false);
+	});
+
+	test('a remote target the server names has no device details to load', async () => {
+		vi.mocked(devicesApi.getDevice).mockClear();
+		const v = new Viewer({
+			data: data({ deviceId: 'target9', capabilities: { transport: 'rdp', remote_target: true } }),
+			onleave: vi.fn()
+		});
+		v.open('target9');
+		await Promise.resolve();
+		expect(devicesApi.getDevice).not.toHaveBeenCalled();
+		expect(v.remoteTarget).toBe(true);
 	});
 });

@@ -26,7 +26,7 @@ import {
 	type ViewerData
 } from '#lib/api/remote.ts';
 import { getDevice } from '#lib/api/devices.ts';
-import { isGuestMode, isRemoteTargetId, isViewOnlyGuest, peerAllowed, transportOf } from './access.ts';
+import { isGuestMode, isRemoteTarget, isViewOnlyGuest, peerAllowed, transportOf } from './access.ts';
 import { isMobileViewer } from './capabilities.ts';
 import {
 	createClient,
@@ -202,6 +202,8 @@ export class Viewer {
 	readonly transport: Transport;
 	readonly guest: boolean;
 	readonly viewOnlyGuest: boolean;
+	/** The server opened an RDP or VNC target, not a device */
+	readonly remoteTarget: boolean;
 	readonly userId: string | number | null;
 	private onleave: () => void;
 	private lastClipboard = '';
@@ -213,6 +215,7 @@ export class Viewer {
 		this.transport = transportOf(opts.data.capabilities);
 		this.guest = isGuestMode(opts.data.capabilities);
 		this.viewOnlyGuest = isViewOnlyGuest(opts.data.capabilities);
+		this.remoteTarget = isRemoteTarget(opts.data.capabilities);
 		this.userId = opts.data.user?.id ?? null;
 		this.onleave = opts.onleave;
 	}
@@ -289,7 +292,7 @@ export class Viewer {
 
 	/** Name and system for tabs opened from the picker or a link */
 	private async loadDetails(s: ViewerSession): Promise<void> {
-		if (this.guest || isRemoteTargetId(s.deviceId)) return;
+		if (this.guest || this.remoteTarget) return;
 		if (s.platform && s.deviceName) return;
 		try {
 			const d = await getDevice(s.deviceId);

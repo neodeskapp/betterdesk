@@ -10,7 +10,6 @@
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import { showDetails, stepRows, type View } from '#lib/remote/states.ts';
-	import { isRemoteTargetId } from '#lib/remote/access.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import LinkButton from '#lib/remote/LinkButton.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
@@ -40,7 +39,7 @@
 	const rows = $derived(result ? viewer.details(s) : []);
 	const hasMessage = $derived(!!(s.endInfo?.reason || s.lastError));
 	const detailsShown = $derived(showDetails(view, hasMessage, s.endedBy));
-	const openDevice = $derived(!viewer.guest && !isRemoteTargetId(s.deviceId));
+	const openDevice = $derived(!viewer.guest && !viewer.remoteTarget);
 	const title = $derived(
 		view === 'failed'
 			? tf('remote_viewer.title_failed', 'Could not connect')

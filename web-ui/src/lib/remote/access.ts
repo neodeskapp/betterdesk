@@ -67,8 +67,12 @@ export function addFromHash(hash: string): string | null {
 	return m?.[1] ?? null;
 }
 
-export function isRemoteTargetId(id: string): boolean {
-	return String(id).startsWith('rt_');
+/**
+ * The viewer opened an RDP or VNC target: the server says so in the viewer
+ * data. A device may have an id that looks like a target's (rt_...).
+ */
+export function isRemoteTarget(caps: ViewerCapabilities | null | undefined): boolean {
+	return caps?.remote_target === true;
 }
 
 /** The guest link's token from the page address (?guest= or ?t=) */
