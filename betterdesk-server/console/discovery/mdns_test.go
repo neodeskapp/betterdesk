@@ -751,8 +751,13 @@ func TestMDNSAnswersAgainstNode(t *testing.T) {
 			if len(nodeSent) > 0 {
 				t.Errorf("datagram %d: %d of Node's answers left over", i, len(nodeSent))
 			}
-			if strings.Join(all, " ") != strings.Join(each, " ") {
-				t.Errorf("datagram %d: respond gave %q, the answers to its questions are %q", i, all, each)
+			// One response per datagram (RV101): the one answer of a datagram
+			// with one answered question, the answers merged for more
+			switch {
+			case len(each) <= 1 && strings.Join(all, " ") != strings.Join(each, " "):
+				t.Errorf("datagram %d: respond gave %q, the answer to its question is %q", i, all, each)
+			case len(each) > 1 && len(all) != 1:
+				t.Errorf("datagram %d: %d responses to %d answered questions", i, len(all), len(each))
 			}
 			if len(p.Sent) > 0 {
 				answered++

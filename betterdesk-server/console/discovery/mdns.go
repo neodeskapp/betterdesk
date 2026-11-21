@@ -32,6 +32,9 @@ const (
 	announceFactor  = 3
 	announceMax     = time.Hour
 	membershipEvery = 5 * time.Second
+	// maxResponsesPerSecond is how many responses the responder sends in
+	// a second at most.
+	maxResponsesPerSecond = 4
 )
 
 // mdnsGroup is where every mDNS message goes.
@@ -163,11 +166,20 @@ func (r *registry) recordsFor(name, typ string) []dnsRecord {
 }
 
 // answer is the response to one question, nil when there is nothing to
-// say: for ANY every record of the name; else the records of the type,
-// and with a pointer the SRV and TXT records it points at and the
-// addresses of their hosts.
+// say (see answerRecords).
 func (r *registry) answer(q dnsQuestion) []byte {
-	var answers, additionals []dnsRecord
+	answers, additionals := r.answerRecords(q)
+	if len(answers) == 0 {
+		return nil
+	}
+	return encodeResponse(answers, additionals)
+}
+
+// answerRecords are the records that answer one question: for ANY every
+// record of the name; else the records of the type, and with a pointer
+// the SRV and TXT records it points at and the addresses of their hosts
+// as additionals.
+func (r *registry) answerRecords(q dnsQuestion) (answers, additionals []dnsRecord) {
 	if q.Type == "ANY" {
 		for _, typ := range r.types {
 			answers = append(answers, r.recordsFor(q.Name, typ)...)
@@ -176,7 +188,7 @@ func (r *registry) answer(q dnsQuestion) []byte {
 		answers = r.recordsFor(q.Name, q.Type)
 	}
 	if len(answers) == 0 {
-		return nil
+		return nil, nil
 	}
 	if q.Type != "ANY" {
 		for _, a := range answers {
@@ -205,24 +217,53 @@ func (r *registry) answer(q dnsQuestion) []byte {
 			additionals = append(additionals, r.recordsFor(target, "AAAA")...)
 		}
 	}
-	return encodeResponse(answers, additionals)
+	return answers, additionals
 }
 
-// respond is the responder's reaction to a datagram: one response per
-// question it has records for. Datagrams that do not decode and
-// responses get nothing.
+// respond is the responder's reaction to a datagram: one response with
+// the answers to all its questions, each record once, in the order the
+// questions ask for them. Datagrams that do not decode, responses and
+// questions it has no records for get nothing. bonjour-service sent one
+// response per question, so a datagram of thousands of questions made
+// thousands of multicast responses.
 func (r *registry) respond(datagram []byte) [][]byte {
 	msg, err := decodeMessage(datagram)
 	if err != nil || msg.Response {
 		return nil
 	}
-	var out [][]byte
+	var answers, additionals []dnsRecord
+	has := func(list []dnsRecord, rec dnsRecord) bool {
+		for _, have := range list {
+			if have.Type == rec.Type && have.Name == rec.Name && dataEqual(have.Data, rec.Data) {
+				return true
+			}
+		}
+		return false
+	}
 	for _, q := range msg.Questions {
-		if packet := r.answer(q); packet != nil {
-			out = append(out, packet)
+		a, extra := r.answerRecords(q)
+		for _, rec := range a {
+			if !has(answers, rec) {
+				answers = append(answers, rec)
+			}
+		}
+		for _, rec := range extra {
+			if !has(additionals, rec) {
+				additionals = append(additionals, rec)
+			}
 		}
 	}
-	return out
+	if len(answers) == 0 {
+		return nil
+	}
+	// A record that answers one question is no additional to another
+	kept := additionals[:0]
+	for _, rec := range additionals {
+		if !has(answers, rec) {
+			kept = append(kept, rec)
+		}
+	}
+	return [][]byte{encodeResponse(answers, kept)}
 }
 
 // MDNS is the mDNS announcement.
@@ -233,6 +274,8 @@ type MDNS struct {
 	after    func(d time.Duration) <-chan time.Time
 	tick     func(d time.Duration) (<-chan time.Time, func())
 	open     func(ctx context.Context, settings Settings) (mdnsSocket, error)
+	// now is the clock of the responder's rate limit
+	now func() time.Time
 }
 
 // NewMDNS returns the announcement for the settings. Its lines go to the
@@ -248,6 +291,7 @@ func NewMDNS(settings Settings) *MDNS {
 			return t.C, t.Stop
 		},
 		open: openMulticast,
+		now:  time.Now,
 	}
 }
 
@@ -344,8 +388,18 @@ func (m *MDNS) Run(ctx context.Context) {
 	}()
 
 	reg := newRegistry()
+	// At most maxResponsesPerSecond responses go out in a second
+	var second time.Time
+	responses := 0
 	serve := func(datagram []byte) {
 		for _, packet := range reg.respond(datagram) {
+			if now := m.now(); now.Sub(second) >= time.Second {
+				second, responses = now, 0
+			}
+			if responses >= maxResponsesPerSecond {
+				return
+			}
+			responses++
 			_ = sock.Send(packet)
 		}
 	}
