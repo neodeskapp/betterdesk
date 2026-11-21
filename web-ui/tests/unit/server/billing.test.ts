@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import type { Contract } from '../../../src/lib/api/billing.ts';
 import {
 	amountFromMinutes,
@@ -21,8 +21,10 @@ import {
 	sameDay,
 	thisMonth,
 	usageRows,
-	type AssignValues
+	type AssignValues,
+	VALIDITY_DAY
 } from '../../../src/lib/serverarea/billing.ts';
+import { formatDate } from '../../../src/lib/i18n/format.ts';
 
 const contract = (over: Partial<Contract> = {}): Contract => ({
 	id: 'c1',
@@ -231,5 +233,20 @@ describe('sessions', () => {
 			[{ started_at: '2026-11-05T10:00:00Z' }, { started_at: '2026-11-03T10:00:00Z' }]
 		]);
 		expect(merged.map((s) => s.started_at.slice(8, 10))).toEqual(['05', '03', '01']);
+	});
+});
+
+describe('validity dates', () => {
+	const tz = process.env.TZ;
+	afterEach(() => {
+		process.env.TZ = tz;
+	});
+
+	test('an assignment from 1 to 30 Nov reads so east and west of UTC', () => {
+		for (const zone of ['Europe/Berlin', 'America/New_York']) {
+			process.env.TZ = zone;
+			expect(formatDate('2026-11-01T00:00:00Z', VALIDITY_DAY)).toBe('Nov 1, 2026');
+			expect(formatDate('2026-11-30T23:59:59Z', VALIDITY_DAY)).toBe('Nov 30, 2026');
+		}
 	});
 });

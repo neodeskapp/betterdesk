@@ -26,7 +26,8 @@
 		filterPackages,
 		formatMinutes,
 		formatMoney,
-		STATUS_TONE
+		STATUS_TONE,
+		VALIDITY_DAY
 	} from '#lib/serverarea/billing.ts';
 	import Empty from '#lib/ui/Empty.svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -258,7 +259,6 @@
 	]);
 
 	const money = (amount: unknown, currency: string) => formatMoney(amount, currency, i18n.locale);
-	const dayOnly = { hour: undefined, minute: undefined } as const;
 </script>
 
 {#snippet pkgName(p: BillingPackage)}
@@ -345,8 +345,8 @@
 	{#if !c.valid_from && !c.valid_until}
 		<Empty word={t('commercialization.ui.no_end')} />
 	{:else}
-		{#if c.valid_from}<Time value={c.valid_from} relative={false} format={dayOnly} />{:else}…{/if} –
-		{#if c.valid_until}<Time value={c.valid_until} relative={false} format={dayOnly} />{:else}…{/if}
+		{#if c.valid_from}<Time value={c.valid_from} relative={false} format={VALIDITY_DAY} />{:else}…{/if} –
+		{#if c.valid_until}<Time value={c.valid_until} relative={false} format={VALIDITY_DAY} />{:else}…{/if}
 	{/if}
 {/snippet}
 

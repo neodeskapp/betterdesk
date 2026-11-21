@@ -138,6 +138,17 @@ export function datesInOrder(from: string, until: string): boolean {
 	return !(from && until && until < from);
 }
 
+/**
+ * How the list shows an assignment's validity dates: the day alone, in UTC,
+ * as the sheet sends them (start T00:00:00Z, end T23:59:59Z); in the
+ * browser's zone the end of 30 Nov reads 1 Dec east of UTC.
+ */
+export const VALIDITY_DAY: Intl.DateTimeFormatOptions = {
+	hour: undefined,
+	minute: undefined,
+	timeZone: 'UTC'
+};
+
 /** What a new assignment sends: empty optional fields are left out (the package's values apply) */
 export function newContractBody(
 	v: AssignValues,
