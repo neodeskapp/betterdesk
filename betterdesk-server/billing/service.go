@@ -192,7 +192,7 @@ func (s *Service) CheckConnection(deviceID string) ConnectionCheckResult {
 		Currency:         contract.Currency,
 	}
 
-	if s.clock != nil && !s.clock.IsSynced() {
+	if s.clock != nil && !s.clock.AllowsBilling() {
 		base.Allowed = false
 		base.Reason = "clock_unsynced"
 		return base

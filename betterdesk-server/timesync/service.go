@@ -259,10 +259,15 @@ func (s *Service) GetStatus() Status {
 func (s *Service) IsSynced() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	if s.cfg.RequireSync && !s.status.Synced {
-		return false
-	}
 	return s.status.Synced
+}
+
+// AllowsBilling reports whether billable sessions may start: the clock is
+// synced, or a synced clock is not required for billing.
+func (s *Service) AllowsBilling() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return !s.cfg.RequireSync || s.status.Synced
 }
 
 // OffsetAtCheck returns the last measured offset in milliseconds.
