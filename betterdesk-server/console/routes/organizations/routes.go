@@ -69,9 +69,9 @@ func Register(d *kit.Deps) {
 	r.Put("/api/panel/org/{id}/address-book", h.pass("PUT", orgPath("/address-book"), true), auth, can("org.edit"))
 
 	// The peer credential vault
-	r.Get("/api/panel/org/{id}/peer-credentials", h.pass("GET", orgPath("/peer-credentials"), false), auth, can("org.manage_devices"))
-	r.Put("/api/panel/org/{id}/peer-credentials/{peerId}", h.pass("PUT", credentialPath, true), auth, can("org.edit"))
-	r.Delete("/api/panel/org/{id}/peer-credentials/{peerId}", h.pass("DELETE", credentialPath, false), auth, can("org.edit"))
+	r.Get("/api/panel/org/{id}/peer-credentials", h.listCredentials, auth, can("org.manage_devices"))
+	r.Put("/api/panel/org/{id}/peer-credentials/{peerId}", h.setCredential, auth, can("org.edit"))
+	r.Delete("/api/panel/org/{id}/peer-credentials/{peerId}", h.setCredential, auth, can("org.edit"))
 
 	r.Get("/api/panel/org/{id}/device-groups", h.deviceGroups, auth, can("user.view"))
 }

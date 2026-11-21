@@ -320,3 +320,51 @@ func TestOrganizationDevicesFollowTheDeviceScope(t *testing.T) {
 		want(t, "the admin puts the closed device in", admin.Do("POST", "/api/panel/org/o1/devices", `{"device_id":"A"}`), 201, `{"org_id":"o1"}`)
 	})
 }
+
+// RV224: the stored-password flags of an organization's devices list only
+// the devices the account may see, and an account with a limited scope
+// sets or clears the stored password only of a device it may see. A is in
+// a group closed to the operator, B is open to all.
+func TestPeerCredentialsFollowTheDeviceScope(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		api.Fallback = func(c routetest.Call) routetest.Reply {
+			switch {
+			case c.Target == "/api/peers" || c.Target == "/api/peers?include_deleted=true":
+				return routetest.Reply{Status: 200, Body: `{"peers":[{"id":"A","hostname":"a"},{"id":"B","hostname":"b"}]}`}
+			case c.Target == "/api/peers/A" || c.Target == "/api/peers/B":
+				return routetest.Reply{Status: 200, Body: `{"id":"` + strings.TrimPrefix(c.Target, "/api/peers/") + `"}`}
+			case strings.HasPrefix(c.Target, "/api/remote-targets"):
+				return routetest.Reply{Status: 200, Body: `{"targets":[]}`}
+			case c.Target == "/api/org/o1/peer-credentials":
+				return routetest.Reply{Status: 200, Body: `{"credentials":[{"org_id":"o1","peer_id":"A","password_set":true},{"org_id":"o1","peer_id":"B","password_set":true}]}`}
+			case strings.HasPrefix(c.Target, "/api/org/o1/peer-credentials/"):
+				return routetest.Reply{Status: 200, Body: `{"status":"ok"}`}
+			}
+			return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
+		}
+		langs := func(cfg *config.Config) { cfg.LangDir = filepath.Join("..", "..", "static", "files", "lang") }
+		// org.edit by an override, as no role with a limited scope has it
+		w := routetest.New(t, routetest.Options{DB: db, API: api, Config: langs, Roles: routetest.Overrides{"operator": {"org.edit": true}}})
+		exec(t, db, `INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-admin', 'Admin only', '', '', 'manual', '')`)
+		exec(t, db, `INSERT INTO device_group_user_access (device_group_id, user_id) SELECT id, 1 FROM device_groups WHERE guid = 'g-admin'`)
+		exec(t, db, `INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'A' FROM device_groups WHERE guid = 'g-admin'`)
+		admin, operator := w.As("admin"), w.As("operator")
+		refused := `{"success":false,"error":"You don't have access to this device."}`
+
+		want(t, "the operator's list", operator.Do("GET", "/api/panel/org/o1/peer-credentials", ""), 200,
+			`{"credentials":[{"org_id":"o1","peer_id":"B","password_set":true}]}`)
+		want(t, "the admin's list", admin.Do("GET", "/api/panel/org/o1/peer-credentials", ""), 200,
+			`{"credentials":[{"org_id":"o1","peer_id":"A","password_set":true},{"org_id":"o1","peer_id":"B","password_set":true}]}`)
+		want(t, "set a closed device's password", operator.Do("PUT", "/api/panel/org/o1/peer-credentials/A", `{"password":"x"}`), 403, refused)
+		want(t, "clear a closed device's password", operator.Do("DELETE", "/api/panel/org/o1/peer-credentials/A", ""), 403, refused)
+		for _, call := range api.Calls() {
+			if strings.Contains(call, "/peer-credentials/") {
+				t.Errorf("a refused change reached the API server: %s", call)
+			}
+		}
+		want(t, "set an open device's password", operator.Do("PUT", "/api/panel/org/o1/peer-credentials/B", `{"password":"x"}`), 200, `{"status":"ok"}`)
+		want(t, "clear an open device's password", operator.Do("DELETE", "/api/panel/org/o1/peer-credentials/B", ""), 200, `{"status":"ok"}`)
+		want(t, "the admin sets the closed device's password", admin.Do("PUT", "/api/panel/org/o1/peer-credentials/A", `{"password":"x"}`), 200, `{"status":"ok"}`)
+	})
+}

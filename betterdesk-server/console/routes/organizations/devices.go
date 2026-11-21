@@ -43,8 +43,37 @@ func (h *handlers) unassignDevice(w http.ResponseWriter, r *http.Request) {
 // listDevices answers GET /api/panel/org/{id}/devices with the API
 // server's list, cut to the devices the account may see.
 func (h *handlers) listDevices(w http.ResponseWriter, r *http.Request) {
+	h.scopedList(w, r, "/devices", "devices", "device_id")
+}
+
+// listCredentials answers GET /api/panel/org/{id}/peer-credentials with
+// the API server's list of stored-password flags, cut to the devices the
+// account may see.
+func (h *handlers) listCredentials(w http.ResponseWriter, r *http.Request) {
+	h.scopedList(w, r, "/peer-credentials", "credentials", "peer_id")
+}
+
+// setCredential answers PUT and DELETE
+// /api/panel/org/{id}/peer-credentials/{peerId} for a device the account
+// may see.
+func (h *handlers) setCredential(w http.ResponseWriter, r *http.Request) {
+	target, err := credentialPath(r)
+	if err != nil {
+		invalid(w, r, err)
+		return
+	}
+	if !h.mayUse(w, r, r.PathValue("peerId")) {
+		return
+	}
+	h.proxy(w, r, r.Method, target, r.Method == http.MethodPut)
+}
+
+// scopedList calls the API server at the organization's suffix and cuts
+// the answer's list (the member key) to the entries whose idKey names a
+// device the account may see.
+func (h *handlers) scopedList(w http.ResponseWriter, r *http.Request, suffix, key, idKey string) {
 	ctx := r.Context()
-	target, err := orgPath("/devices")(r)
+	target, err := orgPath(suffix)(r)
 	if err != nil {
 		invalid(w, r, err)
 		return
@@ -59,7 +88,7 @@ func (h *handlers) listDevices(w http.ResponseWriter, r *http.Request) {
 	answer, isObject := data.(*goapi.Object)
 	list, isList := []any(nil), false
 	if isObject && answer != nil {
-		list, isList = answer.Get("devices").([]any)
+		list, isList = answer.Get(key).([]any)
 	}
 	if isList {
 		user := kit.User(r)
@@ -74,11 +103,11 @@ func (h *handlers) listDevices(w http.ResponseWriter, r *http.Request) {
 		if scope != nil {
 			kept := make([]any, 0, len(list))
 			for _, item := range list {
-				if device, ok := item.(*goapi.Object); ok && device != nil && scope.Has(device.Str("device_id")) {
+				if entry, ok := item.(*goapi.Object); ok && entry != nil && scope.Has(entry.Str(idKey)) {
 					kept = append(kept, item)
 				}
 			}
-			answer.Set("devices", kept)
+			answer.Set(key, kept)
 		}
 	}
 	goapipath.WriteJSON(w, r, resp.Status, data)
