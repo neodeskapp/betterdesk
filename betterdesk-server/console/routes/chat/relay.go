@@ -391,16 +391,7 @@ func supportContact(now float64) []byte {
 // tells the room and the inbox, and loads its history, contacts and
 // groups.
 func (r *Relay) agentJoins(c *client) {
-	r.mu.Lock()
-	rm := r.roomLocked(c.id)
-	if rm.agent != nil {
-		rm.agent.Close(1001, "New agent connected")
-	}
-	rm.agent = c.conn
-	logging.Logf("console", "[Chat] Agent connected: %s", c.id)
-	rm.broadcastLocked(newObject().str("type", "status").boolean("agent_connected", true).text(), c.conn)
-	rm.broadcastLocked(newObject().str("type", "presence").str("device_id", c.id).boolean("online", true).text(), c.conn)
-	r.mu.Unlock()
+	rm := r.agentEnters(c)
 	r.toPanel(c.api, c.id, nil, rm,
 		newObject().str("type", "status").str("device_id", c.id).boolean("agent_connected", true).text(),
 		newObject().str("type", "presence").str("device_id", c.id).boolean("online", true).text())
@@ -427,6 +418,22 @@ func (r *Relay) agentJoins(c *client) {
 	})
 }
 
+// agentEnters makes the agent its room's, closing an earlier one,
+// and tells the room. It takes the relay's lock.
+func (r *Relay) agentEnters(c *client) *room {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	rm := r.roomLocked(c.id)
+	if rm.agent != nil {
+		rm.agent.Close(1001, "New agent connected")
+	}
+	rm.agent = c.conn
+	logging.Logf("console", "[Chat] Agent connected: %s", c.id)
+	rm.broadcastLocked(newObject().str("type", "status").boolean("agent_connected", true).text(), c.conn)
+	rm.broadcastLocked(newObject().str("type", "presence").str("device_id", c.id).boolean("online", true).text(), c.conn)
+	return rm
+}
+
 // sendHistory sends a room's history: the API server's messages for the
 // conversation, else the messages the room keeps in memory (without a
 // conversation id). An operator gets the messages of devices it sees.
@@ -451,37 +458,41 @@ func (r *Relay) memory(id string) []byte {
 }
 
 // agentLeaves takes the agent out of its room, unless another one has
-// replaced it, and tells the room and the inbox.
+// replaced it, and tells the room and the inbox. A replaced agent may end
+// after its successor has left and the room is gone.
 func (r *Relay) agentLeaves(c *client) {
-	r.mu.Lock()
-	rm := r.rooms[c.id]
-	if rm.agent != c.conn {
-		r.mu.Unlock()
+	rm := r.agentExits(c)
+	if rm == nil {
 		return
+	}
+	r.toPanel(c.api, c.id, nil, rm,
+		newObject().str("type", "status").str("device_id", c.id).boolean("agent_connected", false).text(),
+		newObject().str("type", "presence").str("device_id", c.id).boolean("online", false).text())
+}
+
+// agentExits takes the agent out of its room and tells the room. It
+// returns the room, nil when the agent was no longer the room's. It takes
+// the relay's lock.
+func (r *Relay) agentExits(c *client) *room {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	rm := r.rooms[c.id]
+	if rm == nil || rm.agent != c.conn {
+		return nil
 	}
 	rm.agent = nil
 	logging.Logf("console", "[Chat] Agent disconnected: %s", c.id)
 	rm.broadcastLocked(newObject().str("type", "status").boolean("agent_connected", false).text(), nil)
 	rm.broadcastLocked(newObject().str("type", "presence").str("device_id", c.id).boolean("online", false).text(), nil)
 	r.dropIfEmptyLocked(c.id, rm)
-	r.mu.Unlock()
-	r.toPanel(c.api, c.id, nil, rm,
-		newObject().str("type", "status").str("device_id", c.id).boolean("agent_connected", false).text(),
-		newObject().str("type", "presence").str("device_id", c.id).boolean("online", false).text())
+	return rm
 }
 
 // operatorJoins puts the operator into its room (and the inbox for the
 // panel), tells it whether the room's agent is there, and loads the
 // panel's contacts and groups, or the room's history.
 func (r *Relay) operatorJoins(c *client) {
-	r.mu.Lock()
-	rm := r.roomLocked(c.id)
-	rm.operators = append(rm.operators, c.conn)
-	if c.id == panelID {
-		r.panel = append(r.panel, c)
-	}
-	connected := rm.agent != nil && rm.agent.Open()
-	r.mu.Unlock()
+	connected := r.operatorEnters(c)
 	logging.Logf("console", "[Chat] Operator %s connected to %s", c.operator, c.id)
 	c.send(newObject().str("type", "status").boolean("agent_connected", connected))
 
@@ -501,6 +512,19 @@ func (r *Relay) operatorJoins(c *client) {
 		data, ok := loadHistory(ctx, r.opts.API, id)
 		r.sendHistory(ctx, c, data, ok, id)
 	})
+}
+
+// operatorEnters puts the operator into its room and the inbox and
+// reports whether the room's agent is there. It takes the relay's lock.
+func (r *Relay) operatorEnters(c *client) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	rm := r.roomLocked(c.id)
+	rm.operators = append(rm.operators, c.conn)
+	if c.id == panelID {
+		r.panel = append(r.panel, c)
+	}
+	return rm.agent != nil && rm.agent.Open()
 }
 
 // sendContacts sends the API server's contacts when there are some, else
@@ -545,8 +569,10 @@ func (r *Relay) sendGroups(c *client, data jsjson.Value, ok bool) {
 func (r *Relay) operatorLeaves(c *client) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	rm := r.rooms[c.id]
-	rm.operators = without(rm.operators, c.conn)
+	if rm := r.rooms[c.id]; rm != nil {
+		rm.operators = without(rm.operators, c.conn)
+		r.dropIfEmptyLocked(c.id, rm)
+	}
 	panel := r.panel[:0:0]
 	for _, op := range r.panel {
 		if op != c {
@@ -554,7 +580,6 @@ func (r *Relay) operatorLeaves(c *client) {
 		}
 	}
 	r.panel = panel
-	r.dropIfEmptyLocked(c.id, rm)
 	logging.Logf("console", "[Chat] Operator %s left %s", c.operator, c.id)
 }
 
