@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/cdap"
 )
 
@@ -392,7 +393,7 @@ func (s *Server) handleCDAPDelegateCreate(w http.ResponseWriter, r *http.Request
 
 	// Only admins can create delegations
 	role := getRoleFromCtx(r)
-	if role != "admin" {
+	if !auth.IsSuperAdminRole(role) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Only admins can create delegations"})
 		return
 	}
@@ -474,7 +475,7 @@ func (s *Server) handleCDAPDelegateRevoke(w http.ResponseWriter, r *http.Request
 	}
 
 	role := getRoleFromCtx(r)
-	if role != "admin" {
+	if !auth.IsSuperAdminRole(role) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Only admins can manage delegations"})
 		return
 	}
@@ -508,7 +509,7 @@ func (s *Server) handleCDAPDelegateList(w http.ResponseWriter, r *http.Request) 
 	}
 
 	role := getRoleFromCtx(r)
-	if role != "admin" {
+	if !auth.IsSuperAdminRole(role) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Only admins can view all delegations"})
 		return
 	}
@@ -551,7 +552,7 @@ func (s *Server) handleCDAPTerminal(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if effectiveRole != "admin" {
+	if !auth.IsSuperAdminRole(role) && !auth.IsSuperAdminRole(effectiveRole) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Terminal access requires admin role"})
 		return
 	}
@@ -673,7 +674,7 @@ func (s *Server) handleCDAPDesktop(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if effectiveRole != "admin" {
+	if !auth.IsSuperAdminRole(role) && !auth.IsSuperAdminRole(effectiveRole) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Desktop access requires admin role"})
 		return
 	}
@@ -926,7 +927,7 @@ func (s *Server) handleCDAPFileBrowser(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if effectiveRole != "admin" {
+	if !auth.IsSuperAdminRole(role) && !auth.IsSuperAdminRole(effectiveRole) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "File browser access requires admin role"})
 		return
 	}
