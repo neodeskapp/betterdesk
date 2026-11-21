@@ -21,6 +21,9 @@
             this.stream = null;
             this.password = '';
             this.viewOnly = false;
+            // The device's clipboard reaches the operator's only for the active tab, with Disable clipboard off
+            this.clipboardDisabled = false;
+            this.sessionActive = true;
             this.state = 'idle';
             this.renderer = { resize: () => this.resize() };
             this.capabilities = {
@@ -123,6 +126,10 @@
                 this.stream.chunks.push(args[1] || '');
             } else if (opcode === 'end' && this.stream) {
                 if (this.stream.kind === 'clipboard') {
+                    if (this.clipboardDisabled || !this.sessionActive) {
+                        this.stream = null;
+                        return;
+                    }
                     try {
                         const bytes = Uint8Array.from(atob(this.stream.chunks.join('')), c => c.charCodeAt(0));
                         navigator.clipboard?.writeText(new TextDecoder().decode(bytes));
@@ -228,6 +235,8 @@
         }
 
         setViewOnly(value) { this.viewOnly = !!value; }
+        setDisableClipboard(value) { this.clipboardDisabled = !!value; }
+        setSessionActive(active) { this.sessionActive = !!active; }
         setScaleMode() {}
         setBackgroundFps() {}
         setQualityPreset() {}

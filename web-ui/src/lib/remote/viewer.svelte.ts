@@ -450,6 +450,8 @@ export class Viewer {
 		s.client.setBackgroundFps?.(s.prefs.backgroundFps || 1);
 		// A watch-only guest link: no keyboard or mouse input, also not after a reconnect
 		if (this.viewOnlyGuest) s.client.setViewOnly?.(true);
+		// Disable clipboard is also a local flag in the client: a new client starts with it
+		if (s.toggles.disableClipboard) s.client.setDisableClipboard?.(true);
 		s.viewOnly = this.viewOnlyGuest || !!s.client.viewOnly;
 		this.wire(s, s.client);
 		this.attachTouch(s);
@@ -939,7 +941,7 @@ export class Viewer {
 		else if (key === 'showCursor') c.setShowRemoteCursor(on);
 		else if (key === 'lockAfter') c.setLockAfterSession(on);
 		else if (key === 'privacy') c.setPrivacyMode(on);
-		else c.setDisableClipboard(on);
+		else c.setDisableClipboard?.(on);
 	}
 
 	/** Image quality, frame rate, scaling, keyboard mode, codec: the session and the saved defaults */

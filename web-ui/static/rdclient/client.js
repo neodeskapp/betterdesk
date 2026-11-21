@@ -106,6 +106,8 @@ class RDClient {
         // Multi-session viewer: remote.js toggles these when switching tabs
         this._sessionActive = true;
         this._clipboardToLocalEnabled = true;
+        // Disable clipboard (viewer toggle): also kept here, a device may ignore the option
+        this._clipboardDisabled = false;
         this._savedActiveFps = null;
         this._backgroundFps = 1;
         this._streamThrottledActive = null;
@@ -1123,7 +1125,7 @@ class RDClient {
     }
 
     async _applyRemoteClipboard(clipboards) {
-        if (this._viewOnly) return;
+        if (this._viewOnly || this._clipboardDisabled) return;
         const list = clipboards || [];
         if (!list.length) return;
 
@@ -1140,7 +1142,7 @@ class RDClient {
             this._emit('clipboard', text);
         }
 
-        if (this._clipboardToLocalEnabled) {
+        if (this._clipboardToLocalEnabled && !this._clipboardDisabled) {
             const status = await RDClipboard.writeLocalRich(entry);
             this._emit('clipboard_status', status, entry);
         }
@@ -2195,6 +2197,7 @@ class RDClient {
      * @param {boolean} disable
      */
     setDisableClipboard(disable) {
+        this._clipboardDisabled = !!disable;
         if (this._state !== 'streaming') return;
         this._sendPeerMessage(this.proto.buildOptionMisc({ disableClipboard: disable }));
     }

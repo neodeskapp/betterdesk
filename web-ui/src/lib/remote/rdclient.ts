@@ -124,7 +124,8 @@ export interface RemoteClient {
 	setShowRemoteCursor(on: boolean): void;
 	setLockAfterSession(on: boolean): void;
 	setPrivacyMode(on: boolean): void;
-	setDisableClipboard(on: boolean): void;
+	/** Keeps the device's clipboard out of the operator's (the device is asked too); not on mesh sessions */
+	setDisableClipboard?(on: boolean): void;
 	/** Not on CDAP sessions */
 	setViewOnly?(on: boolean): void;
 	setAudioMuted(muted: boolean): void;
