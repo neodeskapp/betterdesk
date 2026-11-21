@@ -121,7 +121,7 @@
     },
     {
      "path": "events[1].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "events[2].details.org_id",
@@ -129,11 +129,11 @@
     },
     {
      "path": "events[3].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "events[4].details.org_id",
-     "pattern": "^[9aA+/_=-]+$"
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[5].details.org_id",
@@ -141,15 +141,15 @@
     },
     {
      "path": "events[6].details.org_id",
-     "pattern": "^[9aA+/_=-]+$"
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[7].details.org_id",
-     "pattern": "^[9aA+/_=-]+$"
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[8].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "events[9].details.org_id",
@@ -586,6 +586,10 @@
      "pattern": "^9999-99-99A99:99:99\\.9+A$"
     },
     {
+     "path": "events[0].details.id",
+     "pattern": "^[9aA+/_=-]{16}$"
+    },
+    {
      "path": "events[10].details.org_id",
      "pattern": "^[9aA+/_=-]{36}$"
     },
@@ -602,32 +606,28 @@
      "pattern": "^[9aA+/_=-]{36}$"
     },
     {
-     "path": "events[14].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[15].details.org_id",
+     "path": "events[3].details.org_id",
      "pattern": "^[9aA+/_=-]+$"
     },
     {
-     "path": "events[16].details.org_id",
+     "path": "events[4].details.org_id",
      "pattern": "^[9aA+/_=-]{36}$"
     },
     {
-     "path": "events[3].details.id",
-     "pattern": "^[9aA+/_=-]{16}$"
+     "path": "events[5].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[6].details.org_id",
-     "pattern": "^[9aA+/_=-]+$"
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[7].details.org_id",
-     "pattern": "^[9aA+/_=-]+$"
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[8].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "events[9].details.org_id",
@@ -637,40 +637,9 @@
    "body": {
     "kind": "json",
     "json": {
-     "count": 47,
+     "count": 44,
      "enabled": true,
      "events": [
-      {
-       "action": "device_rejected",
-       "actor": "127.0.0.1",
-       "details": {
-        "banned": "false",
-        "device_id": "999999999"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "actor": "127.0.0.1",
-       "details": {
-        "device_id": "999999999",
-        "peer_removed": "false",
-        "unbanned": "false"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "actor": "127.0.0.1",
-       "details": {
-        "banned": "false",
-        "device_id": "999999999"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
       {
        "action": "pairing_code_created",
        "actor": "127.0.0.1",
@@ -1082,7 +1051,7 @@
        "timestamp": "<volatile>"
       }
      ],
-     "total": 47
+     "total": 44
     }
    }
   },
@@ -1143,27 +1112,27 @@
     },
     {
      "path": "events[15].details.org_id",
-     "pattern": "^[9aA+/_=-]+$"
-    },
-    {
-     "path": "events[16].details.org_id",
      "pattern": "^[9aA+/_=-]{36}$"
     },
     {
-     "path": "events[17].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[18].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[5].details.id",
+     "path": "events[2].details.id",
      "pattern": "^[9aA+/_=-]{16}$"
     },
     {
-     "path": "events[8].details.org_id",
+     "path": "events[5].details.org_id",
      "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[6].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[7].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[8].details.org_id",
+     "pattern": "^[9aA+/_=-]+$"
     },
     {
      "path": "events[9].details.org_id",
@@ -1173,56 +1142,19 @@
    "body": {
     "kind": "json",
     "json": {
-     "count": 49,
+     "count": 46,
      "enabled": true,
      "events": [
       {
        "action": "config_changed",
        "actor": "127.0.0.1",
-       "details": {
-        "value": "30"
-       },
        "target": "availability_history_retention_days",
        "timestamp": "<volatile>"
       },
       {
        "action": "config_changed",
        "actor": "127.0.0.1",
-       "details": {
-        "value": "false"
-       },
        "target": "availability_history_enabled",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "actor": "127.0.0.1",
-       "details": {
-        "banned": "false",
-        "device_id": "999999999"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "actor": "127.0.0.1",
-       "details": {
-        "device_id": "999999999",
-        "peer_removed": "false",
-        "unbanned": "false"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "actor": "127.0.0.1",
-       "details": {
-        "banned": "false",
-        "device_id": "999999999"
-       },
-       "target": "apikey:console-bridge",
        "timestamp": "<volatile>"
       },
       {
@@ -1636,7 +1568,7 @@
        "timestamp": "<volatile>"
       }
      ],
-     "total": 49
+     "total": 46
     }
    }
   },
@@ -1676,8 +1608,32 @@
      "pattern": "^9999-99-99A99:99:99\\.9+A$"
     },
     {
-     "path": "events[14].details.id",
-     "pattern": "^[9aA+/_=-]{16}$"
+     "path": "events[10].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[11].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[12].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[13].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[14].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[15].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "events[16].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
     },
     {
      "path": "events[17].details.org_id",
@@ -1696,35 +1652,11 @@
      "pattern": "^[9aA+/_=-]{36}$"
     },
     {
-     "path": "events[21].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
+     "path": "events[2].details.id",
+     "pattern": "^[9aA+/_=-]{16}$"
     },
     {
-     "path": "events[22].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[23].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[24].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[25].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[26].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[27].details.org_id",
-     "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "events[6].details.id",
+     "path": "events[7].details.id",
      "pattern": "^[9aA+/_=-]{16}$"
     }
    ],
@@ -1737,61 +1669,13 @@
       {
        "action": "config_changed",
        "actor": "127.0.0.1",
-       "details": {
-        "value": "30"
-       },
        "target": "availability_history_retention_days",
        "timestamp": "<volatile>"
       },
       {
        "action": "config_changed",
        "actor": "127.0.0.1",
-       "details": {
-        "value": "false"
-       },
        "target": "availability_history_enabled",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "actor": "127.0.0.1",
-       "details": {
-        "banned": "false",
-        "device_id": "999999999"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "actor": "127.0.0.1",
-       "details": {
-        "device_id": "999999999",
-        "peer_removed": "false",
-        "unbanned": "false"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "actor": "127.0.0.1",
-       "details": {
-        "banned": "false",
-        "device_id": "999999999"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "actor": "127.0.0.1",
-       "details": {
-        "device_id": "999999999",
-        "peer_removed": "false",
-        "unbanned": "false"
-       },
-       "target": "apikey:console-bridge",
        "timestamp": "<volatile>"
       },
       {
@@ -1824,50 +1708,13 @@
       {
        "action": "config_changed",
        "actor": "127.0.0.1",
-       "details": {
-        "value": "30"
-       },
        "target": "availability_history_retention_days",
        "timestamp": "<volatile>"
       },
       {
        "action": "config_changed",
        "actor": "127.0.0.1",
-       "details": {
-        "value": "false"
-       },
        "target": "availability_history_enabled",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "actor": "127.0.0.1",
-       "details": {
-        "banned": "false",
-        "device_id": "999999999"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "actor": "127.0.0.1",
-       "details": {
-        "device_id": "999999999",
-        "peer_removed": "false",
-        "unbanned": "false"
-       },
-       "target": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "actor": "127.0.0.1",
-       "details": {
-        "banned": "false",
-        "device_id": "999999999"
-       },
-       "target": "apikey:console-bridge",
        "timestamp": "<volatile>"
       },
       {
@@ -2207,9 +2054,72 @@
        },
        "target": "900100008",
        "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "design,laptop"
+       },
+       "target": "900100007",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "design"
+       },
+       "target": "900100006",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "vip"
+       },
+       "target": "900100005",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "finance"
+       },
+       "target": "900100004",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,finance"
+       },
+       "target": "900100003",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,ground-floor"
+       },
+       "target": "900100002",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "peer_tags_updated",
+       "actor": "127.0.0.1",
+       "details": {
+        "tags": "office,ground-floor"
+       },
+       "target": "900100001",
+       "timestamp": "<volatile>"
       }
      ],
-     "total": 58
+     "total": 51
     }
    }
   }

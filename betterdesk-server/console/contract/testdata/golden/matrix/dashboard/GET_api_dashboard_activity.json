@@ -235,27 +235,6 @@
     "json": {
      "events": [
       {
-       "action": "device_rejected",
-       "action_label": "device_rejected",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "action_label": "enrollment_rejection_cleared",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "action_label": "device_rejected",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
        "action": "pairing_code_created",
        "action_label": "pairing_code_created",
        "details": "",
@@ -300,6 +279,27 @@
       {
        "action": "org_user_linked",
        "action_label": "org_user_linked",
+       "details": "",
+       "device_id": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "action_label": "org_policy_changed",
+       "details": "",
+       "device_id": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "action_label": "org_policy_changed",
+       "details": "",
+       "device_id": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "action_label": "org_policy_changed",
        "details": "",
        "device_id": "apikey:console-bridge",
        "timestamp": "<volatile>"
@@ -364,27 +364,6 @@
        "timestamp": "<volatile>"
       },
       {
-       "action": "device_rejected",
-       "action_label": "device_rejected",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "action_label": "enrollment_rejection_cleared",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "action_label": "device_rejected",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
        "action": "pairing_code_created",
        "action_label": "pairing_code_created",
        "details": "",
@@ -408,6 +387,27 @@
       {
        "action": "org_policy_changed",
        "action_label": "org_policy_changed",
+       "details": "",
+       "device_id": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "action_label": "org_policy_changed",
+       "details": "",
+       "device_id": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "action_label": "org_policy_changed",
+       "details": "",
+       "device_id": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_user_linked",
+       "action_label": "org_user_linked",
        "details": "",
        "device_id": "apikey:console-bridge",
        "timestamp": "<volatile>"
@@ -479,34 +479,6 @@
        "timestamp": "<volatile>"
       },
       {
-       "action": "device_rejected",
-       "action_label": "device_rejected",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "action_label": "enrollment_rejection_cleared",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "device_rejected",
-       "action_label": "device_rejected",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "action_label": "enrollment_rejection_cleared",
-       "details": "",
-       "device_id": "apikey:console-bridge",
-       "timestamp": "<volatile>"
-      },
-      {
        "action": "pairing_code_created",
        "action_label": "pairing_code_created",
        "details": "",
@@ -532,6 +504,34 @@
        "action_label": "config_changed",
        "details": "",
        "device_id": "availability_history_retention_days",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "config_changed",
+       "action_label": "config_changed",
+       "details": "",
+       "device_id": "availability_history_enabled",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "pairing_code_created",
+       "action_label": "pairing_code_created",
+       "details": "",
+       "device_id": "e2e_global_admin",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_peer_credential_clear",
+       "action_label": "org_peer_credential_clear",
+       "details": "",
+       "device_id": "999999999",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "branding_updated",
+       "action_label": "branding_updated",
+       "details": "",
+       "device_id": "apikey:console-bridge",
        "timestamp": "<volatile>"
       }
      ],
