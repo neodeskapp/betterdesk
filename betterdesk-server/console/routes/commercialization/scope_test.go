@@ -14,17 +14,22 @@ import (
 // The operator lists the sessions, work reports and device contracts of
 // device b alone, is refused the contract state and pending session of
 // another device and the work report of another device's session without
-// a call reaching the API server, and gets no export. The admin gets the
-// API server's answers as they are.
+// a call reaching the API server, and gets no export. A work report's
+// session is looked up by its id, so a session older than the newest 500
+// is no longer refused. The admin gets the API server's answers as they
+// are.
 func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 	sessions := `{"sessions":[{"id":"s1","device_id":"a","status":"pending_report"},{"id":"s2","device_id":"b","status":"pending_report"},{"id":"s3","device_id":"c","status":"closed"}]}`
 	api := routetest.NewAPI()
 	api.On("GET /api/peers", 200, `[{"id":"a"},{"id":"b"},{"id":"c"}]`)
 	api.On("GET /api/billing/sessions", 200, sessions)
 	api.On("GET /api/billing/sessions?limit=500", 200, sessions)
-	api.On("GET /api/billing/sessions?limit=500&status=pending_report", 200,
-		`{"sessions":[{"id":"s1","device_id":"a"},{"id":"s2","device_id":"b"}]}`)
-	api.On("GET /api/billing/sessions?limit=500&status=active", 200, `{"sessions":[{"id":"s4","device_id":"b"},{"id":"s5","device_id":"c"}]}`)
+	// a work report's session is looked up by its id, also one far past
+	// the newest sessions (s6, s7); s9 is unknown
+	for id, device := range map[string]string{"s1": "a", "s2": "b", "s4": "b", "s5": "c", "s6": "b", "s7": "a"} {
+		api.On("GET /api/billing/sessions/"+id, 200, `{"session":{"id":"`+id+`","device_id":"`+device+`","status":"pending_report"},"device":{"id":"`+device+`"}}`)
+	}
+	api.On("GET /api/billing/sessions/s9", 404, `{"error":"billing session not found"}`)
 	api.On("GET /api/billing/reports", 200, `{"reports":[{"id":1,"session_id":"s1"},{"id":2,"session_id":"s2"},{"id":3,"session_id":"s9"}]}`)
 	api.On("GET /api/billing/contracts", 200,
 		`{"contracts":[{"id":"k1","target_type":"device","target_key":"a"},{"id":"k2","target_type":"device","target_key":"b"},{"id":"k3","target_type":"org","target_key":"o1"}]}`)
@@ -32,7 +37,7 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 		api.On("GET /api/billing/check?device_id="+id, 200, `{"allowed":true,"device":"`+id+`"}`)
 		api.On("GET /api/billing/sessions/pending?device_id="+id, 200, `{"session":{"device":"`+id+`"}}`)
 	}
-	for _, id := range []string{"s1", "s2", "s4", "s5"} {
+	for _, id := range []string{"s1", "s2", "s4", "s5", "s6", "s7"} {
 		api.On("POST /api/billing/sessions/"+id+"/report", 200, `{"ok":"true"}`)
 	}
 	api.On("GET /api/billing/sessions/export?format=csv", 200, "id,device_id\ns1,a")
@@ -69,6 +74,8 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 		{"POST", "/api/panel/billing/sessions/s1/report", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
 		{"POST", "/api/panel/billing/sessions/s5/report", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
 		{"POST", "/api/panel/billing/sessions/s9/report", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
+		{"POST", "/api/panel/billing/sessions/s6/report", 200, `{"ok":"true"}`, "POST /api/billing/sessions/s6/report"},
+		{"POST", "/api/panel/billing/sessions/s7/report", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
 		{"GET", "/api/panel/billing/sessions/export?format=csv", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
 		{"GET", "/api/panel/billing/reports/export?format=csv", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
 	} {
@@ -81,11 +88,13 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 		if got.Status != c.status || got.Body != c.body {
 			t.Errorf("%s %s as the operator: %d %s\nwant %d %s", c.method, c.path, got.Status, got.Body, c.status, c.body)
 		}
-		// the billing calls, without the lookups of sessions by id
+		// the billing calls, without the lookups of sessions
 		var passed []string
 		for _, call := range api.Calls() {
-			_, target, _ := strings.Cut(call, " ")
-			if strings.HasPrefix(target, "/api/billing/") && !strings.HasPrefix(target, "/api/billing/sessions?limit=500") {
+			method, target, _ := strings.Cut(call, " ")
+			lookup := strings.HasPrefix(target, "/api/billing/sessions?limit=500") ||
+				(method == "GET" && strings.HasPrefix(target, "/api/billing/sessions/s") && !strings.Contains(target, "/report"))
+			if strings.HasPrefix(target, "/api/billing/") && !lookup {
 				passed = append(passed, call)
 			}
 		}

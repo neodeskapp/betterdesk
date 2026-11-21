@@ -21,9 +21,9 @@ import (
 //	                                  the 500 newest sessions
 //	the contracts list                without the contracts of a device outside it
 //	check, sessions/pending           403 for a device_id outside it, no call
-//	a session's work report           403 unless the session is among the 500 newest
-//	                                  pending or active sessions and its device is in
-//	                                  the scope, no call
+//	a session's work report           403 unless the API server knows the session
+//	                                  (GET /api/billing/sessions/{id}) and its device
+//	                                  is in the scope, no call
 //	the two exports                   403: the files cannot be cut to the scope
 //
 // An account without a limit gets the API server's answers as they are.
@@ -144,14 +144,10 @@ func contractInScope(scope *access.DeviceScope, contract *goapi.Object) bool {
 	return text(contract, "target_type") != "device" || scope.Has(text(contract, "target_key"))
 }
 
-// sessionDevices reads the devices of the newest sessions of a status
-// ("" for every status) by session id. It answers a failed call itself and
-// returns nil.
-func (h *handlers) sessionDevices(w http.ResponseWriter, r *http.Request, status string) map[string]string {
+// sessionDevices reads the devices of the newest sessions by session id.
+// It answers a failed call itself and returns nil.
+func (h *handlers) sessionDevices(w http.ResponseWriter, r *http.Request) map[string]string {
 	query := url.Values{"limit": {sessionsLookup}}
-	if status != "" {
-		query.Set("status", status)
-	}
 	resp := h.call(w, r, goapipath.Fixed("/billing/sessions?"+query.Encode()))
 	if resp == nil {
 		return nil
@@ -168,7 +164,7 @@ func (h *handlers) sessionDevices(w http.ResponseWriter, r *http.Request, status
 // with a limit: the reports whose session is among the newest sessions
 // and of a device in the scope.
 func (h *handlers) reportsInScope(w http.ResponseWriter, r *http.Request, scope *access.DeviceScope) {
-	devices := h.sessionDevices(w, r, "")
+	devices := h.sessionDevices(w, r)
 	if devices == nil {
 		return
 	}
@@ -201,8 +197,9 @@ func (h *handlers) deviceInScope(pattern string) http.HandlerFunc {
 }
 
 // reportInScope is passBody for the work report of a session, refused
-// for an account with a limit unless the session is among the newest
-// pending or active ones and its device is in the scope.
+// for an account with a limit unless the API server knows the session and
+// its device is in the scope. Whether the session still takes a report is
+// the API server's to answer.
 func (h *handlers) reportInScope(pattern string) http.HandlerFunc {
 	plain := h.passBody(http.MethodPost, pattern)
 	return h.scoped(plain, func(w http.ResponseWriter, r *http.Request, scope *access.DeviceScope) {
@@ -211,21 +208,17 @@ func (h *handlers) reportInScope(pattern string) http.HandlerFunc {
 			plain(w, r)
 			return
 		}
-		id := r.PathValue("sessionId")
-		for _, status := range []string{"pending_report", "active"} {
-			devices := h.sessionDevices(w, r, status)
-			if devices == nil {
-				return
-			}
-			if device, found := devices[id]; found {
-				if !scope.Has(device) {
-					break
-				}
-				plain(w, r)
-				return
-			}
+		session, err := h.api.GetBillingSession(r.Context(), r.PathValue("sessionId"))
+		if err != nil {
+			status, data := goapipath.FailureOf(err, "Go server unreachable")
+			goapipath.WriteJSON(w, r, status, data)
+			return
 		}
-		outOfScope(w, r)
+		if session == nil || !scope.Has(session.DeviceID()) {
+			outOfScope(w, r)
+			return
+		}
+		plain(w, r)
 	})
 }
 
