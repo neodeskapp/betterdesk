@@ -914,3 +914,45 @@ func TestTCPToolTimeout(t *testing.T) {
 		}
 	}
 }
+
+// The three tools take a timeout of at most a minute and refuse a longer
+// one before anything leaves the server, and a target's timeout_ms is held
+// to the same bound (BUGS RV44).
+func TestToolsAndTargetsBoundTheTimeout(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t), names{})
+	tooLong := `{"error":"timeout must be at most 60000"}`
+	for _, c := range []struct{ path, body string }{
+		{"/api/network/ping", `{"host":"10.1.2.3","timeout":60001}`},
+		{"/api/network/ping", `{"host":"10.1.2.3","timeout":2147480000}`},
+		{"/api/network/tcp", `{"host":"10.1.2.3","port":80,"timeout":"60001"}`},
+		{"/api/network/http", `{"url":"http://10.1.2.3/","timeout":1e9}`},
+	} {
+		w.pinged = nil
+		if rec := w.do("olga", "POST", c.path, &c.body, ""); rec.Code != http.StatusBadRequest || rec.Body.String() != tooLong || len(w.pinged) != 0 {
+			t.Errorf("%s %s: %d %s, ping got %q; want 400 %s", c.path, c.body, rec.Code, rec.Body.String(), w.pinged, tooLong)
+		}
+	}
+	w.pinged = nil
+	body := `{"host":"10.1.2.3","timeout":60000}`
+	if rec := w.do("olga", "POST", "/api/network/ping", &body, ""); rec.Code != http.StatusOK || len(w.pinged) != 1 || w.pinged[0] != "-c 1 -W 60 10.1.2.3" {
+		t.Errorf("a timeout of 60000: %d %s, ping got %q", rec.Code, rec.Body.String(), w.pinged)
+	}
+
+	refused := `{"error":"timeout_ms must be a whole number from 1 to 60000"}`
+	create := `{"name":"t","host":"10.1.2.3","check_type":"ping","timeout_ms":60001}`
+	if rec := w.do("root", "POST", "/api/network/targets", &create, ""); rec.Code != http.StatusBadRequest || rec.Body.String() != refused {
+		t.Errorf("a target with timeout_ms 60001: %d %s", rec.Code, rec.Body.String())
+	}
+	create = `{"name":"t","host":"10.1.2.3","check_type":"ping","timeout_ms":60000}`
+	rec := w.do("root", "POST", "/api/network/targets", &create, "")
+	var target struct {
+		ID json.Number `json:"id"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &target); rec.Code != http.StatusCreated || err != nil {
+		t.Fatalf("a target with timeout_ms 60000: %d %s", rec.Code, rec.Body.String())
+	}
+	update := `{"timeout_ms":"2147483647"}`
+	if rec := w.do("root", "PATCH", "/api/network/targets/"+target.ID.String(), &update, ""); rec.Code != http.StatusBadRequest || rec.Body.String() != refused {
+		t.Errorf("an update to timeout_ms 2147483647: %d %s", rec.Code, rec.Body.String())
+	}
+}

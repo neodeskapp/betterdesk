@@ -798,6 +798,13 @@ func TestNodeIsDue(t *testing.T) {
 	}
 }
 
+// boundedTimeouts are the checks of targets stored with a timeout above
+// MaxTimeoutMs, with the start of the ping command's arguments: the
+// console checks them with MaxTimeoutMs (BUGS RV44), where Node stopped
+// the ping process after a millisecond for a timeout above its longest
+// timer.
+var boundedTimeouts = map[string]string{"ping timeout 1e23": "-c 1 -W 60 "}
+
 func TestNodeCheckTarget(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := newWorld(t)
@@ -864,6 +871,15 @@ func TestNodeCheckTarget(t *testing.T) {
 
 			logged = nil
 			got := m.CheckTarget(ctx, target)
+			if start, bounded := boundedTimeouts[name]; bounded {
+				w.mu.Lock()
+				pingArgs := w.pingArgs
+				w.mu.Unlock()
+				if len(pingArgs) != 1 || !strings.HasPrefix(pingArgs[0], start) {
+					t.Errorf("%s: ping got %q, want %q and the address", name, pingArgs, start)
+				}
+				continue
+			}
 			wantResult := map[string]any{}
 			for key, raw := range check.Result {
 				wantResult[key] = decode[any](t, raw)

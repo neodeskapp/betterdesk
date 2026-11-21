@@ -27,7 +27,7 @@ const (
 	hostNotText     = "host must be text"
 	urlNotText      = "url must be text"
 	portNotInRange  = "port must be a whole number from 1 to 65535"
-	timeoutNotRange = "timeout_ms must be a whole number from 1 to 2147483647"
+	timeoutNotRange = "timeout_ms must be a whole number from 1 to 60000"
 	intervalNoRange = "interval_ms must be a whole number from 1 to 2147483647"
 	enabledNotFlag  = "enabled must be true or false"
 	maxPort         = 65535
@@ -233,7 +233,7 @@ func newTarget(body middleware.JSONObject) (netmonitor.NewTarget, string) {
 	if port != 0 {
 		data.Port = netmonitor.Num(port)
 	}
-	if data.TimeoutMs, ok = wholeNumber(body.Get("timeout_ms"), maxMs); !ok {
+	if data.TimeoutMs, ok = wholeNumber(body.Get("timeout_ms"), netmonitor.MaxTimeoutMs); !ok {
 		return data, timeoutNotRange
 	}
 	if data.IntervalMs, ok = wholeNumber(body.Get("interval_ms"), maxMs); !ok {
@@ -295,13 +295,14 @@ func targetChanges(body middleware.JSONObject) (netmonitor.TargetChanges, string
 	}
 	for _, m := range []struct {
 		key, problem string
+		max          float64
 		into         **netmonitor.Param
-	}{{"timeout_ms", timeoutNotRange, &changes.TimeoutMs}, {"interval_ms", intervalNoRange, &changes.IntervalMs}} {
+	}{{"timeout_ms", timeoutNotRange, netmonitor.MaxTimeoutMs, &changes.TimeoutMs}, {"interval_ms", intervalNoRange, maxMs, &changes.IntervalMs}} {
 		if !body.Has(m.key) {
 			continue
 		}
 		v := body.Get(m.key)
-		n, ok := wholeNumber(v, maxMs)
+		n, ok := wholeNumber(v, m.max)
 		if !ok {
 			return changes, m.problem
 		}

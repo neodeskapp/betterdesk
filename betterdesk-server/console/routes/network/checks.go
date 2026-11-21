@@ -142,17 +142,23 @@ func historyBound(db *store.DB, rawQuery, name string, isEnd bool) (*netmonitor.
 }
 
 // toolTimeout is the timeout of a tool's body in milliseconds, the default
-// when it is no number or 0. ok is false for a number below 1, which the
-// tools refuse.
-func toolTimeout(body middleware.JSONObject) (timeout netmonitor.Number, ok bool) {
+// when it is no number or 0. problem is the refusal of a number below 1 or
+// above netmonitor.MaxTimeoutMs, "" for a timeout the tools take.
+func toolTimeout(body middleware.JSONObject) (timeout netmonitor.Number, problem string) {
 	timeout = parseInt(body.Get("timeout"))
-	if timeout.Truthy() && timeout < 1 {
-		return 0, false
+	switch {
+	case timeout.Truthy() && timeout < 1:
+		return 0, timeoutBelowOne
+	case timeout > netmonitor.MaxTimeoutMs:
+		return 0, timeoutAboveMax
 	}
-	return timeout.Or(netmonitor.DefaultTimeoutMs), true
+	return timeout.Or(netmonitor.DefaultTimeoutMs), ""
 }
 
-const timeoutBelowOne = "timeout must be at least 1"
+const (
+	timeoutBelowOne = "timeout must be at least 1"
+	timeoutAboveMax = "timeout must be at most 60000"
+)
 
 // ping answers POST /ping with the body {host, timeout}.
 func (h *handlers) ping(w http.ResponseWriter, r *http.Request) {
@@ -162,9 +168,9 @@ func (h *handlers) ping(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "host is required")
 		return
 	}
-	timeout, ok := toolTimeout(body)
-	if !ok {
-		fail(w, r, http.StatusBadRequest, timeoutBelowOne)
+	timeout, problem := toolTimeout(body)
+	if problem != "" {
+		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
 	result := netmonitor.InvalidHost()
@@ -182,9 +188,9 @@ func (h *handlers) tcp(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "host and port are required")
 		return
 	}
-	timeout, ok := toolTimeout(body)
-	if !ok {
-		fail(w, r, http.StatusBadRequest, timeoutBelowOne)
+	timeout, problem := toolTimeout(body)
+	if problem != "" {
+		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
 	port := parseInt(body.Get("port"))
@@ -203,9 +209,9 @@ func (h *handlers) httpCheck(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "url is required")
 		return
 	}
-	timeout, ok := toolTimeout(body)
-	if !ok {
-		fail(w, r, http.StatusBadRequest, timeoutBelowOne)
+	timeout, problem := toolTimeout(body)
+	if problem != "" {
+		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
 	result := netmonitor.URLRequired()

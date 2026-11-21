@@ -35,7 +35,7 @@ func TestTargetValuesOfTheWrongType(t *testing.T) {
 			host     = `{"error":"host must be text"}`
 			url      = `{"error":"url must be text"}`
 			port     = `{"error":"port must be a whole number from 1 to 65535"}`
-			timeout  = `{"error":"timeout_ms must be a whole number from 1 to 2147483647"}`
+			timeout  = `{"error":"timeout_ms must be a whole number from 1 to 60000"}`
 			interval = `{"error":"interval_ms must be a whole number from 1 to 2147483647"}`
 			enabled  = `{"error":"enabled must be true or false"}`
 			kind     = `{"error":"check_type must be one of: ping, tcp, http, https"}`

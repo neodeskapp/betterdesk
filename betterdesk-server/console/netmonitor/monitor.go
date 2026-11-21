@@ -143,20 +143,55 @@ func (m *Monitor) ResolveHost(ctx context.Context, host string) (string, error) 
 	return m.probe.resolveHost(ctx, host)
 }
 
+// MaxTimeoutMs is the longest timeout of a check: a minute. The network
+// routes refuse a longer one; a check given one, such as a target stored
+// with a longer timeout_ms, waits MaxTimeoutMs.
+const MaxTimeoutMs = 60000
+
+// checkGrace is how much longer than its timeout a check may take in all:
+// the ping command runs up to two seconds longer than it waits.
+const checkGrace = 3 * time.Second
+
+// boundTimeout is the timeout a check waits: timeoutMs, at most
+// MaxTimeoutMs.
+func boundTimeout(timeoutMs Number) Number {
+	if timeoutMs > MaxTimeoutMs {
+		return MaxTimeoutMs
+	}
+	return timeoutMs
+}
+
+// withDeadline is ctx with the deadline of a check of the timeout: the
+// timeout and checkGrace. A timeout that is no number above 0 counts as
+// MaxTimeoutMs.
+func withDeadline(ctx context.Context, timeoutMs Number) (context.Context, context.CancelFunc) {
+	ms := float64(boundTimeout(timeoutMs))
+	if !(ms > 0) {
+		ms = MaxTimeoutMs
+	}
+	return context.WithTimeout(ctx, time.Duration(ms*float64(time.Millisecond))+checkGrace)
+}
+
 // PingHost sends one echo request with the system's ping command.
 func (m *Monitor) PingHost(ctx context.Context, host string, timeoutMs Number) Result {
-	return m.probe.pingHost(ctx, host, timeoutMs)
+	ctx, cancel := withDeadline(ctx, timeoutMs)
+	defer cancel()
+	return m.probe.pingHost(ctx, host, boundTimeout(timeoutMs))
 }
 
 // CheckTCPPort opens a connection to a port and closes it.
 func (m *Monitor) CheckTCPPort(ctx context.Context, host string, port, timeoutMs Number) Result {
-	return m.probe.checkTCPPort(ctx, host, port, timeoutMs)
+	ctx, cancel := withDeadline(ctx, timeoutMs)
+	defer cancel()
+	return m.probe.checkTCPPort(ctx, host, port, boundTimeout(timeoutMs))
 }
 
 // CheckHTTP sends one GET request. A status from 200 to 399 is a
 // success; a redirect is not followed.
 func (m *Monitor) CheckHTTP(ctx context.Context, rawURL string, timeoutMs Number) Result {
-	return m.probe.checkHTTP(ctx, rawURL, timeoutMs)
+	ctx, cancel := withDeadline(ctx, timeoutMs)
+	defer cancel()
+	return m.probe.checkHTTP(ctx, rawURL, boundTimeout(timeoutMs))
 }
 
 // Running reports whether the monitor polls.
@@ -304,7 +339,9 @@ func (m *Monitor) CheckTarget(ctx context.Context, target *Target) CheckResult {
 	if !target.TimeoutMs.Valid {
 		timeout = 0
 	}
-	timeout = timeout.Or(DefaultTimeoutMs)
+	timeout = boundTimeout(timeout.Or(DefaultTimeoutMs))
+	checkCtx, cancel := withDeadline(ctx, timeout)
+	defer cancel()
 	port := Number(target.Port.V)
 	if !target.Port.Valid {
 		port = 0
@@ -321,13 +358,13 @@ func (m *Monitor) CheckTarget(ctx context.Context, target *Target) CheckResult {
 		if !target.Host.Valid {
 			result = InvalidHost()
 		} else {
-			result = m.probe.pingHost(ctx, host, timeout)
+			result = m.probe.pingHost(checkCtx, host, timeout)
 		}
 	case "tcp":
 		if !target.Host.Valid {
 			result = InvalidHost()
 		} else {
-			result = m.probe.checkTCPPort(ctx, host, port.Or(80), timeout)
+			result = m.probe.checkTCPPort(checkCtx, host, port.Or(80), timeout)
 		}
 	case "http", "https":
 		rawURL := target.URL.String
@@ -338,7 +375,7 @@ func (m *Monitor) CheckTarget(ctx context.Context, target *Target) CheckResult {
 			}
 			rawURL = checkType + "://" + host + ":" + port.Or(defaultPort).String()
 		}
-		result = m.probe.checkHTTP(ctx, rawURL, timeout)
+		result = m.probe.checkHTTP(checkCtx, rawURL, timeout)
 	default:
 		result = failed("Unknown check type: " + checkType)
 	}
