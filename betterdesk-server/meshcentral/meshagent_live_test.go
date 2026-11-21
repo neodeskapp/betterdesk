@@ -30,6 +30,9 @@ func TestMeshAgentLiveConnect(t *testing.T) {
 	meshHex := make([]byte, 32)
 	rand.Read(meshHex)
 	meshID := "0x" + fmt.Sprintf("%x", meshHex)
+	if err := gw.SaveGroups([]MeshGroup{{ID: "default", Name: "BetterDeskInterop", MeshID: meshID}}); err != nil {
+		t.Fatal(err)
+	}
 	msh := fmt.Sprintf("MeshName=BetterDeskInterop\nMeshType=2\nMeshID=%s\nServerID=%s\nMeshServer=%s\nMeshServerNoSSL=1\n",
 		meshID,
 		gw.creds.ServerID,

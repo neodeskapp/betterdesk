@@ -185,8 +185,14 @@ func TestAgentHandshakeInterop(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	meshRaw := make([]byte, 48)
-	rand.Read(meshRaw[:16])
+	meshHex, err := NewMeshIDHex()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := gw.SaveGroups([]MeshGroup{{ID: "default", Name: "Default", MeshID: meshHex}}); err != nil {
+		t.Fatal(err)
+	}
+	meshRaw, _ := hex.DecodeString(meshHex)
 	authInfo := buildAuthInfoPacket(meshRaw, "interop-host")
 	if err := conn.Write(ctx, websocket.MessageBinary, authInfo); err != nil {
 		t.Fatal(err)

@@ -3,6 +3,7 @@ package meshcentral
 import (
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -45,7 +46,6 @@ func (g *Gateway) registerAgent(ac *AgentConn) (string, error) {
 		}
 	}
 	g.agents.Store(peerID, ac)
-	g.AutoLinkHybrid(peerID, hostname)
 
 	if g.auditLog != nil {
 		g.auditLog.Log(audit.ActionPeerUpdated, "mesh", peerID, map[string]string{
@@ -82,25 +82,6 @@ func meshPeerID(nodeID string) string {
 	return "M" + s
 }
 
-func (g *Gateway) AutoLinkHybrid(peerID, hostname string) {
-	if hostname == "" {
-		return
-	}
-	peers, err := g.db.ListPeers(false)
-	if err != nil {
-		return
-	}
-	for _, p := range peers {
-		if p.ID == peerID || p.DeviceType == "mesh_agent" {
-			continue
-		}
-		if strings.EqualFold(p.Hostname, hostname) && p.LinkedPeerID == "" {
-			g.db.UpdatePeerFields(peerID, map[string]string{"linked_peer_id": p.ID})
-			return
-		}
-	}
-}
-
 func (g *Gateway) ListGroups() []MeshGroup {
 	groups := g.loadGroupsRaw()
 	groups, changed, err := ensureGroupMeshIDs(groups)
@@ -114,6 +95,21 @@ func (g *Gateway) ListGroups() []MeshGroup {
 		}
 	}
 	return groups
+}
+
+// knownMesh reports whether raw, the 48 bytes of mesh id an agent sends,
+// is the mesh id of a stored group: its bytes, then zeros.
+func (g *Gateway) knownMesh(raw []byte) bool {
+	for _, gr := range g.ListGroups() {
+		id, err := hex.DecodeString(NormalizeMeshIDHex(gr.MeshID))
+		if err != nil || len(id) == 0 || len(id) > len(raw) {
+			continue
+		}
+		if subtle.ConstantTimeCompare(raw[:len(id)], id) == 1 && isZero(raw[len(id):]) {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *Gateway) loadGroupsRaw() []MeshGroup {

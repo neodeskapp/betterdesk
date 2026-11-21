@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"unicode/utf8"
 
 	"github.com/coder/websocket"
 	"github.com/unitronix/betterdesk-server/audit"
@@ -22,8 +23,10 @@ type AgentConn struct {
 	peerID      string
 	meshNodeID  string
 	meshGroupID string
-	clientIP    string
-	hostname    string
+	// meshRaw is the mesh id the agent sent, 48 bytes
+	meshRaw  []byte
+	clientIP string
+	hostname string
 
 	serverNonce   []byte
 	agentNonce    []byte
@@ -102,19 +105,46 @@ func (ac *AgentConn) handleJSON(ctx context.Context, data []byte) {
 		ac.handleCoreInfo(msg)
 	default:
 		// telemetry / state — update peer metadata
-		if ac.peerID != "" {
-			b, _ := json.Marshal(msg)
-			ac.gw.db.SetConfig("mesh_last_msg_"+ac.peerID, string(b))
-		}
+		ac.store("mesh_last_msg_", msg)
 	}
 }
 
 func (ac *AgentConn) handleCoreInfo(msg map[string]interface{}) {
 	ac.coreStable = true
-	if ac.peerID != "" {
-		b, _ := json.Marshal(msg)
-		ac.gw.db.SetConfig("mesh_coreinfo_"+ac.peerID, string(b))
+	ac.store("mesh_coreinfo_", msg)
+}
+
+// maxStoredMessage is the largest agent message kept in server_config.
+const maxStoredMessage = 64 << 10
+
+// maxHostname is how many bytes of the host name an agent sends are kept.
+const maxHostname = 128
+
+// store keeps the agent's last message of a kind in server_config, when
+// it is not over maxStoredMessage.
+func (ac *AgentConn) store(prefix string, msg map[string]interface{}) {
+	if ac.peerID == "" {
+		return
 	}
+	b, err := json.Marshal(msg)
+	if err != nil || len(b) > maxStoredMessage {
+		return
+	}
+	ac.gw.db.SetConfig(prefix+ac.peerID, string(b))
+}
+
+// boundHostname is the host name an agent sent as UTF-8 text of at most
+// maxHostname bytes.
+func boundHostname(raw []byte) string {
+	s := strings.TrimSpace(strings.ToValidUTF8(string(raw), ""))
+	if len(s) <= maxHostname {
+		return s
+	}
+	cut := maxHostname
+	for cut > 0 && !utf8.RuneStart(s[cut]) {
+		cut--
+	}
+	return s[:cut]
 }
 
 func (ac *AgentConn) handleBinary(ctx context.Context, data []byte) error {
@@ -219,7 +249,8 @@ func (ac *AgentConn) handleAuthBinary(ctx context.Context, cmd uint16, data []by
 		}
 		ac.receivedCmd |= 4
 		// mesh id at offset 18, 48 bytes (base64 mesh id)
-		meshRaw := data[18:66]
+		meshRaw := append([]byte(nil), data[18:66]...)
+		ac.meshRaw = meshRaw
 		if isZero(meshRaw[16:32]) {
 			ac.meshGroupID = fmt.Sprintf("%x", meshRaw[0:16])
 		} else {
@@ -229,7 +260,7 @@ func (ac *AgentConn) handleAuthBinary(ctx context.Context, cmd uint16, data []by
 		if len(data) > 72 {
 			hnLen := int(readU16(data, 70))
 			if len(data) >= 72+hnLen {
-				ac.hostname = string(data[72 : 72+hnLen])
+				ac.hostname = boundHostname(data[72 : 72+hnLen])
 			}
 		}
 		_ = capabilities
@@ -256,6 +287,12 @@ func (ac *AgentConn) tryCompleteAuth(ctx context.Context) error {
 	// Need auth verify + auth info
 	if ac.receivedCmd&2 == 0 || ac.receivedCmd&4 == 0 {
 		return nil
+	}
+	// The mesh id of the .msh file is what enrols an agent: it must be a
+	// stored group's.
+	if !ac.gw.knownMesh(ac.meshRaw) {
+		log.Printf("[mesh] agent from %s refused: unknown mesh id", ac.clientIP)
+		return fmt.Errorf("unknown mesh id")
 	}
 
 	ac.authenticated = true
