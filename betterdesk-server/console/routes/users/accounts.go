@@ -68,6 +68,9 @@ func isSessionAccount(r *http.Request, id int64) bool {
 // errRoleAboveOwn is the reply to a role the caller may not give.
 var errRoleAboveOwn = say(http.StatusForbidden, "Cannot assign a role higher than your own")
 
+// errPasswordTooLong is the reply to a password the sign-in would refuse.
+var errPasswordTooLong = say(http.StatusBadRequest, string(authn.ErrPasswordTooLong))
+
 // weakPassword is the reply to a password that rates weak, with what it
 // lacks.
 func weakPassword(rating authn.PasswordStrength) error {
@@ -307,6 +310,9 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if password.IsString() && rating.TooShort() {
 		return nil, sayKey(r, http.StatusBadRequest, "users.password_too_short")
 	}
+	if password.IsString() && rating.TooLong() {
+		return nil, errPasswordTooLong
+	}
 	assigned := "viewer"
 	if validRole(role) {
 		assigned = role.Str()
@@ -474,6 +480,9 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		}
 		if password.IsString() && rating.TooShort() {
 			return nil, sayKey(r, http.StatusBadRequest, "users.password_too_short")
+		}
+		if password.IsString() && rating.TooLong() {
+			return nil, errPasswordTooLong
 		}
 		if hash, err = h.hash(ctx, password); err != nil {
 			return nil, err
@@ -710,6 +719,10 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	if password.IsString() && rating.TooShort() {
 		failKey(w, r, http.StatusBadRequest, "users.password_too_short")
+		return
+	}
+	if password.IsString() && rating.TooLong() {
+		sent(w, r, errPasswordTooLong)
 		return
 	}
 	hash, err := h.hash(ctx, password)

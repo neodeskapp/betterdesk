@@ -147,3 +147,25 @@ func TestPasswordChangeWhenTheAuditLogFails(t *testing.T) {
 		t.Error("the password is the old one")
 	}
 }
+
+// A new password longer than the sign-in takes (128 UTF-16 units) is
+// refused, so nobody locks themselves out with it; 128 itself signs in
+// (RV123).
+func TestPasswordChangeRefusesWhatTheSignInRefuses(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		alice := w.addUser(user{name: "alice"})
+		a := w.agent()
+		a.signIn("alice")
+		long := "Aa1!" + strings.Repeat("x", 125)
+		want(t, "129 characters", a.post("/api/auth/password", change(password, long, long)), http.StatusBadRequest,
+			`{"success":false,"error":"Password must be at most 128 characters"}`)
+		if hash := w.text(`SELECT password_hash FROM users WHERE id = ?`, alice); hash != passwordHash {
+			t.Error("the refused password was stored")
+		}
+		fits := long[:128]
+		want(t, "128 characters", a.post("/api/auth/password", change(password, fits, fits)), http.StatusOK, `{"success":true}`)
+		if res := w.agent().post("/api/auth/login", login("alice", fits)); res.status != http.StatusOK {
+			t.Errorf("sign-in with the new password: %d %s", res.status, res.body)
+		}
+	})
+}

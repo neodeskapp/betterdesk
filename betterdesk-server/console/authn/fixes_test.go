@@ -38,6 +38,7 @@ var scenarioFixes = []scenarioFix{
 	{"RV117", stopAtOtherSpellings},
 	{"RV118", ipv6AttemptsCountPerNetwork},
 	{"RV122", codesWorkOnce},
+	{"RV123", noPasswordsTheSignInRefuses},
 }
 
 // fixScenario applies every fix to sc and counts the ones that changed it.
@@ -449,6 +450,30 @@ func codesWorkOnce(sc *scenarioVector) bool {
 		used[user] = at
 	}
 	return changed
+}
+
+// noPasswordsTheSignInRefuses: a new password longer than the sign-in
+// takes (MaxPasswordLength UTF-16 units) is refused (RV123); Node stored
+// it. Such a scenario is compared up to that step, which answers the
+// refusal, and its rows at the end are not;
+// TestPasswordChangeRefusesWhatTheSignInRefuses holds the rule.
+func noPasswordsTheSignInRefuses(sc *scenarioVector) bool {
+	for i := range sc.Steps {
+		step := &sc.Steps[i]
+		if step.Fn != "changePassword" || len(step.Args) < 3 {
+			continue
+		}
+		var next string
+		var recorded struct{ Success bool }
+		if json.Unmarshal(step.Args[2], &next) != nil || utf16Len(toWellFormed(next)) <= MaxPasswordLength ||
+			json.Unmarshal(step.Result, &recorded) != nil || !recorded.Success {
+			continue
+		}
+		step.Result = json.RawMessage(`{"success":false,"error":"` + string(ErrPasswordTooLong) + `"}`)
+		sc.Steps, sc.skipTables = sc.Steps[:i+1], true
+		return true
+	}
+	return false
 }
 
 // stopAtAccountLockouts: failed sign-ins lock an account for the address

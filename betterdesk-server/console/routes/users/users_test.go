@@ -502,6 +502,39 @@ func TestNewPasswordsNeedEightCharacters(t *testing.T) {
 	})
 }
 
+// A new password longer than the sign-in takes (128 UTF-16 units) is
+// refused by creating, changing and resetting (RV123).
+func TestNewPasswordsFitTheSignIn(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		ctx := context.Background()
+		state := func() string {
+			t.Helper()
+			var s string
+			if err := db.QueryRow(ctx, `SELECT password_hash || ' ' || (SELECT COUNT(*) FROM users) FROM users WHERE id = 5`).Scan(&s); err != nil {
+				t.Fatal(err)
+			}
+			return s
+		}
+		const tooLong = `{"success":false,"error":"Password must be at most 128 characters"}`
+		long := "Aa1!" + strings.Repeat("x", 125)
+		admin := w.As("admin")
+		for i, c := range []struct{ method, path, body string }{
+			{"POST", "/api/users", `{"username":"long_pw","password":"` + long + `"}`},
+			{"PATCH", "/api/users/5", `{"password":"` + long + `"}`},
+			{"POST", "/api/users/5/reset-password", `{"newPassword":"` + long + `"}`},
+		} {
+			before := state()
+			got := admin.Do(c.method, c.path, c.body, "X-Forwarded-For", "10.7.0."+strconv.Itoa(i+1))
+			expect(t, c.method+" "+c.path, got, 400, tooLong)
+			if after := state(); after != before {
+				t.Errorf("%s %s: the refused request wrote %q, was %q", c.method, c.path, after, before)
+			}
+		}
+		expect(t, "128", admin.Do("POST", "/api/users/5/reset-password", `{"newPassword":"`+long[:128]+`"}`, "X-Forwarded-For", "10.7.0.9"), 200, "")
+	})
+}
+
 // The answer to a new account lists the user groups it became a member
 // of, not the guids as they were sent, and an email of null is "" (BUGS
 // US7).

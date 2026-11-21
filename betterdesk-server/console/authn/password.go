@@ -124,6 +124,10 @@ type PasswordStrength struct {
 // which no new password may be, whatever its strength.
 func (p PasswordStrength) TooShort() bool { return p.length < MinPasswordLength }
 
+// TooLong reports whether the password is longer than MaxPasswordLength,
+// which the sign-in refuses.
+func (p PasswordStrength) TooLong() bool { return p.length > MaxPasswordLength }
+
 // ValidatePasswordStrength rates a password. Letters and digits are the
 // ASCII ones; every other character counts as a special character. The
 // length is counted in UTF-16 units.
@@ -189,6 +193,7 @@ const (
 	ErrUserNotFound     Refusal = "User not found"
 	ErrWrongPassword    Refusal = "Current password is incorrect"
 	ErrPasswordTooShort Refusal = "Password must be at least 8 characters"
+	ErrPasswordTooLong  Refusal = "Password must be at most 128 characters"
 	ErrTOTPNotSetUp     Refusal = "TOTP not set up"
 	ErrInvalidTOTPCode  Refusal = "Invalid verification code"
 )
@@ -197,10 +202,14 @@ const (
 // web app's forms ask for it.
 const MinPasswordLength = 8
 
+// MaxPasswordLength is the longest password, in UTF-16 units, that the
+// sign-in takes.
+const MaxPasswordLength = 128
+
 // ChangePassword replaces the password of an account after checking the
-// current one. The new password must have 8 UTF-16 units or more; nothing
-// else about it is checked. It returns ErrUserNotFound, ErrWrongPassword
-// or ErrPasswordTooShort when it refuses.
+// current one. The new password must have 8 to 128 UTF-16 units; nothing
+// else about it is checked. It returns ErrUserNotFound, ErrWrongPassword,
+// ErrPasswordTooShort or ErrPasswordTooLong when it refuses.
 func (s *Service) ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error {
 	user, err := getUserByID(ctx, s.db, userID)
 	if err != nil {
@@ -216,8 +225,11 @@ func (s *Service) ChangePassword(ctx context.Context, userID int64, currentPassw
 	if !valid {
 		return ErrWrongPassword
 	}
-	if utf16Len(toWellFormed(newPassword)) < MinPasswordLength {
+	switch length := utf16Len(toWellFormed(newPassword)); {
+	case length < MinPasswordLength:
 		return ErrPasswordTooShort
+	case length > MaxPasswordLength:
+		return ErrPasswordTooLong
 	}
 	hash, err := s.HashPassword(ctx, newPassword)
 	if err != nil {
