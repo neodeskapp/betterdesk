@@ -95,10 +95,23 @@ func TestSMTPSettings(t *testing.T) {
 		// port 1 of loopback, and the answer is the connection's error.
 		expect(do("admin", "POST", "/api/automation/smtp/test", "{}"), 200, `{"success":false,"error":"connect ECONNREFUSED 127.0.0.1:1"}`, "test against a closed port")
 
+		// The stored password is not kept for another server or user (BUGS
+		// RV33), on both mounts of the handler
+		for _, path := range []string{"/api/automation/smtp", "/api/settings/email/smtp"} {
+			for _, body := range []string{
+				`{"host":"mail.example.test","port":1,"user":"contract","pass":"********","from":"console@example.com","tlsVerify":false}`,
+				`{"host":"127.0.0.1","port":2,"user":"contract","from":"console@example.com"}`,
+				`{"host":"127.0.0.1","port":1,"user":"other","pass":"","from":"console@example.com"}`,
+			} {
+				expect(do("admin", "PUT", path, body), 400, `{"error":"SMTP password is required when the host, port or user changes"}`, "save for another account at "+path)
+			}
+		}
+		expect(do("admin", "GET", "/api/automation/smtp", ""), 200, masked, "read back after saves for another account")
+
 		// A host alone has no sender and is refused (BUGS EM9); with a
 		// sender the other members take their defaults
 		expect(do("admin", "PUT", "/api/automation/smtp", `{"host":" mail.example.test "}`), 400, `{"error":"SMTP sender is required"}`, "save with a host only")
-		expect(do("admin", "PUT", "/api/automation/smtp", `{"host":" mail.example.test ","from":"alerts@example.com"}`), 200, `{"success":true}`, "save with a host and a sender")
+		expect(do("admin", "PUT", "/api/automation/smtp", `{"host":" mail.example.test ","from":"alerts@example.com","pass":"other-secret"}`), 200, `{"success":true}`, "save with a host and a sender")
 		if rows := stored(); !strings.Contains(rows, `\"host\":\"mail.example.test\",\"port\":587,`) || !strings.Contains(rows, `\"from\":\"alerts@example.com\"`) {
 			t.Errorf("a host and a sender are stored as %s", rows)
 		}

@@ -108,7 +108,9 @@ func bodyValue(body middleware.JSONObject, name string) value {
 // that has not is answered with 400 {"error":"..."}: "SMTP host is
 // required" for a host that is missing, blank or another empty value,
 // else "Invalid <member>"; then a save without a sender is answered "SMTP
-// sender is required". What is stored:
+// sender is required", and a save that would keep the stored password for
+// another host, port or user is answered "SMTP password is required when
+// the host, port or user changes". What is stored:
 //
 //	host         text, without the white space around it
 //	port         a whole number from 1 to 65535, or text of its digits,
@@ -116,7 +118,8 @@ func bodyValue(body middleware.JSONObject, name string) value {
 //	secure       true or false; false when missing
 //	user         text; "" when missing or null
 //	pass         text; when missing, null, "" or "********", the
-//	             password stored so far, else ""
+//	             password stored so far when host, port and user are
+//	             the stored ones, else ""
 //	from         text that is not blank
 //	alert_email  plain addresses separated by commas (PlainAddressList),
 //	             without the white space around them; "" when missing or
@@ -191,12 +194,17 @@ func nextConfig(body middleware.JSONObject, existing value) (config value, refus
 	if jsbind.Trim(texts["from"]) == "" {
 		return undefined, "SMTP sender is required"
 	}
-	// The password stays what it was unless the request brings a new one:
-	// the settings page sends the mask back, or nothing.
+	// The password stays what it was unless the request brings a new one
+	// (the settings page sends the mask back, or nothing), but only for the
+	// server and the account it was given for: it is never sent to another
+	// host, port or user.
 	pass := stringValue(texts["pass"])
 	if pass.str == "" || pass.str == MaskedPass {
 		pass = stringValue("")
 		if kept := existing.member("pass"); kept.truthy() {
+			if !sameAccount(existing, jsbind.Trim(host.str), port, texts["user"]) {
+				return undefined, passwordRequired
+			}
 			pass = kept
 		}
 	}
@@ -213,6 +221,33 @@ func nextConfig(body middleware.JSONObject, existing value) (config value, refus
 		config.set("tlsVerify", tlsVerify)
 	}
 	return config, ""
+}
+
+// passwordRequired refuses a save that keeps the stored password while it
+// changes the host, the port or the user.
+const passwordRequired = "SMTP password is required when the host, port or user changes"
+
+// sameAccount reports whether the stored configuration has the host, the
+// port and the user of a save. A port the stored row does not have is 587,
+// a user it does not have is "".
+func sameAccount(existing value, host string, port float64, user string) bool {
+	if h := existing.member("host"); h.kind != kindString || h.str != host {
+		return false
+	}
+	switch p := existing.member("port"); {
+	case p.kind == kindNumber:
+		if p.num != port {
+			return false
+		}
+	case p.truthy() || port != 587:
+		return false
+	}
+	switch u := existing.member("user"); {
+	case u.kind == kindString:
+		return u.str == user
+	default:
+		return !u.truthy() && user == ""
+	}
 }
 
 // savedPort reads the port of a save: a whole number from 1 to 65535, or

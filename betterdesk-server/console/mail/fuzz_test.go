@@ -145,6 +145,13 @@ func FuzzSettingsBody(f *testing.F) {
 		}
 		config, refused := nextConfig(body, existing)
 		if refused != "" {
+			if refused == passwordRequired {
+				// BUGS RV33: only to keep a stored password for another account
+				if sent := bodyValue(body, "pass"); !existing.member("pass").truthy() || sent.kind == kindString && sent.str != "" && sent.str != MaskedPass {
+					t.Fatalf("%s over %s: refused with %q", raw, storedText, refused)
+				}
+				return
+			}
 			if refused != "SMTP host is required" && refused != "SMTP sender is required" && !strings.HasPrefix(refused, "Invalid ") {
 				t.Fatalf("%s: refused with %q", raw, refused)
 			}
@@ -197,7 +204,10 @@ func FuzzSettingsBody(f *testing.F) {
 				t.Fatalf("%s stores the password %s", raw, got)
 			}
 		case kept.truthy():
-			if got != kept.json() {
+			// ... and only for the stored host and user (BUGS RV33)
+			eu, su := existing.member("user"), stored.member("user").str
+			sameUser := eu.kind == kindString && eu.str == su || !eu.truthy() && su == ""
+			if got != kept.json() || existing.member("host").json() != stored.member("host").json() || !sameUser {
 				t.Fatalf("%s over %s stores the password %s", raw, storedText, got)
 			}
 		case got != `""`:

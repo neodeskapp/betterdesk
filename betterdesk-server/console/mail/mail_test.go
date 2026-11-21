@@ -125,9 +125,9 @@ func TestPutKeepsTheStoredPasswordForTheMask(t *testing.T) {
 		// No password at all keeps it too; a new one replaces it; the mask
 		// with nothing stored is no password.
 		for _, step := range []struct{ body, want string }{
-			{`{"host":"h","from":"f@example.com"}`, `"pass":"existing-secret"`},
-			{`{"host":"h","from":"f@example.com","pass":""}`, `"pass":"existing-secret"`},
-			{`{"host":"h","from":"f@example.com","pass":null}`, `"pass":"existing-secret"`},
+			{`{"host":"smtp.example.com","user":"user","from":"f@example.com"}`, `"pass":"existing-secret"`},
+			{`{"host":"smtp.example.com","user":"user","from":"f@example.com","pass":""}`, `"pass":"existing-secret"`},
+			{`{"host":"smtp.example.com","user":"user","from":"f@example.com","pass":null}`, `"pass":"existing-secret"`},
 			{`{"host":"h","from":"f@example.com","pass":"new-secret"}`, `"pass":"new-secret"`},
 			{`{"host":"h","from":"f@example.com","pass":"********"}`, `"pass":"new-secret"`},
 			{`{"host":"h","from":"f@example.com","pass":" ********"}`, `"pass":" ********"`},

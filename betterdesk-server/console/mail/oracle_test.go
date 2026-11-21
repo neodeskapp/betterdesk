@@ -384,6 +384,22 @@ func refusedForCause(request, message string) bool {
 	return false
 }
 
+// keptForAnotherAccount reports whether Node stored the password of the
+// row before a save with another host, port or user (BUGS RV33).
+func keptForAnotherAccount(before, after string) bool {
+	old, err := parseJSON(before)
+	if err != nil {
+		return false
+	}
+	saved, err := parseJSON(after)
+	if err != nil {
+		return false
+	}
+	pass := old.member("pass")
+	return pass.truthy() && saved.member("pass").json() == pass.json() &&
+		(saved.member("host").json() != old.member("host").json() || saved.member("port").json() != old.member("port").json() || saved.member("user").json() != old.member("user").json())
+}
+
 // tlsVerifyMember is the member a settings answer ends with when the
 // stored configuration has a tlsVerify.
 var tlsVerifyMember = regexp.MustCompile(`,"tlsVerify":(true|false)\}$`)
@@ -829,6 +845,22 @@ func (r *replay) run(i int, step oracleStep) {
 			t.Fatal(err)
 		}
 		answer := r.service.PutSMTPSettings(ctx, body)
+		if refused := marshal(t, answer.Body); answer.Status == 400 && refused == `{"error":"`+passwordRequired+`"}` && step.Status == 200 {
+			// BUGS RV33: Node kept the stored password for another host,
+			// port or user. The replay goes on from the row Node stored.
+			if !hadRow || step.StoredAfter == nil || !keptForAnotherAccount(before, *step.StoredAfter) {
+				t.Fatalf("step %d put %s over %s: refused with %s, Node stored %s", i, show(step.Request), before, refused, show(step.StoredAfter))
+			}
+			if after, _, err := getSetting(ctx, r.db, settingKey); err != nil || after != before || answer.Audit != nil || len(r.log.lines) != 0 {
+				t.Fatalf("step %d put %s: a refused save changed the row to %q (%v), audit %+v, logs %q", i, show(step.Request), after, err, answer.Audit, r.log.lines)
+			}
+			r.counts["RV33: the stored password kept for another account"]++
+			if err := setSetting(ctx, r.db, settingKey, *step.StoredAfter); err != nil {
+				t.Fatal(err)
+			}
+			r.service.ResetTransporter()
+			return
+		}
 		if refused := marshal(t, answer.Body); answer.Status == 400 && (step.Status != 400 || step.Body != refused) {
 			// BUGS EM5: a member of the wrong type is refused, where Node
 			// stored it or failed on it, and EM9: so is a save without a
@@ -1022,7 +1054,8 @@ func TestNodeRecording(t *testing.T) {
 			"recipients that are no text", "EM1: a stored tlsVerify that is no flag", "EM3: an alert value with markup is escaped",
 			"EM7: a help request mail with its blank lines", "EM4: a stored configuration that is invalid",
 			"EM5: a save with a member of the wrong type", "EM5: a read after a refused save",
-			"EM8: no address without a public URL", "EM8: a help request mail without a link", "EM9: a save without a sender"} {
+			"EM8: no address without a public URL", "EM8: a help request mail without a link", "EM9: a save without a sender",
+			"RV33: the stored password kept for another account"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}
