@@ -60,6 +60,9 @@
         this._statsTimer = null;
         this._lastStats = Date.now();
         this._inputGrabbed = false;
+        this._inputListeners = [];
+        // Only the active tab of the viewer sends keys and mouse input
+        this._active = true;
         this._pressedKeys = [];
         this._viewOnly = !!(opts && opts.viewOnly);
     }
@@ -71,7 +74,9 @@
 
     BetterViewer.prototype._emit = function (event, data) {
         var list = this._handlers[event] || [];
-        for (var i = 0; i < list.length; i++) list[i](data);
+        for (var i = 0; i < list.length; i++) {
+            try { list[i](data); } catch (e) { console.error(e); }
+        }
     };
 
     BetterViewer.prototype.attachWebSocket = function (ws) {
@@ -324,47 +329,76 @@
         var self = this;
         this._inputGrabbed = true;
 
-        this.canvas.addEventListener('mousedown', function (e) {
+        this._listen(this.canvas, 'mousedown', function (e) {
+            if (!self._sendsInput()) return;
             var c = self._canvasCoords(e);
             var btn = e.button === 2 ? MOUSE_RIGHT : (e.button === 1 ? MOUSE_MIDDLE : MOUSE_LEFT);
             self._sendMouse(KEY_DOWN, c.x, c.y, btn);
             e.preventDefault();
         });
-        this.canvas.addEventListener('mouseup', function (e) {
+        this._listen(this.canvas, 'mouseup', function (e) {
+            if (!self._sendsInput()) return;
             var c = self._canvasCoords(e);
             var btn = e.button === 2 ? MOUSE_RIGHT : (e.button === 1 ? MOUSE_MIDDLE : MOUSE_LEFT);
             self._sendMouse(KEY_UP, c.x, c.y, btn * 2);
             e.preventDefault();
         });
-        this.canvas.addEventListener('mousemove', function (e) {
+        this._listen(this.canvas, 'mousemove', function (e) {
+            if (!self._sendsInput()) return;
             var c = self._canvasCoords(e);
             self._sendMouse(0, c.x, c.y, 0);
             e.preventDefault();
         });
-        this.canvas.addEventListener('wheel', function (e) {
+        this._listen(this.canvas, 'wheel', function (e) {
+            if (!self._sendsInput()) return;
             var c = self._canvasCoords(e);
             var delta = e.deltaY * -3;
             self._sendMouse(KEY_SCROLL, c.x, c.y, 0, delta);
             e.preventDefault();
         }, { passive: false });
 
-        document.addEventListener('keydown', function (e) {
-            if (self._state !== 3) return;
+        this._listen(document, 'keydown', function (e) {
+            if (!self._sendsInput()) return;
             self._sendKeyKC(KEY_DOWN, e.keyCode, false);
             e.preventDefault();
         });
-        document.addEventListener('keyup', function (e) {
-            if (self._state !== 3) return;
+        this._listen(document, 'keyup', function (e) {
+            if (!self._sendsInput()) return;
             self._sendKeyKC(KEY_UP, e.keyCode, false);
             e.preventDefault();
         });
+    };
+
+    BetterViewer.prototype._listen = function (target, type, fn, opts) {
+        target.addEventListener(type, fn, opts);
+        this._inputListeners.push([target, type, fn, opts]);
+    };
+
+    /** Input goes out only while streaming, in the active tab, without view only */
+    BetterViewer.prototype._sendsInput = function () {
+        return this._state === 3 && this._active && !this._viewOnly;
+    };
+
+    BetterViewer.prototype._releaseInput = function () {
+        for (var i = 0; i < this._inputListeners.length; i++) {
+            var l = this._inputListeners[i];
+            l[0].removeEventListener(l[1], l[2], l[3]);
+        }
+        this._inputListeners = [];
+        this._inputGrabbed = false;
     };
 
     BetterViewer.prototype.setViewOnly = function (viewOnly) {
         this._viewOnly = !!viewOnly;
     };
 
+    /** The viewer's active tab: only that one takes keyboard and mouse input */
+    BetterViewer.prototype.setActive = function (active) {
+        this._active = !!active;
+    };
+
     BetterViewer.prototype.disconnect = function (reason) {
+        this._releaseInput();
         if (this._statsTimer) {
             clearInterval(this._statsTimer);
             this._statsTimer = null;

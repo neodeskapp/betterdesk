@@ -13,6 +13,7 @@
         this._ws = null;
         this._desktop = null;
         this._deviceId = opts.deviceId || '';
+        this._active = true;
     }
 
     MeshSession.prototype.on = function (event, fn) {
@@ -22,7 +23,9 @@
 
     MeshSession.prototype._emit = function (event, data) {
         const list = this._handlers[event] || [];
-        for (let i = 0; i < list.length; i++) list[i](data);
+        for (let i = 0; i < list.length; i++) {
+            try { list[i](data); } catch (e) { console.error(e); }
+        }
     };
 
     MeshSession.prototype._bindDesktop = function (desktop) {
@@ -95,6 +98,7 @@
         this._ws.binaryType = 'arraybuffer';
 
         this._desktop = new BetterViewer(this.canvas, this.opts);
+        this._desktop.setActive(this._active);
         this._bindDesktop(this._desktop);
         this._desktop.attachWebSocket(this._ws);
 
@@ -128,6 +132,12 @@
         this._state = 'disconnected';
         this._emit('state', 'disconnected');
         this._emit('disconnected');
+    };
+
+    /** The viewer's active tab: keyboard and mouse go to this session only then */
+    MeshSession.prototype.setSessionActive = function (active) {
+        this._active = !!active;
+        if (this._desktop) this._desktop.setActive(this._active);
     };
 
     MeshSession.prototype.authenticate = function () { return Promise.resolve(); };

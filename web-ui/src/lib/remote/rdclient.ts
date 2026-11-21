@@ -92,7 +92,8 @@ export interface RemoteClient {
 	/** RDClient: the device proved its identity and encrypts (the other clients go through the server) */
 	readonly encrypted?: boolean;
 	viewOnly?: boolean;
-	renderer: { resize(): void };
+	/** Not on mesh sessions */
+	renderer?: { resize(): void };
 	video?: { onAutoplayBlocked?: (() => void) | null; retryPlay?(): void };
 	audio?: { audioCtx?: AudioContext | null };
 	input?: {
@@ -102,41 +103,46 @@ export interface RemoteClient {
 		resetKeyboard?(): void;
 	};
 	fileTransfer?: unknown;
+	/* Every client has these */
 	on(event: string, fn: (...args: never[]) => void): unknown;
 	connect(): Promise<unknown>;
 	disconnect(): void;
 	authenticate(password: string): unknown;
-	submit2FA(code: string): void;
-	sendChat(text: string): void;
-	sendCtrlAltDel(): void;
-	sendLockScreen(): void;
-	sendRestartRemoteDevice(): void;
-	sendRefreshScreen(): void;
-	sendClipboard(text: string): void;
+	/*
+	 * The rest depends on the transport: RDClient has all of them, CDAP most,
+	 * the RDP/VNC gateway a few and a mesh session almost none. Call them
+	 * with ?. so a missing one does nothing.
+	 */
+	submit2FA?(code: string): void;
+	sendChat?(text: string): void;
+	sendCtrlAltDel?(): void;
+	sendLockScreen?(): void;
+	sendRestartRemoteDevice?(): void;
+	sendRefreshScreen?(): void;
+	sendClipboard?(text: string): void;
 	sendText?(text: string): boolean | undefined;
 	resetKeyboard?(): void;
-	setBlockInput(on: boolean): void;
-	setQualityPreset(preset: string): void;
+	setBlockInput?(on: boolean): void;
+	setQualityPreset?(preset: string): void;
 	setFpsMode?(mode: string): void;
 	setKeyboardMode?(mode: string): void;
-	setScaleMode(mode: string): void;
-	setCodec(codec: string): void;
-	setShowRemoteCursor(on: boolean): void;
-	setLockAfterSession(on: boolean): void;
-	setPrivacyMode(on: boolean): void;
-	/** Keeps the device's clipboard out of the operator's (the device is asked too); not on mesh sessions */
+	setScaleMode?(mode: string): void;
+	setCodec?(codec: string): void;
+	setShowRemoteCursor?(on: boolean): void;
+	setLockAfterSession?(on: boolean): void;
+	setPrivacyMode?(on: boolean): void;
+	/** Keeps the device's clipboard out of the operator's (the device is asked too) */
 	setDisableClipboard?(on: boolean): void;
-	/** Not on CDAP sessions */
 	setViewOnly?(on: boolean): void;
-	setAudioMuted(muted: boolean): void;
+	setAudioMuted?(muted: boolean): void;
 	setBackgroundFps?(fps: number): void;
 	setSessionActive?(active: boolean): void;
-	getMonitors(): Monitor[];
-	switchMonitor(idx: number): void;
+	getMonitors?(): Monitor[];
+	switchMonitor?(idx: number): void;
 	getVirtualDisplaySupport?(): VirtualDisplaySupport;
-	toggleVirtualDisplay(index: number, on: boolean): void;
+	toggleVirtualDisplay?(index: number, on: boolean): void;
 	getWindowsSessions?(): WindowsSessions;
-	selectWindowsSession(sid: number): void;
+	selectWindowsSession?(sid: number): void;
 	getStats?(): ClientStats;
 }
 

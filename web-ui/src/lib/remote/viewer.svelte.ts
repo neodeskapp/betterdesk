@@ -275,7 +275,7 @@ export class Viewer {
 		const c = s.client;
 		if (!c) return;
 		try {
-			c.renderer.resize();
+			c.renderer?.resize();
 		} catch {
 			/* not ready */
 		}
@@ -313,7 +313,7 @@ export class Viewer {
 				s.focus?.canvas();
 				this.resize();
 			});
-			s.client?.setAudioMuted(s.audioMuted);
+			s.client?.setAudioMuted?.(s.audioMuted);
 			this.applyPrefs(s);
 		}
 		this.syncMediaCapture();
@@ -775,7 +775,7 @@ export class Viewer {
 			return;
 		}
 		s.tfaError = '';
-		s.client?.submit2FA(code);
+		s.client?.submit2FA?.(code);
 	}
 
 	/* ── Work report after a billed session ── */
@@ -856,12 +856,12 @@ export class Viewer {
 	}
 
 	ctrlAltDel(): void {
-		this.inputClient()?.sendCtrlAltDel();
+		this.inputClient()?.sendCtrlAltDel?.();
 		this.focusScreen();
 	}
 
 	lockScreen(): void {
-		this.inputClient()?.sendLockScreen();
+		this.inputClient()?.sendLockScreen?.();
 		this.focusScreen();
 	}
 
@@ -874,11 +874,11 @@ export class Viewer {
 			confirmLabel: tf('remote.restart_remote', 'Restart remote device'),
 			danger: true
 		});
-		if (ok && s.client) s.client.sendRestartRemoteDevice();
+		if (ok && s.client) s.client.sendRestartRemoteDevice?.();
 	}
 
 	refreshScreen(): void {
-		this.withClient((c) => c.sendRefreshScreen());
+		this.withClient((c) => c.sendRefreshScreen?.());
 		this.focusScreen();
 	}
 
@@ -900,7 +900,7 @@ export class Viewer {
 		}
 		try {
 			const text = await navigator.clipboard.readText();
-			if (text) s.client.sendClipboard(text);
+			if (text) s.client.sendClipboard?.(text);
 			else toast.warning(tf('remote.clipboard_empty', 'Clipboard is empty'));
 		} catch {
 			toast.error(
@@ -937,10 +937,10 @@ export class Viewer {
 		s.toggles = { ...s.toggles, [key]: on };
 		const c = s.client;
 		if (!c) return;
-		if (key === 'blockInput') c.setBlockInput(on);
-		else if (key === 'showCursor') c.setShowRemoteCursor(on);
-		else if (key === 'lockAfter') c.setLockAfterSession(on);
-		else if (key === 'privacy') c.setPrivacyMode(on);
+		if (key === 'blockInput') c.setBlockInput?.(on);
+		else if (key === 'showCursor') c.setShowRemoteCursor?.(on);
+		else if (key === 'lockAfter') c.setLockAfterSession?.(on);
+		else if (key === 'privacy') c.setPrivacyMode?.(on);
 		else c.setDisableClipboard?.(on);
 	}
 
@@ -952,10 +952,10 @@ export class Viewer {
 		savePrefs(this.userId, s.prefs);
 		const c = s.client;
 		if (!c) return;
-		if (key === 'quality') c.setQualityPreset(presetForQuality(String(value)));
+		if (key === 'quality') c.setQualityPreset?.(presetForQuality(String(value)));
 		else if (key === 'fpsMode') c.setFpsMode?.(String(value));
-		else if (key === 'scale') c.setScaleMode(String(value));
-		else if (key === 'codec') c.setCodec(String(value));
+		else if (key === 'scale') c.setScaleMode?.(String(value));
+		else if (key === 'codec') c.setCodec?.(String(value));
 		else if (key === 'keyboardMode') c.setKeyboardMode?.(String(value));
 	}
 
@@ -965,10 +965,10 @@ export class Viewer {
 		const p = s.prefs;
 		c.setBackgroundFps?.(p.backgroundFps || 1);
 		if (c._state !== 'streaming' && c.state !== 'streaming') return;
-		c.setQualityPreset(presetForQuality(p.quality));
+		c.setQualityPreset?.(presetForQuality(p.quality));
 		c.setFpsMode?.(p.fpsMode || 'adaptive');
-		c.setScaleMode(p.scale || 'fit');
-		if (p.codec && p.codec !== 'Auto') c.setCodec(p.codec);
+		c.setScaleMode?.(p.scale || 'fit');
+		if (p.codec && p.codec !== 'Auto') c.setCodec?.(p.codec);
 		if (p.keyboardMode) c.setKeyboardMode?.(p.keyboardMode);
 	}
 
@@ -976,7 +976,7 @@ export class Viewer {
 		const s = this.active;
 		if (!s) return;
 		s.audioMuted = !s.audioMuted;
-		s.client?.setAudioMuted(s.audioMuted);
+		s.client?.setAudioMuted?.(s.audioMuted);
 	}
 
 	toggleViewOnly(): void {
@@ -1041,7 +1041,7 @@ export class Viewer {
 		const c = s.client;
 		if (!c) return;
 		try {
-			s.monitors = c.getMonitors() || [];
+			s.monitors = c.getMonitors?.() ?? [];
 		} catch {
 			s.monitors = [];
 		}
@@ -1060,21 +1060,21 @@ export class Viewer {
 	switchMonitor(idx: number): void {
 		const s = this.active;
 		if (!s?.client) return;
-		s.client.switchMonitor(idx);
+		s.client.switchMonitor?.(idx);
 		this.refreshMonitors(s);
 		s.monitors = s.monitors.map((m) => ({ ...m, current: m.idx === idx }));
 	}
 
 	toggleVirtualDisplay(index: number, on: boolean): void {
 		const s = this.active;
-		s?.client?.toggleVirtualDisplay(index, on);
+		s?.client?.toggleVirtualDisplay?.(index, on);
 		if (s) this.refreshMonitors(s);
 	}
 
 	selectWindowsSession(sid: number): void {
 		const s = this.active;
 		if (!s?.client) return;
-		s.client.selectWindowsSession(sid);
+		s.client.selectWindowsSession?.(sid);
 		s.windowsSessions = { ...s.windowsSessions, currentSid: sid };
 	}
 
@@ -1125,7 +1125,7 @@ export class Viewer {
 
 	sendChat(s: ViewerSession, text: string): boolean {
 		const msg = text.trim();
-		if (!msg || !s.client) return false;
+		if (!msg || !s.client?.sendChat) return false;
 		s.client.sendChat(msg);
 		this.addChat(s, msg, 'sent');
 		return true;
@@ -1142,7 +1142,7 @@ export class Viewer {
 		if (!s?.client) return;
 		requestAnimationFrame(() => {
 			try {
-				s.client?.renderer.resize();
+				s.client?.renderer?.resize();
 			} catch {
 				/* not ready */
 			}
@@ -1152,7 +1152,7 @@ export class Viewer {
 	resizeAll(): void {
 		for (const s of this.sessions) {
 			try {
-				s.client?.renderer.resize();
+				s.client?.renderer?.resize();
 			} catch {
 				/* not ready */
 			}
@@ -1226,7 +1226,7 @@ export class Viewer {
 			const text = await navigator.clipboard.readText();
 			if (text && text !== this.lastClipboard) {
 				this.lastClipboard = text;
-				s.client.sendClipboard(text);
+				s.client.sendClipboard?.(text);
 			}
 		} catch {
 			/* not focused or refused */
