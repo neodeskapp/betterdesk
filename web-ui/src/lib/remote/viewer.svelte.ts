@@ -126,6 +126,9 @@ export class ViewerSession {
 	tfaError = $state('');
 	password = $state('');
 	remember = $state(false);
+	/** The password filled in from this browser's store, and the one last sent to the device */
+	rememberedPassword = '';
+	submittedPassword = '';
 	tfaCode = $state('');
 	cdapFallback = $state(false);
 	autoplayBlocked = $state(false);
@@ -514,10 +517,15 @@ export class Viewer {
 				.catch(() => '');
 			const org = this.data.mockRemote ? Promise.resolve('') : getConnectPassword(s.deviceId);
 			void Promise.all([local, org]).then(([mine, theirs]) => {
-				const saved = mine || theirs || '';
-				if (saved) {
-					s.password = saved;
+				// The organisation's password wins and stays out of this browser unless Remember is ticked
+				if (theirs) {
+					s.password = theirs;
+					s.remember = false;
+					s.rememberedPassword = '';
+				} else if (mine) {
+					s.password = mine;
 					s.remember = true;
+					s.rememberedPassword = mine;
 				}
 				if (this.isActive(s)) void tick().then(() => s.focus?.password());
 			});
@@ -528,6 +536,14 @@ export class Viewer {
 				s.tfaCode = '';
 				if (this.isActive(s)) void tick().then(() => s.focus?.tfa());
 				return;
+			}
+			// The device refused the password remembered in this browser: forget it
+			if (s.rememberedPassword && s.submittedPassword === s.rememberedPassword) {
+				s.rememberedPassword = '';
+				s.remember = false;
+				void secureStore()
+					.clearPeerPassword(s.deviceId)
+					.catch(() => {});
 			}
 			this.showView(s, 'password');
 			s.loginError = loginErrorText(error);
@@ -764,6 +780,7 @@ export class Viewer {
 			return;
 		}
 		s.loginError = '';
+		s.submittedPassword = s.password;
 		void s.client?.authenticate(s.password);
 	}
 

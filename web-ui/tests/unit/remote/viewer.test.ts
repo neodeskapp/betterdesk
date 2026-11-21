@@ -65,8 +65,18 @@ vi.mock('../../../src/lib/api/remote.ts', () => ({
 	getPendingBillingSession: vi.fn(async () => null),
 	submitWorkReport: vi.fn()
 }));
+/** Device passwords remembered in this browser */
+const remembered = vi.hoisted(() => new Map<string, string>());
+vi.mock('../../../src/lib/remote/secure-store.ts', () => ({
+	secureStore: () => ({
+		loadPeerPassword: async (id: string) => remembered.get(id) ?? '',
+		savePeerPassword: async (id: string, pw: string) => void remembered.set(id, pw),
+		clearPeerPassword: async (id: string) => void remembered.delete(id)
+	})
+}));
 
 const { Viewer } = await import('../../../src/lib/remote/viewer.svelte.ts');
+const remoteApi = await import('../../../src/lib/api/remote.ts');
 type ViewerData = ConstructorParameters<typeof Viewer>[0]['data'];
 
 function data(extra: Partial<ViewerData> = {}): ViewerData {
@@ -141,6 +151,44 @@ describe('remote viewer sessions', () => {
 		expect(s.view).toBe('streaming');
 		expect(s.everStreamed).toBe(true);
 		expect(c.setSessionActive).toHaveBeenLastCalledWith(true);
+	});
+
+	test("the organisation's connection password wins over a remembered one and is not stored in the browser", async () => {
+		remembered.clear();
+		remembered.set('900100012', 'old-pw');
+		vi.mocked(remoteApi.getConnectPassword).mockResolvedValueOnce('org-pw');
+		const { s, c } = setup();
+		c.emit('password_required');
+		await vi.waitFor(() => expect(s.password).toBe('org-pw'));
+		expect(s.remember).toBe(false);
+		c.emit('login_success');
+		await vi.waitFor(() => expect(remembered.has('900100012')).toBe(false));
+	});
+
+	test('a remembered password the device refuses is forgotten', async () => {
+		remembered.clear();
+		remembered.set('900100012', 'old-pw');
+		const { v, s, c } = setup();
+		c.emit('password_required');
+		await vi.waitFor(() => expect(s.password).toBe('old-pw'));
+		expect(s.remember).toBe(true);
+		v.authenticate(s);
+		c.emit('login_error', 'Wrong Password');
+		await vi.waitFor(() => expect(remembered.has('900100012')).toBe(false));
+		expect(s.remember).toBe(false);
+	});
+
+	test('a typed password the device refuses leaves the remembered one alone', async () => {
+		remembered.clear();
+		remembered.set('900100012', 'old-pw');
+		const { v, s, c } = setup();
+		c.emit('password_required');
+		await vi.waitFor(() => expect(s.password).toBe('old-pw'));
+		s.password = 'typo';
+		v.authenticate(s);
+		c.emit('login_error', 'Wrong Password');
+		await Promise.resolve();
+		expect(remembered.get('900100012')).toBe('old-pw');
 	});
 
 	test('a failure says what happened and keeps the details', () => {
