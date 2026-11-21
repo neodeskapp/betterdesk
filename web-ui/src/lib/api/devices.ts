@@ -167,13 +167,22 @@ export function setDeviceTags(id: string, tags: string[]) {
 
 /* ── Folders ── */
 
+/**
+ * A whole number, or the same in digits: on a PostgreSQL database the Go
+ * server created, BIGSERIAL and BIGINT columns come as text ("4")
+ */
+const WholeNum = v.union([
+	v.number(),
+	v.pipe(v.string(), v.regex(/^-?\d+$/), v.transform(Number), v.number())
+]);
+
 export const Folder = v.looseObject({
-	id: v.number(),
+	id: WholeNum,
 	name: v.string(),
 	color: Str,
 	icon: Str,
-	sort_order: v.optional(v.number()),
-	device_count: v.optional(v.number()),
+	sort_order: v.optional(WholeNum),
+	device_count: v.optional(WholeNum),
 	allowed_users: v.optional(v.array(v.string())),
 	allowed_groups: v.optional(v.array(v.string()))
 });

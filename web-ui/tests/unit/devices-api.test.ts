@@ -1,6 +1,7 @@
 import * as v from 'valibot';
-import { describe, expect, test } from 'vitest';
-import { Device, DeviceList } from '../../src/lib/api/devices.ts';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { createFolder, Device, DeviceList, listFolders } from '../../src/lib/api/devices.ts';
+import { countDevices, inFolder } from '../../src/lib/devices/model.ts';
 import fixture from '../fixtures/devices.json';
 
 describe('device list schema', () => {
@@ -66,5 +67,50 @@ describe('device list schema', () => {
 		expect(v.parse(DeviceList, large).devices).toHaveLength(5000);
 		console.warn(`validated 500 devices in ${tSmall.toFixed(1)} ms, 5000 in ${tLarge.toFixed(1)} ms`);
 		expect(tLarge / tSmall).toBeLessThan(40);
+	});
+});
+
+describe('folders on a PostgreSQL database the Go server created (ids as text)', () => {
+	const answer = (data: unknown) =>
+		new Response(JSON.stringify({ success: true, data }), {
+			status: 200,
+			headers: { 'Content-Type': 'application/json' }
+		});
+	afterEach(() => vi.unstubAllGlobals());
+
+	test('the list takes ids, order and counts as numbers or numeric text', async () => {
+		vi.stubGlobal('fetch', async () =>
+			answer({
+				folders: [
+					{ id: '4', name: 'Office', sort_order: '0', device_count: '2' },
+					{ id: 5, name: 'Lab', sort_order: 1, device_count: 0 }
+				]
+			})
+		);
+		const folders = await listFolders();
+		expect(folders.map((f) => [f.id, f.sort_order, f.device_count])).toEqual([
+			[4, 0, 2],
+			[5, 1, 0]
+		]);
+		const devices = [{ id: 'a', folder_id: 4 }, { id: 'b', folder_id: '5' }, { id: 'c' }].map((d) =>
+			v.parse(Device, d)
+		);
+		expect(countDevices(devices, folders, []).folders).toEqual(
+			new Map([
+				[4, 1],
+				[5, 1]
+			])
+		);
+		expect(devices.filter((d) => inFolder(d, folders[0]!.id)).map((d) => d.id)).toEqual(['a']);
+	});
+
+	test('the create answer with a text id is a folder, not a failure', async () => {
+		vi.stubGlobal('fetch', async () => answer({ id: '6', name: 'New' }));
+		await expect(createFolder({ name: 'New' })).resolves.toMatchObject({ id: 6, name: 'New' });
+	});
+
+	test('text that is no number is still refused', async () => {
+		vi.stubGlobal('fetch', async () => answer({ folders: [{ id: 'x', name: 'Bad' }] }));
+		await expect(listFolders()).rejects.toThrow();
 	});
 });
