@@ -92,8 +92,8 @@ func queryText(r *http.Request, name string) (text string, ok bool) {
 	return text, err == nil
 }
 
-// maxRows is the largest limit of the device routes: the web app asks
-// for 500 top apps.
+// maxRows is the largest limit of the device routes (the web app asks
+// for 500 top apps), and the most summaries the list gives.
 const maxRows = 500
 
 // limitOf reads the limit of a request: fallback when the query has none
@@ -178,9 +178,9 @@ type listed struct {
 	ReceivedAt      any           `json:"received_at"`
 }
 
-// list answers GET /api/activity?from=&to=: every summary whose report
-// time is in the window, newest first, with the name of its device. An
-// account limited to some devices gets only theirs.
+// list answers GET /api/activity?from=&to=: the summaries whose report
+// time is in the window, the maxRows received last, with the name of
+// their device. An account limited to some devices gets only theirs.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	window, bad := spanOf(r)
 	if bad != "" {
@@ -192,7 +192,7 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "List error", err)
 		return
 	}
-	summaries, err := allSummaries(r.Context(), h.db, window)
+	summaries, err := allSummaries(r.Context(), h.db, window, scope, maxRows)
 	if err != nil {
 		h.serverError(w, r, "List error", err)
 		return
@@ -200,9 +200,6 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	out := make([]listed, 0, len(summaries))
 	for _, s := range summaries {
 		id := s.text("device_id")
-		if !scope.Has(id) {
-			continue
-		}
 		out = append(out, listed{
 			DeviceID:        s.value("device_id"),
 			Hostname:        h.hostname(r, id),

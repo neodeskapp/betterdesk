@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -67,10 +68,13 @@ type filter struct {
 	value  jsbind.Value
 }
 
+// maxListed is the most tickets the list gives.
+const maxListed = 500
+
 // listTickets returns the tickets that pass every filter and whose title
-// or description holds the search text, newest first; tickets of the same
-// second by their id. search is
-// undefined for a list without a search.
+// or description holds the search text, newest first and maxListed at
+// most; tickets of the same second by their id. search is undefined for a
+// list without a search.
 func listTickets(ctx context.Context, db *store.DB, filters []filter, search jsbind.Value) ([]ticket, error) {
 	where := "WHERE 1=1"
 	var values []jsbind.Value
@@ -93,7 +97,7 @@ func listTickets(ctx context.Context, db *store.DB, filters []filter, search jsb
 	if err != nil {
 		return nil, fmt.Errorf("list tickets: %w", err)
 	}
-	rows, err := store.Select(ctx, db, "SELECT "+ticketColumns+" FROM tickets "+where+" ORDER BY created_at DESC, id DESC", args...)
+	rows, err := store.Select(ctx, db, "SELECT "+ticketColumns+" FROM tickets "+where+" ORDER BY created_at DESC, id DESC LIMIT "+strconv.Itoa(maxListed), args...)
 	if err != nil {
 		return nil, fmt.Errorf("list tickets: %w", err)
 	}

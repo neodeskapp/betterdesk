@@ -294,14 +294,15 @@ func filterText(rawQuery, name string) string {
 	return ""
 }
 
-// maxEvents is the largest limit of the event list.
+// maxEvents is the largest limit of the event list, and its limit when
+// the request gives none.
 const maxEvents = 500
 
-// limitOf reads the limit of the event list: 0 for none, ok false for
-// text that is no whole number from 1 to maxEvents written in digits.
+// limitOf reads the limit of the event list: maxEvents for none, ok false
+// for text that is no whole number from 1 to maxEvents written in digits.
 func limitOf(text string) (int, bool) {
 	if text == "" {
-		return 0, true
+		return maxEvents, true
 	}
 	if strings.Trim(text, "0123456789") != "" || len(text) > 4 {
 		return 0, false
@@ -336,9 +337,9 @@ func windowOf(text string, isEnd bool) (window, bool) {
 }
 
 // events answers GET events?device_id=&event_source=&event_type=&limit=
-// &from=&to=: the reported events, newest first. limit, when given, is a
-// whole number from 1 to 500; from and to are times, a date alone as to
-// taking in that whole day. Anything else is 400.
+// &from=&to=: the reported events, newest first, 500 at most. limit,
+// when given, is a whole number from 1 to 500; from and to are times, a
+// date alone as to taking in that whole day. Anything else is 400.
 func (h *handlers) events(w http.ResponseWriter, r *http.Request) {
 	query := func(name string) string { return filterText(r.URL.RawQuery, name) }
 	filter := eventFilter{

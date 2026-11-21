@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
@@ -140,11 +141,15 @@ func (q *query) run(ctx context.Context, db *store.DB, doing string) ([]record, 
 	return out, nil
 }
 
-// allSummaries returns the summaries of all devices reported in the
-// window, the one received last first, each with the number of the
+// allSummaries returns the summaries reported in the window of the
+// devices in the scope (every device for a nil scope), the one received
+// last first and at most limit of them, each with the number of the
 // device's sessions that started at or after its report time and before
 // the device's next report (detail_count).
-func allSummaries(ctx context.Context, db *store.DB, window span) ([]record, error) {
+func allSummaries(ctx context.Context, db *store.DB, window span, scope *access.DeviceScope, limit int) ([]record, error) {
+	if scope != nil && scope.Size() == 0 {
+		return []record{}, nil
+	}
 	var q query
 	q.add(`SELECT s.*, (
                 SELECT COUNT(*) FROM activity_sessions a
@@ -159,7 +164,15 @@ func allSummaries(ctx context.Context, db *store.DB, window span) ([]record, err
             ) as detail_count
             FROM activity_summaries s WHERE 1=1`)
 	q.between("s.reported_at", "s.reported_at", window)
-	q.add(" ORDER BY s.received_at DESC")
+	if scope != nil {
+		ids := scope.IDs()
+		values := make([]jsbind.Value, len(ids))
+		for i, id := range ids {
+			values[i] = jsbind.String(id)
+		}
+		q.add(" AND s.device_id IN (?"+strings.Repeat(", ?", len(ids)-1)+")", values...)
+	}
+	q.add(" ORDER BY s.received_at DESC LIMIT ?", jsbind.Number(float64(limit)))
 	return q.run(ctx, db, "list activity summaries")
 }
 
