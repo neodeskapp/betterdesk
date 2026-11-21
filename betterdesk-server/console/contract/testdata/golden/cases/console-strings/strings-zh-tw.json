@@ -3311,7 +3311,8 @@
       "title": "訪客遠端",
       "ttl": "有效時間（分鐘）",
       "url": "分享 URL",
-      "view_only": "僅檢視"
+      "view_only": "僅檢視",
+      "view_only_rustdesk": "RustDesk 裝置無法限制為僅檢視，因此此連結會提供完整控制權。僅檢視適用於 Mesh 與 CDAP 裝置。"
      },
      "help": {
       "panel": {
@@ -7595,6 +7596,7 @@
       "access_source_role": "來自角色",
       "access_source_unset": "未設定",
       "access_source_user": "為此人設定",
+      "access_super_admin_note": "超級管理員一律擁有所有區段的完整存取權，因此區段設定不適用於他們。用戶端功能仍然適用。",
       "access_user_note": "此處的設定優先於此人的群組。若未設定，則套用其群組中最高的設定，再來是其角色。",
       "access_whole_group": "此群組中的所有區段",
       "access_write": "完整",

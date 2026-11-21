@@ -3313,7 +3313,8 @@
       "title": "Gastzugang",
       "ttl": "Gültig für (Minuten)",
       "url": "Freigabe-URL",
-      "view_only": "Nur Ansicht"
+      "view_only": "Nur Ansicht",
+      "view_only_rustdesk": "Ein RustDesk-Gerät lässt sich nicht auf Zuschauen beschränken, dieser Link gibt also volle Kontrolle. Nur ansehen gibt es für Mesh- und CDAP-Geräte."
      },
      "help": {
       "panel": {
@@ -7593,6 +7594,7 @@
       "access_source_role": "aus der Rolle",
       "access_source_unset": "nicht festgelegt",
       "access_source_user": "für diese Person festgelegt",
+      "access_super_admin_note": "Super-Admins haben immer vollen Zugriff auf alle Bereiche, daher gelten Bereichseinstellungen für sie nicht. Client-Funktionen gelten weiterhin.",
       "access_user_note": "Eine Einstellung hier gilt vor den Gruppen dieser Person. Ohne Einstellung gilt die höchste Einstellung ihrer Gruppen, danach ihre Rolle.",
       "access_whole_group": "Alle Bereiche dieser Gruppe",
       "access_write": "Voll",
@@ -11123,7 +11125,8 @@
       "title": "Gastzugang",
       "ttl": "Gültig für (Minuten)",
       "url": "Freigabe-URL",
-      "view_only": "Nur Ansicht"
+      "view_only": "Nur Ansicht",
+      "view_only_rustdesk": "Ein RustDesk-Gerät lässt sich nicht auf Zuschauen beschränken, dieser Link gibt also volle Kontrolle. Nur ansehen gibt es für Mesh- und CDAP-Geräte."
      },
      "help": {
       "panel": {
@@ -15403,6 +15406,7 @@
       "access_source_role": "aus der Rolle",
       "access_source_unset": "nicht festgelegt",
       "access_source_user": "für diese Person festgelegt",
+      "access_super_admin_note": "Super-Admins haben immer vollen Zugriff auf alle Bereiche, daher gelten Bereichseinstellungen für sie nicht. Client-Funktionen gelten weiterhin.",
       "access_user_note": "Eine Einstellung hier gilt vor den Gruppen dieser Person. Ohne Einstellung gilt die höchste Einstellung ihrer Gruppen, danach ihre Rolle.",
       "access_whole_group": "Alle Bereiche dieser Gruppe",
       "access_write": "Voll",
