@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -101,10 +102,14 @@ func newWorld(t *testing.T) *world {
 				scope[id] = true
 			}
 			return scope, nil
-		})
+		}, anyDevice)
 	})
 	return w
 }
+
+// anyDevice is a device table that has every id, without a folder or
+// tags.
+func anyDevice(_ context.Context, id string) *goapi.Object { return goapi.NewObject("id", id) }
 
 var (
 	cookieExpires = regexp.MustCompile(`Expires=[A-Za-z]{3}, [0-9]{2} [A-Za-z]{3} [0-9]{4} [0-9:]{8} GMT`)
@@ -457,7 +462,9 @@ func TestDeviceScopeOfTheAccount(t *testing.T) {
 	w.World = proxytest.NewWorld(t, func(d *kit.Deps) {
 		d.Access = scopes
 		d.GuestAccess = guestaccess.New(guestaccess.Options{GoAPI: d.GoAPI})
-		Register(d)
+		register(d, func(ctx context.Context, user *access.ScopeUser, devices []access.Device) (deviceScope, error) {
+			return scopes.DeviceScopeForUser(ctx, user, devices)
+		}, anyDevice)
 	})
 	created := &proxytest.Answer{Status: 201, Type: "application/json", Body: `{"id":"g1"}`}
 	post := func(role string, id int64, body string) (int, string) {
@@ -502,7 +509,7 @@ func TestLinkRoutesAreRateLimited(t *testing.T) {
 			d.GuestAccess = guestaccess.New(guestaccess.Options{GoAPI: d.GoAPI})
 			register(d, func(context.Context, *access.ScopeUser, []access.Device) (deviceScope, error) {
 				return unlimited{}, nil
-			})
+			}, anyDevice)
 		})
 		for n := 1; n <= 3; n++ {
 			rec, _ := w.Do(req, nil)

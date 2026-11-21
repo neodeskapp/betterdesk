@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
@@ -33,21 +34,28 @@ type deviceScope interface {
 // (deviceGroupService.getDeviceScopeForUser).
 type scopeFunc func(ctx context.Context, user *access.ScopeUser, devices []access.Device) (deviceScope, error)
 
+// deviceFunc is the device of an id as the device layer has it, with its
+// folder and tags, nil when there is none (goapi.Backend.GetDeviceByID).
+type deviceFunc func(ctx context.Context, id string) *goapi.Object
+
 type handlers struct {
 	api    *goapi.Client
 	guests *guestaccess.Service
 	scope  scopeFunc
+	device deviceFunc
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
 	register(d, func(ctx context.Context, user *access.ScopeUser, devices []access.Device) (deviceScope, error) {
 		return d.Access.DeviceScopeForUser(ctx, user, devices)
+	}, func(ctx context.Context, id string) *goapi.Object {
+		return d.Backend.GetDeviceByID(ctx, id, false)
 	})
 }
 
-func register(d *kit.Deps, scope scopeFunc) {
-	h := &handlers{api: d.GoAPI, guests: d.GuestAccess, scope: scope}
+func register(d *kit.Deps, scope scopeFunc, device deviceFunc) {
+	h := &handlers{api: d.GoAPI, guests: d.GuestAccess, scope: scope, device: device}
 	create := d.RequirePermission("guest.create")
 	page := d.Limits.RDClientPage.Middleware
 
@@ -70,7 +78,9 @@ type failure struct {
 // create answers POST /api/guest/access-links with the body {peer_ids,
 // ttl_minutes, view_only, label, max_uses}. Every peer id is taken as
 // text; ttl_minutes, label and max_uses are checked here (linkTypes). The
-// account must have all of the devices in its device scope.
+// account must have all of the devices in its device scope, which is
+// computed over the devices with their folders and tags; for an account
+// with a limit an id that is no device is outside.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	list, _ := body.Get("peer_ids").Array()
@@ -79,7 +89,7 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	peerIDs := make([]any, len(list))
-	devices := make([]access.Device, len(list))
+	ids := make([]string, len(list))
 	for i, item := range list {
 		value, err := goapi.Parse(item.Raw())
 		text, isText := guestaccess.JSText(value)
@@ -87,8 +97,7 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 			kit.JSON(w, r, http.StatusInternalServerError, failure{Error: guestaccess.ErrNotText.Error()})
 			return
 		}
-		peerIDs[i] = text
-		devices[i] = access.Device{ID: text}
+		peerIDs[i], ids[i] = text, text
 	}
 	ttl, hasTTL := bodyValue(r, "ttl_minutes")
 	label, _ := bodyValue(r, "label")
@@ -98,6 +107,7 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	devices, missing := h.scopeDevices(r.Context(), ids)
 	scope, err := h.scope(r.Context(), scopeUser(r), devices)
 	if err != nil {
 		kit.JSON(w, r, http.StatusInternalServerError, failure{Error: err.Error()})
@@ -105,7 +115,7 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	}
 	if !scope.Unlimited() {
 		for _, device := range devices {
-			if !scope.Has(device.ID) {
+			if missing[device.ID] || !scope.Has(device.ID) {
 				kit.JSON(w, r, http.StatusForbidden, failure{Error: "One or more devices are outside your device scope"})
 				return
 			}
@@ -126,6 +136,24 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		link.Set("max_uses", uses)
 	}
 	goapipath.ProxyToGo(h.api, w, r, http.MethodPost, goapipath.Fixed("/guest/access-links"), goapipath.Body(link))
+}
+
+// scopeDevices looks up the devices of ids for the device scope, each
+// with its folder and tags under the id as it was asked. missing holds the
+// ids that are no device.
+func (h *handlers) scopeDevices(ctx context.Context, ids []string) (devices []access.Device, missing map[string]bool) {
+	devices = make([]access.Device, len(ids))
+	missing = map[string]bool{}
+	for i, id := range ids {
+		found := h.device(ctx, id)
+		if found == nil {
+			devices[i], missing[id] = access.Device{ID: id}, true
+			continue
+		}
+		devices[i] = devicegroups.ScopeDevices([]*goapi.Object{found})[0]
+		devices[i].ID = id
+	}
+	return devices, missing
 }
 
 // linkTypes checks the values of a new link the API server reads as
