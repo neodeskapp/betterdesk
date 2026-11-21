@@ -56,6 +56,11 @@ func OpenPostgres(dsn string) (*PostgresDB, error) {
 		config.MaxConns = 10
 	}
 	config.MinConns = 1
+	// Every session runs in UTC, whatever the DSN or the server's own
+	// setting says: the API server and the console pass UTC times as text
+	// without a zone, which PostgreSQL reads in the session's zone, and
+	// queries that read a time as text (::text) get it in that zone.
+	config.ConnConfig.RuntimeParams["timezone"] = "UTC"
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
