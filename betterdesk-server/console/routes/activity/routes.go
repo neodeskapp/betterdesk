@@ -6,8 +6,9 @@
 //     activity, behind the device guards (device.go).
 //   - The routes people read app usage with: the summaries devices
 //     reported, one device's sessions and summaries, and its most used
-//     apps. All three need the permission audit.view, and all three step
-//     aside at /api/bd for the routes of other groups there.
+//     apps. All three need the permission audit.view and keep to the
+//     account's device scope, and all three step aside at /api/bd for the
+//     routes of other groups there.
 package activity
 
 import (
@@ -16,7 +17,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/alerts"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/devicemount"
@@ -28,11 +31,20 @@ type handlers struct {
 	db     *store.DB
 	alerts *alerts.Engine
 	log    *kit.Logger
+	// scope is the device scope of the account of a request, nil when it
+	// sees every device
+	scope func(r *http.Request) (*access.DeviceScope, error)
 }
 
 // Register adds the group's routes below the mount.
 func Register(d *kit.Deps) {
 	h := &handlers{db: d.Store, alerts: d.Alerts, log: d.Log.Child("Activity")}
+	h.scope = func(r *http.Request) (*access.DeviceScope, error) {
+		ctx := r.Context()
+		return d.DeviceGroups.LimitedScope(ctx, kit.User(r), func() []*goapi.Object {
+			return d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{})
+		})
+	}
 	r := d.Router
 	canRead := d.RequirePermission("audit.view")
 	r.Post("/activity", h.report, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
@@ -50,6 +62,21 @@ type failure struct {
 func (h *handlers) serverError(w http.ResponseWriter, r *http.Request, what string, err error) {
 	h.log.Error(what+":", err)
 	kit.JSON(w, r, http.StatusInternalServerError, failure{Error: "Internal server error"})
+}
+
+// inScope answers 403 and reports false when the device is outside the
+// account's scope; a failed check is answered as the route's what.
+func (h *handlers) inScope(w http.ResponseWriter, r *http.Request, what, id string) bool {
+	scope, err := h.scope(r)
+	if err != nil {
+		h.serverError(w, r, what, err)
+		return false
+	}
+	if !scope.Has(id) {
+		kit.JSON(w, r, http.StatusForbidden, failure{Error: kit.T(r, "errors.forbidden", nil)})
+		return false
+	}
+	return true
 }
 
 // badQuery answers 400 for a parameter of the query the route cannot use.
@@ -152,11 +179,17 @@ type listed struct {
 }
 
 // list answers GET /api/activity?from=&to=: every summary whose report
-// time is in the window, newest first, with the name of its device.
+// time is in the window, newest first, with the name of its device. An
+// account limited to some devices gets only theirs.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	window, bad := spanOf(r)
 	if bad != "" {
 		badQuery(w, r, bad)
+		return
+	}
+	scope, err := h.scope(r)
+	if err != nil {
+		h.serverError(w, r, "List error", err)
 		return
 	}
 	summaries, err := allSummaries(r.Context(), h.db, window)
@@ -164,10 +197,13 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "List error", err)
 		return
 	}
-	out := make([]listed, len(summaries))
-	for i, s := range summaries {
+	out := make([]listed, 0, len(summaries))
+	for _, s := range summaries {
 		id := s.text("device_id")
-		out[i] = listed{
+		if !scope.Has(id) {
+			continue
+		}
+		out = append(out, listed{
 			DeviceID:        s.value("device_id"),
 			Hostname:        h.hostname(r, id),
 			IdleSeconds:     s.value("idle_seconds"),
@@ -176,7 +212,7 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 			DetailCount:     s.value("detail_count"),
 			ReportedAt:      s.value("reported_at"),
 			ReceivedAt:      s.value("received_at"),
-		}
+		})
 	}
 	kit.JSON(w, r, http.StatusOK, summaryList{Summaries: out, Total: len(out)})
 }
@@ -214,7 +250,9 @@ type deviceDetail struct {
 
 // detail answers GET /api/activity/{id}?from=&to=&limit=: the device's
 // sessions that lie in the window, newest first and 100 at most unless
-// limit says otherwise, and its summaries reported in the window.
+// limit says otherwise, and its summaries reported in the window. A
+// device outside the account's scope, or one no device has, is refused
+// with 403.
 func (h *handlers) detail(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	window, bad := spanOf(r)
@@ -225,6 +263,8 @@ func (h *handlers) detail(w http.ResponseWriter, r *http.Request) {
 		return
 	case !ok:
 		badQuery(w, r, "limit")
+		return
+	case !h.inScope(w, r, "Detail error", id):
 		return
 	}
 	sessions, err := deviceSessions(r.Context(), h.db, id, window, max)
@@ -252,7 +292,8 @@ type topApps struct {
 
 // top answers GET /api/activity/{id}/top?from=&to=&limit=: the apps of
 // the device's sessions in the window with the time spent in each, the
-// most used first, 10 unless limit says otherwise.
+// most used first, 10 unless limit says otherwise. A device outside the
+// account's scope is refused with 403.
 func (h *handlers) top(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	window, bad := spanOf(r)
@@ -263,6 +304,8 @@ func (h *handlers) top(w http.ResponseWriter, r *http.Request) {
 		return
 	case !ok:
 		badQuery(w, r, "limit")
+		return
+	case !h.inScope(w, r, "Top apps error", id):
 		return
 	}
 	apps, err := topAppsOf(r.Context(), h.db, id, window, max)
