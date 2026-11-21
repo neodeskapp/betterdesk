@@ -29,7 +29,8 @@ type movedCount struct {
 
 // assignDevices answers POST /api/folders/{id}/devices with {deviceIds}:
 // the devices go into the folder, or out of their folder for the id 0.
-// Every device has to exist and be one the account may see. The id of the
+// Every device has to exist and be one the account may see, and the
+// folder has to be open to the account. The id of the
 // device that was found is stored, as text, whatever JSON type the body
 // gave it as.
 func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +53,9 @@ func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
 		}
 		if folder == nil {
 			fail(w, r, http.StatusNotFound, "folders.not_found")
+			return
+		}
+		if !h.mayFill(w, r, id, "Assign devices error:") {
 			return
 		}
 	}
@@ -99,7 +103,7 @@ func (h *handlers) assignDevices(w http.ResponseWriter, r *http.Request) {
 // assignDevice answers PATCH /api/devices/{id}/folder with {folderId}: the
 // device goes into the folder, or out of its folder for null or no
 // folderId. A folderId that is no whole number (as a number or in
-// digits) is refused with 400.
+// digits) is refused with 400, a folder closed to the account with 403.
 func (h *handlers) assignDevice(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deviceID := r.PathValue("id")
@@ -134,10 +138,28 @@ func (h *handlers) assignDevice(w http.ResponseWriter, r *http.Request) {
 			fail(w, r, http.StatusNotFound, "folders.not_found")
 			return
 		}
+		if !h.mayFill(w, r, folder, "Assign device folder error:") {
+			return
+		}
 	}
 	if err := h.groups.AssignDeviceToFolder(ctx, jsbind.String(deviceID), folder); err != nil {
 		h.serverError(w, r, "Assign device folder error:", err)
 		return
 	}
 	answer(w, r, http.StatusOK, done{Success: true})
+}
+
+// mayFill reports whether the account may put devices into the folder:
+// one open to it (access.GroupRightsForUser). It answers a refusal or a
+// failure itself.
+func (h *handlers) mayFill(w http.ResponseWriter, r *http.Request, id jsbind.Value, what string) bool {
+	_, rights, err := h.folderRights(r.Context(), r, id)
+	if err != nil {
+		h.serverError(w, r, what, err)
+		return false
+	}
+	if !rights.Change {
+		fail(w, r, http.StatusForbidden, "errors.no_permission")
+	}
+	return rights.Change
 }

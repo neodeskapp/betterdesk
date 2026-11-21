@@ -229,6 +229,32 @@ func TestLimitedScopeKeepsToItsFolders(t *testing.T) {
 	})
 }
 
+// RV11: an account the device scope limits puts devices only into a
+// folder that is open to it, so it cannot hide a device it may see in a
+// folder closed to it. Taking a device out of its folder stays allowed.
+func TestLimitedScopeMovesOnlyIntoItsFolders(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db)
+		admin, operator := w.As("admin"), w.As("operator")
+		for _, folder := range []string{`{"name":"Closed","allowed_users":["e2e_admin"]}`, `{"name":"Open","allowed_users":["e2e_operator"]}`} {
+			if got := admin.Do("POST", "/api/folders", folder); got.Status != http.StatusOK {
+				t.Fatalf("create %s: %d %s", folder, got.Status, got.Body)
+			}
+		}
+		const refused = `{"success":false,"error":"You don't have permission to do this. Ask an administrator."}`
+		want(t, "move B into the closed folder", operator.Do("POST", "/api/folders/1/devices", `{"deviceIds":["B"]}`), 403, refused)
+		want(t, "move B alone into the closed folder", operator.Do("PATCH", "/api/devices/B/folder", `{"folderId":1}`), 403, refused)
+		if got := rows(t, db, `SELECT device_id FROM device_folder_assignments`); got != "" {
+			t.Errorf("assignments after the refusals: %q", got)
+		}
+		want(t, "move B into its own folder", operator.Do("POST", "/api/folders/2/devices", `{"deviceIds":["B"]}`), 200, `{"success":true,"data":{"count":1}}`)
+		want(t, "move C alone into its own folder", operator.Do("PATCH", "/api/devices/C/folder", `{"folderId":"2"}`), 200, ok)
+		want(t, "take B out", operator.Do("POST", "/api/folders/0/devices", `{"deviceIds":["B"]}`), 200, `{"success":true,"data":{"count":1}}`)
+		want(t, "take C out", operator.Do("PATCH", "/api/devices/C/folder", `{"folderId":null}`), 200, ok)
+		want(t, "the admin fills the closed folder", admin.Do("POST", "/api/folders/1/devices", `{"deviceIds":["B"]}`), 200, `{"success":true,"data":{"count":1}}`)
+	})
+}
+
 // TestTheDeviceScopeCheckComesFirst checks that PATCH /api/devices/{id}/folder
 // is behind the device group's scope check, which looks for deleted
 // devices too: for E, a deleted device in a group only e2e_viewer may see,
