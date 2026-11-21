@@ -161,7 +161,7 @@
 					<Input
 						{...f}
 						width="medium"
-						maxlength={32}
+						maxlength={64}
 						autocomplete="off"
 						spellcheck="false"
 						data-autofocus
