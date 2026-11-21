@@ -161,7 +161,9 @@ func latestAuditEntry(ctx context.Context, db *store.DB, action, prefix string) 
 
 // clearDeletedDevice removes what the console keeps of a device that was
 // deleted for good: its system information, its metrics, its folder, its
-// manual device groups and its row in the console's device table.
+// manual device groups, its row in the console's device table, its
+// inventory and telemetry, its app usage and the accounts' direct grants
+// to it. Its tickets and data guard events stay.
 func clearDeletedDevice(ctx context.Context, db *store.DB, id string) error {
 	return db.InTx(ctx, func(tx *store.Tx) error {
 		for _, query := range []string{
@@ -170,6 +172,11 @@ func clearDeletedDevice(ctx context.Context, db *store.DB, id string) error {
 			`DELETE FROM device_folder_assignments WHERE device_id = ?`,
 			`DELETE FROM device_group_members WHERE peer_id = ?`,
 			`DELETE FROM peer WHERE id = ?`,
+			`DELETE FROM device_inventory WHERE device_id = ?`,
+			`DELETE FROM device_telemetry WHERE device_id = ?`,
+			`DELETE FROM activity_sessions WHERE device_id = ?`,
+			`DELETE FROM activity_summaries WHERE device_id = ?`,
+			`DELETE FROM user_peer_grants WHERE peer_id = ?`,
 		} {
 			if _, err := tx.Exec(ctx, query, id); err != nil {
 				return fmt.Errorf("clear the rows of deleted device %s: %w", id, err)

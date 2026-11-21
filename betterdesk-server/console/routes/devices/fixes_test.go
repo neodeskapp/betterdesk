@@ -25,10 +25,11 @@ import (
 
 // TestHardDeleteClearsDeviceRows: a hard delete that the server confirmed
 // clears what the console keeps of the device: its system information,
-// metrics, folder, manual device groups and its row in peer. A soft
-// delete keeps all of it, since the device can be restored, and so does a
-// hard delete the server refused (BUGS DE1, DECISIONS A59). Other devices
-// keep theirs.
+// metrics, folder, manual device groups, its row in peer, its inventory
+// and telemetry, its app usage and the accounts' direct grants to it. A
+// soft delete keeps all of it, since the device can be restored, and so
+// does a hard delete the server refused (BUGS DE1, RV65, DECISIONS A59).
+// Other devices keep theirs.
 func TestHardDeleteClearsDeviceRows(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w, api := world(t, db, nil, nil)
@@ -50,6 +51,11 @@ func TestHardDeleteClearsDeviceRows(t *testing.T) {
 			exec(`INSERT INTO peer_metrics (peer_id, cpu_usage) VALUES (?, 1)`, id)
 			exec(`INSERT INTO peer (id) VALUES (?)`, id)
 			exec(`INSERT INTO device_folder_assignments (device_id, folder_id) VALUES (?, ?)`, id, folder)
+			exec(`INSERT INTO device_inventory (device_id, hardware) VALUES (?, '{}')`, id)
+			exec(`INSERT INTO device_telemetry (device_id, cpu_usage_percent) VALUES (?, 1)`, id)
+			exec(`INSERT INTO activity_sessions (device_id, app_name, started_at, ended_at) VALUES (?, 'x', '2026-01-01 10:00:00', '2026-01-01 10:01:00')`, id)
+			exec(`INSERT INTO activity_summaries (device_id, reported_at) VALUES (?, '2026-01-01 10:00:00')`, id)
+			exec(`INSERT INTO user_peer_grants (user_id, peer_id) VALUES (5, ?)`, id)
 		}
 		rows := func(id string) string {
 			t.Helper()
@@ -60,6 +66,11 @@ func TestHardDeleteClearsDeviceRows(t *testing.T) {
 				`SELECT COUNT(*) FROM device_folder_assignments WHERE device_id = ?`,
 				`SELECT COUNT(*) FROM device_group_members WHERE peer_id = ?`,
 				`SELECT COUNT(*) FROM peer WHERE id = ?`,
+				`SELECT COUNT(*) FROM device_inventory WHERE device_id = ?`,
+				`SELECT COUNT(*) FROM device_telemetry WHERE device_id = ?`,
+				`SELECT COUNT(*) FROM activity_sessions WHERE device_id = ?`,
+				`SELECT COUNT(*) FROM activity_summaries WHERE device_id = ?`,
+				`SELECT COUNT(*) FROM user_peer_grants WHERE peer_id = ?`,
 			} {
 				var n int
 				if err := db.QueryRow(ctx, q, id).Scan(&n); err != nil {
@@ -69,7 +80,7 @@ func TestHardDeleteClearsDeviceRows(t *testing.T) {
 			}
 			return strings.Join(counts, " ")
 		}
-		const all, none = "1 1 1 1 1", "0 0 0 0 0"
+		const all, none = "1 1 1 1 1 1 1 1 1 1", "0 0 0 0 0 0 0 0 0 0"
 		admin := w.As("admin")
 
 		api.On("DELETE /api/peers/A?hard=true", 500, `{"error":"delete failed"}`)
