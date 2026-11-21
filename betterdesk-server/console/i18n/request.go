@@ -161,6 +161,11 @@ func percentByte(s string, i int) (byte, bool) {
 
 // --- the cookie ---
 
+// maxJSONCookie is the longest j: cookie value that is read as JSON. A
+// language code is at most 17 characters, so even written with an escape
+// for every character it fits.
+const maxJSONCookie = 256
+
 // CookieLanguage reads the language cookie from a Cookie header the way
 // cookie-parser reads it: the first cookie of that name counts, quotes around
 // the value are dropped, percent escapes are decoded when they are valid,
@@ -172,7 +177,7 @@ func CookieLanguage(header string) string {
 	if !ok {
 		return ""
 	}
-	if strings.HasPrefix(raw, "j:") {
+	if strings.HasPrefix(raw, "j:") && len(raw) <= maxJSONCookie {
 		if v, err := parseJSON(raw[2:]); err == nil && truthy(v) {
 			text, _ := v.(string)
 			return text

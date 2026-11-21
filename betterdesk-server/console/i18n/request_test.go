@@ -4,6 +4,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -232,6 +233,46 @@ func TestLangCookie(t *testing.T) {
 	}
 	if got, want := LangCookie(`j:["de"]`, true, now), "betterdesk_lang=j%3A%5B%22de%22%5D; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 11:00:00 GMT; Secure; SameSite=Lax"; got != want {
 		t.Errorf("LangCookie = %q, want %q", got, want)
+	}
+}
+
+// A language cookie of deeply nested JSON costs about what it weighs: a
+// j: value longer than a language code can be is not read as JSON, and the
+// parser refuses nesting deeper than maxJSONDepth (BUGS.md RV190).
+func TestDeepJSONCookieIsCheap(t *testing.T) {
+	header := CookieName + "=j:" + strings.Repeat("[", 1<<20)
+	var before, after runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&before)
+	got := CookieLanguage(header)
+	runtime.ReadMemStats(&after)
+	// The recursion's stack is not in TotalAlloc, only in what the process
+	// takes from the system
+	if allocated := after.TotalAlloc - before.TotalAlloc; allocated > 32<<20 {
+		t.Errorf("a 1 MB cookie allocated %d MB", allocated>>20)
+	}
+	if grown := after.Sys - before.Sys; after.Sys > before.Sys && grown > 64<<20 {
+		t.Errorf("a 1 MB cookie took %d MB from the system", grown>>20)
+	}
+	if !strings.HasPrefix(got, "j:[[[") {
+		t.Errorf("the long cookie reads as %.20q", got)
+	}
+	padded := "j:" + strings.Repeat(" ", maxJSONCookie) + `"de"`
+	if got := CookieLanguage(CookieName + "=" + padded); got != padded {
+		t.Errorf("a j: cookie longer than %d characters reads as %q", maxJSONCookie, got)
+	}
+	if got := CookieLanguage(CookieName + `=j:"de"`); got != "de" {
+		t.Errorf(`j:"de" reads as %q`, got)
+	}
+
+	nested := func(depth int) string { return strings.Repeat("[", depth) + strings.Repeat("]", depth) }
+	if _, err := parseJSON(nested(maxJSONDepth)); err != nil {
+		t.Errorf("%d levels: %v", maxJSONDepth, err)
+	}
+	for _, text := range []string{nested(maxJSONDepth + 1), strings.Repeat(`{"a":`, maxJSONDepth+1) + "1" + strings.Repeat("}", maxJSONDepth+1)} {
+		if _, err := parseJSON(text); err == nil || err.Error() != "Maximum call stack size exceeded" {
+			t.Errorf("%d levels of %c: %v", maxJSONDepth+1, text[0], err)
+		}
 	}
 }
 

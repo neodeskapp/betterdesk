@@ -212,6 +212,7 @@ func (s *Server) serve(ctx context.Context, port int, label string, h http.Handl
 	srv := &http.Server{
 		Handler:           h,
 		ReadHeaderTimeout: 15 * time.Second,
+		MaxHeaderBytes:    listen.MaxHeaderBytes,
 		BaseContext:       func(net.Listener) context.Context { return ctx },
 		ErrorLog:          listen.ErrorLog("console"),
 	}

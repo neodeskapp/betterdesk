@@ -11,6 +11,11 @@ type parseError struct{ msg string }
 
 func (e *parseError) Error() string { return e.msg }
 
+// maxJSONDepth is how deep arrays and objects may be nested in a text given
+// to parseJSON. Deeper nesting fails with the RangeError message V8 gives
+// when it runs out of stack.
+const maxJSONDepth = 5000
+
 // parseJSON is JSON.parse: strict JSON, a repeated key keeps its first
 // place and its last value, numbers become float64.
 func parseJSON(text string) (any, error) {
@@ -29,9 +34,22 @@ func parseJSON(text string) (any, error) {
 }
 
 type jsonParser struct {
-	src []uint16
-	pos int
-	err *parseError
+	src   []uint16
+	pos   int
+	depth int
+	err   *parseError
+}
+
+// enter counts one more level of nesting and fails when it is too deep.
+func (p *jsonParser) enter() bool {
+	p.depth++
+	if p.depth > maxJSONDepth {
+		if p.err == nil {
+			p.err = &parseError{"Maximum call stack size exceeded"}
+		}
+		return false
+	}
+	return true
 }
 
 func (p *jsonParser) skipSpace() {
@@ -300,6 +318,10 @@ func (p *jsonParser) parseString() any {
 }
 
 func (p *jsonParser) parseArray() any {
+	if !p.enter() {
+		return nil
+	}
+	defer func() { p.depth-- }()
 	p.pos++
 	out := []any{}
 	p.skipSpace()
@@ -328,6 +350,10 @@ func (p *jsonParser) parseArray() any {
 }
 
 func (p *jsonParser) parseObject() any {
+	if !p.enter() {
+		return nil
+	}
+	defer func() { p.depth-- }()
 	p.pos++
 	out := NewObject()
 	p.skipSpace()
