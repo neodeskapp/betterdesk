@@ -296,9 +296,14 @@ func TestImportLatest(t *testing.T) {
 			t.Errorf("file request: %s", r)
 		}
 	}
-	// A second import of the same tag is not newer than the cache
-	if _, err := s.ImportLatest(context.Background()); !errors.Is(err, ErrNotNewer) {
-		t.Errorf("second import: %v", err)
+	// A second import of the same tag is told so before downloading
+	f.gh.requests = nil
+	_, err = s.ImportLatest(context.Background())
+	if !errors.Is(err, ErrAlreadyImported) || err.Error() != "generic_agent_release_already_imported:support-v2.0.0" || len(f.gh.requests) != 1 {
+		t.Errorf("second import: %v after %d requests", err, len(f.gh.requests))
+	}
+	if entries, _ := os.ReadDir(s.Root()); len(entries) != 1 {
+		t.Errorf("the cache holds %d entries after the second import", len(entries))
 	}
 }
 

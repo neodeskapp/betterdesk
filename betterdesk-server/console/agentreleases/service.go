@@ -193,9 +193,14 @@ func (r Release) MarshalJSON() ([]byte, error) {
 // undefined marks a value JavaScript left undefined.
 var undefined = &struct{ undefined bool }{true}
 
+// reStagingName is the name of an import's staging folder: the tag,
+// ".tmp-", the process id, "-" and the time in milliseconds.
+var reStagingName = regexp.MustCompile(`\.tmp-[0-9]+-[0-9]+$`)
+
 // ListCached returns the releases in the cache: every folder with a
-// manifest.json that can be read, sorted by tag as text, highest first. A
-// cache that cannot be read is empty.
+// manifest.json that can be read, sorted by tag as text, highest first.
+// Staging folders of imports are no releases. A cache that cannot be
+// read is empty.
 func (s *Service) ListCached() []Release {
 	entries, err := os.ReadDir(s.root)
 	if err != nil {
@@ -203,7 +208,7 @@ func (s *Service) ListCached() []Release {
 	}
 	releases := []Release{}
 	for _, entry := range entries {
-		if !entry.IsDir() {
+		if !entry.IsDir() || reStagingName.MatchString(entry.Name()) {
 			continue
 		}
 		raw, err := os.ReadFile(filepath.Join(s.root, entry.Name(), "manifest.json"))
@@ -236,10 +241,11 @@ func (s *Service) CacheExists() bool {
 }
 
 // ResolveAsset returns the path of a file of a cached release, or "" when
-// the tag or the name is no plain file name or there is no such file.
+// the tag or the name is no plain file name, the tag names a staging
+// folder, or there is no such file.
 func (s *Service) ResolveAsset(tag, name string) string {
 	safeTag, safeAsset := safeName(tag), safeName(name)
-	if safeTag == "" || safeAsset == "" {
+	if safeTag == "" || safeAsset == "" || reStagingName.MatchString(safeTag) {
 		return ""
 	}
 	candidate := filepath.Join(s.root, safeTag, safeAsset)

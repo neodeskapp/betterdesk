@@ -81,6 +81,40 @@ func TestImportChecksTheTag(t *testing.T) {
 	}
 }
 
+// TestFailedImportLeavesNoStaging removes the staging folder when the
+// rename fails, here because another import stored the tag while this
+// one downloaded; staging folders left by an older console are no
+// releases and serve no files (BUGS RV51: each failed import left a
+// full copy that was listed and served as the newest release).
+func TestFailedImportLeavesNoStaging(t *testing.T) {
+	f := newRelease(t, zipOf(t, "agent/x.exe"))
+	s := f.service(t, t.TempDir(), "agent/x\n")
+	dest := filepath.Join(s.Root(), "support-v2.0.0")
+	leftover := filepath.Join(s.Root(), "support-v2.0.0.tmp-4242-1794312120000")
+	writeFile(t, filepath.Join(leftover, "manifest.json"), `{"assets":[]}`)
+	writeFile(t, filepath.Join(leftover, "agent-windows.zip"), "zip")
+	f.offer(t, "support-v2.0.0")
+	file := "https://objects.githubusercontent.com/files/SHA256SUMS"
+	served := f.gh.answers[file]
+	f.gh.answers[file] = func() *http.Response {
+		writeFile(t, filepath.Join(dest, "manifest.json"), `{"assets":[]}`)
+		return served()
+	}
+	if _, err := s.ImportLatest(context.Background()); err == nil {
+		t.Fatal("the rename onto a full folder went through")
+	}
+	entries, _ := os.ReadDir(s.Root())
+	if len(entries) != 2 {
+		t.Errorf("the cache holds %d entries, want the stored tag and the old leftover", len(entries))
+	}
+	if got := s.ListCached(); len(got) != 1 || got[0].Tag != "support-v2.0.0" {
+		t.Errorf("ListCached: %+v", got)
+	}
+	if got := s.ResolveAsset(filepath.Base(leftover), "agent-windows.zip"); got != "" {
+		t.Errorf("a staging folder's file is served: %s", got)
+	}
+}
+
 // TestCompareTags orders versions by number, a suffix below its release.
 func TestCompareTags(t *testing.T) {
 	for _, c := range []struct {

@@ -41,7 +41,8 @@ type Imported struct {
 // the manifest's signature with the signing key, the manifest itself, and
 // the size and SHA-256 of every file against the manifest and SHA256SUMS,
 // and refuses archives that carry a custom.txt. The files go into a
-// staging folder that is renamed to the tag's folder at the end. The
+// staging folder that is renamed to the tag's folder at the end, and
+// removed when anything before fails. The
 // errors carry the codes the console's answer shows
 // (generic_agent_release_...).
 func (s *Service) ImportLatest(ctx context.Context) (Imported, error) {
@@ -159,6 +160,12 @@ func (s *Service) ImportLatest(ctx context.Context) (Imported, error) {
 	destination := filepath.Join(s.root, tag)
 	now := s.opts.Now()
 	staging := destination + ".tmp-" + strconv.Itoa(s.opts.PID) + "-" + strconv.FormatInt(now.UnixMilli(), 10)
+	renamed := false
+	defer func() {
+		if !renamed {
+			_ = os.RemoveAll(staging)
+		}
+	}()
 	if err := os.RemoveAll(staging); err != nil {
 		return Imported{}, fsError(err, "rm", staging, "")
 	}
@@ -193,6 +200,7 @@ func (s *Service) ImportLatest(ctx context.Context) (Imported, error) {
 	if err := os.Rename(staging, destination); err != nil {
 		return Imported{}, fsError(err, "rename", staging, destination)
 	}
+	renamed = true
 	return Imported{Tag: tag, Manifest: manifest, Path: destination}, nil
 }
 
@@ -238,13 +246,18 @@ func (s *Service) fetchLatestRelease(ctx context.Context) (any, error) {
 	return nil, errors.New("generic_agent_release_not_found")
 }
 
-// ErrNotNewer refuses a release whose tag is not higher than every
-// release in the cache. Its error text is the code, a colon and the tag.
-var ErrNotNewer = errors.New("generic_agent_release_not_newer")
+// ErrAlreadyImported refuses a release whose folder is in the cache
+// already, ErrNotNewer one whose tag is not higher than every release in
+// the cache. The error text is the code, a colon and the tag.
+var (
+	ErrAlreadyImported = errors.New("generic_agent_release_already_imported")
+	ErrNotNewer        = errors.New("generic_agent_release_not_newer")
+)
 
 // checkReleaseTag takes a release's tag as the name of its cache folder:
-// a plain file name that starts with support-v and is higher than the
-// tag of every release in the cache (compareTags). Only manifest.json is
+// a plain file name that starts with support-v, has no folder in the
+// cache yet and is higher than the tag of every release in the cache
+// (compareTags). Only manifest.json is
 // signed and it does not name its release, so the files of an older
 // signed release published under a new tag would otherwise be offered
 // as the newest agent.
@@ -255,6 +268,9 @@ func (s *Service) checkReleaseTag(v any) (string, error) {
 	}
 	if safeName(tag) == "" || !strings.HasPrefix(tag, releasePrefix) || tag == releasePrefix {
 		return "", errors.New("generic_agent_release_tag_invalid")
+	}
+	if _, err := os.Lstat(filepath.Join(s.root, tag)); err == nil {
+		return "", fmt.Errorf("%w:%s", ErrAlreadyImported, tag)
 	}
 	for _, cached := range s.ListCached() {
 		if strings.HasPrefix(cached.Tag, releasePrefix) && compareTags(tag, cached.Tag) <= 0 {
