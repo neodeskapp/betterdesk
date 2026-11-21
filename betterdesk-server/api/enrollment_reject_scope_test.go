@@ -62,3 +62,47 @@ func TestEnrollmentRejectTouchesOnlyPendingRequests(t *testing.T) {
 		t.Errorf("the row the rejection created is still there: %+v", p)
 	}
 }
+
+// TestPendingEnrollmentIsRejectedAndCleared: a pending request rejected
+// without a ban leaves the pending list and is marked rejected, without a
+// device row; clearing the rejection removes the mark and its decision, and
+// a second clear finds nothing to clear.
+func TestPendingEnrollmentIsRejectedAndCleared(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	admin := map[string]string{"X-API-Key": testAPIKey}
+	call := func(method, path, body string) (int, string) {
+		t.Helper()
+		return listenerCall(t, srv, method, path, body, admin)
+	}
+	seedPendingEnrollment(t, database, "PENDPLN1")
+	if _, body := call(http.MethodGet, "/api/enrollment/pending", ""); !strings.Contains(body, `"PENDPLN1"`) {
+		t.Fatalf("pending list without the seeded request: %s", body)
+	}
+
+	if status, body := call(http.MethodPost, "/api/enrollment/reject/PENDPLN1", `{}`); status != http.StatusOK || body != `{"banned":false,"success":true}` {
+		t.Fatalf("reject: %d %s", status, body)
+	}
+	if _, body := call(http.MethodGet, "/api/enrollment/pending", ""); strings.Contains(body, `"PENDPLN1"`) {
+		t.Errorf("the rejected request is still pending: %s", body)
+	}
+	if marker, _ := database.GetConfig(rejectedDevicePrefix + "PENDPLN1"); !strings.Contains(marker, `"rejected":true`) {
+		t.Errorf("rejection marker: %q", marker)
+	}
+	if p, _ := database.GetPeer("PENDPLN1"); p != nil {
+		t.Errorf("a reject without ban made a device row: %+v", p)
+	}
+
+	status, body := call(http.MethodPost, "/api/enrollment/clear-rejection/PENDPLN1", `{}`)
+	if want := `{"device_id":"PENDPLN1","peer_removed":false,"success":true,"unbanned":false}`; status != http.StatusOK || body != want {
+		t.Errorf("clear: %d %s, want 200 %s", status, body, want)
+	}
+	if marker, _ := database.GetConfig(rejectedDevicePrefix + "PENDPLN1"); marker != "" {
+		t.Errorf("the rejection marker stays after the clear: %s", marker)
+	}
+	if decision, _ := database.GetConfig(enrollmentDecisionPrefix + "PENDPLN1"); decision != "" {
+		t.Errorf("the rejected decision stays after the clear: %s", decision)
+	}
+	if status, body := call(http.MethodPost, "/api/enrollment/clear-rejection/PENDPLN1", `{}`); status != http.StatusNotFound {
+		t.Errorf("second clear: %d %s, want 404", status, body)
+	}
+}
