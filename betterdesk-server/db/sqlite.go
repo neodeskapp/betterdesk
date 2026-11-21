@@ -2524,35 +2524,32 @@ func (s *SQLiteDB) getDeviceTokenByQuery(query string, args ...interface{}) (*De
 		return nil, err
 	}
 
-	if createdAt.Valid {
-		if tm, err := time.Parse(time.RFC3339, createdAt.String); err == nil {
-			t.CreatedAt = tm
-		} else if tm, err := time.Parse("2006-01-02 15:04:05", createdAt.String); err == nil {
-			t.CreatedAt = tm
-		}
-	}
-	if expiresAt.Valid {
-		if tm, err := time.Parse(time.RFC3339, expiresAt.String); err == nil {
-			t.ExpiresAt = &tm
-		} else if tm, err := time.Parse("2006-01-02 15:04:05", expiresAt.String); err == nil {
-			t.ExpiresAt = &tm
-		}
-	}
-	if revokedAt.Valid {
-		if tm, err := time.Parse(time.RFC3339, revokedAt.String); err == nil {
-			t.RevokedAt = &tm
-		} else if tm, err := time.Parse("2006-01-02 15:04:05", revokedAt.String); err == nil {
-			t.RevokedAt = &tm
-		}
-	}
-	if lastUsedAt.Valid {
-		if tm, err := time.Parse(time.RFC3339, lastUsedAt.String); err == nil {
-			t.LastUsedAt = &tm
-		} else if tm, err := time.Parse("2006-01-02 15:04:05", lastUsedAt.String); err == nil {
-			t.LastUsedAt = &tm
-		}
-	}
+	setDeviceTokenTimes(t, createdAt, expiresAt, revokedAt, lastUsedAt)
 	return t, nil
+}
+
+// parseDeviceTokenTime reads a device token time: RFC 3339 as the token
+// writes store the expiry, or SQLite's datetime('now') form in UTC.
+func parseDeviceTokenTime(ns sql.NullString) *time.Time {
+	if !ns.Valid {
+		return nil
+	}
+	for _, layout := range []string{time.RFC3339, "2006-01-02 15:04:05"} {
+		if tm, err := time.Parse(layout, ns.String); err == nil {
+			return &tm
+		}
+	}
+	return nil
+}
+
+// setDeviceTokenTimes fills the times of a scanned device token row.
+func setDeviceTokenTimes(t *DeviceToken, createdAt, expiresAt, revokedAt, lastUsedAt sql.NullString) {
+	if tm := parseDeviceTokenTime(createdAt); tm != nil {
+		t.CreatedAt = *tm
+	}
+	t.ExpiresAt = parseDeviceTokenTime(expiresAt)
+	t.RevokedAt = parseDeviceTokenTime(revokedAt)
+	t.LastUsedAt = parseDeviceTokenTime(lastUsedAt)
 }
 
 // ListDeviceTokens returns all device tokens.
@@ -2585,28 +2582,7 @@ func (s *SQLiteDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, error)
 			return nil, err
 		}
 
-		if createdAt.Valid {
-			if tm, err := time.Parse(time.RFC3339, createdAt.String); err == nil {
-				t.CreatedAt = tm
-			} else if tm, err := time.Parse("2006-01-02 15:04:05", createdAt.String); err == nil {
-				t.CreatedAt = tm
-			}
-		}
-		if expiresAt.Valid {
-			if tm, err := time.Parse(time.RFC3339, expiresAt.String); err == nil {
-				t.ExpiresAt = &tm
-			}
-		}
-		if revokedAt.Valid {
-			if tm, err := time.Parse(time.RFC3339, revokedAt.String); err == nil {
-				t.RevokedAt = &tm
-			}
-		}
-		if lastUsedAt.Valid {
-			if tm, err := time.Parse(time.RFC3339, lastUsedAt.String); err == nil {
-				t.LastUsedAt = &tm
-			}
-		}
+		setDeviceTokenTimes(t, createdAt, expiresAt, revokedAt, lastUsedAt)
 		tokens = append(tokens, t)
 	}
 	return tokens, rows.Err()
@@ -2690,13 +2666,14 @@ func (s *SQLiteDB) ValidateToken(tokenHash string) (*DeviceToken, error) {
 	return t, nil
 }
 
-// CleanupExpiredTokens marks expired tokens as expired.
+// CleanupExpiredTokens marks expired tokens as expired. datetime() reads
+// the RFC 3339 expiry, with its zone, as UTC in the form of datetime('now').
 func (s *SQLiteDB) CleanupExpiredTokens() (int64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	res, err := s.db.Exec(`
 		UPDATE device_tokens SET status='expired' 
-		WHERE status='pending' AND expires_at IS NOT NULL AND expires_at < datetime('now')`)
+		WHERE status='pending' AND expires_at IS NOT NULL AND datetime(expires_at) < datetime('now')`)
 	if err != nil {
 		return 0, err
 	}
