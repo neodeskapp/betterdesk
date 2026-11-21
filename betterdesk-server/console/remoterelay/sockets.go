@@ -163,7 +163,7 @@ func (s *Service) serveViewer(u *ws.Upgrade) {
 		u.Refuse(http.StatusNotFound)
 		return
 	}
-	conn, ok := u.Accept(ws.AcceptOptions{})
+	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxViewerMessage})
 	if !ok {
 		return
 	}

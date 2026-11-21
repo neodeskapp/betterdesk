@@ -210,33 +210,46 @@ func halfPair(s string) (rune, bool) {
 }
 
 // message is a JSON text as the relay reads it: whether JSON.parse took
-// it, how deeply it nests, and its value when it nests no deeper than
-// stringifyDepth. A deeper message is read only at its top: top holds its
-// type when it is an object, so the caller can tell what Node did with
-// it.
+// it, how deeply it nests, and its value when the relay acts on its type
+// and it nests no deeper than stringifyDepth. Any other message is read
+// only at its top: typ holds its type when it is an object, so the caller
+// can tell what Node did with it.
 type message struct {
 	value jsValue
 	depth int
-	// shallow is set for a message deeper than stringifyDepth: value is
-	// then undefined and typ is the top-level type member.
+	// shallow is set for a message read at its top only: value is then
+	// undefined and typ is the top-level type member.
 	shallow bool
 	typ     jsValue
 }
 
 // readMessage reads a text message. ok is false where JSON.parse threw.
-func readMessage(text string) (message, bool) {
+// Only a message whose top-level type wanted takes is built as a tree:
+// the tree costs many times the text, and the relay drops every other
+// message.
+func readMessage(text string, wanted func(typ jsValue) bool) (message, bool) {
 	depth, ok := scanJSON(text)
 	if !ok {
 		return message{}, false
 	}
-	if depth <= stringifyDepth {
-		v, err := parseJS(text)
-		if err != nil {
-			return message{}, false
-		}
-		return message{value: v, depth: depth}, true
+	if isNullText(text) {
+		return message{value: jsValue{kind: jsNull}}, true
 	}
-	return message{depth: depth, shallow: true, typ: topLevelType(text)}, true
+	typ := topLevelType(text)
+	if depth > stringifyDepth || !wanted(typ) {
+		return message{depth: depth, shallow: true, typ: typ}, true
+	}
+	v, err := parseJS(text)
+	if err != nil {
+		return message{}, false
+	}
+	return message{value: v, depth: depth}, true
+}
+
+// isNullText reports JSON text that is the value null, with the
+// whitespace JSON.parse allows around it.
+func isNullText(s string) bool {
+	return strings.Trim(s, " \t\n\r") == "null"
 }
 
 // isNull reports a message that is the value null, where reading a

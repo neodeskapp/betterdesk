@@ -21,11 +21,15 @@ const (
 
 // agentMessage decides what happens to an agent's text message: JSON
 // whose type is pong or status goes to the viewers as JSON.stringify
-// wrote it again, everything else is dropped. The JSON null (frame.type
-// threw) and a message the old relay could not write out again
-// (JSON.stringify ran out of stack) ended Node.
+// wrote it again, everything else is dropped, also any text over
+// MaxAgentText, unread. The JSON null (frame.type threw) and a message
+// the old relay could not write out again (JSON.stringify ran out of
+// stack) ended Node.
 func agentMessage(text string) (verdict, string) {
-	msg, ok := readMessage(text)
+	if len(text) > MaxAgentText {
+		return ignore, ""
+	}
+	msg, ok := readMessage(text, func(typ jsValue) bool { return typ.isText("pong") || typ.isText("status") })
 	if !ok {
 		return ignore, ""
 	}
@@ -55,7 +59,7 @@ var inputKinds = map[string]bool{
 // else is dropped, also input that would name the relay's own start or
 // stop. The JSON null ended Node.
 func viewerMessage(text string) (verdict, string) {
-	msg, ok := readMessage(text)
+	msg, ok := readMessage(text, func(typ jsValue) bool { return typ.isText("stop") || typ.isText("input") })
 	if !ok {
 		return ignore, ""
 	}

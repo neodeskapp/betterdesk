@@ -48,6 +48,14 @@ const (
 	// SessionCheck is how often a viewer's session, permission and device
 	// scope are looked at again while its socket is open.
 	SessionCheck = 10 * time.Second
+	// MaxViewerMessage is the largest message the viewer socket takes; a
+	// bigger one closes it with 1009. A viewer's input is a few hundred
+	// bytes.
+	MaxViewerMessage = 64 << 10
+	// MaxAgentText is the largest text message of an agent the relay
+	// reads; a bigger one is dropped unread and the socket stays open.
+	// Screen frames are binary and keep MaxBinaryFrame.
+	MaxAgentText = 1 << 20
 )
 
 // Clock is the time the relay sees: the old code's Date.now and
