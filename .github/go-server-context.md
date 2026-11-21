@@ -104,10 +104,10 @@ both `hbbs` (signal) and `hbbr` (relay).
 ```
 betterdesk-server [--port 21116] [--relay-port 21117] [--api-port 21114] [--key <base64>]
 
-Modes (all run by default in a single process):
-  --mode=all       ← default, runs signal + relay + api in one process
-  --mode=signal    ← only signal server (hbbs equivalent)
-  --mode=relay     ← only relay server (hbbr equivalent)
+Mode:
+  --mode=all       ← default and the only mode: signal + relay + api + console in one process
+  (--mode=signal and --mode=relay are refused at start: the relay only pairs
+   connections that the signal server of the same process authorized)
 ```
 
 ### Why single binary is possible and better:
@@ -120,8 +120,8 @@ Modes (all run by default in a single process):
 3. **Shared state** — signal server needs to tell clients which relay to use. In a single
    binary, this is just a reference to a struct; in two binaries, you need IPC or config.
 4. **Simpler deployment** — one binary, one systemd service, one Docker container.
-5. **Optional separation** — the `--mode` flag still allows running signal-only or
-   relay-only for large-scale deployments with separate relay nodes.
+5. **No separation** — signal and relay share the relay tickets in memory, so the
+   server refuses `MODE=signal` and `MODE=relay`; only `MODE=all` starts.
 
 ### Folder Structure
 
@@ -544,7 +544,7 @@ states is a bitmask: 2 bits per peer
 | `API_PORT` | `--api-port` | 21114 | HTTP API port |
 | `KEY` | `--key` | (auto-gen) | Ed25519 private key (base64) |
 | `DB_URL` | `--db` | `./db_v2.sqlite3` | SQLite database path |
-| `MODE` | `--mode` | `all` | `all`, `signal`, `relay` |
+| `MODE` | `--mode` | `all` | `all` (`signal` and `relay` are refused at start) |
 | `REG_TIMEOUT` | - | 15000 | Registration timeout (ms) |
 | `HEARTBEAT_INTERVAL_SECS` | - | 3 | Heartbeat check interval |
 | `PEER_TIMEOUT_SECS` | - | 15 | Mark offline after N seconds |

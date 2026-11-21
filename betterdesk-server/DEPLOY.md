@@ -169,7 +169,7 @@ sudo firewall-cmd --reload
 ### Command-line flags
 
 ```
--mode string        Server mode: all, signal, relay (default "all")
+-mode string        Server mode: all, the only mode (default "all"); signal and relay are refused at start
 -port int           Signal server port (default 21116)
 -relay-port int     Relay server port (default 21117)
 -api-port int       HTTP API port (default 21114)

@@ -30,7 +30,7 @@ type Config struct {
 	APIPort    int // HTTP API / RustDesk client-API port (default 21114, signal_port-2)
 
 	// Mode
-	Mode string // "all", "signal", "relay"
+	Mode string // "all"; the start refuses every other mode
 
 	// Database
 	DBPath     string // Database DSN: file path for SQLite, postgres:// URI for PostgreSQL

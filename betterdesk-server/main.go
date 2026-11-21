@@ -497,7 +497,7 @@ func main() {
 		log.Printf("[SECURITY] NOTICE: API_WS_ALLOWED_ORIGINS is not set — API events WebSocket accepts all origins")
 	}
 
-	// Start servers based on mode
+	// parseFlags lets only the combined mode through.
 	switch cfg.Mode {
 	case "all":
 		log.Printf("Starting signal + relay + API servers...")
@@ -641,69 +641,8 @@ func main() {
 		}
 		defer stopConsole()
 
-	case "signal":
-		log.Printf("Starting signal + API servers...")
-		sig := sigServer.New(cfg, kp, database)
-		sig.SetBlocklist(blocklist)
-		sig.SetRateLimiter(ipLimiter)
-		sig.SetAuditLogger(auditLogger)
-		if err := sig.Start(ctx); err != nil {
-			log.Fatalf("Failed to start signal server: %v", err)
-		}
-		defer sig.Stop()
-
-		apiSrv := api.New(cfg, database, sig.PeerMap(), nil, Version)
-		defer attachPanelSync(apiSrv, billingSvc, database, cfg.DBPath, cfg.AuthDBPath)()
-		attachPanelTrust(apiSrv)
-		apiSrv.SetBlocklist(blocklist)
-		apiSrv.SetBandwidthLimiter(bwLimiter)
-		apiSrv.SetAuditLogger(auditLogger)
-		apiSrv.SetEventBus(sig.EventBus())
-		apiSrv.SetMetrics(mc)
-		apiSrv.SetJWTManager(jwtManager)
-		apiSrv.SetKeyPair(kp)
-		vaultKey := cfg.OrgPeerVaultKey
-		if vaultKey == "" {
-			vaultKey = jwtSecret
-		}
-		if err := apiSrv.InitPeerCredentialVault(vaultKey); err != nil {
-			log.Printf("[warn] org peer credential vault disabled: %v", err)
-		}
-		if cfg.RemoteTargetVaultKey == "" {
-			log.Printf("[warn] remote target credential vault disabled: REMOTE_TARGET_VAULT_KEY is not configured")
-		} else if err := apiSrv.InitRemoteTargetCredentialVault(cfg.RemoteTargetVaultKey); err != nil {
-			log.Printf("[warn] remote target credential vault disabled: %v", err)
-		}
-		apiSrv.InitLDAP()
-		apiSrv.InitOIDC()
-		if err := apiSrv.Start(ctx); err != nil {
-			log.Fatalf("Failed to start API server: %v", err)
-		}
-		defer apiSrv.Stop()
-
-		adminSrv.SetPeerMap(sig.PeerMap())
-		if err := adminSrv.Start(ctx); err != nil {
-			log.Printf("WARN: Failed to start admin interface: %v", err)
-		}
-		defer adminSrv.Stop()
-
-	case "relay":
-		log.Printf("Starting relay server only...")
-		relaySrv := relay.New(cfg)
-		relaySrv.SetBandwidthLimiter(bwLimiter)
-		if connLimiter != nil {
-			relaySrv.SetConnLimiter(connLimiter)
-		}
-		if sessionLimiter != nil {
-			relaySrv.SetSessionLimiter(sessionLimiter)
-		}
-		if err := relaySrv.Start(ctx); err != nil {
-			log.Fatalf("Failed to start relay server: %v", err)
-		}
-		defer relaySrv.Stop()
-
 	default:
-		log.Fatalf("Unknown mode: %s (use: all, signal, relay)", cfg.Mode)
+		log.Fatal(checkMode(cfg.Mode))
 	}
 
 	// Everything listens: a freshly installed binary has made it.
@@ -1189,7 +1128,7 @@ func parseFlags() *config.Config {
 	flag.IntVar(&cfg.SignalPort, "port", cfg.SignalPort, "Signal server port (UDP+TCP)")
 	flag.IntVar(&cfg.RelayPort, "relay-port", cfg.RelayPort, "Relay server port (TCP)")
 	flag.IntVar(&cfg.APIPort, "api-port", cfg.APIPort, "HTTP API port")
-	flag.StringVar(&cfg.Mode, "mode", cfg.Mode, "Server mode: all, signal, relay")
+	flag.StringVar(&cfg.Mode, "mode", cfg.Mode, "Server mode: all, the only mode (signal, relay, API and console in one process)")
 	flag.StringVar(&cfg.DBPath, "db", cfg.DBPath, "Database DSN: SQLite path or postgres://... URI")
 	flag.StringVar(&cfg.KeyFile, "key-file", cfg.KeyFile, "Ed25519 key file path (without extension)")
 	flag.StringVar(&cfg.RelayServers, "relay-servers", cfg.RelayServers, "Comma-separated relay server addresses")
@@ -1257,13 +1196,27 @@ func parseFlags() *config.Config {
 	}
 	cfg.WarnProxyTrustMisconfig()
 
-	// Validate mode
 	cfg.Mode = strings.ToLower(cfg.Mode)
-	if cfg.Mode != "all" && cfg.Mode != "signal" && cfg.Mode != "relay" {
-		log.Fatalf("Invalid mode: %s (must be: all, signal, relay)", cfg.Mode)
+	if err := checkMode(cfg.Mode); err != nil {
+		log.Fatal(err)
 	}
 
 	return cfg
+}
+
+// checkMode says why a server mode cannot start, nil for "all". The relay
+// pairs only the connections that the signal server of the same process
+// authorized, so the two cannot run in separate processes: MODE=signal and
+// MODE=relay are refused.
+func checkMode(mode string) error {
+	switch mode {
+	case "all":
+		return nil
+	case "signal", "relay":
+		return fmt.Errorf("MODE=%s (-mode %s) is not supported: the relay only pairs connections that the signal server of the same process authorized, so signal and relay cannot run apart. Use MODE=all (-mode all), the combined mode that runs signal, relay, API and console together", mode, mode)
+	default:
+		return fmt.Errorf("invalid mode %q: use MODE=all (-mode all), the combined mode that runs signal, relay, API and console together", mode)
+	}
 }
 
 // swapRestoredDatabase puts the SQLite file a restore left next to the
