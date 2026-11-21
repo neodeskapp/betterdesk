@@ -150,9 +150,60 @@ function Test-ConsoleHomeCopiesNoConsoleFiles {
     Remove-Item -Recurse -Force $dir
 }
 
+# RV83: the migrate tool replaces an existing SQLite destination only with
+# -overwrite. The menus pass it after the user agreed, and do not run the
+# migration when the user declined.
+function Test-MigrationMenusPassOverwrite {
+    $dir = New-TestInstall
+    $script:AUTO_MODE = $false
+    $script:migrateCalls = @()
+    function Get-MigrateBin { return 'fake-migrate' }
+    function fake-migrate { $script:migrateCalls += ($args -join ' '); $global:LASTEXITCODE = 0 }
+    function Invoke-MenuChoose { param($Title, $Subtitle, $Items, $Returns) $script:MENU_CHOICE = $script:testChoice }
+    function Read-Host { param($Prompt) if ($script:answers.Count -gt 0) { $script:answers.Dequeue() } else { '' } }
+    function Press-Enter { }
+    function Clear-Host { }
+    function Invoke-TestMenu([string]$Choice, [string[]]$Answers) {
+        $script:migrateCalls = @()
+        $script:testChoice = $Choice
+        $script:answers = New-Object System.Collections.Queue
+        foreach ($a in $Answers) { $script:answers.Enqueue($a) }
+        Do-MigrateDatabase *> $null
+        return @($script:migrateCalls | Where-Object { $_ -match '-mode (rust2go|nodejs2go|pg2sqlite)' })
+    }
+
+    $src = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
+    $dst = Join-Path $script:RUSTDESK_PATH 'betterdesk.sqlite3'
+    Set-Content -Path $src -Value 'db'
+    Set-Content -Path $dst -Value 'old'
+
+    $runs = Invoke-TestMenu '4' @('postgres://u@h/db', '', 'y')
+    if ($runs -notcontains "-mode pg2sqlite -src postgres://u@h/db -dst $src -overwrite") { Fail "pg2sqlite after an agreed overwrite ran as: $runs" }
+    $runs = Invoke-TestMenu '4' @('postgres://u@h/db', '', 'n')
+    if ($runs.Count -ne 0) { Fail "pg2sqlite ran although the overwrite was declined: $runs" }
+
+    $runs = Invoke-TestMenu '1' @('', '', 'y')
+    if ($runs -notcontains "-mode rust2go -src $src -dst $dst -overwrite") { Fail "rust2go after an agreed overwrite ran as: $runs" }
+    $runs = Invoke-TestMenu '1' @('', '', 'n')
+    if ($runs.Count -ne 0) { Fail "rust2go ran although the overwrite was declined: $runs" }
+
+    $runs = Invoke-TestMenu '2' @('', '', '', 'y')
+    if ($runs -notcontains "-mode nodejs2go -src $src -dst $dst -overwrite") { Fail "nodejs2go after an agreed overwrite ran as: $runs" }
+    $runs = Invoke-TestMenu '2' @('', '', '', 'n')
+    if ($runs.Count -ne 0) { Fail "nodejs2go ran although the overwrite was declined: $runs" }
+
+    Remove-Item -Force $dst
+    $runs = Invoke-TestMenu '1' @('', '')
+    if ($runs -notcontains "-mode rust2go -src $src -dst $dst") { Fail "rust2go into a new file ran as: $runs" }
+    $runs = Invoke-TestMenu '1' @('', 'postgres://u@h/db')
+    if ($runs -notcontains "-mode rust2go -src $src -dst postgres://u@h/db") { Fail "rust2go to PostgreSQL ran as: $runs" }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
 Test-ConsoleHomeCopiesNoConsoleFiles
+Test-MigrationMenusPassOverwrite
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

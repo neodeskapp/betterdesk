@@ -4837,27 +4837,43 @@ function Do-ToggleProtocol {
 # Database Migration Functions
 #===============================================================================
 
-function Do-MigrateDatabase {
-    Print-Header
-    Write-Host "========== DATABASE MIGRATION ==========" -ForegroundColor White
-    Write-Host ""
-
-    # Locate migration binary
-    $migrateBin = $null
+# Get-MigrateBin returns the path of the migration tool, or $null.
+function Get-MigrateBin {
     $searchPaths = @(
         (Join-Path $script:ScriptDir "betterdesk-server\tools\migrate\migrate.exe"),
         (Join-Path $script:ScriptDir "tools\migrate\migrate.exe"),
         (Join-Path $script:RUSTDESK_PATH "migrate.exe"),
         "C:\BetterDesk\migrate.exe"
     )
-
     foreach ($p in $searchPaths) {
-        if (Test-Path $p) {
-            $migrateBin = $p
-            break
-        }
+        if (Test-Path $p) { return $p }
     }
+    return $null
+}
 
+# Confirm-MigrateOverwrite decides whether the migration tool may replace
+# the SQLite file at Destination. It sets $script:MIGRATE_OVERWRITE to
+# "-overwrite" when the file (or a -wal, -shm or -journal of one) exists
+# and the user agreed, to "" when there is nothing to replace, and returns
+# $false when the user declined. A postgres:// destination needs nothing.
+function Confirm-MigrateOverwrite {
+    param([string]$Destination)
+    $script:MIGRATE_OVERWRITE = ""
+    if ($Destination -match '^postgres(ql)?://') { return $true }
+    $existing = @(@("", "-wal", "-shm", "-journal") | Where-Object { Test-Path -LiteralPath ($Destination + $_) })
+    if ($existing.Count -eq 0) { return $true }
+    Print-Warning "Destination file exists: $Destination"
+    if (-not (Confirm-Action "Overwrite (backup will be created first)?")) { return $false }
+    $script:MIGRATE_OVERWRITE = "-overwrite"
+    return $true
+}
+
+function Do-MigrateDatabase {
+    Print-Header
+    Write-Host "========== DATABASE MIGRATION ==========" -ForegroundColor White
+    Write-Host ""
+
+    $migrateBin = Get-MigrateBin
     if (-not $migrateBin) {
         Print-Error "Migration binary not found!"
         Print-Info "Expected at: $(Join-Path $script:ScriptDir 'betterdesk-server\tools\migrate\migrate.exe')"
@@ -4895,16 +4911,22 @@ function Do-MigrateDatabase {
             }
 
             $dstDb = Read-Host "Destination (SQLite path or postgres:// URI) [new file next to source]"
+            if ([string]::IsNullOrEmpty($dstDb)) { $dstDb = Join-Path (Split-Path -Parent $srcDb) "betterdesk.sqlite3" }
+            if (-not (Confirm-MigrateOverwrite $dstDb)) {
+                Press-Enter
+                return
+            }
 
             Print-Step "Creating backup before migration..."
             & $migrateBin -mode backup -src $srcDb 2>&1 | ForEach-Object { Write-Host $_ }
+            if ($script:MIGRATE_OVERWRITE -and (Test-Path -LiteralPath $dstDb)) {
+                & $migrateBin -mode backup -src $dstDb 2>&1 | ForEach-Object { Write-Host $_ }
+            }
 
             Print-Step "Running Rust -> Go migration..."
-            if ([string]::IsNullOrEmpty($dstDb)) {
-                & $migrateBin -mode rust2go -src $srcDb 2>&1 | ForEach-Object { Write-Host $_ }
-            } else {
-                & $migrateBin -mode rust2go -src $srcDb -dst $dstDb 2>&1 | ForEach-Object { Write-Host $_ }
-            }
+            $migrateArgs = @("-mode", "rust2go", "-src", $srcDb, "-dst", $dstDb)
+            if ($script:MIGRATE_OVERWRITE) { $migrateArgs += $script:MIGRATE_OVERWRITE }
+            & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
 
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "Rust -> Go migration completed successfully!"
@@ -4931,22 +4953,29 @@ function Do-MigrateDatabase {
             if ([string]::IsNullOrEmpty($authDb)) { $authDb = $defaultAuth }
 
             $dstDb = Read-Host "Destination (SQLite path or postgres:// URI) [new file next to source]"
+            if ([string]::IsNullOrEmpty($dstDb)) { $dstDb = Join-Path (Split-Path -Parent $srcDb) "betterdesk.sqlite3" }
+            if (-not (Confirm-MigrateOverwrite $dstDb)) {
+                Press-Enter
+                return
+            }
 
             Print-Step "Creating backup before migration..."
             & $migrateBin -mode backup -src $srcDb 2>&1 | ForEach-Object { Write-Host $_ }
             if (Test-Path $authDb) {
                 & $migrateBin -mode backup -src $authDb 2>&1 | ForEach-Object { Write-Host $_ }
             }
+            if ($script:MIGRATE_OVERWRITE -and (Test-Path -LiteralPath $dstDb)) {
+                & $migrateBin -mode backup -src $dstDb 2>&1 | ForEach-Object { Write-Host $_ }
+            }
 
             Print-Step "Running Node.js -> Go migration..."
-            $args = @("-mode", "nodejs2go", "-src", $srcDb)
+            $migrateArgs = @("-mode", "nodejs2go", "-src", $srcDb)
             if (Test-Path $authDb) {
-                $args += @("-node-auth", $authDb)
+                $migrateArgs += @("-node-auth", $authDb)
             }
-            if (-not [string]::IsNullOrEmpty($dstDb)) {
-                $args += @("-dst", $dstDb)
-            }
-            & $migrateBin @args 2>&1 | ForEach-Object { Write-Host $_ }
+            $migrateArgs += @("-dst", $dstDb)
+            if ($script:MIGRATE_OVERWRITE) { $migrateArgs += $script:MIGRATE_OVERWRITE }
+            & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
 
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "Node.js -> Go migration completed successfully!"
@@ -5001,17 +5030,18 @@ function Do-MigrateDatabase {
             $dstDb = Read-Host "Destination SQLite file [$defaultDst]"
             if ([string]::IsNullOrEmpty($dstDb)) { $dstDb = $defaultDst }
 
-            if (Test-Path $dstDb) {
-                Print-Warning "Destination file exists: $dstDb"
-                if (-not (Confirm-Action "Overwrite (backup will be created first)?")) {
-                    Press-Enter
-                    return
-                }
+            if (-not (Confirm-MigrateOverwrite $dstDb)) {
+                Press-Enter
+                return
+            }
+            if ($script:MIGRATE_OVERWRITE -and (Test-Path -LiteralPath $dstDb)) {
                 & $migrateBin -mode backup -src $dstDb 2>&1 | ForEach-Object { Write-Host $_ }
             }
 
             Print-Step "Running PostgreSQL -> SQLite migration..."
-            & $migrateBin -mode pg2sqlite -src $pgUri -dst $dstDb 2>&1 | ForEach-Object { Write-Host $_ }
+            $migrateArgs = @("-mode", "pg2sqlite", "-src", $pgUri, "-dst", $dstDb)
+            if ($script:MIGRATE_OVERWRITE) { $migrateArgs += $script:MIGRATE_OVERWRITE }
+            & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
 
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "PostgreSQL -> SQLite migration completed successfully!"

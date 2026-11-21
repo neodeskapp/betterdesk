@@ -189,7 +189,93 @@ FAKE_GIT
     done
 )
 
+# RV83: the migrate tool replaces an existing SQLite destination only with
+# -overwrite. The menus pass it after the user agreed, and nothing when
+# the user declined; a file the tool wrote goes to the service account.
+# The check for an outdated binary asks for -h instead of backing up
+# /dev/null.
+test_migration_menus() (
+    local temp_dir calls owned
+    temp_dir=$(mktemp -d)
+    trap 'rm -rf "$temp_dir"' EXIT
+    calls="$temp_dir/calls"
+    owned="$temp_dir/owned"
+    mkdir -p "$temp_dir/betterdesk-server/tools/migrate" "$temp_dir/rustdesk"
+    cat > "$temp_dir/betterdesk-server/tools/migrate/migrate-linux-amd64" <<FAKE_MIGRATE
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> "$calls"
+if [ "\${1:-}" = "-h" ]; then
+    printf 'Usage of migrate:\n  -mode string\n  -overwrite\n' >&2
+fi
+exit 0
+FAKE_MIGRATE
+    chmod +x "$temp_dir/betterdesk-server/tools/migrate/migrate-linux-amd64"
+
+    set --
+    # shellcheck disable=SC1091
+    source "$SCRIPT_ROOT/betterdesk.sh"
+    SCRIPT_DIR="$temp_dir"
+    RUSTDESK_PATH="$temp_dir/rustdesk"
+    CONSOLE_PATH="$temp_dir/console"
+    LOG_FILE="$temp_dir/log"
+    print_header() { :; }
+    press_enter() { :; }
+    menu_choose() { MENU_CHOICE="$TEST_MENU_CHOICE"; }
+    own_by_service_user() { printf '%s\n' "$*" >> "$owned"; }
+
+    local src="$RUSTDESK_PATH/db_v2.sqlite3" dst="$RUSTDESK_PATH/betterdesk.sqlite3"
+    printf 'db' > "$src"
+    printf 'old' > "$dst"
+
+    # run_menu CHOICE INPUT: runs the migration menu with the answers given.
+    run_menu() {
+        : > "$calls"
+        : > "$owned"
+        TEST_MENU_CHOICE="$1" do_migrate_database <<< "$2" > /dev/null 2>&1
+    }
+    migrations() { grep -E -- '-mode (rust2go|nodejs2go|pg2sqlite)' "$calls" || true; }
+
+    # pg2sqlite into the existing default file: agreed, then declined
+    run_menu 4 $'postgres://u@h/db\n\ny'
+    [[ "$(migrations)" == *"-mode pg2sqlite -src postgres://u@h/db -dst $src -overwrite"* ]] \
+        || fail "pg2sqlite after an agreed overwrite ran as: $(migrations)"
+    grep -qx "$src" "$owned" || fail "pg2sqlite's new file was not handed to the service account"
+    run_menu 4 $'postgres://u@h/db\n\nn'
+    [ -z "$(migrations)" ] || fail "pg2sqlite ran although the overwrite was declined: $(migrations)"
+
+    # rust2go and nodejs2go into the existing file next to the source
+    run_menu 1 $'\n\ny'
+    [[ "$(migrations)" == *"-mode rust2go -src $src -dst $dst -overwrite"* ]] \
+        || fail "rust2go after an agreed overwrite ran as: $(migrations)"
+    grep -qx "$dst" "$owned" || fail "rust2go's new file was not handed to the service account"
+    run_menu 1 $'\n\nn'
+    [ -z "$(migrations)" ] || fail "rust2go ran although the overwrite was declined: $(migrations)"
+    run_menu 2 $'\n\n\ny'
+    [[ "$(migrations)" == *"-mode nodejs2go -src $src -dst $dst -overwrite"* ]] \
+        || fail "nodejs2go after an agreed overwrite ran as: $(migrations)"
+    run_menu 2 $'\n\n\nn'
+    [ -z "$(migrations)" ] || fail "nodejs2go ran although the overwrite was declined: $(migrations)"
+
+    # a new file needs no -overwrite, and a PostgreSQL destination no chown
+    rm -f "$dst"
+    run_menu 1 $'\n\n'
+    [[ "$(migrations)" == *"-mode rust2go -src $src -dst $dst" ]] \
+        || fail "rust2go into a new file ran as: $(migrations)"
+    run_menu 1 $'\npostgres://u@h/db\n'
+    [[ "$(migrations)" == *"-dst postgres://u@h/db" ]] || fail "rust2go to PostgreSQL ran as: $(migrations)"
+    [ ! -s "$owned" ] || fail "a PostgreSQL destination was chowned: $(cat "$owned")"
+
+    # the check for an outdated binary
+    : > "$calls"
+    migrate_sqlite_to_postgresql > /dev/null 2>&1 || true
+    grep -qx -- "-h" "$calls" || fail "the binary check did not ask for -h: $(cat "$calls")"
+    if grep -q "/dev/null" "$calls"; then
+        fail "the binary check still backs up /dev/null"
+    fi
+)
+
 test_bounded_go_commands
 test_dirty_native_clone
 test_native_update_channel
+test_migration_menus
 printf 'PASS: native installer regression tests\n'

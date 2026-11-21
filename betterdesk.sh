@@ -3664,12 +3664,10 @@ migrate_sqlite_to_postgresql() {
     chmod +x "$migrate_bin"
     
     # Verify binary supports -mode flag (in case of outdated binary)
-    if ! "$migrate_bin" -mode backup -src /dev/null 2>&1 | grep -qv "flag provided but not defined"; then
-        if "$migrate_bin" -mode backup -src /dev/null 2>&1 | grep -q "flag provided but not defined"; then
-            print_warning "Migration binary is outdated (missing -mode flag)"
-            print_info "Rebuild with: cd betterdesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
-            return 0
-        fi
+    if ! "$migrate_bin" -h 2>&1 | grep -q -- "-mode"; then
+        print_warning "Migration binary is outdated (missing -mode flag)"
+        print_info "Rebuild with: cd betterdesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
+        return 0
     fi
     
     # Check if SQLite has data
@@ -7234,6 +7232,33 @@ do_toggle_protocol() {
 # Database Migration Functions
 #===============================================================================
 
+# migrate_dst_overwrite DST: whether the migration tool may replace the
+# SQLite file at DST. Sets MIGRATE_OVERWRITE to -overwrite when the file
+# (or a -wal, -shm or -journal of one) exists and the user agreed, to
+# nothing when there is nothing to replace; returns 1 when the user
+# declined. A postgres:// destination needs nothing.
+migrate_dst_overwrite() {
+    local dst="$1"
+    MIGRATE_OVERWRITE=""
+    case "${dst,,}" in
+        postgres://*|postgresql://*) return 0 ;;
+    esac
+    if [ -e "$dst" ] || [ -e "$dst-wal" ] || [ -e "$dst-shm" ] || [ -e "$dst-journal" ]; then
+        print_warning "Destination file exists: $dst"
+        confirm "Overwrite (backup will be created first)?" || return 1
+        MIGRATE_OVERWRITE="-overwrite"
+    fi
+}
+
+# migrate_sqlite_dst_done DST: hands a SQLite file the migration tool wrote
+# to the service account, as the install does with the server's files.
+migrate_sqlite_dst_done() {
+    case "${1,,}" in
+        postgres://*|postgresql://*) return 0 ;;
+    esac
+    own_by_service_user "$1"
+}
+
 do_migrate_database() {
     print_header
     echo -e "${WHITE}${BOLD}══════════ DATABASE MIGRATION ══════════${NC}"
@@ -7304,18 +7329,21 @@ do_migrate_database() {
             fi
 
             read -p "Destination (SQLite path or postgres:// URI) [new file next to source]: " dst_db
+            dst_db="${dst_db:-$(dirname "$src_db")/betterdesk.sqlite3}"
+            if ! migrate_dst_overwrite "$dst_db"; then
+                press_enter
+                return
+            fi
 
             print_step "Creating backup before migration..."
             "$migrate_bin" -mode backup -src "$src_db" 2>&1 || true
-
-            print_step "Running Rust → Go migration..."
-            if [ -n "$dst_db" ]; then
-                "$migrate_bin" -mode rust2go -src "$src_db" -dst "$dst_db" 2>&1
-            else
-                "$migrate_bin" -mode rust2go -src "$src_db" 2>&1
+            if [ -n "$MIGRATE_OVERWRITE" ] && [ -f "$dst_db" ]; then
+                "$migrate_bin" -mode backup -src "$dst_db" 2>&1 || true
             fi
 
-            if [ $? -eq 0 ]; then
+            print_step "Running Rust → Go migration..."
+            if "$migrate_bin" -mode rust2go -src "$src_db" -dst "$dst_db" ${MIGRATE_OVERWRITE:+"$MIGRATE_OVERWRITE"} 2>&1; then
+                migrate_sqlite_dst_done "$dst_db"
                 print_success "Rust → Go migration completed successfully!"
             else
                 print_error "Migration failed. Check the output above for details."
@@ -7340,11 +7368,19 @@ do_migrate_database() {
             auth_db="${auth_db:-$default_auth}"
 
             read -p "Destination (SQLite path or postgres:// URI) [new file next to source]: " dst_db
+            dst_db="${dst_db:-$(dirname "$src_db")/betterdesk.sqlite3}"
+            if ! migrate_dst_overwrite "$dst_db"; then
+                press_enter
+                return
+            fi
 
             print_step "Creating backup before migration..."
             "$migrate_bin" -mode backup -src "$src_db" 2>&1 || true
             if [ -f "$auth_db" ]; then
                 "$migrate_bin" -mode backup -src "$auth_db" 2>&1 || true
+            fi
+            if [ -n "$MIGRATE_OVERWRITE" ] && [ -f "$dst_db" ]; then
+                "$migrate_bin" -mode backup -src "$dst_db" 2>&1 || true
             fi
 
             print_step "Running Node.js → Go migration..."
@@ -7355,12 +7391,12 @@ do_migrate_database() {
             if [ -f "$auth_db" ]; then
                 args+=("-node-auth" "$auth_db")
             fi
-            if [ -n "$dst_db" ]; then
-                args+=("-dst" "$dst_db")
+            args+=("-dst" "$dst_db")
+            if [ -n "$MIGRATE_OVERWRITE" ]; then
+                args+=("$MIGRATE_OVERWRITE")
             fi
-            "$migrate_bin" "${args[@]}" 2>&1
-
-            if [ $? -eq 0 ]; then
+            if "$migrate_bin" "${args[@]}" 2>&1; then
+                migrate_sqlite_dst_done "$dst_db"
                 print_success "Node.js → Go migration completed successfully!"
             else
                 print_error "Migration failed. Check the output above for details."
@@ -7413,19 +7449,17 @@ do_migrate_database() {
             read -p "Destination SQLite file [$default_dst]: " dst_db
             dst_db="${dst_db:-$default_dst}"
 
-            if [ -f "$dst_db" ]; then
-                print_warning "Destination file exists: $dst_db"
-                if ! confirm "Overwrite (backup will be created first)?"; then
-                    press_enter
-                    return
-                fi
+            if ! migrate_dst_overwrite "$dst_db"; then
+                press_enter
+                return
+            fi
+            if [ -n "$MIGRATE_OVERWRITE" ] && [ -f "$dst_db" ]; then
                 "$migrate_bin" -mode backup -src "$dst_db" 2>&1 || true
             fi
 
             print_step "Running PostgreSQL → SQLite migration..."
-            "$migrate_bin" -mode pg2sqlite -src "$pg_uri" -dst "$dst_db" 2>&1
-
-            if [ $? -eq 0 ]; then
+            if "$migrate_bin" -mode pg2sqlite -src "$pg_uri" -dst "$dst_db" ${MIGRATE_OVERWRITE:+"$MIGRATE_OVERWRITE"} 2>&1; then
+                migrate_sqlite_dst_done "$dst_db"
                 print_success "PostgreSQL → SQLite migration completed successfully!"
             else
                 print_error "Migration failed. Check the output above for details."
