@@ -279,7 +279,7 @@ func TestListSortFields(t *testing.T) {
 	api.On("GET /api/peers", 200, `{"peers":[`+
 		`{"id":"P2","hostname":"b","os":"b","version":"b","user":"b","note":"b","created_at":"2020-01-02","last_online":"2020-01-01"},`+
 		`{"id":"P1","hostname":"a","os":"a","version":"a","user":"a","note":"a","created_at":"2020-01-01","last_online":"2021-01-01"}]}`)
-	api.On("GET /api/remote-targets?org_id=&include_disabled=false", 200, `{"targets":[]}`)
+	api.On("GET /api/remote-targets?org_id=&include_disabled=true", 200, `{"targets":[]}`)
 	w := routetest.New(t, routetest.Options{API: api, Env: raisedLimits, Config: nodeLanguages})
 	admin := w.As("admin")
 	first := func(query string) string {

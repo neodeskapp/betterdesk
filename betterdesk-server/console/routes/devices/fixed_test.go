@@ -39,10 +39,10 @@ var fixedSteps = []fixedStep{
 	{"node", "263 DELETE /api/devices/A1001?revoke=TRUE&hard=1 {} as admin", "DE3"},
 	// search and sortOrder given as a list or an object are ignored: the
 	// whole list in the default order, where Node answered 500.
-	{"node", "9 GET /api/devices?search[]=x as admin", "DE4"},
-	{"node", "10 GET /api/devices?search[a]=1 as admin", "DE4"},
-	{"node", "18 GET /api/devices?sortOrder[]=asc as admin", "DE4"},
-	{"node", "19 GET /api/devices?sortOrder[x]=1 as admin", "DE4"},
+	{"node", "9 GET /api/devices?search[]=x as admin", "DE4, RV25"},
+	{"node", "10 GET /api/devices?search[a]=1 as admin", "DE4, RV25"},
+	{"node", "18 GET /api/devices?sortOrder[]=asc as admin", "DE4, RV25"},
+	{"node", "19 GET /api/devices?sortOrder[x]=1 as admin", "DE4, RV25"},
 	// A new id that is no text is refused as an invalid id before
 	// anything is asked, so the made-up server never renames A1001 to
 	// 1234567 or true, and the audit log has no entries of it.
@@ -54,8 +54,8 @@ var fixedSteps = []fixedStep{
 	{"node", `300 POST /api/devices/A1001/change-id {"newId":{"a":1}} as admin`, "DE5"},
 	// groupGuids that is no list is refused and changes nothing; the audit
 	// log has no entry of it.
-	{"node", `226 PUT /api/devices/A1001/groups {"groupGuids":"g-open"} as admin`, "DE6"},
-	{"node", "232 PUT /api/devices/A1001/groups {} as admin", "DE6"},
+	{"node", `226 PUT /api/devices/A1001/groups {"groupGuids":"g-open"} as admin`, "DE6, RV25"},
+	{"node", "232 PUT /api/devices/A1001/groups {} as admin", "DE6, RV25"},
 	// A list that is no list and an empty reference are refused with 400
 	// and their text, where Node answered 500.
 	{"node", `436 POST /api/panel/strategies/s-two/assign {"peers":{"length":2}} as admin`, "DE7"},
@@ -79,12 +79,12 @@ var fixedSteps = []fixedStep{
 	// leave "By operator" out.
 	{"node", `210 POST /api/device-groups {"name":["a","b"],"note":5,"team_id":null,"allowed_users":"e2e_viewer, e2e_operator ,x","allowed_groups":[{"guid":"ug-ops"},"ug-ops","missing"]} as admin`, "DGR5"},
 	{"node", `214 POST /api/device-groups {"name":"By operator","allowed_users":["e2e_operator"]} as operator`, "DGR5, RV59"},
-	{"node", "215 GET /api/device-groups as admin", "DGR5, UM33, RV59"},
-	{"node", "220 GET /api/devices/A1001/groups as admin", "DGR5, UM33, RV59"},
-	{"node", "221 GET /api/devices/A1001/groups as operator", "DGR5, UM33"},
-	{"node", "223 GET /api/devices/C1003/groups as admin", "DGR5, UM33, RV59"},
-	{"node", "237 GET /api/devices/A1001/groups as admin", "DGR5, RV59"},
-	{"node", "356 GET /api/devices/C1003/groups as viewer", "DGR5, RV59"},
+	{"node", "215 GET /api/device-groups as admin", "DGR5, UM33, RV59, RV25"},
+	{"node", "220 GET /api/devices/A1001/groups as admin", "DGR5, UM33, RV59, RV25"},
+	{"node", "221 GET /api/devices/A1001/groups as operator", "DGR5, UM33, RV25"},
+	{"node", "223 GET /api/devices/C1003/groups as admin", "DGR5, UM33, RV59, RV25"},
+	{"node", "237 GET /api/devices/A1001/groups as admin", "DGR5, RV59, RV25"},
+	{"node", "356 GET /api/devices/C1003/groups as viewer", "DGR5, RV59, RV25"},
 	// The audit log after the steps of DE5, DE6, DGR2, DGR5, UM33 and
 	// RV59
 	{"node", "459 audit", "DE5, DE6, DGR2, DGR5, UM33, RV59"},
@@ -99,33 +99,33 @@ var fixedSteps = []fixedStep{
 	// console's own writer takes each write, where Node read and wrote
 	// every group through the server and answered its refusals. The rows
 	// and lists after them follow (steps 215 to 223 and 459 above).
-	{"node", `148 PUT /api/devices/A1001/groups {"groupGuids":["g-ops"]} as admin`, "UM33"},
-	{"node", `149 PUT /api/devices/A1001/groups {"groupGuids":["g-open"]} as operator`, "UM33"},
-	{"node", `150 PUT /api/devices/A1001/groups {"groupGuids":["g-viewer"]} as admin`, "UM33"},
-	{"node", `151 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `152 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `153 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `154 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `155 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `156 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `157 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `158 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `159 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `160 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `161 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `162 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `163 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `164 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `165 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `166 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `167 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
-	{"node", `168 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
+	{"node", `148 PUT /api/devices/A1001/groups {"groupGuids":["g-ops"]} as admin`, "UM33, RV25"},
+	{"node", `149 PUT /api/devices/A1001/groups {"groupGuids":["g-open"]} as operator`, "UM33, RV25"},
+	{"node", `150 PUT /api/devices/A1001/groups {"groupGuids":["g-viewer"]} as admin`, "UM33, RV25"},
+	{"node", `151 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `152 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `153 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `154 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `155 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `156 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `157 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `158 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `159 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `160 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `161 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `162 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `163 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `164 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `165 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `166 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `167 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
+	{"node", `168 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33, RV25"},
 	{"node", "169 members after the panel writes", "UM33"},
-	{"node", "222 GET /api/devices/A1001/groups as viewer", "UM33, RV59"},
-	{"node", `230 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-ops","no-such","g-lab"]} as admin`, "UM33, RV59"},
-	{"node", `231 PUT /api/devices/A1001/groups {"groupGuids":[null,5]} as admin`, "UM33, RV59"},
-	{"node", `233 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-viewer"]} as operator`, "UM33, RV59"},
-	{"node", `236 PUT /api/devices/A1001/groups {"groupGuids":["g-open"]} as admin`, "UM33, RV59"},
+	{"node", "222 GET /api/devices/A1001/groups as viewer", "UM33, RV59, RV25"},
+	{"node", `230 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-ops","no-such","g-lab"]} as admin`, "UM33, RV59, RV25"},
+	{"node", `231 PUT /api/devices/A1001/groups {"groupGuids":[null,5]} as admin`, "UM33, RV59, RV25"},
+	{"node", `233 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-viewer"]} as operator`, "UM33, RV59, RV25"},
+	{"node", `236 PUT /api/devices/A1001/groups {"groupGuids":["g-open"]} as admin`, "UM33, RV59, RV25"},
 	// folder_5 is open to e2e_viewer alone, so the operator, whose scope
 	// it limits, puts no device into folder 5. A1001 then stays in the
 	// operator's scope, and the next step answers Node's 404 for folder
@@ -136,6 +136,56 @@ var fixedSteps = []fixedStep{
 	// API server grow.
 	{"node", "42 GET /api/devices/rt_nope as admin", "RV30"},
 	{"node", `304 POST /api/devices/A1001/change-id {"newId":"rt_target1"} as admin`, "RV30"},
+	// The device list asks the API server for the remote targets with
+	// include_disabled=true, so a switched-off RDP or VNC target is listed
+	// without Show deleted. Every step that reads the device list (the
+	// lists, the tags, the device groups and the group writes) makes that
+	// call; the steps of other bugs above that make it carry RV25 too.
+	// The lists show the disabled rt_2 where the made-up server has it.
+	{"node", "0 GET /api/devices?sortBy=id&sortOrder=asc as admin", "RV25"},
+	{"node", "1 GET /api/devices?sortBy=id&sortOrder=asc as operator", "RV25"},
+	{"node", "2 GET /api/devices?sortBy=id&sortOrder=asc as viewer", "RV25"},
+	{"node", "3 GET /api/devices?sortBy=id&sortOrder=asc as guest_issuer", "RV25"},
+	{"node", "4 GET /api/devices as admin", "RV25"},
+	{"node", "5 GET /api/devices?sortBy=hostname&sortOrder=DESC as admin", "RV25"},
+	{"node", "6 GET /api/devices?search=ALP as admin", "RV25"},
+	{"node", "7 GET /api/devices?search=fan&sortBy=note as admin", "RV25"},
+	{"node", "8 GET /api/devices?search= as admin", "RV25"},
+	{"node", "11 GET /api/devices?status=online as admin", "RV25"},
+	{"node", "12 GET /api/devices?status=offline as admin", "RV25"},
+	{"node", "13 GET /api/devices?status=banned as admin", "RV25"},
+	{"node", "14 GET /api/devices?status[]=banned as admin", "RV25"},
+	{"node", "15 GET /api/devices?hasNotes=true as admin", "RV25"},
+	{"node", "16 GET /api/devices?hasNotes=TRUE as admin", "RV25"},
+	{"node", "20 GET /api/devices?sortOrder= as admin", "RV25"},
+	{"node", "21 GET /api/devices?sortBy=password&sortOrder=asc as admin", "RV25"},
+	{"node", "22 GET /api/devices?sortBy[]=id as admin", "RV25"},
+	{"node", "23 GET /api/devices?sortBy=version&sortOrder=asc as admin", "RV25"},
+	{"node", "24 GET /api/devices?sortBy=created_at as admin", "RV25"},
+	{"node", "25 GET /api/devices?sortBy=os&sortOrder=ASC as admin", "RV25"},
+	{"node", "26 GET /api/devices?sortBy=username as admin", "RV25"},
+	{"node", "27 GET /api/devices?page=2&limit=1&sortBy=id as admin", "RV25"},
+	{"node", "29 GET /api/devices?sortBy=id as admin", "RV25"},
+	{"node", "30 GET /api/devices?sortBy=id as admin", "RV25"},
+	{"node", "31 GET /api/devices?sortBy=id as admin", "RV25"},
+	{"node", "114 GET /api/tags as admin", "RV25"},
+	{"node", "115 GET /api/tags as operator", "RV25"},
+	{"node", "116 GET /api/tags as viewer", "RV25"},
+	{"node", "117 GET /api/tags as guest_issuer", "RV25"},
+	{"node", `122 POST /api/tags/rename {"from":5,"to":6} as admin`, "RV25"},
+	{"node", `123 POST /api/tags/rename {"from":"nobody-has","to":"y"} as admin`, "RV25"},
+	{"node", `124 POST /api/tags/rename {"from":"LAB","to":"lab-2"} as admin`, "RV25"},
+	{"node", `125 POST /api/tags/rename {"from":"lab-2","to":"lab"} as operator`, "RV25"},
+	{"node", `126 POST /api/tags/rename {"from":"lab","to":"lab-3"} as admin`, "RV25"},
+	{"node", `129 POST /api/tags/delete {"tag":42} as admin`, "RV25"},
+	{"node", `130 POST /api/tags/delete {"tag":"Office"} as admin`, "RV25"},
+	{"node", `131 POST /api/tags/delete {"tag":"fan"} as admin`, "RV25"},
+	{"node", `132 POST /api/tags/delete {"tag":"kiosk"} as operator`, "RV25"},
+	{"node", "144 GET /api/device-groups as admin", "RV25"},
+	{"node", "145 GET /api/device-groups as operator", "RV25"},
+	{"node", "146 GET /api/device-groups as viewer", "RV25"},
+	{"node", "147 GET /api/device-groups as guest_issuer", "RV25"},
+	{"node", `229 PUT /api/devices/A1001/groups {"groupGuids":["g-open","g-ops"]} as admin`, "RV25"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The
