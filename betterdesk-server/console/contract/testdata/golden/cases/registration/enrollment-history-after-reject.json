@@ -116,28 +116,13 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "data[*].decided_at",
-     "format": "9999-99-99A99:99:99A"
-    }
+    "data[*].decided_at"
    ],
    "body": {
     "kind": "json",
     "json": {
-     "count": 1,
-     "data": [
-      {
-       "actor": "apikey:console-bridge",
-       "banned": false,
-       "decided_at": "<volatile>",
-       "device_id": "contract-enroll-x",
-       "hostname": "",
-       "ip": "",
-       "platform": "",
-       "status": "rejected",
-       "version": ""
-      }
-     ],
+     "count": 0,
+     "data": [],
      "success": true
     }
    }

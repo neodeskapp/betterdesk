@@ -108,11 +108,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "data": {
-      "banned": true,
-      "success": true
-     },
-     "success": true
+     "error": "Request failed with status code 404",
+     "success": false
     }
    }
   }

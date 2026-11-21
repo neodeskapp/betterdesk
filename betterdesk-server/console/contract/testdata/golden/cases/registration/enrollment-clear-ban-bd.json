@@ -106,13 +106,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "data": {
-      "device_id": "contract-enroll-y",
-      "peer_removed": true,
-      "success": true,
-      "unbanned": true
-     },
-     "success": true
+     "error": "Request failed with status code 404",
+     "success": false
     }
    }
   }
