@@ -158,13 +158,20 @@ export function newContractBody(
 	return body;
 }
 
-/** What an edit sends: the fields people can change; empty dates clear them */
-export function contractPatch(v: AssignValues): ContractBody {
+/**
+ * What an edit sends: the remaining minutes and the rates only when the
+ * person changed them from `before` (the values the sheet loaded), so a
+ * save does not write back minutes billed since the list was loaded; a
+ * cleared overage rate is null (the package's rate). Empty dates clear them.
+ */
+export function contractPatch(v: AssignValues, before: AssignValues): ContractBody {
 	const patch: ContractBody = {};
 	const hourly = parseFloat(v.hourlyRate);
-	if (v.remaining !== '') patch.remaining_minutes = parseInt(v.remaining, 10);
-	if (!Number.isNaN(hourly)) patch.hourly_rate = hourly;
-	if (v.overageRate !== '') patch.overage_rate = parseFloat(v.overageRate);
+	if (v.remaining !== '' && v.remaining !== before.remaining)
+		patch.remaining_minutes = parseInt(v.remaining, 10);
+	if (!Number.isNaN(hourly) && v.hourlyRate !== before.hourlyRate) patch.hourly_rate = hourly;
+	if (v.overageRate !== before.overageRate)
+		patch.overage_rate = v.overageRate === '' ? null : parseFloat(v.overageRate);
 	patch.valid_from = v.validFrom ? `${v.validFrom}T00:00:00Z` : null;
 	patch.valid_until = v.validUntil ? `${v.validUntil}T23:59:59Z` : null;
 	return patch;

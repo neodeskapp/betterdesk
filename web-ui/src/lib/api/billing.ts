@@ -176,7 +176,7 @@ export interface ContractBody {
 	status?: string;
 	remaining_minutes?: number;
 	hourly_rate?: number;
-	overage_rate?: number;
+	overage_rate?: number | null;
 	valid_from?: string | null;
 	valid_until?: string | null;
 }

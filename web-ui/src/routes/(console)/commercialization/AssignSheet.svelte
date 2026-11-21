@@ -65,7 +65,7 @@
 		},
 		submit: async (v) => {
 			try {
-				if (contract) await updateContract(contract.id, contractPatch(v));
+				if (contract) await updateContract(contract.id, contractPatch(v, contractValues(contract)));
 				else
 					await createContract(
 						newContractBody(

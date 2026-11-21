@@ -145,12 +145,22 @@ describe('assignments', () => {
 			valid_until: '2026-12-31T23:59:59Z'
 		});
 	});
-	test('an edit sends what can change and clears empty dates', () => {
-		expect(contractPatch(values({ remaining: '5' }))).toEqual({
+	test('an edit sends the numbers that changed and clears empty dates', () => {
+		const before = values({ remaining: '600', hourlyRate: '0', overageRate: '9' });
+		expect(contractPatch(values({ remaining: '5', hourlyRate: '0', overageRate: '9' }), before)).toEqual({
 			remaining_minutes: 5,
 			valid_from: null,
 			valid_until: null
 		});
+	});
+	test('an edit of the end date alone leaves the remaining minutes and rates the list loaded alone', () => {
+		const loaded = contractValues(contract({ remaining_minutes: 600, hourly_rate: 50, overage_rate: 9 }));
+		expect(contractPatch({ ...loaded, validUntil: '2026-12-31' }, loaded)).toEqual({
+			valid_from: null,
+			valid_until: '2026-12-31T23:59:59Z'
+		});
+		// A cleared overage rate is sent as null, so the package's rate applies again
+		expect(contractPatch({ ...loaded, overageRate: '' }, loaded)).toMatchObject({ overage_rate: null });
 	});
 	test('an assignment as sheet values', () => {
 		expect(contractValues(contract({ valid_from: '2026-11-01T00:00:00Z', overage_rate: 9 }))).toMatchObject({
