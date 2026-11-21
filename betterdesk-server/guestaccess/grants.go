@@ -279,10 +279,33 @@ func (s *Store) Touch(token string) error {
 	return err
 }
 
+// listLive reads the stored grants and deletes the rows of grants past
+// their end, revoked or not: nothing reads them again but Validate, which
+// answers the same without the row. It returns the other rows. A row
+// that cannot be read is kept; a delete that fails is left for the next
+// read.
+func (s *Store) listLive() ([]db.ServerConfig, error) {
+	entries, err := s.DB.ListConfigByPrefix(configPrefix)
+	if err != nil {
+		return nil, err
+	}
+	now := time.Now().UTC()
+	live := entries[:0]
+	for _, e := range entries {
+		var g Grant
+		if err := json.Unmarshal([]byte(e.Value), &g); err == nil && now.After(g.ExpiresAt) {
+			_ = s.DB.DeleteConfig(e.Key)
+			continue
+		}
+		live = append(live, e)
+	}
+	return live, nil
+}
+
 // RevokeByID marks a grant revoked. Returns true if found.
 func (s *Store) RevokeByID(id, createdBy string, admin bool) (bool, error) {
 	for attempt := 0; attempt < 8; attempt++ {
-		entries, err := s.DB.ListConfigByPrefix(configPrefix)
+		entries, err := s.listLive()
 		if err != nil {
 			return false, err
 		}
@@ -317,7 +340,7 @@ func (s *Store) RevokeByID(id, createdBy string, admin bool) (bool, error) {
 
 // ListActive returns non-revoked, non-expired grants (optionally filtered by creator).
 func (s *Store) ListActive(createdBy string, admin bool) ([]*Grant, error) {
-	entries, err := s.DB.ListConfigByPrefix(configPrefix)
+	entries, err := s.listLive()
 	if err != nil {
 		return nil, err
 	}
