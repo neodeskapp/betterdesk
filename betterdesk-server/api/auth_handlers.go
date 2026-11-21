@@ -100,18 +100,29 @@ func (s *Server) resolvePermission(role, permission string) (bool, bool, error) 
 	return auth.RoleHasPermission(role, permission), false, nil
 }
 
-// roleHolds reports whether role holds perm as requirePermission decides
-// it: never for device credentials or a permission pro may not hold, always
-// for super admins, else the stored override or the built-in map. A failed
-// override lookup counts as not held.
-func (s *Server) roleHolds(role, perm string) bool {
+// RoleHasPermission reports whether role holds perm as requirePermission
+// decides it: never for device credentials or a permission pro may not
+// hold, always for super admins, else the stored override or the built-in
+// map. A failed override lookup is returned as the error. The MeshCentral
+// gateway asks it for the actions of /control.ashx.
+func (s *Server) RoleHasPermission(role, perm string) (bool, error) {
 	if auth.IsDeviceRole(role) || (auth.IsProRole(role) && auth.ProRoleBlocksPermission(perm)) {
-		return false
+		return false, nil
 	}
 	if auth.IsSuperAdminRole(role) {
-		return true
+		return true, nil
 	}
 	granted, _, err := s.resolvePermission(role, perm)
+	if err != nil {
+		return false, err
+	}
+	return granted, nil
+}
+
+// roleHolds is RoleHasPermission with a failed override lookup counted as
+// not held.
+func (s *Server) roleHolds(role, perm string) bool {
+	granted, err := s.RoleHasPermission(role, perm)
 	if err != nil {
 		log.Printf("api: permission lookup failed for role %q permission %q: %v", role, perm, err)
 		return false

@@ -311,9 +311,13 @@ func (s *Server) SetCDAPGateway(gw *cdap.Gateway) {
 	s.cdapGw = gw
 }
 
-// SetMeshGateway sets the MeshCentral compatibility gateway.
+// SetMeshGateway sets the MeshCentral compatibility gateway and gives it
+// the API's permission check for the actions of /control.ashx.
 func (s *Server) SetMeshGateway(gw *meshcentral.Gateway) {
 	s.meshGw = gw
+	if gw != nil {
+		gw.SetPermissionChecker(s)
+	}
 }
 
 // InitLDAP initializes the LDAP provider from the database configuration.
