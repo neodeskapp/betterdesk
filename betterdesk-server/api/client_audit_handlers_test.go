@@ -12,15 +12,20 @@ import (
 
 	"github.com/unitronix/betterdesk-server/config"
 	cryptopkg "github.com/unitronix/betterdesk-server/crypto"
+	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/peer"
 )
 
-// startTestServer spins up a Server on the given port with a generated keypair.
-func startTestServer(t *testing.T, port int) (*config.Config, func()) {
+// startTestServer spins up a Server on the given port with a generated
+// keypair, on a database the seed functions fill first.
+func startTestServer(t *testing.T, port int, seed ...func(db.Database)) (*config.Config, func()) {
 	t.Helper()
 	cfg := config.DefaultConfig()
 	cfg.APIPort = port
 	database := testSetupDB(t)
+	for _, fill := range seed {
+		fill(database)
+	}
 	kp, err := cryptopkg.GenerateKeyPair()
 	if err != nil {
 		t.Fatal(err)
@@ -38,13 +43,19 @@ func startTestServer(t *testing.T, port int) (*config.Config, func()) {
 }
 
 func TestAuditConnEndpoint(t *testing.T) {
-	cfg, cleanup := startTestServer(t, 19901)
+	cfg, cleanup := startTestServer(t, 19901, func(database db.Database) {
+		if err := database.UpsertPeer(&db.Peer{ID: "1340238749", UUID: "686f73742d75756964"}); err != nil {
+			t.Fatal(err)
+		}
+	})
 	defer cleanup()
 	base := fmt.Sprintf("http://127.0.0.1:%d", cfg.APIPort)
 
-	// POST is public (no auth) — client reports a connection event.
+	// POST takes no credential: a client reports a connection event of its
+	// device with the uuid the device registered with.
 	payload := map[string]any{
 		"host_id":   1340238749, // numeric host_id (RustDesk client behaviour)
+		"host_uuid": "aG9zdC11dWlk",
 		"peer_id":   "PEER01",
 		"peer_name": "workstation",
 		"action":    "connect",

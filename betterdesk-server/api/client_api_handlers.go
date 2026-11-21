@@ -933,9 +933,22 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 		return
 	}
-
-	if peer.Banned {
-		writeJSON(w, http.StatusOK, map[string]any{"error": "BANNED", "modified_at": s.clientBrandingModifiedAt()})
+	// The device is known by the uuid it registered with: a heartbeat
+	// without it, or with another, is answered as for an unknown device.
+	// A heartbeat in the device's signed envelope proves more: it is
+	// answered as for an unknown device when the envelope does not open,
+	// and told that the device is banned only after it opened.
+	if len(body.BetterDeskEnvelope) == 0 && !sameRegisteredUUID(peer.UUID, body.UUID) {
+		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
+		return
+	}
+	banned := func() bool {
+		if peer.Banned {
+			writeJSON(w, http.StatusOK, map[string]any{"error": "BANNED", "modified_at": s.clientBrandingModifiedAt()})
+		}
+		return peer.Banned
+	}
+	if len(body.BetterDeskEnvelope) == 0 && banned() {
 		return
 	}
 	var responsePublicKey *[32]byte
@@ -951,6 +964,9 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		if err := json.Unmarshal(opened.Payload, &inner); err != nil || (inner.ID != "" && inner.ID != deviceID) {
 			log.Printf("[api] BetterDesk heartbeat payload rejected for %s", deviceID)
 			writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
+			return
+		}
+		if banned() {
 			return
 		}
 		body = inner
@@ -1195,9 +1211,9 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify peer exists
+	// Verify peer exists, by the uuid it registered with
 	peer, err := s.db.GetPeer(deviceID)
-	if err != nil || peer == nil {
+	if err != nil || peer == nil || !sameRegisteredUUID(peer.UUID, body.UUID) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("ID_NOT_FOUND")) //nolint:errcheck
 		return

@@ -94,6 +94,22 @@ func queryLimitOffset(r *http.Request) (int, int) {
 
 // ── Audit: Connections ────────────────────────────────────────────────
 
+// auditFromKnownDevice takes a client's audit record only from a device
+// the server has, named by host_id with the uuid it registered with
+// (host_uuid or uuid); else it answers 404 "Unknown device".
+func (s *Server) auditFromKnownDevice(w http.ResponseWriter, hostID string, body map[string]any) bool {
+	known, err := s.knownClientDevice(hostID, body)
+	if err != nil {
+		writeInternalError(w, err, "GetPeer")
+		return false
+	}
+	if !known {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "Unknown device"})
+		return false
+	}
+	return true
+}
+
 // handleAuditConnPost records a connection event reported by a RustDesk client.
 // Public endpoint (no auth) — matches the Node.js behaviour.
 func (s *Server) handleAuditConnPost(w http.ResponseWriter, r *http.Request) {
@@ -105,6 +121,9 @@ func (s *Server) handleAuditConnPost(w http.ResponseWriter, r *http.Request) {
 	hostID := truncStr(coerceStr(body["host_id"]), maxIDLen)
 	if hostID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "host_id is required"})
+		return
+	}
+	if !s.auditFromKnownDevice(w, hostID, body) {
 		return
 	}
 	connType := 0
@@ -171,6 +190,9 @@ func (s *Server) handleAuditFilePost(w http.ResponseWriter, r *http.Request) {
 	hostID := truncStr(coerceStr(body["host_id"]), maxIDLen)
 	if hostID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "host_id is required"})
+		return
+	}
+	if !s.auditFromKnownDevice(w, hostID, body) {
 		return
 	}
 	direction := 0
@@ -262,6 +284,9 @@ func (s *Server) handleAuditAlarmPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if !alarmTypes[alarmType] {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid alarm_type"})
+		return
+	}
+	if !s.auditFromKnownDevice(w, truncStr(coerceStr(body["host_id"]), maxIDLen), body) {
 		return
 	}
 	details := "{}"
