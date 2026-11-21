@@ -26,27 +26,21 @@ var assignableRoles = map[string]bool{
 // validRole is VALID_USER_ROLES.has(role).
 func validRole(v jsbind.Value) bool { return v.IsString() && assignableRoles[v.Str()] }
 
-// canAssignRole is canAssignUserRole: the super admin roles may give any
-// role, global_admin may give operator, viewer and pro, nobody else any.
+// canAssignRole is canAssignUserRole: whether the caller may change an
+// account of the target role (access.MayChangeAccount). The super admin
+// roles may give any role, global_admin operator, viewer and pro, nobody
+// else any. guest_issuer, which global_admin also looks after, is no role
+// an account is given here (validRole).
 func canAssignRole(caller, target string) bool {
-	if access.IsSuperAdminRole(caller) {
-		return true
-	}
-	if caller == "global_admin" {
-		return target == "operator" || target == "viewer" || target == "pro"
-	}
-	return false
+	return access.MayChangeAccount(0, caller, access.PolicyUser{Role: target})
 }
 
 // mayChange reports whether the caller may change, reset or delete an
-// account: its own, or one whose role the caller could give. global_admin
-// also looks after guest_issuer accounts, a role nobody is given here.
+// account, its user groups included (access.MayChangeAccount): its own,
+// or one whose role the caller could give. global_admin also looks after
+// guest_issuer accounts.
 func mayChange(r *http.Request, target *account) bool {
-	if isSessionAccount(r, target.ID.V) {
-		return true
-	}
-	caller, role := callerRole(r), target.role()
-	return canAssignRole(caller, role) || caller == "global_admin" && role == "guest_issuer"
+	return access.MayChangeAccount(kit.UserID(r), callerRole(r), access.PolicyUser{ID: target.ID.V, Role: target.role()})
 }
 
 // callerRole is req.session.user.role.
