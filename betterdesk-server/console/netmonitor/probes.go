@@ -296,8 +296,19 @@ func isTimeout(err error) bool {
 	return errors.As(err, &netErr) && netErr.Timeout() && !errors.Is(err, syscall.ETIMEDOUT)
 }
 
+// maxCheckBody is how much of an answer's body an HTTP check reads. The
+// status is known with the headers; the body is read so that one that
+// breaks off fails the check.
+const maxCheckBody = 64 << 10
+
 // checkHTTP is checkHttp(url, timeoutMs): one GET request. Any status
 // from 200 to 399 counts as success; redirects are not followed.
+//
+// The check fails with "Timeout" when nothing arrives for the length of the
+// timeout, until the answer starts and then between the parts of its body.
+// Of the body it reads at most maxCheckBody bytes, and the whole check
+// ends checkGrace after its timeout: a body that goes on beyond either is
+// not read further, and the answer counts by its status.
 func (p *prober) checkHTTP(ctx context.Context, rawURL string, timeoutMs Number) Result {
 	parsed, checked, err := p.guard.CheckHTTPURL(ctx, rawURL, tools)
 	if err != nil {
@@ -316,8 +327,10 @@ func (p *prober) checkHTTP(ctx context.Context, rawURL string, timeoutMs Number)
 	if parsed.Port != "" {
 		host += ":" + parsed.Port
 	}
+	checkCtx, stop := withDeadline(ctx, timeoutMs)
+	defer stop()
 	// The connection goes to an address the guard checked (connector.dial)
-	reqCtx, cancel := context.WithCancel(context.WithValue(ctx, checkedHost{}, checked))
+	reqCtx, cancel := context.WithCancel(context.WithValue(checkCtx, checkedHost{}, checked))
 	defer cancel()
 	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, scheme+"://"+host+"/", nil)
 	if err != nil {
@@ -342,27 +355,29 @@ func (p *prober) checkHTTP(ctx context.Context, rawURL string, timeoutMs Number)
 	req.Header["User-Agent"] = nil
 	req.Header.Set("Connection", "keep-alive")
 
-	// The request fails when nothing arrives for the length of the
-	// timeout: until the answer starts, then between the parts of its body
 	idle := newIdleTimer(timeout, cancel)
 	defer idle.stop()
 
 	start := p.nowMs()
 	res, err := p.transport.RoundTrip(req)
 	if err != nil {
-		if idle.fired() {
+		if idle.fired() || checkCtx.Err() != nil {
 			return failedHTTP("Timeout")
 		}
 		return failedHTTP(requestMessage(err))
 	}
 	rtt := Number(p.nowMs() - start)
 	idle.reset()
-	_, err = io.Copy(io.Discard, &touchReader{r: res.Body, touch: idle.reset})
+	_, err = io.CopyN(io.Discard, &touchReader{r: res.Body, touch: idle.reset}, maxCheckBody)
 	_ = res.Body.Close()
-	if err != nil {
-		if idle.fired() {
-			return failedHTTP("Timeout")
-		}
+	switch {
+	case err == nil, errors.Is(err, io.EOF):
+		// The whole body, or as much of it as the check reads
+	case idle.fired():
+		return failedHTTP("Timeout")
+	case checkCtx.Err() != nil:
+		// The body was still coming at the check's deadline
+	default:
 		// The connection broke inside the body. The old check never
 		// ended there (BUGS.md NM4).
 		return failedHTTP("aborted")
