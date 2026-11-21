@@ -221,8 +221,11 @@ var missing = gap{}
 
 // node is a list or an object while a query is put together.
 type node struct {
-	list     bool
-	items    []any // a list's elements; missing marks a gap
+	list bool
+	// length is a list's length; elems are its elements by index, an
+	// index below length without one is a gap. An index costs one entry.
+	length   int
+	elems    map[int]any
 	obj      *object
 	overflow bool // a list that outgrew the limit and became an object
 	max      float64
@@ -230,14 +233,42 @@ type node struct {
 	cmax     float64
 }
 
-func listOf(items ...any) *node { return &node{list: true, items: items} }
+func listOf(items ...any) *node {
+	n := &node{list: true, elems: make(map[int]any, len(items))}
+	for _, v := range items {
+		n.push(v)
+	}
+	return n
+}
+
+// push adds v at the end of a list; missing adds a gap.
+func (n *node) push(v any) {
+	if v != missing {
+		n.elems[n.length] = v
+	}
+	n.length++
+}
+
+// indices are the indices of a list's elements, in order.
+func (n *node) indices() []int {
+	out := make([]int, 0, len(n.elems))
+	for i := range n.elems {
+		out = append(out, i)
+	}
+	sort.Ints(out)
+	return out
+}
 
 func objectNode() *node { return &node{obj: newObject()} }
 
 func (n *node) has(key string) bool {
 	if n.list {
 		i, ok := listIndex(key)
-		return ok && i < len(n.items) && n.items[i] != missing
+		if !ok {
+			return false
+		}
+		_, there := n.elems[i]
+		return there
 	}
 	_, ok := n.obj.get(key)
 	return ok
@@ -245,8 +276,10 @@ func (n *node) has(key string) bool {
 
 func (n *node) get(key string) any {
 	if n.list {
-		if i, ok := listIndex(key); ok && i < len(n.items) {
-			return n.items[i]
+		if i, ok := listIndex(key); ok {
+			if v, there := n.elems[i]; there {
+				return v
+			}
 		}
 		return missing
 	}
@@ -265,10 +298,14 @@ func (n *node) set(key string, v any) {
 	if !ok {
 		return
 	}
-	for len(n.items) <= i {
-		n.items = append(n.items, missing)
+	if v == missing {
+		delete(n.elems, i)
+	} else {
+		n.elems[i] = v
 	}
-	n.items[i] = v
+	if i >= n.length {
+		n.length = i + 1
+	}
 }
 
 func (n *node) keys() []string {
@@ -276,23 +313,13 @@ func (n *node) keys() []string {
 		return n.obj.keys()
 	}
 	var out []string
-	for i, v := range n.items {
-		if v != missing {
-			out = append(out, strconv.Itoa(i))
-		}
+	for _, i := range n.indices() {
+		out = append(out, strconv.Itoa(i))
 	}
 	return out
 }
 
-func (n *node) count() int {
-	c := 0
-	for _, v := range n.items {
-		if v != missing {
-			c++
-		}
-	}
-	return c
-}
+func (n *node) count() int { return len(n.elems) }
 
 func listIndex(key string) (int, bool) {
 	if !isArrayIndex(key) || len(key) > 7 {
@@ -339,10 +366,8 @@ func canonicalInt(key string) (float64, bool) {
 
 func toObjectNode(list *node) *node {
 	out := objectNode()
-	for i, v := range list.items {
-		if v != missing {
-			out.obj.set(strconv.Itoa(i), v)
-		}
+	for _, i := range list.indices() {
+		out.obj.set(strconv.Itoa(i), list.elems[i])
 	}
 	return out
 }
@@ -362,9 +387,12 @@ func concat(parts ...any) *node {
 	out := listOf()
 	for _, p := range parts {
 		if n, ok := p.(*node); ok && n.list {
-			out.items = append(out.items, n.items...)
+			for i, v := range n.elems {
+				out.elems[out.length+i] = v
+			}
+			out.length += n.length
 		} else {
-			out.items = append(out.items, p)
+			out.push(p)
 		}
 	}
 	return out
@@ -373,21 +401,26 @@ func concat(parts ...any) *node {
 // combine puts a second value under a key that already has one.
 func combine(a, b any) any {
 	if n, ok := a.(*node); ok && n.overflow {
-		values := []any{b}
-		if bn, ok := b.(*node); ok && bn.list {
-			values = bn.items
-		}
 		index := n.max
-		for _, v := range values {
+		if bn, ok := b.(*node); ok && bn.list {
+			for i := 0; i < bn.length; i++ {
+				v, there := bn.elems[i]
+				if !there {
+					v = missing
+				}
+				index++
+				n.set(numberString(index), v)
+			}
+		} else {
 			index++
-			n.set(numberString(index), v)
+			n.set(numberString(index), b)
 		}
 		n.max = index
 		return n
 	}
 	result := concat(a, b)
-	if len(result.items) > arrayLimit {
-		return markOverflow(toObjectNode(result), float64(len(result.items)-1))
+	if result.length > arrayLimit {
+		return markOverflow(toObjectNode(result), float64(result.length-1))
 	}
 	return result
 }
@@ -581,7 +614,7 @@ func merge(target, source any) any {
 	if !sourceIsNode {
 		switch {
 		case targetIsNode && tgt.list:
-			next := len(tgt.items)
+			next := tgt.length
 			if tgt.count() >= arrayLimit {
 				return markOverflow(toObjectNode(concat(tgt, source)), float64(next))
 			}
@@ -617,8 +650,8 @@ func merge(target, source any) any {
 			return markOverflow(result, src.max+1)
 		}
 		combined := concat(listOf(target), source)
-		if len(combined.items) > arrayLimit {
-			return markOverflow(toObjectNode(combined), float64(len(combined.items)-1))
+		if combined.length > arrayLimit {
+			return markOverflow(toObjectNode(combined), float64(combined.length-1))
 		}
 		return combined
 	}
@@ -626,29 +659,27 @@ func merge(target, source any) any {
 	if tgt.list && !src.list {
 		mergeTarget = toObjectNode(tgt)
 		if tgt.conflict {
-			markConflict(mergeTarget, float64(len(tgt.items)-1))
+			markConflict(mergeTarget, float64(tgt.length-1))
 		}
 	}
 	if tgt.list && src.list {
-		for i, item := range src.items {
-			if item == missing {
-				continue
-			}
+		for _, i := range src.indices() {
+			item := src.elems[i]
 			key := strconv.Itoa(i)
 			if tgt.has(key) {
-				_, a := tgt.items[i].(*node)
+				_, a := tgt.elems[i].(*node)
 				_, b := item.(*node)
 				if a && b {
-					tgt.items[i] = merge(tgt.items[i], item)
+					tgt.elems[i] = merge(tgt.elems[i], item)
 				} else {
-					tgt.items = append(tgt.items, item)
+					tgt.push(item)
 				}
 			} else {
 				tgt.set(key, item)
 			}
 		}
 		if tgt.count() > arrayLimit {
-			return markOverflow(toObjectNode(tgt), float64(len(tgt.items)-1))
+			return markOverflow(toObjectNode(tgt), float64(tgt.length-1))
 		}
 		return tgt
 	}
@@ -714,10 +745,8 @@ func plain(v any) any {
 	}
 	if n.list {
 		out := []any{}
-		for _, item := range n.items {
-			if item != missing {
-				out = append(out, plain(item))
-			}
+		for _, i := range n.indices() {
+			out = append(out, plain(n.elems[i]))
 		}
 		return out
 	}

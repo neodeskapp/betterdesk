@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"net/http/httptest"
 	"os"
+	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -160,4 +162,40 @@ func FuzzParseQuery(f *testing.F) {
 			}
 		}
 	})
+}
+
+// TestListIndexCostsOneEntry: an index in a key costs one entry, not a
+// place for every index below it. 1000 keys of five [999] groups, 32 KB,
+// took about 170 MB when lists grew to their index (BUGS RV99).
+func TestListIndexCostsOneEntry(t *testing.T) {
+	var b strings.Builder
+	for i := 0; i < 1000; i++ {
+		if i > 0 {
+			b.WriteByte('&')
+		}
+		b.WriteString("k" + strconv.Itoa(i) + "[999][999][999][999][999]=x")
+	}
+	raw := b.String()
+	var before, after runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&before)
+	q := parseQuery(raw)
+	runtime.ReadMemStats(&after)
+	if allocated := after.TotalAlloc - before.TotalAlloc; allocated > 20<<20 {
+		t.Errorf("a query of %d bytes allocated %d MB", len(raw), allocated>>20)
+	}
+	if got := q.values.keys(); len(got) != 1000 {
+		t.Fatalf("%d keys, want 1000", len(got))
+	}
+	v, _ := q.values.get("k7")
+	for depth := 0; depth < 5; depth++ {
+		list, ok := v.([]any)
+		if !ok || len(list) != 1 {
+			t.Fatalf("k7 at depth %d is %#v, want a list of one", depth, v)
+		}
+		v = list[0]
+	}
+	if v != "x" {
+		t.Fatalf("k7's value is %#v, want x", v)
+	}
 }
