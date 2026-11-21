@@ -35,6 +35,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
@@ -58,6 +59,8 @@ const (
 	SweepInterval = time.Minute
 
 	defaultMimeType = "application/octet-stream"
+	// maxMimeType is the longest type a transfer keeps, in characters.
+	maxMimeType = 255
 )
 
 // The states of a transfer.
@@ -253,7 +256,8 @@ type Params struct {
 	Filename any
 	// Size is the number of bytes, 0 when missing.
 	Size any
-	// MimeType defaults to application/octet-stream.
+	// MimeType defaults to application/octet-stream. Given, it is text of
+	// at most 255 characters.
 	MimeType any
 	// CreatedBy defaults to "system".
 	CreatedBy any
@@ -263,11 +267,15 @@ type Params struct {
 // an object with a member named toString.
 var ErrNotText = errors.New("Cannot convert object to primitive value")
 
+// errMimeType refuses a type that is no short text.
+var errMimeType = fmt.Errorf("mime_type must be text of at most %d characters", maxMimeType)
+
 // CreateTransfer starts a transfer and returns its record.
 //
 // Errors: "Invalid file size: <size>" for a size that is no number from 0
 // up, "File too large: <size> bytes (max 4294967296)" for a size above
-// MaxFileSize, ErrNotText for a size, a file name, a direction or a
+// MaxFileSize, errMimeType for a type that is no text of at most
+// maxMimeType characters, ErrNotText for a size, a file name, a direction or a
 // device that has no text, and the errors of package safepath. A refused
 // transfer is not stored. The safe file name is cut to maxFileName
 // bytes, so the transfer's file can be written.
@@ -297,6 +305,10 @@ func (s *Service) create(p Params) (*Transfer, error) {
 	if n := number(storedSize); math.IsNaN(n) || n < 0 {
 		text, _ := jsText(storedSize)
 		return nil, fmt.Errorf("Invalid file size: %s", text)
+	}
+	mimeType := or(p.MimeType, defaultMimeType)
+	if text, isText := mimeType.(string); !isText || utf8.RuneCountInString(text) > maxMimeType {
+		return nil, errMimeType
 	}
 
 	var name any = "file"
@@ -330,7 +342,7 @@ func (s *Service) create(p Params) (*Transfer, error) {
 		DeviceID:    p.DeviceID,
 		Filename:    safeName,
 		Size:        storedSize,
-		MimeType:    or(p.MimeType, defaultMimeType),
+		MimeType:    mimeType,
 		Status:      StatusPending,
 		TotalChunks: chunks,
 		TempPath:    tempPath,

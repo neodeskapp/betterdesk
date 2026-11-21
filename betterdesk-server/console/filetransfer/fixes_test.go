@@ -39,6 +39,9 @@ var stepFixes = []struct{ bug, steps string }{
 	{"FT9", "1787-1795"},
 	// A transfer whose size is no number from 0 up is refused and not stored
 	{"RV42", "11-63,444-453,470-472,743,919-940,2452,2915-2921,4337,4522-4525,4631-4634,5027-5046"},
+	// A transfer whose type is no text of at most 255 characters is refused
+	// and not stored
+	{"RV48", "370-371,468-469,549-556,571-582,850-853,1056-1057,1786,2146-2152,2560-2569,3177-3178,3431-3436,3503-3506,3934-3936,4005-4009,4207-4209,4617-4628,4630,5019-5026"},
 }
 
 // rewrite is a fix that changes Node's answer of every step alike. It

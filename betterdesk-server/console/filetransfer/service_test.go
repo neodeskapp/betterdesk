@@ -555,3 +555,30 @@ func TestASizeThatIsNoNumberIsRefused(t *testing.T) {
 		}
 	}
 }
+
+// A transfer's type is short text, or the default when none is given. A
+// type that is no text or longer than 255 characters is refused before
+// the transfer is stored, so a record holds no large value (BUGS RV48).
+func TestATypeThatIsNoShortTextIsRefused(t *testing.T) {
+	s, _ := newService(t)
+	refused := "mime_type must be text of at most 255 characters"
+	for _, mime := range []any{float64(5), true, goapi.NewObject("x", float64(1)), []any{"text/plain"}, strings.Repeat("a", 256), strings.Repeat("é", 256)} {
+		if _, err := s.CreateTransfer(Params{Filename: "x.bin", DeviceID: "d", Size: float64(1), MimeType: mime}); err == nil || err.Error() != refused {
+			t.Errorf("CreateTransfer with the type %.40v: %v", mime, err)
+		}
+		message := goapi.NewObject("action", "init", "filename", "x.bin", "size", float64(1), "mime_type", mime)
+		raw, _ := json.Marshal(s.HandleMessage("dev", message))
+		if string(raw) != `{"action":"error","error":"`+refused+`"}` {
+			t.Errorf("init with the type %.40v: %s", mime, raw)
+		}
+	}
+	if list := s.ListTransfers(Filter{}); len(list) != 0 {
+		t.Fatalf("%d transfers stored, the first %+v", len(list), list[0])
+	}
+	for mime, want := range map[any]string{nil: defaultMimeType, "": defaultMimeType, float64(0): defaultMimeType, false: defaultMimeType, "text/plain": "text/plain", strings.Repeat("é", 255): strings.Repeat("é", 255)} {
+		record, err := s.CreateTransfer(Params{Filename: "x.bin", DeviceID: "d", Size: float64(1), MimeType: mime})
+		if err != nil || record.MimeType != want {
+			t.Errorf("CreateTransfer with the type %.40v: %v, %v", mime, record, err)
+		}
+	}
+}
