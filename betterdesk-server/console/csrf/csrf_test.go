@@ -552,3 +552,25 @@ func TestBodyTokenHook(t *testing.T) {
 		t.Errorf("the hook was asked %d times where the header or the method decides", asked)
 	}
 }
+
+// Behind a TLS proxy in HTTPS mode without a certificate the cookie is
+// Secure for a request that came over HTTPS, as the session cookie is
+// (RV124).
+func TestProviderSecureBehindATLSProxy(t *testing.T) {
+	f := newFixture(t, func(o *Options) {
+		o.HTTPS = true
+		o.SecureRequest = func(r *http.Request) bool { return r.Header.Get("X-Forwarded-Proto") == "https" }
+	})
+	r := req("GET", "/", "", "")
+	r.Header.Set("X-Forwarded-Proto", "https")
+	token, rec := f.provide(r)
+	want := "__csrf=" + token + "%7C" + f.p.hash(token) + "; Path=/; HttpOnly; Secure; SameSite=Lax"
+	if got := setCookies(rec); len(got) != 1 || got[0] != want {
+		t.Fatalf("over HTTPS:\n got %q\nwant %q", got, want)
+	}
+	token, rec = f.provide(req("GET", "/", "", ""))
+	want = "__csrf=" + token + "%7C" + f.p.hash(token) + "; Path=/; HttpOnly; SameSite=Lax"
+	if got := setCookies(rec); len(got) != 1 || got[0] != want {
+		t.Fatalf("over plain HTTP:\n got %q\nwant %q", got, want)
+	}
+}

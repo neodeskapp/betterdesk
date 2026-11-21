@@ -68,6 +68,10 @@ type Options struct {
 	// HTTPS. In HTTPS mode without a usable certificate the console serves
 	// plain HTTP, and the cookie keeps its HTTPS name without Secure.
 	Secure bool
+	// SecureRequest, when set, marks the cookie Secure also for a request
+	// it says came over HTTPS (through a proxy the console trusts), as the
+	// session cookie is. Pass the session manager's SecureCookie.
+	SecureRequest func(r *http.Request) bool
 	// SignedIn reports whether a request carries a signed-in session. Gate
 	// asks it for requests under /api/bd/ and requests with a bearer token.
 	SignedIn func(r *http.Request) bool
@@ -86,6 +90,7 @@ type Protector struct {
 	secret     string
 	cookieName string
 	secure     bool
+	secureReq  func(r *http.Request) bool
 	signedIn   func(r *http.Request) bool
 	bodyToken  func(r *http.Request) string
 	onError    func(w http.ResponseWriter, r *http.Request)
@@ -103,6 +108,7 @@ func New(opts Options) (*Protector, error) {
 		secret:     opts.Secret,
 		cookieName: cookieNameHTTP,
 		secure:     opts.Secure,
+		secureReq:  opts.SecureRequest,
 		signedIn:   opts.SignedIn,
 		bodyToken:  opts.BodyToken,
 		onError:    opts.OnError,
@@ -145,7 +151,7 @@ func (p *Protector) Provider(next http.Handler) http.Handler {
 			token, hash, ok = splitPair(value)
 			ok = ok && p.fits(token, hash)
 			if !ok {
-				cookie.Clear(w, p.cookieName, p.attributes())
+				cookie.Clear(w, p.cookieName, p.attributes(r))
 			}
 		}
 		if !ok {
@@ -155,7 +161,7 @@ func (p *Protector) Provider(next http.Handler) http.Handler {
 			}
 		}
 		if token != "" || ok {
-			cookie.Set(w, p.cookieName, token+"|"+hash, p.attributes())
+			cookie.Set(w, p.cookieName, token+"|"+hash, p.attributes(r))
 		}
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), contextKey{}, token)))
 	})
@@ -212,8 +218,9 @@ func safeMethod(method string) bool {
 	return method == http.MethodGet || method == http.MethodHead || method == http.MethodOptions
 }
 
-func (p *Protector) attributes() cookie.Attributes {
-	return cookie.Attributes{Path: "/", HTTPOnly: true, Secure: p.secure, SameSite: "lax"}
+func (p *Protector) attributes(r *http.Request) cookie.Attributes {
+	secure := p.secure || p.secureReq != nil && p.secureReq(r)
+	return cookie.Attributes{Path: "/", HTTPOnly: true, Secure: secure, SameSite: "lax"}
 }
 
 // cookie reads the request's token cookie. A value of the form j:<JSON>
