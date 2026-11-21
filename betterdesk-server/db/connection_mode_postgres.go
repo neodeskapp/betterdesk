@@ -46,7 +46,11 @@ func (pg *PostgresDB) IssueConnectionMode(issue *ConnectionModeIssue) (*Connecti
 	if err != nil {
 		return nil, false, err
 	}
-	plan := planConnectionModeIssue(policy, active, applied, prepared.Mode)
+	var uuidRevision int64
+	if err := tx.QueryRow(ctx, `SELECT COALESCE(MAX(revision), 0) FROM device_connection_mode_commands WHERE device_uuid = $1`, deviceUUID).Scan(&uuidRevision); err != nil {
+		return nil, false, err
+	}
+	plan := planConnectionModeIssue(policy, active, applied, prepared.Mode, uuidRevision)
 	switch plan.Kind {
 	case issueDuplicate, issueUnchanged:
 		if err := tx.Commit(ctx); err != nil {

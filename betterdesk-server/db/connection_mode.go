@@ -188,11 +188,15 @@ type issuePlan struct {
 	SupersedeID  string
 }
 
-func planConnectionModeIssue(policy *ConnectionModePolicy, active, applied *ConnectionModeCommand, mode string) issuePlan {
+// planConnectionModeIssue decides what an issue does. uuidRevision is the
+// highest revision of any command for the device's uuid: commands are
+// unique per uuid and revision, and devices can share a uuid (a cloned
+// machine), so a new revision goes above it as well as above the device's.
+func planConnectionModeIssue(policy *ConnectionModePolicy, active, applied *ConnectionModeCommand, mode string, uuidRevision int64) issuePlan {
 	previous := ConnectionModeNormal
-	revisionBase := int64(0)
+	revisionBase := uuidRevision
 	if policy != nil {
-		revisionBase = policy.Revision
+		revisionBase = max(revisionBase, policy.Revision)
 		if policy.EffectiveMode != "" {
 			previous = policy.EffectiveMode
 		} else if policy.DesiredMode != "" {

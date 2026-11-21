@@ -48,7 +48,11 @@ func (s *SQLiteDB) IssueConnectionMode(issue *ConnectionModeIssue) (*ConnectionM
 	if err != nil {
 		return nil, false, err
 	}
-	plan := planConnectionModeIssue(policy, active, applied, prepared.Mode)
+	var uuidRevision int64
+	if err := tx.QueryRow(`SELECT COALESCE(MAX(revision), 0) FROM device_connection_mode_commands WHERE device_uuid = ?`, deviceUUID).Scan(&uuidRevision); err != nil {
+		return nil, false, err
+	}
+	plan := planConnectionModeIssue(policy, active, applied, prepared.Mode, uuidRevision)
 	switch plan.Kind {
 	case issueDuplicate, issueUnchanged:
 		if err := tx.Commit(); err != nil {
