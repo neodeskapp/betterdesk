@@ -111,20 +111,31 @@ func (s *Service) readStoredSigningSeed() []byte {
 	return decodeSigningSeed(decodeUTF8(raw))
 }
 
-// writeSigningFile replaces a file through a temporary one next to it.
+// writeSigningFile replaces a file with value and a line break, through
+// a temporary file of a name of its own next to it that is renamed onto
+// it, so a reader sees the old file or the new one and never none.
 func (s *Service) writeSigningFile(path, value string, mode os.FileMode) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o777); err != nil {
 		return nodeFSError(err, "mkdir", filepath.Dir(path))
 	}
-	temporary := fmt.Sprintf("%s.tmp-%d-%d", path, s.opts.PID, s.opts.Now().UnixMilli())
-	if err := os.WriteFile(temporary, []byte(value+"\n"), mode); err != nil {
-		return nodeFSError(err, "open", temporary)
+	f, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".tmp-*")
+	if err != nil {
+		return nodeFSError(err, "open", path)
 	}
-	_ = os.Chmod(temporary, mode)
-	if exists(path) {
-		_ = os.Remove(path)
+	temporary := f.Name()
+	_, err = f.WriteString(value + "\n")
+	if closeErr := f.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Chmod(temporary, mode)
+	}
+	if err != nil {
+		_ = os.Remove(temporary)
+		return nodeFSError(err, "write", temporary)
 	}
 	if err := os.Rename(temporary, path); err != nil {
+		_ = os.Remove(temporary)
 		return nodeFSError(err, "rename", temporary)
 	}
 	return nil
@@ -139,7 +150,8 @@ type SigningKey struct {
 
 // EnsureSigningKey makes sure the install has a signing seed and its
 // public key on disk: the seed from BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED
-// when set, else the stored one, else a new random one.
+// when set, else the stored one, else a new random one. A file that
+// holds its value already is left as it is.
 func (s *Service) EnsureSigningKey() (SigningKey, error) {
 	configured := decodeSigningSeed(s.getenv("BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED"))
 	existing := s.readStoredSigningSeed()
@@ -160,7 +172,7 @@ func (s *Service) EnsureSigningKey() (SigningKey, error) {
 	if existing != nil {
 		currentSeed = base64.StdEncoding.EncodeToString(existing)
 	}
-	if configured != nil || existing == nil || currentSeed != seedText {
+	if existing == nil || currentSeed != seedText {
 		if err := s.writeSigningFile(s.SigningSeedPath(), seedText, 0o600); err != nil {
 			return SigningKey{}, err
 		}
@@ -200,15 +212,8 @@ func (s *Service) prepareClientSigningPublicKey() (SigningKey, error) {
 		return key, nodeFSError(err, "open", target)
 	}
 	if jsTrim(decodeUTF8(raw)) != key.PublicKey {
-		temporary := fmt.Sprintf("%s.tmp-%d-%d", target, s.opts.PID, s.opts.Now().UnixMilli())
-		if err := os.WriteFile(temporary, []byte(key.PublicKey+"\n"), 0o644); err != nil {
-			return key, nodeFSError(err, "open", temporary)
-		}
-		if exists(target) {
-			_ = os.Remove(target)
-		}
-		if err := os.Rename(temporary, target); err != nil {
-			return key, nodeFSError(err, "rename", temporary)
+		if err := s.writeSigningFile(target, key.PublicKey, 0o644); err != nil {
+			return key, err
 		}
 	}
 	return key, nil
