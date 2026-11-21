@@ -28,9 +28,11 @@
 
 	let userGroups = $state.raw<UserGroup[]>([]);
 	let groupsLoaded = $state(false);
+	/** Who may see the folder is managing accounts: user.edit. Without it the lists go back as they are */
+	const editsAccess = can('user.edit');
 
 	$effect(() => {
-		if (!can('device.edit') && !can('user.view')) {
+		if (!editsAccess) {
 			groupsLoaded = true;
 			return;
 		}
@@ -93,35 +95,37 @@
 				{/each}
 			</div>
 		</div>
-		<Field label={t('devices.group_allowed_users')} hint={t('devices.group_allowed_users_hint')}>
-			{#snippet children(f)}
-				<Input {...f} autocomplete="off" spellcheck="false" bind:value={form.values.allowedUsers} />
-			{/snippet}
-		</Field>
-		<div class="block">
-			<span class="label" id="{uid}-ug">{t('devices.group_allowed_user_groups')}</span>
-			{#if userGroups.length}
-				<div role="group" aria-labelledby="{uid}-ug" aria-describedby="{uid}-ug-hint">
-					<ul class="pick">
-						{#each userGroups as g (g.guid)}
-							<li>
-								<Checkbox
-									label={g.name || g.guid}
-									checked={form.values.allowedGroups.includes(g.guid)}
-									onchange={(e) => toggleGroup(g.guid, (e.currentTarget as HTMLInputElement).checked)}
-								/>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{:else if groupsLoaded}
-				<p class="hint">
-					{t('devices.no_user_groups')}
-					<a href={link('/users#user-groups')}>{t('devices.manage_user_groups')}</a>
-				</p>
-			{/if}
-			<p class="hint" id="{uid}-ug-hint">{t('devices.group_allowed_user_groups_hint')}</p>
-		</div>
+		{#if editsAccess}
+			<Field label={t('devices.group_allowed_users')} hint={t('devices.group_allowed_users_hint')}>
+				{#snippet children(f)}
+					<Input {...f} autocomplete="off" spellcheck="false" bind:value={form.values.allowedUsers} />
+				{/snippet}
+			</Field>
+			<div class="block">
+				<span class="label" id="{uid}-ug">{t('devices.group_allowed_user_groups')}</span>
+				{#if userGroups.length}
+					<div role="group" aria-labelledby="{uid}-ug" aria-describedby="{uid}-ug-hint">
+						<ul class="pick">
+							{#each userGroups as g (g.guid)}
+								<li>
+									<Checkbox
+										label={g.name || g.guid}
+										checked={form.values.allowedGroups.includes(g.guid)}
+										onchange={(e) => toggleGroup(g.guid, (e.currentTarget as HTMLInputElement).checked)}
+									/>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{:else if groupsLoaded}
+					<p class="hint">
+						{t('devices.no_user_groups')}
+						<a href={link('/users#user-groups')}>{t('devices.manage_user_groups')}</a>
+					</p>
+				{/if}
+				<p class="hint" id="{uid}-ug-hint">{t('devices.group_allowed_user_groups_hint')}</p>
+			</div>
+		{/if}
 		<FormStatus status={form.status} />
 	</form>
 	{#snippet footer()}

@@ -111,14 +111,68 @@ func TestGroupWritesKeepTheScope(t *testing.T) {
 				t.Errorf("the admin's tag group (console writer %v): %d %s", node, got.Status, got.Body)
 			}
 			// Without an access list on any group and without grants the
-			// operator sees every device, and sets lists and tag groups
+			// operator sees every device and makes tag groups; access lists
+			// need user.edit, which it has not (BUGS RV59, A91)
 			for _, q := range []string{`DELETE FROM device_group_user_access`, `DELETE FROM device_group_user_group_access`} {
 				if _, err := db.Exec(ctx, q); err != nil {
 					t.Fatalf("%s: %v", q, err)
 				}
 			}
-			if got := operator.Do("POST", "/api/device-groups", `{"name":"Lab","source_type":"tag","tag_filter":"lab","allowed_users":"e2e_operator"}`); got.Status != http.StatusOK {
-				t.Errorf("a tag group with a list as an operator who sees every device (console writer %v): %d %s", node, got.Status, got.Body)
+			if got := operator.Do("POST", "/api/device-groups", `{"name":"Lab","source_type":"tag","tag_filter":"lab"}`); got.Status != http.StatusOK {
+				t.Errorf("a tag group as an operator who sees every device (console writer %v): %d %s", node, got.Status, got.Body)
+			}
+			if got := operator.Do("POST", "/api/device-groups", `{"name":"Lab 2","allowed_users":"e2e_operator"}`); got.Status != http.StatusForbidden || got.Body != forbidden {
+				t.Errorf("a group with a list as an operator who sees every device (console writer %v): %d %s", node, got.Status, got.Body)
+			}
+		})
+	}
+}
+
+// TestGroupAccessListsNeedUserEdit: an operator who sees every device
+// (device.edit, no user.edit) renames a device group and saves it with
+// its lists as they are, but sets, changes and clears no access list; a
+// global admin, who has user.edit, does (BUGS RV59, A91).
+func TestGroupAccessListsNeedUserEdit(t *testing.T) {
+	for _, node := range []bool{false, true} {
+		storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+			w, api := world(t, db, nil, func(cfg *config.Config) { cfg.PanelGroupingNode = node })
+			operator, globalAdmin := w.As("operator"), w.As("global_admin")
+			// No group has a list (the world's g-viewer loses its own), so
+			// the operator's scope has no limit
+			for _, q := range []string{
+				`DELETE FROM device_group_user_access`,
+				`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-lab', 'Lab', '', '', 'manual', '')`,
+			} {
+				if _, err := db.Exec(context.Background(), q); err != nil {
+					t.Fatalf("%s: %v", q, err)
+				}
+			}
+			forbidden := `{"success":false,"error":"You don't have access to this device."}`
+			for _, body := range []string{
+				`{"guid":"g-lab","name":"Lab","allowed_users":"e2e_operator"}`,
+				`{"guid":"g-lab","name":"Lab","allowed_users":"","allowed_groups":["ug-1"]}`,
+				`{"name":"New","allowed_users":"e2e_viewer"}`,
+			} {
+				api.Calls()
+				if got := operator.Do("POST", "/api/device-groups", body); got.Status != http.StatusForbidden || got.Body != forbidden {
+					t.Errorf("%s as operator (console writer %v): %d %s, want 403 %s", body, node, got.Status, got.Body, forbidden)
+				}
+				for _, call := range api.Calls() {
+					if !strings.HasPrefix(call, "GET ") {
+						t.Errorf("%s as operator (console writer %v) reached the server: %s", body, node, call)
+					}
+				}
+			}
+			for _, body := range []string{
+				`{"guid":"g-lab","name":"Laboratory","allowed_users":"","allowed_groups":[]}`,
+				`{"name":"Plain","allowed_users":"","allowed_groups":[]}`,
+			} {
+				if got := operator.Do("POST", "/api/device-groups", body); got.Status != http.StatusOK {
+					t.Errorf("%s as operator (console writer %v): %d %s, want 200", body, node, got.Status, got.Body)
+				}
+			}
+			if got := globalAdmin.Do("POST", "/api/device-groups", `{"guid":"g-lab","name":"Laboratory","allowed_users":"e2e_viewer"}`); got.Status != http.StatusOK {
+				t.Errorf("the global admin's list (console writer %v): %d %s", node, got.Status, got.Body)
 			}
 		})
 	}

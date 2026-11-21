@@ -229,6 +229,31 @@ func TestLimitedScopeKeepsToItsFolders(t *testing.T) {
 	})
 }
 
+// TestFolderAccessListsNeedUserEdit: an operator who sees every device
+// (device.edit, no user.edit) creates, renames and deletes folders and
+// saves one with its lists as they are, but sets, changes and clears no
+// access list; a global admin, who has user.edit, does (BUGS RV11, A91).
+func TestFolderAccessListsNeedUserEdit(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db)
+		operator, globalAdmin := w.As("operator"), w.As("global_admin")
+		const refused = `{"success":false,"error":"You don't have permission to do this. Ask an administrator."}`
+		want(t, "create a folder with a list", operator.Do("POST", "/api/folders", `{"name":"Mine","allowed_users":["e2e_operator"]}`), 403, refused)
+		want(t, "create a folder for a user group", operator.Do("POST", "/api/folders", `{"name":"Mine","allowed_groups":["g-1"]}`), 403, refused)
+		want(t, "create a folder without lists", operator.Do("POST", "/api/folders", `{"name":"Lab","allowed_users":"","allowed_groups":[]}`),
+			200, `{"success":true,"data":{"id":1,"name":"Lab","color":"#6366f1","icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
+		want(t, "set a list", operator.Do("PATCH", "/api/folders/1", `{"allowed_users":"e2e_viewer"}`), 403, refused)
+		want(t, "rename with the lists as they are", operator.Do("PATCH", "/api/folders/1", `{"name":"Laboratory","allowed_users":"","allowed_groups":[]}`), 200, ok)
+		want(t, "the global admin sets a list", globalAdmin.Do("PATCH", "/api/folders/1", `{"allowed_users":"e2e_operator"}`), 200, ok)
+		// The list names the operator, so its scope is limited now; it still
+		// may rename the folder, which is open to it, and keeps off the list
+		want(t, "clear the list", operator.Do("PATCH", "/api/folders/1", `{"allowed_users":[]}`), 403, refused)
+		want(t, "rename the folder open to it", operator.Do("PATCH", "/api/folders/1", `{"name":"Lab"}`), 200, ok)
+		want(t, "the global admin clears the list", globalAdmin.Do("PATCH", "/api/folders/1", `{"allowed_users":[]}`), 200, ok)
+		want(t, "delete the folder", operator.Do("DELETE", "/api/folders/1", ""), 200, ok)
+	})
+}
+
 // RV11: an account the device scope limits puts devices only into a
 // folder that is open to it, so it cannot hide a device it may see in a
 // folder closed to it. Taking a device out of its folder stays allowed.

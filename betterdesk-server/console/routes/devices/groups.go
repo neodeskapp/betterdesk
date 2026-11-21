@@ -204,10 +204,10 @@ func (h *handlers) groupRights(r *http.Request, group *goapi.Object) (access.Gro
 // groupSaveInScope reports whether the account may save the group of the
 // payload: it must be allowed to change the group (a new one when the
 // payload names none that is stored), and to change access lists when the
-// payload's lists differ from the stored ones (a new group has none). An
-// account that may not change access lists, one whose device scope is
-// limited, also makes no tag group: it neither turns a group into one nor
-// changes the tag of one, since either would widen its own scope.
+// payload's lists differ from the stored ones (a new group has none), both
+// by access.GroupRightsForUser. An account whose device scope is limited
+// also makes no tag group: it neither turns a group into one nor changes
+// the tag of one, since either would widen its own scope.
 func (h *handlers) groupSaveInScope(r *http.Request, p devicegroups.GroupPayload) (bool, error) {
 	var stored *goapi.Object
 	if p.GUID != "" {
@@ -220,17 +220,14 @@ func (h *handlers) groupSaveInScope(r *http.Request, p devicegroups.GroupPayload
 	if err != nil || !rights.Change {
 		return false, err
 	}
-	if rights.ChangeAccess {
-		return true, nil
-	}
 	var was access.DeviceGroup
 	if stored != nil {
 		was = devicegroups.ScopeGroup(stored)
 	}
-	if !sameEntries(p.AllowedUsers, was.AllowedUsers) || !sameEntries(p.AllowedGroups, was.AllowedGroups) {
+	if !rights.ChangeAccess && (!sameEntries(p.AllowedUsers, was.AllowedUsers) || !sameEntries(p.AllowedGroups, was.AllowedGroups)) {
 		return false, nil
 	}
-	if p.SourceType == "tag" && (was.SourceType != "tag" || p.TagFilter != was.TagFilter) {
+	if rights.Limited && p.SourceType == "tag" && (was.SourceType != "tag" || p.TagFilter != was.TagFilter) {
 		return false, nil
 	}
 	return true, nil
