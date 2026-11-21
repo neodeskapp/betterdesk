@@ -18,7 +18,8 @@ func TestServerTokenFollowsTheAccount(t *testing.T) {
 	jwt := auth.NewJWTManager("server-token-test-secret", time.Hour)
 	srv.SetJWTManager(jwt)
 	user := &db.User{Username: "opsy", PasswordHash: mustHash(t, "opsy-pass-1"), Role: auth.RoleOperator}
-	if err := database.CreateUser(user); err != nil {
+	err := database.CreateUser(user)
+	if err != nil {
 		t.Fatal(err)
 	}
 	status, body := listenerCall(t, srv, http.MethodPost, "/api/auth/login", `{"username":"opsy","password":"opsy-pass-1"}`, nil)
@@ -36,6 +37,13 @@ func TestServerTokenFollowsTheAccount(t *testing.T) {
 		t.Fatalf("operator token before the change: %d, want 200", got)
 	}
 
+	// The sign-in stored a new hash of the password: the account is read
+	// again, so the role change does not write the old hash back and end
+	// the token as a password change would. The wait makes that visible.
+	if user, err = database.GetUser("opsy"); err != nil || user == nil {
+		t.Fatalf("the account after the sign-in: %v", err)
+	}
+	time.Sleep(1100 * time.Millisecond)
 	user.Role = auth.RoleViewer
 	if err := database.UpdateUser(user); err != nil {
 		t.Fatal(err)
