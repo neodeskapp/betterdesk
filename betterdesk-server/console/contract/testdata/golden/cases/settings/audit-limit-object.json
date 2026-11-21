@@ -700,18 +700,27 @@
        "username": "e2e_admin"
       },
       {
-       "action": "api_login_banned_device",
+       "action": "api_login_failed",
        "created_at": "<volatile>",
-       "details": "Device: 900100028, User: rd_contract_nobody",
+       "details": "User: r***y",
        "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
        "username": null
       },
       {
-       "action": "api_login_banned_device",
+       "action": "api_login_failed",
        "created_at": "<volatile>",
-       "details": "Device: 900100028, User: rd_contract_nobody",
+       "details": "User: r***y",
+       "id": 0,
+       "ip_address": "<client-ip>",
+       "user_id": null,
+       "username": null
+      },
+      {
+       "action": "api_login_failed",
+       "created_at": "<volatile>",
+       "details": "User: r***y",
        "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
@@ -745,18 +754,9 @@
        "username": null
       },
       {
-       "action": "api_login_banned_device",
+       "action": "api_login_failed",
        "created_at": "<volatile>",
-       "details": "Device: 900100029, User: rd_contract_nobody",
-       "id": 0,
-       "ip_address": "<client-ip>",
-       "user_id": null,
-       "username": null
-      },
-      {
-       "action": "api_login_banned_device",
-       "created_at": "<volatile>",
-       "details": "Device: 900100028, User: rd_contract_nobody",
+       "details": "User: r***y",
        "id": 0,
        "ip_address": "<client-ip>",
        "user_id": null,
