@@ -364,7 +364,10 @@ func ValidateManifest(m *Manifest) error {
 		}
 	}
 
-	// Alert validation
+	// Alert validation: every alert is evaluated on every update
+	if len(m.Alerts) > maxWidgets {
+		return fmt.Errorf("too many alerts (%d, max %d)", len(m.Alerts), maxWidgets)
+	}
 	alertIDs := make(map[string]bool, len(m.Alerts))
 	for i := range m.Alerts {
 		a := &m.Alerts[i]

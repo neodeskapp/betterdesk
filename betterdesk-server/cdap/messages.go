@@ -172,8 +172,28 @@ type DeviceConn struct {
 	HeartbeatCount atomic.Int64
 	CommandCount   atomic.Int64
 
-	// Widget state cache (widget_id → last value)
+	// Widget state cache (widget_id → last value), for the widgets of the
+	// manifest only
 	widgetState sync.Map // map[string]any
+	// widgetIDs are the ids of the manifest's widgets, set at registration
+	widgetIDs map[string]bool
+}
+
+// maxWidgetValueBytes is the most a widget value may take written as JSON.
+const maxWidgetValueBytes = 64 << 10
+
+// keepWidgetValue stores a widget's value when the manifest has the widget
+// and the value is not over maxWidgetValueBytes, and reports whether it
+// did.
+func (dc *DeviceConn) keepWidgetValue(widgetID string, value any) bool {
+	if !dc.widgetIDs[widgetID] {
+		return false
+	}
+	if raw, err := json.Marshal(value); err != nil || len(raw) > maxWidgetValueBytes {
+		return false
+	}
+	dc.widgetState.Store(widgetID, value)
+	return true
 }
 
 // ReadMessage reads and decodes the next CDAP JSON message from the WebSocket.

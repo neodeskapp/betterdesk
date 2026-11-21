@@ -254,6 +254,21 @@ var fixes = []fix{
 	{"RV163", "agent session", 19, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
 	{"RV163", "agent session", 23, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
 	{"RV163", "agent session", 42, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
+	// A socket reads no message over MaxTextBytes: the agent that sends one
+	// is closed with 1009 and leaves its room, so its next message goes
+	// nowhere
+	{"RV166", "agent replaced and gone", 10, `[{"socket":"a4","close":1009,"reason":""},{"socket":"a4","end":true},` +
+		`{"socket":"o","text":"{\"type\":\"status\",\"agent_connected\":false}"},` +
+		`{"socket":"o","text":"{\"type\":\"presence\",\"device_id\":\"dev1\",\"online\":false}"},` +
+		`{"socket":"p","text":"{\"type\":\"status\",\"device_id\":\"dev1\",\"agent_connected\":false}"},` +
+		`{"socket":"p","text":"{\"type\":\"presence\",\"device_id\":\"dev1\",\"online\":false}"}]`},
+	{"RV166", "agent replaced and gone", 12, `[]`},
+	{"RV166", "agent session", 45, `[{"socket":"a","close":1009,"reason":""},{"socket":"a","end":true},` +
+		`{"socket":"op","text":"{\"type\":\"status\",\"agent_connected\":false}"},` +
+		`{"socket":"op","text":"{\"type\":\"presence\",\"device_id\":\"dev1\",\"online\":false}"},` +
+		`{"socket":"panel","text":"{\"type\":\"status\",\"device_id\":\"dev1\",\"agent_connected\":false}"},` +
+		`{"socket":"panel","text":"{\"type\":\"presence\",\"device_id\":\"dev1\",\"online\":false}"}]`},
+	{"RV166", "agent session", 46, `[]`},
 }
 
 // fixedEvents is what a step of the recording looks like since the fixes:

@@ -17,8 +17,9 @@ import (
 
 // The limits of the relay.
 const (
-	// MaxTextBytes is the largest message the relay reads; a bigger one,
-	// and every binary one, is left alone and the socket stays open.
+	// MaxTextBytes is the largest message a socket of the relay takes: one
+	// that sends a bigger one is closed with 1009. A binary message is left
+	// alone and the socket stays open.
 	MaxTextBytes = 8192
 	// PingInterval is how often a socket is pinged.
 	PingInterval = 30 * time.Second
@@ -212,7 +213,7 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 func accept(u *ws.Upgrade) (*ws.Conn, *heard, bool) {
 	answers := &heard{}
 	answers.listen(u)
-	conn, ok := u.Accept(ws.AcceptOptions{})
+	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxTextBytes})
 	return conn, answers, ok
 }
 
@@ -275,7 +276,7 @@ func (c *client) run(handle func(*client, jsjson.Value) error) {
 		if err != nil {
 			break
 		}
-		if binary || len(data) > MaxTextBytes {
+		if binary {
 			continue
 		}
 		frame, err := jsjson.Parse(string(data))

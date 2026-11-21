@@ -46,6 +46,10 @@ func (g *Gateway) handleRegister(ctx context.Context, dc *DeviceConn) error {
 
 	dc.Manifest = rp.Manifest
 	dc.HeartbeatInterval = rp.Manifest.HeartbeatInterval
+	dc.widgetIDs = make(map[string]bool, len(rp.Manifest.Widgets))
+	for _, w := range rp.Manifest.Widgets {
+		dc.widgetIDs[w.ID] = true
+	}
 
 	if dc.ID == "" {
 		return fmt.Errorf("device_id is required (set in auth payload)")
@@ -171,10 +175,13 @@ func (g *Gateway) handleHeartbeat(ctx context.Context, dc *DeviceConn, msg *Mess
 	}
 
 	// Update widget values
-	if payload.WidgetValues != nil {
-		for widgetID, value := range payload.WidgetValues {
-			dc.widgetState.Store(widgetID, value)
+	kept := make(map[string]any, len(payload.WidgetValues))
+	for widgetID, value := range payload.WidgetValues {
+		if dc.keepWidgetValue(widgetID, value) {
+			kept[widgetID] = value
 		}
+	}
+	if len(kept) > 0 {
 
 		// Evaluate alert conditions
 		if g.alertEngine != nil && dc.Manifest != nil {
@@ -183,7 +190,7 @@ func (g *Gateway) handleHeartbeat(ctx context.Context, dc *DeviceConn, msg *Mess
 
 		// Publish widget state update event
 		if g.eventBus != nil {
-			valuesJSON, _ := json.Marshal(payload.WidgetValues)
+			valuesJSON, _ := json.Marshal(kept)
 			g.eventBus.Publish(events.Event{
 				Type: "cdap_widget_update",
 				Data: map[string]string{
@@ -217,7 +224,9 @@ func (g *Gateway) handleStateUpdate(ctx context.Context, dc *DeviceConn, msg *Me
 	}
 
 	// Update cached state
-	dc.widgetState.Store(payload.WidgetID, payload.Value)
+	if !dc.keepWidgetValue(payload.WidgetID, payload.Value) {
+		return
+	}
 
 	// Evaluate alert conditions
 	if g.alertEngine != nil && dc.Manifest != nil {
@@ -248,8 +257,7 @@ func (g *Gateway) handleBulkUpdate(ctx context.Context, dc *DeviceConn, msg *Mes
 
 	updates := make(map[string]any, len(payload.Updates))
 	for _, u := range payload.Updates {
-		if u.WidgetID != "" {
-			dc.widgetState.Store(u.WidgetID, u.Value)
+		if u.WidgetID != "" && dc.keepWidgetValue(u.WidgetID, u.Value) {
 			updates[u.WidgetID] = u.Value
 		}
 	}
