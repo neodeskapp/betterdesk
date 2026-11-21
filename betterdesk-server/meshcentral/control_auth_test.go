@@ -156,7 +156,18 @@ func TestControlActionsAskThePermissionOfTheirRoute(t *testing.T) {
 	controlSend(t, ctx, viewer, `{"action":"devicepower","nodeid":"node//nodeA","actiontype":3}`)
 	controlSend(t, ctx, viewer, `{"action":"authcookie"}`)
 	controlSend(t, ctx, viewer, `{"action":"ping"}`)
-	controlReadAction(t, ctx, viewer, "pong")
+	for {
+		_, data, err := viewer.Read(ctx)
+		if err != nil {
+			t.Fatalf("viewer: %v", err)
+		}
+		if strings.Contains(string(data), `"authcookie"`) {
+			t.Fatalf("the viewer got a relay cookie: %s", data)
+		}
+		if strings.Contains(string(data), `"pong"`) {
+			break
+		}
+	}
 
 	op, _, err := dialControl(ctx, url, token(t, jm, "anna", auth.RoleOperator))
 	if err != nil {
