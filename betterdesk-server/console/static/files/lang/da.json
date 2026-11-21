@@ -643,7 +643,8 @@
     "tag_on_count": "På {count} af {total}",
     "bulk_tags_title": "Tags på {count} enheder",
     "bulk_tags_hint": "Afkrydsede tags kommer på hver valgt enhed, fravalgte fjernes. Halvt afkrydsede tags forbliver, som de er.",
-    "bulk_tags_saved": "Tags ændret på {count} enheder."
+    "bulk_tags_saved": "Tags ændret på {count} enheder.",
+    "remote_disabled_badge": "Deaktiveret"
   },
   "keys": {
     "title": "Servernøgler",

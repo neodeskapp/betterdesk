@@ -637,7 +637,8 @@
     "tag_on_count": "{total} 台中的 {count} 台",
     "bulk_tags_title": "{count} 台设备的标签",
     "bulk_tags_hint": "勾选的标签会加到每台所选设备，取消勾选的会移除。部分勾选的标签保持不变。",
-    "bulk_tags_saved": "已更改 {count} 台设备的标签。"
+    "bulk_tags_saved": "已更改 {count} 台设备的标签。",
+    "remote_disabled_badge": "已禁用"
   },
   "keys": {
     "title": "服务器密钥",

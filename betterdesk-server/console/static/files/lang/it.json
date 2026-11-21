@@ -637,7 +637,8 @@
     "tag_on_count": "Su {count} di {total}",
     "bulk_tags_title": "Tag di {count} dispositivi",
     "bulk_tags_hint": "I tag spuntati vanno su ogni dispositivo scelto, quelli senza spunta vengono rimossi. I tag spuntati a metà restano come sono.",
-    "bulk_tags_saved": "Tag modificati su {count} dispositivi."
+    "bulk_tags_saved": "Tag modificati su {count} dispositivi.",
+    "remote_disabled_badge": "Disattivato"
   },
   "keys": {
     "title": "Chiavi del server",

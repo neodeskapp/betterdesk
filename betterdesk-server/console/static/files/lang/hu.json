@@ -643,7 +643,8 @@
     "tag_on_count": "{total} eszközből {count} eszközön",
     "bulk_tags_title": "{count} eszköz címkéi",
     "bulk_tags_hint": "A bejelölt címkék minden kiválasztott eszközre rákerülnek, a jelöletlenek lekerülnek. A részben bejelöltek változatlanok maradnak.",
-    "bulk_tags_saved": "A címkék módosultak {count} eszközön."
+    "bulk_tags_saved": "A címkék módosultak {count} eszközön.",
+    "remote_disabled_badge": "Letiltva"
   },
   "keys": {
     "title": "Szerverkulcsok",

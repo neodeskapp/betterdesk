@@ -637,7 +637,8 @@
     "tag_on_count": "Em {count} de {total}",
     "bulk_tags_title": "Etiquetas de {count} dispositivos",
     "bulk_tags_hint": "As etiquetas marcadas vão para cada dispositivo escolhido, as desmarcadas são removidas. As marcadas em parte ficam como estão.",
-    "bulk_tags_saved": "Etiquetas alteradas em {count} dispositivos."
+    "bulk_tags_saved": "Etiquetas alteradas em {count} dispositivos.",
+    "remote_disabled_badge": "Desativado"
   },
   "keys": {
     "title": "Chaves do servidor",

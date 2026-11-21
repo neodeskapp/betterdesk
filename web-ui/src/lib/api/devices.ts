@@ -75,11 +75,32 @@ export const Device = v.looseObject({
 	groups: v.pipe(
 		v.optional(v.nullable(v.array(DeviceGroupRow))),
 		v.transform((g) => g ?? [])
-	)
+	),
+	/** An RDP or VNC target that is switched off (see listedDevice) */
+	disabled: v.optional(v.boolean(), false)
 });
 export type Device = v.InferOutput<typeof Device>;
 
-export const DeviceList = wrapped(v.looseObject({ devices: v.array(Device), total: v.optional(v.number()) }));
+/**
+ * The server sends a switched-off RDP or VNC target as soft_deleted. It is
+ * not deleted: it stays listed as disabled and can be edited.
+ */
+function listedDevice<T extends { remote_target?: boolean; soft_deleted?: boolean; disabled: boolean }>(
+	d: T
+): T {
+	if (d.remote_target && d.soft_deleted) {
+		d.soft_deleted = false;
+		d.disabled = true;
+	}
+	return d;
+}
+
+export const DeviceList = wrapped(
+	v.looseObject({
+		devices: v.array(v.pipe(Device, v.transform(listedDevice))),
+		total: v.optional(v.number())
+	})
+);
 
 export interface ListQuery {
 	search?: string;
@@ -116,7 +137,13 @@ export const DeviceDetail = v.looseObject({
 export type DeviceDetail = v.InferOutput<typeof DeviceDetail>;
 
 export function getDevice(id: string, signal?: AbortSignal): Promise<DeviceDetail> {
-	return api(wrapped(DeviceDetail), `/api/devices/${encodeURIComponent(id)}`, { signal });
+	return api(
+		wrapped(v.pipe(DeviceDetail, v.transform(listedDevice))),
+		`/api/devices/${encodeURIComponent(id)}`,
+		{
+			signal
+		}
+	);
 }
 
 export function updateDevice(id: string, fields: { user?: string; note?: string; display_name?: string }) {

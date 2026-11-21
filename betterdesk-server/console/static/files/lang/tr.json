@@ -643,7 +643,8 @@
     "tag_on_count": "{total} cihazdan {count} tanesinde",
     "bulk_tags_title": "{count} cihazın etiketleri",
     "bulk_tags_hint": "İşaretli etiketler seçilen her cihaza eklenir, işareti kaldırılanlar çıkarılır. Kısmen işaretli etiketler olduğu gibi kalır.",
-    "bulk_tags_saved": "{count} cihazdaki etiketler değiştirildi."
+    "bulk_tags_saved": "{count} cihazdaki etiketler değiştirildi.",
+    "remote_disabled_badge": "Devre dışı"
   },
   "keys": {
     "title": "Sunucu Anahtarları",

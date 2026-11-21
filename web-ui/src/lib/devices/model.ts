@@ -16,11 +16,12 @@ export const PREF_SHOW_DELETED = 'bd_devices_show_deleted';
 
 /* ── Status, name, type ── */
 
-export type DeviceState = 'deleted' | 'banned' | 'online' | 'no_signal' | 'offline';
+export type DeviceState = 'deleted' | 'disabled' | 'banned' | 'online' | 'no_signal' | 'offline';
 
-/** A device's state as the list shows it: deleted and banned win over online */
+/** A device's state as the list shows it: deleted, a switched-off target and banned win over online */
 export function deviceState(d: DeviceLike): DeviceState {
 	if (d.soft_deleted) return 'deleted';
+	if (d.disabled) return 'disabled';
 	if (d.banned) return 'banned';
 	if (d.online) return 'online';
 	if (d.no_signal) return 'no_signal';
@@ -29,12 +30,14 @@ export function deviceState(d: DeviceLike): DeviceState {
 
 /** Status tone word for Status (statusTone maps it) */
 export function stateTone(state: DeviceState): string {
-	return state === 'deleted' ? 'neutral' : state;
+	return state === 'deleted' || state === 'disabled' ? 'neutral' : state;
 }
 
 /** String key of the state's label */
 export function stateLabelKey(state: DeviceState): string {
-	return state === 'deleted' ? 'devices.deleted_badge' : `status.${state}`;
+	if (state === 'deleted') return 'devices.deleted_badge';
+	if (state === 'disabled') return 'devices.remote_disabled_badge';
+	return `status.${state}`;
 }
 
 /** The name the list shows: display name, else host name, else the note */

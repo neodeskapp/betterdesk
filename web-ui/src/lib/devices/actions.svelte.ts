@@ -115,7 +115,8 @@ const ids = (devices: readonly DeviceLike[]) => devices.map((d) => d.id);
 
 export const may = {
 	connect: (d: DeviceLike) =>
-		!d.soft_deleted && (d.remote_target ? can('remote_target.connect') : can('device.connect')),
+		!d.soft_deleted &&
+		(d.remote_target ? !d.disabled && can('remote_target.connect') : can('device.connect')),
 	connectApp: (d: DeviceLike) => !d.soft_deleted && !d.remote_target && can('device.connect'),
 	guestLink: (d: DeviceLike) => !d.soft_deleted && !d.remote_target && can('guest.create'),
 	edit: (d: DeviceLike) => !d.soft_deleted && can('device.edit'),

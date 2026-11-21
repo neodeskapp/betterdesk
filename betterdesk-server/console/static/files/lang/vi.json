@@ -643,7 +643,8 @@
     "tag_on_count": "Trên {count}/{total}",
     "bulk_tags_title": "Thẻ của {count} thiết bị",
     "bulk_tags_hint": "Thẻ được đánh dấu sẽ gắn vào mọi thiết bị đã chọn, thẻ bị bỏ đánh dấu sẽ bị gỡ. Thẻ đánh dấu một phần giữ nguyên.",
-    "bulk_tags_saved": "Đã đổi thẻ trên {count} thiết bị."
+    "bulk_tags_saved": "Đã đổi thẻ trên {count} thiết bị.",
+    "remote_disabled_badge": "Đã tắt"
   },
   "keys": {
     "title": "Khóa máy chủ",

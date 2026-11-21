@@ -641,7 +641,8 @@
     "tag_on_count": "{total} 台中的 {count} 台",
     "bulk_tags_title": "{count} 台裝置的標籤",
     "bulk_tags_hint": "勾選的標籤會加到每台所選裝置，取消勾選的會移除。部分勾選的標籤維持不變。",
-    "bulk_tags_saved": "已變更 {count} 台裝置的標籤。"
+    "bulk_tags_saved": "已變更 {count} 台裝置的標籤。",
+    "remote_disabled_badge": "已停用"
   },
   "keys": {
     "title": "服務器密鑰",

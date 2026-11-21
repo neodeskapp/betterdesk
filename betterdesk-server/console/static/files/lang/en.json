@@ -645,7 +645,8 @@
         "tag_on_count": "On {count} of {total}",
         "bulk_tags_title": "Tags of {count} devices",
         "bulk_tags_hint": "Ticked tags go on every chosen device, cleared ones come off. Half-ticked tags stay as they are.",
-        "bulk_tags_saved": "Tags changed on {count} devices."
+        "bulk_tags_saved": "Tags changed on {count} devices.",
+        "remote_disabled_badge": "Disabled"
     },
     "keys": {
         "title": "Server Keys",

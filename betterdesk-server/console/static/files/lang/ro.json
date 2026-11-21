@@ -643,7 +643,8 @@
     "tag_on_count": "Pe {count} din {total}",
     "bulk_tags_title": "Etichetele a {count} dispozitive",
     "bulk_tags_hint": "Etichetele bifate se adaugă pe fiecare dispozitiv ales, cele debifate se elimină. Etichetele bifate parțial rămân neschimbate.",
-    "bulk_tags_saved": "Etichete modificate pe {count} dispozitive."
+    "bulk_tags_saved": "Etichete modificate pe {count} dispozitive.",
+    "remote_disabled_badge": "Dezactivat"
   },
   "keys": {
     "title": "Cheile serverului",

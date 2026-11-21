@@ -1,7 +1,15 @@
 import * as v from 'valibot';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { createFolder, Device, DeviceList, listFolders } from '../../src/lib/api/devices.ts';
-import { countDevices, inFolder } from '../../src/lib/devices/model.ts';
+import { createFolder, Device, DeviceList, listDevices, listFolders } from '../../src/lib/api/devices.ts';
+import {
+	countDevices,
+	deviceState,
+	filterDevices,
+	inFolder,
+	NO_FILTERS,
+	stateLabelKey
+} from '../../src/lib/devices/model.ts';
+import { footerSlots, panelActions, panelStatus } from '../../src/lib/devices/panel-logic.ts';
 import fixture from '../fixtures/devices.json';
 
 describe('device list schema', () => {
@@ -112,5 +120,42 @@ describe('folders on a PostgreSQL database the Go server created (ids as text)',
 	test('text that is no number is still refused', async () => {
 		vi.stubGlobal('fetch', async () => answer({ folders: [{ id: 'x', name: 'Bad' }] }));
 		await expect(listFolders()).rejects.toThrow();
+	});
+});
+
+describe('a disabled RDP or VNC target (the server marks it soft_deleted)', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	test('stays in the list as Disabled, keeps Edit, and offers no connect', async () => {
+		vi.stubGlobal(
+			'fetch',
+			async () =>
+				new Response(
+					JSON.stringify({
+						success: true,
+						data: {
+							devices: [
+								{ id: 'rt_1', remote_target: true, soft_deleted: true, device_type: 'rdp' },
+								{ id: '900', soft_deleted: true }
+							]
+						}
+					}),
+					{ status: 200, headers: { 'Content-Type': 'application/json' } }
+				)
+		);
+		const [target, peer] = await listDevices();
+		expect(target).toMatchObject({ soft_deleted: false, disabled: true });
+		expect(peer).toMatchObject({ soft_deleted: true, disabled: false });
+		expect(deviceState(target!)).toBe('disabled');
+		expect(stateLabelKey('disabled')).toBe('devices.remote_disabled_badge');
+		expect(filterDevices([target!, peer!], NO_FILTERS, []).map((d) => d.id)).toEqual(['rt_1']);
+		const all = () => true;
+		expect(footerSlots(target!, all)).toEqual({ edit: false, editTarget: true, connect: false });
+		expect(panelActions(target!, all)).toMatchObject({
+			connect: [],
+			manage: ['edit-target', 'groups'],
+			danger: ['delete-target']
+		});
+		expect(panelStatus(target!)).toEqual({ tone: 'neutral', key: 'devices.remote_disabled_badge' });
 	});
 });

@@ -637,7 +637,8 @@
     "tag_on_count": "Op {count} van {total}",
     "bulk_tags_title": "Tags van {count} apparaten",
     "bulk_tags_hint": "Aangevinkte tags komen op elk gekozen apparaat, uitgevinkte gaan eraf. Half aangevinkte tags blijven zoals ze zijn.",
-    "bulk_tags_saved": "Tags gewijzigd op {count} apparaten."
+    "bulk_tags_saved": "Tags gewijzigd op {count} apparaten.",
+    "remote_disabled_badge": "Uitgeschakeld"
   },
   "keys": {
     "title": "Serversleutels",

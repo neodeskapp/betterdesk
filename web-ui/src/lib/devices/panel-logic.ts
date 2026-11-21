@@ -67,6 +67,7 @@ export interface PanelStatus {
 export function panelStatus(d: PanelDevice): PanelStatus {
 	const state = deviceState(d);
 	if (state === 'deleted') return { tone: 'neutral', key: 'devices.deleted_badge' };
+	if (state === 'disabled') return { tone: 'neutral', key: 'devices.remote_disabled_badge' };
 	if (state === 'banned') return { tone: 'danger', key: 'status.banned' };
 	if (state === 'online') {
 		const tier = String(d.status_tier || 'online').toLowerCase();
@@ -181,7 +182,8 @@ export function panelActions(d: PanelDevice, can: Can): PanelActions {
 		return out;
 	}
 	if (d.remote_target) {
-		if (can('remote_target.connect')) out.connect.push('connect-web');
+		// A switched-off target takes no connections until it is on again
+		if (!d.disabled && can('remote_target.connect')) out.connect.push('connect-web');
 		if (can('remote_target.edit')) out.manage.push('edit-target');
 		if (can('device.edit')) out.manage.push('groups');
 		if (can('remote_target.delete')) out.danger.push('delete-target');
@@ -251,7 +253,7 @@ export function footerSlots(d: PanelDevice, can: Can): FooterSlots {
 	return {
 		edit: !deleted && !target && !isSupportAgent(identityOf(d)) && can('device.edit'),
 		editTarget: !deleted && target && can('remote_target.edit'),
-		connect: !deleted && (target ? can('remote_target.connect') : can('device.connect'))
+		connect: !deleted && (target ? !d.disabled && can('remote_target.connect') : can('device.connect'))
 	};
 }
 

@@ -641,7 +641,8 @@
     "tag_on_count": "{count} sur {total}",
     "bulk_tags_title": "Balises de {count} appareils",
     "bulk_tags_hint": "Les balises cochées sont ajoutées à chaque appareil choisi, les décochées sont retirées. Les balises à moitié cochées restent telles quelles.",
-    "bulk_tags_saved": "Balises modifiées sur {count} appareils."
+    "bulk_tags_saved": "Balises modifiées sur {count} appareils.",
+    "remote_disabled_badge": "Désactivé"
   },
   "keys": {
     "title": "Tableau de bord",
