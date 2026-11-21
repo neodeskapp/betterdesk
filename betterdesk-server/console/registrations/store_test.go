@@ -2,6 +2,7 @@ package registrations
 
 import (
 	"context"
+	"errors"
 	"math"
 	"net/http"
 	"regexp"
@@ -76,7 +77,7 @@ func TestCreateApproveRejectDelete(t *testing.T) {
 		if err != nil || !changed {
 			t.Fatal(changed, err)
 		}
-		if approved.Get("status") != "approved" || approved.Get("approved_by") != "admin" || approved.Get("access_token") != nil ||
+		if approved.Get("status") != "approved" || approved.Get("approved_by") != "admin" || approved.Get("access_token") != "" ||
 			approved.Get("server_address") != nil || approved.Get("console_url") != "http://h:5000" || approved.Get("server_key") != "key" {
 			t.Fatalf("approved: %s", mustJSON(t, approved))
 		}
@@ -301,6 +302,83 @@ func TestNotificationsFromBothSources(t *testing.T) {
 		first := s.Notifications(ctx)[0]
 		if got := mustJSON(t, first); got != `{"id":"registration:lan:2","title":"lan-2","message":"lan-2 · 10.0.0.9","icon":"how_to_reg","link":"/registrations","read":false,"created_at":"2001-01-01T00:02:00.000Z","kind":"registration","source":"lan","device_id":"lan-2","hostname":"","platform":"","ip":"10.0.0.9","status":"pending"}` {
 			t.Fatalf("entry: %s", got)
+		}
+	})
+}
+
+// An approved registration's device token is issued at the first status
+// request, on behalf of the approver, and only once; the row keeps its
+// hash. A failed issue leaves it due. A pending row, a row without a token
+// and one an older console approved with its own token issue none (BUGS
+// RV1).
+func TestDeliverTokenOnce(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		s := New(db, nil)
+		for _, stmt := range []string{
+			"INSERT INTO pending_registrations (device_id, status) VALUES ('pend', 'pending')",
+			"INSERT INTO pending_registrations (device_id, status) VALUES ('bare', 'approved')",
+			"INSERT INTO pending_registrations (device_id, status, access_token) VALUES ('older', 'approved', 'tok-older')",
+		} {
+			if _, err := db.Exec(ctx, stmt); err != nil {
+				t.Fatal(err)
+			}
+		}
+		row, err := s.Create(ctx, Request{DeviceID: "dev-1"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, changed, err := s.Approve(ctx, jsbind.Number(row.Get("id").(float64)), "e2e_admin", ServerConfig{}); err != nil || !changed {
+			t.Fatal(changed, err)
+		}
+		var calls []string
+		issue := func(token string, err error) func(string) (string, error) {
+			return func(approvedBy string) (string, error) {
+				calls = append(calls, approvedBy)
+				return token, err
+			}
+		}
+		stored := func(device string) any {
+			t.Helper()
+			reg, err := s.ByDeviceID(ctx, device)
+			if err != nil {
+				t.Fatal(err)
+			}
+			return reg.Get("access_token")
+		}
+
+		if got, err := s.DeliverToken(ctx, "dev-1", issue("", errors.New("no account"))); got != "" || err == nil {
+			t.Fatalf("failed issue: %q, %v", got, err)
+		}
+		if !TokenDue(stored("dev-1")) {
+			t.Fatalf("after a failed issue the row holds %v", stored("dev-1"))
+		}
+		const token = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+		if got, err := s.DeliverToken(ctx, "dev-1", issue(token, nil)); got != token || err != nil {
+			t.Fatalf("first delivery: %q, %v", got, err)
+		}
+		if got := stored("dev-1"); got != store.StoredAccessToken(store.HashAccessToken(token)) {
+			t.Fatalf("the row holds %v", got)
+		}
+		if got, err := s.DeliverToken(ctx, "dev-1", issue("other", nil)); got != "" || err != nil {
+			t.Fatalf("second delivery: %q, %v", got, err)
+		}
+		if got := DeliveredToken(stored("dev-1")); got != "" {
+			t.Fatalf("the status shows %q after the delivery", got)
+		}
+		for _, device := range []string{"pend", "bare", "older", "nope"} {
+			if got, err := s.DeliverToken(ctx, device, issue("other", nil)); got != "" || err != nil {
+				t.Errorf("%s: %q, %v", device, got, err)
+			}
+		}
+		if want := []string{"e2e_admin", "e2e_admin"}; strings.Join(calls, ",") != strings.Join(want, ",") {
+			t.Errorf("issued for %q, want %q", calls, want)
+		}
+		if got := DeliveredToken(stored("older")); got != "tok-older" {
+			t.Errorf("an older console's token shows as %q", got)
+		}
+		if got := DeliveredToken(stored("bare")); got != "" {
+			t.Errorf("no token shows as %q", got)
 		}
 	})
 }

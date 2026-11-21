@@ -50,6 +50,12 @@ func (s *Service) IssueDeviceToken(ctx context.Context, userID int64, deviceID, 
 	return s.issue(ctx, TokenKindDevice, userID, deviceID, "", ip)
 }
 
+// RevokeDeviceTokens revokes the device tokens issued for the device, for
+// a device that is banned or removed. The tokens of accounts stay.
+func (s *Service) RevokeDeviceTokens(ctx context.Context, deviceID string) error {
+	return revokeDeviceTokens(ctx, s.db, deviceID)
+}
+
 // GenerateAccessToken issues a device token the way cmd/devseed issues the
 // test stack's device tokens: it revokes the user's account tokens with the
 // same client UUID, then stores a device token bound to clientID with that

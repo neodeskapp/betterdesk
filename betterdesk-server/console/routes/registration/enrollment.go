@@ -108,7 +108,8 @@ func enrollmentApprovalDetails(deviceID, mode string, guids []string) string {
 }
 
 // enrollmentReject answers POST /api/enrollment/reject/{id} with the body
-// {ban}, which counts when it is truthy.
+// {ban}, which counts when it is truthy. A ban also revokes the device
+// tokens the console issued for the device.
 func (h *handlers) enrollmentReject(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.PathValue("id")
 	ban := goapi.Truthy(jsreq.Prop(jsreq.Body(r), "ban"))
@@ -117,6 +118,9 @@ func (h *handlers) enrollmentReject(w http.ResponseWriter, r *http.Request) {
 		details := "Rejected enrollment for device " + deviceID
 		if ban {
 			details += " (banned)"
+			if err := h.d.Authn.RevokeDeviceTokens(r.Context(), deviceID); err != nil {
+				h.log.Error("Revoke the device tokens of a banned device:", err)
+			}
 		}
 		h.audit(r, "enrollment_rejected", details)
 	}

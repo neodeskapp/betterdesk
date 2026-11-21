@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -34,14 +35,26 @@ type Request struct {
 	UUID      string
 }
 
-// ServerConfig is what an approved device gets from the status route.
-// Empty fields are stored as NULL.
+// ServerConfig is what an approved device gets from the status route
+// besides its device token (DeliverToken). Empty fields are stored as
+// NULL.
 type ServerConfig struct {
 	ConsoleURL    string
 	ServerAddress string
 	ServerKey     string
-	AccessToken   string
 }
+
+// What access_token holds on an approved row. An approval stores
+// tokenDue: the device token is issued when the device first asks for its
+// status (DeliverToken), so the token is never stored but as its hash.
+// tokenIssuing marks the row while one status request issues it, and a
+// delivered token is kept as store.StoredAccessToken of its hash. A row an
+// older console approved holds the random token it made, which no route
+// accepts.
+const (
+	tokenDue     = ""
+	tokenIssuing = "sha256 "
+)
 
 // columnNames are the table's columns in their order, which is the order
 // of the keys of a row. On SQLite the two DATETIME columns are read as the
@@ -292,9 +305,10 @@ func orNull(v string) any {
 
 // Approve is approvePendingRegistration: the pending row with the id
 // becomes approved by approvedBy ("admin" when empty) with the server
-// configuration. It returns the row as it is now, and whether this call
-// approved it: a row that was no longer pending (another approver was
-// first) comes back unchanged, nil when it is gone.
+// configuration, and its device token becomes due (DeliverToken). It
+// returns the row as it is now, and whether this call approved it: a row
+// that was no longer pending (another approver was first) comes back
+// unchanged, nil when it is gone.
 func (s *Service) Approve(ctx context.Context, id jsbind.Value, approvedBy string, cfg ServerConfig) (*goapi.Object, bool, error) {
 	if approvedBy == "" {
 		approvedBy = "admin"
@@ -306,11 +320,77 @@ func (s *Service) Approve(ctx context.Context, id jsbind.Value, approvedBy strin
 			updated_at = ` + now + `
 		WHERE id = ? AND status = 'pending'`
 	row, changed, err := s.change(ctx, update, id,
-		approvedBy, orNull(cfg.AccessToken), orNull(cfg.ConsoleURL), orNull(cfg.ServerAddress), orNull(cfg.ServerKey))
+		approvedBy, tokenDue, orNull(cfg.ConsoleURL), orNull(cfg.ServerAddress), orNull(cfg.ServerKey))
 	if err != nil {
 		return nil, false, fmt.Errorf("approve registration: %w", err)
 	}
 	return row, changed, nil
+}
+
+// DeliverToken hands the device of an approved registration its device
+// token, once. The first call for a row whose token is due claims it,
+// has issue make the token (issue gets the name of the approver), keeps
+// only the token's hash in the row and returns the token. Every other call
+// returns "": for a device without an approved registration, for a row
+// whose token was delivered or is being issued, and for a row an older
+// console approved. When issue fails the token is due again.
+func (s *Service) DeliverToken(ctx context.Context, deviceID string, issue func(approvedBy string) (string, error)) (string, error) {
+	res, err := s.db.Exec(ctx, `UPDATE pending_registrations SET access_token = ?
+		WHERE device_id = ? AND status = 'approved' AND access_token = ?`, tokenIssuing, deviceID, tokenDue)
+	if err != nil {
+		return "", fmt.Errorf("claim the device token of %q: %w", deviceID, err)
+	}
+	if n, err := res.RowsAffected(); err != nil || n == 0 {
+		return "", err
+	}
+	token, err := s.issueClaimed(ctx, deviceID, issue)
+	if err != nil {
+		if _, release := s.db.Exec(ctx, `UPDATE pending_registrations SET access_token = ? WHERE device_id = ? AND access_token = ?`,
+			tokenDue, deviceID, tokenIssuing); release != nil {
+			err = errors.Join(err, release)
+		}
+		return "", fmt.Errorf("issue the device token of %q: %w", deviceID, err)
+	}
+	return token, nil
+}
+
+// issueClaimed issues the token of a claimed row and stores its hash.
+func (s *Service) issueClaimed(ctx context.Context, deviceID string, issue func(approvedBy string) (string, error)) (string, error) {
+	var approvedBy sql.NullString
+	if err := s.db.QueryRow(ctx, `SELECT approved_by FROM pending_registrations WHERE device_id = ?`, deviceID).Scan(&approvedBy); err != nil {
+		return "", err
+	}
+	token, err := issue(approvedBy.String)
+	if err != nil {
+		return "", err
+	}
+	if token == "" {
+		return "", errors.New("no token issued")
+	}
+	if _, err := s.db.Exec(ctx, `UPDATE pending_registrations SET access_token = ? WHERE device_id = ? AND access_token = ?`,
+		store.StoredAccessToken(store.HashAccessToken(token)), deviceID, tokenIssuing); err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+// TokenDue reports whether the access_token a row holds says its device
+// token is due, so that DeliverToken may issue it.
+func TokenDue(stored any) bool {
+	text, ok := stored.(string)
+	return ok && text == tokenDue
+}
+
+// DeliveredToken is the token field the status route shows for a row
+// besides a token DeliverToken returned: "" for a due, issued or
+// delivered device token and for none, else the token an older console
+// stored.
+func DeliveredToken(stored any) string {
+	text, _ := stored.(string)
+	if text == tokenDue || strings.HasPrefix(text, tokenIssuing) {
+		return ""
+	}
+	return text
 }
 
 // Reject is rejectPendingRegistration: the pending row with the id becomes

@@ -2,6 +2,7 @@ package registration
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 
@@ -155,7 +156,9 @@ func (h *handlers) publish(event *goapi.Object) {
 
 // registerStatus answers GET /register-status?device_id=: the status of
 // the device's registration, with the server configuration once it is
-// approved and the reason once it is rejected.
+// approved and the reason once it is rejected. The first answer after
+// the approval carries the device's device token in access_token, which
+// the device routes take; later answers carry "" there (deviceToken).
 func (h *handlers) registerStatus(w http.ResponseWriter, r *http.Request) {
 	deviceID := statusDeviceID(r)
 	if deviceID == "" {
@@ -179,10 +182,40 @@ func (h *handlers) registerStatus(w http.ResponseWriter, r *http.Request) {
 			"console_url", orValue(reg.Get("console_url"), ""),
 			"server_address", orValue(reg.Get("server_address"), ""),
 			"server_key", orValue(reg.Get("server_key"), ""),
-			"access_token", orValue(reg.Get("access_token"), ""),
+			"access_token", h.deviceToken(r, deviceID, reg.Get("access_token")),
 		))
 	case "rejected":
 		answer.Set("reason", orValue(reg.Get("rejected_reason"), ""))
 	}
 	kit.JSON(w, r, http.StatusOK, answer)
+}
+
+// deviceToken is the access token of an approved registration's status:
+// a device token issued now for the device on behalf of the approver when
+// the registration's token is due (registrations.DeliverToken), else what
+// registrations.DeliveredToken shows for the stored value. A token that
+// cannot be issued (the approver's account is gone, the id is no device
+// id) is logged and stays due; the answer then carries "".
+func (h *handlers) deviceToken(r *http.Request, deviceID string, stored any) string {
+	if !registrations.TokenDue(stored) {
+		return registrations.DeliveredToken(stored)
+	}
+	ctx := r.Context()
+	token, err := h.regs.DeliverToken(ctx, deviceID, func(approvedBy string) (string, error) {
+		approver, err := h.d.Authn.UserByUsername(ctx, approvedBy)
+		if err != nil {
+			return "", err
+		}
+		if approver == nil {
+			return "", fmt.Errorf("the approver %q has no account", approvedBy)
+		}
+		return h.d.Authn.IssueDeviceToken(ctx, approver.ID.V, deviceID, clientIP(r))
+	})
+	if err != nil {
+		h.log.Error("Register status error:", err)
+	}
+	if token != "" {
+		return token
+	}
+	return registrations.DeliveredToken(stored)
 }

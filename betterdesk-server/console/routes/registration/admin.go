@@ -1,8 +1,6 @@
 package registration
 
 import (
-	"encoding/hex"
-	"io"
 	"math"
 	"net"
 	"net/http"
@@ -209,11 +207,7 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 		failure(w, r, http.StatusForbidden, kit.T(r, "errors.forbidden", nil))
 		return
 	}
-	cfg, err := h.serverConfig(r)
-	if err != nil {
-		h.serverError(w, r, "Approve registration error:", err)
-		return
-	}
+	cfg := h.serverConfig(r)
 	approvedBy := "admin"
 	if user := kit.User(r); user != nil && user.Username != "" {
 		approvedBy = user.Username
@@ -294,9 +288,10 @@ func nullable(row *goapi.Object) any {
 }
 
 // serverConfig is the configuration an approved device polls for: the
-// console's address and the signal server's (approvalAddresses), the
-// server's key and a new access token.
-func (h *handlers) serverConfig(r *http.Request) (registrations.ServerConfig, error) {
+// console's address and the signal server's (approvalAddresses) and the
+// server's key. Its device token is issued when the device polls
+// (deviceToken).
+func (h *handlers) serverConfig(r *http.Request) registrations.ServerConfig {
 	protocol := "http"
 	port := 0
 	if h.d.Config != nil {
@@ -310,17 +305,12 @@ func (h *handlers) serverConfig(r *http.Request) (registrations.ServerConfig, er
 		key = string(h.d.ServerInfo.ResolvePublicKey(r.Context()))
 		publicID = h.d.ServerInfo.GetPublicEndpointSettings().PublicServerID
 	}
-	token := make([]byte, 32)
-	if _, err := io.ReadFull(h.random, token); err != nil {
-		return registrations.ServerConfig{}, err
-	}
 	consoleURL, serverAddress := approvalAddresses(protocol, port, r.Host, publicID)
 	return registrations.ServerConfig{
 		ConsoleURL:    consoleURL,
 		ServerAddress: serverAddress,
 		ServerKey:     key,
-		AccessToken:   hex.EncodeToString(token),
-	}, nil
+	}
 }
 
 // approvalAddresses are the console's address and the signal server's an

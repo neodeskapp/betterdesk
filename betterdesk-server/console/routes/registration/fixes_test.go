@@ -199,3 +199,91 @@ func TestApprovalSaysWhenTheFolderFailed(t *testing.T) {
 		}
 	})
 }
+
+// An approved registration gives its device a device token: the first
+// status request after the approval carries it, issued on behalf of the
+// approver and kept only as its hash, and the device routes take it;
+// later status requests carry "". A ban through the enrollment queue
+// revokes it (BUGS RV1).
+func TestApprovalGivesTheDeviceADeviceTokenOnce(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		api.Fallback = func(c routetest.Call) routetest.Reply {
+			if path, _, _ := strings.Cut(c.Target, "?"); path == "/api/enrollment/reject/900100031" {
+				return routetest.Reply{Status: http.StatusOK, Body: `{"success":true}`}
+			}
+			return routetest.Reply{Status: http.StatusNotFound, Body: `{"error":"not found"}`}
+		}
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		ctx := context.Background()
+		if _, err := db.Exec(ctx, "INSERT INTO pending_registrations (id, device_id, status) VALUES (1, '900100031', 'pending')"); err != nil {
+			t.Fatal(err)
+		}
+		admin := w.As("admin")
+		got := admin.Do(http.MethodPut, "/api/registrations/1/approve", `{}`)
+		var approved struct {
+			Data struct {
+				AccessToken *string `json:"access_token"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &approved); err != nil || got.Status != http.StatusOK || approved.Data.AccessToken == nil || *approved.Data.AccessToken != "" {
+			t.Fatalf("approval: %d %s", got.Status, got.Body)
+		}
+
+		device := w.SignedOut()
+		status := func() string {
+			t.Helper()
+			got := device.Do(http.MethodGet, "/api/bd/register-status?device_id=900100031", "")
+			var answer struct {
+				Status string `json:"status"`
+				Config struct {
+					AccessToken string `json:"access_token"`
+				} `json:"config"`
+			}
+			if err := json.Unmarshal([]byte(got.Body), &answer); err != nil || got.Status != http.StatusOK || answer.Status != "approved" {
+				t.Fatalf("status: %d %s", got.Status, got.Body)
+			}
+			return answer.Config.AccessToken
+		}
+		token := status()
+		if len(token) != 64 {
+			t.Fatalf("the first status carries %q, want a token", token)
+		}
+		if again := status(); again != "" {
+			t.Errorf("the second status carries %q", again)
+		}
+		hash := store.HashAccessToken(token)
+		var kind, client, stored string
+		var user int64
+		if err := db.QueryRow(ctx, "SELECT token_kind, client_id, user_id FROM access_tokens WHERE token_hash = ?", hash).Scan(&kind, &client, &user); err != nil {
+			t.Fatal(err)
+		}
+		if kind != "device" || client != "900100031" || user != routetest.RoleIDs["admin"] {
+			t.Errorf("token row: kind %q, client %q, user %d", kind, client, user)
+		}
+		if err := db.QueryRow(ctx, "SELECT access_token FROM pending_registrations WHERE id = 1").Scan(&stored); err != nil || stored != store.StoredAccessToken(hash) {
+			t.Errorf("the registration keeps %q (%v), want the hash", stored, err)
+		}
+		var plain int
+		if err := db.QueryRow(ctx, "SELECT (SELECT COUNT(*) FROM access_tokens WHERE token = ?) + (SELECT COUNT(*) FROM pending_registrations WHERE access_token = ?)", token, token).Scan(&plain); err != nil || plain != 0 {
+			t.Errorf("%d rows keep the token itself (%v)", plain, err)
+		}
+
+		bearer := []string{"Authorization", "Bearer " + token}
+		heartbeat := func() routetest.Answer {
+			return device.Do(http.MethodPost, "/api/bd/heartbeat", `{"device_id":"900100031"}`, bearer...)
+		}
+		if got := heartbeat(); got.Status == http.StatusUnauthorized || got.Status == http.StatusForbidden {
+			t.Errorf("heartbeat with the delivered token: %d %s", got.Status, got.Body)
+		}
+		if got := device.Do(http.MethodPost, "/api/bd/heartbeat", `{"device_id":"900100032"}`, bearer...); got.Status != http.StatusForbidden && got.Status != http.StatusUnauthorized {
+			t.Errorf("heartbeat for another device with the token: %d %s", got.Status, got.Body)
+		}
+		if got := admin.Do(http.MethodPost, "/api/enrollment/reject/900100031", `{"ban":true}`); got.Status != http.StatusOK {
+			t.Fatalf("ban: %d %s", got.Status, got.Body)
+		}
+		if got := heartbeat(); got.Status != http.StatusUnauthorized {
+			t.Errorf("heartbeat after the ban: %d %s", got.Status, got.Body)
+		}
+	})
+}

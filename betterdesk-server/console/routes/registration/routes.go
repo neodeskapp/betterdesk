@@ -18,8 +18,6 @@
 package registration
 
 import (
-	"crypto/rand"
-	"io"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -42,7 +40,6 @@ type handlers struct {
 	actors *helpActors
 	log    *kit.Logger
 	now    func() time.Time
-	random io.Reader
 	// limit is the limit of device registrations a request that adds a
 	// registration counts against; nil without limiters.
 	limit kit.Middleware
@@ -55,7 +52,6 @@ func newHandlers(d *kit.Deps, actors *helpActors) *handlers {
 		actors: actors,
 		log:    d.Log.Child("REGISTRATION"),
 		now:    time.Now,
-		random: rand.Reader,
 		limit:  registerLimit(d),
 	}
 }
