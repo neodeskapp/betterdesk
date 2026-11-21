@@ -1124,19 +1124,9 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		return
 	}
 
-	if s.billing != nil {
-		if check := s.billing.CheckConnection(targetID); !check.Allowed {
-			log.Printf("[signal] PunchHole: billing denied for target %s: %s", targetID, check.Reason)
-			resp := &pb.RendezvousMessage{
-				Union: &pb.RendezvousMessage_PunchHoleResponse{
-					PunchHoleResponse: &pb.PunchHoleResponse{
-						Failure: pb.PunchHoleResponse_OFFLINE,
-					},
-				},
-			}
-			s.sendUDP(resp, raddr)
-			return
-		}
+	if refuse := s.admitSession("", initiatorID, targetID); refuse != "" {
+		s.sendUDP(punchHoleOfflineResponse(), raddr)
+		return
 	}
 
 	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(s.getRelayServer(), raddr, target.UDPAddr)
@@ -1334,13 +1324,10 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 	// Reject disabled, banned, or soft-deleted targets as offline.
 	if target.Banned || !s.targetAcceptsInboundSession(targetID) {
 		log.Printf("[signal] PunchHole (TCP): target %s is unavailable, rejecting", targetID)
-		return &pb.RendezvousMessage{
-			Union: &pb.RendezvousMessage_PunchHoleResponse{
-				PunchHoleResponse: &pb.PunchHoleResponse{
-					Failure: pb.PunchHoleResponse_OFFLINE,
-				},
-			},
-		}
+		return punchHoleOfflineResponse()
+	}
+	if refuse := s.admitSession("", initiatorID, targetID); refuse != "" {
+		return punchHoleOfflineResponse()
 	}
 
 	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(s.getRelayServer(), raddr, target.UDPAddr)
@@ -1728,36 +1715,8 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		return
 	}
 
-	if s.billing != nil {
-		if check := s.billing.CheckConnection(targetID); !check.Allowed {
-			log.Printf("[signal] RequestRelay: billing denied for target %s: %s", targetID, check.Reason)
-			resp := &pb.RendezvousMessage{
-				Union: &pb.RendezvousMessage_RelayResponse{
-					RelayResponse: &pb.RelayResponse{
-						RefuseReason: "Billing suspended",
-						RelayServer:  relayServer,
-					},
-				},
-			}
-			s.sendUDP(resp, raddr)
-			return
-		}
-		if err := s.billing.PrepareRelay(relayUUID, targetID, initiatorID); err != nil {
-			log.Printf("[signal] RequestRelay: billing prepare failed: %v", err)
-			resp := &pb.RendezvousMessage{
-				Union: &pb.RendezvousMessage_RelayResponse{
-					RelayResponse: &pb.RelayResponse{
-						RefuseReason: "Billing blocked",
-						RelayServer:  relayServer,
-					},
-				},
-			}
-			s.sendUDP(resp, raddr)
-			return
-		}
-	}
-	if !s.authorizeRelayTicket(relayUUID, initiatorID, targetID) {
-		s.sendUDP(s.relayTicketRejectedResponse(relayServer), raddr)
+	if refuse := s.admitSession(relayUUID, initiatorID, targetID); refuse != "" {
+		s.sendUDP(relayRefusedResponse(refuse, relayServer), raddr)
 		return
 	}
 
@@ -1910,8 +1869,8 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 		log.Printf("[signal] RequestRelay (TCP): mixed transport initiator=%s target=%s (%s vs %s) — relay will bridge framing",
 			initiatorID, targetID, initiatorType, target.ConnType)
 	}
-	if !s.authorizeRelayTicket(relayUUID, initiatorID, targetID) {
-		return s.relayTicketRejectedResponse(relayServer)
+	if refuse := s.admitSession(relayUUID, initiatorID, targetID); refuse != "" {
+		return relayRefusedResponse(refuse, relayServer)
 	}
 
 	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "request_relay", relayUUID)
@@ -2161,9 +2120,9 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 			rr.Uuid, initiatorID, targetID, senderAddr)
 		return
 	}
-	if !s.authorizeRelayTicket(rr.Uuid, initiatorID, targetID) {
-		log.Printf("[signal] RelayResponse forward: relay ticket rejected (uuid=%q initiator=%q target=%q) — not forwarding",
-			rr.Uuid, initiatorID, targetID)
+	if refuse := s.admitSession(rr.Uuid, initiatorID, targetID); refuse != "" {
+		log.Printf("[signal] RelayResponse forward: %s (uuid=%q initiator=%q target=%q) — not forwarding",
+			refuse, rr.Uuid, initiatorID, targetID)
 		return
 	}
 
@@ -2464,8 +2423,8 @@ func (s *Server) handleOnlineRequest(msg *pb.OnlineRequest) *pb.RendezvousMessag
 func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *pb.PunchHoleRequest, relay, initiatorID string) {
 	// Generate a relay session UUID for pairing both peers at hbbr.
 	relayUUID := uuid.New().String()
-	if !s.authorizeRelayTicket(relayUUID, initiatorID, target.ID) {
-		s.sendUDP(s.relayTicketRejectedResponse(relay), raddr)
+	if refuse := s.admitSession(relayUUID, initiatorID, target.ID); refuse != "" {
+		s.sendUDP(relayRefusedResponse(refuse, relay), raddr)
 		return
 	}
 	// RustDesk 1.5.3 validates the relay in the target-bound RequestRelay
@@ -2578,26 +2537,65 @@ func targetOfflineRelayResponse(relayServer string) *pb.RendezvousMessage {
 	}
 }
 
-// relayTicketRejectedResponse avoids advertising a relay UUID that has not been
-// accepted by the server-side relay authorization registry.
-func (s *Server) relayTicketRejectedResponse(relayServer string) *pb.RendezvousMessage {
+// punchHoleOfflineResponse answers a punch to a target that may not be
+// reached as if it were offline.
+func punchHoleOfflineResponse() *pb.RendezvousMessage {
+	return &pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_PunchHoleResponse{
+			PunchHoleResponse: &pb.PunchHoleResponse{
+				Failure: pb.PunchHoleResponse_OFFLINE,
+			},
+		},
+	}
+}
+
+// relayRefusedResponse refuses a relay session with reason.
+func relayRefusedResponse(reason, relayServer string) *pb.RendezvousMessage {
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
-				RefuseReason: "Relay authorization rejected",
+				RefuseReason: reason,
 				RelayServer:  relayServer,
 			},
 		},
 	}
 }
 
-func (s *Server) authorizeRelayTicket(relayUUID, initiatorID, targetID string) bool {
-	if relay.AuthorizeRelayPair(relayUUID, initiatorID, targetID) {
-		return true
+// Refuse reasons of admitSession.
+const (
+	refuseBillingSuspended    = "Billing suspended"
+	refuseBillingBlocked      = "Billing blocked"
+	refuseRelayTicketRejected = "Relay authorization rejected"
+)
+
+// admitSession decides whether a session from initiatorID to targetID may
+// start, on every path that signals one (UDP, TCP and WebSocket, punch and
+// relay). Billing refuses a device whose contract does not allow it. With a
+// relay uuid the session is also registered with billing, which meters it
+// once the relay pairs both sides, and the relay ticket is issued. It returns
+// "" when the session may start, otherwise the reason it is refused.
+func (s *Server) admitSession(relayUUID, initiatorID, targetID string) string {
+	if s.billing != nil {
+		if check := s.billing.CheckConnection(targetID); !check.Allowed {
+			log.Printf("[signal] Billing denied session to %s: %s", targetID, check.Reason)
+			return refuseBillingSuspended
+		}
 	}
-	log.Printf("[signal] Rejected relay authorization (uuid=%q initiator=%q target=%q)",
-		relayUUID, initiatorID, targetID)
-	return false
+	if relayUUID == "" {
+		return ""
+	}
+	if s.billing != nil {
+		if err := s.billing.PrepareRelay(relayUUID, targetID, initiatorID); err != nil {
+			log.Printf("[signal] Billing prepare failed for relay to %s: %v", targetID, err)
+			return refuseBillingBlocked
+		}
+	}
+	if !relay.AuthorizeRelayPair(relayUUID, initiatorID, targetID) {
+		log.Printf("[signal] Rejected relay authorization (uuid=%q initiator=%q target=%q)",
+			relayUUID, initiatorID, targetID)
+		return refuseRelayTicketRejected
+	}
+	return ""
 }
 
 // requireAuthorizedInitiator enforces that PunchHole/RequestRelay may only be
