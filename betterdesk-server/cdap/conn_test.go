@@ -219,3 +219,52 @@ func TestEndedConnectionRemovesOnlyItself(t *testing.T) {
 		t.Fatalf("the reconnected device got %s %s, want ping", m.Type, m.Payload)
 	}
 }
+
+// TestRegisterKeepsToTheDevicesOfThePrincipal: a sign-in with an account
+// or API key registers only a device id of the right form that is new or
+// was registered by the same account or key; registering never enables a
+// disabled device (BUGS RV157).
+func TestRegisterKeepsToTheDevicesOfThePrincipal(t *testing.T) {
+	w := newCDAPWorld(t)
+	createAPIKey(t, w.db, "apikey-mine-0123456789abcdef", "mine", "operator", "")
+	createAPIKey(t, w.db, "apikey-other-0123456789abcdef", "other", "viewer", "")
+	if err := w.db.UpsertPeer(&db.Peer{ID: "900100001", Hostname: "real-host", Status: "OFFLINE", Disabled: true}); err != nil {
+		t.Fatal(err)
+	}
+
+	refused := func(what, key, deviceID string) {
+		t.Helper()
+		c := w.dial(t)
+		if m := c.authWith(key, deviceID); m.Type != "auth_result" {
+			t.Fatalf("%s: auth %s %s", what, m.Type, m.Payload)
+		}
+		if m := c.register("evil-name"); m.Type != "error" {
+			t.Errorf("%s: register answered %s %s, want an error", what, m.Type, m.Payload)
+		}
+		w.settle(t, 0)
+	}
+	refused("a device someone else enrolled", "apikey-other-0123456789abcdef", "900100001")
+	if p, _ := w.db.GetPeer("900100001"); p == nil || p.Hostname != "real-host" || !p.Disabled || p.Status == "ONLINE" {
+		t.Fatalf("the enrolled device became %+v", p)
+	}
+	for _, id := range []string{"a b", "../x", "dev/1", strings.Repeat("x", 65)} {
+		refused("the id "+id, "apikey-mine-0123456789abcdef", id)
+	}
+
+	mine := w.connect(t, "apikey-mine-0123456789abcdef", "plc-new")
+	mine.drain()
+	mine.conn.Close(websocket.StatusNormalClosure, "")
+	w.settle(t, 0)
+	refused("a device another key registered", "apikey-other-0123456789abcdef", "plc-new")
+
+	p, _ := w.db.GetPeer("plc-new")
+	p.Disabled = true
+	if err := w.db.UpsertPeer(p); err != nil {
+		t.Fatal(err)
+	}
+	again := w.connect(t, "apikey-mine-0123456789abcdef", "plc-new")
+	again.drain()
+	if p, _ := w.db.GetPeer("plc-new"); p == nil || !p.Disabled {
+		t.Fatalf("the reconnected device is %+v, want it still disabled", p)
+	}
+}

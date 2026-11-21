@@ -5,13 +5,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/events"
 )
+
+// deviceIDPattern is the form of a device id the REST routes of a CDAP
+// device take.
+var deviceIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
 
 // handleRegister processes the "register" message after authentication.
 // It parses the manifest, creates/updates the peer in the database, and
@@ -41,15 +47,31 @@ func (g *Gateway) handleRegister(ctx context.Context, dc *DeviceConn) error {
 	dc.Manifest = rp.Manifest
 	dc.HeartbeatInterval = rp.Manifest.HeartbeatInterval
 
-	// Validate device ID format (CDAP-XXXXXXXX or 6-16 alphanumeric)
 	if dc.ID == "" {
 		return fmt.Errorf("device_id is required (set in auth payload)")
+	}
+	if !deviceIDPattern.MatchString(dc.ID) {
+		return fmt.Errorf("invalid device_id")
 	}
 
 	// Check if device is banned
 	banned, _ := g.db.IsPeerBanned(dc.ID)
 	if banned {
 		return fmt.Errorf("device is banned")
+	}
+
+	existing, err := g.db.GetPeer(dc.ID)
+	if err != nil {
+		return fmt.Errorf("load peer: %w", err)
+	}
+	// A device token is bound to its device. An account or API key registers
+	// a new id, or one it registered itself.
+	if existing != nil && !auth.IsDeviceRole(dc.Role) && existing.User != dc.Username {
+		g.auditAction("cdap_register_refused", dc.ID, map[string]string{
+			"username": dc.Username,
+			"reason":   "device registered by another principal",
+		})
+		return fmt.Errorf("device_id is registered by another principal")
 	}
 
 	// Upsert the peer in the database
@@ -66,6 +88,10 @@ func (g *Gateway) handleRegister(ctx context.Context, dc *DeviceConn) error {
 		LastOnline:   time.Now(),
 		OS:           rp.Manifest.Bridge.Protocol,
 		Version:      rp.Manifest.Bridge.Version,
+	}
+	// The upsert writes disabled as given: keep what an operator set.
+	if existing != nil {
+		peer.Disabled = existing.Disabled
 	}
 	if err := g.db.UpsertPeer(peer); err != nil {
 		return fmt.Errorf("save peer: %w", err)
