@@ -38,6 +38,20 @@ func TestLDAPAccountNameComesFromTheEntry(t *testing.T) {
 		}
 	}
 
+	// A direct bind by another attribute than the id: the id attribute's value
+	smith := fakeEntry{
+		dn:       "cn=Alice Smith,ou=staff,dc=corp,dc=example",
+		password: "secret",
+		attrs:    map[string][]string{"uid": {"ASmith"}, "cn": {"Alice Smith"}},
+	}
+	byName := newFakeDirectory(t, smith).config()
+	byName.DirectBind = true
+	byName.DirectBindDN = "cn={{username}},ou=staff,dc=corp,dc=example"
+	byName.UserAttrID = "uid"
+	if result, err := NewLDAPProvider(byName).Authenticate("alice smith", "secret"); err != nil || result == nil || result.Username != "asmith" {
+		t.Errorf("direct bind by name: %+v, %v", result, err)
+	}
+
 	// An entry without the id attribute: the name as typed, lower-cased and trimmed
 	direct.UserAttrID = "sAMAccountName"
 	result, err := NewLDAPProvider(direct).Authenticate("Alice", "secret")
