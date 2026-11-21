@@ -7714,7 +7714,9 @@
     "fail_dropped": "Koneksi ke {name} terputus.",
     "try_dropped": "Jaringan antara browser ini, server, dan perangkat terganggu. Hubungkan ulang. Jika terus terjadi, periksa jaringan perangkat.",
     "fail_generic": "Tidak dapat terhubung ke {name}.",
-    "try_generic": "Hubungkan ulang. Jika terus gagal, salin detail di bawah dan kirimkan ke administrator Anda."
+    "try_generic": "Hubungkan ulang. Jika terus gagal, salin detail di bawah dan kirimkan ke administrator Anda.",
+    "fail_insecure": "Koneksi ke {name} dihentikan karena tidak dapat diamankan.",
+    "try_insecure": "Tidak ada kata sandi yang dikirim. Seseorang di antara browser ini dan perangkat mungkin menyadap, atau kunci server belum disiapkan. Minta administrator memeriksa server."
   },
   "diagram": {
     "your_computer": "Komputer Anda",

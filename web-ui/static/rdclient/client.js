@@ -95,8 +95,7 @@ class RDClient {
         this._relayFrameIdx = 0;         // Counter for relay frames (debugging)
         this._relayConfirmReceived = false; // Whether hbbr's RelayResponse confirmation was consumed
         this._peerEncryptionConfirmed = false; // Whether peer has started encrypting
-        this._keyExchangePending = false;  // True when we have keys ready but haven't sent PublicKey yet
-        this._keyExchangeDone = false;     // True after PublicKey was sent and crypto enabled
+        this._keyExchangeDone = false;     // True after the SignedId checked out, PublicKey was sent and crypto enabled
         this._sessionStartedAt = null;
         this._lastDisconnect = null;
         this._lastError = null;
@@ -455,6 +454,10 @@ class RDClient {
      */
     async authenticate(password) {
         try {
+            // The password hash never goes out unencrypted
+            if (!this._keyExchangeDone) {
+                throw new Error('Handshake failed: the connection is not encrypted');
+            }
             this._setState('authenticating');
             this._emit('log', 'Authenticating...');
             this._sessionPassword = password != null ? String(password) : '';
@@ -752,24 +755,21 @@ class RDClient {
     /**
      * Handle a single decoded relay frame (protobuf bytes).
      *
-     * Frame sequence on a relay connection:
-     *   #1: Target's SignedId (Message, unencrypted)
-     *   #3+: Target's Hash, TestDelay etc. — may be plaintext OR encrypted
-     *        depending on whether the target has processed our PublicKey yet
-     *   #N:  Once peer encryption is confirmed, all subsequent frames are encrypted
+     * Frame sequence on a relay connection (RustDesk's secure_connection):
+     *   #1: the device's SignedId (Message, unencrypted). We check it against
+     *       the server key and the device ID, answer with PublicKey at once and
+     *       turn encryption on.
+     *   #2+: everything else, encrypted with the session key we sent.
      *
-     * Deferred key exchange: after receiving SignedId we prepare the keys but
-     * do NOT send PublicKey yet.  We wait for the next peer frame:
-     *   • If it is plaintext (e.g. Hash) → peer is NOT encrypting → we skip the
-     *     key exchange entirely and communicate in plaintext.
-     *   • If it is encrypted → peer already processed our PublicKey (shouldn’t
-     *     happen since we haven’t sent it yet in this flow) or peer uses some
-     *     other encryption setup — handled via speculative decrypt.
+     * The connection fails closed: any other first message, a SignedId that
+     * does not check out, or a frame that does not decrypt before the device's
+     * first encrypted one ends it before the password prompt.
      *
      * @param {Uint8Array} frameData - Raw protobuf bytes from one WS message
      */
     _handleRelayMessage(frameData) {
         try {
+            if (this._state === 'error' || this._state === 'disconnected') return;
             this._relayFrameIdx++;
             const idx = this._relayFrameIdx;
             if (RDClient.isRelayDebug()) {
@@ -793,69 +793,34 @@ class RDClient {
                 }
             }
 
-            let data = frameData;
-
-            // --- Deferred key exchange decision ---
-            // If we have keys prepared (_keyExchangePending) but haven't sent
-            // PublicKey yet, this frame tells us whether the peer uses encryption.
-            if (this._keyExchangePending && !this._keyExchangeDone) {
-                // Try decoding as plaintext Message first.
-                let isPlaintext = false;
-                try {
-                    const probe = this.proto.decodeMessage(frameData);
-                    // Check if the decoded message has any meaningful field set.
-                    // A plaintext Hash (field 9) with human-readable salt/challenge
-                    // is the strongest signal that the peer is NOT encrypting.
-                    const fields = Object.keys(probe).filter(k => probe[k] != null && k !== 'union');
-                    if (fields.length > 0) {
-                        isPlaintext = true;
-                    }
-                } catch (_e) {
-                    // Decode failed — likely encrypted data
+            // Until the device has proved who it is, only its SignedId is accepted
+            if (!this._keyExchangeDone) {
+                let first = null;
+                try { first = this.proto.decodeMessage(frameData); } catch (_e) { first = null; }
+                if (!first || !first.signedId) {
+                    this._handleError(new Error('Handshake failed: the device did not identify itself'));
+                    return;
                 }
-
-                if (isPlaintext) {
-                    // Peer is NOT encrypting.  Abandon the key exchange — do NOT
-                    // send PublicKey.  All communication stays in plaintext.
-                    console.warn(`[RDClient] Frame #${idx}: peer sent plaintext → connection NOT encrypted`);
-                    this._keyExchangePending = false;
-                    this._keyExchangeDone = false;
-                    this._emit('encryption_warning', 'Connection is not encrypted — peer did not use encryption.');
-                    // Fall through to process this frame as plaintext
-                } else {
-                    // Frame doesn't decode as plaintext Message — peer might be
-                    // encrypting (unlikely since we haven't sent PublicKey, but
-                    // handle defensively).  Complete the key exchange now, then
-                    // try to decrypt.
-                    this._debugRelay(`[RDClient] Frame #${idx}: not plaintext → completing key exchange`);
-                    this._completeKeyExchange();
-                    // Try to decrypt below
-                }
+                this._handleSignedId(first.signedId);
+                return;
             }
 
-            // --- Speculative decryption ---
-            if (this.crypto.secretKey && this._keyExchangeDone) {
-                const spec = this.crypto.tryDecrypt(new Uint8Array(data));
-
-                if (spec) {
-                    this.crypto.commitDecrypt(spec.seq);
-                    data = spec.plaintext;
-
-                    if (!this._peerEncryptionConfirmed) {
-                        this._peerEncryptionConfirmed = true;
-                        this._debugRelay(`[RDClient] Peer encryption confirmed at frame #${idx} (seq=${spec.seq})`);
-                    }
-                } else if (this._peerEncryptionConfirmed) {
-                    const failHex = Array.from(frameData.slice(0, 48))
-                        .map(b => b.toString(16).padStart(2, '0')).join(' ');
-                    console.warn(`[RDClient] Decryption FAILED (peer was encrypting)`
-                        + ` nextSeq=${this.crypto._recvSeq + 1} frameLen=${frameData.length}`);
-                    console.warn(`[RDClient] Ciphertext[0..48]: ${failHex}`);
-                    return;
-                } else {
-                    // Key exchange done but peer hasn't encrypted yet — plaintext
-                    this._debugRelay(`[RDClient] Frame #${idx}: plaintext (peer crypto not yet active)`);
+            let data = frameData;
+            const spec = this.crypto.tryDecrypt(new Uint8Array(data));
+            if (spec) {
+                this.crypto.commitDecrypt(spec.seq);
+                data = spec.plaintext;
+                if (!this._peerEncryptionConfirmed) {
+                    this._peerEncryptionConfirmed = true;
+                    this._debugRelay(`[RDClient] Peer encryption confirmed at frame #${idx} (seq=${spec.seq})`);
                 }
+            } else if (this._peerEncryptionConfirmed) {
+                console.warn(`[RDClient] Decryption FAILED (peer was encrypting)`
+                    + ` nextSeq=${this.crypto._recvSeq + 1} frameLen=${frameData.length}`);
+                return;
+            } else {
+                this._handleError(new Error('Handshake failed: the device did not encrypt the connection'));
+                return;
             }
 
             const msg = this.proto.decodeMessage(data);
@@ -980,11 +945,6 @@ class RDClient {
             return;
         }
 
-        // Signed ID from peer
-        if (msg.signedId) {
-            this._handleSignedId(msg.signedId);
-            return;
-        }
     }
 
     // ---- Specific Message Handlers ----
@@ -997,108 +957,43 @@ class RDClient {
     }
 
     /**
-     * Handle SignedId from target peer.
+     * Handle the device's SignedId, the first message on the relay.
      * SignedId.id = 64-byte Ed25519 signature + protobuf(IdPk{ id, pk })
-     * where pk is the target's EPHEMERAL Curve25519 public key.
+     * where pk is the device's ephemeral Curve25519 public key.
      *
-     * DEFERRED key exchange: We prepare the cryptographic material but do NOT
-     * send PublicKey yet.  The next incoming frame will tell us whether the
-     * peer uses encryption:
-     *   - Plaintext Hash → peer sent Hash before enabling crypto → skip key
-     *     exchange entirely, communicate in plaintext.
-     *   - Encrypted data → complete the key exchange (send PublicKey, enable
-     *     secretbox). This covers the standard RustDesk flow where the target
-     *     waits for our PublicKey before sending Hash.
+     * The identity chain (RustDesk decode_id_pk) must hold, or the connection
+     * ends: RelayResponse.pk is IdPk{id, identityPk} signed by the server key,
+     * and the SignedId is IdPk{id, boxPk} signed by that identity key, both for
+     * the ID asked for. Then we send PublicKey with a fresh session key and
+     * encrypt everything after it.
      */
     _handleSignedId(signedId) {
-        const idBytes = signedId.id;
-        if (!idBytes || idBytes.length === 0) {
-            this._emit('log', 'Received empty SignedId');
-            return;
-        }
-
-        // Parse SignedId: extract target's ephemeral Curve25519 pk
-        const parsed = this.crypto.parseSignedId(
-            new Uint8Array(idBytes),
+        const checked = RDCrypto.checkPeer(
+            signedId.id,
+            this._peerSignedPk,
+            this.opts.serverPubKey || '',
+            this.deviceId,
             this.proto.types.IdPk
         );
-
-        if (!parsed) {
-            this._emit('log', 'Failed to parse SignedId');
+        if (checked.error) {
+            this._handleError(new Error(checked.error));
             return;
         }
+        this._emit('log', 'Peer identified: ' + this.deviceId);
+        this._emit('log', 'Peer identity verified (Ed25519)');
 
-        this._emit('log', `Peer identified: ${parsed.peerId}`);
-        const peerPkHex = Array.from(parsed.peerPk.slice(0, 8))
-            .map(b => b.toString(16).padStart(2, '0')).join('');
-        this._debugRelay(`[RDClient] Peer ephemeral pk: ${parsed.peerPk.length} bytes [${peerPkHex}...]`);
-
-        // MITM chain (matches RustDesk decode_id_pk):
-        // RelayResponse.pk = IdPk{id, identityPk} signed by server → verify with server Key
-        // SignedId         = IdPk{id, ephemeralBoxPk} signed by peer identity → verify with identityPk
-        const serverPubKey = this.opts.serverPubKey || '';
-        if (RDCrypto.hasDecodablePublicKey(serverPubKey) && this._peerSignedPk && this._peerSignedPk.length) {
-            const peerIdentity = RDCrypto.verifyAndDecodeIdPk(
-                this._peerSignedPk instanceof Uint8Array
-                    ? this._peerSignedPk
-                    : new Uint8Array(this._peerSignedPk),
-                serverPubKey,
-                this.proto.types.IdPk
-            );
-            if (!peerIdentity) {
-                console.warn('[RDClient] RelayResponse.pk failed server-key verification');
-                this._emit('signature_warning', 'Server-signed peer identity could not be verified.');
-                this._emit('log', 'WARNING: Peer identity (RelayResponse.pk) verification failed');
-            } else {
-                const verified = RDCrypto.verifySignedId(
-                    parsed.signature,
-                    parsed.payload,
-                    peerIdentity.peerPk
-                );
-                parsed.signatureVerified = verified;
-                if (verified) {
-                    this._debugRelay('[RDClient] Ed25519 signature VERIFIED — peer identity authenticated');
-                    this._emit('log', 'Peer identity verified (Ed25519)');
-                } else {
-                    console.warn('[RDClient] Ed25519 signature FAILED — possible MITM attack!');
-                    this._emit('signature_warning', 'Ed25519 signature verification failed. Connection may be intercepted.');
-                    this._emit('log', 'WARNING: Peer signature verification failed');
-                }
-            }
-        } else if (RDCrypto.hasDecodablePublicKey(serverPubKey)) {
-            this._debugRelay('[RDClient] No RelayResponse.pk — SignedId not verified against peer identity');
-        } else {
-            this._debugRelay('[RDClient] No server public key available — signature not verified');
-        }
-
-        // Prepare key material but DO NOT send PublicKey yet.
-        // We defer the decision until we see the next peer frame.
         this.crypto.generateKeyPair();
         this.crypto.generateSymmetricKey();
-        this.crypto.setPeerPublicKey(parsed.peerPk);
-
-        const ourPkHex = Array.from(this.crypto.asymKeyPair.publicKey.slice(0, 8))
-            .map(b => b.toString(16).padStart(2, '0')).join('');
-        const symKeyHex = Array.from(this.crypto.secretKey.slice(0, 8))
-            .map(b => b.toString(16).padStart(2, '0')).join('');
-        this._debugRelay(`[RDClient] Keys prepared (deferred): ourPk=[${ourPkHex}...] symKey=[${symKeyHex}...]`);
-
-        this._keyExchangePending = true;
-        this._keyExchangeDone = false;
-        this._emit('log', 'Key exchange prepared, waiting for peer to decide encryption mode...');
+        this.crypto.setPeerPublicKey(checked.peerPk);
+        this._completeKeyExchange();
     }
 
     /**
-     * Complete the deferred key exchange: send PublicKey and enable encryption.
-     * Called when we detect the peer IS using encryption.
+     * Send PublicKey (our ephemeral key and the session key sealed for the
+     * device) and turn on encryption for everything after it.
      */
     _completeKeyExchange() {
         if (this._keyExchangeDone) return;
-        if (!this.crypto.peerPk) {
-            console.warn('[RDClient] Cannot complete key exchange: no peer pk');
-            return;
-        }
-
         const keyMsg = this.crypto.createSymmetricKeyMsg(this.crypto.peerPk);
         this._debugRelay(`[RDClient] Completing key exchange: sealed=${keyMsg.symmetricValue.length} bytes`);
 
@@ -1113,7 +1008,6 @@ class RDClient {
         this.crypto._sendSeq = 0;
         this.crypto._recvSeq = 0;
 
-        this._keyExchangePending = false;
         this._keyExchangeDone = true;
         this._debugRelay('[RDClient] Key exchange completed: encryption enabled');
     }

@@ -7708,7 +7708,9 @@
         "fail_dropped": "The connection to {name} dropped.",
         "try_dropped": "The network between this browser, the server and the device was interrupted. Reconnect. If it keeps happening, check the network of the device.",
         "fail_generic": "Could not connect to {name}.",
-        "try_generic": "Reconnect. If it keeps failing, copy the details below and send them to your administrator."
+        "try_generic": "Reconnect. If it keeps failing, copy the details below and send them to your administrator.",
+        "fail_insecure": "The connection to {name} was stopped because it could not be secured.",
+        "try_insecure": "No password was sent. Someone between this browser and the device may be listening in, or the server key is not set up. Ask an administrator to check the server."
     },
     "diagram": {
         "your_computer": "Your computer",

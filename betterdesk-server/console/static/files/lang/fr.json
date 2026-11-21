@@ -7712,7 +7712,9 @@
     "fail_dropped": "La connexion à {name} a été coupée.",
     "try_dropped": "Le réseau entre ce navigateur, le serveur et l'appareil a été interrompu. Reconnectez-vous. Si cela se reproduit, vérifiez le réseau de l'appareil.",
     "fail_generic": "Impossible de se connecter à {name}.",
-    "try_generic": "Reconnectez-vous. Si l'échec persiste, copiez les détails ci-dessous et envoyez-les à votre administrateur."
+    "try_generic": "Reconnectez-vous. Si l'échec persiste, copiez les détails ci-dessous et envoyez-les à votre administrateur.",
+    "fail_insecure": "La connexion à {name} a été arrêtée, car elle n'a pas pu être sécurisée.",
+    "try_insecure": "Aucun mot de passe n'a été envoyé. Quelqu'un entre ce navigateur et l'appareil écoute peut-être, ou la clé du serveur n'est pas configurée. Demandez à un administrateur de vérifier le serveur."
   },
   "diagram": {
     "your_computer": "Votre ordinateur",

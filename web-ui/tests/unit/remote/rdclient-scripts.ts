@@ -22,11 +22,21 @@ export const RD_CORE = [
 	'protocol.js'
 ];
 
+// protobuf.js encodes into Node's Buffer when it sees Node. jsdom's
+// Uint8Array is another class, so tweetnacl refuses those bytes. A browser
+// has no Buffer: make protobuf.js use plain byte arrays, as it does there.
+const BROWSER_BYTES = 'protobuf.util.Buffer = null; protobuf.configure();';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Loaded = Record<string, any>;
 
 export function loadScripts(files: string[], names: string[]): Loaded {
-	const code = files.map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n;\n');
+	const code = files
+		.map((f) => {
+			const text = fs.readFileSync(path.join(dir, f), 'utf8');
+			return f === 'vendor/protobuf.min.js' ? `${text}\n;${BROWSER_BYTES}` : text;
+		})
+		.join('\n;\n');
 	const out = names
 		.map((n) => `${JSON.stringify(n)}: typeof ${n} === 'undefined' ? undefined : ${n}`)
 		.join(',');

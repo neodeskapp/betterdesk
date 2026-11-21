@@ -7714,7 +7714,9 @@
     "fail_dropped": "Conexiunea cu {name} s-a întrerupt.",
     "try_dropped": "Rețeaua dintre acest browser, server și dispozitiv a fost întreruptă. Reconectați-vă. Dacă se repetă, verificați rețeaua dispozitivului.",
     "fail_generic": "Nu s-a putut conecta la {name}.",
-    "try_generic": "Reconectați-vă. Dacă tot nu funcționează, copiați detaliile de mai jos și trimiteți-le administratorului."
+    "try_generic": "Reconectați-vă. Dacă tot nu funcționează, copiați detaliile de mai jos și trimiteți-le administratorului.",
+    "fail_insecure": "Conexiunea la {name} a fost oprită, deoarece nu a putut fi securizată.",
+    "try_insecure": "Nu a fost trimisă nicio parolă. Cineva între acest browser și dispozitiv poate asculta, sau cheia serverului nu este configurată. Cereți unui administrator să verifice serverul."
   },
   "diagram": {
     "your_computer": "Computerul dvs.",

@@ -14,7 +14,6 @@
 	import Button from '#lib/ui/Button.svelte';
 	import LinkButton from '#lib/remote/LinkButton.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
-	import IconButton from '#lib/ui/IconButton.svelte';
 	import Platform from '#lib/ui/Platform.svelte';
 	import Status from '#lib/ui/Status.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
@@ -360,13 +359,6 @@
 			</div>
 		</div>
 	{/if}
-
-	{#if s.banner}
-		<div class={['security-warning-banner', s.banner.level === 'error' && 'security-error']} role="alert">
-			<span class="security-warning-text">{s.banner.message}</span>
-			<IconButton icon="close" label={tf('actions.dismiss', 'Dismiss')} onclick={() => (s.banner = null)} />
-		</div>
-	{/if}
 </div>
 
 <style>
@@ -618,27 +610,6 @@
 		.overlay-card-divider {
 			height: 1px;
 		}
-	}
-	.security-warning-banner {
-		position: absolute;
-		top: var(--space-2);
-		left: 50%;
-		z-index: 210;
-		display: flex;
-		align-items: flex-start;
-		gap: var(--space-2);
-		max-width: min(540px, calc(100% - 2 * var(--space-4)));
-		padding: var(--space-2) var(--space-1) var(--space-2) var(--space-3);
-		border: 1px solid var(--rule);
-		border-inline-start: 3px solid var(--warning);
-		border-radius: var(--radius);
-		background: var(--bg-float);
-		box-shadow: var(--shadow-float);
-		color: var(--text);
-		transform: translateX(-50%);
-	}
-	.security-warning-banner.security-error {
-		border-inline-start-color: var(--danger);
 	}
 	@media (max-width: 640px) {
 		.viewer-overlay {

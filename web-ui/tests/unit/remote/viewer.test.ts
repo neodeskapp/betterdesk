@@ -151,6 +151,26 @@ describe('remote viewer sessions', () => {
 		expect(s.endInfo?.reason).toBe('Connection refused: Device offline');
 	});
 
+	test('a device whose identity or encryption fails ends in a failure, not a warning to dismiss', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const a = setup();
+		a.c.emit('error', 'Handshake failed: the device signature does not match its key');
+		expect(a.s.view).toBe('failed');
+		expect(a.s.statusText).toBe(
+			'The connection to demo-build-server was stopped because it could not be secured.'
+		);
+		expect(a.s.tryText).toMatch(/No password was sent/);
+
+		for (const ev of ['signature_warning', 'encryption_warning']) {
+			const b = setup();
+			b.c.emit('password_required');
+			b.c.emit(ev, 'Ed25519 signature verification failed. Connection may be intercepted.');
+			expect(b.s.view).toBe('failed');
+			expect(b.c.disconnected).toBe(true);
+		}
+		expect(warn).toHaveBeenCalled();
+	});
+
 	test('a drop after the picture is a drop, not "closed before it answered"', () => {
 		const { s, c } = setup();
 		c.emit('state', 'streaming');

@@ -166,6 +166,22 @@ export function classifyEnd(
 	const p = { name: ctx.name };
 	const pick = (kind: string, text: string, tryText: string): Outcome => ({ kind, text, tryText });
 
+	// The client stopped before signing in: the device's identity or the encryption did not check out
+	if (/^handshake failed/.test(m)) {
+		return pick(
+			'insecure',
+			tf(
+				'remote_viewer.fail_insecure',
+				'The connection to {name} was stopped because it could not be secured.',
+				p
+			),
+			tf(
+				'remote_viewer.try_insecure',
+				'No password was sent. Someone between this browser and the device may be listening in, or the server key is not set up. Ask an administrator to check the server.'
+			)
+		);
+	}
+
 	if (
 		/^remote:|closed manually|by the peer|peer closed|session (was )?ended|agent_end/.test(m) &&
 		!/refus|reject|declin|denied/.test(m)

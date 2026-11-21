@@ -36,6 +36,16 @@ describe('what happened, in plain words', () => {
 		],
 		['License limit reached', 'limit', 'The server does not allow this connection right now.'],
 		['Rendezvous connection failed', 'relay', 'The relay server could not be reached.'],
+		[
+			'Handshake failed: the device did not encrypt the connection',
+			'insecure',
+			'The connection to demo-build-server was stopped because it could not be secured.'
+		],
+		[
+			'Handshake failed: the device answered for another ID',
+			'insecure',
+			'The connection to demo-build-server was stopped because it could not be secured.'
+		],
 		['something odd', 'generic', 'Could not connect to demo-build-server.']
 	])('%s', (reason, kind, text) => {
 		const out = classifyEnd(reason, null, ctx);

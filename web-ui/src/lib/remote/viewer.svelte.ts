@@ -120,8 +120,6 @@ export class ViewerSession {
 	everStreamed = $state(false);
 	connectedAt = $state<number | null>(null);
 	lastError = $state('');
-	encryptionWarning = $state('');
-	banner = $state.raw<{ message: string; level: 'warning' | 'error' } | null>(null);
 	loginError = $state('');
 	tfaError = $state('');
 	password = $state('');
@@ -442,8 +440,6 @@ export class Viewer {
 		s.endedBy = '';
 		s.endInfo = null;
 		s.lastError = '';
-		s.encryptionWarning = '';
-		s.banner = null;
 		s.loginError = '';
 		s.tfaError = '';
 		if (!s.canvas) return;
@@ -597,17 +593,18 @@ export class Viewer {
 		});
 		on('display_switched', () => this.refreshMonitors(s));
 		on('virtual_display_toggled', () => this.refreshMonitors(s));
-		// End-to-end encryption problems: a warning over the screen and in Session info
-		on('signature_warning', (msg: unknown) => {
-			console.warn('[Remote] Signature warning:', msg);
-			s.encryptionWarning = String(msg ?? '');
-			s.banner = { message: String(msg ?? ''), level: 'warning' };
-		});
-		on('encryption_warning', (msg: unknown) => {
-			console.warn('[Remote] Encryption warning:', msg);
-			s.encryptionWarning = String(msg ?? '');
-			s.banner = { message: String(msg ?? ''), level: 'error' };
-		});
+		// The device's identity or the encryption failed: the session ends, nothing more goes to it
+		const insecure = (msg: unknown) => {
+			console.warn('[Remote] Connection not secure:', msg);
+			this.fail(s, `Handshake failed: ${String(msg ?? '')}`);
+			try {
+				c.disconnect();
+			} catch {
+				/* gone */
+			}
+		};
+		on('signature_warning', insecure);
+		on('encryption_warning', insecure);
 	}
 
 	private async trustCertificate(s: ViewerSession, c: RemoteClient, fingerprint: string): Promise<void> {

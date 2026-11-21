@@ -235,6 +235,48 @@ class RDCrypto {
     }
 
     /**
+     * Check the device's identity before anything else goes to it, as RustDesk's
+     * secure_connection does. Every gap fails: the viewer needs the server key,
+     * the relay answer the device's identity key signed by that server
+     * (RelayResponse.pk), and the SignedId a session key signed by that identity,
+     * both for the ID the operator asked for.
+     *
+     * @param {Uint8Array} signedIdBytes - SignedId.id from the device
+     * @param {Uint8Array|null} relayPk - RelayResponse.pk from the rendezvous server
+     * @param {string} serverPubKey - The server's public key (base64 or hex)
+     * @param {string} deviceId - The ID the operator connects to
+     * @param {Object} idPkType - protobufjs IdPk type
+     * @returns {{ peerPk: Uint8Array } | { error: string }} The device's session key, or why it was refused
+     */
+    static checkPeer(signedIdBytes, relayPk, serverPubKey, deviceId, idPkType) {
+        if (!RDCrypto.hasDecodablePublicKey(serverPubKey)) {
+            return { error: 'Handshake failed: the server key is missing, so the device cannot be checked' };
+        }
+        if (!relayPk || !relayPk.length) {
+            return { error: 'Handshake failed: the server sent no signed key for the device' };
+        }
+        const identity = RDCrypto.verifyAndDecodeIdPk(
+            relayPk instanceof Uint8Array ? relayPk : new Uint8Array(relayPk),
+            serverPubKey,
+            idPkType
+        );
+        if (!identity) {
+            return { error: 'Handshake failed: the device key is not signed by this server' };
+        }
+        const parsed = new RDCrypto().parseSignedId(
+            signedIdBytes instanceof Uint8Array ? signedIdBytes : new Uint8Array(signedIdBytes || []),
+            idPkType
+        );
+        if (!parsed || !RDCrypto.verifySignedId(parsed.signature, parsed.payload, identity.peerPk)) {
+            return { error: 'Handshake failed: the device signature does not match its key' };
+        }
+        if (identity.peerId !== String(deviceId) || parsed.peerId !== String(deviceId)) {
+            return { error: 'Handshake failed: the device answered for another ID' };
+        }
+        return { peerPk: parsed.peerPk };
+    }
+
+    /**
      * Convert hex string to Uint8Array
      * @param {string} hex
      * @returns {Uint8Array}

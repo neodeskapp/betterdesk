@@ -7714,7 +7714,9 @@
     "fail_dropped": "Anslutningen till {name} bröts.",
     "try_dropped": "Nätverket mellan den här webbläsaren, servern och enheten avbröts. Anslut igen. Om det fortsätter att hända, kontrollera enhetens nätverk.",
     "fail_generic": "Kunde inte ansluta till {name}.",
-    "try_generic": "Anslut igen. Om det fortsätter att misslyckas, kopiera detaljerna nedan och skicka dem till din administratör."
+    "try_generic": "Anslut igen. Om det fortsätter att misslyckas, kopiera detaljerna nedan och skicka dem till din administratör.",
+    "fail_insecure": "Anslutningen till {name} stoppades eftersom den inte kunde säkras.",
+    "try_insecure": "Inget lösenord skickades. Någon mellan den här webbläsaren och enheten kan avlyssna, eller så är servernyckeln inte konfigurerad. Be en administratör att kontrollera servern."
   },
   "diagram": {
     "your_computer": "Din dator",

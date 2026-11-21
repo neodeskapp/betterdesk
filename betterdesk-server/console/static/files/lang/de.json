@@ -7708,7 +7708,9 @@
     "fail_dropped": "Die Verbindung zu {name} ist abgebrochen.",
     "try_dropped": "Das Netzwerk zwischen diesem Browser, dem Server und dem Gerät wurde unterbrochen. Verbinden Sie sich erneut. Wenn das öfter passiert, prüfen Sie das Netzwerk des Geräts.",
     "fail_generic": "Verbindung zu {name} nicht möglich.",
-    "try_generic": "Verbinden Sie sich erneut. Wenn es weiter fehlschlägt, kopieren Sie die Details unten und senden Sie sie an Ihren Administrator."
+    "try_generic": "Verbinden Sie sich erneut. Wenn es weiter fehlschlägt, kopieren Sie die Details unten und senden Sie sie an Ihren Administrator.",
+    "fail_insecure": "Die Verbindung zu {name} wurde abgebrochen, weil sie nicht abgesichert werden konnte.",
+    "try_insecure": "Es wurde kein Passwort gesendet. Jemand zwischen diesem Browser und dem Gerät hört möglicherweise mit, oder der Serverschlüssel ist nicht eingerichtet. Bitten Sie einen Administrator, den Server zu prüfen."
   },
   "diagram": {
     "your_computer": "Ihr Computer",

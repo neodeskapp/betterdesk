@@ -7708,7 +7708,9 @@
     "fail_dropped": "De verbinding met {name} is weggevallen.",
     "try_dropped": "Het netwerk tussen deze browser, de server en het apparaat is onderbroken. Maak opnieuw verbinding. Als het blijft gebeuren, controleer dan het netwerk van het apparaat.",
     "fail_generic": "Kon geen verbinding maken met {name}.",
-    "try_generic": "Maak opnieuw verbinding. Als het blijft mislukken, kopieer dan de details hieronder en stuur ze naar je beheerder."
+    "try_generic": "Maak opnieuw verbinding. Als het blijft mislukken, kopieer dan de details hieronder en stuur ze naar je beheerder.",
+    "fail_insecure": "De verbinding met {name} is gestopt omdat die niet beveiligd kon worden.",
+    "try_insecure": "Er is geen wachtwoord verzonden. Iemand tussen deze browser en het apparaat luistert mogelijk mee, of de serversleutel is niet ingesteld. Vraag een beheerder de server te controleren."
   },
   "diagram": {
     "your_computer": "Uw computer",

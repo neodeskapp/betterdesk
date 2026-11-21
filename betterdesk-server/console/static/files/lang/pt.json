@@ -7708,7 +7708,9 @@
     "fail_dropped": "A conexão com {name} caiu.",
     "try_dropped": "A rede entre este navegador, o servidor e o dispositivo foi interrompida. Reconecte. Se continuar acontecendo, verifique a rede do dispositivo.",
     "fail_generic": "Não foi possível conectar a {name}.",
-    "try_generic": "Reconecte. Se continuar falhando, copie os detalhes abaixo e envie para o seu administrador."
+    "try_generic": "Reconecte. Se continuar falhando, copie os detalhes abaixo e envie para o seu administrador.",
+    "fail_insecure": "A ligação a {name} foi interrompida porque não foi possível protegê-la.",
+    "try_insecure": "Nenhuma palavra-passe foi enviada. Alguém entre este navegador e o dispositivo pode estar a escutar, ou a chave do servidor não está configurada. Peça a um administrador para verificar o servidor."
   },
   "diagram": {
     "your_computer": "O seu computador",

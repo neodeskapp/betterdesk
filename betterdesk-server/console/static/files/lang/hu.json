@@ -7714,7 +7714,9 @@
     "fail_dropped": "A kapcsolat a(z) {name} eszközzel megszakadt.",
     "try_dropped": "Megszakadt a hálózat a böngésző, a szerver és az eszköz között. Csatlakozzon újra. Ha ez ismétlődik, ellenőrizze az eszköz hálózatát.",
     "fail_generic": "Nem sikerült csatlakozni a(z) {name} eszközhöz.",
-    "try_generic": "Csatlakozzon újra. Ha továbbra sem sikerül, másolja ki az alábbi részleteket, és küldje el a rendszergazdának."
+    "try_generic": "Csatlakozzon újra. Ha továbbra sem sikerül, másolja ki az alábbi részleteket, és küldje el a rendszergazdának.",
+    "fail_insecure": "A(z) {name} felé irányuló kapcsolat leállt, mert nem sikerült biztonságossá tenni.",
+    "try_insecure": "Nem lett jelszó elküldve. Lehet, hogy valaki lehallgatja a forgalmat a böngésző és az eszköz között, vagy nincs beállítva a szerver kulcsa. Kérje meg a rendszergazdát, hogy ellenőrizze a szervert."
   },
   "diagram": {
     "your_computer": "Az Ön gépe",

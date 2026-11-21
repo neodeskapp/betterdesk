@@ -7714,7 +7714,9 @@
     "fail_dropped": "Yhteys laitteeseen {name} katkesi.",
     "try_dropped": "Verkkoyhteys tämän selaimen, palvelimen ja laitteen välillä katkesi. Yhdistä uudelleen. Jos tämä toistuu, tarkista laitteen verkko.",
     "fail_generic": "Yhteys laitteeseen {name} ei onnistunut.",
-    "try_generic": "Yhdistä uudelleen. Jos yhteys epäonnistuu edelleen, kopioi alla olevat tiedot ja lähetä ne ylläpitäjälle."
+    "try_generic": "Yhdistä uudelleen. Jos yhteys epäonnistuu edelleen, kopioi alla olevat tiedot ja lähetä ne ylläpitäjälle.",
+    "fail_insecure": "Yhteys kohteeseen {name} katkaistiin, koska sitä ei voitu suojata.",
+    "try_insecure": "Salasanaa ei lähetetty. Joku tämän selaimen ja laitteen välissä saattaa kuunnella, tai palvelimen avainta ei ole määritetty. Pyydä ylläpitäjää tarkistamaan palvelin."
   },
   "diagram": {
     "your_computer": "Tietokoneesi",

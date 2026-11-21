@@ -7708,7 +7708,9 @@
     "fail_dropped": "Połączenie z {name} zostało przerwane.",
     "try_dropped": "Sieć między tą przeglądarką, serwerem i urządzeniem została przerwana. Połącz ponownie. Jeśli to się powtarza, sprawdź sieć urządzenia.",
     "fail_generic": "Nie można połączyć z {name}.",
-    "try_generic": "Połącz ponownie. Jeśli nadal się nie udaje, skopiuj poniższe szczegóły i wyślij je administratorowi."
+    "try_generic": "Połącz ponownie. Jeśli nadal się nie udaje, skopiuj poniższe szczegóły i wyślij je administratorowi.",
+    "fail_insecure": "Połączenie z {name} zostało przerwane, ponieważ nie udało się go zabezpieczyć.",
+    "try_insecure": "Nie wysłano żadnego hasła. Ktoś między tą przeglądarką a urządzeniem może podsłuchiwać albo klucz serwera nie jest skonfigurowany. Poproś administratora o sprawdzenie serwera."
   },
   "diagram": {
     "your_computer": "Twój komputer",

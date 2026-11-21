@@ -125,10 +125,7 @@
 				{#if s.view === 'streaming'}
 					<dt>{tf('remote_viewer.info_encryption', 'Encryption')}</dt>
 					<dd>
-						{#if s.encryptionWarning}<Status tone="warning" label={s.encryptionWarning} />{:else}<Status
-								tone="good"
-								label={tf('remote_viewer.info_encrypted', 'End-to-end encrypted')}
-							/>{/if}
+						<Status tone="good" label={tf('remote_viewer.info_encrypted', 'End-to-end encrypted')} />
 					</dd>
 					{#if s.latency}
 						<dt>{tf('remote_viewer.info_latency', 'Round trip')}</dt>

@@ -7708,7 +7708,9 @@
     "fail_dropped": "La connessione a {name} si è interrotta.",
     "try_dropped": "La rete tra questo browser, il server e il dispositivo si è interrotta. Riconnettiti. Se succede ancora, controlla la rete del dispositivo.",
     "fail_generic": "Impossibile connettersi a {name}.",
-    "try_generic": "Riconnettiti. Se continua a non funzionare, copia i dettagli qui sotto e inviali al tuo amministratore."
+    "try_generic": "Riconnettiti. Se continua a non funzionare, copia i dettagli qui sotto e inviali al tuo amministratore.",
+    "fail_insecure": "La connessione a {name} è stata interrotta perché non è stato possibile proteggerla.",
+    "try_insecure": "Nessuna password è stata inviata. Qualcuno tra questo browser e il dispositivo potrebbe essere in ascolto, oppure la chiave del server non è configurata. Chiedi a un amministratore di controllare il server."
   },
   "diagram": {
     "your_computer": "Il suo computer",

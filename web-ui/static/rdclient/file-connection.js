@@ -25,7 +25,6 @@ class RDFileConnection {
         this._listeners = {};
         this._rendezvousDecoder = null;
         this._relayConfirmReceived = false;
-        this._keyExchangePending = false;
         this._keyExchangeDone = false;
         this._peerEncryptionConfirmed = false;
         this._loginChallenge = '';
@@ -124,7 +123,6 @@ class RDFileConnection {
 
             this._rendezvousDecoder = this.proto.createStreamDecoder();
             this._relayConfirmReceived = false;
-            this._keyExchangePending = false;
             this._keyExchangeDone = false;
             this._peerEncryptionConfirmed = false;
             this._loginChallenge = '';
@@ -220,6 +218,8 @@ class RDFileConnection {
     }
 
     async _authenticate(password) {
+        // The password hash never goes out unencrypted
+        if (!this._keyExchangeDone) throw new Error('Handshake failed: the connection is not encrypted');
         this._setState('authenticating');
         const hash = await this.crypto.hashPassword(
             password, this._loginSalt || '', this._loginChallenge || ''
@@ -383,7 +383,13 @@ class RDFileConnection {
         }
     }
 
+    /**
+     * Same handshake as the desktop session (RDClient._handleRelayMessage):
+     * the device's SignedId first, checked, then only encrypted frames. Any
+     * gap ends the session before the login.
+     */
     _handleRelayMessage(frameData) {
+        if (this._state === 'error' || this._state === 'disconnected') return;
         if (!this._relayConfirmReceived) {
             this._relayConfirmReceived = true;
             try {
@@ -394,44 +400,47 @@ class RDFileConnection {
             }
         }
 
-        let data = frameData;
-
-        if (this._keyExchangePending && !this._keyExchangeDone) {
-            let isPlaintext = false;
-            try {
-                const probe = this.proto.decodeMessage(frameData);
-                const fields = Object.keys(probe).filter(k => probe[k] != null && k !== 'union');
-                if (fields.length > 0) isPlaintext = true;
-            } catch (_e) { /* encrypted */ }
-
-            if (isPlaintext) {
-                this._keyExchangePending = false;
-                this._keyExchangeDone = false;
-            } else {
-                this._completeKeyExchange();
-            }
-        }
-
-        if (this.crypto.secretKey && this._keyExchangeDone) {
-            const spec = this.crypto.tryDecrypt(new Uint8Array(data));
-            if (spec) {
-                this.crypto.commitDecrypt(spec.seq);
-                data = spec.plaintext;
-                this._peerEncryptionConfirmed = true;
-            } else if (this._peerEncryptionConfirmed) {
+        if (!this._keyExchangeDone) {
+            let first = null;
+            try { first = this.proto.decodeMessage(frameData); } catch (_e) { first = null; }
+            if (!first || !first.signedId) {
+                this._fail('Handshake failed: the device did not identify itself');
                 return;
             }
+            this._handleSignedId(first.signedId);
+            return;
+        }
+
+        let data = frameData;
+        const spec = this.crypto.tryDecrypt(new Uint8Array(data));
+        if (spec) {
+            this.crypto.commitDecrypt(spec.seq);
+            data = spec.plaintext;
+            this._peerEncryptionConfirmed = true;
+        } else if (this._peerEncryptionConfirmed) {
+            return;
+        } else {
+            this._fail('Handshake failed: the device did not encrypt the connection');
+            return;
         }
 
         const msg = this.proto.decodeMessage(data);
         this._dispatchMessage(msg);
     }
 
-    _dispatchMessage(msg) {
-        if (msg.signedId) {
-            this._handleSignedId(msg.signedId);
+    /** End the session: the pending login fails with the reason */
+    _fail(reason) {
+        const err = new Error(reason);
+        if (this._loginReject) {
+            this._loginReject(err);
             return;
         }
+        this._setState('error');
+        this._emit('error', reason);
+        this.disconnect();
+    }
+
+    _dispatchMessage(msg) {
         if (msg.hash) {
             this._loginChallenge = msg.hash.challenge || '';
             this._loginSalt = msg.hash.salt || '';
@@ -461,34 +470,22 @@ class RDFileConnection {
     }
 
     _handleSignedId(signedId) {
-        const idBytes = signedId.id;
-        if (!idBytes || idBytes.length === 0) return;
-
-        const parsed = this.crypto.parseSignedId(
-            new Uint8Array(idBytes),
+        const checked = RDCrypto.checkPeer(
+            signedId.id,
+            this._peerSignedPk,
+            this.opts.serverPubKey || '',
+            this.deviceId,
             this.proto.types.IdPk
         );
-        if (!parsed) return;
-
-        const serverPubKey = this.opts.serverPubKey || '';
-        if (RDCrypto.hasDecodablePublicKey(serverPubKey) && this._peerSignedPk && this._peerSignedPk.length) {
-            const peerIdentity = RDCrypto.verifyAndDecodeIdPk(
-                this._peerSignedPk instanceof Uint8Array
-                    ? this._peerSignedPk
-                    : new Uint8Array(this._peerSignedPk),
-                serverPubKey,
-                this.proto.types.IdPk
-            );
-            if (peerIdentity) {
-                RDCrypto.verifySignedId(parsed.signature, parsed.payload, peerIdentity.peerPk);
-            }
+        if (checked.error) {
+            this._fail(checked.error);
+            return;
         }
 
         this.crypto.generateKeyPair();
         this.crypto.generateSymmetricKey();
-        this.crypto.setPeerPublicKey(parsed.peerPk);
-        this._keyExchangePending = true;
-        this._keyExchangeDone = false;
+        this.crypto.setPeerPublicKey(checked.peerPk);
+        this._completeKeyExchange();
 
         // Unattended / no-password peers may send loginResponse without Hash
         if (this._pendingPassword === '' && this._loginResolve) {
@@ -499,14 +496,13 @@ class RDFileConnection {
     }
 
     _completeKeyExchange() {
-        if (this._keyExchangeDone || !this.crypto.peerPk) return;
+        if (this._keyExchangeDone) return;
         const keyMsg = this.crypto.createSymmetricKeyMsg(this.crypto.peerPk);
         const pkMsg = this.proto.buildPublicKey(keyMsg.asymmetricValue, keyMsg.symmetricValue);
         this._sendPeerMessageRaw(pkMsg);
         this.crypto.enabled = true;
         this.crypto._sendSeq = 0;
         this.crypto._recvSeq = 0;
-        this._keyExchangePending = false;
         this._keyExchangeDone = true;
     }
 

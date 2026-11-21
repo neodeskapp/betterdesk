@@ -7708,7 +7708,9 @@
     "fail_dropped": "Připojení k zařízení {name} se přerušilo.",
     "try_dropped": "Síť mezi tímto prohlížečem, serverem a zařízením byla přerušena. Připojte se znovu. Pokud se to opakuje, zkontrolujte síť zařízení.",
     "fail_generic": "Nelze se připojit k zařízení {name}.",
-    "try_generic": "Připojte se znovu. Pokud to stále nejde, zkopírujte níže uvedené podrobnosti a pošlete je správci."
+    "try_generic": "Připojte se znovu. Pokud to stále nejde, zkopírujte níže uvedené podrobnosti a pošlete je správci.",
+    "fail_insecure": "Připojení k {name} bylo zastaveno, protože ho nebylo možné zabezpečit.",
+    "try_insecure": "Žádné heslo nebylo odesláno. Mezi tímto prohlížečem a zařízením může někdo odposlouchávat, nebo není nastaven klíč serveru. Požádejte správce o kontrolu serveru."
   },
   "diagram": {
     "your_computer": "Váš počítač",

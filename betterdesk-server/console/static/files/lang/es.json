@@ -7708,7 +7708,9 @@
     "fail_dropped": "Se perdió la conexión con {name}.",
     "try_dropped": "Se interrumpió la red entre este navegador, el servidor y el dispositivo. Vuelva a conectar. Si sigue ocurriendo, compruebe la red del dispositivo.",
     "fail_generic": "No se pudo conectar con {name}.",
-    "try_generic": "Vuelva a conectar. Si sigue fallando, copie los detalles de abajo y envíelos a su administrador."
+    "try_generic": "Vuelva a conectar. Si sigue fallando, copie los detalles de abajo y envíelos a su administrador.",
+    "fail_insecure": "La conexión con {name} se detuvo porque no se pudo proteger.",
+    "try_insecure": "No se envió ninguna contraseña. Alguien entre este navegador y el dispositivo podría estar escuchando, o la clave del servidor no está configurada. Pide a un administrador que revise el servidor."
   },
   "diagram": {
     "your_computer": "Su equipo",

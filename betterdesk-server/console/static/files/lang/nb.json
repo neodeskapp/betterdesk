@@ -7714,7 +7714,9 @@
     "fail_dropped": "Tilkoblingen til {name} ble brutt.",
     "try_dropped": "Nettverket mellom denne nettleseren, serveren og enheten ble avbrutt. Koble til igjen. Hvis det fortsetter å skje, sjekk nettverket til enheten.",
     "fail_generic": "Kunne ikke koble til {name}.",
-    "try_generic": "Koble til igjen. Hvis det fortsatt ikke virker, kopier detaljene nedenfor og send dem til administratoren din."
+    "try_generic": "Koble til igjen. Hvis det fortsatt ikke virker, kopier detaljene nedenfor og send dem til administratoren din.",
+    "fail_insecure": "Tilkoblingen til {name} ble stoppet fordi den ikke kunne sikres.",
+    "try_insecure": "Ingen passord ble sendt. Noen mellom denne nettleseren og enheten kan lytte, eller servernøkkelen er ikke satt opp. Be en administrator om å sjekke serveren."
   },
   "diagram": {
     "your_computer": "Din datamaskin",

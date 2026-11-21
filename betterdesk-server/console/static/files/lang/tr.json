@@ -7714,7 +7714,9 @@
     "fail_dropped": "{name} cihazıyla bağlantı koptu.",
     "try_dropped": "Bu tarayıcı, sunucu ve cihaz arasındaki ağ bağlantısı kesildi. Yeniden bağlanın. Bu tekrarlanırsa cihazın ağını kontrol edin.",
     "fail_generic": "{name} cihazına bağlanılamadı.",
-    "try_generic": "Yeniden bağlanın. Sorun devam ederse aşağıdaki ayrıntıları kopyalayıp yöneticinize gönderin."
+    "try_generic": "Yeniden bağlanın. Sorun devam ederse aşağıdaki ayrıntıları kopyalayıp yöneticinize gönderin.",
+    "fail_insecure": "{name} bağlantısı güvenli hale getirilemediği için durduruldu.",
+    "try_insecure": "Hiçbir parola gönderilmedi. Bu tarayıcı ile cihaz arasında biri dinliyor olabilir veya sunucu anahtarı ayarlanmamış olabilir. Bir yöneticiden sunucuyu kontrol etmesini isteyin."
   },
   "diagram": {
     "your_computer": "Bilgisayarınız",
