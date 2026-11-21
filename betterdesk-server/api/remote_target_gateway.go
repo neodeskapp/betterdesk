@@ -74,14 +74,13 @@ func (s *Server) handleRemoteTargetTunnel(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 	errCh := make(chan error, 2)
-	argNames := []string{}
-	var argNamesMu sync.RWMutex
+	args := newGuacdArgs()
 
 	go func() {
-		errCh <- s.remoteTargetBrowserToGuacd(ctx, ws, guacd, target, &argNames, &argNamesMu)
+		errCh <- s.remoteTargetBrowserToGuacd(ctx, ws, guacd, target, args)
 	}()
 	go func() {
-		errCh <- s.remoteTargetGuacdToBrowser(ctx, guacd, ws, &argNames, &argNamesMu)
+		errCh <- s.remoteTargetGuacdToBrowser(ctx, guacd, ws, args)
 	}()
 	<-errCh
 	cancel()
@@ -89,7 +88,42 @@ func (s *Server) handleRemoteTargetTunnel(w http.ResponseWriter, r *http.Request
 	_ = ws.Close(websocket.StatusNormalClosure, "session ended")
 }
 
-func (s *Server) remoteTargetBrowserToGuacd(ctx context.Context, ws *websocket.Conn, guacd net.Conn, target *db.RemoteTarget, argNames *[]string, argNamesMu *sync.RWMutex) error {
+// guacdArgs hands the parameter names of guacd's args answer to the
+// browser side, which builds the connect from them and so holds a connect
+// back until they arrived.
+type guacdArgs struct {
+	once  sync.Once
+	ready chan struct{}
+	names []string
+}
+
+func newGuacdArgs() *guacdArgs {
+	return &guacdArgs{ready: make(chan struct{})}
+}
+
+// set keeps the names of guacd's first args answer.
+func (a *guacdArgs) set(names []string) {
+	a.once.Do(func() {
+		a.names = append([]string(nil), names...)
+		close(a.ready)
+	})
+}
+
+// wait returns the names once guacd sent them.
+func (a *guacdArgs) wait(ctx context.Context) ([]string, error) {
+	timer := time.NewTimer(remoteTargetDialTimeout)
+	defer timer.Stop()
+	select {
+	case <-a.ready:
+		return a.names, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-timer.C:
+		return nil, fmt.Errorf("guacd sent no args")
+	}
+}
+
+func (s *Server) remoteTargetBrowserToGuacd(ctx context.Context, ws *websocket.Conn, guacd net.Conn, target *db.RemoteTarget, args *guacdArgs) error {
 	parser := &guacInstructionParser{}
 	for {
 		messageType, data, err := ws.Read(ctx)
@@ -112,9 +146,10 @@ func (s *Server) remoteTargetBrowserToGuacd(ctx context.Context, ws *websocket.C
 				if err != nil {
 					return err
 				}
-				argNamesMu.RLock()
-				names := append([]string(nil), (*argNames)...)
-				argNamesMu.RUnlock()
+				names, err := args.wait(ctx)
+				if err != nil {
+					return err
+				}
 				instruction.args = rewriteRemoteTargetConnect(instruction.args, names, target, password)
 			}
 			if _, err := guacd.Write(encodeGuacInstruction(instruction)); err != nil {
@@ -124,7 +159,7 @@ func (s *Server) remoteTargetBrowserToGuacd(ctx context.Context, ws *websocket.C
 	}
 }
 
-func (s *Server) remoteTargetGuacdToBrowser(ctx context.Context, guacd net.Conn, ws *websocket.Conn, argNames *[]string, argNamesMu *sync.RWMutex) error {
+func (s *Server) remoteTargetGuacdToBrowser(ctx context.Context, guacd net.Conn, ws *websocket.Conn, args *guacdArgs) error {
 	buf := make([]byte, 64*1024)
 	parser := &guacInstructionParser{}
 	for {
@@ -134,9 +169,7 @@ func (s *Server) remoteTargetGuacdToBrowser(ctx context.Context, guacd net.Conn,
 			if instructions, parseErr := parser.Feed(data); parseErr == nil {
 				for _, instruction := range instructions {
 					if instruction.opcode == "args" {
-						argNamesMu.Lock()
-						*argNames = append((*argNames)[:0], instruction.args...)
-						argNamesMu.Unlock()
+						args.set(instruction.args)
 					}
 				}
 			}
@@ -168,28 +201,55 @@ func (s *Server) remoteTargetPassword(target *db.RemoteTarget) (string, error) {
 	return password, nil
 }
 
+// remoteTargetBrowserArgs are the connection parameters whose value the
+// browser chooses: display, input, clipboard and performance settings,
+// none of which reaches the gateway's host or another address.
+var remoteTargetBrowserArgs = map[string]bool{
+	"width": true, "height": true, "dpi": true, "color-depth": true, "resize-method": true,
+	"read-only": true, "swap-red-blue": true, "cursor": true, "force-lossless": true,
+	"disable-copy": true, "disable-paste": true, "clipboard-encoding": true, "normalize-clipboard": true,
+	"server-layout": true, "timezone": true, "domain": true, "disable-audio": true,
+	"enable-wallpaper": true, "enable-theming": true, "enable-font-smoothing": true,
+	"enable-full-window-drag": true, "enable-desktop-composition": true, "enable-menu-animations": true,
+	"disable-bitmap-caching": true, "disable-offscreen-caching": true, "disable-glyph-caching": true,
+}
+
+// rewriteRemoteTargetConnect builds the values of the connect instruction
+// for guacd's parameter names: the server's values for host, port,
+// account and certificate check, the browser's for the protocol version
+// and the parameters in remoteTargetBrowserArgs, and empty for every other
+// name, so the browser cannot map folders, write recordings or reach
+// other hosts through the gateway.
 func rewriteRemoteTargetConnect(values, names []string, target *db.RemoteTarget, savedPassword string) []string {
-	out := append([]string(nil), values...)
-	for len(out) < len(names) {
-		out = append(out, "")
-	}
+	out := make([]string, len(names))
 	for index, name := range names {
-		switch strings.ToLower(name) {
-		case "hostname", "host", "server":
+		browser := ""
+		if index < len(values) {
+			browser = values[index]
+		}
+		lower := strings.ToLower(name)
+		switch {
+		case strings.HasPrefix(name, "VERSION_"):
+			out[index] = browser
+		case lower == "hostname" || lower == "host" || lower == "server":
 			out[index] = target.Host
-		case "port":
+		case lower == "port":
 			out[index] = strconv.Itoa(target.Port)
-		case "username", "user":
+		case lower == "username" || lower == "user":
+			out[index] = browser
 			if target.Username != "" {
 				out[index] = target.Username
 			}
-		case "password":
+		case lower == "password":
+			out[index] = browser
 			if savedPassword != "" {
 				out[index] = savedPassword
 			}
-		case "ignore-cert":
+		case lower == "ignore-cert":
 			// Never enable trust-all implicitly.
 			out[index] = "false"
+		case remoteTargetBrowserArgs[lower]:
+			out[index] = browser
 		}
 	}
 	return out
