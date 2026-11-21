@@ -47,7 +47,10 @@
   },
   {
    "roles": [
-    "guest_issuer"
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin"
    ],
    "status": 403,
    "headers": {
@@ -80,16 +83,13 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Permission denied: metrics.view",
+     "error": "Permission denied: server.config",
      "success": false
     }
    }
   },
   {
    "roles": [
-    "viewer",
-    "operator",
-    "global_admin",
     "server_admin",
     "super_admin",
     "admin"
