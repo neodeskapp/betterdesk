@@ -341,6 +341,38 @@ func TestTwoFactorEnrolment(t *testing.T) {
 	})
 }
 
+// A wrong password to turn the second factor off is a failed sign-in
+// attempt of the account at the address, and the account's lockout there
+// refuses further tries (RV121).
+func TestTOTPDisableCountsWrongPasswords(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		bob := w.addUser(user{name: "bob", totpSecret: totpSecret})
+		a := w.agent()
+		a.signIn("bob")
+		w.exec(`UPDATE users SET totp_enabled = `+w.db.Pick("1", "TRUE")+` WHERE id = ?`, bob)
+		w.exec(`DELETE FROM login_attempts`)
+		want(t, "a number", a.post("/api/auth/totp/disable", `{"password":12345}`), http.StatusUnauthorized, invalidCredentials)
+		for i := 0; i < 9; i++ {
+			want(t, "a wrong password", a.post("/api/auth/totp/disable", `{"password":"wrong"}`), http.StatusUnauthorized, invalidCredentials)
+		}
+		if got := w.attempts(); len(got) != 10 || got[0] != "bob|127.0.0.1|0" || got[9] != "bob|127.0.0.1|0" {
+			t.Errorf("attempts: %v", got)
+		}
+		res := a.post("/api/auth/totp/disable", fmt.Sprintf(`{"password":%q}`, password))
+		if res.status != http.StatusTooManyRequests || !strings.Contains(res.body, `"code":"account_locked"`) || res.header.Get("Retry-After") == "" {
+			t.Errorf("the right password after ten wrong ones: %d %s", res.status, res.body)
+		}
+		if on := w.text(`SELECT CASE WHEN `+w.db.Pick("totp_enabled = 1", "totp_enabled")+` THEN 'on' ELSE 'off' END FROM users WHERE id = ?`, bob); on != "on" {
+			t.Errorf("the second factor after a refused request: %s", on)
+		}
+		// The sign-in of the account from that address is locked too
+		res = w.agent().post("/api/auth/login", fmt.Sprintf(`{"username":"bob","password":%q}`, password))
+		if res.status != http.StatusTooManyRequests {
+			t.Errorf("sign-in after the wrong passwords: %d %s", res.status, res.body)
+		}
+	})
+}
+
 func TestTwoFactorRoutesWhenTheAuditLogFails(t *testing.T) {
 	w := newWorld(t, nil, setup{})
 	alice := w.addUser(user{name: "alice", totpSecret: totpSecret})

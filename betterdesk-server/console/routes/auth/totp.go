@@ -78,7 +78,9 @@ func (h *handlers) totpEnable(w http.ResponseWriter, r *http.Request) {
 
 // totpDisable answers POST /api/auth/totp/disable with the body
 // {password}: with the account's password it turns two-factor sign-in off
-// and deletes the secret and the recovery codes.
+// and deletes the secret and the recovery codes. A wrong password is a
+// failed sign-in attempt of the account at the client's address, and the
+// lockout that refuses the account's sign-in there refuses this too.
 func (h *handlers) totpDisable(w http.ResponseWriter, r *http.Request) {
 	password := kit.Body(r).Get("password")
 	if !password.Truthy() {
@@ -95,6 +97,16 @@ func (h *handlers) totpDisable(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusNotFound, kit.T(r, "users.not_found", nil))
 		return
 	}
+	ip := kit.ClientIP(r)
+	lockout, err := h.authn.CheckBruteForce(r.Context(), user.Username, ip)
+	if err != nil {
+		h.serverError(w, r, "TOTP disable error:", err)
+		return
+	}
+	if lockout.Blocked {
+		h.refuseLockedOut(w, r, lockout, h.sessions.ClientMeta(r, ""))
+		return
+	}
 	// A password that is not text is never the right one
 	valid := false
 	if text, isText := password.Str(); isText {
@@ -104,6 +116,10 @@ func (h *handlers) totpDisable(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !valid {
+		if err := h.authn.RecordAttempt(r.Context(), user.Username, ip, false); err != nil {
+			h.serverError(w, r, "TOTP disable error:", err)
+			return
+		}
 		kit.Fail(w, r, http.StatusUnauthorized, kit.T(r, "auth.invalid_credentials", nil))
 		return
 	}
