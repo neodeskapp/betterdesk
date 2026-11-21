@@ -54,29 +54,6 @@ func getOrgIDFromCtx(r *http.Request) string {
 	return ""
 }
 
-// peerOrgScopeCheck verifies org-scoped users have access to the target peer.
-// Returns true if access is allowed, false if denied (response already written).
-// Super admins, global admins, and users without org context bypass the check.
-func (s *Server) peerOrgScopeCheck(w http.ResponseWriter, r *http.Request, peerID string) bool {
-	userRole := getRoleFromCtx(r)
-	// Super admin and global admin can access any peer.
-	if auth.IsSuperAdminRole(userRole) || userRole == auth.RoleGlobalAdmin {
-		return true
-	}
-	orgID := getOrgIDFromCtx(r)
-	if orgID == "" {
-		// Global user (no org scope) — allowed (permissions already checked by requirePermission).
-		return true
-	}
-	// Org-scoped user: peer must be assigned to their org.
-	od, _ := s.db.GetOrgDevice(orgID, peerID)
-	if od != nil {
-		return true
-	}
-	writeJSON(w, http.StatusForbidden, map[string]string{"error": "Device not in your organization"})
-	return false
-}
-
 // requireRole wraps a handler to enforce minimum role permissions.
 func (s *Server) requireRole(role string, handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

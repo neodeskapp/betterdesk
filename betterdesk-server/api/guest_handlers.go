@@ -34,6 +34,11 @@ func (s *Server) handleGuestAccessCreate(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
+	for _, id := range body.PeerIDs {
+		if !s.deviceInScope(w, r, strings.TrimSpace(id)) {
+			return
+		}
+	}
 	token, grant, err := s.guestAccessStore().Create(body.PeerIDs, username, body.TTLMinutes, body.ViewOnly, body.Label, body.MaxUses)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})

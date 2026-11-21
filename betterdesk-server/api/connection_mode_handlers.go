@@ -31,7 +31,7 @@ type verifiedDeviceIdentity struct {
 
 func (s *Server) handleGetConnectionMode(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 	peer, err := s.db.GetPeer(id)
@@ -44,7 +44,7 @@ func (s *Server) handleGetConnectionMode(w http.ResponseWriter, r *http.Request)
 
 func (s *Server) handleSetConnectionMode(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 	peer, err := s.db.GetPeer(id)

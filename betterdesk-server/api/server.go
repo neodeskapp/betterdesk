@@ -348,22 +348,22 @@ func (s *Server) routes() *http.ServeMux {
 	// peers, status, metrics, linked devices) without `device.view`.
 	mux.HandleFunc("GET /api/peers/status/summary", s.requirePermission(auth.PermDeviceView, s.handleStatusSummary))
 	mux.HandleFunc("GET /api/peers/online", s.requirePermission(auth.PermDeviceView, s.handleOnlinePeers))
-	mux.HandleFunc("GET /api/peers/{id}/status", s.requirePermission(auth.PermDeviceView, s.handlePeerStatus))
+	mux.HandleFunc("GET /api/peers/{id}/status", s.requirePermission(auth.PermDeviceView, s.scopedDevice(s.handlePeerStatus)))
 	mux.HandleFunc("GET /api/peers/{id}/metrics", s.requirePermission(auth.PermDeviceView, s.handlePeerMetrics))
 	mux.HandleFunc("GET /api/peers/{id}/availability", s.requirePermission(auth.PermDeviceView, s.handlePeerAvailability))
 	mux.HandleFunc("GET /api/peers/{id}/connection-sessions", s.requirePermission(auth.PermDeviceView, s.handlePeerConnectionSessions))
-	mux.HandleFunc("GET /api/peers/{id}/telemetry", s.requirePermission(auth.PermDeviceView, s.handleGetPeerTelemetry))
-	mux.HandleFunc("POST /api/peers/{id}/telemetry/refresh", s.requirePermission(auth.PermDeviceEdit, s.handleRefreshPeerHardware))
-	mux.HandleFunc("POST /api/peers/{id}/telemetry/command", s.requireRole(auth.RoleOperator, s.handleQueuePeerTelemetryCommand))
-	mux.HandleFunc("GET /api/peers/{id}/linked", s.requirePermission(auth.PermDeviceView, s.handleLinkedPeers))
-	mux.HandleFunc("POST /api/peers/{id}/wol", s.requireRole(auth.RoleOperator, s.handleWakeOnLan))
-	mux.HandleFunc("GET /api/peers/{id}/access-policy", s.requireRole(auth.RoleOperator, s.handleGetAccessPolicy))
-	mux.HandleFunc("PUT /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.handleSaveAccessPolicy))
-	mux.HandleFunc("DELETE /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.handleDeleteAccessPolicy))
+	mux.HandleFunc("GET /api/peers/{id}/telemetry", s.requirePermission(auth.PermDeviceView, s.scopedDevice(s.handleGetPeerTelemetry)))
+	mux.HandleFunc("POST /api/peers/{id}/telemetry/refresh", s.requirePermission(auth.PermDeviceEdit, s.scopedDevice(s.handleRefreshPeerHardware)))
+	mux.HandleFunc("POST /api/peers/{id}/telemetry/command", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleQueuePeerTelemetryCommand)))
+	mux.HandleFunc("GET /api/peers/{id}/linked", s.requirePermission(auth.PermDeviceView, s.scopedDevice(s.handleLinkedPeers)))
+	mux.HandleFunc("POST /api/peers/{id}/wol", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleWakeOnLan)))
+	mux.HandleFunc("GET /api/peers/{id}/access-policy", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleGetAccessPolicy)))
+	mux.HandleFunc("PUT /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.scopedDevice(s.handleSaveAccessPolicy)))
+	mux.HandleFunc("DELETE /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.scopedDevice(s.handleDeleteAccessPolicy)))
 	mux.HandleFunc("GET /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceView, s.handleGetConnectionMode))
 	mux.HandleFunc("POST /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceConnectionMode, s.handleSetConnectionMode))
 	mux.HandleFunc("POST /api/peers/{id}/session-grant", s.requireRole(auth.RoleOperator, s.handleIssueSupportSessionGrant))
-	mux.HandleFunc("GET /api/peers/{id}/policy", s.requirePermission(auth.PermDeviceView, s.handleGetPeerPolicy))
+	mux.HandleFunc("GET /api/peers/{id}/policy", s.requirePermission(auth.PermDeviceView, s.scopedDevice(s.handleGetPeerPolicy)))
 
 	// Manually configured RDP/VNC targets.
 	mux.HandleFunc("GET /api/remote-targets", s.requirePermission(auth.PermRemoteTargetView, s.handleListRemoteTargets))
@@ -384,7 +384,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("DELETE /api/blocklist/{entry}", s.requirePermission(auth.PermBlocklistEdit, s.handleRemoveBlocklist))
 
 	// Tags
-	mux.HandleFunc("PUT /api/peers/{id}/tags", s.requirePermission(auth.PermDeviceEdit, s.handleSetPeerTags))
+	mux.HandleFunc("PUT /api/peers/{id}/tags", s.requirePermission(auth.PermDeviceEdit, s.scopedDevice(s.handleSetPeerTags)))
 	mux.HandleFunc("GET /api/tags/{tag}/peers", s.requirePermission(auth.PermDeviceView, s.handlePeersByTag))
 
 	// Chat (requires chat.access permission)
@@ -420,7 +420,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/org/{id}/peer-credentials", s.requireOrgMembership("id", s.handleListOrgPeerCredentials))
 	mux.HandleFunc("PUT /api/org/{id}/peer-credentials/{peerId}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleSetOrgPeerCredential)))
 	mux.HandleFunc("DELETE /api/org/{id}/peer-credentials/{peerId}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleClearOrgPeerCredential)))
-	mux.HandleFunc("GET /api/peers/{id}/connect-password", s.requirePermission(auth.PermDeviceConnect, s.handleGetPeerConnectPassword))
+	mux.HandleFunc("GET /api/peers/{id}/connect-password", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleGetPeerConnectPassword)))
 	mux.HandleFunc("POST /api/org/login", s.handleOrgLogin) // public — no auth required
 
 	// User-Org Linking (Issue #106)
@@ -649,10 +649,10 @@ func (s *Server) routes() *http.ServeMux {
 	// CDAP device management (requires CDAP gateway to be enabled)
 	mux.HandleFunc("GET /api/cdap/status", s.handleCDAPStatus)
 	mux.HandleFunc("GET /api/cdap/devices", s.handleCDAPListDevices)
-	mux.HandleFunc("GET /api/cdap/devices/{id}", s.handleCDAPDeviceInfo)
-	mux.HandleFunc("GET /api/cdap/devices/{id}/manifest", s.handleCDAPDeviceManifest)
-	mux.HandleFunc("GET /api/cdap/devices/{id}/state", s.handleCDAPDeviceState)
-	mux.HandleFunc("POST /api/cdap/devices/{id}/command", s.requireRole(auth.RoleOperator, s.handleCDAPSendCommand))
+	mux.HandleFunc("GET /api/cdap/devices/{id}", s.scopedDevice(s.handleCDAPDeviceInfo))
+	mux.HandleFunc("GET /api/cdap/devices/{id}/manifest", s.scopedDevice(s.handleCDAPDeviceManifest))
+	mux.HandleFunc("GET /api/cdap/devices/{id}/state", s.scopedDevice(s.handleCDAPDeviceState))
+	mux.HandleFunc("POST /api/cdap/devices/{id}/command", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleCDAPSendCommand)))
 	mux.HandleFunc("GET /api/cdap/alerts", s.handleCDAPAlerts)
 
 	// CDAP auth delegation (admin only)
@@ -661,19 +661,19 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/cdap/delegations", s.requireRole(auth.RoleAdmin, s.handleCDAPDelegateList))
 
 	// CDAP terminal WebSocket (admin only, upgraded inside handler)
-	mux.HandleFunc("GET /api/cdap/devices/{id}/terminal", s.requireRole(auth.RoleAdmin, s.handleCDAPTerminal))
+	mux.HandleFunc("GET /api/cdap/devices/{id}/terminal", s.requireRole(auth.RoleAdmin, s.scopedDevice(s.handleCDAPTerminal)))
 
 	// CDAP remote desktop WebSocket (admin only)
-	mux.HandleFunc("GET /api/cdap/devices/{id}/desktop", s.requireRole(auth.RoleAdmin, s.handleCDAPDesktop))
+	mux.HandleFunc("GET /api/cdap/devices/{id}/desktop", s.requireRole(auth.RoleAdmin, s.scopedDevice(s.handleCDAPDesktop)))
 
 	// CDAP video stream WebSocket (operator+)
-	mux.HandleFunc("GET /api/cdap/devices/{id}/video", s.requireRole(auth.RoleOperator, s.handleCDAPVideo))
+	mux.HandleFunc("GET /api/cdap/devices/{id}/video", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleCDAPVideo)))
 
 	// CDAP file browser WebSocket (admin only)
-	mux.HandleFunc("GET /api/cdap/devices/{id}/files", s.requireRole(auth.RoleAdmin, s.handleCDAPFileBrowser))
+	mux.HandleFunc("GET /api/cdap/devices/{id}/files", s.requireRole(auth.RoleAdmin, s.scopedDevice(s.handleCDAPFileBrowser)))
 
 	// CDAP audio stream WebSocket (operator+)
-	mux.HandleFunc("GET /api/cdap/devices/{id}/audio", s.requireRole(auth.RoleOperator, s.handleCDAPAudio))
+	mux.HandleFunc("GET /api/cdap/devices/{id}/audio", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleCDAPAudio)))
 
 	// MeshCentral compatibility REST
 	mux.HandleFunc("GET /api/mesh/server-id", s.requirePermission(auth.PermServerConfig, s.handleMeshServerID))
@@ -681,10 +681,10 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/mesh/groups", s.requirePermission(auth.PermServerConfig, s.handleMeshGroupsList))
 	mux.HandleFunc("POST /api/mesh/groups", s.requirePermission(auth.PermServerConfig, s.handleMeshGroupsSave))
 	mux.HandleFunc("GET /api/mesh/download.msh", s.requirePermission(auth.PermServerConfig, s.handleMeshDownloadMSH))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/desktop", s.requirePermission(auth.PermDeviceConnect, s.handleMeshDesktopTunnel))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/terminal", s.requirePermission(auth.PermMeshTerminal, s.handleMeshTerminalTunnel))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/files", s.requirePermission(auth.PermMeshFiles, s.handleMeshFilesTunnel))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/share", s.requireRole(auth.RoleOperator, s.handleMeshShareCreate))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/desktop", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleMeshDesktopTunnel)))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/terminal", s.requirePermission(auth.PermMeshTerminal, s.scopedDevice(s.handleMeshTerminalTunnel)))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/files", s.requirePermission(auth.PermMeshFiles, s.scopedDevice(s.handleMeshFilesTunnel)))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/share", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleMeshShareCreate)))
 	mux.HandleFunc("GET /api/mesh/share/validate", s.handleMeshShareValidate)
 
 	// Guest Access Links (temporary RdClient allowlist links)
@@ -695,15 +695,15 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/guest/access-links/consume", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessConsume))
 	mux.HandleFunc("POST /api/guest/access-links/events", s.requirePermission(auth.PermGuestCreate, s.handleGuestAccessEvent))
 	mux.HandleFunc("GET /api/guest/access-links/peers", s.handleGuestAccessPeers)
-	mux.HandleFunc("POST /api/mesh/devices/{id}/tcp", s.requirePermission(auth.PermDeviceConnect, s.handleMeshTcpRelay))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/udp", s.requirePermission(auth.PermDeviceConnect, s.handleMeshUdpRelay))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/power", s.requirePermission(auth.PermMeshPower, s.handleMeshPower))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/group", s.requirePermission(auth.PermServerConfig, s.handleMeshDeviceGroup))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/tcp", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleMeshTcpRelay)))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/udp", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleMeshUdpRelay)))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/power", s.requirePermission(auth.PermMeshPower, s.scopedDevice(s.handleMeshPower)))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/group", s.requirePermission(auth.PermServerConfig, s.scopedDevice(s.handleMeshDeviceGroup)))
 	mux.HandleFunc("GET /api/mesh/recordings", s.requirePermission(auth.PermDeviceView, s.handleMeshRecordingsList))
 	mux.HandleFunc("GET /api/mesh/recordings/{id}", s.requirePermission(auth.PermDeviceConnect, s.handleMeshRecordingDownload))
 	mux.HandleFunc("GET /api/session/recordings", s.requirePermission(auth.PermDeviceView, s.handleSessionRecordingsList))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/exec", s.requireRole(auth.RoleOperator, s.handleMeshExec))
-	mux.HandleFunc("POST /api/peers/{id}/exec", s.requireRole(auth.RoleOperator, s.handleUnifiedPeerExec))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/exec", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleMeshExec)))
+	mux.HandleFunc("POST /api/peers/{id}/exec", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleUnifiedPeerExec)))
 
 	if s.meshGw != nil {
 		s.meshGw.RegisterRoutes(mux)
@@ -1165,7 +1165,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	// Org scope check: org-scoped users can only access devices in their org.
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 
@@ -1248,6 +1248,10 @@ func (s *Server) handleLinkedPeers(w http.ResponseWriter, r *http.Request) {
 		writeInternalError(w, err, "GetLinkedPeers")
 		return
 	}
+	if linked, err = s.visiblePeers(r, linked); err != nil {
+		writeInternalError(w, err, "device scope")
+		return
+	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"peer_id": id,
@@ -1262,7 +1266,7 @@ func (s *Server) handleLinkedPeers(w http.ResponseWriter, r *http.Request) {
 // PATCH /api/peers/{id}
 func (s *Server) handleUpdatePeerFields(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 
@@ -1321,7 +1325,7 @@ func (s *Server) handleUpdatePeerFields(w http.ResponseWriter, r *http.Request) 
 
 func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 	hard := r.URL.Query().Get("hard") == "true"
@@ -1458,7 +1462,7 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleBanPeer(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 
@@ -1492,7 +1496,7 @@ func (s *Server) handleBanPeer(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 
@@ -1545,7 +1549,7 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 // a deleted device back. UpsertPeer no longer restores rows implicitly.
 func (s *Server) handleRestorePeer(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 
@@ -1595,7 +1599,7 @@ func (s *Server) handleRestorePeer(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleChangePeerID(w http.ResponseWriter, r *http.Request) {
 	oldID := r.PathValue("id")
-	if !s.peerOrgScopeCheck(w, r, oldID) {
+	if !s.deviceInScope(w, r, oldID) {
 		return
 	}
 
@@ -1743,6 +1747,20 @@ func (s *Server) handleStatusSummary(w http.ResponseWriter, r *http.Request) {
 // GET /api/peers/online
 func (s *Server) handleOnlinePeers(w http.ResponseWriter, r *http.Request) {
 	snapshots := s.peers.GetAllSnapshots(config.DegradedThreshold, config.CriticalThreshold)
+	visible, err := s.visibleSnapshotIDs(r, snapshots)
+	if err != nil {
+		writeInternalError(w, err, "device scope")
+		return
+	}
+	if visible != nil {
+		kept := make([]peer.Snapshot, 0, len(snapshots))
+		for _, snap := range snapshots {
+			if visible[snap.ID] {
+				kept = append(kept, snap)
+			}
+		}
+		snapshots = kept
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"count": len(snapshots),
 		"peers": snapshots,
@@ -1795,7 +1813,7 @@ func (s *Server) handlePeerAvailability(w http.ResponseWriter, r *http.Request) 
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid peer ID"})
 		return
 	}
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 
@@ -1848,7 +1866,7 @@ func (s *Server) handlePeerConnectionSessions(w http.ResponseWriter, r *http.Req
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid peer ID"})
 		return
 	}
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 
@@ -1883,7 +1901,7 @@ func (s *Server) handlePeerMetrics(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid peer ID"})
 		return
 	}
-	if !s.peerOrgScopeCheck(w, r, id) {
+	if !s.deviceInScope(w, r, id) {
 		return
 	}
 
@@ -2138,6 +2156,10 @@ func (s *Server) handlePeersByTag(w http.ResponseWriter, r *http.Request) {
 	peers, err := s.db.ListPeersByTag(tag)
 	if err != nil {
 		writeInternalError(w, err, "ListPeersByTag")
+		return
+	}
+	if peers, err = s.visiblePeers(r, peers); err != nil {
+		writeInternalError(w, err, "device scope")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{

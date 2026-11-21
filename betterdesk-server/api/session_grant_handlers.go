@@ -40,7 +40,7 @@ func (s *Server) handleIssueSupportSessionGrant(w http.ResponseWriter, r *http.R
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "peer ID required"})
 		return
 	}
-	if !s.peerOrgScopeCheck(w, r, deviceID) {
+	if !s.deviceInScope(w, r, deviceID) {
 		return
 	}
 	if s.keyPair == nil || len(s.keyPair.PrivateKey) == 0 {
