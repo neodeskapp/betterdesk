@@ -487,12 +487,17 @@ func (g *Gateway) delegationCleaner() {
 	}
 }
 
-// removeDevice cleans up a device connection from the registry.
+// removeDevice cleans up a device connection from the registry. Only the
+// connection stored under the id is cleaned up: one that never registered,
+// or that a reconnect replaced, leaves the live connection, its manifest
+// and its sessions alone.
 func (g *Gateway) removeDevice(dc *DeviceConn) {
 	if dc == nil || dc.ID == "" {
 		return
 	}
-	g.devices.Delete(dc.ID)
+	if !g.devices.CompareAndDelete(dc.ID, dc) {
+		return
+	}
 
 	// Clear any firing alerts for this device
 	if g.alertEngine != nil {
