@@ -16,30 +16,17 @@ func (g *Gateway) handleControlWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := ""
-	if g.jwt != nil {
-		if tok := r.Header.Get("x-meshauth"); tok != "" {
-			parts := strings.Split(tok, ",")
-			if len(parts) >= 1 {
-				claims, err := g.jwt.Validate(parts[0])
-				if err == nil {
-					userID = claims.Sub
-				}
-			}
-		}
-		if userID == "" {
-			if h := r.Header.Get("Authorization"); strings.HasPrefix(h, "Bearer ") {
-				claims, err := g.jwt.Validate(strings.TrimPrefix(h, "Bearer "))
-				if err == nil {
-					userID = claims.Sub
-				}
-			}
-		}
-	}
-	if userID == "" {
+	p, ok := g.controlPrincipalOf(r)
+	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
+	// The node list is what GET /api/mesh/status and the device list show.
+	if !g.may(p, auth.PermDeviceView) {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	userID := p.user
 
 	conn, err := websocket.Accept(w, r, g.webSocketAcceptOptions())
 	if err != nil {
@@ -72,6 +59,10 @@ func (g *Gateway) handleControlWS(w http.ResponseWriter, r *http.Request) {
 		case "ping":
 			conn.Write(ctx, websocket.MessageText, []byte(`{"action":"pong"}`))
 		case "authcookie":
+			// A relay cookie opens sessions, as POST /api/mesh/devices/{id}/desktop does.
+			if !g.may(p, auth.PermDeviceConnect) {
+				continue
+			}
 			cookie, err := g.cookies.Encode(&RelayCookieData{RUserID: userID, ExpireMin: 240}, 240)
 			if err == nil {
 				resp, _ := json.Marshal(map[string]string{"action": "authcookie", "cookie": cookie})
@@ -80,6 +71,10 @@ func (g *Gateway) handleControlWS(w http.ResponseWriter, r *http.Request) {
 		case "nodes":
 			g.sendNodesList(ctx, conn, userID)
 		case "runcommands":
+			// POST /api/mesh/devices/{id}/exec asks for the operator role.
+			if !auth.HasPermission(p.role, auth.RoleOperator) {
+				continue
+			}
 			nodeid, _ := msg["nodeid"].(string)
 			cmds, _ := msg["cmds"].(string)
 			peerID := g.peerIDFromNode(nodeid)
@@ -87,6 +82,9 @@ func (g *Gateway) handleControlWS(w http.ResponseWriter, r *http.Request) {
 				_ = g.SendRunCommand(peerID, userID, cmds, true)
 			}
 		case "devicepower":
+			if !g.may(p, auth.PermMeshPower) {
+				continue
+			}
 			nodeid, _ := msg["nodeid"].(string)
 			peerID := g.peerIDFromNode(nodeid)
 			if peerID == "" {

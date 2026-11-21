@@ -29,6 +29,7 @@ type Gateway struct {
 	auditLog  *audit.Logger
 	blocklist *security.Blocklist
 	jwt       *auth.JWTManager
+	perms     PermissionChecker
 	limiter   *ratelimit.IPLimiter
 	cookies   *CookieCodec
 	creds     *AgentCredentials
