@@ -148,6 +148,7 @@ func readWSBinaryCmdAny(ctx context.Context, conn *websocket.Conn, cmds []uint16
 func TestAgentHandshakeInterop(t *testing.T) {
 	gw, srv := newTestGateway(t)
 	agentKey, agentCert, nodeID := generateAgentKeyAndCert(t)
+	approveAgent(t, gw, nodeID)
 
 	wsURL := strings.Replace(srv.URL, "http://", "ws://", 1) + "/agent.ashx"
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

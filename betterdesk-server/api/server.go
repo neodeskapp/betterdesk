@@ -317,11 +317,13 @@ func (s *Server) SetCDAPGateway(gw *cdap.Gateway) {
 }
 
 // SetMeshGateway sets the MeshCentral compatibility gateway and gives it
-// the API's permission check for the actions of /control.ashx.
+// the API's permission check for the actions of /control.ashx and the
+// enrollment queue for new agents (QueueMeshAgent).
 func (s *Server) SetMeshGateway(gw *meshcentral.Gateway) {
 	s.meshGw = gw
 	if gw != nil {
 		gw.SetPermissionChecker(s)
+		gw.SetEnrollmentQueue(s)
 	}
 }
 

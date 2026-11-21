@@ -50,6 +50,9 @@ type Gateway struct {
 
 	activeAgents atomic.Int64
 	version      string
+
+	// enroll keeps new agents until they are approved (SetEnrollmentQueue).
+	enroll atomic.Pointer[enrollmentQueue]
 }
 
 // NewGateway creates a MeshCentral compatibility gateway.

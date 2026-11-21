@@ -294,6 +294,9 @@ func (ac *AgentConn) tryCompleteAuth(ctx context.Context) error {
 		log.Printf("[mesh] agent from %s refused: unknown mesh id", ac.clientIP)
 		return fmt.Errorf("unknown mesh id")
 	}
+	if err := ac.gw.admitAgent(ac); err != nil {
+		return err
+	}
 
 	ac.authenticated = true
 	peerID, err := ac.gw.registerAgent(ac)

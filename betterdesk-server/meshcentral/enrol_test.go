@@ -2,6 +2,7 @@ package meshcentral
 
 import (
 	"context"
+	"crypto/rsa"
 	"encoding/binary"
 	"encoding/hex"
 	"strings"
@@ -12,12 +13,19 @@ import (
 	"github.com/unitronix/betterdesk-server/db"
 )
 
-// agentHandshake runs the agent side of the handshake with a mesh id and
-// host name. It returns the open socket and true when the server confirmed
-// the agent, or false when it closed the socket instead.
+// agentHandshake runs the agent side of the handshake with a new agent key,
+// a mesh id and a host name. It returns the open socket and true when the
+// server confirmed the agent, or false when it closed the socket instead.
 func agentHandshake(t *testing.T, ctx context.Context, url string, meshRaw []byte, hostname string) (*websocket.Conn, bool) {
 	t.Helper()
 	agentKey, agentCert, _ := generateAgentKeyAndCert(t)
+	return agentHandshakeAs(t, ctx, url, agentKey, agentCert, meshRaw, hostname)
+}
+
+// agentHandshakeAs is agentHandshake with the agent key and certificate of
+// an agent the test made.
+func agentHandshakeAs(t *testing.T, ctx context.Context, url string, agentKey *rsa.PrivateKey, agentCert, meshRaw []byte, hostname string) (*websocket.Conn, bool) {
+	t.Helper()
 	conn, _, err := websocket.Dial(ctx, url, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -65,6 +73,15 @@ func agentHandshake(t *testing.T, ctx context.Context, url string, meshRaw []byt
 	}
 	_, ok = read(cmdAuthConfirm)
 	return conn, ok
+}
+
+// approveAgent creates the device of an agent as approving its pending
+// request does.
+func approveAgent(t *testing.T, gw *Gateway, nodeID string) {
+	t.Helper()
+	if err := gw.db.UpsertPeer(&db.Peer{ID: meshPeerID(nodeID), UUID: nodeID, DeviceType: "mesh_agent", OS: "mesh", Status: "OFFLINE"}); err != nil {
+		t.Fatal(err)
+	}
 }
 
 // meshAgents lists the peer rows of mesh agents.
@@ -118,7 +135,9 @@ func TestAgentNeedsTheMeshIDOfAGroup(t *testing.T) {
 	}
 
 	raw, _ := hex.DecodeString(groupID)
-	conn, ok := agentHandshake(t, ctx, url, raw, "office-pc"+strings.Repeat("x", 300))
+	key, cert, nodeID := generateAgentKeyAndCert(t)
+	approveAgent(t, gw, nodeID)
+	conn, ok := agentHandshakeAs(t, ctx, url, key, cert, raw, "office-pc"+strings.Repeat("x", 300))
 	if !ok {
 		t.Fatal("an agent with the group's mesh id was refused")
 	}
