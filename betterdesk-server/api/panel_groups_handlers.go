@@ -177,6 +177,11 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 
 	var created bool
 	if body.GUID == "" {
+		// Who may see the group's devices is the access list: setting one
+		// asks user.edit, a group without one asks device.edit only.
+		if (len(accessNames(users)) > 0 || len(accessNames(groups)) > 0) && !s.permitted(w, r, auth.PermUserEdit) {
+			return
+		}
 		g := &db.DeviceGroup{
 			Name:       body.Name,
 			Note:       note,
@@ -209,18 +214,25 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 		if body.TeamID == nil {
 			teamID = existing.TeamID
 		}
-		if !usersSent || !groupsSent {
-			acl, err := store.GetDeviceGroupACL(body.GUID)
-			if err != nil {
-				writeInternalError(w, err, "GetDeviceGroupACL")
-				return
-			}
-			if acl != nil && !usersSent {
-				users = acl.AllowedUsers
-			}
-			if acl != nil && !groupsSent {
-				groups = acl.AllowedUserGroups
-			}
+		acl, err := store.GetDeviceGroupACL(body.GUID)
+		if err != nil {
+			writeInternalError(w, err, "GetDeviceGroupACL")
+			return
+		}
+		var storedUsers, storedGroups []string
+		if acl != nil {
+			storedUsers, storedGroups = acl.AllowedUsers, acl.AllowedUserGroups
+		}
+		if !usersSent {
+			users = storedUsers
+		}
+		if !groupsSent {
+			groups = storedGroups
+		}
+		// Renaming keeps device.edit; changing the access list asks
+		// user.edit, also when the form sends the lists unchanged along.
+		if (!sameAccessNames(users, storedUsers) || !sameAccessNames(groups, storedGroups)) && !s.permitted(w, r, auth.PermUserEdit) {
+			return
 		}
 		update := &db.DeviceGroup{
 			GUID:       body.GUID,
@@ -620,6 +632,35 @@ func (s *Server) handlePanelUserGrantsPut(w http.ResponseWriter, r *http.Request
 
 // ── helpers ───────────────────────────────────────────────────────────
 
+// accessNames are the names of an access list without blanks and spaces
+// around them.
+func accessNames(list []string) []string {
+	out := make([]string, 0, len(list))
+	for _, name := range list {
+		if name = strings.TrimSpace(name); name != "" {
+			out = append(out, name)
+		}
+	}
+	return out
+}
+
+// sameAccessNames reports whether two access lists name the same entries,
+// in any order.
+func sameAccessNames(a, b []string) bool {
+	set := map[string]bool{}
+	for _, name := range accessNames(a) {
+		set[name] = true
+	}
+	other := map[string]bool{}
+	for _, name := range accessNames(b) {
+		if !set[name] {
+			return false
+		}
+		other[name] = true
+	}
+	return len(set) == len(other)
+}
+
 // panelGroupOpenTo reports whether the caller may change the device group:
 // a group whose access list keeps the caller out (panelGroupAllowedForUser)
 // is refused with 403, so no one opens, empties or deletes a group closed
@@ -681,7 +722,9 @@ func parsePanelID(w http.ResponseWriter, raw string) (int64, bool) {
 }
 
 // registerPanelGroupRoutes mounts the grouping endpoints. Writes need
-// device.edit (groups) or user.edit (grants); reads need device.view or
+// device.edit (groups, members, folders) or user.edit (grants and the
+// access lists, which decide who sees a group's or folder's devices: the
+// ACL route, and the lists in a group save); reads need device.view or
 // user.view, so a viewer can see the folders but not change them.
 func (s *Server) registerPanelGroupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/panel/device-groups",
@@ -697,7 +740,7 @@ func (s *Server) registerPanelGroupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/panel/device-groups/{guid}/acl",
 		s.requirePermission(auth.PermDeviceView, s.handlePanelDeviceGroupACLGet))
 	mux.HandleFunc("PUT /api/panel/device-groups/{guid}/acl",
-		s.requirePermission(auth.PermDeviceEdit, s.handlePanelDeviceGroupACLPut))
+		s.requirePermission(auth.PermUserEdit, s.handlePanelDeviceGroupACLPut))
 
 	mux.HandleFunc("GET /api/panel/folders",
 		s.requirePermission(auth.PermDeviceView, s.handlePanelFoldersList))
