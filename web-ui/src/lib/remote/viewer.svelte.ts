@@ -120,6 +120,8 @@ export class ViewerSession {
 	everStreamed = $state(false);
 	connectedAt = $state<number | null>(null);
 	lastError = $state('');
+	/** The client confirmed end-to-end encryption with the device (RustDesk only) */
+	encrypted = $state(false);
 	loginError = $state('');
 	tfaError = $state('');
 	password = $state('');
@@ -440,6 +442,7 @@ export class Viewer {
 		s.endedBy = '';
 		s.endInfo = null;
 		s.lastError = '';
+		s.encrypted = false;
 		s.loginError = '';
 		s.tfaError = '';
 		if (!s.canvas) return;
@@ -464,6 +467,8 @@ export class Viewer {
 
 		on('state', (state: string) => {
 			s.state = String(state);
+			// CDAP, mesh, RDP and VNC streams pass through the server: never end-to-end
+			s.encrypted = this.transport === 'rd' && c.encrypted === true;
 			this.handleState(s, s.state);
 		});
 		on('log', (msg: unknown) => {

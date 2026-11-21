@@ -89,6 +89,8 @@ export interface ClientStats {
 export interface RemoteClient {
 	readonly state?: string;
 	readonly _state?: string;
+	/** RDClient: the device proved its identity and encrypts (the other clients go through the server) */
+	readonly encrypted?: boolean;
 	viewOnly?: boolean;
 	renderer: { resize(): void };
 	video?: { onAutoplayBlocked?: (() => void) | null; retryPlay?(): void };

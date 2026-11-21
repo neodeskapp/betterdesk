@@ -118,6 +118,8 @@ class RDClient {
 
     get state() { return this._state; }
     get peerInfo() { return this._peerInfo; }
+    /** True once the device's identity checked out and it sent its first encrypted frame */
+    get encrypted() { return this._keyExchangeDone && this._peerEncryptionConfirmed; }
 
     // ---- Event Emitter ----
 

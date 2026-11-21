@@ -123,10 +123,12 @@
 						: tf('remote_viewer.info_route_server', 'Through the server')}
 				</dd>
 				{#if s.view === 'streaming'}
-					<dt>{tf('remote_viewer.info_encryption', 'Encryption')}</dt>
-					<dd>
-						<Status tone="good" label={tf('remote_viewer.info_encrypted', 'End-to-end encrypted')} />
-					</dd>
+					{#if viewer.transport === 'rd' && s.encrypted}
+						<dt>{tf('remote_viewer.info_encryption', 'Encryption')}</dt>
+						<dd>
+							<Status tone="good" label={tf('remote_viewer.info_encrypted', 'End-to-end encrypted')} />
+						</dd>
+					{/if}
 					{#if s.latency}
 						<dt>{tf('remote_viewer.info_latency', 'Round trip')}</dt>
 						<dd class="tabular">{`${formatNumber(Math.round(s.latency))} ms`}</dd>

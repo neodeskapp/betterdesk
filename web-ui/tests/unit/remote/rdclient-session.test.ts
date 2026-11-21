@@ -141,7 +141,10 @@ describe('device identity and encryption (main session)', () => {
 		// The client answers the SignedId with its key at once
 		expect(t.sent).toHaveLength(1);
 		expect(d.takeKey(t.sent[0]!)).not.toBeNull();
+		// Session info claims encryption only once the device has encrypted
+		expect(t.c.encrypted).toBe(false);
 		t.c._handleRelayMessage(d.sealed(HASH));
+		expect(t.c.encrypted).toBe(true);
 		expect(t.errors).toEqual([]);
 		expect(t.prompts).toHaveLength(1);
 		expect(t.c.state).toBe('waiting_password');
