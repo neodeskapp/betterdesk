@@ -7378,6 +7378,7 @@
     "ttl": "Ważny przez (minuty)",
     "label": "Etykieta (opcjonalnie)",
     "view_only": "Tylko podgląd",
+    "view_only_rustdesk": "Urządzenia RustDesk nie da się ograniczyć do samego podglądu, więc ten link daje pełną kontrolę. Tylko podgląd działa dla urządzeń Mesh i CDAP.",
     "url": "URL do udostępnienia",
     "create": "Utwórz link",
     "created": "Utworzono link gościnny",

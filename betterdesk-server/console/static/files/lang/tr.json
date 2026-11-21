@@ -7384,6 +7384,7 @@
     "ttl": "Geçerlilik (dakika)",
     "label": "Etiket (isteğe bağlı)",
     "view_only": "Yalnızca görüntüleme",
+    "view_only_rustdesk": "Bir RustDesk cihazı yalnızca izlemeyle sınırlanamaz, bu yüzden bu bağlantı tam denetim verir. Yalnızca görüntüleme Mesh ve CDAP cihazlarında çalışır.",
     "url": "Paylaşım URL’si",
     "create": "Bağlantı oluştur",
     "created": "Misafir bağlantısı oluşturuldu",

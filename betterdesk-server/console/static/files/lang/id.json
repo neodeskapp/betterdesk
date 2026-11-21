@@ -7384,6 +7384,7 @@
     "ttl": "Berlaku (menit)",
     "label": "Label (opsional)",
     "view_only": "Hanya lihat",
+    "view_only_rustdesk": "Perangkat RustDesk tidak bisa dibatasi hanya untuk melihat, jadi tautan ini memberi kendali penuh. Hanya lihat berfungsi untuk perangkat Mesh dan CDAP.",
     "url": "URL berbagi",
     "create": "Buat tautan",
     "created": "Tautan tamu dibuat",

@@ -7378,6 +7378,7 @@
     "ttl": "有效期（分钟）",
     "label": "标签（可选）",
     "view_only": "仅查看",
+    "view_only_rustdesk": "RustDesk 设备无法限制为仅查看，因此此链接会提供完全控制权。仅查看适用于 Mesh 和 CDAP 设备。",
     "url": "分享 URL",
     "create": "创建链接",
     "created": "已创建访客链接",

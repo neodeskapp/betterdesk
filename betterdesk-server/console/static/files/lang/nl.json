@@ -7378,6 +7378,7 @@
     "ttl": "Geldig voor (minuten)",
     "label": "Label (optioneel)",
     "view_only": "Alleen bekijken",
+    "view_only_rustdesk": "Een RustDesk-apparaat kan niet tot alleen kijken worden beperkt, dus deze link geeft volledige controle. Alleen bekijken werkt voor Mesh- en CDAP-apparaten.",
     "url": "Deel-URL",
     "create": "Link maken",
     "created": "Gastlink gemaakt",

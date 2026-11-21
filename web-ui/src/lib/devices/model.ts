@@ -83,6 +83,21 @@ export function isMesh(d: DeviceLike): boolean {
 	return String(d.device_type ?? '').toLowerCase() === 'mesh_agent';
 }
 
+/** The device types of a CDAP manifest */
+const CDAP_TYPES = new Set(['scada', 'iot', 'os_agent', 'network', 'camera', 'desktop', 'custom']);
+
+/**
+ * Whether the server can keep a guest of the device to watching: a mesh
+ * agent or a CDAP device. Any other device is a RustDesk session, which
+ * the server refuses a view-only guest link for.
+ */
+export function watchable(d: DeviceLike): boolean {
+	const type = String(d.device_type ?? '')
+		.trim()
+		.toLowerCase();
+	return type === 'mesh_agent' || CDAP_TYPES.has(type) || !!d.cdap_connected;
+}
+
 /* ── Search ── */
 
 /** Text the search box looks through: ID, names, user, platform, type, tags, note, IP, linked peer */

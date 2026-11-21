@@ -108,8 +108,10 @@ func newWorld(t *testing.T) *world {
 }
 
 // anyDevice is a device table that has every id, without a folder or
-// tags.
-func anyDevice(_ context.Context, id string) *goapi.Object { return goapi.NewObject("id", id) }
+// tags, each a mesh agent, which keeps view-only links (watchable).
+func anyDevice(_ context.Context, id string) *goapi.Object {
+	return goapi.NewObject("id", id, "device_type", "mesh_agent")
+}
 
 var (
 	cookieExpires = regexp.MustCompile(`Expires=[A-Za-z]{3}, [0-9]{2} [A-Za-z]{3} [0-9]{4} [0-9:]{8} GMT`)
@@ -453,6 +455,52 @@ func TestCreateChecksTheTypes(t *testing.T) {
 		if rec.Code != 201 || len(calls) != 1 || calls[0].Body != want {
 			t.Errorf("%q: %d %s, calls %+v; want the API server to get %s", fields, rec.Code, rec.Body, calls, want)
 		}
+	}
+}
+
+// TestViewOnlyLinksOnlyForWatchableDevices: a view_only link is refused
+// with 400 before the API server is asked when one of its devices is a
+// RustDesk device or not known, since the server cannot keep a RustDesk
+// guest to watching; mesh agents and CDAP devices (by type or by their
+// connection) keep it, and a link that is not view_only goes for every
+// device (BUGS RV209, A94).
+func TestViewOnlyLinksOnlyForWatchableDevices(t *testing.T) {
+	devices := map[string]*goapi.Object{
+		"rd-1":   goapi.NewObject("id", "rd-1", "device_type", "rustdesk"),
+		"bd-1":   goapi.NewObject("id", "bd-1", "device_type", ""),
+		"mesh-1": goapi.NewObject("id", "mesh-1", "device_type", "Mesh_Agent"),
+		"os-1":   goapi.NewObject("id", "os-1", "device_type", "os_agent"),
+		"iot-1":  goapi.NewObject("id", "iot-1", "device_type", "iot"),
+		"gw-1":   goapi.NewObject("id", "gw-1", "device_type", "rustdesk", "cdap_connected", true),
+	}
+	w := &world{}
+	w.World = proxytest.NewWorld(t, func(d *kit.Deps) {
+		d.GuestAccess = guestaccess.New(guestaccess.Options{GoAPI: d.GoAPI})
+		register(d, func(context.Context, *access.ScopeUser, []access.Device) (deviceScope, error) {
+			return unlimited{}, nil
+		},
+			func(_ context.Context, id string) *goapi.Object { return devices[id] })
+	})
+	admin := &proxytest.Account{UserID: 1}
+	admin.User.Username, admin.User.Role = "e2e_admin", "admin"
+	created := &proxytest.Answer{Status: 201, Type: "application/json", Body: `{"id":"g1"}`}
+	post := func(body string) (int, string, int) {
+		rec, calls := w.Do(proxytest.Request{Method: "POST", Path: "/api/guest/access-links", Session: admin, Type: "application/json", Body: &body}, created)
+		return rec.Code, rec.Body.String(), len(calls)
+	}
+	const refused = `{"error":"View-only links work for mesh and CDAP devices only: a RustDesk device cannot be limited to watching"}`
+	for _, ids := range []string{`"rd-1"`, `"bd-1"`, `"nobody"`, `"mesh-1","rd-1"`} {
+		if code, body, calls := post(`{"peer_ids":[` + ids + `],"view_only":true}`); code != 400 || body != refused || calls != 0 {
+			t.Errorf("view only for %s: %d %s after %d calls", ids, code, body, calls)
+		}
+	}
+	for _, ids := range []string{`"mesh-1"`, `"os-1"`, `"iot-1"`, `"gw-1"`, `"mesh-1","os-1"`} {
+		if code, body, calls := post(`{"peer_ids":[` + ids + `],"view_only":true}`); code != 201 || calls != 1 {
+			t.Errorf("view only for %s: %d %s after %d calls", ids, code, body, calls)
+		}
+	}
+	if code, body, calls := post(`{"peer_ids":["rd-1"],"view_only":false}`); code != 201 || calls != 1 {
+		t.Errorf("a full link for rd-1: %d %s after %d calls", code, body, calls)
 	}
 }
 

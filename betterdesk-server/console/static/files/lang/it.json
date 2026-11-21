@@ -7378,6 +7378,7 @@
     "ttl": "Valido per (minuti)",
     "label": "Etichetta (opzionale)",
     "view_only": "Solo visualizzazione",
+    "view_only_rustdesk": "Un dispositivo RustDesk non può essere limitato alla sola visione, quindi questo link dà il controllo completo. Solo visualizzazione funziona per i dispositivi Mesh e CDAP.",
     "url": "URL di condivisione",
     "create": "Crea link",
     "created": "Link ospite creato",

@@ -7384,6 +7384,7 @@
     "ttl": "Érvényesség (perc)",
     "label": "Címke (opcionális)",
     "view_only": "Csak megtekintés",
+    "view_only_rustdesk": "Egy RustDesk-eszköz nem korlátozható csak megtekintésre, ezért ez a hivatkozás teljes vezérlést ad. A csak megtekintés Mesh- és CDAP-eszközökön működik.",
     "url": "Megosztási URL",
     "create": "Link létrehozása",
     "created": "Vendéglink létrehozva",

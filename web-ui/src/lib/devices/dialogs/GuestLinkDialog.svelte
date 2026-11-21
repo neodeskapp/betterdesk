@@ -1,11 +1,14 @@
 <!--
   Guest access link: a time-limited link to the web viewer for the chosen
   devices, for someone without a console account. After Create the link
-  shows here, ready to copy.
+  shows here, ready to copy. View only is offered when every device can be
+  kept to watching (mesh and CDAP devices); with a RustDesk device among
+  them the link gives full control, and the dialog says so.
 -->
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { GuestLinkInput } from '#lib/api/guest.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
@@ -18,10 +21,12 @@
 
 	let {
 		ids,
+		viewOnly: viewOnlyOffered = true,
 		create,
 		settle
 	}: {
 		ids: string[];
+		viewOnly?: boolean;
 		create: (input: GuestLinkInput) => Promise<{ url: string; expiresAt: string }>;
 		settle: (done: true | null) => void;
 	} = $props();
@@ -29,7 +34,7 @@
 	const formId = $props.id();
 	let ttl = $state(120);
 	let label = $state('');
-	let viewOnly = $state(true);
+	let viewOnly = $state(untrack(() => viewOnlyOffered));
 	let busy = $state(false);
 	let error = $state('');
 	let link = $state<{ url: string; expiresAt: string } | null>(null);
@@ -41,7 +46,12 @@
 		error = '';
 		try {
 			const minutes = Math.min(1440, Math.max(15, Math.round(Number(ttl)) || 120));
-			link = await create({ peer_ids: ids, ttl_minutes: minutes, view_only: viewOnly, label: label.trim() });
+			link = await create({
+				peer_ids: ids,
+				ttl_minutes: minutes,
+				view_only: viewOnlyOffered && viewOnly,
+				label: label.trim()
+			});
 		} catch (err) {
 			error = err instanceof Error ? err.message : String(err);
 		} finally {
@@ -70,7 +80,16 @@
 				<Input {...f} maxlength={120} bind:value={label} />
 			{/snippet}
 		</Field>
-		<Checkbox label={t('guest_access.view_only')} bind:checked={viewOnly} />
+		{#if viewOnlyOffered}
+			<Checkbox label={t('guest_access.view_only')} bind:checked={viewOnly} />
+		{:else}
+			<p class="hint">
+				{tf(
+					'guest_access.view_only_rustdesk',
+					"A RustDesk device can't be limited to watching, so this link gives full control. View only works for mesh and CDAP devices."
+				)}
+			</p>
+		{/if}
 		{#if link}
 			<div class="block result">
 				<h3 class="label">{t('guest_access.url')}</h3>

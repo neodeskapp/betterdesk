@@ -7384,6 +7384,7 @@
     "ttl": "Gyldig i (minutter)",
     "label": "Etiket (valgfrit)",
     "view_only": "Kun visning",
+    "view_only_rustdesk": "En RustDesk-enhed kan ikke begrænses til kun at se, så dette link giver fuld kontrol. Kun visning virker for Mesh- og CDAP-enheder.",
     "url": "Delings-URL",
     "create": "Opret link",
     "created": "Gæstelink oprettet",

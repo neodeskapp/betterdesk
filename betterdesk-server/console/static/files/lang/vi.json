@@ -7384,6 +7384,7 @@
     "ttl": "Có hiệu lực (phút)",
     "label": "Nhãn (tuỳ chọn)",
     "view_only": "Chỉ xem",
+    "view_only_rustdesk": "Không thể giới hạn thiết bị RustDesk chỉ để xem, nên liên kết này cho toàn quyền điều khiển. Chỉ xem hoạt động với thiết bị Mesh và CDAP.",
     "url": "URL chia sẻ",
     "create": "Tạo liên kết",
     "created": "Đã tạo liên kết khách",

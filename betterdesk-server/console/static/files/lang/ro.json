@@ -7384,6 +7384,7 @@
     "ttl": "Valabil (minute)",
     "label": "Etichetă (opțional)",
     "view_only": "Doar vizualizare",
+    "view_only_rustdesk": "Un dispozitiv RustDesk nu poate fi limitat doar la vizualizare, așa că acest link oferă control complet. Doar vizualizare funcționează pentru dispozitive Mesh și CDAP.",
     "url": "URL de partajare",
     "create": "Creează link",
     "created": "Link oaspete creat",

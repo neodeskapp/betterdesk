@@ -78,7 +78,7 @@ import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
 import { toast } from '#lib/ui/toasts.svelte.ts';
 import { ICONS } from '#lib/util/display.ts';
 import { ask } from './ask.svelte.ts';
-import { deviceLabel, deviceName, isMesh, type DeviceLike } from './model.ts';
+import { deviceLabel, deviceName, isMesh, watchable, type DeviceLike } from './model.ts';
 
 export type { DeviceLike } from './model.ts';
 
@@ -200,6 +200,7 @@ export async function createGuestLink(devices: readonly DeviceLike[]): Promise<b
 	if (!list.length) return false;
 	const done = await ask('guest-link', {
 		ids: ids(list),
+		viewOnly: list.every(watchable),
 		create: async (input) => {
 			const out = await guestApi.createGuestLink(input);
 			toast.success(tf('guest_access.created', 'Guest link created'));

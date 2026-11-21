@@ -7378,6 +7378,7 @@
     "ttl": "Gültig für (Minuten)",
     "label": "Bezeichnung (optional)",
     "view_only": "Nur Ansicht",
+    "view_only_rustdesk": "Ein RustDesk-Gerät lässt sich nicht auf Zuschauen beschränken, dieser Link gibt also volle Kontrolle. Nur ansehen gibt es für Mesh- und CDAP-Geräte.",
     "url": "Freigabe-URL",
     "create": "Link erstellen",
     "created": "Gastlink erstellt",

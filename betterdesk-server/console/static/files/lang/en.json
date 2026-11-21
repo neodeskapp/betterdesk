@@ -7390,6 +7390,7 @@
         "ttl": "Valid for (minutes)",
         "label": "Label (optional)",
         "view_only": "View only",
+        "view_only_rustdesk": "A RustDesk device can't be limited to watching, so this link gives full control. View only works for mesh and CDAP devices.",
         "url": "Share URL",
         "create": "Create link",
         "created": "Guest link created",

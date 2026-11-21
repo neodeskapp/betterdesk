@@ -37,7 +37,12 @@ export interface AskMap {
 	/** Phone: open the web viewer anyway, or hand the ID to the RustDesk app */
 	'connect-choice': { props: { device: DeviceLike; app: boolean }; result: 'web' | 'app' };
 	'guest-link': {
-		props: { ids: string[]; create: (input: GuestLinkInput) => Promise<{ url: string; expiresAt: string }> };
+		props: {
+			ids: string[];
+			/** Every device can be kept to watching (no RustDesk device among them) */
+			viewOnly: boolean;
+			create: (input: GuestLinkInput) => Promise<{ url: string; expiresAt: string }>;
+		};
 		result: true;
 	};
 	'mesh-share': {

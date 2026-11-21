@@ -7378,6 +7378,7 @@
     "ttl": "Platnost (minuty)",
     "label": "Štítek (volitelně)",
     "view_only": "Jen prohlížení",
+    "view_only_rustdesk": "Zařízení RustDesk nelze omezit jen na sledování, takže tento odkaz dává plné ovládání. Pouze zobrazení funguje u zařízení Mesh a CDAP.",
     "url": "URL ke sdílení",
     "create": "Vytvořit odkaz",
     "created": "Odkaz pro hosta vytvořen",

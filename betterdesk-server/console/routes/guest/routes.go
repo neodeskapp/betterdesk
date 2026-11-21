@@ -80,7 +80,9 @@ type failure struct {
 // text; ttl_minutes, label and max_uses are checked here (linkTypes). The
 // account must have all of the devices in its device scope, which is
 // computed over the devices with their folders and tags; for an account
-// with a limit an id that is no device is outside.
+// with a limit an id that is no device is outside. A view_only link is
+// refused unless every device is a mesh or CDAP device (watchable): a
+// RustDesk session cannot be kept to watching by the server.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	list, _ := body.Get("peer_ids").Array()
@@ -122,11 +124,21 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	viewOnly := body.Get("view_only").Truthy()
+	if viewOnly {
+		for _, id := range ids {
+			if !watchable(h.device(r.Context(), id)) {
+				kit.JSON(w, r, http.StatusBadRequest, failure{Error: viewOnlyRefused})
+				return
+			}
+		}
+	}
+
 	link := goapi.NewObject("peer_ids", peerIDs)
 	if hasTTL {
 		link.Set("ttl_minutes", ttl)
 	}
-	link.Set("view_only", body.Get("view_only").Truthy())
+	link.Set("view_only", viewOnly)
 	link.Set("label", "")
 	if goapi.Truthy(label) {
 		link.Set("label", label)
@@ -136,6 +148,28 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 		link.Set("max_uses", uses)
 	}
 	goapipath.ProxyToGo(h.api, w, r, http.MethodPost, goapipath.Fixed("/guest/access-links"), goapipath.Body(link))
+}
+
+// viewOnlyRefused is the refusal of a view_only link for a device that is
+// not watchable.
+const viewOnlyRefused = "View-only links work for mesh and CDAP devices only: a RustDesk device cannot be limited to watching"
+
+// cdapDeviceTypes are the device types a CDAP device registers with (the
+// types of a CDAP manifest).
+var cdapDeviceTypes = map[string]bool{"scada": true, "iot": true, "os_agent": true, "network": true, "camera": true, "desktop": true, "custom": true}
+
+// watchable reports whether the server can keep a guest of the device to
+// watching: a mesh agent, or a CDAP device by its type or its connection.
+// The web viewer reaches any other device over a RustDesk session, where
+// the input cannot be filtered; a device that is not known is not
+// watchable either.
+func watchable(device *goapi.Object) bool {
+	if device == nil {
+		return false
+	}
+	kind, _ := device.Get("device_type").(string)
+	kind = strings.ToLower(strings.TrimSpace(kind))
+	return kind == "mesh_agent" || cdapDeviceTypes[kind] || goapi.Truthy(device.Get("cdap_connected"))
 }
 
 // scopeDevices looks up the devices of ids for the device scope, each

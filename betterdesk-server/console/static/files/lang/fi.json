@@ -7384,6 +7384,7 @@
     "ttl": "Voimassa (minuuttia)",
     "label": "Nimike (valinnainen)",
     "view_only": "Vain katselu",
+    "view_only_rustdesk": "RustDesk-laitetta ei voi rajata pelkkään katseluun, joten tämä linkki antaa täyden hallinnan. Vain katselu toimii Mesh- ja CDAP-laitteilla.",
     "url": "Jakamis-URL",
     "create": "Luo linkki",
     "created": "Vieraslinkki luotu",
