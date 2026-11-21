@@ -18,10 +18,11 @@ import (
 // Options say how strict a check is.
 type Options struct {
 	// AllowPrivate lets the private ranges through (10.0.0.0/8,
-	// 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10, 198.18.0.0/15 and the
-	// unique local IPv6 addresses), for the network tools of an
-	// administrator. Loopback, link-local, 0.0.0.0/8 and :: stay blocked:
-	// a connection to 0.0.0.0 or :: reaches the machine itself.
+	// 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10, 198.18.0.0/15, the
+	// unique local and the site-local IPv6 addresses), for the network
+	// tools of an administrator. Loopback, link-local, 0.0.0.0/8, :: and
+	// the cloud metadata services stay blocked: a connection to 0.0.0.0 or
+	// :: reaches the machine itself.
 	AllowPrivate bool
 }
 
@@ -50,15 +51,19 @@ var blockedHostnames = map[string]bool{
 }
 
 // The ranges the guard refuses. alwaysBlocked holds even for the network
-// tools of an administrator.
+// tools of an administrator; it has the metadata services of AWS over
+// IPv6 (fd00:ec2::254) and of Alibaba Cloud (100.100.100.200), which lie
+// in private ranges.
 var (
 	alwaysBlocked = []netip.Prefix{
 		netip.MustParsePrefix("0.0.0.0/8"),
 		netip.MustParsePrefix("127.0.0.0/8"),
 		netip.MustParsePrefix("169.254.0.0/16"),
+		netip.MustParsePrefix("100.100.100.200/32"),
 		netip.MustParsePrefix("::/128"),
 		netip.MustParsePrefix("::1/128"),
 		netip.MustParsePrefix("fe80::/10"),
+		netip.MustParsePrefix("fd00:ec2::/32"),
 	}
 	privateRanges = []netip.Prefix{
 		netip.MustParsePrefix("10.0.0.0/8"),
@@ -67,20 +72,36 @@ var (
 		netip.MustParsePrefix("100.64.0.0/10"),
 		netip.MustParsePrefix("198.18.0.0/15"),
 		netip.MustParsePrefix("fc00::/7"),
+		netip.MustParsePrefix("fec0::/10"),
 	}
+)
+
+// The IPv6 ranges whose addresses carry an IPv4 address that a gateway
+// reaches for them: NAT64 (64:ff9b::/96 and the local-use 64:ff9b:1::/48,
+// the IPv4 address in the last 32 bits), IPv4-translated addresses
+// (::ffff:0:0:0/96, the same) and 6to4 (2002::/16, the IPv4 address in the
+// 32 bits after the first 16).
+var (
+	nat64          = netip.MustParsePrefix("64:ff9b::/96")
+	nat64LocalUse  = netip.MustParsePrefix("64:ff9b:1::/48")
+	ipv4Translated = netip.MustParsePrefix("::ffff:0:0:0/96")
+	sixToFour      = netip.MustParsePrefix("2002::/16")
 )
 
 // IsBlockedIP reports whether an address, as text, must not be reached
 // (isBlockedIp). The address is parsed and its range decides, however it
 // is written: "0:0:0:0:0:0:0:1" is ::1, and an IPv4 address inside an
-// IPv6 one, mapped (::ffff:7f00:1, ::ffff:127.0.0.1) or compatible
-// (::127.0.0.1), counts as that IPv4 address. A zone does not matter.
-// Text that is no address is blocked.
+// IPv6 one, mapped (::ffff:7f00:1, ::ffff:127.0.0.1), compatible
+// (::127.0.0.1), translated (::ffff:0:7f00:1), NAT64 (64:ff9b::7f00:1) or
+// 6to4 (2002:7f00:1::), counts as that IPv4 address. A zone does not
+// matter. Text that is no address is blocked.
 //
 //	0.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16,
-//	::, ::1, fe80::/10                                 always
+//	100.100.100.200, ::, ::1, fe80::/10,
+//	fd00:ec2::/32                                      always
 //	10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16,
-//	100.64.0.0/10, 198.18.0.0/15, fc00::/7          unless AllowPrivate
+//	100.64.0.0/10, 198.18.0.0/15, fc00::/7,
+//	fec0::/10                                          unless AllowPrivate
 func IsBlockedIP(ip string, opts Options) bool {
 	addr, err := netip.ParseAddr(ip)
 	if err != nil {
@@ -103,10 +124,10 @@ func IsBlockedIP(ip string, opts Options) bool {
 	return false
 }
 
-// embeddedIPv4 is the IPv4 address an IPv6 address carries in its last 32
-// bits when the bits before them are those of a mapped address
-// (::ffff:0:0/96) or of a compatible one (::/96, without :: and ::1), and
-// the address itself otherwise.
+// embeddedIPv4 is the IPv4 address an IPv6 address carries: in its last 32
+// bits for a mapped address (::ffff:0:0/96), a compatible one (::/96,
+// without :: and ::1), a translated one and the two NAT64 ranges, and in
+// bits 16 to 47 for a 6to4 address. It is the address itself otherwise.
 func embeddedIPv4(addr netip.Addr) netip.Addr {
 	if addr.Is4In6() {
 		return addr.Unmap()
@@ -115,6 +136,12 @@ func embeddedIPv4(addr netip.Addr) netip.Addr {
 		return addr
 	}
 	b := addr.As16()
+	switch {
+	case sixToFour.Contains(addr):
+		return netip.AddrFrom4([4]byte{b[2], b[3], b[4], b[5]})
+	case nat64.Contains(addr), nat64LocalUse.Contains(addr), ipv4Translated.Contains(addr):
+		return netip.AddrFrom4([4]byte{b[12], b[13], b[14], b[15]})
+	}
 	for _, octet := range b[:12] {
 		if octet != 0 {
 			return addr

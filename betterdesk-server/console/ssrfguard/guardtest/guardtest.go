@@ -25,12 +25,21 @@ func prefixes(texts ...string) []netip.Prefix {
 var (
 	always  = prefixes("0.0.0.0/8", "127.0.0.0/8", "169.254.0.0/16", "::/128", "::1/128", "fe80::/10")
 	private = prefixes("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10", "198.18.0.0/15", "fc00::/7")
+
+	// What RV46 added: the metadata services of AWS over IPv6 and of
+	// Alibaba Cloud always, site-local addresses as private ones, and the
+	// IPv4 address inside a NAT64, IPv4-translated or 6to4 address
+	rv46Always  = prefixes("fd00:ec2::/32", "100.100.100.200/32")
+	rv46Private = prefixes("fec0::/10")
+	lastWord    = prefixes("64:ff9b::/96", "64:ff9b:1::/48", "::ffff:0:0:0/96")
+	sixToFour   = netip.MustParsePrefix("2002::/16")
 )
 
 // address reads ip as the guard must see it: without a zone, and an IPv4
-// address carried in an IPv6 one (::ffff:a.b.c.d, ::a.b.c.d) as that IPv4
-// address.
-func address(ip string) (netip.Addr, bool) {
+// address carried in an IPv6 one (::ffff:a.b.c.d, ::a.b.c.d, and with
+// rv46 also 64:ff9b::a.b.c.d, 64:ff9b:1:...:a.b.c.d, ::ffff:0:a.b.c.d and
+// 2002:AABB:CCDD::) as that IPv4 address.
+func address(ip string, rv46 bool) (netip.Addr, bool) {
 	addr, err := netip.ParseAddr(ip)
 	if err != nil {
 		return netip.Addr{}, false
@@ -40,6 +49,12 @@ func address(ip string) (netip.Addr, bool) {
 		return addr.Unmap(), true
 	}
 	b := addr.As16()
+	switch {
+	case rv46 && sixToFour.Contains(addr):
+		return netip.AddrFrom4([4]byte(b[2:6])), true
+	case rv46 && within(addr, lastWord):
+		return netip.AddrFrom4([4]byte(b[12:])), true
+	}
 	if addr.Is6() && !addr.IsUnspecified() && !addr.IsLoopback() && [12]byte(b[:12]) == [12]byte{} {
 		return netip.AddrFrom4([4]byte(b[12:])), true
 	}
@@ -58,11 +73,19 @@ func within(addr netip.Addr, ranges []netip.Prefix) bool {
 // Blocked is what the guard answers for an address now: true when it must
 // not be reached.
 func Blocked(ip string, allowPrivate bool) bool {
-	addr, ok := address(ip)
+	return blocked(ip, allowPrivate, true)
+}
+
+// blocked is the guard's answer with or without the rules of RV46.
+func blocked(ip string, allowPrivate, rv46 bool) bool {
+	addr, ok := address(ip, rv46)
 	if !ok {
 		return true
 	}
-	return within(addr, always) || !allowPrivate && within(addr, private)
+	if within(addr, always) || !allowPrivate && within(addr, private) {
+		return true
+	}
+	return rv46 && (within(addr, rv46Always) || !allowPrivate && within(addr, rv46Private))
 }
 
 // Node's net.isIPv4 and net.isIPv6.
@@ -130,11 +153,13 @@ func Change(ip string, allowPrivate bool) string {
 	switch {
 	case now == before:
 		return ""
+	case blocked(ip, allowPrivate, false) != now:
+		return "RV46"
 	case !now:
 		// Node refused any text that starts with fc or fd
 		return "SC6"
 	}
-	addr, ok := address(ip)
+	addr, ok := address(ip, false)
 	if !ok {
 		return "SC5"
 	}

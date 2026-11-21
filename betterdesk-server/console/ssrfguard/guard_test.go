@@ -384,3 +384,49 @@ func TestLookupErrorText(t *testing.T) {
 		t.Errorf("deadline: %q", got)
 	}
 }
+
+// An IPv4 address carried in a NAT64 (64:ff9b::/96, 64:ff9b:1::/48), 6to4
+// (2002::/16) or IPv4-translated (::ffff:0:0:0/96) address counts as that
+// IPv4 address; site-local addresses (fec0::/10) are private; the
+// metadata services at fd00:ec2::/32 and 100.100.100.200 are refused in
+// both modes (BUGS RV46). Public addresses inside those prefixes pass.
+func TestEmbeddedAndMetadataAddresses(t *testing.T) {
+	for _, c := range []struct {
+		ip              string
+		strict, private bool
+	}{
+		{"64:ff9b::7f00:1", true, true},
+		{"64:ff9b::a9fe:a9fe", true, true},
+		{"64:ff9b::a00:1", true, false},
+		{"64:ff9b::10.0.0.1", true, false},
+		{"64:ff9b:1::a00:1", true, false},
+		{"64:ff9b:1:abcd::7f00:1", true, true},
+		{"2002:a00:1::1", true, false},
+		{"2002:7f00:1:5::9", true, true},
+		{"2002:a9fe:a9fe::", true, true},
+		{"::ffff:0:10.0.0.1", true, false},
+		{"::ffff:0:7f00:1", true, true},
+		{"fec0::1", true, false},
+		{"feff::1", true, false},
+		{"fd00:ec2::254", true, true},
+		{"fd00:ec2:1::1", true, true},
+		{"100.100.100.200", true, true},
+		{"::ffff:100.100.100.200", true, true},
+		{"64:ff9b::6464:64c8", true, true},
+		// Public IPv4 addresses inside the prefixes, and their neighbours
+		{"64:ff9b::808:808", false, false},
+		{"64:ff9b:1::808:808", false, false},
+		{"2002:808:808::1", false, false},
+		{"::ffff:0:8.8.8.8", false, false},
+		{"fd00:ec3::1", true, false},
+		{"100.100.100.201", true, false},
+		{"64:ff9c::a00:1", false, false},
+	} {
+		if got := IsBlockedIP(c.ip, Options{}); got != c.strict {
+			t.Errorf("IsBlockedIP(%q) = %v, want %v", c.ip, got, c.strict)
+		}
+		if got := IsBlockedIP(c.ip, Options{AllowPrivate: true}); got != c.private {
+			t.Errorf("IsBlockedIP(%q) for the network tools = %v, want %v", c.ip, got, c.private)
+		}
+	}
+}
