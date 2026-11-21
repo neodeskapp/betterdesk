@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -341,6 +342,11 @@ func envLine(line string) (key, value string, ok bool) {
 	return key, rest[eq+1:], true
 }
 
+// writing is held by every write of an env file (Apply, RestoreBackup),
+// so that two writes in this process, through one Config or two, never
+// read the same old content and lose one of the changes.
+var writing sync.Mutex
+
 // Applied is what a write did.
 type Applied struct {
 	EnvPath    string
@@ -357,6 +363,8 @@ type Applied struct {
 // new one is written to a temporary file and renamed over the env file,
 // both with mode 0600. Line ends become "\n" and the file ends with one.
 func (c *Config) Apply(settings []Setting) (Applied, error) {
+	writing.Lock()
+	defer writing.Unlock()
 	p := c.Paths()
 	existing, err := os.ReadFile(p.EnvPath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -420,6 +428,8 @@ func (c *Config) Apply(settings []Setting) (Applied, error) {
 // (restoreEnvBackup). The backup must be named after the env file of
 // these paths, be an absolute clean path and exist.
 func (c *Config) RestoreBackup(backupPath string) error {
+	writing.Lock()
+	defer writing.Unlock()
 	p := c.Paths()
 	if !strings.HasPrefix(backupPath, p.EnvPath+".bak.") || resolve(backupPath) != backupPath ||
 		strings.ContainsAny(backupPath[len(p.EnvPath)+len(".bak."):], `/\`) {

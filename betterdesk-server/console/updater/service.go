@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/managedconfig"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
@@ -100,6 +99,8 @@ type Service struct {
 	// managed is the env file's allowlisted part, for the capability
 	// report.
 	managed *managedconfig.Config
+	// channelEnv writes the channel into Options.EnvFile.
+	channelEnv *managedconfig.Config
 
 	busy atomic.Bool
 	// ops replaces the file calls of a swap in tests.
@@ -156,7 +157,8 @@ func New(opts Options) *Service {
 	if opts.EnvFile == "" {
 		opts.EnvFile = filepath.Join(opts.ConsoleDir, ".env")
 	}
-	s := &Service{opts: opts, files: dataFiles{dir: opts.DataDir, now: opts.Now}, log: opts.Logger, managed: managed}
+	channelEnv := managedconfig.New(managedconfig.Options{EnvFile: opts.EnvFile, Now: opts.Now, PID: opts.PID})
+	s := &Service{opts: opts, files: dataFiles{dir: opts.DataDir, now: opts.Now}, log: opts.Logger, managed: managed, channelEnv: channelEnv}
 	s.gh = &githubClient{
 		transport: opts.Transport,
 		userAgent: "BetterDesk-Console/" + opts.Version,
@@ -343,8 +345,10 @@ type ErrDockerChannel struct{ Message string }
 
 func (e *ErrDockerChannel) Error() string { return e.Message }
 
-// SetChannel switches the channel: UPDATE_GITHUB_BRANCH in the env file
-// (mode 0600), and in this process. channel must be "stable" or
+// SetChannel switches the channel: UPDATE_GITHUB_BRANCH in the env file,
+// written as a save of the managed configuration is (managedconfig.Apply:
+// a backup, a temporary file renamed over the env file, mode 0600, one
+// write at a time), and in this process. channel must be "stable" or
 // "development".
 func (s *Service) SetChannel(channel string) (ChannelSwitched, error) {
 	branch := BranchOf(channel)
@@ -360,13 +364,8 @@ func (s *Service) SetChannel(channel string) (ChannelSwitched, error) {
 			"Set BETTERDESK_IMAGE_TAG=" + tag + " (or a release version) in compose/.env, then run: docker compose pull && docker compose up -d"}
 	}
 	previous := s.Branch()
-	existing, err := os.ReadFile(s.opts.EnvFile)
-	if err != nil && !os.IsNotExist(err) {
-		return ChannelSwitched{}, fmt.Errorf("read %s: %w", s.opts.EnvFile, err)
-	}
-	updated := serverinfo.UpsertEnvKey(string(existing), "UPDATE_GITHUB_BRANCH", branch)
-	if err := os.WriteFile(s.opts.EnvFile, []byte(updated), 0o600); err != nil {
-		return ChannelSwitched{}, fmt.Errorf("write %s: %w", s.opts.EnvFile, err)
+	if _, err := s.channelEnv.Apply([]managedconfig.Setting{{Key: "UPDATE_GITHUB_BRANCH", Value: branch}}); err != nil {
+		return ChannelSwitched{}, fmt.Errorf("save the channel: %w", err)
 	}
 	s.mu.Lock()
 	s.branch = branch

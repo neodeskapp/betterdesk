@@ -2,13 +2,99 @@ package updater
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/managedconfig"
 )
+
+// RV19: the switch writes the env file as a save of the managed
+// configuration does: a backup first, a new file renamed over the old one
+// (a hard link to the old file keeps the old content), no temporary file
+// left; and a save of the configuration at the same time loses neither
+// change.
+func TestChannelWritesThroughTheManagedConfiguration(t *testing.T) {
+	dir := t.TempDir()
+	in := newInstall(t)
+	in.opts.EnvFile = filepath.Join(dir, "console.env")
+	in.svc = New(in.opts)
+	before := "PORT=5000\nSESSION_SECRET=s\nUPDATE_GITHUB_BRANCH=main\n"
+	if err := os.WriteFile(in.opts.EnvFile, []byte(before), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, "link-to-the-old-file")
+	if err := os.Link(in.opts.EnvFile, link); err != nil {
+		t.Skipf("no hard links here: %v", err)
+	}
+	if _, err := in.svc.SetChannel("development"); err != nil {
+		t.Fatal(err)
+	}
+	if data, _ := os.ReadFile(in.opts.EnvFile); string(data) != "PORT=5000\nSESSION_SECRET=s\nUPDATE_GITHUB_BRANCH=dev\n" {
+		t.Errorf("env file %q", data)
+	}
+	if data, _ := os.ReadFile(link); string(data) != before {
+		t.Errorf("the old file was written in place: %q", data)
+	}
+	entries, _ := os.ReadDir(dir)
+	var backups, others []string
+	for _, e := range entries {
+		switch name := e.Name(); {
+		case strings.HasPrefix(name, "console.env.bak."):
+			backups = append(backups, name)
+		case name != "console.env" && name != "link-to-the-old-file":
+			others = append(others, name)
+		}
+	}
+	if len(backups) != 1 || len(others) != 0 {
+		t.Fatalf("backups %v, other files %v", backups, others)
+	}
+	if data, _ := os.ReadFile(filepath.Join(dir, backups[0])); string(data) != before {
+		t.Errorf("backup %q", data)
+	}
+
+	saves := managedconfig.New(managedconfig.Options{EnvFile: in.opts.EnvFile, PID: 77})
+	const rounds = 100
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for i := range rounds {
+			if _, err := in.svc.SetChannel([]string{"stable", "development"}[i%2]); err != nil {
+				t.Error(err)
+				return
+			}
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := range rounds {
+			if _, err := saves.Apply([]managedconfig.Setting{{Key: fmt.Sprintf("SAVED_%d", i), Value: "x"}}); err != nil {
+				t.Error(err)
+				return
+			}
+		}
+	}()
+	wg.Wait()
+	values, err := managedconfig.ReadEnvFile(in.opts.EnvFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var lost []string
+	for i := range rounds {
+		if key := fmt.Sprintf("SAVED_%d", i); values[key] != "x" {
+			lost = append(lost, key)
+		}
+	}
+	if len(lost) != 0 || values["UPDATE_GITHUB_BRANCH"] != "dev" {
+		t.Errorf("lost saves %v, branch %q", lost, values["UPDATE_GITHUB_BRANCH"])
+	}
+}
 
 func TestCheckFindsTheRelease(t *testing.T) {
 	in := newInstall(t)
@@ -184,8 +270,7 @@ func TestChannel(t *testing.T) {
 	if string(data) != "PORT=5000\nUPDATE_GITHUB_BRANCH=dev\n" {
 		t.Errorf("env file %q", data)
 	}
-	// A file the switch creates is private; an existing one keeps its mode,
-	// as with the old console's writeFileSync.
+	// A file the switch creates is private, as is one it writes (RV19).
 	fresh := newInstall(t)
 	fresh.opts.EnvFile = filepath.Join(t.TempDir(), "new.env")
 	fresh.svc = New(fresh.opts)
