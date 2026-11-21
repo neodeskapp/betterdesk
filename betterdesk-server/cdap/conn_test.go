@@ -38,6 +38,9 @@ func newCDAPWorld(t *testing.T) *cdapWorld {
 	g := New(config.DefaultConfig(), database, peer.NewMap(), events.NewBus())
 	g.SetJWTManager(auth.NewJWTManager("cdap-conn-test-secret-0123456789", time.Hour))
 	g.SetRateLimiter(nil)
+	// Keys and accounts register devices with enrollment.approve, which the
+	// tests' keys of role global_admin hold.
+	g.SetPermissionChecker(dbPermissions{database})
 	ctx, cancel := context.WithCancel(context.Background())
 	g.ctx, g.cancel = ctx, cancel
 	srv := httptest.NewServer(http.HandlerFunc(g.handleWebSocket))
@@ -176,7 +179,7 @@ func (w *cdapWorld) manifestStored(t *testing.T, deviceID string) bool {
 // (BUGS RV158).
 func TestEndedConnectionRemovesOnlyItself(t *testing.T) {
 	w := newCDAPWorld(t)
-	createAPIKey(t, w.db, "apikey-plc-0123456789abcdef", "plc", "operator", "")
+	createAPIKey(t, w.db, "apikey-plc-0123456789abcdef", "plc", "global_admin", "")
 
 	live := w.connect(t, "apikey-plc-0123456789abcdef", "plc-1")
 	w.settle(t, 1)
@@ -226,8 +229,8 @@ func TestEndedConnectionRemovesOnlyItself(t *testing.T) {
 // disabled device (BUGS RV157).
 func TestRegisterKeepsToTheDevicesOfThePrincipal(t *testing.T) {
 	w := newCDAPWorld(t)
-	createAPIKey(t, w.db, "apikey-mine-0123456789abcdef", "mine", "operator", "")
-	createAPIKey(t, w.db, "apikey-other-0123456789abcdef", "other", "viewer", "")
+	createAPIKey(t, w.db, "apikey-mine-0123456789abcdef", "mine", "global_admin", "")
+	createAPIKey(t, w.db, "apikey-other-0123456789abcdef", "other", "global_admin", "")
 	if err := w.db.UpsertPeer(&db.Peer{ID: "900100001", Hostname: "real-host", Status: "OFFLINE", Disabled: true}); err != nil {
 		t.Fatal(err)
 	}

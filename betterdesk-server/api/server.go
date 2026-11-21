@@ -306,9 +306,14 @@ func (s *Server) SetKeyPair(kp *crypto.KeyPair) {
 	s.initializeTelemetryKeys()
 }
 
-// SetCDAPGateway sets the CDAP gateway for serving CDAP REST endpoints.
+// SetCDAPGateway sets the CDAP gateway for serving CDAP REST endpoints and
+// gives it the API's permission check for registrations with a password or
+// an API key.
 func (s *Server) SetCDAPGateway(gw *cdap.Gateway) {
 	s.cdapGw = gw
+	if gw != nil {
+		gw.SetPermissionChecker(s)
+	}
 }
 
 // SetMeshGateway sets the MeshCentral compatibility gateway and gives it

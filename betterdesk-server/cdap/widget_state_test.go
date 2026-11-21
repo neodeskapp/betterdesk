@@ -12,7 +12,7 @@ import (
 // heartbeats, state updates and bulk updates alike (BUGS RV166).
 func TestWidgetValuesKeepToTheManifest(t *testing.T) {
 	w := newCDAPWorld(t)
-	createAPIKey(t, w.db, "apikey-w-0123456789abcdef", "w", "operator", "")
+	createAPIKey(t, w.db, "apikey-w-0123456789abcdef", "w", "global_admin", "")
 	dev := w.connect(t, "apikey-w-0123456789abcdef", "dev-W")
 	dev.drain()
 	w.settle(t, 1)

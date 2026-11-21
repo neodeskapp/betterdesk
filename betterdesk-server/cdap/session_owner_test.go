@@ -63,8 +63,8 @@ func nothingFor(t *testing.T, got <-chan string, d time.Duration, what string) {
 // nowhere (BUGS RV164).
 func TestDeviceReachesOnlyItsOwnSessions(t *testing.T) {
 	w := newCDAPWorld(t)
-	createAPIKey(t, w.db, "apikey-a-0123456789abcdef", "a", "operator", "")
-	createAPIKey(t, w.db, "apikey-b-0123456789abcdef", "b", "operator", "")
+	createAPIKey(t, w.db, "apikey-a-0123456789abcdef", "a", "global_admin", "")
+	createAPIKey(t, w.db, "apikey-b-0123456789abcdef", "b", "global_admin", "")
 	devA := w.connect(t, "apikey-a-0123456789abcdef", "dev-A")
 	devB := w.connect(t, "apikey-b-0123456789abcdef", "dev-B")
 	devA.drain()

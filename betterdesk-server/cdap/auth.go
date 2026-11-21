@@ -68,6 +68,20 @@ func (g *Gateway) handleAuth(ctx context.Context, conn *websocket.Conn, clientIP
 		return nil, fmt.Errorf("unsupported auth method: %s", payload.Method)
 	}
 
+	// A device token registers its own device. An account or an API key
+	// names the device it registers, which enrolls a device: that needs
+	// enrollment.approve.
+	if payload.Method != "device_token" {
+		if err := g.mayEnroll(role); err != nil {
+			g.auditAction("cdap_auth_failed", clientIP, map[string]string{
+				"username": username,
+				"method":   payload.Method,
+				"reason":   "no enrollment.approve",
+			})
+			return nil, err
+		}
+	}
+
 	// Generate session token
 	sessionID, _ := auth.GenerateRandomString(16)
 
@@ -114,6 +128,25 @@ func (g *Gateway) handleAuth(ctx context.Context, conn *websocket.Conn, clientIP
 		payload.DeviceID, username, role, payload.Method, clientIP)
 
 	return dc, nil
+}
+
+// mayEnroll refuses a role that does not hold enrollment.approve, as the
+// permission check decides it; no check or a failed lookup refuses.
+func (g *Gateway) mayEnroll(role string) error {
+	refused := fmt.Errorf("registering a device with this sign-in needs the enrollment.approve permission")
+	pc := g.perms.Load()
+	if pc == nil {
+		return refused
+	}
+	ok, err := pc.RoleHasPermission(role, auth.PermEnrollmentApprove)
+	if err != nil {
+		log.Printf("[cdap] permission lookup for role %q failed: %v", role, err)
+		return refused
+	}
+	if !ok {
+		return refused
+	}
+	return nil
 }
 
 // Failed password sign-ins: after maxFailedSignIns within

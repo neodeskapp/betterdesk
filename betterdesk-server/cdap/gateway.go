@@ -84,6 +84,29 @@ type Gateway struct {
 	activeConns atomic.Int64
 
 	version string
+
+	// perms answers whether a role holds a permission, with the stored role
+	// overrides (SetPermissionChecker).
+	perms atomic.Pointer[permissionChecker]
+}
+
+// PermissionChecker answers whether a role holds a permission, with the
+// role overrides stored in the database, the way the API's
+// requirePermission answers it for a REST route.
+type PermissionChecker interface {
+	RoleHasPermission(role, permission string) (bool, error)
+}
+
+type permissionChecker struct{ PermissionChecker }
+
+// SetPermissionChecker attaches the permission check for registrations
+// with an account's password or an API key. Without one they are refused.
+func (g *Gateway) SetPermissionChecker(pc PermissionChecker) {
+	if pc == nil {
+		g.perms.Store(nil)
+		return
+	}
+	g.perms.Store(&permissionChecker{pc})
 }
 
 // PendingCommand tracks a command sent to a device, awaiting ACK/NACK.
