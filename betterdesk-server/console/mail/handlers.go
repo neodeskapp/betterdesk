@@ -119,9 +119,9 @@ func bodyValue(body middleware.JSONObject, name string) value {
 //	             stored as the number; 587 when missing or null
 //	secure       true or false; false when missing
 //	user         text; "" when missing or null
-//	pass         text; when missing, null, "" or "********", the
-//	             password stored so far when host, port and user are
-//	             the stored ones, else ""
+//	pass         text, "" for none; when missing, null or "********",
+//	             the password stored so far when host, port and user
+//	             are the stored ones, else ""
 //	from         text that is not blank, of at most 998 characters
 //	alert_email  plain addresses separated by commas (PlainAddressList),
 //	             without the white space around them; "" when missing or
@@ -199,12 +199,12 @@ func nextConfig(body middleware.JSONObject, existing value) (config value, refus
 	if utf8.RuneCountInString(texts["from"]) > maxFromLength {
 		return undefined, "SMTP sender is too long"
 	}
-	// The password stays what it was unless the request brings a new one
-	// (the settings page sends the mask back, or nothing), but only for the
-	// server and the account it was given for: it is never sent to another
-	// host, port or user.
+	// The password stays what it was for the mask or no password member at
+	// all, but only for the server and the account it was given for: it is
+	// never sent to another host, port or user. An empty password removes
+	// it.
 	pass := stringValue(texts["pass"])
-	if pass.str == "" || pass.str == MaskedPass {
+	if sent := bodyValue(body, "pass"); sent.kind != kindString || sent.str == MaskedPass {
 		pass = stringValue("")
 		if kept := existing.member("pass"); kept.truthy() {
 			if !sameAccount(existing, jsbind.Trim(host.str), port, texts["user"]) {

@@ -405,6 +405,26 @@ func keptForAnotherAccount(before, after string) bool {
 		(saved.member("host").json() != old.member("host").json() || saved.member("port").json() != old.member("port").json() || saved.member("user").json() != old.member("user").json())
 }
 
+// clearedForEmpty reports whether a save sent an empty password, Node
+// stored the password of the row before, and the Go console stored the
+// same row with no password (BUGS RV40).
+func clearedForEmpty(request, before, stored, nodeStored string) bool {
+	var members map[string]json.RawMessage
+	if json.Unmarshal([]byte(request), &members) != nil || string(members["pass"]) != `""` {
+		return false
+	}
+	old, err := parseJSON(before)
+	if err != nil || !old.member("pass").truthy() {
+		return false
+	}
+	got, err := parseJSON(stored)
+	if err != nil || got.member("pass").json() != `""` {
+		return false
+	}
+	got.set("pass", old.member("pass"))
+	return got.json() == nodeStored
+}
+
 // tlsVerifyMember is the member a settings answer ends with when the
 // stored configuration has a tlsVerify.
 var tlsVerifyMember = regexp.MustCompile(`,"tlsVerify":(true|false)\}$`)
@@ -891,6 +911,16 @@ func (r *replay) run(i int, step oracleStep) {
 		}
 		r.checkAnswer(i, step, answer)
 		stored, ok, err := getSetting(ctx, r.db, settingKey)
+		if err == nil && ok && step.StoredAfter != nil && stored != *step.StoredAfter && step.Request != nil && clearedForEmpty(*step.Request, before, stored, *step.StoredAfter) {
+			// BUGS RV40: Node kept the stored password for an empty one. The
+			// replay goes on from the row Node stored.
+			r.counts["RV40: an empty password removes the stored one"]++
+			if err := setSetting(ctx, r.db, settingKey, *step.StoredAfter); err != nil {
+				t.Fatal(err)
+			}
+			r.service.ResetTransporter()
+			stored = *step.StoredAfter
+		}
 		if err != nil || ok != (step.StoredAfter != nil) || (ok && stored != *step.StoredAfter) {
 			t.Fatalf("step %d put %s: stored %q %v %v\nNode: %v", i, *step.Request, stored, ok, err, show(step.StoredAfter))
 		}
@@ -1063,7 +1093,7 @@ func TestNodeRecording(t *testing.T) {
 			"EM7: a help request mail with its blank lines", "EM4: a stored configuration that is invalid",
 			"EM5: a save with a member of the wrong type", "EM5: a read after a refused save",
 			"EM8: no address without a public URL", "EM8: a help request mail without a link", "EM9: a save without a sender",
-			"RV33: the stored password kept for another account"} {
+			"RV33: the stored password kept for another account", "RV40: an empty password removes the stored one"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
 			}

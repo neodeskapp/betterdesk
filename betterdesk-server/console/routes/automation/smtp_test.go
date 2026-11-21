@@ -81,8 +81,8 @@ func TestSMTPSettings(t *testing.T) {
 			t.Errorf("audit entries of the save: %s", rows)
 		}
 
-		// The masked password, an empty one and none keep the stored one
-		for _, pass := range []string{`,"pass":"********"`, `,"pass":""`, ``} {
+		// The masked password and none keep the stored one
+		for _, pass := range []string{`,"pass":"********"`, ``} {
 			body := `{"host":"127.0.0.1","port":1,"user":"contract"` + pass + `,"from":"console@example.com","alert_email":"ops@example.com","tlsVerify":false}`
 			expect(do("admin", "PUT", "/api/automation/smtp", body), 200, `{"success":true}`, "save again")
 			if rows := stored(); !strings.Contains(rows, `\"pass\":\"`+secret+`\"`) {
@@ -101,12 +101,23 @@ func TestSMTPSettings(t *testing.T) {
 			for _, body := range []string{
 				`{"host":"mail.example.test","port":1,"user":"contract","pass":"********","from":"console@example.com","tlsVerify":false}`,
 				`{"host":"127.0.0.1","port":2,"user":"contract","from":"console@example.com"}`,
-				`{"host":"127.0.0.1","port":1,"user":"other","pass":"","from":"console@example.com"}`,
+				`{"host":"127.0.0.1","port":1,"user":"other","pass":"********","from":"console@example.com"}`,
 			} {
 				expect(do("admin", "PUT", path, body), 400, `{"error":"SMTP password is required when the host, port or user changes"}`, "save for another account at "+path)
 			}
 		}
 		expect(do("admin", "GET", "/api/automation/smtp", ""), 200, masked, "read back after saves for another account")
+
+		// An empty password removes the stored one, on both mounts (BUGS
+		// RV40)
+		for _, path := range []string{"/api/automation/smtp", "/api/settings/email/smtp"} {
+			expect(do("admin", "PUT", path, full), 200, `{"success":true}`, "save with the password at "+path)
+			expect(do("admin", "PUT", path, `{"host":"127.0.0.1","port":1,"user":"","pass":"","from":"console@example.com","alert_email":"ops@example.com","tlsVerify":false}`),
+				200, `{"success":true}`, "save with an empty password at "+path)
+			if rows := stored(); strings.Contains(rows, secret) || !strings.Contains(rows, `\"pass\":\"\"`) {
+				t.Errorf("a save with an empty password at %s kept it: %s", path, rows)
+			}
+		}
 
 		// A host alone has no sender and is refused (BUGS EM9); with a
 		// sender the other members take their defaults

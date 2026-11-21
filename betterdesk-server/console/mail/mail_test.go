@@ -122,12 +122,14 @@ func TestPutKeepsTheStoredPasswordForTheMask(t *testing.T) {
 		if answer.Audit == nil || *answer.Audit != (AuditEntry{Action: "smtp_config_updated", Details: "SMTP: smtp.example.com:587"}) {
 			t.Fatalf("audit entry %+v", answer.Audit)
 		}
-		// No password at all keeps it too; a new one replaces it; the mask
-		// with nothing stored is no password.
+		// No password at all keeps it too; an empty one removes it (BUGS
+		// RV40); a new one replaces it; the mask with nothing stored is no
+		// password.
 		for _, step := range []struct{ body, want string }{
 			{`{"host":"smtp.example.com","user":"user","from":"f@example.com"}`, `"pass":"existing-secret"`},
-			{`{"host":"smtp.example.com","user":"user","from":"f@example.com","pass":""}`, `"pass":"existing-secret"`},
 			{`{"host":"smtp.example.com","user":"user","from":"f@example.com","pass":null}`, `"pass":"existing-secret"`},
+			{`{"host":"smtp.example.com","user":"user","from":"f@example.com","pass":""}`, `"pass":""`},
+			{`{"host":"smtp.example.com","user":"user","from":"f@example.com","pass":"********"}`, `"pass":""`},
 			{`{"host":"h","from":"f@example.com","pass":"new-secret"}`, `"pass":"new-secret"`},
 			{`{"host":"h","from":"f@example.com","pass":"********"}`, `"pass":"new-secret"`},
 			{`{"host":"h","from":"f@example.com","pass":" ********"}`, `"pass":" ********"`},

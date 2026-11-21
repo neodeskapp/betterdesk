@@ -147,7 +147,7 @@ func FuzzSettingsBody(f *testing.F) {
 		if refused != "" {
 			if refused == passwordRequired {
 				// BUGS RV33: only to keep a stored password for another account
-				if sent := bodyValue(body, "pass"); !existing.member("pass").truthy() || sent.kind == kindString && sent.str != "" && sent.str != MaskedPass {
+				if sent := bodyValue(body, "pass"); !existing.member("pass").truthy() || sent.kind == kindString && sent.str != MaskedPass {
 					t.Fatalf("%s over %s: refused with %q", raw, storedText, refused)
 				}
 				return
@@ -199,14 +199,14 @@ func FuzzSettingsBody(f *testing.F) {
 		if !stored.member("from").truthy() || utf8.RuneCountInString(stored.member("from").str) > maxFromLength {
 			t.Fatalf("%s stores no sender: %q", raw, out)
 		}
-		// The password: a new one when the request brings one, else the
-		// one stored so far, else none. The mask is never taken for a
-		// password.
+		// The password: a new one when the request brings one, none for an
+		// empty one (BUGS RV40), else the one stored so far, else none. The
+		// mask is never taken for a password.
 		sent := bodyValue(body, "pass")
 		kept := existing.member("pass")
 		got := config.member("pass").json()
 		switch {
-		case sent.kind == kindString && sent.str != "" && sent.str != MaskedPass:
+		case sent.kind == kindString && sent.str != MaskedPass:
 			if got != sent.json() {
 				t.Fatalf("%s stores the password %s", raw, got)
 			}

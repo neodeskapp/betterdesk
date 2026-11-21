@@ -9,9 +9,45 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
+// The stored password can be removed: an empty password clears it, also
+// with another host or user, where the mask and no password member keep it
+// (BUGS RV40). The settings page sends the mask for a field left as it is.
+func TestSaveClearsThePasswordForAnEmptyOne(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		s, transport, _ := newTestService(db, nil, Options{})
+		save := func(body string) {
+			t.Helper()
+			if answer := s.PutSMTPSettings(ctx, bodyOf(body)); answer.Status != 200 {
+				t.Fatalf("%s: %d %s", body, answer.Status, marshal(t, answer.Body))
+			}
+		}
+		save(`{"host":"mail.example.org","user":"alerts","pass":"first-secret","from":"f@example.org"}`)
+		save(`{"host":"mail.example.org","user":"","pass":"","from":"f@example.org"}`)
+		if got := stored(t, db); got != `{"host":"mail.example.org","port":587,"secure":false,"user":"","pass":"","from":"f@example.org","alert_email":""}` {
+			t.Fatalf("after a save with an empty user and password: %s", got)
+		}
+		if got := marshal(t, s.GetSMTPSettings(ctx).Body); !strings.Contains(got, `"pass":""`) {
+			t.Fatalf("read back: %s", got)
+		}
+		// A user entered again does not bring the old password back
+		save(`{"host":"mail.example.org","user":"alerts","pass":"********","from":"f@example.org"}`)
+		s.TestSMTPSettings(ctx)
+		if len(transport.verifies) != 1 || transport.verifies[0].Pass != "" {
+			t.Fatalf("the test connected with %+v", transport.verifies)
+		}
+		// An empty password with another host is no refusal: nothing is kept
+		save(`{"host":"mail.example.org","user":"alerts","pass":"second-secret","from":"f@example.org"}`)
+		save(`{"host":"relay.example.net","user":"alerts","pass":"","from":"f@example.org"}`)
+		if got := stored(t, db); !strings.Contains(got, `"host":"relay.example.net"`) || !strings.Contains(got, `"pass":""`) {
+			t.Fatalf("an empty password for another host: %s", got)
+		}
+	})
+}
+
 // The stored password is kept only for the server and the account it was
 // given for. A save that changes the host, the port or the user and sends
-// the mask, an empty password or none is refused, the row stays as it was,
+// the mask or no password is refused, the row stays as it was,
 // and the connection test still signs in at the stored server (BUGS RV33).
 func TestSaveAsksForThePasswordOnAnotherServer(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
@@ -24,7 +60,6 @@ func TestSaveAsksForThePasswordOnAnotherServer(t *testing.T) {
 		before := stored(t, db)
 		for _, body := range []string{
 			`{"host":"attacker.example","port":465,"secure":true,"user":"alerts","pass":"********","from":"f@example.org","tlsVerify":false}`,
-			`{"host":"attacker.example","port":465,"user":"alerts","pass":"","from":"f@example.org"}`,
 			`{"host":"attacker.example","port":465,"user":"alerts","from":"f@example.org"}`,
 			`{"host":"attacker.example","port":465,"user":"alerts","pass":null,"from":"f@example.org"}`,
 			`{"host":"mail.example.org","port":2525,"user":"alerts","pass":"********","from":"f@example.org"}`,
