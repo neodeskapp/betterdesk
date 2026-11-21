@@ -124,8 +124,7 @@
 //
 //	r.Get("/rules", h.rules, kit.OnMount("/api/automation"), d.RequireAuth)
 //
-// While the Node console still serves routes, a request that every Go
-// route passed on goes to Node as it arrived, body included.
+// A request that every route passed on ends in the pipeline's 404.
 //
 // # Mounts
 //
@@ -224,8 +223,8 @@
 //	})
 //
 // console/sockets.go lists the services whose sockets are switched on.
-// Upgrades to a path nobody registered go to the Node console while it
-// runs behind this one.
+// An upgrade to a path nobody registered passes the request pipeline
+// like a plain request and ends in its 404.
 //
 // # What a handler reads and writes
 //

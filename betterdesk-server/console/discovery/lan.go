@@ -3,9 +3,9 @@
 // identity (LAN), and an mDNS announcement of the service
 // _betterdesk._tcp (MDNS).
 //
-// Both bind ports of their own (UDP 21119 and 5353). While the Node
-// console runs behind this one it binds them itself, so the console
-// starts them only when it serves everything.
+// Both bind ports of their own (UDP 21119 and 5353). The console starts
+// the LAN responder with its background jobs, and the mDNS announcement
+// only when PANEL_MDNS asks for it.
 package discovery
 
 import (

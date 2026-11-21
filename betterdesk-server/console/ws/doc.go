@@ -34,7 +34,7 @@
 // a registered path. Those go to ServeHTTP and never through the request
 // pipeline, as Node's upgrade listener ran outside Express: no security
 // headers, no session renewal, no rate limiter, no CSRF gate. Every other
-// upgrade goes to the Node console while it is behind this one.
+// upgrade passes the pipeline like a plain request and ends in its 404.
 //
 // # Paths
 //

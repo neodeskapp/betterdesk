@@ -552,9 +552,7 @@ func (e *Engine) PeriodicCheckAt(ctx context.Context, at time.Time) error {
 // with the next tick after it.
 //
 // Run is start() of the Node console's engine. The engine never calls it
-// itself: while the Node console still runs its own sweep, registering
-// this job as well would have every offline alert raised and mailed
-// twice.
+// itself: the console runs it as its "alert sweep" job, one per process.
 func (e *Engine) Run(ctx context.Context) {
 	ticker := time.NewTicker(e.opts.SweepEvery)
 	defer ticker.Stop()

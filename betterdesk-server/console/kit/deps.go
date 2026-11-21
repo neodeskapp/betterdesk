@@ -130,9 +130,9 @@ type Deps struct {
 	// Jobs takes background work that stops with the console.
 	Jobs Jobs
 	// Sockets is the registry of the console's websockets: a service adds
-	// a socket path with d.Sockets.Handle (package console/ws). Upgrades
-	// to a path nobody registered go to the Node console while it is
-	// behind this one.
+	// a socket path with d.Sockets.Handle (package console/ws). An upgrade
+	// to a path nobody registered passes the request pipeline like a plain
+	// request and ends in its 404.
 	Sockets *ws.Registry
 	// StatusPush pushes device status and panel events to the browsers
 	// (services/deviceStatusPush.js); d.StatusPush.PublishPanelEvent is
