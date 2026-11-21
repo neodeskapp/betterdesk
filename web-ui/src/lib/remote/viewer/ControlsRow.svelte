@@ -53,7 +53,8 @@
 					.join('\n')
 			: ''
 	);
-	const noSheets = $derived(viewer.viewOnlyGuest);
+	// A watch-only guest link: no chat or files, and nothing that sends input to the device
+	const watchOnly = $derived(viewer.viewOnlyGuest);
 
 	const qualityLabel = (q: string) =>
 		q === 'Best'
@@ -123,112 +124,114 @@
 	{/if}
 	<div class="controls-groups">
 		<div class="group">
-			<ToolMenu
-				label={tf('remote.actions', 'Actions')}
-				icon="keyboard"
-				onopen={() => s && viewer.refreshMonitors(s)}
-			>
-				<MenuItem icon="keyboard" onselect={() => viewer.ctrlAltDel()}
-					><span translate="no">Ctrl+Alt+Del</span></MenuItem
+			{#if !watchOnly}
+				<ToolMenu
+					label={tf('remote.actions', 'Actions')}
+					icon="keyboard"
+					onopen={() => s && viewer.refreshMonitors(s)}
 				>
-				<MenuItem icon="lock" onselect={() => viewer.lockScreen()}
-					>{tf('remote.lock_screen', 'Lock screen')}</MenuItem
-				>
-				<MenuItem icon="restart_alt" onselect={() => void viewer.restartRemote()}
-					>{tf('remote.restart_remote', 'Restart remote device')}</MenuItem
-				>
-				<MenuDivider />
-				<MenuItem icon="refresh" onselect={() => viewer.refreshScreen()}
-					>{tf('remote.refresh_screen', 'Refresh screen')}</MenuItem
-				>
-				<MenuItem icon="content_paste" onselect={() => void viewer.pasteClipboard()}
-					>{tf('remote.clipboard_paste', 'Paste clipboard')}</MenuItem
-				>
-				<MenuItem icon="settings_backup_restore" onselect={() => viewer.resetKeyboard()}
-					>{tf('remote.reset_keyboard', 'Reset keyboard')}</MenuItem
-				>
-				<MenuDivider />
-				<MenuItem
-					type="checkbox"
-					checked={s?.toggles.blockInput ?? false}
-					onselect={() => viewer.setToggle('blockInput', !(s?.toggles.blockInput ?? false))}
-					>{tf('remote.block_input', 'Block user input')}</MenuItem
-				>
-				{#if winSessions.sessions.length >= 2}
-					<MenuDivider />
-					<div role="group" aria-labelledby="{uid}-winsess">
-						<div class="menu-label" id="{uid}-winsess">
-							{tf('remote.windows_sessions', 'Windows sessions')}
-						</div>
-						{#each winSessions.sessions as ws (ws.sid)}
-							<MenuItem
-								type="radio"
-								checked={ws.sid === winSessions.currentSid}
-								onselect={() => viewer.selectWindowsSession(ws.sid)}>{ws.name}</MenuItem
-							>
-						{/each}
-					</div>
-				{/if}
-			</ToolMenu>
-
-			<span class="tool-anchor">
-				<Button
-					size="sm"
-					class="toolbar-btn"
-					icon="text_fields"
-					bind:element={typeButton}
-					title={tf('remote.type_text', 'Type text')}
-					aria-expanded={typeOpen}
-					aria-controls={typeOpen ? `${uid}-type` : undefined}
-					onclick={() => (typeOpen ? closeType(false) : (typeOpen = true))}
-					><span class="tb-label">{tf('remote.type_text', 'Type text')}</span><Icon
-						name="expand_more"
-						class="btn-caret"
-					/></Button
-				>
-				{#if typeOpen}
-					<div
-						bind:this={typePanel}
-						class="type-panel"
-						id="{uid}-type"
-						role="dialog"
-						aria-labelledby="{uid}-type-label"
-						tabindex="-1"
-						onkeydown={(e) => {
-							if (e.key === 'Escape') {
-								e.preventDefault();
-								e.stopPropagation();
-								closeType(true);
-							}
-						}}
+					<MenuItem icon="keyboard" onselect={() => viewer.ctrlAltDel()}
+						><span translate="no">Ctrl+Alt+Del</span></MenuItem
 					>
-						<label class="field-label" id="{uid}-type-label" for="{uid}-type-input"
-							>{tf('remote.type_text', 'Type text')}</label
-						>
-						<textarea
-							bind:this={typeInput}
-							id="{uid}-type-input"
-							class="type-input"
-							rows="3"
-							autocomplete="off"
-							spellcheck="false"
-							aria-describedby="{uid}-type-hint"
-							bind:value={typeText}
+					<MenuItem icon="lock" onselect={() => viewer.lockScreen()}
+						>{tf('remote.lock_screen', 'Lock screen')}</MenuItem
+					>
+					<MenuItem icon="restart_alt" onselect={() => void viewer.restartRemote()}
+						>{tf('remote.restart_remote', 'Restart remote device')}</MenuItem
+					>
+					<MenuDivider />
+					<MenuItem icon="refresh" onselect={() => viewer.refreshScreen()}
+						>{tf('remote.refresh_screen', 'Refresh screen')}</MenuItem
+					>
+					<MenuItem icon="content_paste" onselect={() => void viewer.pasteClipboard()}
+						>{tf('remote.clipboard_paste', 'Paste clipboard')}</MenuItem
+					>
+					<MenuItem icon="settings_backup_restore" onselect={() => viewer.resetKeyboard()}
+						>{tf('remote.reset_keyboard', 'Reset keyboard')}</MenuItem
+					>
+					<MenuDivider />
+					<MenuItem
+						type="checkbox"
+						checked={s?.toggles.blockInput ?? false}
+						onselect={() => viewer.setToggle('blockInput', !(s?.toggles.blockInput ?? false))}
+						>{tf('remote.block_input', 'Block user input')}</MenuItem
+					>
+					{#if winSessions.sessions.length >= 2}
+						<MenuDivider />
+						<div role="group" aria-labelledby="{uid}-winsess">
+							<div class="menu-label" id="{uid}-winsess">
+								{tf('remote.windows_sessions', 'Windows sessions')}
+							</div>
+							{#each winSessions.sessions as ws (ws.sid)}
+								<MenuItem
+									type="radio"
+									checked={ws.sid === winSessions.currentSid}
+									onselect={() => viewer.selectWindowsSession(ws.sid)}>{ws.name}</MenuItem
+								>
+							{/each}
+						</div>
+					{/if}
+				</ToolMenu>
+
+				<span class="tool-anchor">
+					<Button
+						size="sm"
+						class="toolbar-btn"
+						icon="text_fields"
+						bind:element={typeButton}
+						title={tf('remote.type_text', 'Type text')}
+						aria-expanded={typeOpen}
+						aria-controls={typeOpen ? `${uid}-type` : undefined}
+						onclick={() => (typeOpen ? closeType(false) : (typeOpen = true))}
+						><span class="tb-label">{tf('remote.type_text', 'Type text')}</span><Icon
+							name="expand_more"
+							class="btn-caret"
+						/></Button
+					>
+					{#if typeOpen}
+						<div
+							bind:this={typePanel}
+							class="type-panel"
+							id="{uid}-type"
+							role="dialog"
+							aria-labelledby="{uid}-type-label"
+							tabindex="-1"
 							onkeydown={(e) => {
-								if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+								if (e.key === 'Escape') {
 									e.preventDefault();
-									sendTyped();
+									e.stopPropagation();
+									closeType(true);
 								}
-							}}></textarea>
-						<p class="form-hint" id="{uid}-type-hint">
-							{tf('remote.type_text_placeholder', 'Text is typed as keystrokes on the remote device.')}
-						</p>
-						<Button size="sm" class="type-send" onclick={sendTyped}
-							>{tf('remote.type_text_send', 'Send')}</Button
+							}}
 						>
-					</div>
-				{/if}
-			</span>
+							<label class="field-label" id="{uid}-type-label" for="{uid}-type-input"
+								>{tf('remote.type_text', 'Type text')}</label
+							>
+							<textarea
+								bind:this={typeInput}
+								id="{uid}-type-input"
+								class="type-input"
+								rows="3"
+								autocomplete="off"
+								spellcheck="false"
+								aria-describedby="{uid}-type-hint"
+								bind:value={typeText}
+								onkeydown={(e) => {
+									if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+										e.preventDefault();
+										sendTyped();
+									}
+								}}></textarea>
+							<p class="form-hint" id="{uid}-type-hint">
+								{tf('remote.type_text_placeholder', 'Text is typed as keystrokes on the remote device.')}
+							</p>
+							<Button size="sm" class="type-send" onclick={sendTyped}
+								>{tf('remote.type_text_send', 'Send')}</Button
+							>
+						</div>
+					{/if}
+				</span>
+			{/if}
 
 			<ToolMenu label={tf('remote.display_settings', 'Display')} icon="fit_screen" menuClass="display-menu">
 				<div class="display-grid">
@@ -387,7 +390,7 @@
 		</div>
 
 		<div class="group">
-			{#if !noSheets}
+			{#if !watchOnly}
 				<Button
 					size="sm"
 					class="toolbar-btn"
@@ -455,15 +458,17 @@
 						: tf('remote.record', 'Record')}</span
 				></Button
 			>
-			<Button
-				size="sm"
-				class="toolbar-btn"
-				icon="visibility"
-				title={tf('remote.view_only', 'View only')}
-				aria-pressed={s?.viewOnly ?? false}
-				onclick={() => viewer.toggleViewOnly()}
-				><span class="tb-label">{tf('remote.view_only', 'View only')}</span></Button
-			>
+			{#if !watchOnly}
+				<Button
+					size="sm"
+					class="toolbar-btn"
+					icon="visibility"
+					title={tf('remote.view_only', 'View only')}
+					aria-pressed={s?.viewOnly ?? false}
+					onclick={() => viewer.toggleViewOnly()}
+					><span class="tb-label">{tf('remote.view_only', 'View only')}</span></Button
+				>
+			{/if}
 			{#if hasPackage && viewer.data.workReports}
 				<Button
 					size="sm"

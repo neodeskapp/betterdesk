@@ -111,6 +111,10 @@ class RDClient {
         this._backgroundFps = 1;
         this._streamThrottledActive = null;
         this.video.getAudioContext = () => this.audio.audioCtx;
+
+        // A watch-only guest link: view only from the start, and it stays on
+        this._viewOnlyLocked = !!opts.viewOnly;
+        this._viewOnly = this._viewOnlyLocked;
     }
 
     get state() { return this._state; }
@@ -482,7 +486,8 @@ class RDClient {
                 fps: this._getInitialStreamFps(),
                 imageQuality: this.opts.imageQuality || 'Best',
                 codecAbilities: this._codecAbilities,
-                preferCodec: this._preferCodec
+                preferCodec: this._preferCodec,
+                disableKeyboard: this._viewOnlyLocked
             });
 
             this._debugRelay('[RDClient] Auth: sending LoginRequest, crypto.enabled=' + this.crypto.enabled
@@ -1770,7 +1775,7 @@ class RDClient {
      * Send Ctrl+Alt+Delete to remote
      */
     sendCtrlAltDel() {
-        if (this._state !== 'streaming') return;
+        if (this._state !== 'streaming' || this._viewOnlyLocked) return;
         this._sendPeerMessage({
             keyEvent: { controlKey: 'CtrlAltDel', down: true, press: true, modifiers: [], mode: 'Legacy' }
         });
@@ -1780,7 +1785,7 @@ class RDClient {
      * Send Lock Screen command to remote
      */
     sendLockScreen() {
-        if (this._state !== 'streaming') return;
+        if (this._state !== 'streaming' || this._viewOnlyLocked) return;
         this._sendPeerMessage({
             keyEvent: { controlKey: 'LockScreen', down: true, press: true, modifiers: [], mode: 'Legacy' }
         });
@@ -2221,7 +2226,7 @@ class RDClient {
      * Request remote device restart
      */
     sendRestartRemoteDevice() {
-        if (this._state !== 'streaming') return;
+        if (this._state !== 'streaming' || this._viewOnlyLocked) return;
         this._sendPeerMessage(this.proto.buildMisc('restartRemoteDevice', true));
     }
 
@@ -2267,7 +2272,7 @@ class RDClient {
      * @param {boolean} block
      */
     setBlockInput(block) {
-        if (this._state !== 'streaming') return;
+        if (this._state !== 'streaming' || this._viewOnlyLocked) return;
         this._sendPeerMessage(this.proto.buildOptionMisc({ blockInput: block }));
     }
 
@@ -2312,7 +2317,7 @@ class RDClient {
      * @param {boolean} on
      */
     setViewOnly(on) {
-        this._viewOnly = on;
+        this._viewOnly = this._viewOnlyLocked || !!on;
         this._syncInputCapture();
         this._emit('view_only', on);
     }

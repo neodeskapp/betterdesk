@@ -311,7 +311,9 @@ class RDProtocol {
                     disableAudio: opts.disableAudio ? 2 : 1,
                     disableClipboard: 1, // No
                     enableFileTransfer: 2, // Yes — required for file transfer on DEFAULT_CONN
-                    lockAfterSessionEnd: 1 // No
+                    lockAfterSessionEnd: 1, // No
+                    // Watch-only guests: the device ignores keyboard and mouse
+                    ...(opts.disableKeyboard ? { disableKeyboard: 2 } : {})
                 }
             }
         };

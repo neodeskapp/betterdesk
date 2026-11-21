@@ -429,7 +429,8 @@ export class Viewer {
 			adaptiveQuality: p.fpsMode === 'adaptive' && p.adaptiveQuality !== false,
 			preferCodec: p.codec || 'Auto',
 			disableAudio: false,
-			serverRecord: s.meshServerRecord
+			serverRecord: s.meshServerRecord,
+			viewOnly: this.viewOnlyGuest
 		};
 	}
 
@@ -448,7 +449,9 @@ export class Viewer {
 		if (!s.canvas) return;
 		s.client = createClient(s.canvas, this.clientOptions(s), this.transport);
 		s.client.setBackgroundFps?.(s.prefs.backgroundFps || 1);
-		s.viewOnly = !!s.client.viewOnly;
+		// A watch-only guest link: no keyboard or mouse input, also not after a reconnect
+		if (this.viewOnlyGuest) s.client.setViewOnly?.(true);
+		s.viewOnly = this.viewOnlyGuest || !!s.client.viewOnly;
 		this.wire(s, s.client);
 		this.attachTouch(s);
 		this.showView(s, 'connecting');
@@ -837,24 +840,30 @@ export class Viewer {
 		if (s?.client) fn(s.client, s);
 	}
 
+	/** The client of the active tab for a control that sends input; none for a watch-only guest */
+	private inputClient(): RemoteClient | null {
+		if (this.viewOnlyGuest) return null;
+		return this.active?.client ?? null;
+	}
+
 	focusScreen(): void {
 		const s = this.active;
 		if (s?.view === 'streaming') s.focus?.canvas();
 	}
 
 	ctrlAltDel(): void {
-		this.withClient((c) => c.sendCtrlAltDel());
+		this.inputClient()?.sendCtrlAltDel();
 		this.focusScreen();
 	}
 
 	lockScreen(): void {
-		this.withClient((c) => c.sendLockScreen());
+		this.inputClient()?.sendLockScreen();
 		this.focusScreen();
 	}
 
 	async restartRemote(): Promise<void> {
 		const s = this.active;
-		if (!s?.client) return;
+		if (!s?.client || !this.inputClient()) return;
 		const ok = await confirm({
 			title: tf('remote.restart_remote', 'Restart remote device'),
 			message: tf('remote.confirm_restart', 'Restart the remote device?'),
@@ -881,7 +890,7 @@ export class Viewer {
 	async pasteClipboard(): Promise<void> {
 		const s = this.active;
 		if (!s?.client) return;
-		if (s.client.viewOnly) {
+		if (s.client.viewOnly || this.viewOnlyGuest) {
 			toast.warning(tf('remote.view_only', 'View only mode'));
 			return;
 		}
@@ -900,7 +909,7 @@ export class Viewer {
 	typeText(text: string): boolean {
 		const s = this.active;
 		if (!s?.client) return false;
-		if (s.client.viewOnly) {
+		if (s.client.viewOnly || this.viewOnlyGuest) {
 			toast.warning(tf('remote.view_only', 'View only mode'));
 			return false;
 		}
@@ -920,6 +929,7 @@ export class Viewer {
 	setToggle(key: keyof Toggles, on: boolean): void {
 		const s = this.active;
 		if (!s) return;
+		if (key === 'blockInput' && this.viewOnlyGuest) return;
 		s.toggles = { ...s.toggles, [key]: on };
 		const c = s.client;
 		if (!c) return;
@@ -967,9 +977,9 @@ export class Viewer {
 
 	toggleViewOnly(): void {
 		const s = this.active;
-		if (!s?.client) return;
+		if (!s?.client || this.viewOnlyGuest) return;
 		s.viewOnly = !s.viewOnly;
-		s.client.setViewOnly(s.viewOnly);
+		s.client.setViewOnly?.(s.viewOnly);
 		this.syncTouch();
 	}
 
@@ -1182,7 +1192,7 @@ export class Viewer {
 
 	/** Special keys of the tablet toolbar, as key presses on the remote */
 	sendSpecialKey(key: 'Meta' | 'Alt+Tab' | 'PrintScreen' | 'Escape'): void {
-		const input = this.active?.client?.input;
+		const input = this.inputClient()?.input;
 		if (!input?._handleKeyDown || !input._handleKeyUp) return;
 		const code = { Meta: 'MetaLeft', 'Alt+Tab': 'Tab', PrintScreen: 'PrintScreen', Escape: 'Escape' }[key];
 		const alt = key === 'Alt+Tab';
@@ -1193,7 +1203,7 @@ export class Viewer {
 	}
 
 	keyFromBridge(e: KeyboardEvent): void {
-		const input = this.active?.client?.input;
+		const input = this.inputClient()?.input;
 		if (e.type === 'keydown') input?._handleKeyDown?.(e);
 		else input?._handleKeyUp?.(e);
 	}

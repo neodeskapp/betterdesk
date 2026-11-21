@@ -214,6 +214,39 @@ describe('remote viewer sessions', () => {
 		expect(warn).toHaveBeenCalled();
 	});
 
+	test('a watch-only guest link starts the client in view only, and the guest cannot turn it off', () => {
+		const { v, s, c } = setup(
+			data({
+				capabilities: {
+					transport: 'rd',
+					guest_access: true,
+					guest_view_only: true,
+					guest_peer_ids: ['900100012']
+				}
+			})
+		);
+		expect(c.opts.viewOnly).toBe(true);
+		expect(c.setViewOnly).toHaveBeenCalledWith(true);
+		expect(s.viewOnly).toBe(true);
+		c.emit('state', 'streaming');
+		c.emit('session_start');
+		v.toggleViewOnly();
+		expect(c.setViewOnly).not.toHaveBeenCalledWith(false);
+		expect(s.viewOnly).toBe(true);
+		v.ctrlAltDel();
+		v.setToggle('blockInput', true);
+		expect(c.sendCtrlAltDel).not.toHaveBeenCalled();
+		expect(c.setBlockInput).not.toHaveBeenCalled();
+		expect(v.typeText('rm -rf /')).toBe(false);
+	});
+
+	test('an operator starts with input on', () => {
+		const { s, c } = setup();
+		expect(c.opts.viewOnly).toBe(false);
+		expect(c.setViewOnly).not.toHaveBeenCalled();
+		expect(s.viewOnly).toBe(false);
+	});
+
 	test('chat goes to the device and replies show in the session', () => {
 		const { v, s, c } = setup();
 		expect(v.sendChat(s, '  hello ')).toBe(true);

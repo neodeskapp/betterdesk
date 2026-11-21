@@ -123,7 +123,8 @@ export interface RemoteClient {
 	setLockAfterSession(on: boolean): void;
 	setPrivacyMode(on: boolean): void;
 	setDisableClipboard(on: boolean): void;
-	setViewOnly(on: boolean): void;
+	/** Not on CDAP sessions */
+	setViewOnly?(on: boolean): void;
 	setAudioMuted(muted: boolean): void;
 	setBackgroundFps?(fps: number): void;
 	setSessionActive?(active: boolean): void;
@@ -150,6 +151,8 @@ export interface ClientOptions {
 	preferCodec: string;
 	disableAudio: boolean;
 	serverRecord: boolean;
+	/** A watch-only guest link: the client sends no input and the guest cannot turn view only off */
+	viewOnly: boolean;
 }
 
 type ClientCtor = new (canvas: HTMLCanvasElement, opts: ClientOptions) => RemoteClient;
