@@ -6,7 +6,9 @@
 //  1. Server accepts TCP connection
 //  2. Server sends KeyExchange{keys: [ed25519_sign(server_curve25519_pubkey)]}
 //     The signed payload is 96 bytes: [64-byte Ed25519 signature][32-byte Curve25519 pubkey]
-//     (matches libsodium crypto_sign combined mode)
+//     (matches libsodium crypto_sign combined mode). The Curve25519 key is made
+//     for this connection, as hbbs does; only the signature uses the server's
+//     long-term key, so a leaked id_ed25519 does not open recorded sessions.
 //  3. Client verifies Ed25519 signature, extracts server's Curve25519 pubkey
 //  4. Client sends KeyExchange{keys: [nacl_box_encrypted_sym_key, client_curve25519_pubkey]}
 //  5. Server decrypts symmetric key using NaCl box
@@ -19,7 +21,6 @@ package crypto
 import (
 	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/sha512"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -36,44 +37,6 @@ import (
 	pb "github.com/unitronix/betterdesk-server/proto"
 	"google.golang.org/protobuf/proto"
 )
-
-// Ed25519ToCurve25519PrivateKey converts an Ed25519 private key to a
-// Curve25519 private key suitable for X25519 key exchange.
-// This mirrors libsodium's crypto_sign_ed25519_sk_to_curve25519.
-func Ed25519ToCurve25519PrivateKey(edPriv ed25519.PrivateKey) [32]byte {
-	// Ed25519 private key is 64 bytes: [32-byte seed][32-byte public key].
-	// The Curve25519 scalar is derived by hashing the seed with SHA-512 and
-	// clamping the first 32 bytes.
-	seed := edPriv[:32]
-	h := sha512.Sum512(seed)
-	h[0] &= 248
-	h[31] &= 127
-	h[31] |= 64
-	var curvePriv [32]byte
-	copy(curvePriv[:], h[:32])
-	return curvePriv
-}
-
-// Ed25519ToCurve25519PublicKey converts an Ed25519 public key to a
-// Curve25519 public key.  Uses the scalar multiplication identity:
-//
-//	curve25519_pubkey = scalar_mult(curve25519_privkey, basepoint)
-//
-// Since we derive the scalar from the private key, we can also derive
-// the public key from the private key directly.
-//
-// Alternatively, we compute it from the Ed25519 private key to ensure
-// consistency: curvePriv * basepoint = curvePub.
-func Ed25519ToCurve25519PublicKey(edPriv ed25519.PrivateKey) ([32]byte, error) {
-	curvePriv := Ed25519ToCurve25519PrivateKey(edPriv)
-	curvePub, err := curve25519.X25519(curvePriv[:], curve25519.Basepoint)
-	if err != nil {
-		return [32]byte{}, fmt.Errorf("secure: curve25519 scalar mult: %w", err)
-	}
-	var pub [32]byte
-	copy(pub[:], curvePub)
-	return pub, nil
-}
 
 // SecureTCPConn wraps a net.Conn with NaCl secretbox encryption/decryption.
 // After the key exchange, all reads and writes go through this wrapper.
@@ -249,13 +212,12 @@ type HandshakeResult struct {
 //  3. If KeyExchange → complete handshake, return SecureConn
 //  4. If other message → old client, return that message for direct handling
 //
-// The edPriv parameter is the server's Ed25519 private key (64 bytes).
+// The edPriv parameter is the server's Ed25519 private key (64 bytes); it
+// signs a Curve25519 key made for this connection.
 func NegotiateSecureTCP(conn net.Conn, edPriv ed25519.PrivateKey) (*HandshakeResult, error) {
-	// Derive Curve25519 keys from Ed25519 identity key
-	curvePriv := Ed25519ToCurve25519PrivateKey(edPriv)
-	curvePub, err := Ed25519ToCurve25519PublicKey(edPriv)
+	curvePub, curvePriv, err := GenerateEphemeralX25519()
 	if err != nil {
-		return nil, fmt.Errorf("secure: derive curve25519 key: %w", err)
+		return nil, fmt.Errorf("secure: generate connection key: %w", err)
 	}
 
 	// Step 1: Send Ed25519-signed Curve25519 public key as KeyExchange.
@@ -346,8 +308,8 @@ func NegotiateSecureTCP(conn net.Conn, edPriv ed25519.PrivateKey) (*HandshakeRes
 	}, nil
 }
 
-// GenerateEphemeralX25519 generates a random X25519 keypair for one-shot use.
-// Not currently needed (we derive from Ed25519), but available for future use.
+// GenerateEphemeralX25519 generates a random X25519 keypair for one
+// connection.
 func GenerateEphemeralX25519() (publicKey, privateKey [32]byte, err error) {
 	_, err = io.ReadFull(rand.Reader, privateKey[:])
 	if err != nil {
