@@ -443,18 +443,21 @@ func TestPG2SQLiteReplacesAnExistingDestinationOnlyWhenTheCopySucceeds(t *testin
 	dst := filepath.Join(dir, "db_v2.sqlite3")
 	oldDestination(t, dst)
 
-	if err := runPG2SQLite(dsn, dst, false); err == nil {
+	if err := runPG2SQLite(dsn, dst, moveOptions{overwrite: false}); err == nil {
 		t.Error("an existing -dst was replaced without -overwrite")
 	}
-	broken := pgDSN(t, `INSERT INTO peers (id) VALUES ('123456789')`, `DROP TABLE api_keys`)
-	if err := runPG2SQLite(broken, dst, true); err == nil {
-		t.Error("a copy that failed on api_keys succeeded")
+	// A user without password hash, which SQLite's users table refuses.
+	broken := pgDSN(t, `INSERT INTO peers (id) VALUES ('123456789')`,
+		`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`,
+		`INSERT INTO users (username, password_hash) VALUES ('broken', NULL)`)
+	if err := runPG2SQLite(broken, dst, moveOptions{overwrite: true}); err == nil {
+		t.Error("a copy that failed on a user succeeded")
 	}
 	if !tableExistsIn(t, dst, "keep") || countRows(t, dst, "keep") != 1 {
 		t.Fatal("a refused or failed run changed the destination")
 	}
 
-	if err := runPG2SQLite(dsn, dst, true); err != nil {
+	if err := runPG2SQLite(dsn, dst, moveOptions{overwrite: true}); err != nil {
 		t.Fatalf("with -overwrite: %v", err)
 	}
 	if tableExistsIn(t, dst, "keep") || countRows(t, dst, "peers") != 1 {
@@ -558,7 +561,7 @@ func TestSQLite2PGCopiesRowsWithNulls(t *testing.T) {
 		`INSERT INTO api_keys (key_hash, key_prefix, name, role, created_at, expires_at, last_used)
 		 VALUES ('kh', 'p', 'n', 'viewer', NULL, NULL, NULL)`)
 
-	if err := runSQLite2PG(src, dsn); err != nil {
+	if err := runSQLite2PG(src, dsn, moveOptions{}); err != nil {
 		t.Fatal(err)
 	}
 	for _, table := range []string{"peers", "server_config", "id_change_history", "users", "api_keys"} {
@@ -593,7 +596,7 @@ func TestSQLite2PGFailsOnARowItCannotCopy(t *testing.T) {
 				"CREATE TABLE users (username TEXT, password_hash TEXT, role TEXT DEFAULT 'viewer', totp_secret TEXT, totp_enabled INTEGER, created_at TEXT, last_login TEXT)",
 				sqliteSchemaStatements()[0]) // peers
 			execSQLite(t, src, rows...)
-			if err := runSQLite2PG(src, dsn); err == nil {
+			if err := runSQLite2PG(src, dsn, moveOptions{}); err == nil {
 				t.Error("a row that could not be copied was dropped and the migration succeeded")
 			}
 		})
@@ -624,7 +627,7 @@ func TestPG2SQLiteCopiesRowsWithNulls(t *testing.T) {
 		`INSERT INTO api_keys (key_hash, created_at) VALUES ('kh', NULL)`)...)
 	dst := filepath.Join(t.TempDir(), "db_v2.sqlite3")
 
-	if err := runPG2SQLite(dsn, dst, false); err != nil {
+	if err := runPG2SQLite(dsn, dst, moveOptions{overwrite: false}); err != nil {
 		t.Fatal(err)
 	}
 	for _, table := range []string{"peers", "server_config", "id_change_history", "users", "api_keys"} {
@@ -639,7 +642,7 @@ func TestPG2SQLiteFailsOnARowItCannotRead(t *testing.T) {
 		`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`,
 		`INSERT INTO users (username, password_hash) VALUES ('fine', 'hash'), ('broken', NULL)`)
 	dst := filepath.Join(t.TempDir(), "db_v2.sqlite3")
-	if err := runPG2SQLite(dsn, dst, false); err == nil {
+	if err := runPG2SQLite(dsn, dst, moveOptions{overwrite: false}); err == nil {
 		t.Error("a user that could not be read was dropped and the migration succeeded")
 	}
 	if exists(dst) {
@@ -650,16 +653,25 @@ func TestPG2SQLiteFailsOnARowItCannotRead(t *testing.T) {
 func TestTimesGoToSQLiteAsUTC(t *testing.T) {
 	// pgx hands timestamptz values over in the process's zone.
 	east := time.FixedZone("UTC+1", 3600)
-	at := time.Date(2026, 1, 1, 13, 0, 0, 0, east)
-	if got := formatTime(&at); got != "2026-01-01 12:00:00" {
-		t.Errorf("formatTime: %q, want the UTC time 2026-01-01 12:00:00", got)
-	}
-	if got := formatTimeDefault(&at); got != "2026-01-01 12:00:00" {
-		t.Errorf("formatTimeDefault: %q, want the UTC time 2026-01-01 12:00:00", got)
-	}
-	now, err := time.Parse("2006-01-02 15:04:05", formatTimeDefault(nil))
-	if err != nil || time.Since(now) > time.Minute || time.Until(now) > time.Minute {
-		t.Errorf("formatTimeDefault(nil) = %v (%v), want the current UTC time", now, err)
+	at := time.Date(2026, 1, 1, 13, 0, 0, 123456000, east)
+	timestamptz := column{kind: kTime, declared: "timestamp with time zone"}
+	for field, want := range map[string]string{
+		"peers.last_online":             "2026-01-01 12:00:00",
+		"studio_flows.updated_at":       "2026-01-01T12:00:00.123Z",
+		"access_tokens.expires_at":      "2026-01-01 12:00:00.123",
+		"org_users.created_at":          "2026-01-01T12:00:00Z",
+		"dlp_events.created_at":         "2026-01-01 12:00:00",
+		"tickets.sla_due_at":            "2026-01-01T12:00:00.123Z",
+		"account_lockouts.locked_until": "2026-01-01 12:00:00.123",
+	} {
+		dst := column{kind: kText, declared: "TEXT"}
+		if field == "dlp_events.created_at" {
+			dst = column{kind: kDateTimeText, declared: "DATETIME"}
+		}
+		got, err := convert(at, timestamptz, dst, false, field)
+		if err != nil || got != want {
+			t.Errorf("%s: %v (%v), want the UTC time %q", field, got, err, want)
+		}
 	}
 }
 
@@ -688,7 +700,7 @@ func TestSQLite2PGKeepsTimesTheConsoleWrites(t *testing.T) {
 	execSQLite(t, src, sqliteSchemaStatements()...)
 	execSQLite(t, src,
 		`INSERT INTO api_keys (key_hash, created_at, expires_at) VALUES ('kh', '2026-11-17 01:05:51.694', '2026-12-01T00:00:00.5')`)
-	if err := runSQLite2PG(src, dsn); err != nil {
+	if err := runSQLite2PG(src, dsn, moveOptions{}); err != nil {
 		t.Fatal(err)
 	}
 	pool, err := pgxpool.New(context.Background(), dsn)
@@ -748,7 +760,7 @@ func TestSQLite2PGReadsASourceInRollbackJournalMode(t *testing.T) {
 	src := filepath.Join(t.TempDir(), "db_v2.sqlite3")
 	rollbackJournal(t, src, append(sqliteSchemaStatements(),
 		`INSERT INTO peers (id) VALUES ('123456789')`)...)
-	if err := runSQLite2PG(src, dsn); err != nil {
+	if err := runSQLite2PG(src, dsn, moveOptions{}); err != nil {
 		t.Fatal(err)
 	}
 	if n := countPG(t, dsn, "peers"); n != 1 {

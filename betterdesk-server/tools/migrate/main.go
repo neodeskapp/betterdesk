@@ -3,8 +3,8 @@
 // Supports multiple migration modes:
 //
 //	rust2go   — Rust hbbs-patch-v2 SQLite → BetterDesk Go schema (SQLite or PG)
-//	sqlite2pg — BetterDesk Go SQLite → PostgreSQL
-//	pg2sqlite — PostgreSQL → BetterDesk Go SQLite
+//	sqlite2pg — move a whole install (server and console) from SQLite to PostgreSQL
+//	pg2sqlite — move a whole install from PostgreSQL to SQLite
 //	nodejs2go — Node.js console SQLite → BetterDesk Go schema (SQLite or PG)
 //	backup    — Create timestamped backup of a SQLite file
 //
@@ -19,7 +19,8 @@
 //	./migrate -mode backup    -src db_v2.sqlite3
 //
 // An existing SQLite file at -dst is replaced only with -overwrite, and
-// never when it is one of the sources.
+// never when it is one of the sources. sqlite2pg writes into a PostgreSQL
+// database that has rows only with -overwrite.
 package main
 
 import (
@@ -36,7 +37,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "modernc.org/sqlite"
 
@@ -79,7 +79,8 @@ func main() {
 	dst := flag.String("dst", "", "Destination: SQLite file path or postgres:// DSN (default: auto)")
 	nodeAuth := flag.String("node-auth", "", "Path to Node.js auth.sqlite3 (nodejs2go mode)")
 	backupOnly := flag.Bool("backup-only", false, "Create backup only (legacy flag, same as -mode backup)")
-	overwrite := flag.Bool("overwrite", false, "Replace an existing SQLite file at -dst")
+	overwrite := flag.Bool("overwrite", false, "Replace an existing SQLite file at -dst, or everything in the PostgreSQL database at -dst")
+	skipLeftovers := flag.Bool("skip-leftovers", false, "sqlite2pg, pg2sqlite: leave out source tables and columns the server's schema does not have, instead of failing")
 	flag.Parse()
 
 	// Legacy compatibility: -src without -mode assumes rust2go
@@ -96,9 +97,9 @@ func main() {
 	case "rust2go":
 		err = runRust2Go(*src, *dst, *overwrite)
 	case "sqlite2pg":
-		err = runSQLite2PG(*src, *dst)
+		err = runSQLite2PG(*src, *dst, moveOptions{overwrite: *overwrite, skipLeftovers: *skipLeftovers})
 	case "pg2sqlite":
-		err = runPG2SQLite(*src, *dst, *overwrite)
+		err = runPG2SQLite(*src, *dst, moveOptions{overwrite: *overwrite, skipLeftovers: *skipLeftovers})
 	case "nodejs2go":
 		err = runNodeJS2Go(*src, *nodeAuth, *dst, *overwrite)
 	case "backup":
@@ -121,17 +122,19 @@ func main() {
 func printUsage() {
 	fmt.Println("BetterDesk Database Migration Tool")
 	fmt.Println()
-	fmt.Println("Usage: migrate -mode <mode> -src <source> [-dst <dest>] [-overwrite] [options]")
+	fmt.Println("Usage: migrate -mode <mode> -src <source> [-dst <dest>] [-overwrite] [-skip-leftovers] [options]")
 	fmt.Println()
 	fmt.Println("Modes:")
 	fmt.Println("  rust2go   - Migrate Rust hbbs-patch-v2 → BetterDesk Go schema")
-	fmt.Println("  sqlite2pg - Migrate BetterDesk Go SQLite → PostgreSQL")
-	fmt.Println("  pg2sqlite - Migrate PostgreSQL → BetterDesk Go SQLite")
+	fmt.Println("  sqlite2pg - Move the whole install (every table of the server and the console) from SQLite to PostgreSQL")
+	fmt.Println("  pg2sqlite - Move the whole install from PostgreSQL to SQLite")
 	fmt.Println("  nodejs2go - Migrate Node.js console → BetterDesk Go schema")
 	fmt.Println("  backup    - Create timestamped backup of a SQLite file")
 	fmt.Println()
 	fmt.Println("A SQLite destination is written to a temporary file and renamed at the end.")
 	fmt.Println("An existing file at -dst is replaced only with -overwrite; a source is never.")
+	fmt.Println("sqlite2pg writes into a PostgreSQL database with rows in it only with -overwrite,")
+	fmt.Println("and both moves stop on tables or columns the server's schema lacks unless -skip-leftovers.")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  ./migrate -mode rust2go   -src /opt/rustdesk/db_v2.sqlite3")
@@ -267,8 +270,10 @@ func readRustDB(path string) ([]rustPeer, error) {
 // writeRustPeersSQLite writes Rust peers to a new BetterDesk Go SQLite
 // database at path.
 func writeRustPeersSQLite(path string, overwrite bool, peers []rustPeer) (int, error) {
-	return writeSQLiteFile(path, overwrite, func(db *sql.DB) (int, error) {
-		return copyRustPeers2SQLite(db, peers)
+	return writeSQLiteFile(path, overwrite, func(tmp string) (int, error) {
+		return fillSQLite(tmp, func(db *sql.DB) (int, error) {
+			return copyRustPeers2SQLite(db, peers)
+		})
 	})
 }
 
@@ -363,510 +368,6 @@ func convertRustPeer(p rustPeer) (info peerInfo, uuid, status, user, lastOnline,
 	return
 }
 
-// ── Mode: sqlite2pg ───────────────────────────────────────────────────
-
-func runSQLite2PG(srcPath, dstDSN string) error {
-	if srcPath == "" || dstDSN == "" || !isPG(dstDSN) {
-		return errors.New("usage: migrate -mode sqlite2pg -src <sqlite-path> -dst <postgres://...>")
-	}
-	if err := requireFile(srcPath); err != nil {
-		return err
-	}
-	bp, err := createBackup(srcPath)
-	if err != nil {
-		return err
-	}
-	log.Printf("Backup created: %s", bp)
-
-	srcDB, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=ro&_pragma=busy_timeout(5000)", srcPath))
-	if err != nil {
-		return fmt.Errorf("open source: %w", err)
-	}
-	defer srcDB.Close()
-
-	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, dstDSN)
-	if err != nil {
-		return fmt.Errorf("connect to PostgreSQL: %w", err)
-	}
-	defer pool.Close()
-	if err := pool.Ping(ctx); err != nil {
-		return fmt.Errorf("ping PostgreSQL: %w", err)
-	}
-
-	log.Println("Creating PostgreSQL schema...")
-	for _, stmt := range pgSchemaStatements() {
-		if _, err := pool.Exec(ctx, stmt); err != nil {
-			return fmt.Errorf("create schema: %w", err)
-		}
-	}
-
-	// Detect source schema type
-	schema := detectSQLiteSchema(srcDB)
-	log.Printf("Detected source schema: %s", schema)
-
-	var total int
-
-	// Copy peers
-	if tableExists(srcDB, "peers") {
-		n, err := copyPeersSQLite2PG(ctx, srcDB, pool)
-		if err != nil {
-			return fmt.Errorf("copy peers: %w", err)
-		}
-		log.Printf("  peers: %d rows", n)
-		total += n
-	}
-
-	// Copy server_config
-	if tableExists(srcDB, "server_config") {
-		n, err := copyConfigSQLite2PG(ctx, srcDB, pool)
-		if err != nil {
-			return fmt.Errorf("copy server_config: %w", err)
-		}
-		log.Printf("  server_config: %d rows", n)
-		total += n
-	}
-
-	// Copy id_change_history
-	if tableExists(srcDB, "id_change_history") {
-		n, err := copyIDHistorySQLite2PG(ctx, srcDB, pool)
-		if err != nil {
-			return fmt.Errorf("copy id_change_history: %w", err)
-		}
-		log.Printf("  id_change_history: %d rows", n)
-		total += n
-	}
-
-	// Copy users
-	if tableExists(srcDB, "users") {
-		n, err := copyUsersSQLite2PG(ctx, srcDB, pool)
-		if err != nil {
-			return fmt.Errorf("copy users: %w", err)
-		}
-		log.Printf("  users: %d rows", n)
-		total += n
-	}
-
-	// Copy api_keys
-	if tableExists(srcDB, "api_keys") {
-		n, err := copyAPIKeysSQLite2PG(ctx, srcDB, pool)
-		if err != nil {
-			return fmt.Errorf("copy api_keys: %w", err)
-		}
-		log.Printf("  api_keys: %d rows", n)
-		total += n
-	}
-
-	log.Printf("Migration complete: %d total rows copied to PostgreSQL", total)
-	return nil
-}
-
-func copyPeersSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int, error) {
-	rows, err := src.Query(`SELECT id, uuid, pk, ip, user, hostname, os, version,
-		status, nat_type, last_online, created_at,
-		disabled, banned, ban_reason, banned_at,
-		soft_deleted, deleted_at, note, tags, heartbeat_seq FROM peers`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	count := 0
-	for rows.Next() {
-		var (
-			id                                                   string
-			pk                                                   []byte
-			uuid, ip, user, hostname, osStr, version, status     sql.NullString
-			banReason, note, tags                                sql.NullString
-			lastOnline, createdAt, bannedAt, deletedAt           sql.NullString
-			natType, heartbeatSeq, disabled, banned, softDeleted sql.NullInt64
-		)
-		if err := rows.Scan(&id, &uuid, &pk, &ip, &user, &hostname, &osStr, &version,
-			&status, &natType, &lastOnline, &createdAt,
-			&disabled, &banned, &banReason, &bannedAt,
-			&softDeleted, &deletedAt, &note, &tags, &heartbeatSeq); err != nil {
-			return count, fmt.Errorf("read peer row %d: %w", count+1, err)
-		}
-
-		_, err := dst.Exec(ctx, `
-			INSERT INTO peers (id, uuid, pk, ip, "user", hostname, os, version,
-			    status, nat_type, last_online, created_at,
-			    disabled, banned, ban_reason, banned_at,
-			    soft_deleted, deleted_at, note, tags, heartbeat_seq)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
-			ON CONFLICT (id) DO NOTHING`,
-			id, uuid.String, pk, ip.String, user.String, hostname.String, osStr.String, version.String,
-			status.String, natType.Int64, parseNullTime(lastOnline), parseTimeDefault(createdAt.String),
-			disabled.Int64 != 0, banned.Int64 != 0, banReason.String, parseNullTime(bannedAt),
-			softDeleted.Int64 != 0, parseNullTime(deletedAt), note.String, tags.String, heartbeatSeq.Int64)
-		if err != nil {
-			return count, fmt.Errorf("peer %s: %w", id, err)
-		}
-		count++
-	}
-	return count, rows.Err()
-}
-
-func copyConfigSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int, error) {
-	rows, err := src.Query(`SELECT key, value FROM server_config`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	count := 0
-	for rows.Next() {
-		var key string
-		var value sql.NullString
-		if err := rows.Scan(&key, &value); err != nil {
-			return count, fmt.Errorf("read config row %d: %w", count+1, err)
-		}
-		_, err := dst.Exec(ctx, `INSERT INTO server_config (key, value) VALUES ($1, $2)
-			ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, key, value.String)
-		if err != nil {
-			return count, fmt.Errorf("config %s: %w", key, err)
-		}
-		count++
-	}
-	return count, rows.Err()
-}
-
-func copyIDHistorySQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int, error) {
-	rows, err := src.Query(`SELECT old_id, new_id, changed_at, reason FROM id_change_history`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	count := 0
-	for rows.Next() {
-		var oldID, newID string
-		var changedAt, reason sql.NullString
-		if err := rows.Scan(&oldID, &newID, &changedAt, &reason); err != nil {
-			return count, fmt.Errorf("read id_change_history row %d: %w", count+1, err)
-		}
-		_, err := dst.Exec(ctx, `INSERT INTO id_change_history (old_id, new_id, changed_at, reason)
-			VALUES ($1, $2, $3, $4)`, oldID, newID, parseTimeDefault(changedAt.String), reason.String)
-		if err != nil {
-			return count, fmt.Errorf("id_history %s→%s: %w", oldID, newID, err)
-		}
-		count++
-	}
-	return count, rows.Err()
-}
-
-func copyUsersSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int, error) {
-	rows, err := src.Query(`SELECT username, password_hash, role, totp_secret, totp_enabled,
-		created_at, last_login FROM users`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	count := 0
-	for rows.Next() {
-		var (
-			username, passwordHash, role     string
-			totpSecret, createdAt, lastLogin sql.NullString
-			totpEnabled                      sql.NullInt64
-		)
-		if err := rows.Scan(&username, &passwordHash, &role, &totpSecret,
-			&totpEnabled, &createdAt, &lastLogin); err != nil {
-			return count, fmt.Errorf("read user row %d: %w", count+1, err)
-		}
-
-		_, err := dst.Exec(ctx, `
-			INSERT INTO users (username, password_hash, role, totp_secret, totp_enabled,
-			    created_at, last_login)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-			ON CONFLICT (username) DO NOTHING`,
-			username, passwordHash, role, totpSecret.String, totpEnabled.Int64 != 0,
-			parseTimeDefault(createdAt.String), parseNullTime(lastLogin))
-		if err != nil {
-			return count, fmt.Errorf("user %s: %w", username, err)
-		}
-		count++
-	}
-	return count, rows.Err()
-}
-
-func copyAPIKeysSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int, error) {
-	rows, err := src.Query(`SELECT key_hash, key_prefix, name, role, created_at, expires_at, last_used
-		FROM api_keys`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	count := 0
-	for rows.Next() {
-		var keyHash, keyPrefix, name, role string
-		var createdAt, expiresAt, lastUsed sql.NullString
-		if err := rows.Scan(&keyHash, &keyPrefix, &name, &role, &createdAt, &expiresAt, &lastUsed); err != nil {
-			return count, fmt.Errorf("read api_keys row %d: %w", count+1, err)
-		}
-		_, err := dst.Exec(ctx, `
-			INSERT INTO api_keys (key_hash, key_prefix, name, role, created_at, expires_at, last_used)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-			ON CONFLICT (key_hash) DO NOTHING`,
-			keyHash, keyPrefix, name, role,
-			parseTimeDefault(createdAt.String), parseNullTime(expiresAt), parseNullTime(lastUsed))
-		if err != nil {
-			return count, fmt.Errorf("api_key %s: %w", keyPrefix, err)
-		}
-		count++
-	}
-	return count, rows.Err()
-}
-
-// ── Mode: pg2sqlite ───────────────────────────────────────────────────
-
-func runPG2SQLite(srcDSN, dstPath string, overwrite bool) error {
-	if srcDSN == "" || !isPG(srcDSN) || dstPath == "" {
-		return errors.New("usage: migrate -mode pg2sqlite -src <postgres://...> -dst <sqlite-path> [-overwrite]")
-	}
-	if err := checkSQLiteDst(dstPath, overwrite); err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, srcDSN)
-	if err != nil {
-		return fmt.Errorf("connect to PostgreSQL: %w", err)
-	}
-	defer pool.Close()
-	if err := pool.Ping(ctx); err != nil {
-		return fmt.Errorf("ping PostgreSQL: %w", err)
-	}
-
-	total, err := writeSQLiteFile(dstPath, overwrite, func(dstDB *sql.DB) (int, error) {
-		var total int
-		for _, step := range []struct {
-			table string
-			copy  func(context.Context, *pgxpool.Pool, *sql.DB) (int, error)
-		}{
-			{"peers", copyPeersPG2SQLite},
-			{"server_config", copyConfigPG2SQLite},
-			{"id_change_history", copyIDHistoryPG2SQLite},
-			{"users", copyUsersPG2SQLite},
-			{"api_keys", copyAPIKeysPG2SQLite},
-		} {
-			n, err := step.copy(ctx, pool, dstDB)
-			if err != nil {
-				return total, fmt.Errorf("copy %s: %w", step.table, err)
-			}
-			log.Printf("  %s: %d rows", step.table, n)
-			total += n
-		}
-		return total, nil
-	})
-	if err != nil {
-		return err
-	}
-	log.Printf("Migration complete: %d total rows copied to %s", total, dstPath)
-	return nil
-}
-
-func copyPeersPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (int, error) {
-	rows, err := src.Query(ctx, `SELECT id, uuid, pk, ip, "user", hostname, os, version,
-		status, nat_type, last_online, created_at,
-		disabled, banned, ban_reason, banned_at,
-		soft_deleted, deleted_at, note, tags, heartbeat_seq FROM peers`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	tx, err := dst.Begin()
-	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback()
-
-	stmt, err := tx.Prepare(`INSERT OR REPLACE INTO peers
-		(id, uuid, pk, ip, user, hostname, os, version,
-		 status, nat_type, last_online, created_at,
-		 disabled, banned, ban_reason, banned_at,
-		 soft_deleted, deleted_at, note, tags, heartbeat_seq)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer stmt.Close()
-
-	count := 0
-	for rows.Next() {
-		var (
-			id                                               string
-			pk                                               []byte
-			uuid, ip, user, hostname, osStr, version, status *string
-			banReason, note, tags                            *string
-			natType, heartbeatSeq                            *int64
-			lastOnline, createdAt, bannedAt, deletedAt       *time.Time
-			disabled, banned, softDeleted                    *bool
-		)
-		if err := rows.Scan(&id, &uuid, &pk, &ip, &user, &hostname, &osStr, &version,
-			&status, &natType, &lastOnline, &createdAt,
-			&disabled, &banned, &banReason, &bannedAt,
-			&softDeleted, &deletedAt, &note, &tags, &heartbeatSeq); err != nil {
-			return count, fmt.Errorf("read peer row %d: %w", count+1, err)
-		}
-		_, err := stmt.Exec(id, ptrStr(uuid), pk, ptrStr(ip), ptrStr(user), ptrStr(hostname), ptrStr(osStr), ptrStr(version),
-			ptrStr(status), ptrInt64(natType), formatTime(lastOnline), formatTimeDefault(createdAt),
-			ptrBoolInt(disabled), ptrBoolInt(banned), ptrStr(banReason), formatTime(bannedAt),
-			ptrBoolInt(softDeleted), formatTime(deletedAt), ptrStr(note), ptrStr(tags), ptrInt64(heartbeatSeq))
-		if err != nil {
-			return count, fmt.Errorf("peer %s: %w", id, err)
-		}
-		count++
-	}
-	if err := rows.Err(); err != nil {
-		return count, err
-	}
-	return count, tx.Commit()
-}
-
-func copyConfigPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (int, error) {
-	rows, err := src.Query(ctx, `SELECT key, value FROM server_config`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	tx, err := dst.Begin()
-	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback()
-
-	count := 0
-	for rows.Next() {
-		var key string
-		var value *string
-		if err := rows.Scan(&key, &value); err != nil {
-			return count, fmt.Errorf("read config row %d: %w", count+1, err)
-		}
-		if _, err := tx.Exec(`INSERT OR REPLACE INTO server_config (key, value) VALUES (?, ?)`, key, ptrStr(value)); err != nil {
-			return count, fmt.Errorf("config %s: %w", key, err)
-		}
-		count++
-	}
-	if err := rows.Err(); err != nil {
-		return count, err
-	}
-	return count, tx.Commit()
-}
-
-func copyIDHistoryPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (int, error) {
-	rows, err := src.Query(ctx, `SELECT old_id, new_id, changed_at, reason FROM id_change_history ORDER BY id`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	tx, err := dst.Begin()
-	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback()
-
-	count := 0
-	for rows.Next() {
-		var oldID, newID string
-		var changedAt *time.Time
-		var reason *string
-		if err := rows.Scan(&oldID, &newID, &changedAt, &reason); err != nil {
-			return count, fmt.Errorf("read id_change_history row %d: %w", count+1, err)
-		}
-		if _, err := tx.Exec(`INSERT INTO id_change_history (old_id, new_id, changed_at, reason) VALUES (?, ?, ?, ?)`,
-			oldID, newID, formatTimeDefault(changedAt), ptrStr(reason)); err != nil {
-			return count, fmt.Errorf("id_history %s→%s: %w", oldID, newID, err)
-		}
-		count++
-	}
-	if err := rows.Err(); err != nil {
-		return count, err
-	}
-	return count, tx.Commit()
-}
-
-func copyUsersPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (int, error) {
-	rows, err := src.Query(ctx, `SELECT username, password_hash, role, totp_secret, totp_enabled,
-		created_at, last_login FROM users ORDER BY id`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	tx, err := dst.Begin()
-	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback()
-
-	count := 0
-	for rows.Next() {
-		var (
-			username, passwordHash, role string
-			totpSecret                   *string
-			totpEnabled                  *bool
-			createdAt, lastLogin         *time.Time
-		)
-		if err := rows.Scan(&username, &passwordHash, &role, &totpSecret, &totpEnabled,
-			&createdAt, &lastLogin); err != nil {
-			return count, fmt.Errorf("read user row %d: %w", count+1, err)
-		}
-		if _, err := tx.Exec(`INSERT OR REPLACE INTO users
-			(username, password_hash, role, totp_secret, totp_enabled, created_at, last_login)
-			VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			username, passwordHash, role, ptrStr(totpSecret), ptrBoolInt(totpEnabled),
-			formatTimeDefault(createdAt), formatTime(lastLogin)); err != nil {
-			return count, fmt.Errorf("user %s: %w", username, err)
-		}
-		count++
-	}
-	if err := rows.Err(); err != nil {
-		return count, err
-	}
-	return count, tx.Commit()
-}
-
-func copyAPIKeysPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (int, error) {
-	rows, err := src.Query(ctx, `SELECT key_hash, key_prefix, name, role,
-		created_at, expires_at, last_used FROM api_keys ORDER BY id`)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	tx, err := dst.Begin()
-	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback()
-
-	count := 0
-	for rows.Next() {
-		var keyHash, keyPrefix, name, role string
-		var createdAt, expiresAt, lastUsed *time.Time
-		if err := rows.Scan(&keyHash, &keyPrefix, &name, &role, &createdAt, &expiresAt, &lastUsed); err != nil {
-			return count, fmt.Errorf("read api_keys row %d: %w", count+1, err)
-		}
-		if _, err := tx.Exec(`INSERT OR REPLACE INTO api_keys
-			(key_hash, key_prefix, name, role, created_at, expires_at, last_used)
-			VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			keyHash, keyPrefix, name, role,
-			formatTimeDefault(createdAt), formatTime(expiresAt), formatTime(lastUsed)); err != nil {
-			return count, fmt.Errorf("api_key %s: %w", keyPrefix, err)
-		}
-		count++
-	}
-	if err := rows.Err(); err != nil {
-		return count, err
-	}
-	return count, tx.Commit()
-}
-
 // ── Mode: nodejs2go ───────────────────────────────────────────────────
 
 func runNodeJS2Go(srcPeerPath, srcAuthPath, dstPath string, overwrite bool) error {
@@ -915,8 +416,10 @@ func runNodeJS2Go(srcPeerPath, srcAuthPath, dstPath string, overwrite bool) erro
 		log.Printf("Migration complete: %d total rows → PostgreSQL", total)
 		return nil
 	}
-	total, err := writeSQLiteFile(dstPath, overwrite, func(dstDB *sql.DB) (int, error) {
-		return migrateNodeJS2SQLite(srcPeerPath, srcAuthPath, dstDB)
+	total, err := writeSQLiteFile(dstPath, overwrite, func(tmp string) (int, error) {
+		return fillSQLite(tmp, func(dstDB *sql.DB) (int, error) {
+			return migrateNodeJS2SQLite(srcPeerPath, srcAuthPath, dstDB)
+		})
 	})
 	if err != nil {
 		return fmt.Errorf("migration failed: %w", err)
@@ -1649,12 +1152,12 @@ func checkSQLiteDst(dstPath string, overwrite bool, srcPaths ...string) error {
 }
 
 // writeSQLiteFile builds a new SQLite database for dstPath under a
-// temporary name in the same folder: the tool's schema, then fill. Only
+// temporary name in the same folder with build, which gets that name. Only
 // when every step succeeded does it take dstPath's place, after the -wal,
 // -shm and -journal of the database there are removed. On a failure
 // dstPath is left as it was. A replaced file keeps its mode; a new one
 // gets 0600, as it holds password hashes.
-func writeSQLiteFile(dstPath string, overwrite bool, fill func(*sql.DB) (int, error)) (int, error) {
+func writeSQLiteFile(dstPath string, overwrite bool, build func(tmpPath string) (int, error)) (int, error) {
 	perm := os.FileMode(0o600)
 	if info, err := os.Stat(dstPath); err == nil {
 		perm = info.Mode().Perm()
@@ -1668,16 +1171,23 @@ func writeSQLiteFile(dstPath string, overwrite bool, fill func(*sql.DB) (int, er
 	defer func() {
 		if !placed {
 			_ = os.Remove(tmpPath)
-			_ = os.Remove(tmpPath + "-journal")
+			for _, suffix := range sqliteSidecars {
+				_ = os.Remove(tmpPath + suffix)
+			}
 		}
 	}()
 	if err := tmp.Close(); err != nil {
 		return 0, err
 	}
 
-	n, err := fillSQLite(tmpPath, fill)
+	n, err := build(tmpPath)
 	if err != nil {
 		return n, err
+	}
+	for _, suffix := range []string{"-wal", "-journal"} {
+		if _, err := os.Stat(tmpPath + suffix); err == nil {
+			return n, fmt.Errorf("the new database left %s behind: it is not complete in one file", tmpPath+suffix)
+		}
 	}
 	if err := syncFile(tmpPath, perm); err != nil {
 		return n, err
@@ -1740,24 +1250,6 @@ func requireFile(path string) error {
 		return fmt.Errorf("source: %w", err)
 	}
 	return nil
-}
-
-// detectSQLiteSchema returns the detected schema type of a SQLite database.
-func detectSQLiteSchema(db *sql.DB) string {
-	if tableExists(db, "peers") {
-		return "betterdesk-go"
-	}
-	if tableExists(db, "peer") {
-		cols := getColumns(db, "peer")
-		if contains(cols, "status_online") {
-			return "nodejs-console"
-		}
-		if contains(cols, "guid") {
-			return "rust-hbbs"
-		}
-		return "unknown-peer"
-	}
-	return "unknown"
 }
 
 // tableExists checks if a table exists in a SQLite database.
@@ -1841,41 +1333,6 @@ func parseTimeDefault(s string) time.Time {
 	return *t
 }
 
-// parseNullTime converts a sql.NullString timestamp to *time.Time.
-func parseNullTime(ns sql.NullString) *time.Time {
-	if !ns.Valid || ns.String == "" {
-		return nil
-	}
-	return parseTime(ns.String)
-}
-
-// formatTime converts a *time.Time to SQLite TEXT in UTC, the zone the
-// server and the console read such text in. pgx returns timestamptz
-// values in the process's zone.
-func formatTime(t *time.Time) string {
-	if t == nil {
-		return ""
-	}
-	return t.UTC().Format("2006-01-02 15:04:05")
-}
-
-// formatTimeDefault is formatTime with the current time for nil.
-func formatTimeDefault(t *time.Time) string {
-	if t == nil {
-		now := time.Now()
-		t = &now
-	}
-	return formatTime(t)
-}
-
-// boolToInt converts a bool to 0/1 for SQLite storage.
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
-}
-
 // ── Nullable Pointer Helpers ──────────────────────────────────────────
 
 func ptrStr(s *string) string {
@@ -1883,20 +1340,6 @@ func ptrStr(s *string) string {
 		return ""
 	}
 	return *s
-}
-
-func ptrInt64(i *int64) int64 {
-	if i == nil {
-		return 0
-	}
-	return *i
-}
-
-func ptrBoolInt(b *bool) int {
-	if b == nil {
-		return 0
-	}
-	return boolToInt(*b)
 }
 
 func ptrIntBool(i *int64) int {
@@ -1912,6 +1355,3 @@ func nullStr(ns sql.NullString) string {
 	}
 	return ""
 }
-
-// Compile-time check: ensure pgx import is used (via ErrNoRows reference).
-var _ = pgx.ErrNoRows
