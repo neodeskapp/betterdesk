@@ -1,8 +1,8 @@
 /**
  * Tickets (routes/tickets.routes.js, mounted at /api/tickets). Reading
- * needs device.view, creating, changing, deleting and attaching
- * device.edit; any reader may comment (internal notes only from roles
- * other than viewer). Answers carry no { success } envelope and errors are
+ * needs device.view; creating, changing, deleting, attaching and
+ * commenting device.edit (internal notes only from roles other than
+ * viewer). Answers carry no { success } envelope and errors are
  * { error }. Dates: SQLite writes "2026-11-08 17:54:40" (UTC), due dates
  * are ISO; parseDate reads both.
  */

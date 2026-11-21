@@ -348,7 +348,8 @@
 				</section>
 			{/if}
 		</div>
-		{#if ticket}
+		<!-- Commenting needs device.edit, as every other write here -->
+		{#if ticket && canEdit}
 			<form class="ticket-composer" onsubmit={sendComment} novalidate>
 				<label class="composer-label" for="{uid}-comment">{t('tickets.comment_label')}</label>
 				<Textarea
