@@ -13,17 +13,17 @@ import (
 
 // ReportExportRow is a flattened work report for export.
 type ReportExportRow struct {
-	SessionID   string
-	DeviceID    string
-	OrgID       string
-	OperatorID  string
-	Summary     string
-	Category    string
-	TicketRef   string
-	BilledMin   int
-	Amount      float64
-	Currency    string
-	CreatedAt   time.Time
+	SessionID  string
+	DeviceID   string
+	OrgID      string
+	OperatorID string
+	Summary    string
+	Category   string
+	TicketRef  string
+	BilledMin  int
+	Amount     float64
+	Currency   string
+	CreatedAt  time.Time
 }
 
 // SessionExportRow is a flattened billing session for export.

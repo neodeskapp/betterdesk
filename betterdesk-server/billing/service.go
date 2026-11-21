@@ -34,15 +34,15 @@ const (
 
 // ConnectionCheckResult is returned before allowing a remote session.
 type ConnectionCheckResult struct {
-	Allowed           bool   `json:"allowed"`
-	Reason            string `json:"reason,omitempty"`
-	OrgID             string `json:"org_id,omitempty"`
-	HasBilling        bool   `json:"has_billing"`
-	ContractID        string `json:"contract_id,omitempty"`
-	PackageID         string `json:"package_id,omitempty"`
-	PackageName       string `json:"package_name,omitempty"`
-	RemainingMinutes  *int   `json:"remaining_minutes,omitempty"`
-	Currency          string `json:"currency,omitempty"`
+	Allowed          bool   `json:"allowed"`
+	Reason           string `json:"reason,omitempty"`
+	OrgID            string `json:"org_id,omitempty"`
+	HasBilling       bool   `json:"has_billing"`
+	ContractID       string `json:"contract_id,omitempty"`
+	PackageID        string `json:"package_id,omitempty"`
+	PackageName      string `json:"package_name,omitempty"`
+	RemainingMinutes *int   `json:"remaining_minutes,omitempty"`
+	Currency         string `json:"currency,omitempty"`
 }
 
 // Service manages billable remote sessions.
@@ -68,17 +68,17 @@ type pendingRelay struct {
 }
 
 type activeSession struct {
-	ID              string
-	OrgID           string
-	ContractID      string
-	RelayUUID       string
-	StartedAt       time.Time
+	ID               string
+	OrgID            string
+	ContractID       string
+	RelayUUID        string
+	StartedAt        time.Time
 	RemainingAtStart int
-	OverageRate     float64
-	HourlyRate      float64
-	Currency        string
-	Phase           string
-	LastBilledMin   int
+	OverageRate      float64
+	HourlyRate       float64
+	Currency         string
+	Phase            string
+	LastBilledMin    int
 }
 
 // NewService creates a billing service.
