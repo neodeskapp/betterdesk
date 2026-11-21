@@ -142,7 +142,7 @@ func (g *Gateway) StartDesktopSession(ctx context.Context, browserConn *websocke
 		height = 720
 	}
 
-	sessionID := fmt.Sprintf("desk_%s_%d", deviceID, time.Now().UnixNano())
+	sessionID := newSessionID("desk")
 	grant, capabilities, err := g.issuePassiveDesktopGrant(deviceID, username, sessionID)
 	if err != nil {
 		return nil, err
@@ -385,7 +385,7 @@ const frameHeaderSize = 64
 // The payload format is: [frameHeaderSize bytes session ID, NUL-padded][raw JPEG bytes].
 // The raw JPEG is forwarded to the browser as a single binary WS frame —
 // no base64, no JSON. This is the difference between 1–3 fps and 30+ fps.
-func (g *Gateway) handleDesktopFrameBinary(ctx context.Context, _ *DeviceConn, data []byte) {
+func (g *Gateway) handleDesktopFrameBinary(ctx context.Context, dc *DeviceConn, data []byte) {
 	if len(data) < frameHeaderSize {
 		return
 	}
@@ -405,7 +405,7 @@ func (g *Gateway) handleDesktopFrameBinary(ctx context.Context, _ *DeviceConn, d
 		return
 	}
 	ds := val.(*DesktopSession)
-	if ds.closed.Load() {
+	if ds.closed.Load() || ds.deviceConn != dc {
 		return
 	}
 
@@ -468,7 +468,7 @@ func (g *Gateway) EndDesktopSession(ctx context.Context, sessionID, reason strin
 
 // HandleDesktopInputError forwards input injection failures from the device to
 // the browser session so operators get an actionable error instead of silent no-op input.
-func (g *Gateway) HandleDesktopInputError(ctx context.Context, _ *DeviceConn, msg *Message) {
+func (g *Gateway) HandleDesktopInputError(ctx context.Context, dc *DeviceConn, msg *Message) {
 	var payload struct {
 		SessionID string `json:"session_id"`
 		Type      string `json:"type"`
@@ -483,7 +483,7 @@ func (g *Gateway) HandleDesktopInputError(ctx context.Context, _ *DeviceConn, ms
 		return
 	}
 	ds := val.(*DesktopSession)
-	if ds.closed.Load() {
+	if ds.closed.Load() || ds.deviceConn != dc {
 		return
 	}
 

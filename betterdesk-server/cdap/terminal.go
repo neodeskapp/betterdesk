@@ -89,7 +89,7 @@ func (g *Gateway) StartTerminalSession(ctx context.Context, browserConn *websock
 		}
 	}
 
-	sessionID := fmt.Sprintf("term_%s_%d", deviceID, time.Now().UnixNano())
+	sessionID := newSessionID("term")
 
 	ts := &TerminalSession{
 		ID:         sessionID,

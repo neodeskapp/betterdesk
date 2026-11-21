@@ -132,7 +132,7 @@ func (g *Gateway) StartFileSession(ctx context.Context, browserConn *websocket.C
 		}
 	}
 
-	sessionID := fmt.Sprintf("file_%s_%d", deviceID, time.Now().UnixNano())
+	sessionID := newSessionID("file")
 
 	fs := &FileSession{
 		ID:         sessionID,

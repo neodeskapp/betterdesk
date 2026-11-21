@@ -551,6 +551,9 @@ func (g *Gateway) handleTerminalOutput(ctx context.Context, dc *DeviceConn, msg 
 	if payload.Stream == "" {
 		payload.Stream = "stdout"
 	}
+	if !owns(&g.terminalSessions, payload.SessionID, dc) {
+		return
+	}
 	g.HandleTerminalOutput(ctx, payload.SessionID, payload.Data, payload.Stream)
 }
 
@@ -561,6 +564,9 @@ func (g *Gateway) handleTerminalEnd(ctx context.Context, dc *DeviceConn, msg *Me
 		return
 	}
 	if payload.SessionID == "" {
+		return
+	}
+	if !owns(&g.terminalSessions, payload.SessionID, dc) {
 		return
 	}
 	g.EndTerminalSession(ctx, payload.SessionID, payload.Reason)
@@ -575,6 +581,9 @@ func (g *Gateway) handleDesktopFrame(ctx context.Context, dc *DeviceConn, msg *M
 	if payload.SessionID == "" {
 		return
 	}
+	if !owns(&g.desktopSessions, payload.SessionID, dc) {
+		return
+	}
 	g.HandleDesktopFrame(ctx, payload.SessionID, &payload)
 }
 
@@ -585,6 +594,9 @@ func (g *Gateway) handleDesktopEnd(ctx context.Context, dc *DeviceConn, msg *Mes
 		return
 	}
 	if payload.SessionID == "" {
+		return
+	}
+	if !owns(&g.desktopSessions, payload.SessionID, dc) {
 		return
 	}
 	g.EndDesktopSession(ctx, payload.SessionID, payload.Reason)
@@ -599,6 +611,9 @@ func (g *Gateway) handleDesktopConsentDenied(ctx context.Context, dc *DeviceConn
 	if err := json.Unmarshal(msg.Payload, &payload); err != nil || payload.SessionID == "" {
 		return
 	}
+	if !owns(&g.desktopSessions, payload.SessionID, dc) {
+		return
+	}
 	g.EndDesktopSession(ctx, payload.SessionID, "consent_denied")
 }
 
@@ -609,6 +624,9 @@ func (g *Gateway) handleVideoFrame(ctx context.Context, dc *DeviceConn, msg *Mes
 		return
 	}
 	if payload.SessionID == "" {
+		return
+	}
+	if !owns(&g.videoSessions, payload.SessionID, dc) {
 		return
 	}
 	g.HandleVideoFrame(ctx, payload.SessionID, &payload)
@@ -623,6 +641,9 @@ func (g *Gateway) handleVideoEnd(ctx context.Context, dc *DeviceConn, msg *Messa
 	if payload.SessionID == "" {
 		return
 	}
+	if !owns(&g.videoSessions, payload.SessionID, dc) {
+		return
+	}
 	g.EndVideoSession(ctx, payload.SessionID, payload.Reason)
 }
 
@@ -633,6 +654,9 @@ func (g *Gateway) handleFileResponse(ctx context.Context, dc *DeviceConn, msg *M
 		SessionID string `json:"session_id"`
 	}
 	if err := json.Unmarshal(msg.Payload, &base); err != nil || base.SessionID == "" {
+		return
+	}
+	if !owns(&g.fileSessions, base.SessionID, dc) {
 		return
 	}
 	g.HandleFileResponse(ctx, base.SessionID, msg.Type, msg.Payload)
@@ -647,6 +671,9 @@ func (g *Gateway) handleFileEnd(ctx context.Context, dc *DeviceConn, msg *Messag
 	if payload.SessionID == "" {
 		return
 	}
+	if !owns(&g.fileSessions, payload.SessionID, dc) {
+		return
+	}
 	g.EndFileSession(ctx, payload.SessionID, payload.Reason)
 }
 
@@ -659,6 +686,9 @@ func (g *Gateway) handleAudioFrame(ctx context.Context, dc *DeviceConn, msg *Mes
 	if payload.SessionID == "" {
 		return
 	}
+	if !owns(&g.audioSessions, payload.SessionID, dc) {
+		return
+	}
 	g.HandleAudioFrame(ctx, payload.SessionID, &payload)
 }
 
@@ -669,6 +699,9 @@ func (g *Gateway) handleAudioEnd(ctx context.Context, dc *DeviceConn, msg *Messa
 		return
 	}
 	if payload.SessionID == "" {
+		return
+	}
+	if !owns(&g.audioSessions, payload.SessionID, dc) {
 		return
 	}
 	g.EndAudioSession(ctx, payload.SessionID, payload.Reason)

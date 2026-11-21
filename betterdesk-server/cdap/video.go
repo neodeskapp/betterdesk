@@ -87,7 +87,7 @@ func (g *Gateway) StartVideoSession(ctx context.Context, browserConn *websocket.
 		fps = 10
 	}
 
-	sessionID := fmt.Sprintf("vid_%s_%d", deviceID, time.Now().UnixNano())
+	sessionID := newSessionID("vid")
 
 	vs := &VideoSession{
 		ID:         sessionID,

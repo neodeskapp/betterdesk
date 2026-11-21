@@ -92,7 +92,7 @@ func (g *Gateway) StartAudioSession(ctx context.Context, browserConn *websocket.
 		direction = "receive"
 	}
 
-	sessionID := fmt.Sprintf("aud_%s_%d", deviceID, time.Now().UnixNano())
+	sessionID := newSessionID("aud")
 
 	as := &AudioSession{
 		ID:         sessionID,
