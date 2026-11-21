@@ -1,8 +1,8 @@
 // Package housekeeping runs the console's periodic clean-up of its own
-// tables: once an hour the old heartbeat metrics, client audit rows and
-// audit log rows are deleted, and every few seconds devices whose last
-// contact is too old are set offline in the console's copy of the device
-// list.
+// tables: once an hour the old heartbeat metrics, client audit rows, audit
+// log rows and pending registrations are deleted, and every few seconds
+// devices whose last contact is too old are set offline in the console's
+// copy of the device list.
 //
 // Both jobs swallow every error, as the old console did: a failed run
 // leaves no log line and the next run comes at its time.
@@ -20,9 +20,15 @@ import (
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
-// IntegrationInterval is how often the old metrics, client audit rows and
-// audit log rows are deleted.
+// IntegrationInterval is how often the old metrics, client audit rows,
+// audit log rows and pending registrations are deleted.
 const IntegrationInterval = time.Hour
+
+// PendingRegistrationDays is how many days a registration request waits
+// for an approver before the hourly run deletes it. Approved and rejected
+// rows stay. A device whose request expired is listed again when it asks
+// again.
+const PendingRegistrationDays = 30
 
 // sqliteOlder is the SQLite condition that created_at is more than days
 // old, compared as a time: a time in any form datetime() reads (with a
@@ -35,8 +41,9 @@ func sqliteOlder(days int) string {
 }
 
 // integrationStatements delete heartbeat metrics older than 7 days, client
-// audit rows older than 90 days and audit log rows older than 90 days, in
-// this order. The console writes the audit log only in the column's own
+// audit rows older than 90 days, audit log rows older than 90 days and
+// pending registrations older than PendingRegistrationDays, in this
+// order. The console writes the audit log only in the column's own
 // format, so its rows compare as text, by the index on created_at.
 var integrationStatements = map[store.Dialect][]string{
 	store.SQLite: {
@@ -45,6 +52,7 @@ var integrationStatements = map[store.Dialect][]string{
 		`DELETE FROM audit_files WHERE ` + sqliteOlder(90),
 		`DELETE FROM audit_alarms WHERE ` + sqliteOlder(90),
 		`DELETE FROM audit_log WHERE created_at < datetime('now', '-90 days')`,
+		`DELETE FROM pending_registrations WHERE status = 'pending' AND ` + sqliteOlder(PendingRegistrationDays),
 	},
 	store.Postgres: {
 		`DELETE FROM peer_metrics WHERE created_at < NOW() - INTERVAL '7 days'`,
@@ -52,12 +60,15 @@ var integrationStatements = map[store.Dialect][]string{
 		`DELETE FROM audit_files WHERE created_at < NOW() - INTERVAL '90 days'`,
 		`DELETE FROM audit_alarms WHERE created_at < NOW() - INTERVAL '90 days'`,
 		`DELETE FROM audit_log WHERE created_at < NOW() - INTERVAL '90 days'`,
+		`DELETE FROM pending_registrations WHERE status = 'pending' AND created_at < NOW() - INTERVAL '` + strconv.Itoa(PendingRegistrationDays) + ` days'`,
 	},
 }
 
 // Integration deletes heartbeat metrics older than 7 days, the client
-// audit rows (connections, file transfers, alarms) older than 90 days and
-// the rows of the console's audit log older than 90 days. The first
+// audit rows (connections, file transfers, alarms) older than 90 days, the
+// rows of the console's audit log older than 90 days and the pending
+// registrations older than PendingRegistrationDays, by the database's
+// clock. The first
 // statement that fails ends the run with its error; the tables after it
 // are left for the next run.
 func Integration(ctx context.Context, db *store.DB) error {

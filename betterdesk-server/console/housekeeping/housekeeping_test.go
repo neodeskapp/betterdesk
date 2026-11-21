@@ -344,6 +344,39 @@ func TestIntegrationPrunesTheAuditLog(t *testing.T) {
 	})
 }
 
+// TestIntegrationExpiresPendingRegistrations: the hourly run deletes
+// pending registrations older than 30 days by the database's clock and
+// keeps the younger ones and every approved or rejected row, however old
+// (BUGS.md RV8).
+func TestIntegrationExpiresPendingRegistrations(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		ago := func(hours int) string {
+			if db.Dialect() == store.SQLite {
+				return fmt.Sprintf("datetime('now', '-%d hours')", hours)
+			}
+			return fmt.Sprintf("NOW() - INTERVAL '%d hours'", hours)
+		}
+		for _, row := range []struct {
+			device, status string
+			hours          int
+		}{
+			{"young", "pending", 29 * 24}, {"just-young", "pending", 30*24 - 1}, {"just-old", "pending", 30*24 + 1},
+			{"old", "pending", 400 * 24}, {"approved-old", "approved", 400 * 24}, {"rejected-old", "rejected", 400 * 24},
+		} {
+			if _, err := db.Exec(ctx, "INSERT INTO pending_registrations (device_id, status, created_at) VALUES (?, ?, "+ago(row.hours)+")", row.device, row.status); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := housekeeping.Integration(ctx, db); err != nil {
+			t.Fatalf("Integration: %v", err)
+		}
+		if got := strings.Join(rows(t, db, "SELECT device_id FROM pending_registrations ORDER BY id"), ", "); got != "young, just-young, approved-old, rejected-old" {
+			t.Errorf("registrations after the clean-up: %s", got)
+		}
+	})
+}
+
 // TestHourBoundRowsFollowTheTextComparison pins the rule the replays above
 // use for the rows whose outcome depends on the hour.
 func TestHourBoundRowsFollowTheTextComparison(t *testing.T) {
