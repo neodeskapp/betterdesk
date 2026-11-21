@@ -708,3 +708,50 @@ func TestSQLite2PGKeepsTimesTheConsoleWrites(t *testing.T) {
 		t.Errorf("expires_at = %v, want %v", expires, want)
 	}
 }
+
+// rollbackJournal writes a SQLite file in rollback-journal mode, as a copied
+// or restored database can be.
+func rollbackJournal(t *testing.T, path string, stmts ...string) {
+	t.Helper()
+	db, err := sql.Open("sqlite", "file:"+path+"?_pragma=journal_mode(DELETE)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	for _, stmt := range stmts {
+		if _, err := db.Exec(stmt); err != nil {
+			t.Fatalf("%s: %v", stmt, err)
+		}
+	}
+	var mode string
+	if err := db.QueryRow("PRAGMA journal_mode").Scan(&mode); err != nil || mode != "delete" {
+		t.Fatalf("journal mode %q, %v; the test needs delete", mode, err)
+	}
+}
+
+func TestRust2GoReadsASourceInRollbackJournalMode(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "db_v2.sqlite3")
+	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	rollbackJournal(t, src, rustPeerTable,
+		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '123456789', x'02', x'03', '{}')`)
+	if err := runRust2Go(src, dst, false); err != nil {
+		t.Fatal(err)
+	}
+	if n := countRows(t, dst, "peers"); n != 1 {
+		t.Errorf("destination has %d peers, want 1", n)
+	}
+}
+
+func TestSQLite2PGReadsASourceInRollbackJournalMode(t *testing.T) {
+	dsn := pgDSN(t)
+	src := filepath.Join(t.TempDir(), "db_v2.sqlite3")
+	rollbackJournal(t, src, append(sqliteSchemaStatements(),
+		`INSERT INTO peers (id) VALUES ('123456789')`)...)
+	if err := runSQLite2PG(src, dsn); err != nil {
+		t.Fatal(err)
+	}
+	if n := countPG(t, dsn, "peers"); n != 1 {
+		t.Errorf("PostgreSQL has %d peers, want 1", n)
+	}
+}

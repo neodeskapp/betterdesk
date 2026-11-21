@@ -194,7 +194,7 @@ func runRust2Go(srcPath, dstPath string, overwrite bool) error {
 
 // readRustDB reads all peers from the old Rust hbbs-patch-v2 database.
 func readRustDB(path string) ([]rustPeer, error) {
-	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=ro&_journal_mode=WAL", path))
+	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=ro&_pragma=busy_timeout(5000)", path))
 	if err != nil {
 		return nil, fmt.Errorf("open: %w", err)
 	}
@@ -378,7 +378,7 @@ func runSQLite2PG(srcPath, dstDSN string) error {
 	}
 	log.Printf("Backup created: %s", bp)
 
-	srcDB, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=ro&_journal_mode=WAL", srcPath))
+	srcDB, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=ro&_pragma=busy_timeout(5000)", srcPath))
 	if err != nil {
 		return fmt.Errorf("open source: %w", err)
 	}
