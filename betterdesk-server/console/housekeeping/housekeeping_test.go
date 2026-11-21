@@ -377,6 +377,96 @@ func TestIntegrationExpiresPendingRegistrations(t *testing.T) {
 	})
 }
 
+// expiresAfterRetention seeds one row of a table just inside
+// RetentionDays and one just outside, by its time column, on each
+// database and origin, runs the hourly clean-up and checks that only the
+// row inside is left. parent, when set, gives the table the row its
+// foreign key needs; columns and values are the other columns of the two
+// rows.
+func expiresAfterRetention(t *testing.T, table, timeColumn, parent, columns string, values func(i int) []any) {
+	t.Helper()
+	storetest.EachOrigin(t, func(t *testing.T, db *store.DB, origin storetest.Origin) {
+		ctx := context.Background()
+		if parent != "" {
+			if _, err := db.Exec(ctx, parent); err != nil {
+				t.Fatal(err)
+			}
+		}
+		ago := func(hours int) string {
+			if db.Dialect() == store.SQLite {
+				return fmt.Sprintf("datetime('now', '-%d hours')", hours)
+			}
+			return fmt.Sprintf("NOW() - INTERVAL '%d hours'", hours)
+		}
+		marks := strings.TrimSuffix(strings.Repeat("?, ", len(values(0))), ", ")
+		day := housekeeping.RetentionDays * 24
+		for i, hours := range []int{day - 1, day + 1} {
+			query := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES (%s, %s)", table, columns, timeColumn, marks, ago(hours))
+			if _, err := db.Exec(ctx, query, values(i)...); err != nil {
+				t.Fatalf("%s: %v", query, err)
+			}
+		}
+		if err := housekeeping.Integration(ctx, db); err != nil {
+			t.Fatalf("Integration: %v", err)
+		}
+		var inside, outside int
+		query := fmt.Sprintf("SELECT COUNT(CASE WHEN %[1]s > %[2]s THEN 1 END), COUNT(CASE WHEN %[1]s <= %[2]s THEN 1 END) FROM %[3]s", timeColumn, ago(day), table)
+		if err := db.QueryRow(ctx, query).Scan(&inside, &outside); err != nil {
+			t.Fatal(err)
+		}
+		if inside != 1 || outside != 0 {
+			t.Errorf("%s after the clean-up: %d rows younger than %d days (want 1), %d older (want 0)", table, inside, housekeeping.RetentionDays, outside)
+		}
+	})
+}
+
+// TestIntegrationPrunesAlertHistory: alerts older than RetentionDays by
+// the time they were written go (DECISIONS A93).
+func TestIntegrationPrunesAlertHistory(t *testing.T) {
+	expiresAfterRetention(t, "alert_history", "created_at",
+		"INSERT INTO alert_rules (id, name, condition_type) VALUES (7, 'offline', 'offline')",
+		"rule_id, message, triggered_at", func(i int) []any { return []any{7, fmt.Sprint("alert ", i), "2026-01-01 00:00:00"} })
+}
+
+// TestIntegrationPrunesRemoteCommands: commands older than RetentionDays
+// by the time they were created go, with their results (DECISIONS A93).
+func TestIntegrationPrunesRemoteCommands(t *testing.T) {
+	expiresAfterRetention(t, "remote_commands", "created_at", "",
+		"device_id, created_by", func(i int) []any { return []any{fmt.Sprint("DEV", i), "admin"} })
+}
+
+// TestIntegrationPrunesActivitySessions: app usage sessions older than
+// RetentionDays by the time they arrived go (DECISIONS A93).
+func TestIntegrationPrunesActivitySessions(t *testing.T) {
+	expiresAfterRetention(t, "activity_sessions", "created_at", "",
+		"device_id, started_at, ended_at", func(i int) []any {
+			return []any{fmt.Sprint("DEV", i), "2026-01-01 00:00:00", "2026-01-01 00:01:00"}
+		})
+}
+
+// TestIntegrationPrunesActivitySummaries: app usage summaries older than
+// RetentionDays by the time they last arrived go (DECISIONS A93).
+func TestIntegrationPrunesActivitySummaries(t *testing.T) {
+	expiresAfterRetention(t, "activity_summaries", "received_at", "",
+		"device_id, reported_at", func(i int) []any { return []any{fmt.Sprint("DEV", i), "2026-01-01 00:00:00"} })
+}
+
+// TestIntegrationPrunesDataGuardEvents: data loss prevention events older
+// than RetentionDays go (DECISIONS A93).
+func TestIntegrationPrunesDataGuardEvents(t *testing.T) {
+	expiresAfterRetention(t, "dlp_events", "created_at", "",
+		"device_id, event_type", func(i int) []any { return []any{fmt.Sprint("DEV", i), "usb"} })
+}
+
+// TestIntegrationPrunesNetworkChecks: network checks older than
+// RetentionDays go, on top of netmonitor's own bound per target
+// (DECISIONS A93).
+func TestIntegrationPrunesNetworkChecks(t *testing.T) {
+	expiresAfterRetention(t, "network_checks", "checked_at",
+		"INSERT INTO network_targets (id, name, host) VALUES (3, 'gateway', '10.0.0.1')",
+		"target_id, status", func(i int) []any { return []any{3, []string{"up", "down"}[i]} })
+}
+
 // TestHourBoundRowsFollowTheTextComparison pins the rule the replays above
 // use for the rows whose outcome depends on the hour.
 func TestHourBoundRowsFollowTheTextComparison(t *testing.T) {

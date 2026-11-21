@@ -1,8 +1,9 @@
 // Package housekeeping runs the console's periodic clean-up of its own
 // tables: once an hour the old heartbeat metrics, client audit rows, audit
-// log rows and pending registrations are deleted, and every few seconds
-// devices whose last contact is too old are set offline in the console's
-// copy of the device list.
+// log rows, pending registrations, alerts, remote commands, app usage,
+// data loss prevention events and network checks are deleted, and every
+// few seconds devices whose last contact is too old are set offline in the
+// console's copy of the device list.
 //
 // Both jobs swallow every error, as the old console did: a failed run
 // leaves no log line and the next run comes at its time.
@@ -20,8 +21,8 @@ import (
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
-// IntegrationInterval is how often the old metrics, client audit rows,
-// audit log rows and pending registrations are deleted.
+// IntegrationInterval is how often the hourly clean-up (Integration)
+// runs.
 const IntegrationInterval = time.Hour
 
 // PendingRegistrationDays is how many days a registration request waits
@@ -29,6 +30,12 @@ const IntegrationInterval = time.Hour
 // rows stay. A device whose request expired is listed again when it asks
 // again.
 const PendingRegistrationDays = 30
+
+// RetentionDays is how many days the hourly run keeps the rows of the
+// audit log, the client audit tables, the alert history, the remote
+// commands, the app usage sessions and summaries, the data loss
+// prevention events and the network checks.
+const RetentionDays = 90
 
 // sqliteOlder is the SQLite condition that created_at is more than days
 // old, compared as a time: a time in any form datetime() reads (with a
@@ -40,37 +47,63 @@ func sqliteOlder(days int) string {
 		" < datetime('now', '-" + strconv.Itoa(days) + " days')"
 }
 
-// integrationStatements delete heartbeat metrics older than 7 days, client
-// audit rows older than 90 days, audit log rows older than 90 days and
-// pending registrations older than PendingRegistrationDays, in this
-// order. The console writes the audit log only in the column's own
-// format, so its rows compare as text, by the index on created_at.
-var integrationStatements = map[store.Dialect][]string{
-	store.SQLite: {
-		`DELETE FROM peer_metrics WHERE ` + sqliteOlder(7),
-		`DELETE FROM audit_connections WHERE ` + sqliteOlder(90),
-		`DELETE FROM audit_files WHERE ` + sqliteOlder(90),
-		`DELETE FROM audit_alarms WHERE ` + sqliteOlder(90),
-		`DELETE FROM audit_log WHERE created_at < datetime('now', '-90 days')`,
-		`DELETE FROM pending_registrations WHERE status = 'pending' AND ` + sqliteOlder(PendingRegistrationDays),
-	},
-	store.Postgres: {
-		`DELETE FROM peer_metrics WHERE created_at < NOW() - INTERVAL '7 days'`,
-		`DELETE FROM audit_connections WHERE created_at < NOW() - INTERVAL '90 days'`,
-		`DELETE FROM audit_files WHERE created_at < NOW() - INTERVAL '90 days'`,
-		`DELETE FROM audit_alarms WHERE created_at < NOW() - INTERVAL '90 days'`,
-		`DELETE FROM audit_log WHERE created_at < NOW() - INTERVAL '90 days'`,
-		`DELETE FROM pending_registrations WHERE status = 'pending' AND created_at < NOW() - INTERVAL '` + strconv.Itoa(PendingRegistrationDays) + ` days'`,
-	},
+// expiring are the tables the hourly run keeps RetentionDays of, each with
+// the column that holds the time the row was written or last arrived. The
+// database fills these columns with its own clock (datetime('now') on
+// SQLite), so on SQLite they compare as text, by the index on the column
+// where there is one, as the audit log does.
+var expiring = []struct{ table, column string }{
+	{"alert_history", "created_at"},
+	{"remote_commands", "created_at"},
+	{"activity_sessions", "created_at"},
+	{"activity_summaries", "received_at"},
+	{"dlp_events", "created_at"},
+	{"network_checks", "checked_at"},
 }
 
+// integrationStatements delete heartbeat metrics older than 7 days, client
+// audit rows and audit log rows older than RetentionDays, pending
+// registrations older than PendingRegistrationDays and then the rows of
+// the expiring tables older than RetentionDays, in this order. The
+// console writes the audit log only in the column's own format, so its
+// rows compare as text, by the index on created_at.
+var integrationStatements = func() map[store.Dialect][]string {
+	days := strconv.Itoa(RetentionDays)
+	sqliteCutoff := "datetime('now', '-" + days + " days')"
+	postgresCutoff := "NOW() - INTERVAL '" + days + " days'"
+	out := map[store.Dialect][]string{
+		store.SQLite: {
+			`DELETE FROM peer_metrics WHERE ` + sqliteOlder(7),
+			`DELETE FROM audit_connections WHERE ` + sqliteOlder(RetentionDays),
+			`DELETE FROM audit_files WHERE ` + sqliteOlder(RetentionDays),
+			`DELETE FROM audit_alarms WHERE ` + sqliteOlder(RetentionDays),
+			`DELETE FROM audit_log WHERE created_at < ` + sqliteCutoff,
+			`DELETE FROM pending_registrations WHERE status = 'pending' AND ` + sqliteOlder(PendingRegistrationDays),
+		},
+		store.Postgres: {
+			`DELETE FROM peer_metrics WHERE created_at < NOW() - INTERVAL '7 days'`,
+			`DELETE FROM audit_connections WHERE created_at < ` + postgresCutoff,
+			`DELETE FROM audit_files WHERE created_at < ` + postgresCutoff,
+			`DELETE FROM audit_alarms WHERE created_at < ` + postgresCutoff,
+			`DELETE FROM audit_log WHERE created_at < ` + postgresCutoff,
+			`DELETE FROM pending_registrations WHERE status = 'pending' AND created_at < NOW() - INTERVAL '` + strconv.Itoa(PendingRegistrationDays) + ` days'`,
+		},
+	}
+	for _, e := range expiring {
+		out[store.SQLite] = append(out[store.SQLite], `DELETE FROM `+e.table+` WHERE `+e.column+` < `+sqliteCutoff)
+		out[store.Postgres] = append(out[store.Postgres], `DELETE FROM `+e.table+` WHERE `+e.column+` < `+postgresCutoff)
+	}
+	return out
+}()
+
 // Integration deletes heartbeat metrics older than 7 days, the client
-// audit rows (connections, file transfers, alarms) older than 90 days, the
-// rows of the console's audit log older than 90 days and the pending
-// registrations older than PendingRegistrationDays, by the database's
-// clock. The first
-// statement that fails ends the run with its error; the tables after it
-// are left for the next run.
+// audit rows (connections, file transfers, alarms) and the rows of the
+// console's audit log older than RetentionDays, the pending registrations
+// older than PendingRegistrationDays, and the alert history, remote
+// commands, app usage sessions and summaries, data loss prevention events
+// and network checks older than RetentionDays, by the database's clock.
+// The first statement that fails ends the run with its error; the tables
+// after it are left for the next run.
 func Integration(ctx context.Context, db *store.DB) error {
 	for _, query := range integrationStatements[db.Dialect()] {
 		if _, err := db.Exec(ctx, query); err != nil {
@@ -155,8 +188,8 @@ func (j *Jobs) StatusSyncInterval() time.Duration { return j.interval }
 // gone.
 func (j *Jobs) StaleThreshold() float64 { return j.threshold }
 
-// RunIntegration deletes old metrics, client audit rows and audit log rows
-// once an hour, first an hour after the start, until ctx ends.
+// RunIntegration runs Integration once an hour, first an hour after the
+// start, until ctx ends.
 func (j *Jobs) RunIntegration(ctx context.Context) {
 	j.every(ctx, IntegrationInterval, func() { _ = Integration(ctx, j.opts.DB) })
 }
