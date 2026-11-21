@@ -327,21 +327,9 @@ func main() {
 		blocklist.Count(), rateLimitDesc)
 
 	// Initialize JWT manager for API authentication
-	jwtSecret := cfg.JWTSecret
-	if jwtSecret == "" {
-		// Use a persistent secret from the database so tokens survive restarts
-		stored, _ := database.GetConfig("jwt_secret")
-		if stored != "" {
-			jwtSecret = stored
-		} else {
-			generated, err := auth.GenerateRandomString(32)
-			if err != nil {
-				log.Fatalf("Failed to generate JWT secret: %v", err)
-			}
-			jwtSecret = generated
-			_ = database.SetConfig("jwt_secret", jwtSecret)
-			log.Printf("Generated and stored new JWT secret")
-		}
+	jwtSecret, err := loadJWTSecret(database, cfg.JWTSecret)
+	if err != nil {
+		log.Fatalf("JWT secret: %v", err)
 	}
 	jwtExpiry := cfg.JWTExpiry
 	if jwtExpiry <= 0 {
@@ -857,6 +845,33 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// loadJWTSecret returns the secret that signs API tokens: the configured one,
+// else the one stored in server_config, so tokens survive restarts. The first
+// start makes one and stores it. A stored secret that cannot be read is an
+// error, never a reason to make a new one: it is also the key of the peer
+// credential vault when ORG_PEER_VAULT_KEY is unset.
+func loadJWTSecret(database db.Database, configured string) (string, error) {
+	if configured != "" {
+		return configured, nil
+	}
+	stored, err := database.GetConfig("jwt_secret")
+	if err != nil {
+		return "", fmt.Errorf("read the stored secret: %w", err)
+	}
+	if stored != "" {
+		return stored, nil
+	}
+	generated, err := auth.GenerateRandomString(32)
+	if err != nil {
+		return "", fmt.Errorf("generate: %w", err)
+	}
+	if err := database.SetConfig("jwt_secret", generated); err != nil {
+		return "", fmt.Errorf("store the new secret: %w", err)
+	}
+	log.Printf("Generated and stored new JWT secret")
+	return generated, nil
 }
 
 // bootstrapCredentialsDir is the folder of .admin_credentials: the SQLite
