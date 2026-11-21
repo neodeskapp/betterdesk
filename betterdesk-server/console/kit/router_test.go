@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/access"
 )
 
 func echo(name string) http.HandlerFunc {
@@ -430,5 +432,140 @@ func TestDigitsLooksAtTheWrittenPath(t *testing.T) {
 	}
 	if _, ok := serve(late, "GET", "/api/tickets/%31"); ok || !ran {
 		t.Errorf("Digits behind other middleware: %%31 answered %v, middleware ran %v; want it passed on after the middleware", ok, ran)
+	}
+}
+
+// find is Find for a method and target.
+func find(rt *Router, method, target string) (Route, bool) {
+	return rt.Find(httptest.NewRequest(method, target, nil))
+}
+
+// PA3: a route says itself which panel section it belongs to, and the
+// table hands that to whoever asks before the route runs.
+func TestRoutesDeclareTheirSection(t *testing.T) {
+	rt := NewRouter()
+	rt.Get("/api/users", echo("list"))
+	rt.NoSection().Get("/api/users/{id}/avatar", echo("avatar"))
+	rt.Post("/api/users/{id}/avatar", echo("upload"))
+	net := rt.Mount("/api/network")
+	net.Get("/targets/{id}", echo("target"))
+	net.Section("toolkit").Post("/targets/{id}/check", echo("check"))
+	rt.SectionLevel("devices", access.LevelRead).Post("/api/devices/{id}/screenshot", echo("shot"))
+
+	type want struct {
+		found   bool
+		path    string
+		section *access.RouteSection
+	}
+	none, toolkit := &access.RouteSection{}, &access.RouteSection{Section: "toolkit"}
+	for _, c := range []struct {
+		method, target string
+		want           want
+	}{
+		{"GET", "/api/users", want{true, "/api/users", nil}},
+		{"GET", "/api/users/3/avatar", want{true, "/api/users/{id}/avatar", none}},
+		{"HEAD", "/api/users/3/avatar", want{true, "/api/users/{id}/avatar", none}},
+		{"GET", "/api/users/3/avatar?v=2", want{true, "/api/users/{id}/avatar", none}},
+		// in any letter case and with a slash at the end, as the routes match
+		{"GET", "/API/Users/3/Avatar/", want{true, "/api/users/{id}/avatar", none}},
+		// the declaration belongs to one route, not to its address
+		{"POST", "/api/users/3/avatar", want{true, "/api/users/{id}/avatar", nil}},
+		{"DELETE", "/api/users/3/avatar", want{}},
+		{"OPTIONS", "/api/users/3/avatar", want{}},
+		{"GET", "/api/users/3/avatar/x", want{}},
+		{"GET", "/api/users/3", want{}},
+		{"POST", "/api/network/targets/7/check", want{true, "/api/network/targets/{id}/check", toolkit}},
+		{"GET", "/api/network/targets/7", want{true, "/api/network/targets/{id}", nil}},
+		{"GET", "/api/network/targets/7/check", want{}},
+		{"POST", "/api/devices/A1/screenshot", want{true, "/api/devices/{id}/screenshot", &access.RouteSection{Section: "devices", Level: access.LevelRead}}},
+		// no route can have this path
+		{"GET", "/api/users/../users/3/avatar", want{}},
+	} {
+		got, ok := find(rt, c.method, c.target)
+		if ok != c.want.found || got.Path != c.want.path {
+			t.Errorf("%s %s: route %q found %v, want %q found %v", c.method, c.target, got.Path, ok, c.want.path, c.want.found)
+			continue
+		}
+		switch {
+		case (got.Section == nil) != (c.want.section == nil):
+			t.Errorf("%s %s: section %+v, want %+v", c.method, c.target, got.Section, c.want.section)
+		case got.Section != nil && *got.Section != *c.want.section:
+			t.Errorf("%s %s: section %+v, want %+v", c.method, c.target, *got.Section, *c.want.section)
+		}
+	}
+
+	// Routes lists the declaration too
+	declared := map[string]access.RouteSection{}
+	for _, route := range rt.Routes() {
+		if route.Section != nil {
+			declared[route.Method+" "+route.Path] = *route.Section
+		}
+	}
+	if len(declared) != 3 || declared["GET /api/users/{id}/avatar"] != *none || declared["POST /api/network/targets/{id}/check"] != *toolkit {
+		t.Errorf("declared routes: %+v", declared)
+	}
+
+	// Declaring changes nothing about who answers
+	if rec, ok := serve(rt, "POST", "/api/network/targets/7/check"); !ok || rec.Header().Get("X-Route") != "check" || rec.Header().Get("X-Mount") != "/api/network" {
+		t.Errorf("the declared route does not answer: %v %v", ok, rec.Header())
+	}
+}
+
+// Find gives the route that answers first. A route behind it does not
+// count, with or without a section of its own; nor does a middleware
+// added with Use.
+func TestFindIsTheFirstRouteThatFits(t *testing.T) {
+	rt := NewRouter()
+	rt.Use("/api/things/{id}", func(next http.Handler) http.Handler { return next })
+	rt.Get("/api/things/{id}", echo("first"))
+	rt.NoSection().Get("/api/things/special", echo("late"))
+	if got, ok := find(rt, "GET", "/api/things/special"); !ok || got.Section != nil {
+		t.Errorf("a declared route behind another: %+v %v", got, ok)
+	}
+	if _, ok := find(rt, "GET", "/api/things/special/more"); ok {
+		t.Error("a Use entry was found as a route")
+	}
+
+	// A route for digits only steps aside for anything else, so the
+	// route behind it is the first that fits
+	rt = NewRouter()
+	rt.Section("tickets").Get("/api/tickets/{id}", echo("number"), Digits("id"))
+	rt.NoSection().Get("/api/tickets/{name}", echo("name"))
+	if got, ok := find(rt, "GET", "/api/tickets/12"); !ok || got.Section == nil || got.Section.Section != "tickets" {
+		t.Errorf("digits: %+v %v", got, ok)
+	}
+	if got, ok := find(rt, "GET", "/api/tickets/stats"); !ok || got.Section == nil || got.Section.Section != "" {
+		t.Errorf("no digits: %+v %v", got, ok)
+	}
+	if got, ok := find(rt, "GET", "/api/tickets/%31"); !ok || got.Section == nil || got.Section.Section != "" {
+		t.Errorf("an escaped digit: %+v %v", got, ok)
+	}
+}
+
+func TestSectionRefusesWhatTheCatalogDoesNotHave(t *testing.T) {
+	for name, declare := range map[string]func(rt *Router){
+		"unknown section":      func(rt *Router) { rt.Section("tools") },
+		"empty section":        func(rt *Router) { rt.Section("") },
+		"level none":           func(rt *Router) { rt.SectionLevel("devices", access.LevelNone) },
+		"a second section":     func(rt *Router) { rt.Section("toolkit").Section("devices") },
+		"a section after none": func(rt *Router) { rt.NoSection().Section("devices") },
+		"use with a section": func(rt *Router) {
+			rt.Section("toolkit").Use("/api/x", func(next http.Handler) http.Handler { return next })
+		},
+	} {
+		func() {
+			defer func() {
+				if recover() == nil {
+					t.Errorf("%s: no panic", name)
+				}
+			}()
+			declare(NewRouter())
+		}()
+	}
+	// A mount below a declaration keeps it
+	rt := NewRouter()
+	rt.Section("toolkit").Mount("/api/tools").Post("/run", echo("run"))
+	if got, ok := find(rt, "POST", "/api/tools/run"); !ok || got.Section == nil || got.Section.Section != "toolkit" {
+		t.Errorf("mount below a section: %+v %v", got, ok)
 	}
 }

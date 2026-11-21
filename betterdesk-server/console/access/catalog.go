@@ -8,7 +8,8 @@
 // Per request, in this order:
 //
 //	c := service.Load(ctx, access.Session{UserID: ..., HasUser: ..., Role: ...})
-//	guard := c.Guard(r.Method, path)        // path as sent, without the query
+//	guard := c.GuardRoute(r.Method, path, declared) // path as sent, without the query;
+//	                                                // declared is the route's own section, if it names one
 //	if !guard.Decision.Passed() { answer guard.Decision }
 //	...
 //	d := c.RequirePermission("device.view", originalURL) // per route

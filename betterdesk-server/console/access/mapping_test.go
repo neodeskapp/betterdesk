@@ -257,7 +257,6 @@ func TestOwnProfileIsForEveryAccount(t *testing.T) {
 		{"PUT", "/api/users/me/profile", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
 		{"GET", "/api/users/avatars", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
 		{"GET", "/api/panel/access/effective", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
-		{"GET", "/api/users/3/avatar", "", [5]string{"guard", "ok", "guard", "ok", "ok"}},
 		{"GET", "/api/users", "user.view", [5]string{"guard", "ok", "guard", "ok", "ok"}},
 	})
 }
@@ -273,8 +272,40 @@ func TestNetworkReadsAndTools(t *testing.T) {
 		{"POST", "/api/network/targets", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
 		{"POST", "/api/network/ping", "device.connect", [5]string{"guard", "ok", "guard", "ok", "guard"}},
 		{"POST", "/api/network/resolve", "device.connect", [5]string{"guard", "ok", "guard", "ok", "guard"}},
-		{"POST", "/api/network/targets/1/check", "device.connect", [5]string{"guard", "guard", "guard", "guard", "route"}},
 	})
+}
+
+// PA3 (analysis C4): the two routes of table 5 that no path rule can name
+// declare their section themselves. One profile picture is for every
+// account, as the list of pictures is; checking a stored network target
+// is a toolkit route, as the four network tools are.
+func TestRoutesThatNameTheirOwnSection(t *testing.T) {
+	// viewer, operator, guest_issuer, global_admin, server_admin
+	for _, c := range []struct {
+		method, path, permission string
+		declared                 RouteSection
+		answers                  [5]string
+	}{
+		{"GET", "/api/users/3/avatar", "", RouteSection{}, [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"POST", "/api/network/targets/1/check", "device.connect", RouteSection{Section: "toolkit"}, [5]string{"guard", "ok", "guard", "ok", "guard"}},
+	} {
+		for i, role := range defaultRoles {
+			ctx := roleContext(t, role)
+			got := "ok"
+			if !ctx.GuardRoute(c.method, c.path, &c.declared).Decision.Passed() {
+				got = "guard"
+			} else if c.permission != "" && !ctx.HasPermission(c.permission) {
+				got = "route"
+			}
+			if got != c.answers[i] {
+				t.Errorf("%s %s as %s: %s, want %s", c.method, c.path, role, got, c.answers[i])
+			}
+			// By its path alone the route belongs to its prefix's section
+			if byPath := routeAnswer(t, role, c.method, c.path, c.permission); byPath == "ok" && got != "ok" {
+				t.Errorf("%s %s as %s: the declaration takes away what the path rule gives", c.method, c.path, role)
+			}
+		}
+	}
 }
 
 // PA3 (F5): the data guard's policies are read with device.view, its

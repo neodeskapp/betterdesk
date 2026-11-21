@@ -28,7 +28,9 @@ func Register(d *kit.Deps) {
 	h := &handlers{avatars: d.Avatars, log: d.Log.Child("Avatar")}
 	r := d.Router
 	r.Get("/api/users/avatars", h.list, d.RequireAuth, d.Limits.PanelRead.Middleware)
-	r.Get("/api/users/{id}/avatar", h.picture, d.RequireAuth, d.Limits.PanelRead.Middleware)
+	// A picture is for every account, like the list: the users section,
+	// which the other routes below /api/users belong to, does not guard it
+	r.NoSection().Get("/api/users/{id}/avatar", h.picture, d.RequireAuth, d.Limits.PanelRead.Middleware)
 }
 
 type directory struct {

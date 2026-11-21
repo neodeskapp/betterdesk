@@ -145,7 +145,9 @@ func stage(routes *kit.Router) kit.Middleware {
 
 // loadAccess is step 10: it loads the role's effective permissions and
 // the account's panel access policy, then lets the panel access guard
-// refuse a request to a section the account may not use.
+// refuse a request to a section the account may not use. The section is
+// the one the request's route declares, or the one the guard's path rules
+// give the path when the route declares nothing.
 func (s *Server) loadAccess(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		who := access.Session{UserID: kit.UserID(r)}
@@ -154,12 +156,24 @@ func (s *Server) loadAccess(next http.Handler) http.Handler {
 		}
 		loaded := s.deps.Access.Load(r.Context(), who)
 		kit.SetAccess(r, loaded)
-		if verdict := loaded.Guard(r.Method, httpx.RawPath(r)); !verdict.Decision.Passed() {
+		if verdict := loaded.GuardRoute(r.Method, httpx.RawPath(r), s.routeSection(r)); !verdict.Decision.Passed() {
 			s.deps.Refuse(w, r, verdict.Decision)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// routeSection is what the route that answers the request declares about
+// its panel section, nil when it declares nothing or no route fits. The
+// early stage is asked first, as it answers first.
+func (s *Server) routeSection(r *http.Request) *access.RouteSection {
+	for _, table := range []*kit.Router{s.early, s.router} {
+		if route, ok := table.Find(r); ok {
+			return route.Section
+		}
+	}
+	return nil
 }
 
 // language is step 14: it picks the request language and remembers a

@@ -416,3 +416,78 @@ func TestGuardCoversTheBDMounts(t *testing.T) {
 		}
 	}
 }
+
+// PA3 (analysis C4): a route can say itself which section it belongs to.
+// What it says stands in place of the path rules.
+func TestGuardAsksTheRoutesOwnSectionFirst(t *testing.T) {
+	account := func(section string, level Level) *Context {
+		return &Context{UserID: 7, HasUser: true, Role: "operator", Policy: policyWith(section, level)}
+	}
+
+	// A route without a section below a guarded prefix is not guarded.
+	c := account("users", LevelNone)
+	if got := c.GuardRoute("GET", "/api/users/3/avatar", &RouteSection{}); got.Verdict != VerdictNoRule || got.Section != "" || !got.Decision.Passed() || c.Section != "" {
+		t.Errorf("a route without a section, users at none: %+v, context section %q", got, c.Section)
+	}
+	// Without a declaration the path rules hold.
+	if got := account("users", LevelNone).GuardRoute("GET", "/api/users/3/avatar", nil); got.Verdict != VerdictDenied || got.Section != "users" {
+		t.Errorf("no declaration, users at none: %+v", got)
+	}
+
+	// A route of another section than its prefix's is guarded by its own:
+	// the level there decides, the prefix's section does not count.
+	toolkit := &RouteSection{Section: "toolkit"}
+	c = account("network", LevelNone)
+	c.Policy.Sections.Set("toolkit", SectionAccess{Access: LevelWrite})
+	if got := c.GuardRoute("POST", "/api/network/targets/1/check", toolkit); got.Verdict != VerdictAllowed || got.Section != "toolkit" || c.Section != "toolkit" {
+		t.Errorf("toolkit route, network at none: %+v, context section %q", got, c.Section)
+	}
+	c = account("toolkit", LevelRead)
+	c.Policy.Sections.Set("network", SectionAccess{Access: LevelWrite})
+	got := c.GuardRoute("POST", "/api/network/targets/1/check", toolkit)
+	wantBody := `{"success":false,"error":"Panel access denied: toolkit","code":"panel_access_denied"}`
+	if got.Verdict != VerdictDenied || got.Section != "toolkit" || got.Decision.Answer != AnswerJSON || jsJSON(t, got.Decision.Body) != wantBody {
+		t.Errorf("toolkit route, toolkit at read: %+v", got)
+	}
+
+	// The level is the method's unless the route names one.
+	read := &RouteSection{Section: "devices", Level: LevelRead}
+	if got := account("devices", LevelRead).GuardRoute("POST", "/api/devices/A1/screenshot", read); got.Verdict != VerdictAllowed {
+		t.Errorf("a POST that needs read, devices at read: %+v", got)
+	}
+	if got := account("devices", LevelNone).GuardRoute("POST", "/api/devices/A1/screenshot", read); got.Verdict != VerdictDenied {
+		t.Errorf("a POST that needs read, devices at none: %+v", got)
+	}
+	write := &RouteSection{Section: "devices", Level: LevelWrite}
+	if got := account("devices", LevelRead).GuardRoute("GET", "/api/devices/A1/export", write); got.Verdict != VerdictDenied {
+		t.Errorf("a GET that needs write, devices at read: %+v", got)
+	}
+
+	// Nobody signed in: the request goes on, as with a path rule.
+	if got := (&Context{}).GuardRoute("POST", "/api/network/targets/1/check", toolkit); got.Verdict != VerdictNoRule {
+		t.Errorf("signed out: %+v", got)
+	}
+	// A policy that could not be loaded refuses a declared section too.
+	broken := &Context{UserID: 7, HasUser: true, Role: "operator", PolicyErr: errors.New("down")}
+	if got := broken.GuardRoute("POST", "/api/network/targets/1/check", toolkit); got.Verdict != VerdictUnavailable || got.Section != "toolkit" {
+		t.Errorf("policy unavailable: %+v", got)
+	}
+	if got := broken.GuardRoute("GET", "/api/users/3/avatar", &RouteSection{}); got.Verdict != VerdictNoRule {
+		t.Errorf("policy unavailable, route without a section: %+v", got)
+	}
+}
+
+// A declaration must name a section of the catalog and a level the guard
+// can ask for.
+func TestRouteSectionValid(t *testing.T) {
+	for _, ok := range []RouteSection{{}, {Section: "toolkit"}, {Section: "devices", Level: LevelRead}, {Section: "devices", Level: LevelWrite}} {
+		if err := ok.Valid(); err != nil {
+			t.Errorf("%+v: %v", ok, err)
+		}
+	}
+	for _, bad := range []RouteSection{{Section: "tools"}, {Section: "Toolkit"}, {Level: LevelRead}, {Section: "devices", Level: LevelNone}, {Section: "devices", Level: "all"}} {
+		if err := bad.Valid(); err == nil {
+			t.Errorf("%+v passes", bad)
+		}
+	}
+}

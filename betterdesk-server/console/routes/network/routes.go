@@ -57,7 +57,10 @@ func register(d *kit.Deps, monitor *netmonitor.Monitor) {
 	r.Patch("/targets/{id}", h.updateTarget, requireSession, config)
 	r.Delete("/targets/{id}", h.deleteTarget, requireSession, config)
 
-	r.Post("/targets/{id}/check", h.checkTarget, requireSession, connect)
+	// A check connects from the server, as the four tools below do: it is
+	// a toolkit route (device.connect), where a write to the network
+	// section asks server.config
+	r.Section("toolkit").Post("/targets/{id}/check", h.checkTarget, requireSession, connect)
 	r.Get("/targets/{id}/history", h.history, requireSession, view)
 	r.Get("/stats", h.stats, requireSession, view)
 

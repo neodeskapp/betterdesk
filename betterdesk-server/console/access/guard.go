@@ -1,6 +1,9 @@
 package access
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // Rule maps a console path to a panel section. A rule with Path matches
 // that path only; a rule with Prefix matches the prefix itself and
@@ -233,19 +236,68 @@ type GuardResult struct {
 	Decision Decision
 }
 
-// Guard maps the request to its panel section and checks the account's
-// level there. path is the request path as it was sent, without the query
-// and without decoding; letters count in either case, as for the routes.
-// Guard stores the section in the context, where HasPermission reads it.
+// RouteSection is what a route says about its own panel section. It
+// stands in place of the path rules, for a route they cannot name: one
+// for every account below a guarded prefix, or one that belongs to
+// another section than its neighbours.
+type RouteSection struct {
+	// Section is the key of a catalog section, "" for a route without a
+	// section.
+	Section string
+	// Level is the level the route needs in its section, "" for the level
+	// of its method (RequiredLevel).
+	Level Level
+}
+
+// Valid reports what is wrong with the declaration: a section the catalog
+// does not have, a level without a section, or a level the guard cannot
+// ask for.
+func (s RouteSection) Valid() error {
+	if s.Section == "" {
+		if s.Level != "" {
+			return fmt.Errorf("level %q without a section", s.Level)
+		}
+		return nil
+	}
+	if _, ok := CatalogEntry(s.Section); !ok {
+		return fmt.Errorf("section %q is not in the catalog", s.Section)
+	}
+	switch s.Level {
+	case "", LevelRead, LevelWrite:
+		return nil
+	}
+	return fmt.Errorf("level %q is not read or write", s.Level)
+}
+
+// Guard maps the request to its panel section by the path rules and
+// checks the account's level there. path is the request path as it was
+// sent, without the query and without decoding; letters count in either
+// case, as for the routes. Guard stores the section in the context, where
+// HasPermission reads it.
 func (c *Context) Guard(method, path string) GuardResult {
-	rule, ok := FindRule(path)
-	if !ok || c.UserID == 0 || !c.HasUser {
+	return c.GuardRoute(method, path, nil)
+}
+
+// GuardRoute is Guard for a request whose route is known: what the route
+// declares about its section decides, and the path rules only when it
+// declares nothing (declared is nil).
+func (c *Context) GuardRoute(method, path string, declared *RouteSection) GuardResult {
+	section, level := "", RequiredLevel(method)
+	if declared != nil {
+		section = declared.Section
+		if declared.Level != "" {
+			level = declared.Level
+		}
+	} else if rule, ok := FindRule(path); ok {
+		section = rule.Section
+	}
+	if section == "" || c.UserID == 0 || !c.HasUser {
 		return GuardResult{Verdict: VerdictNoRule, Decision: pass()}
 	}
-	c.Section = rule.Section
+	c.Section = section
 	api := strings.HasPrefix(rulePath(path), apiPrefix)
 	if !api && (method == "GET" || method == "HEAD") {
-		return GuardResult{Verdict: VerdictPage, Section: rule.Section, Decision: pass()}
+		return GuardResult{Verdict: VerdictPage, Section: section, Decision: pass()}
 	}
 	if c.PolicyErr != nil {
 		d := Decision{
@@ -256,10 +308,10 @@ func (c *Context) Guard(method, path string) GuardResult {
 		if api {
 			d = refuseJSON(statusUnavailable, MsgPolicyUnavailable, CodePolicyUnavailable)
 		}
-		return GuardResult{Verdict: VerdictUnavailable, Section: rule.Section, Decision: d}
+		return GuardResult{Verdict: VerdictUnavailable, Section: section, Decision: d}
 	}
-	if AccessAllows(c.Policy, rule.Section, RequiredLevel(method)) {
-		return GuardResult{Verdict: VerdictAllowed, Section: rule.Section, Decision: pass()}
+	if AccessAllows(c.Policy, section, level) {
+		return GuardResult{Verdict: VerdictAllowed, Section: section, Decision: pass()}
 	}
 	d := Decision{
 		Answer: AnswerErrorPage,
@@ -267,7 +319,7 @@ func (c *Context) Guard(method, path string) GuardResult {
 		Page:   ErrorPage{Kind: errorPageForbidden, Message: MsgPanelSectionDenied, Text: MsgPanelSectionDenied},
 	}
 	if api {
-		d = refuseJSON(statusForbidden, MsgPanelAccessDenied(rule.Section), CodePanelAccessDenied)
+		d = refuseJSON(statusForbidden, MsgPanelAccessDenied(section), CodePanelAccessDenied)
 	}
-	return GuardResult{Verdict: VerdictDenied, Section: rule.Section, Decision: d}
+	return GuardResult{Verdict: VerdictDenied, Section: section, Decision: d}
 }

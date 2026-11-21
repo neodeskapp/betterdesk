@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 )
 
@@ -26,6 +27,10 @@ type Route struct {
 	// Mount is the prefix the route's group was mounted at, "" for the
 	// root.
 	Mount string
+	// Section is what the route declares about its panel section
+	// (Router.Section, NoSection), nil for a route that leaves it to the
+	// panel access guard's path rules.
+	Section *access.RouteSection
 }
 
 type route struct {
@@ -67,6 +72,8 @@ type table struct {
 type Router struct {
 	table  *table
 	prefix string
+	// section is what the routes added through this router declare.
+	section *access.RouteSection
 }
 
 // NewRouter returns an empty route table.
@@ -89,7 +96,52 @@ func (rt *Router) Mount(prefix string) *Router {
 	if !strings.HasPrefix(prefix, "/") || strings.HasSuffix(prefix, "/") {
 		panic(fmt.Sprintf("kit: mount %q must start with / and not end with one", prefix))
 	}
-	return &Router{table: rt.table, prefix: rt.prefix + prefix}
+	return &Router{table: rt.table, prefix: rt.prefix + prefix, section: rt.section}
+}
+
+// Section returns a router whose routes declare key as their panel
+// section, for a route the panel access guard's path rules cannot name:
+//
+//	r.Section("toolkit").Post("/targets/{id}/check", h.check, ...)
+//
+// The guard then asks the account's level in that section, whatever the
+// rules say about the path: write for a method that changes something,
+// read for GET and HEAD. A route that can pass a request on (PassOn)
+// declares what the route behind it declares, since the guard asks the
+// first route that fits.
+func (rt *Router) Section(key string) *Router {
+	if key == "" {
+		panic("kit: Section needs a section; NoSection declares that a route has none")
+	}
+	return rt.declare(access.RouteSection{Section: key})
+}
+
+// SectionLevel is Section for a route that needs another level than its
+// method's: a POST that only reads, or a GET that needs write.
+func (rt *Router) SectionLevel(key string, level access.Level) *Router {
+	if key == "" || level == "" {
+		panic(fmt.Sprintf("kit: SectionLevel needs a section and a level, got %q and %q", key, level))
+	}
+	return rt.declare(access.RouteSection{Section: key, Level: level})
+}
+
+// NoSection returns a router whose routes declare that they belong to no
+// panel section, for a route every account may use below a prefix the
+// guard's rules give to a section:
+//
+//	r.NoSection().Get("/api/users/{id}/avatar", h.picture, ...)
+func (rt *Router) NoSection() *Router {
+	return rt.declare(access.RouteSection{})
+}
+
+func (rt *Router) declare(section access.RouteSection) *Router {
+	if rt.section != nil {
+		panic(fmt.Sprintf("kit: the router declares %+v already", *rt.section))
+	}
+	if err := section.Valid(); err != nil {
+		panic(fmt.Sprintf("kit: %v", err))
+	}
+	return &Router{table: rt.table, prefix: rt.prefix, section: &section}
 }
 
 // Prefix is the mount the router adds its routes below, "" for the table
@@ -117,6 +169,9 @@ func (rt *Router) Use(pattern string, mw Middleware) {
 	if strings.HasSuffix(pattern, "...}") {
 		panic(fmt.Sprintf("kit: Use %q covers the rest of the path already; leave out {name...}", pattern))
 	}
+	if rt.section != nil {
+		panic(fmt.Sprintf("kit: Use %q is no route and has no panel section", pattern))
+	}
 	rt.add("", pattern, mw(http.HandlerFunc(PassOn)), true)
 }
 
@@ -128,7 +183,7 @@ func (rt *Router) add(method, pattern string, h http.Handler, prefix bool) {
 	if pattern == "/" && rt.prefix != "" {
 		full = rt.prefix
 	}
-	entry := &route{Route: Route{Method: method, Path: full, Mount: rt.prefix}, handler: h, prefix: prefix}
+	entry := &route{Route: Route{Method: method, Path: full, Mount: rt.prefix, Section: rt.section}, handler: h, prefix: prefix}
 	if full != "/" {
 		entry.segments = strings.Split(strings.TrimPrefix(full, "/"), "/")
 	}
@@ -196,6 +251,25 @@ func (rt *Router) Match(r *http.Request) bool {
 		}
 	}
 	return false
+}
+
+// Find returns the first route of the table that fits the request's
+// method and path: the route Serve tries first. It runs nothing. A route
+// for digits only (Digits) does not fit a parameter written otherwise,
+// as in Serve; any other reason a route has to pass the request on shows
+// only when it runs.
+func (rt *Router) Find(r *http.Request) (Route, bool) {
+	parts, trailing, ok := splitPath(r)
+	if !ok {
+		return Route{}, false
+	}
+	for _, entry := range rt.table.routes {
+		if entry.prefix || !entry.matches(parts, trailing) || !entry.allows(r.Method) || !entry.digitsFit(parts) {
+			continue
+		}
+		return entry.Route, true
+	}
+	return Route{}, false
 }
 
 // Serve answers the request from the table and reports whether it did. On
@@ -342,11 +416,7 @@ func (g *digitsGuard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if state, ok := r.Context().Value(routeKey{}).(*routeState); ok {
 		value = state.written[g.name]
 	}
-	ok := value != ""
-	for i := 0; i < len(value) && ok; i++ {
-		ok = value[i] >= '0' && value[i] <= '9'
-	}
-	if !ok {
+	if !allDigits(value) {
 		PassOn(w, r)
 		return
 	}
@@ -366,6 +436,32 @@ func (entry *route) digitsGuard(name string) bool {
 		}
 		h = g.next
 	}
+}
+
+// digitsFit reports whether every parameter the route's middleware
+// starts with Digits for is made of digits in the path parts.
+func (entry *route) digitsFit(parts []string) bool {
+	for h := entry.handler; ; {
+		g, ok := h.(*digitsGuard)
+		if !ok {
+			return true
+		}
+		for i, seg := range entry.segments {
+			if seg == "{"+g.name+"}" && i < len(parts) && !allDigits(parts[i]) {
+				return false
+			}
+		}
+		h = g.next
+	}
+}
+
+// allDigits reports whether value is one or more ASCII digits.
+func allDigits(value string) bool {
+	ok := value != ""
+	for i := 0; i < len(value) && ok; i++ {
+		ok = value[i] >= '0' && value[i] <= '9'
+	}
+	return ok
 }
 
 // splitPath cuts the request path into its parts. ok is false for a path
