@@ -123,7 +123,9 @@ func TestVectors(t *testing.T) {
 	}
 	w := newWorld(t)
 	etags := map[string]string{}
-	failures, unstored, noPath, refusedDownloads, deviceRefusals, sizeRefusals := 0, 0, 0, 0, 0, 0
+	failures, unstored, noPath, refusedDownloads, deviceRefusals, sizeRefusals, capped := 0, 0, 0, 0, 0, 0, 0
+	// overCap holds the ids of the Node run's transfers the cap refused
+	overCap := map[string]bool{}
 	for i, v := range vectors {
 		switch {
 		case v.Feed != nil:
@@ -154,6 +156,10 @@ func TestVectors(t *testing.T) {
 			}
 			headers["If-None-Match"] = etags[req.Path]
 			req.Headers = headers
+		}
+		if id, refused := w.beyondTheCap(&v); refused {
+			overCap[id] = true
+			capped++
 		}
 		rec, _ := w.Do(req, nil)
 		if deviceNotText(&v) {
@@ -209,6 +215,8 @@ func TestVectors(t *testing.T) {
 				wantText = kept
 				unstored++
 			}
+			// RV48: a transfer the cap refused is not stored either
+			wantText = withoutRefused(wantText, overCap)
 			// A transfer that was made by a request that failed all the same
 			// shows up in Node's lists only: pair the unknown ids of the two
 			// lists by their places
@@ -261,6 +269,78 @@ func TestVectors(t *testing.T) {
 	if sizeRefusals == 0 {
 		t.Error("no start names a negative size: the fix of RV42 changes no vector")
 	}
+	if capped == 0 {
+		t.Error("no start goes beyond the open transfers of a device: the fix of RV48 changes no vector")
+	}
+}
+
+// beyondTheCap is the fix of RV48 on a vector: a start that Node made
+// while the device already had MaxOpenTransfersPerDevice pending or active
+// transfers here, or the console MaxOpenTransfers, answers 429 with the
+// cap's error and stores nothing. It returns the id the Node run gave the
+// transfer. Call it before the request.
+func (w *world) beyondTheCap(v *vector) (string, bool) {
+	if v.Request == nil || v.Request.Method != http.MethodPost || v.Status != http.StatusCreated ||
+		!strings.HasSuffix(strings.ToLower(strings.TrimSuffix(v.Request.Path, "/")), "/transfer") {
+		return "", false
+	}
+	body, _ := base64.StdEncoding.DecodeString(v.Body)
+	var record struct {
+		ID       string `json:"id"`
+		DeviceID any    `json:"deviceId"`
+	}
+	if json.Unmarshal(body, &record) != nil {
+		return "", false
+	}
+	device, isText := record.DeviceID.(string)
+	if !isText {
+		return "", false
+	}
+	ofDevice, open := 0, 0
+	for _, t := range w.transfers.ListTransfers(service.Filter{}) {
+		if t.Status != service.StatusPending && t.Status != service.StatusActive {
+			continue
+		}
+		open++
+		if t.DeviceID == device {
+			ofDevice++
+		}
+	}
+	text := ""
+	switch {
+	case ofDevice >= service.MaxOpenTransfersPerDevice:
+		text = "Too many open file transfers for this device (at most 10 pending or active)"
+	case open >= service.MaxOpenTransfers:
+		text = "Too many open file transfers (at most 200 pending or active)"
+	default:
+		return "", false
+	}
+	v.Status = http.StatusTooManyRequests
+	v.Body = base64.StdEncoding.EncodeToString([]byte(`{"error":"` + text + `"}`))
+	return record.ID, true
+}
+
+// withoutRefused is a list of transfers of the Node run without the ones
+// whose id is in refused.
+func withoutRefused(list string, refused map[string]bool) string {
+	var records []json.RawMessage
+	if len(refused) == 0 || !strings.HasPrefix(list, "[") || json.Unmarshal([]byte(list), &records) != nil {
+		return list
+	}
+	kept := make([]string, 0, len(records))
+	for _, record := range records {
+		var fields struct {
+			ID string `json:"id"`
+		}
+		if json.Unmarshal(record, &fields) == nil && refused[fields.ID] {
+			continue
+		}
+		kept = append(kept, string(record))
+	}
+	if len(kept) == len(records) {
+		return list
+	}
+	return "[" + strings.Join(kept, ",") + "]"
 }
 
 // downloadFailed is the body Node answered a download with that failed

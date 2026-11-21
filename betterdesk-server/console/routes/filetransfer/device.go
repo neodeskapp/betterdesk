@@ -21,13 +21,16 @@ import (
 // its transfers, the body as it came ({action, transfer_id, chunk_index,
 // data, filename, size, mime_type, path}; see
 // filetransfer.Service.HandleMessage). The answer is the service's, with
-// status 200 also when it is {"action":"error"}. The service turns every
-// failure into such an answer, so the handler has no failure of its own.
+// status 200 also when it is {"action":"error"}, except for an init
+// beyond the open transfers the device or the console may have, which
+// answers 429. The service turns every failure into such an answer, so
+// the handler has no failure of its own.
 //
 // A chunk or a cancel reaches only a transfer of the token's device; one
 // for another device's transfer is answered as one for no transfer.
 func (h *handlers) deviceMessage(w http.ResponseWriter, r *http.Request) {
-	kit.JSON(w, r, http.StatusOK, h.transfers.HandleMessage(kit.Device(r).DeviceID, jsreq.Body(r)))
+	answer, status := h.transfers.HandleMessageStatus(kit.Device(r).DeviceID, jsreq.Body(r))
+	kit.JSON(w, r, status, answer)
 }
 
 // deviceTransfer answers GET /file-transfer/{id} with how far the transfer

@@ -261,3 +261,45 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 		}
 	})
 }
+
+// A start beyond the open transfers a device may have is refused with 429
+// and the cap's error, by the people's route and by the device's init;
+// the transfer is not stored (BUGS RV48, DECISIONS A100).
+func TestAStartBeyondTheCapIsTooManyRequests(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := deviceWorld(t, db)
+		start := func() replay.Answer {
+			return w.Do(replay.Request{Role: "operator", Method: "POST", Path: "/api/files/transfer",
+				Body: replay.Text(`{"direction":"download","device_id":"device-a","filename":"log.txt","size":11}`)})
+		}
+		initMessage := func(path string) replay.Answer {
+			body := `{"action":"init","filename":"a.txt","size":4}`
+			return w.Do(replay.Request{Method: "POST", Path: path, Body: &body, Headers: map[string]string{"Authorization": "Bearer tok-device-a"}, NoCSRF: true})
+		}
+		for i := 0; i < 5; i++ {
+			if got := start(); got.Status != 201 {
+				t.Fatalf("start %d: %d %s", i+1, got.Status, got.Body)
+			}
+			if got := initMessage("/api/bd/file-transfer"); got.Status != 200 || !strings.Contains(got.Body, `"action":"init_ack"`) {
+				t.Fatalf("init %d: %d %s", i+1, got.Status, got.Body)
+			}
+		}
+		refusal := "Too many open file transfers for this device (at most 10 pending or active)"
+		if got := start(); got.Status != 429 || got.Body != `{"error":"`+refusal+`"}` {
+			t.Errorf("start 11: %d %s", got.Status, got.Body)
+		}
+		for _, path := range []string{"/api/bd/file-transfer", "/api/files/file-transfer"} {
+			if got := initMessage(path); got.Status != 429 || got.Body != `{"action":"error","error":"`+refusal+`"}` {
+				t.Errorf("init 11 at %s: %d %s", path, got.Status, got.Body)
+			}
+		}
+		if got := w.Do(replay.Request{Role: "operator", Path: "/api/files/transfers?device_id=device-a"}); strings.Count(got.Body, `"id":"`) != 10 {
+			t.Errorf("transfers of device-a after the refusals: %s", got.Body)
+		}
+		// Another failure of a message stays 200
+		body := `{"action":"init","filename":"a.txt","size":-1}`
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/file-transfer", Body: &body, Headers: map[string]string{"Authorization": "Bearer tok-device-b"}, NoCSRF: true}); got.Status != 200 || !strings.Contains(got.Body, `"action":"error"`) {
+			t.Errorf("an init with a negative size: %d %s", got.Status, got.Body)
+		}
+	})
+}

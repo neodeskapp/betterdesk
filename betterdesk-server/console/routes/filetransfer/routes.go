@@ -11,6 +11,7 @@ package filetransfer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -132,7 +133,9 @@ func bodyValue(r *http.Request, key string) any {
 // filename, size, mime_type}: it starts a transfer and answers 201 with
 // its record. The device is text, so the transfer is the one the device's
 // token reads. The size is read as a whole number, the file name is made
-// safe, and the account is noted as the one who started it.
+// safe, and the account is noted as the one who started it. A start
+// beyond the open transfers the device or the console may have answers
+// 429 with the service's error.
 func (h *handlers) start(w http.ResponseWriter, r *http.Request) {
 	device, filename, direction := bodyValue(r, "device_id"), bodyValue(r, "filename"), bodyValue(r, "direction")
 	if !goapi.Truthy(device) || !goapi.Truthy(filename) {
@@ -175,6 +178,10 @@ func (h *handlers) start(w http.ResponseWriter, r *http.Request) {
 		MimeType:  bodyValue(r, "mime_type"),
 		CreatedBy: createdBy,
 	})
+	if errors.Is(err, filetransfer.ErrTooManyTransfers) {
+		fail(w, r, http.StatusTooManyRequests, err.Error())
+		return
+	}
 	if err != nil {
 		fail(w, r, http.StatusBadRequest, err.Error())
 		return
