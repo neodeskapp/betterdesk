@@ -2,7 +2,9 @@ package registration_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -68,6 +70,89 @@ func TestApprovalOfAKnownDeviceAsksForTheScope(t *testing.T) {
 		}
 		if err := db.QueryRow(ctx, "SELECT COUNT(*) FROM device_folder_assignments WHERE device_id = 'DEV-NEW'").Scan(&n); err != nil || n != 1 {
 			t.Errorf("DEV-NEW has %d folder assignments (%v)", n, err)
+		}
+	})
+}
+
+// A registration request counts against the limit of device
+// registrations per address (BD_REGISTER_RATE_LIMIT_MAX), on the root
+// mount and at /api/bd alike (BUGS RV8).
+func TestRegisterRequestIsLimited(t *testing.T) {
+	w := routetest.New(t, routetest.Options{Env: map[string]string{"BD_REGISTER_RATE_LIMIT_MAX": "2", "RATE_LIMIT_MAX": "1000"}})
+	for i, c := range []struct {
+		path string
+		want int
+	}{{"/api/bd/register-request", 200}, {"/register-request", 200}, {"/api/bd/register-request", 429}} {
+		got := w.SignedOut().Do(http.MethodPost, c.path, `{"device_id":"limited-`+strconv.Itoa(i)+`"}`)
+		if got.Status != c.want {
+			t.Errorf("request %d at %s: %d %s, want %d", i+1, c.path, got.Status, got.Body, c.want)
+		}
+	}
+}
+
+// New registrations are refused while 50 from the same address or 500 in
+// all wait for a decision; a device that already has its registration
+// still gets it, and decided ones do not count. The list holds at most
+// 500 rows a page and counts all of them in total (BUGS RV8).
+func TestPendingRegistrationsAreCapped(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"BD_REGISTER_RATE_LIMIT_MAX": "100000", "RATE_LIMIT_MAX": "100000"}})
+		ctx := context.Background()
+		insert := func(prefix, address, status string, n int) {
+			t.Helper()
+			var values []string
+			var args []any
+			for i := 0; i < n; i++ {
+				values = append(values, "(?, ?, ?)")
+				args = append(args, prefix+strconv.Itoa(i), address, status)
+			}
+			if _, err := db.Exec(ctx, "INSERT INTO pending_registrations (device_id, ip_address, status) VALUES "+strings.Join(values, ", "), args...); err != nil {
+				t.Fatal(err)
+			}
+		}
+		request := func(id string) (int, string) {
+			got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"`+id+`"}`)
+			return got.Status, got.Body
+		}
+		insert("decided-", routetest.ClientIP, "rejected", 60)
+		insert("local-", routetest.ClientIP, "pending", 49)
+		if status, body := request("local-last"); status != 200 {
+			t.Fatalf("the 50th from the address: %d %s", status, body)
+		}
+		if status, body := request("local-over"); status != 429 || body != `{"success":false,"error":"Too many pending registrations"}` {
+			t.Errorf("the 51st from the address: %d %s", status, body)
+		}
+		if status, body := request("local-3"); status != 200 || !strings.Contains(body, `"status":"pending"`) {
+			t.Errorf("a device that has its registration: %d %s", status, body)
+		}
+
+		insert("far-", "10.0.0.9", "pending", 450)
+		var pending int
+		if err := db.QueryRow(ctx, "SELECT COUNT(*) FROM pending_registrations WHERE status = 'pending'").Scan(&pending); err != nil || pending != 500 {
+			t.Fatalf("%d pending (%v)", pending, err)
+		}
+		if _, err := db.Exec(ctx, "UPDATE pending_registrations SET status = 'rejected' WHERE device_id = 'local-0'"); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.Exec(ctx, "UPDATE pending_registrations SET status = 'pending', ip_address = '10.0.0.10' WHERE device_id = 'decided-0'"); err != nil {
+			t.Fatal(err)
+		}
+		if status, body := request("local-new"); status != 429 {
+			t.Errorf("a new device with 500 pending in all: %d %s", status, body)
+		}
+
+		admin := w.As("admin")
+		var page struct {
+			Data  []map[string]any `json:"data"`
+			Total float64          `json:"total"`
+		}
+		got := admin.Do(http.MethodGet, "/api/registrations", "")
+		if err := json.Unmarshal([]byte(got.Body), &page); err != nil || len(page.Data) != 500 || page.Total != 560 {
+			t.Errorf("the list: %d rows of %v (%v)", len(page.Data), page.Total, err)
+		}
+		got = admin.Do(http.MethodGet, "/api/registrations?status=rejected&limit=2&offset=1", "")
+		if err := json.Unmarshal([]byte(got.Body), &page); err != nil || len(page.Data) != 2 || page.Total != 60 {
+			t.Errorf("a page of two: %d rows of %v (%v) %s", len(page.Data), page.Total, err, got.Body)
 		}
 	})
 }

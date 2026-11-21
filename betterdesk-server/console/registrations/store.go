@@ -135,11 +135,36 @@ type Filters struct {
 	// Search keeps the rows whose device id, host name or address holds
 	// its text; % and _ in it are wildcards.
 	Search jsbind.Value
+	// Limit is the most rows List returns, all of them when it is 0;
+	// Offset is the number of rows it skips first.
+	Limit, Offset int
 }
 
 // List is getPendingRegistrations: the rows the filters keep, newest
-// first.
-func (s *Service) List(ctx context.Context, f Filters) ([]*goapi.Object, error) {
+// first, one page of them when f.Limit is set, and the number of rows the
+// filters keep on all pages.
+func (s *Service) List(ctx context.Context, f Filters) ([]*goapi.Object, float64, error) {
+	where, bound, err := s.listWhere(f)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list registrations: %w", err)
+	}
+	page := ""
+	if f.Limit > 0 {
+		page = fmt.Sprintf(" LIMIT %d OFFSET %d", f.Limit, max(f.Offset, 0))
+	}
+	rows, err := readRows(ctx, s.db, "SELECT "+columns(s.db)+" FROM pending_registrations "+where+" ORDER BY created_at DESC, id DESC"+page, bound...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list registrations: %w", err)
+	}
+	var total int64
+	if err := s.db.QueryRow(ctx, "SELECT COUNT(*) FROM pending_registrations "+where, bound...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count registrations: %w", err)
+	}
+	return rows, float64(total), nil
+}
+
+// listWhere is the WHERE clause of the filters with its bound values.
+func (s *Service) listWhere(f Filters) (string, []any, error) {
 	where := "WHERE 1=1"
 	var values []jsbind.Value
 	placeholders := 0
@@ -157,14 +182,7 @@ func (s *Service) List(ctx context.Context, f Filters) ([]*goapi.Object, error) 
 		placeholders += 3
 	}
 	bound, err := args(s.db, placeholders, values...)
-	if err != nil {
-		return nil, fmt.Errorf("list registrations: %w", err)
-	}
-	rows, err := readRows(ctx, s.db, "SELECT "+columns(s.db)+" FROM pending_registrations "+where+" ORDER BY created_at DESC", bound...)
-	if err != nil {
-		return nil, fmt.Errorf("list registrations: %w", err)
-	}
-	return rows, nil
+	return where, bound, err
 }
 
 // ByID is getPendingRegistrationById: the row with the id, nil when there
@@ -192,11 +210,23 @@ func (s *Service) ByDeviceID(ctx context.Context, deviceID string) (*goapi.Objec
 	return row, nil
 }
 
+// The caps on pending registrations. A device without a registration is
+// refused (ErrTooManyPending) while MaxPending rows wait for a decision,
+// or MaxPendingPerAddress rows that came from its address.
+const (
+	MaxPending           = 500
+	MaxPendingPerAddress = 50
+)
+
+// ErrTooManyPending refuses a new registration while too many wait.
+var ErrTooManyPending = errors.New("too many pending registrations")
+
 // Create is createPendingRegistration: a new pending row for a device
 // without one, else the device's row as it is. A request never changes a
 // row: the approver reviews the key, uuid and fields of the first
 // request, and a rejected device stays rejected until someone with
-// enrollment.manage deletes its row.
+// enrollment.manage deletes its row. A new row is refused with
+// ErrTooManyPending when the caps are reached.
 func (s *Service) Create(ctx context.Context, req Request) (*goapi.Object, error) {
 	var row *goapi.Object
 	err := s.db.InTx(ctx, func(tx *store.Tx) error {
@@ -204,6 +234,9 @@ func (s *Service) Create(ctx context.Context, req Request) (*goapi.Object, error
 		err := tx.QueryRow(ctx, "SELECT id FROM pending_registrations WHERE device_id = ?", req.DeviceID).Scan(&id)
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
+			if err := checkCaps(ctx, tx, req.IPAddress); err != nil {
+				return err
+			}
 			return s.insert(ctx, tx, req, &row)
 		case err != nil:
 			return err
@@ -215,6 +248,21 @@ func (s *Service) Create(ctx context.Context, req Request) (*goapi.Object, error
 		return nil, fmt.Errorf("create registration of device %q: %w", req.DeviceID, err)
 	}
 	return row, nil
+}
+
+// checkCaps returns ErrTooManyPending when MaxPending rows are pending, or
+// MaxPendingPerAddress rows from the address.
+func checkCaps(ctx context.Context, tx *store.Tx, address string) error {
+	var all, fromAddress int64
+	err := tx.QueryRow(ctx, `SELECT COUNT(*), COALESCE(SUM(CASE WHEN ip_address = ? THEN 1 ELSE 0 END), 0)
+		FROM pending_registrations WHERE status = 'pending'`, address).Scan(&all, &fromAddress)
+	if err != nil {
+		return fmt.Errorf("count pending registrations: %w", err)
+	}
+	if all >= MaxPending || fromAddress >= MaxPendingPerAddress {
+		return ErrTooManyPending
+	}
+	return nil
 }
 
 func (s *Service) insert(ctx context.Context, tx *store.Tx, req Request, row **goapi.Object) error {

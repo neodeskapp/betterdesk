@@ -1,6 +1,7 @@
 package registration
 
 import (
+	"errors"
 	"net/http"
 	"regexp"
 
@@ -31,7 +32,9 @@ func clientIP(r *http.Request) string {
 // {device_id, hostname, platform, version, public_key, uuid}: a new
 // pending registration, or the device's registration as it is, so asking
 // again changes neither the key an approver reviews nor a rejection. No
-// credential is needed. The device id, trimmed, has to be an id
+// credential is needed. A new registration is refused with 429 while
+// registrations.MaxPending wait, or registrations.MaxPendingPerAddress
+// from the client's address. The device id, trimmed, has to be an id
 // /api/bd/register takes: 3 to 64 letters, digits, "_" and "-". The other
 // fields are cut to their length, and a field that is truthy but no text
 // is the 500 of a TypeError.
@@ -65,6 +68,10 @@ func (h *handlers) registerRequest(w http.ResponseWriter, r *http.Request) {
 		*f.dest = cut(s, f.max)
 	}
 	row, err := h.regs.Create(r.Context(), req)
+	if errors.Is(err, registrations.ErrTooManyPending) {
+		failure(w, r, http.StatusTooManyRequests, "Too many pending registrations")
+		return
+	}
 	if err != nil || row == nil {
 		h.log.Error("Register request error:", err)
 		failure(w, r, http.StatusInternalServerError, "Internal server error")

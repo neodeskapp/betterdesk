@@ -211,7 +211,7 @@ func TestDeviceRoutesAtBothMounts(t *testing.T) {
 // (BUGS RG4), a field that is truthy but no text fails, the fields are
 // cut to their length.
 func TestRegisterRequestChecks(t *testing.T) {
-	w := routetest.New(t, routetest.Options{})
+	w := routetest.New(t, routetest.Options{Env: map[string]string{"BD_REGISTER_RATE_LIMIT_MAX": "1000"}})
 	device := w.SignedOut()
 	row := func(id string) map[string]any {
 		t.Helper()

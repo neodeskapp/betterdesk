@@ -211,7 +211,7 @@ func TestListFilters(t *testing.T) {
 			t.Fatal(err)
 		}
 		ids := func(f Filters) string {
-			rows, err := s.List(ctx, f)
+			rows, _, err := s.List(ctx, f)
 			if err != nil {
 				return "error"
 			}

@@ -56,18 +56,32 @@ func (h *handlers) audit(r *http.Request, action, details string) {
 	}
 }
 
-// list answers GET /api/registrations?status=&search=.
+// listPageSize is the most registrations one page of the list holds, and
+// the page size when the request names none.
+const listPageSize = 500
+
+// list answers GET /api/registrations?status=&search=&limit=&offset=: one
+// page of the registrations the filters keep, newest first, at most
+// listPageSize of them, after offset skipped ones; total counts the
+// registrations of every page.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	filters := registrations.Filters{
 		Status: jsbind.Query(r.URL.RawQuery, "status").Or(jsbind.String("")),
 		Search: jsbind.Query(r.URL.RawQuery, "search").Or(jsbind.String("")),
+		Limit:  listPageSize,
 	}
-	rows, err := h.regs.List(r.Context(), filters)
+	if n, ok := jsreq.ParseInt(jsbind.Query(r.URL.RawQuery, "limit").ToString(), 10); ok && n >= 1 && n < listPageSize {
+		filters.Limit = int(n)
+	}
+	if n, ok := jsreq.ParseInt(jsbind.Query(r.URL.RawQuery, "offset").ToString(), 10); ok && n >= 1 && n <= math.MaxInt32 {
+		filters.Offset = int(n)
+	}
+	rows, total, err := h.regs.List(r.Context(), filters)
 	if err != nil {
 		h.serverError(w, r, "Get registrations error:", err)
 		return
 	}
-	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "data", rows, "total", float64(len(rows))))
+	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "data", rows, "total", total))
 }
 
 // count answers GET /api/registrations/count: the pending LAN

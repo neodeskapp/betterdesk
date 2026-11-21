@@ -161,7 +161,7 @@ func newReplayer(t *testing.T, db *store.DB, rec recording) *replayer {
 		DB:  db,
 		API: p.api,
 		Env: map[string]string{
-			"RATE_LIMIT_MAX": "1000000", "PANEL_READ_RATE_LIMIT_MAX": "1000000", "WIDGET_RATE_LIMIT_MAX": "1000000",
+			"RATE_LIMIT_MAX": "1000000", "PANEL_READ_RATE_LIMIT_MAX": "1000000", "WIDGET_RATE_LIMIT_MAX": "1000000", "BD_REGISTER_RATE_LIMIT_MAX": "1000000",
 		},
 		Config: func(cfg *config.Config) {
 			cfg.NodeEnv, cfg.Production = "production", true

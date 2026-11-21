@@ -59,14 +59,17 @@ func newHandlers(d *kit.Deps, actors *helpActors) *handlers {
 // Register adds the group's routes below the mount of d, in the order of
 // the old route file. Every route but the two of devices needs a
 // permission: enrollment.approve, enrollment.manage to delete a
-// registration, chat.access for the help requests.
+// registration, chat.access for the help requests. A registration request
+// counts against the limit of device registrations (d.Limits.Register,
+// BD_REGISTER_RATE_LIMIT_MAX a minute per address), which
+// /api/bd/register shares.
 func (g *Routes) Register(d *kit.Deps) {
 	h := newHandlers(d, g.actors)
 	r := d.Router
 	approve := d.RequirePermission("enrollment.approve")
 	chat := d.RequirePermission("chat.access")
 
-	r.Post("/register-request", h.registerRequest)
+	r.Post("/register-request", h.registerRequest, registerLimit(d)...)
 	r.Get("/register-status", h.registerStatus)
 
 	r.Get("/api/registrations", h.list, approve)
@@ -98,6 +101,15 @@ func (g *Routes) Register(d *kit.Deps) {
 func ClientAPI(d *kit.Deps) {
 	h := newHandlers(d, newHelpActors())
 	r := d.At("/api/bd").Early
-	r.Post("/register-request", h.registerRequest)
+	r.Post("/register-request", h.registerRequest, registerLimit(d)...)
 	r.Get("/register-status", h.registerStatus)
+}
+
+// registerLimit is the limit of device registrations in front of a
+// registration request; nothing for a Deps without limiters.
+func registerLimit(d *kit.Deps) []kit.Middleware {
+	if d.Limits == nil || d.Limits.Register == nil {
+		return nil
+	}
+	return []kit.Middleware{d.Limits.Register.Middleware}
 }

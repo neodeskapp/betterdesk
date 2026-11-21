@@ -23,7 +23,7 @@ func (s *Service) Notifications(ctx context.Context) []*goapi.Object {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		rows, err := s.List(ctx, Filters{Status: jsbind.String("pending")})
+		rows, _, err := s.List(ctx, Filters{Status: jsbind.String("pending"), Limit: MaxPending})
 		if err == nil {
 			lan = rows
 		}
