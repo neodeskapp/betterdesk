@@ -28,6 +28,9 @@
 
     var MESH_KVM_MAGIC = [0x11, 0xFE, 0x00, 0x00, 0x4D, 0x45, 0x53, 0x48, 0x00, 0x00, 0x00, 0x00, 0x02];
 
+    // Bytes that are no packet header the parser skips in a row before it gives up on the stream
+    var MAX_JUNK = 64 * 1024;
+
     function shortToBytes(v) {
         return [(v >> 8) & 0xFF, v & 0xFF];
     }
@@ -40,6 +43,7 @@
         this._relayReady = false;
         this._protocolSent = false;
         this._accum = new Uint8Array(0);
+        this._junk = 0;
         this._state = 0;
         this._screenW = 0;
         this._screenH = 0;
@@ -180,27 +184,39 @@
         this._processAccum();
     };
 
+    /**
+     * Read whole packets from the buffer, walking it with an offset and
+     * keeping only the unread rest. A run of more than MAX_JUNK bytes that are
+     * no packet header ends the session: that is not a desktop stream.
+     */
     BetterViewer.prototype._processAccum = function () {
-        while (this._accum.length >= 4) {
-            if (this._accum[0] === 0x11 && this._accum[1] === 0xFE) {
-                var skip = Math.min(this._accum.length, 13);
-                this._accum = this._accum.slice(skip);
+        var buf = this._accum;
+        var off = 0;
+        while (buf.length - off >= 4) {
+            if (buf[off] === 0x11 && buf[off + 1] === 0xFE) {
+                off += Math.min(buf.length - off, 13);
                 continue;
             }
-            if (this._accum[0] !== 0) {
-                this._accum = this._accum.slice(1);
+            var total = (buf[off + 2] << 8) | buf[off + 3];
+            if (buf[off] !== 0 || total < 4) {
+                off++;
+                if (++this._junk > MAX_JUNK) {
+                    this._accum = new Uint8Array(0);
+                    this._junk = 0;
+                    this.disconnect('The device sent data that is not a desktop stream');
+                    return;
+                }
                 continue;
             }
-            var total = (this._accum[2] << 8) | this._accum[3];
-            if (total < 4 || total > 65535) {
-                this._accum = this._accum.slice(1);
-                continue;
-            }
-            if (this._accum.length < total) break;
-            var packet = this._accum.slice(0, total);
-            this._accum = this._accum.slice(total);
+            if (buf.length - off < total) break;
+            this._junk = 0;
+            var packet = buf.slice(off, off + total);
+            off += total;
             this._handlePacket(packet);
+            // A packet handler may have ended the session
+            if (this._accum !== buf) return;
         }
+        this._accum = off ? buf.slice(off) : buf;
     };
 
     BetterViewer.prototype._handlePacket = function (view) {
@@ -348,7 +364,7 @@
         this._viewOnly = !!viewOnly;
     };
 
-    BetterViewer.prototype.disconnect = function () {
+    BetterViewer.prototype.disconnect = function (reason) {
         if (this._statsTimer) {
             clearInterval(this._statsTimer);
             this._statsTimer = null;
@@ -359,7 +375,7 @@
         }
         this._state = 0;
         this._emit('state', 'disconnected');
-        this._emit('disconnected');
+        this._emit('disconnected', reason);
     };
 
     global.BetterViewer = BetterViewer;

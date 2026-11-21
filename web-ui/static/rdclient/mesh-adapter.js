@@ -33,7 +33,7 @@
             self._emit('session_start');
             self._onStreaming();
         });
-        desktop.on('disconnected', function () { self._emit('disconnected'); });
+        desktop.on('disconnected', function (reason) { self._emit('disconnected', reason); });
         desktop.on('videoFrame', function (f) { self._emit('videoFrame', f); });
         desktop.on('stats', function (s) { self._emit('stats', s); });
         desktop.on('inputLock', function (locked) { self._emit('cursorUpdate', { locked: locked }); });
