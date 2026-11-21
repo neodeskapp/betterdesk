@@ -42,6 +42,8 @@ afterEach(() => {
 	session.isSuperAdmin = false;
 	session.permissions = [];
 	session.user = null;
+	session.access = null;
+	session.path = '';
 });
 
 function signIn(role: string, permissions: string[]) {
@@ -71,4 +73,24 @@ describe('alerts and automation page', () => {
 		expect(screen.getByRole('button', { name: 'automation.create_rule' })).toBeVisible();
 		await vi.waitFor(() => expect(requests).toContain('/api/automation/rules'));
 	});
+
+	test.each([
+		['read', false],
+		['write', true]
+	])(
+		'with Automation at %s in the panel access policy the page opens; Create rule only at write',
+		async (level, shown) => {
+			signIn('server_admin', ['server.config', 'device.view', 'audit.view']);
+			session.access = {
+				sections: { automation: level as 'read' | 'write' },
+				pages: [{ prefix: '/automation', section: 'automation' }],
+				catalog: [{ key: 'automation', read: 'server.config', write: 'server.config' }]
+			};
+			session.path = '/automation';
+			render(Page);
+			expect(await screen.findByRole('heading', { level: 1, name: 'nav.automation' })).toBeVisible();
+			await vi.waitFor(() => expect(requests).toContain('/api/automation/rules'));
+			expect(!!screen.queryByRole('button', { name: 'automation.create_rule' })).toBe(shown);
+		}
+	);
 });

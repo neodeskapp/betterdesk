@@ -16,6 +16,7 @@
 	import type { Organization } from '#lib/api/orgs.ts';
 	import { filterResources, resourceActive, resourceTypeKey, scopeKey } from '#lib/canvas/fleet.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { canWrite } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
@@ -52,6 +53,8 @@
 		org = $bindable(),
 		type = $bindable()
 	}: Props = $props();
+	/** Adding, editing, running and deleting need Fleet at write */
+	const canEdit = $derived(canWrite('org.manage_devices'));
 
 	const message = (err: unknown) => (err instanceof Error ? err.message : '');
 
@@ -178,24 +181,25 @@
 		label={resourceActive(r) ? t('fleet.active') : t('fleet.inactive')}
 	/>{/snippet}
 
-{#snippet actionsCell(r: Resource)}<MenuButton
-		kebab
-		label={t('fleet.actions_for', { name: r.name || r.id })}
-		bind:open={() => menuFor === r.id, (v) => (menuFor = v ? r.id : menuFor === r.id ? null : menuFor)}
-	>
-		<MenuItem icon={ICONS.edit} onselect={() => (sheet = { resource: r })}>{t('fleet.edit')}</MenuItem>
-		<MenuDivider />
-		<MenuItem icon={ICONS.delete} danger onselect={() => void remove(r)}
-			>{t('fleet.delete_ellipsis')}</MenuItem
+{#snippet actionsCell(r: Resource)}{#if canEdit}<MenuButton
+			kebab
+			label={t('fleet.actions_for', { name: r.name || r.id })}
+			bind:open={() => menuFor === r.id, (v) => (menuFor = v ? r.id : menuFor === r.id ? null : menuFor)}
 		>
-	</MenuButton>{/snippet}
+			<MenuItem icon={ICONS.edit} onselect={() => (sheet = { resource: r })}>{t('fleet.edit')}</MenuItem>
+			<MenuDivider />
+			<MenuItem icon={ICONS.delete} danger onselect={() => void remove(r)}
+				>{t('fleet.delete_ellipsis')}</MenuItem
+			>
+		</MenuButton>{/if}{/snippet}
 
 <p class="note">{t('fleet.resources_note')}</p>
 <Toolbar>
 	<Filter label={t('fleet.scope_org')} options={orgOptions} bind:value={org} />
 	<Filter label={t('fleet.col_type')} options={typeOptions} bind:value={type} />
 	{#snippet end()}
-		<Button variant="primary" icon={ICONS.add} onclick={add}>{t('fleet.add_resource')}</Button>
+		{#if canEdit}<Button variant="primary" icon={ICONS.add} onclick={add}>{t('fleet.add_resource')}</Button
+			>{/if}
 	{/snippet}
 </Toolbar>
 <p class="count-line" aria-live="polite">
@@ -216,7 +220,7 @@
 		{columns}
 		key={(r) => r.id}
 		label={t('fleet.tab_resources')}
-		onrowclick={(r) => (sheet = { resource: r })}
+		onrowclick={canEdit ? (r) => (sheet = { resource: r }) : undefined}
 		loading={loading && !tableError}
 		loadingText={t('fleet.loading_resources')}
 		error={tableError}

@@ -25,7 +25,7 @@
 	import { formatNumber, formatPercent } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
-	import { can } from '#lib/state/session.svelte.ts';
+	import { can, canWrite } from '#lib/state/session.svelte.ts';
 	import {
 		availability,
 		capacityTiers,
@@ -62,6 +62,8 @@
 	import RuleSheet from './RuleSheet.svelte';
 
 	const allowed = $derived(can('server.config'));
+	/** Adding, editing and deleting relays and rules need Scaling at write */
+	const canEdit = $derived(canWrite('server.config'));
 
 	/* ── Data ── */
 
@@ -255,19 +257,21 @@
 {/snippet}
 
 {#snippet relayActions(r: Relay)}
-	<Button
-		size="sm"
-		class="relay-edit"
-		aria-label={t('scaling.edit_named', { name: r.name || r.id })}
-		onclick={() => (relaySheet = { relay: r })}>{t('scaling.edit')}</Button
-	>
-	<Button
-		size="sm"
-		variant="danger-quiet"
-		class="relay-delete"
-		aria-label={t('scaling.delete_named', { name: r.name || r.id })}
-		onclick={() => void removeRelay(r)}>{t('scaling.delete')}…</Button
-	>
+	{#if canEdit}
+		<Button
+			size="sm"
+			class="relay-edit"
+			aria-label={t('scaling.edit_named', { name: r.name || r.id })}
+			onclick={() => (relaySheet = { relay: r })}>{t('scaling.edit')}</Button
+		>
+		<Button
+			size="sm"
+			variant="danger-quiet"
+			class="relay-delete"
+			aria-label={t('scaling.delete_named', { name: r.name || r.id })}
+			onclick={() => void removeRelay(r)}>{t('scaling.delete')}…</Button
+		>
+	{/if}
 {/snippet}
 
 {#snippet priorityCell(r: Rule)}{formatNumber(r.priority || 0)}{/snippet}
@@ -295,21 +299,23 @@
 {/snippet}
 
 {#snippet ruleActions(r: Rule)}
-	{#if relays?.length}
+	{#if canEdit}
+		{#if relays?.length}
+			<Button
+				size="sm"
+				class="rule-edit"
+				aria-label={t('scaling.edit_named', { name: r.name || r.id })}
+				onclick={() => (ruleSheet = { rule: r })}>{t('scaling.edit')}</Button
+			>
+		{/if}
 		<Button
 			size="sm"
-			class="rule-edit"
-			aria-label={t('scaling.edit_named', { name: r.name || r.id })}
-			onclick={() => (ruleSheet = { rule: r })}>{t('scaling.edit')}</Button
+			variant="danger-quiet"
+			class="rule-delete"
+			aria-label={t('scaling.delete_named', { name: r.name || r.id })}
+			onclick={() => void removeRule(r)}>{t('scaling.delete')}…</Button
 		>
 	{/if}
-	<Button
-		size="sm"
-		variant="danger-quiet"
-		class="rule-delete"
-		aria-label={t('scaling.delete_named', { name: r.name || r.id })}
-		onclick={() => void removeRule(r)}>{t('scaling.delete')}…</Button
-	>
 {/snippet}
 
 {#snippet sizingName(r: SizingRow)}{t(r.key)}{/snippet}
@@ -329,14 +335,16 @@
 				{description[0]}<a href={link('/settings?tab=general#public-endpoints')}>{endpointsLabel}</a
 				>{description[1]}
 			</p>
-			<div class="page-actions">
-				<Button
-					class="relay-add"
-					variant="primary"
-					icon={ICONS.add}
-					onclick={() => (relaySheet = { relay: null })}>{t('scaling.relay_add')}</Button
-				>
-			</div>
+			{#if canEdit}
+				<div class="page-actions">
+					<Button
+						class="relay-add"
+						variant="primary"
+						icon={ICONS.add}
+						onclick={() => (relaySheet = { relay: null })}>{t('scaling.relay_add')}</Button
+					>
+				</div>
+			{/if}
 		</div>
 
 		{#if !settled}
@@ -365,7 +373,7 @@
 							columns={relayColumns}
 							key={(r) => r.id}
 							label={t('scaling.relays_title')}
-							onrowclick={(r) => (relaySheet = { relay: r })}
+							onrowclick={canEdit ? (r) => (relaySheet = { relay: r }) : undefined}
 							loading={relays === null && !relaysError}
 							loadingText={t('scaling.relays_loading')}
 							error={relaysError}
@@ -377,7 +385,7 @@
 					<section class="section" id="panel-rules" aria-labelledby="rules-title">
 						<div class="section-head">
 							<h2 id="rules-title">{t('scaling.tab_rules')}</h2>
-							{#if shows.addRule && relays !== null}
+							{#if canEdit && shows.addRule && relays !== null}
 								<Button
 									size="sm"
 									class="rule-add"
@@ -395,7 +403,7 @@
 								columns={ruleColumns}
 								key={(r) => r.id}
 								label={t('scaling.tab_rules')}
-								onrowclick={relays?.length ? (r) => (ruleSheet = { rule: r }) : undefined}
+								onrowclick={canEdit && relays?.length ? (r) => (ruleSheet = { rule: r }) : undefined}
 								loading={rules === null && !rulesError}
 								loadingText={t('scaling.rules_loading')}
 								error={rulesError}

@@ -20,13 +20,21 @@
 		file,
 		requested,
 		onclose,
-		onsaved
-	}: { file: FileContent; requested: string; onclose: () => void; onsaved: () => void } = $props();
+		onsaved,
+		canEdit = true
+	}: {
+		file: FileContent;
+		requested: string;
+		onclose: () => void;
+		onsaved: () => void;
+		/** false: the file opens read-only, without Save */
+		canEdit?: boolean;
+	} = $props();
 
 	const uid = $props.id();
 	const path = $derived(file.path || requested);
 	const binary = $derived(file.isBinary || file.binary);
-	const readOnly = $derived(binary || file.truncated);
+	const readOnly = $derived(binary || file.truncated || !canEdit);
 	const meta = $derived(
 		t(binary ? 'server_mgmt.file_meta_binary' : 'server_mgmt.file_meta_text', {
 			size: formatBytes(file.size ?? 0) || '0 B'

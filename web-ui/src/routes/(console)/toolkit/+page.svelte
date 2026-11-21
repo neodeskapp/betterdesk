@@ -14,7 +14,7 @@
 	import * as tk from '#lib/api/toolkit.ts';
 	import { formatBytes, formatDate, formatNumber } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { can } from '#lib/state/session.svelte.ts';
+	import { can, sectionWritable } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import CodeBlock from '#lib/ui/CodeBlock.svelte';
@@ -52,7 +52,8 @@
 	} from '#lib/support/toolkit.ts';
 	import Tool from './Tool.svelte';
 
-	const tools = $derived(visibleTools(can));
+	// Every tool that posts is a write: with Toolkit at read only the reading ones stay
+	const tools = $derived(visibleTools(can, sectionWritable()));
 	const groups = $derived(visibleGroups(tools));
 	const shown = (id: ToolId) => tools.some((x) => x.id === id);
 

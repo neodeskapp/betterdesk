@@ -18,6 +18,7 @@
 	import { filterTasks, taskSchedule, taskTargets, taskType } from '#lib/canvas/fleet.ts';
 	import { formatDate } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { canWrite } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
@@ -46,6 +47,8 @@
 	}
 
 	let { ready, unavailable = $bindable(), query = $bindable(), status = $bindable() }: Props = $props();
+	/** Adding, editing, running and deleting need Fleet at write */
+	const canEdit = $derived(canWrite('org.manage_devices'));
 
 	const message = (err: unknown) => (err instanceof Error ? err.message : '');
 
@@ -181,7 +184,7 @@
 
 {#snippet lastRunCell(x: Task)}<Time value={x.last_run} />{/snippet}
 
-{#snippet actionsCell(x: Task)}{#if x.status === 'failed'}<Button
+{#snippet actionsCell(x: Task)}{#if canEdit && x.status === 'failed'}<Button
 			size="sm"
 			icon={ICONS.retry}
 			onclick={() => void retry(x)}>{t('fleet.task_retry')}</Button
@@ -193,13 +196,15 @@
 		<MenuItem icon={ICONS.view} onselect={() => (sheet = { kind: 'output', task: x })}
 			>{t('fleet.show_output')}</MenuItem
 		>
-		<MenuItem icon={ICONS.edit} onselect={() => (sheet = { kind: 'form', task: x })}
-			>{t('fleet.edit')}</MenuItem
-		>
-		<MenuDivider />
-		<MenuItem icon={ICONS.delete} danger onselect={() => void remove(x)}
-			>{t('fleet.delete_ellipsis')}</MenuItem
-		>
+		{#if canEdit}
+			<MenuItem icon={ICONS.edit} onselect={() => (sheet = { kind: 'form', task: x })}
+				>{t('fleet.edit')}</MenuItem
+			>
+			<MenuDivider />
+			<MenuItem icon={ICONS.delete} danger onselect={() => void remove(x)}
+				>{t('fleet.delete_ellipsis')}</MenuItem
+			>
+		{/if}
 	</MenuButton>{/snippet}
 
 <p class="note">{t('fleet.tasks_note')}</p>
@@ -207,9 +212,11 @@
 	{#snippet search()}<SearchField label={t('fleet.search_tasks')} bind:value={query} />{/snippet}
 	<Filter label={t('fleet.col_status')} options={statusOptions} bind:value={status} />
 	{#snippet end()}
-		<Button variant="primary" icon={ICONS.add} onclick={() => (sheet = { kind: 'form', task: null })}
-			>{t('fleet.create_task')}</Button
-		>
+		{#if canEdit}
+			<Button variant="primary" icon={ICONS.add} onclick={() => (sheet = { kind: 'form', task: null })}
+				>{t('fleet.create_task')}</Button
+			>
+		{/if}
 	{/snippet}
 </Toolbar>
 <p class="count-line" aria-live="polite">
@@ -254,7 +261,7 @@
 		onclose={() => (sheet = null)}
 	>
 		{#snippet actions()}
-			{#if task.status === 'failed'}
+			{#if canEdit && task.status === 'failed'}
 				<Button icon={ICONS.retry} onclick={() => void retry(task)}>{t('fleet.task_retry')}</Button>
 			{/if}
 		{/snippet}

@@ -31,7 +31,7 @@
 		typeLabel
 	} from '#lib/people/reports.ts';
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
-	import { can, session } from '#lib/state/session.svelte.ts';
+	import { can, canWrite, session } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CodeBlock from '#lib/ui/CodeBlock.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
@@ -51,7 +51,9 @@
 	import Trends from '#lib/people/Trends.svelte';
 
 	const allowed = can('audit.view');
-	const canManage = canManageReports(session.user?.role);
+	/** Generating, the CSV download, saving and deleting are writes: they need Reports at write */
+	const canEdit = $derived(canWrite('audit.view'));
+	const canManage = $derived(canEdit && canManageReports(session.user?.role));
 	const uid = $props.id();
 
 	let from = $state('');
@@ -256,7 +258,7 @@
 								{#snippet gen()}<Button
 										size="sm"
 										busy={generating === type}
-										disabled={!!generating && generating !== type}
+										disabled={!canEdit || (!!generating && generating !== type)}
 										aria-describedby="{uid}-type-{type}"
 										onclick={() => void generate(type)}
 										>{generating === type ? t('reports.generating') : t('reports.generate')}</Button
@@ -280,7 +282,7 @@
 								<MenuItem icon={ICONS.download} onselect={() => void downloadAs('json')}
 									>{t('reports.download_json')}</MenuItem
 								>
-								{#if !current.savedId}
+								{#if !current.savedId && canEdit}
 									<MenuItem icon={ICONS.download} onselect={() => void downloadAs('csv')}
 										>{t('reports.download_csv')}</MenuItem
 									>

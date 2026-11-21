@@ -20,7 +20,7 @@
 	import { openDevice } from '#lib/state/devicePanel.svelte.ts';
 	import { socket, type LiveSocket } from '#lib/state/live.ts';
 	import { myPresence, setPresence } from '#lib/state/presence.svelte.ts';
-	import { can, session } from '#lib/state/session.svelte.ts';
+	import { can, canWrite, session } from '#lib/state/session.svelte.ts';
 	import Avatar from '#lib/ui/Avatar.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
@@ -58,6 +58,8 @@
 	import MessageItem from './MessageItem.svelte';
 
 	const allowed = $derived(can('chat.access'));
+	/** Sending, reacting and new groups need Chat at write; at read the conversations can be read */
+	const canEdit = $derived(canWrite('chat.access'));
 	const me = $derived(session.user?.username ?? '');
 	const chat = new ChatState();
 
@@ -420,7 +422,7 @@
 	/* ── Reactions and emoji ── */
 
 	function react(msg: ChatMessage, emoji: string) {
-		if (!chat.active) return;
+		if (!chat.active || !canEdit) return;
 		send({ type: 'reaction', conversation_id: chat.active, message_id: msg.id, emoji });
 	}
 
@@ -507,7 +509,7 @@
 	<div class="page-head">
 		<h1>{t('nav.chat')}</h1>
 		<p class="page-description">{t('chat.page_description')}</p>
-		{#if allowed}
+		{#if allowed && canEdit}
 			<div class="page-actions">
 				<Button icon={ICONS.add} onclick={() => (groupDialog = true)}>{t('chat.new_group')}</Button>
 			</div>
@@ -703,62 +705,68 @@
 								</p>
 							{/if}
 
-							<form
-								class="chat-input-area"
-								onsubmit={(e) => {
-									e.preventDefault();
-									void sendMessage();
-								}}
-							>
-								{#if pendingFile}
-									<div class="chat-file-preview">
-										<span class="chat-file-name">{pendingFile.name}</span>
-										<span class="chat-file-size">{formatBytes(pendingFile.size)}</span>
-										<IconButton
-											icon="close"
-											label={t('chat.remove_file')}
-											onclick={() => (pendingFile = null)}
-										/>
+							{#if canEdit}
+								<form
+									class="chat-input-area"
+									onsubmit={(e) => {
+										e.preventDefault();
+										void sendMessage();
+									}}
+								>
+									{#if pendingFile}
+										<div class="chat-file-preview">
+											<span class="chat-file-name">{pendingFile.name}</span>
+											<span class="chat-file-size">{formatBytes(pendingFile.size)}</span>
+											<IconButton
+												icon="close"
+												label={t('chat.remove_file')}
+												onclick={() => (pendingFile = null)}
+											/>
+										</div>
+									{/if}
+									<label class="sr-only" for="chat-input">{t('chat.message_label')}</label>
+									<Textarea
+										id="chat-input"
+										class="chat-input"
+										rows={2}
+										maxlength={4096}
+										placeholder={t('chat.message_placeholder')}
+										bind:element={inputEl}
+										bind:value={draft}
+										onkeydown={onKeydown}
+									/>
+									<div class="chat-input-row">
+										<Button icon={ICONS.upload} onclick={() => fileInput?.click()}
+											>{t('chat.attach_file')}</Button
+										>
+										<Button
+											bind:element={emojiBtn}
+											class="chat-emoji-btn"
+											aria-haspopup="menu"
+											aria-expanded={picker?.anchor === emojiBtn && !!emojiBtn}
+											onclick={emojiForInput}>{t('chat.emoji')}</Button
+										>
+										<span class={['chat-send-status', sendStatus && 'is-error']} aria-live="polite"
+											>{sendStatus}</span
+										>
+										<Button
+											variant="primary"
+											type="submit"
+											icon={ICONS.send}
+											busy={uploading}
+											class="chat-send">{t('chat.send')}</Button
+										>
 									</div>
-								{/if}
-								<label class="sr-only" for="chat-input">{t('chat.message_label')}</label>
-								<Textarea
-									id="chat-input"
-									class="chat-input"
-									rows={2}
-									maxlength={4096}
-									placeholder={t('chat.message_placeholder')}
-									bind:element={inputEl}
-									bind:value={draft}
-									onkeydown={onKeydown}
-								/>
-								<div class="chat-input-row">
-									<Button icon={ICONS.upload} onclick={() => fileInput?.click()}
-										>{t('chat.attach_file')}</Button
-									>
-									<Button
-										bind:element={emojiBtn}
-										class="chat-emoji-btn"
-										aria-haspopup="menu"
-										aria-expanded={picker?.anchor === emojiBtn && !!emojiBtn}
-										onclick={emojiForInput}>{t('chat.emoji')}</Button
-									>
-									<span class={['chat-send-status', sendStatus && 'is-error']} aria-live="polite"
-										>{sendStatus}</span
-									>
-									<Button variant="primary" type="submit" icon={ICONS.send} busy={uploading} class="chat-send"
-										>{t('chat.send')}</Button
-									>
-								</div>
-								<input
-									bind:this={fileInput}
-									type="file"
-									class="sr-only"
-									tabindex="-1"
-									aria-hidden="true"
-									onchange={pickFile}
-								/>
-							</form>
+									<input
+										bind:this={fileInput}
+										type="file"
+										class="sr-only"
+										tabindex="-1"
+										aria-hidden="true"
+										onchange={pickFile}
+									/>
+								</form>
+							{/if}
 						{/if}
 					</section>
 				{/snippet}

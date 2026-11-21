@@ -9,7 +9,7 @@
 	import { page } from '$app/state';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { setPageTitle } from '#lib/shell/page.svelte.ts';
-	import { can } from '#lib/state/session.svelte.ts';
+	import { can, canWrite } from '#lib/state/session.svelte.ts';
 	import { TAB_TITLE, tabFrom } from '#lib/serverarea/management.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -22,6 +22,8 @@
 	const tab = $derived(tabFrom(page.url.searchParams.get('tab')));
 	const title = $derived(t(TAB_TITLE[tab]));
 	const allowed = $derived(can('server.config'));
+	/** The terminal runs commands: with Server management at read it stays closed */
+	const canEdit = $derived(canWrite('server.config'));
 
 	$effect(() => setPageTitle(title));
 
@@ -58,7 +60,7 @@
 			{#if tab === 'overview'}
 				<Overview />
 			{:else if tab === 'terminal'}
-				<TerminalPanel />
+				{#if canEdit}<TerminalPanel />{:else}<NoAccess />{/if}
 			{:else if tab === 'files'}
 				<FilesPanel />
 			{:else}

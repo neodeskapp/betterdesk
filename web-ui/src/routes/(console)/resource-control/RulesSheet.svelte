@@ -14,6 +14,7 @@
 	import { ApiError } from '#lib/api/client.ts';
 	import { getDeviceRules, saveDeviceRules, type RcDevice } from '#lib/api/resourceControl.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { canWrite } from '#lib/state/session.svelte.ts';
 	import {
 		changedCategories,
 		isOnline,
@@ -43,6 +44,8 @@
 
 	const uid = $props.id();
 	const name = $derived(device.hostname || device.id);
+	/** Saving rules needs Resource control at write; at read the sheet only shows them */
+	const canEdit = $derived(canWrite('server.config'));
 
 	let values = $state<RcValues>(rcValuesFrom(null));
 	let loaded = $state.raw<RcValues>(rcValuesFrom(null));
@@ -78,7 +81,7 @@
 
 	async function save(e?: SubmitEvent) {
 		e?.preventDefault();
-		if (saving) return;
+		if (saving || !canEdit) return;
 		const cats = changed;
 		if (!cats.length) {
 			status = t('policies.no_changes');
@@ -384,14 +387,16 @@
 	</div>
 	{#snippet footer()}
 		<Button class="sheet-footer-start" onclick={onclose}>{t('actions.cancel')}</Button>
-		<Button
-			variant="primary"
-			type="submit"
-			form="{uid}-form"
-			busy={saving}
-			disabled={phase === 'loading' || phase === 'error'}
-			>{tf('resource_control.save_rules', 'Save rules')}</Button
-		>
+		{#if canEdit}
+			<Button
+				variant="primary"
+				type="submit"
+				form="{uid}-form"
+				busy={saving}
+				disabled={phase === 'loading' || phase === 'error'}
+				>{tf('resource_control.save_rules', 'Save rules')}</Button
+			>
+		{/if}
 	{/snippet}
 </Sheet>
 

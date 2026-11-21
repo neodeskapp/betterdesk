@@ -47,22 +47,51 @@ function sectionAt(path: string): string | null {
 	return best?.section ?? null;
 }
 
+/** The panel access section of the page shown and the account's level there, when the policy has one */
+function sectionHere() {
+	const access = session.access;
+	const section = access ? sectionAt(session.path) : null;
+	if (!access || !section) return null;
+	const level = access.sections[section];
+	if (!level) return null;
+	return { level, entry: access.catalog.find((e) => e.key === section) };
+}
+
 /**
- * Whether the signed-in person may do something here. On a page of a panel
- * access section, the section's level decides the permission it stands for
- * (read or write), as requestHasPermission does on the server.
+ * Whether the signed-in person may do something here, as HasPermission on
+ * the server decides it: the role must hold the permission, and on a page
+ * of a panel access section the section's level can take it away. The
+ * section's read permission needs read and its write permission write;
+ * the read permission is looked at first, so where both are the same one
+ * it needs read. Controls that write ask canWrite.
  */
 export function can(permission: string): boolean {
 	if (session.isSuperAdmin) return true;
-	const access = session.access;
-	const section = access ? sectionAt(session.path) : null;
-	if (access && section) {
-		const entry = access.catalog.find((e) => e.key === section);
-		const level = access.sections[section];
-		const needed = entry?.write === permission ? 'write' : entry?.read === permission ? 'read' : null;
-		if (level && needed) return RANK[level] >= RANK[needed];
-	}
-	return session.permissions.includes(permission);
+	if (!session.permissions.includes(permission)) return false;
+	const here = sectionHere();
+	if (here?.entry?.read === permission) return RANK[here.level] >= RANK.read;
+	if (here?.entry?.write === permission) return RANK[here.level] >= RANK.write;
+	return true;
+}
+
+/**
+ * Whether the person may write with this permission here: can(), and on a
+ * page of a panel access section whose read or write permission it is,
+ * the level write there, as the server's guard asks for every write.
+ */
+export function canWrite(permission: string): boolean {
+	if (!can(permission)) return false;
+	if (session.isSuperAdmin) return true;
+	const here = sectionHere();
+	if (here?.entry?.read === permission || here?.entry?.write === permission) return here.level === 'write';
+	return true;
+}
+
+/** The page's panel access section, when it has one, is at write: the guard lets its writes through */
+export function sectionWritable(): boolean {
+	if (session.isSuperAdmin) return true;
+	const here = sectionHere();
+	return !here || here.level === 'write';
 }
 
 /** The server's panel access guard refuses this page (its section is not readable) */

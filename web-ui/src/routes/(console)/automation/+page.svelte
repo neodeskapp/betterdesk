@@ -37,7 +37,7 @@
 	} from '#lib/rules/automation.ts';
 	import { onRefresh, setPageTitle } from '#lib/shell/page.svelte.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
-	import { can } from '#lib/state/session.svelte.ts';
+	import { can, canWrite } from '#lib/state/session.svelte.ts';
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
@@ -64,6 +64,8 @@
 	$effect(() => setPageTitle(t('nav.automation')));
 
 	const allowed = $derived(can('server.config'));
+	/** Rules, acknowledging alerts and sending commands need Automation at write */
+	const canEdit = $derived(canWrite('server.config'));
 	const message = (err: unknown) => (err instanceof Error ? err.message : '');
 
 	/* ── Tabs, kept in ?tab= ── */
@@ -365,23 +367,25 @@
 		on={t('automation.enabled')}
 		off={t('automation.disabled')}
 	/>{/snippet}
-{#snippet ruleActionsCell(r: AlertRule)}<Button size="sm" onclick={() => (ruleSheet = { rule: r })}
-		>{t('actions.edit')}</Button
-	><MenuButton
-		kebab
-		label={t('automation.rule_actions', { name: r.name })}
-		bind:open={
-			() => ruleMenuFor === r.id, (v) => (ruleMenuFor = v ? r.id : ruleMenuFor === r.id ? null : ruleMenuFor)
-		}
-	>
-		<MenuItem icon={r.enabled ? ICONS.disable : ICONS.enable} onselect={() => void toggleRule(r)}
-			>{r.enabled ? t('automation.disable_rule') : t('automation.enable_rule')}</MenuItem
+{#snippet ruleActionsCell(r: AlertRule)}{#if canEdit}<Button
+			size="sm"
+			onclick={() => (ruleSheet = { rule: r })}>{t('actions.edit')}</Button
+		><MenuButton
+			kebab
+			label={t('automation.rule_actions', { name: r.name })}
+			bind:open={
+				() => ruleMenuFor === r.id,
+				(v) => (ruleMenuFor = v ? r.id : ruleMenuFor === r.id ? null : ruleMenuFor)
+			}
 		>
-		<MenuDivider />
-		<MenuItem icon={ICONS.delete} danger onselect={() => void removeRule(r)}
-			>{t('automation.delete_rule_menu')}…</MenuItem
-		>
-	</MenuButton>{/snippet}
+			<MenuItem icon={r.enabled ? ICONS.disable : ICONS.enable} onselect={() => void toggleRule(r)}
+				>{r.enabled ? t('automation.disable_rule') : t('automation.enable_rule')}</MenuItem
+			>
+			<MenuDivider />
+			<MenuItem icon={ICONS.delete} danger onselect={() => void removeRule(r)}
+				>{t('automation.delete_rule_menu')}…</MenuItem
+			>
+		</MenuButton>{/if}{/snippet}
 
 <!-- Alerts -->
 {#snippet alertTimeCell(a: Alert)}<Time value={a.triggered_at} />{/snippet}
@@ -402,7 +406,7 @@
 				? t('automation.acknowledged_by', { name: a.acknowledged_by })
 				: t('automation.acknowledged')}
 		/>{:else}<Status tone="waiting" label={t('automation.unacknowledged')} />{/if}{/snippet}
-{#snippet alertActionsCell(a: Alert)}{#if !isAcknowledged(a)}<Button
+{#snippet alertActionsCell(a: Alert)}{#if canEdit && !isAcknowledged(a)}<Button
 			size="sm"
 			icon={ICONS.accept}
 			busy={acking === a.id}
@@ -447,9 +451,11 @@
 									)}
 								</p>
 							</div>
-							<Button variant="primary" icon={ICONS.add} onclick={() => (ruleSheet = { rule: null })}
-								>{t('automation.create_rule')}</Button
-							>
+							{#if canEdit}
+								<Button variant="primary" icon={ICONS.add} onclick={() => (ruleSheet = { rule: null })}
+									>{t('automation.create_rule')}</Button
+								>
+							{/if}
 						</div>
 						{#if rulesLoaded && !rulesError && rules.length}
 							<CountLine text={rulesCountText} values={{ count: rules.length, enabled: enabledRules }} />
@@ -459,7 +465,7 @@
 							columns={ruleColumns}
 							key={(r) => r.id}
 							label={t('automation.rules')}
-							onrowclick={(r) => (ruleSheet = { rule: r })}
+							onrowclick={canEdit ? (r) => (ruleSheet = { rule: r }) : undefined}
 							loading={!rulesLoaded}
 							loadingText={t('automation.loading_rules')}
 							error={rulesError}
@@ -499,9 +505,11 @@
 					<div class="panel">
 						<div class="panel-head">
 							<p class="note">{t('automation.commands_note')}</p>
-							<Button variant="primary" icon={ICONS.send} onclick={() => (sendOpen = true)}
-								>{t('automation.send_command')}</Button
-							>
+							{#if canEdit}
+								<Button variant="primary" icon={ICONS.send} onclick={() => (sendOpen = true)}
+									>{t('automation.send_command')}</Button
+								>
+							{/if}
 						</div>
 						{#if commandsLoaded && !commandsError && commands.length}
 							<CountLine text={commandsCountText} values={{ count: commands.length, waiting }} />

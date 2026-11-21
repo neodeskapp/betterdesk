@@ -15,6 +15,7 @@
 		type ServiceAction
 	} from '#lib/api/serverManagement.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { canWrite } from '#lib/state/session.svelte.ts';
 	import {
 		confirmFor,
 		filterServices,
@@ -99,10 +100,22 @@
 		disable: ICONS.disable
 	};
 
+	/** Starting, stopping and restarting services need Server management at write */
+	const canEdit = $derived(canWrite('server.config'));
 	const columns = $derived<Column<Service>[]>([
 		{ id: 'name', label: t('server_mgmt.svc_name'), cell: nameCell, primary: true },
 		{ id: 'state', label: t('server_mgmt.svc_state'), cell: stateCell },
-		{ id: 'actions', label: t('common.actions'), labelHidden: true, cell: actionsCell, align: 'actions' }
+		...(canEdit
+			? [
+					{
+						id: 'actions',
+						label: t('common.actions'),
+						labelHidden: true,
+						cell: actionsCell,
+						align: 'actions' as const
+					}
+				]
+			: [])
 	]);
 </script>
 

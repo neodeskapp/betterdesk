@@ -41,6 +41,7 @@
 	} from '#lib/canvas/workflow.ts';
 	import { formatPercent } from '#lib/i18n/format.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { canWrite } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
@@ -72,6 +73,8 @@
 	};
 	const untitled = () => t('fleet.untitled');
 	const describedby = $derived(unavailable ? noticeId : undefined);
+	/** Running and saving workflows need Fleet at write */
+	const canEdit = $derived(canWrite('org.manage_devices'));
 
 	/* ── Saved workflows ── */
 
@@ -288,19 +291,19 @@
 		<Button icon={ICONS.download} onclick={exportFile}>{t('fleet.export')}</Button>
 		<Button
 			icon={ICONS.run}
-			disabled={unavailable}
+			disabled={unavailable || !canEdit}
 			aria-describedby={describedby}
 			onclick={() => void run(true)}>{t('fleet.dry_run')}</Button
 		>
 		<Button
 			icon={ICONS.run}
-			disabled={unavailable}
+			disabled={unavailable || !canEdit}
 			aria-describedby={describedby}
 			onclick={() => void run(false)}>{t('fleet.execute')}</Button
 		>
 		<Button
 			variant="primary"
-			disabled={unavailable}
+			disabled={unavailable || !canEdit}
 			aria-describedby={describedby}
 			onclick={() => void save()}>{t('fleet.save')}</Button
 		>

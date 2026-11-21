@@ -34,23 +34,25 @@ export interface ToolDef {
 	group: GroupId;
 	/** Permission the server checks for it; none: any signed-in user */
 	requires?: string;
+	/** It asks with POST, which the panel access guard counts as a write */
+	posts?: true;
 }
 
 /** Every tool in the old order, with the permission its API needs */
 export const TOOLS: readonly ToolDef[] = [
-	{ id: 'ping', group: 'network', requires: 'device.connect' },
-	{ id: 'tcp', group: 'network', requires: 'device.connect' },
-	{ id: 'ssl', group: 'network' },
-	{ id: 'http', group: 'network', requires: 'device.connect' },
-	{ id: 'dns', group: 'network', requires: 'device.connect' },
-	{ id: 'whois', group: 'network' },
+	{ id: 'ping', group: 'network', requires: 'device.connect', posts: true },
+	{ id: 'tcp', group: 'network', requires: 'device.connect', posts: true },
+	{ id: 'ssl', group: 'network', posts: true },
+	{ id: 'http', group: 'network', requires: 'device.connect', posts: true },
+	{ id: 'dns', group: 'network', requires: 'device.connect', posts: true },
+	{ id: 'whois', group: 'network', posts: true },
 	{ id: 'speed', group: 'network', requires: 'metrics.view' },
-	{ id: 'wol', group: 'network', requires: 'device.connect' },
-	{ id: 'hash', group: 'crypto' },
-	{ id: 'password', group: 'crypto' },
-	{ id: 'jwt', group: 'crypto' },
-	{ id: 'base64', group: 'encoding' },
-	{ id: 'urlencode', group: 'encoding' },
+	{ id: 'wol', group: 'network', requires: 'device.connect', posts: true },
+	{ id: 'hash', group: 'crypto', posts: true },
+	{ id: 'password', group: 'crypto', posts: true },
+	{ id: 'jwt', group: 'crypto', posts: true },
+	{ id: 'base64', group: 'encoding', posts: true },
+	{ id: 'urlencode', group: 'encoding', posts: true },
 	{ id: 'processes', group: 'system', requires: 'metrics.view' },
 	{ id: 'disk', group: 'system', requires: 'metrics.view' },
 	{ id: 'db', group: 'system', requires: 'metrics.view' },
@@ -58,8 +60,9 @@ export const TOOLS: readonly ToolDef[] = [
 	{ id: 'logs', group: 'system', requires: 'metrics.view' }
 ];
 
-export function visibleTools(can: (permission: string) => boolean): ToolDef[] {
-	return TOOLS.filter((t) => !t.requires || can(t.requires));
+/** The tools the account may use; with writes refused (its section at read) none that post */
+export function visibleTools(can: (permission: string) => boolean, writes = true): ToolDef[] {
+	return TOOLS.filter((t) => (!t.requires || can(t.requires)) && (writes || !t.posts));
 }
 
 /** Groups that still have a tool, in order */

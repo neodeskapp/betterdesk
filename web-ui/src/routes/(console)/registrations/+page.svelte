@@ -56,7 +56,7 @@
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import { openDevice } from '#lib/state/devicePanel.svelte.ts';
-	import { can, session } from '#lib/state/session.svelte.ts';
+	import { can, canWrite, session } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Facts from '#lib/ui/Facts.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
@@ -344,7 +344,9 @@
 	/* ── Table ── */
 
 	let menuFor = $state<string | null>(null);
-	const canManage = $derived(can('enrollment.manage'));
+	/** Approving, rejecting, allowing again and deleting need Registrations at write */
+	const canEdit = $derived(canWrite('enrollment.approve'));
+	const canManage = $derived(canEdit && can('enrollment.manage'));
 
 	const columns = $derived<Column<RequestRow>[]>([
 		{
@@ -409,7 +411,7 @@
 {#snippet actionsCell(r: RequestRow)}
 	{@const acts = rowActions(r, decided.has(r.key))}
 	{@const name = r.hostname || r.device_id}
-	{#if acts.includes('approve')}
+	{#if acts.includes('approve') && canEdit}
 		<Button
 			size="sm"
 			class="act-approve"
@@ -433,7 +435,7 @@
 			aria-label="{t('registrations.open_device')}: {name}"
 			onclick={() => openRowDevice(r)}>{t('registrations.open_device')}</Button
 		>
-	{:else if acts.includes('allow-again')}
+	{:else if acts.includes('allow-again') && canEdit}
 		<Button
 			size="sm"
 			class="act-allow"
@@ -446,7 +448,7 @@
 		label="{t('common.actions')}: {name}"
 		bind:open={() => menuFor === r.key, (v) => (menuFor = v ? r.key : menuFor === r.key ? null : menuFor)}
 	>
-		{#if acts.includes('approve') && narrow}
+		{#if acts.includes('approve') && narrow && canEdit}
 			<MenuItem class="act-reject-menu" icon={ICONS.reject} danger onselect={() => (rejectFor = r)}
 				>{t('registrations.reject_btn')}…</MenuItem
 			>

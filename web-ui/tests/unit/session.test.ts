@@ -1,4 +1,11 @@
-import { can, clearSession, sectionDenied, session, startSession } from '#lib/state/session.svelte.ts';
+import {
+	can,
+	canWrite,
+	clearSession,
+	sectionDenied,
+	session,
+	startSession
+} from '#lib/state/session.svelte.ts';
 
 const boot = {
 	success: true,
@@ -160,6 +167,34 @@ describe('panel access policies (as the server applies them)', () => {
 		// A page outside any section: the role decides
 		session.path = '/pairing';
 		expect(can('device.edit')).toBe(true);
+	});
+
+	test('a section with one permission for read and write: read opens the page, write is asked by canWrite', () => {
+		session.access = {
+			...access,
+			sections: { ...access.sections, reports: 'read' },
+			pages: [...access.pages, { prefix: '/reports', section: 'reports' }],
+			catalog: [...access.catalog, { key: 'reports', read: 'audit.view', write: 'audit.view' }]
+		};
+		session.permissions = ['audit.view', 'device.view', 'device.edit'];
+		session.path = '/reports';
+		expect(can('audit.view')).toBe(true);
+		expect(canWrite('audit.view')).toBe(false);
+		session.access = { ...session.access, sections: { ...session.access.sections, reports: 'write' } };
+		expect(canWrite('audit.view')).toBe(true);
+		// The section only takes away: without the permission in the role, write is no help
+		session.permissions = ['device.view'];
+		expect(can('audit.view')).toBe(false);
+		expect(canWrite('audit.view')).toBe(false);
+	});
+
+	test('canWrite in a section with two permissions, and outside any section', () => {
+		session.path = '/devices';
+		expect(canWrite('device.view')).toBe(false);
+		expect(canWrite('device.edit')).toBe(false);
+		session.path = '/pairing';
+		expect(canWrite('device.edit')).toBe(true);
+		expect(canWrite('user.edit')).toBe(false);
 	});
 
 	test('super admins keep every permission, as requestHasPermission does', () => {

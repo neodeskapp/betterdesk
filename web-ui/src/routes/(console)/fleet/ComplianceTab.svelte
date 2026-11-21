@@ -18,7 +18,7 @@
 	import { formatNumber, formatPercent } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { openDevice } from '#lib/state/devicePanel.svelte.ts';
-	import { can } from '#lib/state/session.svelte.ts';
+	import { can, canWrite } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
@@ -44,6 +44,8 @@
 	}
 
 	let { ready, unavailable = $bindable(), noticeId, orgs, org = $bindable() }: Props = $props();
+	/** Scans and remediation need Fleet at write */
+	const canEdit = $derived(canWrite('org.manage_devices'));
 
 	const message = (err: unknown) => (err instanceof Error ? err.message : '');
 	const canOpen = $derived(can('device.view'));
@@ -193,22 +195,22 @@
 
 {#snippet lastScanCell(d: ComplianceRow)}<Time value={d.last_scan} />{/snippet}
 
-{#snippet actionsCell(d: ComplianceRow)}<Button
-		size="sm"
-		icon={ICONS.compliance_scan}
-		onclick={() => void scan(deviceOf(d))}>{t('fleet.comp_scan')}</Button
-	><MenuButton
-		kebab
-		label={t('fleet.actions_for', { name: d.hostname || deviceOf(d) })}
-		bind:open={
-			() => menuFor === deviceOf(d),
-			(v) => (menuFor = v ? deviceOf(d) : menuFor === deviceOf(d) ? null : menuFor)
-		}
-	>
-		<MenuItem icon={ICONS.remediate} onselect={() => void remediate(deviceOf(d))}
-			>{t('fleet.remediate_ellipsis')}</MenuItem
+{#snippet actionsCell(d: ComplianceRow)}{#if canEdit}<Button
+			size="sm"
+			icon={ICONS.compliance_scan}
+			onclick={() => void scan(deviceOf(d))}>{t('fleet.comp_scan')}</Button
+		><MenuButton
+			kebab
+			label={t('fleet.actions_for', { name: d.hostname || deviceOf(d) })}
+			bind:open={
+				() => menuFor === deviceOf(d),
+				(v) => (menuFor = v ? deviceOf(d) : menuFor === deviceOf(d) ? null : menuFor)
+			}
 		>
-	</MenuButton>{/snippet}
+			<MenuItem icon={ICONS.remediate} onselect={() => void remediate(deviceOf(d))}
+				>{t('fleet.remediate_ellipsis')}</MenuItem
+			>
+		</MenuButton>{/if}{/snippet}
 
 <p class="note">{t('fleet.compliance_note')}</p>
 <Toolbar>
@@ -219,7 +221,7 @@
 			variant="primary"
 			icon={ICONS.compliance_scan}
 			busy={scanning}
-			disabled={unavailable}
+			disabled={unavailable || !canEdit}
 			aria-describedby={unavailable ? noticeId : undefined}
 			onclick={() => void scanAll()}>{t('fleet.scan_all')}</Button
 		>

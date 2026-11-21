@@ -20,6 +20,7 @@
 	} from '#lib/api/serverManagement.ts';
 	import { formatBytes } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { canWrite } from '#lib/state/session.svelte.ts';
 	import {
 		countEntries,
 		entryType,
@@ -50,6 +51,8 @@
 	import FileEditor from './FileEditor.svelte';
 
 	const uid = $props.id();
+	/** Creating, renaming, deleting and saving files need Server management at write */
+	const canEdit = $derived(canWrite('server.config'));
 
 	let cwd = $state('');
 	let pathInput = $state('');
@@ -253,13 +256,15 @@
 				>{t('server_mgmt.files_open')}</MenuItem
 			>
 		{/if}
-		<MenuItem class="act-rename" icon={ICONS.rename} onselect={() => void rename(e)}
-			>{t('server_mgmt.files_rename')}…</MenuItem
-		>
-		<MenuDivider />
-		<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void remove(e)}
-			>{t('actions.delete')}…</MenuItem
-		>
+		{#if canEdit}
+			<MenuItem class="act-rename" icon={ICONS.rename} onselect={() => void rename(e)}
+				>{t('server_mgmt.files_rename')}…</MenuItem
+			>
+			<MenuDivider />
+			<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void remove(e)}
+				>{t('actions.delete')}…</MenuItem
+			>
+		{/if}
 	</MenuButton>
 {/snippet}
 
@@ -295,7 +300,7 @@
 				>{t('actions.refresh')}</Button
 			>
 			<span class="toolbar-end">
-				<Button class="files-mkdir" icon={ICONS.add} disabled={!cwd} onclick={() => void mkdir()}
+				<Button class="files-mkdir" icon={ICONS.add} disabled={!cwd || !canEdit} onclick={() => void mkdir()}
 					>{t('server_mgmt.files_mkdir')}</Button
 				>
 			</span>
@@ -358,6 +363,7 @@
 		requested={editing.requested}
 		onclose={() => (editing = null)}
 		onsaved={() => void refresh(cwd)}
+		{canEdit}
 	/>
 {/if}
 

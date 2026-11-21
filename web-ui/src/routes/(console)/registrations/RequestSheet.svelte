@@ -21,7 +21,7 @@
 		type RequestRow
 	} from '#lib/clients/registrations.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
-	import { can } from '#lib/state/session.svelte.ts';
+	import { can, canWrite } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Facts, { type Fact } from '#lib/ui/Facts.svelte';
@@ -80,7 +80,8 @@
 	const pending = $derived(row.status === 'pending' && !decidedHere);
 	const actions = $derived(rowActions(row, decidedHere));
 	const name = $derived(row.hostname || row.device_id);
-	const canApprove = $derived(can('enrollment.approve'));
+	/** Approving, rejecting and deleting need Registrations at write */
+	const canApprove = $derived(canWrite('enrollment.approve'));
 
 	const SYNC: SyncMode[] = ['standard', 'silent', 'turbo'];
 
@@ -333,10 +334,10 @@
 				<Button class="sheet-open" icon={ICONS.open} onclick={onopen}>{t('registrations.open_device')}</Button
 				>
 			{/if}
-			{#if actions.includes('allow-again')}
+			{#if actions.includes('allow-again') && canApprove}
 				<Button class="sheet-allow" onclick={onallow}>{t('registrations.allow_again')}</Button>
 			{/if}
-			{#if canDeleteRecord(row, can('enrollment.manage'))}
+			{#if canDeleteRecord(row, canApprove && can('enrollment.manage'))}
 				<Button class="sheet-delete" variant="danger-quiet" icon={ICONS.delete} onclick={ondelete}
 					>{t('registrations.delete_record')}</Button
 				>

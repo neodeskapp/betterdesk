@@ -22,7 +22,7 @@
 	import { formatNumber, formatPercent } from '#lib/i18n/format.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { poll } from '#lib/state/live.ts';
-	import { can, session } from '#lib/state/session.svelte.ts';
+	import { can, canWrite, session } from '#lib/state/session.svelte.ts';
 	import {
 		outcome,
 		phaseText,
@@ -47,6 +47,8 @@
 	import { ICONS } from '#lib/util/display.ts';
 
 	const allowed = $derived(can('server.attestation'));
+	/** Running and stopping the test and the badge settings need Server attestation at write */
+	const canEdit = $derived(canWrite('server.attestation'));
 	const uid = $props.id();
 
 	let result = $state.raw<Result | null>(null);
@@ -296,11 +298,11 @@
 							class="sa-run"
 							variant="primary"
 							icon={ICONS.run}
-							disabled={running}
+							disabled={running || !canEdit}
 							busy={starting}
 							onclick={run}>{t('server_attestation.run_benchmark')}</Button
 						>
-						{#if running && !starting}
+						{#if running && !starting && canEdit}
 							<Button class="sa-stop" disabled={stopping} onclick={stop}
 								>{t('server_attestation.abort')}</Button
 							>
@@ -333,49 +335,51 @@
 					</dl>
 				</section>
 
-				<Disclosure class="section" title={t('server_attestation.badge_settings_title')}>
-					<form id={form.id} class="badge-form" onsubmit={form.onsubmit} novalidate>
-						<p class="section-note">{t('server_attestation.badge_settings_desc')}</p>
-						<div class="preview" role="group" aria-labelledby="{uid}-preview">
-							<p class="label" id="{uid}-preview">{t('server_attestation.badge_preview')}</p>
-							<div class="badge" title={previewTitle}>
-								<span class="badge-brand">{brand || session.appName}</span>
-								<span class="badge-tier">{previewTier}</span>
-								{#if result?.maxConnections}
-									<span class="badge-conn"
-										>{formatNumber(result.maxConnections)} {t('server_attestation.connections_short')}</span
-									>
-								{/if}
+				{#if canEdit}
+					<Disclosure class="section" title={t('server_attestation.badge_settings_title')}>
+						<form id={form.id} class="badge-form" onsubmit={form.onsubmit} novalidate>
+							<p class="section-note">{t('server_attestation.badge_settings_desc')}</p>
+							<div class="preview" role="group" aria-labelledby="{uid}-preview">
+								<p class="label" id="{uid}-preview">{t('server_attestation.badge_preview')}</p>
+								<div class="badge" title={previewTitle}>
+									<span class="badge-brand">{brand || session.appName}</span>
+									<span class="badge-tier">{previewTier}</span>
+									{#if result?.maxConnections}
+										<span class="badge-conn"
+											>{formatNumber(result.maxConnections)} {t('server_attestation.connections_short')}</span
+										>
+									{/if}
+								</div>
+								<p class="hint">{t('server_attestation.badge_hover', { title: previewTitle })}</p>
 							</div>
-							<p class="hint">{t('server_attestation.badge_hover', { title: previewTitle })}</p>
-						</div>
-						<Field
-							label={t('server_attestation.badge_title')}
-							hint={t('server_attestation.badge_title_hint')}
-						>
-							{#snippet children(f)}
-								<Input {...f} maxlength={96} autocomplete="off" bind:value={form.values.title} />
-							{/snippet}
-						</Field>
-						<p class="hint" id="{uid}-tier-hint">{t('server_attestation.tier_names_hint')}</p>
-						{#each TIERS as tier (tier)}
-							<Field label={t(`server_attestation.tier_name_${tier}`)}>
+							<Field
+								label={t('server_attestation.badge_title')}
+								hint={t('server_attestation.badge_title_hint')}
+							>
 								{#snippet children(f)}
-									<Input
-										{...f}
-										describedby="{uid}-tier-hint"
-										width="medium"
-										maxlength={32}
-										autocomplete="off"
-										bind:value={form.values[tier]}
-									/>
+									<Input {...f} maxlength={96} autocomplete="off" bind:value={form.values.title} />
 								{/snippet}
 							</Field>
-						{/each}
-						<p class="effect">{t('server_attestation.badge_effect')}</p>
-						<SaveBar {form} label={t('server_attestation.save_badge_settings')} />
-					</form>
-				</Disclosure>
+							<p class="hint" id="{uid}-tier-hint">{t('server_attestation.tier_names_hint')}</p>
+							{#each TIERS as tier (tier)}
+								<Field label={t(`server_attestation.tier_name_${tier}`)}>
+									{#snippet children(f)}
+										<Input
+											{...f}
+											describedby="{uid}-tier-hint"
+											width="medium"
+											maxlength={32}
+											autocomplete="off"
+											bind:value={form.values[tier]}
+										/>
+									{/snippet}
+								</Field>
+							{/each}
+							<p class="effect">{t('server_attestation.badge_effect')}</p>
+							<SaveBar {form} label={t('server_attestation.save_badge_settings')} />
+						</form>
+					</Disclosure>
+				{/if}
 			</aside>
 		</div>
 	</div>

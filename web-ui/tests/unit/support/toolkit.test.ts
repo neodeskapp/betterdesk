@@ -44,6 +44,11 @@ describe('tools per role', () => {
 		expect(tools.map((t) => t.id)).not.toContain('speed');
 	});
 
+	test('with Toolkit at read (writes refused) only the tools that read stay', () => {
+		const tools = visibleTools(grants('device.connect', 'metrics.view'), false).map((t) => t.id);
+		expect(tools).toEqual(['speed', 'processes', 'disk', 'db', 'docker', 'logs']);
+	});
+
 	test('the hash picks a shown group, else the first', () => {
 		expect(groupFromHash('#crypto', ['network', 'crypto'])).toBe('crypto');
 		expect(groupFromHash('#system', ['network', 'crypto'])).toBe('network');
