@@ -781,42 +781,6 @@
        "username": "e2e_admin"
       },
       {
-       "action": "enrollment_rejection_cleared",
-       "created_at": "<volatile>",
-       "details": "Cleared enrollment rejection for device contract-enroll-y (unbanned)",
-       "id": 0,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "enrollment_rejected",
-       "created_at": "<volatile>",
-       "details": "Rejected enrollment for device contract-enroll-y (banned)",
-       "id": 0,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "created_at": "<volatile>",
-       "details": "Cleared enrollment rejection for device contract-enroll-x",
-       "id": 0,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
-       "action": "enrollment_rejected",
-       "created_at": "<volatile>",
-       "details": "Rejected enrollment for device contract-enroll-x",
-       "id": 0,
-       "ip_address": "<client-ip>",
-       "user_id": 5,
-       "username": "e2e_admin"
-      },
-      {
        "action": "registration_rejected",
        "created_at": "<volatile>",
        "details": "Rejected registration for device contract-reject (contract-reject-box): Not one of ours",
@@ -907,42 +871,6 @@
        "username": "e2e_super_admin"
       },
       {
-       "action": "enrollment_rejection_cleared",
-       "created_at": "<volatile>",
-       "details": "Cleared enrollment rejection for device contract-enroll-y (unbanned)",
-       "id": 0,
-       "ip_address": "<client-ip>",
-       "user_id": 6,
-       "username": "e2e_super_admin"
-      },
-      {
-       "action": "enrollment_rejected",
-       "created_at": "<volatile>",
-       "details": "Rejected enrollment for device contract-enroll-y (banned)",
-       "id": 0,
-       "ip_address": "<client-ip>",
-       "user_id": 6,
-       "username": "e2e_super_admin"
-      },
-      {
-       "action": "enrollment_rejection_cleared",
-       "created_at": "<volatile>",
-       "details": "Cleared enrollment rejection for device contract-enroll-x",
-       "id": 0,
-       "ip_address": "<client-ip>",
-       "user_id": 6,
-       "username": "e2e_super_admin"
-      },
-      {
-       "action": "enrollment_rejected",
-       "created_at": "<volatile>",
-       "details": "Rejected enrollment for device contract-enroll-x",
-       "id": 0,
-       "ip_address": "<client-ip>",
-       "user_id": 6,
-       "username": "e2e_super_admin"
-      },
-      {
        "action": "registration_rejected",
        "created_at": "<volatile>",
        "details": "Rejected registration for device contract-reject (contract-reject-box): Not one of ours",
@@ -982,6 +910,78 @@
        "action": "device_updated",
        "created_at": "<volatile>",
        "details": "Device 900100021 updated",
+       "id": 0,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "registration_approved",
+       "created_at": "<volatile>",
+       "details": "Approved registration for device 900100021 (contract-lan-kiosk)",
+       "id": 0,
+       "ip_address": "<client-ip>",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      {
+       "action": "device_group_saved",
+       "created_at": "<volatile>",
+       "details": "Device group Contract registration group saved",
+       "id": 0,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "folder_created",
+       "created_at": "<volatile>",
+       "details": "Created folder: Contract registration folder",
+       "id": 0,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "folder_deleted",
+       "created_at": "<volatile>",
+       "details": "Deleted folder: Contract registration folder",
+       "id": 0,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "device_group_deleted",
+       "created_at": "<volatile>",
+       "details": "Device group Contract registration group deleted",
+       "id": 0,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "device_tags_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100021 tags set to [kiosk]",
+       "id": 0,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "device_updated",
+       "created_at": "<volatile>",
+       "details": "Device 900100021 updated",
+       "id": 0,
+       "ip_address": "<client-ip>",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      {
+       "action": "device_group_saved",
+       "created_at": "<volatile>",
+       "details": "Device group Contract registration group saved",
        "id": 0,
        "ip_address": "<client-ip>",
        "user_id": 5,
