@@ -72,8 +72,8 @@ var (
 	}
 )
 
-// registerRoutes adds the route groups that have moved to Go, one line
-// per group and mount, in the order of web-nodejs/routes/index.js: the
+// registerRoutes adds the route groups, one line per group and mount, in
+// the order of web-nodejs/routes/index.js: the
 // tables answer with the first route that fits, so the order of the
 // groups decides between two routes for one address.
 //

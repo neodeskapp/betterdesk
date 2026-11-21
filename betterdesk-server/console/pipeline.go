@@ -1,7 +1,6 @@
 package console
 
 import (
-	"context"
 	"net/http"
 	"net/url"
 	"strings"
@@ -10,8 +9,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/proxy"
-	"github.com/unitronix/betterdesk-server/logging"
 )
 
 // step is one step of the request pipeline.
@@ -19,7 +16,7 @@ type step struct {
 	// n is the step's number in the Node console's pipeline (server.js).
 	n    int
 	name string
-	// use wraps what follows the step. nil leaves the step out.
+	// use wraps what follows the step.
 	use kit.Middleware
 }
 
@@ -32,10 +29,6 @@ type step struct {
 //	 7  idle check    part of the session step
 //	13  device API    shares the early stage with the client API
 //	20  CSRF, 404     the CSRF error is answered by step 16, the 404 by end
-//
-// With the Node console behind this one, steps 9 and 19 are off: files
-// and pages stay with Node until it goes, and a request that reaches the
-// end of the pipeline goes to Node.
 func (s *Server) steps() []step {
 	d := s.deps
 	cfg := s.cfg
@@ -48,7 +41,7 @@ func (s *Server) steps() []step {
 		{4, "bodies", middleware.Bodies(middleware.BodyOptions{RouteBodies: true, OnError: onError})},
 		{6, "session", d.Sessions.Middleware},
 		{8, "CSRF token", d.CSRF.Provider},
-		{9, "static folders", s.withoutNode(middleware.StaticFolders(middleware.StaticFoldersOptions{PublicDir: cfg.PublicDir, FontsDir: cfg.FontsDir, ProtosDir: cfg.ProtosDir, UploadsDir: cfg.UploadsDir, WallpapersDir: cfg.WallpapersDir, Static: cfg.Static, Production: cfg.Production, OnError: onError}))},
+		{9, "static folders", middleware.StaticFolders(middleware.StaticFoldersOptions{PublicDir: cfg.PublicDir, FontsDir: cfg.FontsDir, ProtosDir: cfg.ProtosDir, UploadsDir: cfg.UploadsDir, WallpapersDir: cfg.WallpapersDir, Static: cfg.Static, Production: cfg.Production, OnError: onError})},
 		{10, "permissions and panel access", s.loadAccess},
 		{11, "rate limiters", d.Limits.AppLevel()},
 		{12, "client and device API routes", stage(s.early)},
@@ -58,7 +51,7 @@ func (s *Server) steps() []step {
 		{17, "compression mark", middleware.MarkAPICompression(nil)},
 		{18, "JSON content type", middleware.RequireJSON()},
 		{18, "routes", stage(s.router)},
-		{19, "web app", s.withoutNode(s.webApp)},
+		{19, "web app", s.webApp},
 	}
 }
 
@@ -93,40 +86,14 @@ func (s *Server) buildPipeline() http.Handler {
 	var handler http.Handler = http.HandlerFunc(s.end)
 	steps := s.steps()
 	for i := len(steps) - 1; i >= 0; i-- {
-		if steps[i].use != nil {
-			handler = steps[i].use(handler)
-		}
+		handler = steps[i].use(handler)
 	}
 	return s.begin(handler)
 }
 
-// withoutNode leaves a step out while the Node console is behind this
-// one.
-func (s *Server) withoutNode(use kit.Middleware) kit.Middleware {
-	if s.node != nil {
-		return nil
-	}
-	return use
-}
-
-type originKey struct{}
-
-// origin is a request as it arrived, kept so that it can still go to the
-// Node console after the pipeline has started on it.
-type origin struct {
-	w    http.ResponseWriter
-	r    *http.Request
-	body *proxy.Recording
-}
-
-// begin prepares a request for the pipeline: the accessors of package kit
-// and, with the Node console behind this one, the copy of what arrived.
+// begin prepares a request for the pipeline: the accessors of package kit.
 func (s *Server) begin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if s.node != nil {
-			arrived := &origin{w: w, r: r, body: proxy.Record(r)}
-			r = r.WithContext(context.WithValue(r.Context(), originKey{}, arrived))
-		}
 		next.ServeHTTP(w, kit.Begin(r, s.cfg.TrustProxy, s.deps.I18n.Bundle))
 	})
 }
@@ -199,38 +166,9 @@ func (s *Server) webApp(next http.Handler) http.Handler {
 	})
 }
 
-// end answers what no step answered: the 404 of step 20, or the Node
-// console while it is behind this one.
+// end answers what no step answered: the 404 of step 20.
 func (s *Server) end(w http.ResponseWriter, r *http.Request) {
-	if s.node == nil {
-		s.deps.WebUI.NotFound(w, r)
-		return
-	}
-	s.toNode(w, r)
-}
-
-// toNode hands a request the pipeline has started on to the Node console
-// as it arrived: with the body from its first byte and without the
-// headers the Go steps have set, since Node sets its own.
-func (s *Server) toNode(w http.ResponseWriter, r *http.Request) {
-	arrived, _ := r.Context().Value(originKey{}).(*origin)
-	if arrived == nil {
-		s.deps.WebUI.NotFound(w, r)
-		return
-	}
-	body, err := arrived.body.Rewind()
-	if err != nil {
-		logging.Logf("console", "ERROR: %s %s cannot go on to the Node console: %v", r.Method, r.URL.Path, err)
-		s.deps.WebUI.ServerError(w, r, err, http.StatusInternalServerError)
-		return
-	}
-	header := arrived.w.Header()
-	for name := range header {
-		delete(header, name)
-	}
-	forward := arrived.r.Clone(arrived.r.Context())
-	forward.Body = body
-	s.node.ServeHTTP(arrived.w, forward)
+	s.deps.WebUI.NotFound(w, r)
 }
 
 // csrfGate is step 16. The gate takes the token from the X-CSRF-Token

@@ -38,9 +38,6 @@ func TestStepOrderIsTheOneOfTheNodeConsole(t *testing.T) {
 			t.Errorf("step %d %q comes after step %d", st.n, st.name, last)
 		}
 		last = st.n
-		if st.use == nil {
-			t.Errorf("step %d %q is off without the Node console", st.n, st.name)
-		}
 		got = append(got, strconv.Itoa(st.n)+" "+st.name)
 	}
 	want := "1 security headers|3 CORS|4 bodies|6 session|8 CSRF token|9 static folders|10 permissions and panel access|" +

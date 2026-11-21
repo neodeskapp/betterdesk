@@ -13,9 +13,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/wsrelay"
 )
 
-// registerSockets adds the websockets that have moved to Go, in the order
-// web-nodejs/server.js set its websocket services up. An upgrade to any
-// other path goes to the Node console while it is behind this one.
+// registerSockets adds the websockets, in the order web-nodejs/server.js
+// set its websocket services up. An upgrade to any other path passes the
+// pipeline like a plain request.
 func registerSockets(d *kit.Deps) {
 	// services/wsRelay.js: /ws/rendezvous, /ws/relay. A guest link that is
 	// taken back ends its bridges at once; an account with a device scope

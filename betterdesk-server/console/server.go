@@ -5,18 +5,9 @@
 // are those of the Node console's server.js. Route groups add their routes
 // to one of two tables: Early, for the client and device API that sit
 // before the request language and the CSRF gate, and Router, for
-// everything else (routes.go).
-//
-// While routes move from the Node console to Go, the Node console runs
-// behind this one (CONSOLE_NODE_UPSTREAM). A request then passes the Go
-// pipeline only when a Go route has its method and path, and a websocket
-// upgrade goes to a Go socket only when one is registered for its path
-// (sockets.go, package console/ws). Everything else goes to the Node
-// console untouched, and the Node console runs its own pipeline: Go
-// answers nothing it has no route for, no 404, no preflight, no file and
-// no page. A Go route that declines a request (kit.PassOn) with no later
-// Go route to take it hands the request on to the Node console as it
-// arrived, body included.
+// everything else (routes.go). A websocket upgrade to a path a socket is
+// registered for (sockets.go, package console/ws) goes to that socket
+// instead.
 package console
 
 import (
@@ -111,7 +102,6 @@ type Server struct {
 	deps     *kit.Deps
 	early    *kit.Router
 	router   *kit.Router
-	node     *proxy.Proxy
 	routing  http.Handler
 	pipeline http.Handler
 	jobs     *jobs.Registry
@@ -125,7 +115,7 @@ type Server struct {
 }
 
 // New builds the console server: its services, the pipeline and the
-// routes of every group that has moved to Go. Nothing runs before Start.
+// routes of every group. Nothing runs before Start.
 func New(ctx context.Context, opts Options) (*Server, error) {
 	cfg := opts.Config
 	getenv := cfg.Getenv
@@ -133,11 +123,8 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		getenv = func(string) string { return "" }
 	}
 	s := &Server{cfg: cfg, early: kit.NewRouter(), router: kit.NewRouter(), jobs: jobs.New(), apiListener: opts.APIListener}
-	if cfg.NodeUpstream != nil {
-		s.node = proxy.New(cfg.NodeUpstream, cfg.TrustProxy)
-	}
 	if cfg.DebugRouting {
-		s.routing = proxy.Routing(s.handles, cfg.NodeUpstream != nil)
+		s.routing = proxy.Routing(func(*http.Request) bool { return true }, false)
 	}
 
 	if err := os.MkdirAll(cfg.UploadsDir, 0o755); err != nil {
@@ -352,18 +339,10 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		stopAlertWork()
 		s.deps.Alerts.Wait()
 	})
-	// While a Node console is behind this one it runs the offline sweep
-	// itself, so this one must not: every alert would be raised and
-	// mailed twice.
-	if cfg.NodeUpstream == nil {
-		s.jobs.Add("alert sweep", s.deps.Alerts.Run)
-	}
-	// The same holds for the mail of a help request.
-	if cfg.NodeUpstream == nil {
-		s.jobs.Add("help request mail", helpmail.New(helpmail.Options{
-			DB: opts.Store, Mail: s.deps.Mail, Events: api.Events, Logger: s.deps.Log.Child("HelpRequestEmail"),
-		}).Run)
-	}
+	s.jobs.Add("alert sweep", s.deps.Alerts.Run)
+	s.jobs.Add("help request mail", helpmail.New(helpmail.Options{
+		DB: opts.Store, Mail: s.deps.Mail, Events: api.Events, Logger: s.deps.Log.Child("HelpRequestEmail"),
+	}).Run)
 	badParam := func(w http.ResponseWriter, r *http.Request, err error) {
 		host.ServerError(w, r, err, http.StatusBadRequest)
 	}
@@ -421,24 +400,21 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		},
 	})
 	// The rest of the old console's start sequence: the hourly clean-up,
-	// the stale device sweep, and, unless a Node console behind this one
-	// binds their ports itself, LAN discovery and the mDNS announcement.
+	// the stale device sweep, LAN discovery and the mDNS announcement.
 	s.authImport = authimport.FromEnv(getenv, cfg.DataDir)
 	sweeps := housekeeping.New(housekeeping.Options{DB: opts.Store, StalePeers: s.deps.DeviceGroups.CleanupStaleOnlinePeers,
 		StatusSyncInterval: getenv("STATUS_SYNC_INTERVAL"), HeartbeatStaleThreshold: getenv("HEARTBEAT_STALE_THRESHOLD")})
 	s.jobs.Add("integration housekeeping", sweeps.RunIntegration)
 	s.jobs.Add("online status sync", sweeps.RunStatusSync)
-	if cfg.NodeUpstream == nil {
-		// The jobs start after the listeners and announce the port and
-		// scheme of the one that serves the console (listeners.go)
-		lan := discovery.FromEnv(getenv, discovery.Settings{PubKeyPath: cfg.PubKeyPath, APIPort: float64(cfg.APIPort), Version: cfg.Version})
-		s.jobs.Add("LAN discovery", func(ctx context.Context) { discovery.NewLAN(s.announced(lan)).Run(ctx) })
-		// The old console announced itself over mDNS only where someone had
-		// installed bonjour-service by hand; no installer or image did. So
-		// the announcement runs only when PANEL_MDNS asks for it.
-		if mdns := getenv("PANEL_MDNS"); mdns != "" && mdns != "off" && mdns != "0" {
-			s.jobs.Add("mDNS announcement", func(ctx context.Context) { discovery.NewMDNS(s.announced(lan)).Run(ctx) })
-		}
+	// The jobs start after the listeners and announce the port and scheme
+	// of the one that serves the console (listeners.go)
+	lan := discovery.FromEnv(getenv, discovery.Settings{PubKeyPath: cfg.PubKeyPath, APIPort: float64(cfg.APIPort), Version: cfg.Version})
+	s.jobs.Add("LAN discovery", func(ctx context.Context) { discovery.NewLAN(s.announced(lan)).Run(ctx) })
+	// The old console announced itself over mDNS only where someone had
+	// installed bonjour-service by hand; no installer or image did. So the
+	// announcement runs only when PANEL_MDNS asks for it.
+	if mdns := getenv("PANEL_MDNS"); mdns != "" && mdns != "off" && mdns != "0" {
+		s.jobs.Add("mDNS announcement", func(ctx context.Context) { discovery.NewMDNS(s.announced(lan)).Run(ctx) })
 	}
 	registerRoutes(s.deps)
 	registerSockets(s.deps)
@@ -481,10 +457,9 @@ func (s *Server) Deps() *kit.Deps { return s.deps }
 func (s *Server) Jobs() *jobs.Registry { return s.jobs }
 
 // ServeHTTP sends a request through the pipeline. An upgrade to a socket
-// the Go console has (console/ws) goes to that socket, outside the
-// pipeline, as Node's upgrade listener ran outside Express. With the Node
-// console behind this one, every other upgrade goes there, and so does a
-// request no Go route has the method and path for.
+// the console has (console/ws) goes to that socket, outside the pipeline,
+// as Node's upgrade listener ran outside Express; any other upgrade
+// passes the pipeline like a plain request.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.routing != nil && r.Method == http.MethodGet && r.URL.Path == proxy.RoutingPath {
 		s.routing.ServeHTTP(w, r)
@@ -494,55 +469,23 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.deps.Sockets.ServeHTTP(w, r)
 		return
 	}
-	if s.node != nil && (ws.IsUpgrade(r) || !s.handles(r)) {
-		s.node.ServeHTTP(w, r)
-		return
-	}
 	s.pipeline.ServeHTTP(w, r)
-}
-
-// handles reports whether Go answers r. Without the Node console behind
-// this one Go answers everything: routes, sockets, files, pages and the
-// 404. With it, a Go socket for an upgrade and a Go route in either stage
-// for anything else. The routing report asks the same question.
-func (s *Server) handles(r *http.Request) bool {
-	if s.node == nil {
-		return true
-	}
-	if s.routing != nil && r.Method == http.MethodGet && r.URL.Path == proxy.RoutingPath {
-		return true
-	}
-	if ws.IsUpgrade(r) {
-		return s.deps.Sockets.Serves(r)
-	}
-	return s.early.Match(r) || s.router.Match(r)
 }
 
 // Start opens the listeners (listeners.go), starts the background jobs and
 // serves until ctx ends or Stop is called.
 //
 // Before it listens it imports the old console's auth.db when there is
-// one that was never imported (package authimport; not while the Node
-// console is behind this one, which still reads that file), and loads the
-// branding settings into their cache. It
-// also looks after the first account (see
-// authn.Service.EnsureDefaultAdmin), unless the Node console is behind
-// this one: that console does the same at its own start, and the file by
-// which an installer asks for a new admin password works once, for
-// whichever of the two looks first. The Node console is the one that is
-// sure to know the password the installer set (web-nodejs/.env), so it is
-// left to it.
+// one that was never imported (package authimport), loads the branding
+// settings into their cache and looks after the first account (see
+// authn.Service.EnsureDefaultAdmin).
 func (s *Server) Start(ctx context.Context) error {
-	if s.cfg.NodeUpstream == nil {
-		if _, err := authimport.Run(ctx, s.deps.Store, s.authImport); err != nil {
-			return fmt.Errorf("auth.db import: %w", err)
-		}
+	if _, err := authimport.Run(ctx, s.deps.Store, s.authImport); err != nil {
+		return fmt.Errorf("auth.db import: %w", err)
 	}
 	s.deps.Branding.LoadBranding(ctx)
-	if s.cfg.NodeUpstream == nil {
-		if _, err := s.deps.Authn.EnsureDefaultAdmin(ctx); err != nil {
-			return fmt.Errorf("first account: %w", err)
-		}
+	if _, err := s.deps.Authn.EnsureDefaultAdmin(ctx); err != nil {
+		return fmt.Errorf("first account: %w", err)
 	}
 	err := s.openListeners(ctx)
 	if err == nil {
@@ -557,11 +500,7 @@ func (s *Server) Start(ctx context.Context) error {
 		return err
 	}
 	s.jobs.Start(ctx)
-	target := "Go only"
-	if s.cfg.NodeUpstream != nil {
-		target = "unported routes go to " + s.cfg.NodeUpstream.Host
-	}
-	logging.Logf("console", "listening on %s (%s), %d Go routes", s.net.addr, target, len(s.early.Routes())+len(s.router.Routes()))
+	logging.Logf("console", "listening on %s, %d routes", s.net.addr, len(s.early.Routes())+len(s.router.Routes()))
 	return nil
 }
 
@@ -585,9 +524,6 @@ func (s *Server) Stop() {
 	s.deps.Sockets.Close()
 	s.jobs.Stop()
 	s.deps.Avatars.Wait()
-	if s.node != nil {
-		s.node.Close()
-	}
 }
 
 // readSetting reads one row of the console's settings table, for the
