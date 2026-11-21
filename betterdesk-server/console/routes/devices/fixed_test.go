@@ -23,11 +23,8 @@ import (
 // fixes change may differ from Node's answer.
 var fixedSteps = []fixedStep{
 	// The hard deletes of A1001 and D1004 clear their system information
-	// and metrics. They also clear A1001's folder and groups, so when the
-	// recording brings A1001 back with a restore the made-up server
-	// allows, it is outside the operator's scope.
+	// and metrics.
 	{"node", "264 cleared", "DE1"},
-	{"node", `403 PATCH /api/devices/A1001/folder {"folderId":999} as operator`, "DE1"},
 	// s-one is stored switched off (0 on SQLite); a change that leaves
 	// enabled out keeps it off, where Node switched it on.
 	{"node_sqlite", "425 PATCH /api/panel/strategies/s-one {} as admin", "DE2"},
@@ -125,6 +122,11 @@ var fixedSteps = []fixedStep{
 	{"node", `231 PUT /api/devices/A1001/groups {"groupGuids":[null,5]} as admin`, "UM33"},
 	{"node", `233 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-viewer"]} as operator`, "UM33"},
 	{"node", `236 PUT /api/devices/A1001/groups {"groupGuids":["g-open"]} as admin`, "UM33"},
+	// folder_5 is open to e2e_viewer alone, so the operator, whose scope
+	// it limits, puts no device into folder 5. A1001 then stays in the
+	// operator's scope, and the next step answers Node's 404 for folder
+	// 999 again.
+	{"node", `402 PATCH /api/devices/A1001/folder {"folderId":5} as operator`, "RV11"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The

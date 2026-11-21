@@ -574,12 +574,13 @@
    "answer": "{\"success\":false,\"error\":\"Permission denied: device.delete\"}"
   }
  },
- "403 PATCH /api/devices/A1001/folder {\"folderId\":999} as operator": {
-  "bug": "DE1",
+ "402 PATCH /api/devices/A1001/folder {\"folderId\":5} as operator": {
+  "bug": "RV11",
   "answer": {
    "status": 403,
-   "answer": "{\"success\":false,\"error\":\"errors.forbidden\"}",
+   "answer": "{\"success\":false,\"error\":\"You don't have permission to do this. Ask an administrator.\"}",
    "calls": [
+    "GET /api/peers/A1001",
     "GET /api/peers/A1001"
    ]
   }
