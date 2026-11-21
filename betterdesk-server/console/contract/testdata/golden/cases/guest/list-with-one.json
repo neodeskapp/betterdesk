@@ -104,7 +104,7 @@
        ],
        "token_prefix": "<volatile>",
        "use_count": 0,
-       "view_only": true
+       "view_only": false
       }
      ]
     }
@@ -207,7 +207,7 @@
        ],
        "token_prefix": "<volatile>",
        "use_count": 0,
-       "view_only": true
+       "view_only": false
       }
      ]
     }
@@ -276,7 +276,7 @@
        ],
        "token_prefix": "<volatile>",
        "use_count": 0,
-       "view_only": true
+       "view_only": false
       }
      ]
     }
@@ -345,7 +345,7 @@
        ],
        "token_prefix": "<volatile>",
        "use_count": 0,
-       "view_only": true
+       "view_only": false
       }
      ]
     }
@@ -414,7 +414,7 @@
        ],
        "token_prefix": "<volatile>",
        "use_count": 0,
-       "view_only": true
+       "view_only": false
       }
      ]
     }

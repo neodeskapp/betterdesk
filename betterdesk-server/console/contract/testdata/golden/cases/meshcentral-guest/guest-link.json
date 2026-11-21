@@ -9,7 +9,7 @@
     "900100001"
    ],
    "ttl_minutes": 5,
-   "view_only": true
+   "view_only": false
   },
   "notes": [
    "sent as admin in every role's turn"
@@ -84,7 +84,7 @@
      ],
      "token": "<volatile>",
      "token_prefix": "<volatile>",
-     "view_only": true
+     "view_only": false
     }
    }
   }

@@ -220,9 +220,11 @@ func init() {
 	empty := map[string]any{}
 
 	contract.Group("meshcentral-guest",
+		// 900100001 is a RustDesk device: a view_only link for it is
+		// refused (RV209), so the link gives control.
 		contract.Case{
 			Name: "guest-link", Method: "POST", Path: "/api/guest/access-links", As: "admin",
-			Body:    map[string]any{"peer_ids": []any{"900100001"}, "ttl_minutes": 5, "view_only": true, "label": "contract mesh"},
+			Body:    map[string]any{"peer_ids": []any{"900100001"}, "ttl_minutes": 5, "view_only": false, "label": "contract mesh"},
 			Capture: map[string]string{"guest": "token", "guestid": "id"},
 		},
 		contract.Case{

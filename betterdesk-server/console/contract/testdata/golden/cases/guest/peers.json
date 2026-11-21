@@ -106,7 +106,7 @@
      "expires_at": "<volatile>",
      "label": "Contract link",
      "valid": true,
-     "view_only": true
+     "view_only": false
     }
    }
   }

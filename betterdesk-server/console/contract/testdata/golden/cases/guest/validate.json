@@ -92,7 +92,7 @@
       "900100002"
      ],
      "valid": true,
-     "view_only": true
+     "view_only": false
     }
    }
   },
@@ -143,7 +143,7 @@
       "900100002"
      ],
      "valid": true,
-     "view_only": true
+     "view_only": false
     }
    }
   },
@@ -194,7 +194,7 @@
       "900100002"
      ],
      "valid": true,
-     "view_only": true
+     "view_only": false
     }
    }
   },
@@ -245,7 +245,7 @@
       "900100002"
      ],
      "valid": true,
-     "view_only": true
+     "view_only": false
     }
    }
   },
@@ -296,7 +296,7 @@
       "900100002"
      ],
      "valid": true,
-     "view_only": true
+     "view_only": false
     }
    }
   }

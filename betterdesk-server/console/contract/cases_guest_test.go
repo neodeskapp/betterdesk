@@ -29,6 +29,10 @@ func init() {
 	issuers := contract.Roles("guest_issuer", "operator", "admin")
 	empty := map[string]any{}
 	link := map[string]any{"peer_ids": []any{"900100001", "900100002"}, "ttl_minutes": 5, "view_only": true, "label": "Contract link", "max_uses": 3}
+	// The demo devices are RustDesk devices, for which the API server
+	// refuses a view_only link (RV209): the link the turns make and use
+	// gives control.
+	controlLink := map[string]any{"peer_ids": []any{"900100001", "900100002"}, "ttl_minutes": 5, "view_only": false, "label": "Contract link", "max_uses": 3}
 	create := func(name string, body any, roles ...contract.Role) contract.Case {
 		return contract.Case{Name: name, Method: "POST", Path: links, Body: body, Roles: roles}
 	}
@@ -59,7 +63,7 @@ func init() {
 
 		// make, read back, ask as the holder, take back
 		contract.Case{
-			Name: "create", Method: "POST", Path: links, Body: link,
+			Name: "create", Method: "POST", Path: links, Body: controlLink,
 			Capture: map[string]string{"link": "id", "token": "token"},
 		},
 		contract.Case{Name: "list-with-one", Path: links},

@@ -11,7 +11,7 @@
     "900100002"
    ],
    "ttl_minutes": 5,
-   "view_only": true
+   "view_only": false
   }
  },
  "recordings": 2,
@@ -114,7 +114,7 @@
      ],
      "token": "<volatile>",
      "token_prefix": "<volatile>",
-     "view_only": true
+     "view_only": false
     }
    }
   },
