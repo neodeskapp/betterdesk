@@ -239,8 +239,8 @@ func (b *bridge) readTargets(data []byte) (send []byte, pass, opening bool) {
 	var allowed bool
 	if b.guest != nil {
 		allowed = msg.RequestRelay != nil && msg.RequestRelay.ID == b.guest.peerID
-	} else {
-		allowed = msg.RequestRelay == nil || b.s.inScope(b.conn.Context(), b.account, msg.RequestRelay.ID)
+	} else if allowed = msg.RequestRelay == nil || b.s.inScope(b.conn.Context(), b.account, msg.RequestRelay.ID); allowed && msg.RequestRelay != nil {
+		b.account.addTarget(msg.RequestRelay.ID)
 	}
 	if !allowed {
 		b.targetMismatch("relay ")
@@ -262,7 +262,14 @@ func (b *bridge) targetAllowed(msg *rendezvousMessage) bool {
 	if req == nil {
 		req = msg.RequestRelay
 	}
-	return req == nil || b.s.inScope(b.conn.Context(), b.account, req.ID)
+	if req == nil {
+		return true
+	}
+	if !b.s.inScope(b.conn.Context(), b.account, req.ID) {
+		return false
+	}
+	b.account.addTarget(req.ID)
+	return true
 }
 
 // targetMismatch ends the bridge on a request for a device the link or
