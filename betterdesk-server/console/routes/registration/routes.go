@@ -43,6 +43,9 @@ type handlers struct {
 	log    *kit.Logger
 	now    func() time.Time
 	random io.Reader
+	// limit is the limit of device registrations a request that adds a
+	// registration counts against; nil without limiters.
+	limit kit.Middleware
 }
 
 func newHandlers(d *kit.Deps, actors *helpActors) *handlers {
@@ -53,6 +56,7 @@ func newHandlers(d *kit.Deps, actors *helpActors) *handlers {
 		log:    d.Log.Child("REGISTRATION"),
 		now:    time.Now,
 		random: rand.Reader,
+		limit:  registerLimit(d),
 	}
 }
 
@@ -60,16 +64,15 @@ func newHandlers(d *kit.Deps, actors *helpActors) *handlers {
 // the old route file. Every route but the two of devices needs a
 // permission: enrollment.approve, enrollment.manage to delete a
 // registration, chat.access for the help requests. A registration request
-// counts against the limit of device registrations (d.Limits.Register,
-// BD_REGISTER_RATE_LIMIT_MAX a minute per address), which
-// /api/bd/register shares.
+// that adds a registration counts against the limit of device
+// registrations (registerRequest).
 func (g *Routes) Register(d *kit.Deps) {
 	h := newHandlers(d, g.actors)
 	r := d.Router
 	approve := d.RequirePermission("enrollment.approve")
 	chat := d.RequirePermission("chat.access")
 
-	r.Post("/register-request", h.registerRequest, registerLimit(d)...)
+	r.Post("/register-request", h.registerRequest)
 	r.Get("/register-status", h.registerStatus)
 
 	r.Get("/api/registrations", h.list, approve)
@@ -101,15 +104,15 @@ func (g *Routes) Register(d *kit.Deps) {
 func ClientAPI(d *kit.Deps) {
 	h := newHandlers(d, newHelpActors())
 	r := d.At("/api/bd").Early
-	r.Post("/register-request", h.registerRequest, registerLimit(d)...)
+	r.Post("/register-request", h.registerRequest)
 	r.Get("/register-status", h.registerStatus)
 }
 
-// registerLimit is the limit of device registrations in front of a
-// registration request; nothing for a Deps without limiters.
-func registerLimit(d *kit.Deps) []kit.Middleware {
+// registerLimit is the limit of device registrations; nil for a Deps
+// without limiters.
+func registerLimit(d *kit.Deps) kit.Middleware {
 	if d.Limits == nil || d.Limits.Register == nil {
 		return nil
 	}
-	return []kit.Middleware{d.Limits.Register.Middleware}
+	return d.Limits.Register.Middleware
 }

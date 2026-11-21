@@ -32,7 +32,12 @@ func clientIP(r *http.Request) string {
 // {device_id, hostname, platform, version, public_key, uuid}: a new
 // pending registration, or the device's registration as it is, so asking
 // again changes neither the key an approver reviews nor a rejection. No
-// credential is needed. A new registration is refused with 429 while
+// credential is needed. A request for a device without a registration
+// counts against the limit of device registrations (d.Limits.Register,
+// BD_REGISTER_RATE_LIMIT_MAX a minute per address, shared with
+// /api/bd/register), which answers 429 past it; a request for a device
+// that has its registration, or one refused for its fields, counts not.
+// A new registration is also refused with 429 while
 // registrations.MaxPending wait, or registrations.MaxPendingPerAddress
 // from the client's address. The device id, trimmed, has to be an id
 // /api/bd/register takes: 3 to 64 letters, digits, "_" and "-". The other
@@ -67,6 +72,9 @@ func (h *handlers) registerRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		*f.dest = cut(s, f.max)
 	}
+	if !h.allowNew(w, r, deviceID) {
+		return
+	}
 	row, err := h.regs.Create(r.Context(), req)
 	if errors.Is(err, registrations.ErrTooManyPending) {
 		failure(w, r, http.StatusTooManyRequests, "Too many pending registrations")
@@ -93,6 +101,27 @@ func (h *handlers) registerRequest(w http.ResponseWriter, r *http.Request) {
 		))
 	}
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "status", row.Get("status"), "id", row.Get("id")))
+}
+
+// allowNew counts a request for a device without a registration against
+// the limit of device registrations, and reports whether the request may
+// go on; when not, the limiter or the failed lookup answered it.
+func (h *handlers) allowNew(w http.ResponseWriter, r *http.Request, deviceID string) bool {
+	if h.limit == nil {
+		return true
+	}
+	existing, err := h.regs.ByDeviceID(r.Context(), deviceID)
+	if err != nil {
+		h.log.Error("Register request error:", err)
+		failure(w, r, http.StatusInternalServerError, "Internal server error")
+		return false
+	}
+	if existing != nil {
+		return true
+	}
+	allowed := false
+	h.limit(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { allowed = true })).ServeHTTP(w, r)
+	return allowed
 }
 
 // statusDeviceID is the device id a status request names: device_id as

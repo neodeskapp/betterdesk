@@ -74,9 +74,10 @@ func TestApprovalOfAKnownDeviceAsksForTheScope(t *testing.T) {
 	})
 }
 
-// A registration request counts against the limit of device
-// registrations per address (BD_REGISTER_RATE_LIMIT_MAX), on the root
-// mount and at /api/bd alike (BUGS RV8).
+// A registration request for a new device counts against the limit of
+// device registrations per address (BD_REGISTER_RATE_LIMIT_MAX), on the
+// root mount and at /api/bd alike; a request for a device that has its
+// registration counts not (BUGS RV8).
 func TestRegisterRequestIsLimited(t *testing.T) {
 	w := routetest.New(t, routetest.Options{Env: map[string]string{"BD_REGISTER_RATE_LIMIT_MAX": "2", "RATE_LIMIT_MAX": "1000"}})
 	for i, c := range []struct {
@@ -87,6 +88,9 @@ func TestRegisterRequestIsLimited(t *testing.T) {
 		if got.Status != c.want {
 			t.Errorf("request %d at %s: %d %s, want %d", i+1, c.path, got.Status, got.Body, c.want)
 		}
+	}
+	if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"limited-0"}`); got.Status != 200 {
+		t.Errorf("a device that has its registration: %d %s", got.Status, got.Body)
 	}
 }
 
