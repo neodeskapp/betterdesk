@@ -638,7 +638,8 @@
     "bulk_tags_title": "기기 {count}대의 태그",
     "bulk_tags_hint": "체크한 태그는 선택한 모든 기기에 추가되고, 체크를 해제한 태그는 제거됩니다. 일부만 체크된 태그는 그대로 유지됩니다.",
     "bulk_tags_saved": "기기 {count}대의 태그를 변경했습니다.",
-    "remote_disabled_badge": "비활성화됨"
+    "remote_disabled_badge": "비활성화됨",
+    "bulk_delete_partial": "{count}개 중 {deleted}개 기기를 삭제했습니다. 나머지는 삭제할 수 없습니다."
   },
   "keys": {
     "title": "서버 키",

@@ -638,7 +638,8 @@
     "bulk_tags_title": "Etiquetas de {count} dispositivos",
     "bulk_tags_hint": "Las etiquetas marcadas se añaden a cada dispositivo elegido y las desmarcadas se quitan. Las marcadas a medias se quedan como están.",
     "bulk_tags_saved": "Etiquetas cambiadas en {count} dispositivos.",
-    "remote_disabled_badge": "Desactivado"
+    "remote_disabled_badge": "Desactivado",
+    "bulk_delete_partial": "Se eliminaron {deleted} de {count} dispositivos. Los demás no se pudieron eliminar."
   },
   "keys": {
     "title": "Panel",

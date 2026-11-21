@@ -642,7 +642,8 @@
     "bulk_tags_title": "{count} 台裝置的標籤",
     "bulk_tags_hint": "勾選的標籤會加到每台所選裝置，取消勾選的會移除。部分勾選的標籤維持不變。",
     "bulk_tags_saved": "已變更 {count} 台裝置的標籤。",
-    "remote_disabled_badge": "已停用"
+    "remote_disabled_badge": "已停用",
+    "bulk_delete_partial": "已刪除 {count} 台裝置中的 {deleted} 台。其餘裝置無法刪除。"
   },
   "keys": {
     "title": "服務器密鑰",

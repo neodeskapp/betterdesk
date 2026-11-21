@@ -638,7 +638,8 @@
     "bulk_tags_title": "Tags von {count} Geräten",
     "bulk_tags_hint": "Angehakte Tags kommen auf jedes ausgewählte Gerät, abgewählte werden entfernt. Halb angehakte Tags bleiben, wie sie sind.",
     "bulk_tags_saved": "Tags auf {count} Geräten geändert.",
-    "remote_disabled_badge": "Deaktiviert"
+    "remote_disabled_badge": "Deaktiviert",
+    "bulk_delete_partial": "{deleted} von {count} Geräten gelöscht. Die anderen konnten nicht gelöscht werden."
   },
   "keys": {
     "title": "Dashboard",

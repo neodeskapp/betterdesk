@@ -644,7 +644,8 @@
     "bulk_tags_title": "{count} cihazın etiketleri",
     "bulk_tags_hint": "İşaretli etiketler seçilen her cihaza eklenir, işareti kaldırılanlar çıkarılır. Kısmen işaretli etiketler olduğu gibi kalır.",
     "bulk_tags_saved": "{count} cihazdaki etiketler değiştirildi.",
-    "remote_disabled_badge": "Devre dışı"
+    "remote_disabled_badge": "Devre dışı",
+    "bulk_delete_partial": "{count} cihazdan {deleted} tanesi silindi. Diğerleri silinemedi."
   },
   "keys": {
     "title": "Sunucu Anahtarları",

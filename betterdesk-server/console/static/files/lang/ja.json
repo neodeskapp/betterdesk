@@ -638,7 +638,8 @@
     "bulk_tags_title": "{count} 台のデバイスのタグ",
     "bulk_tags_hint": "チェックしたタグは選択したすべてのデバイスに付き、チェックを外したタグは外れます。一部だけのタグはそのままです。",
     "bulk_tags_saved": "{count} 台のデバイスのタグを変更しました。",
-    "remote_disabled_badge": "無効"
+    "remote_disabled_badge": "無効",
+    "bulk_delete_partial": "{count} 台中 {deleted} 台のデバイスを削除しました。残りは削除できませんでした。"
   },
   "keys": {
     "title": "サーバーキー",

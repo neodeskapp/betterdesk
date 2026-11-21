@@ -644,7 +644,8 @@
     "bulk_tags_title": "Tag untuk {count} perangkat",
     "bulk_tags_hint": "Tag yang dicentang dipasang di setiap perangkat yang dipilih, yang dikosongkan dilepas. Tag yang dicentang sebagian tetap seperti semula.",
     "bulk_tags_saved": "Tag diubah pada {count} perangkat.",
-    "remote_disabled_badge": "Dinonaktifkan"
+    "remote_disabled_badge": "Dinonaktifkan",
+    "bulk_delete_partial": "{deleted} dari {count} perangkat dihapus. Yang lain tidak dapat dihapus."
   },
   "keys": {
     "title": "Kunci Server",

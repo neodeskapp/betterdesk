@@ -300,8 +300,14 @@ export function setDeviceGroups(id: string, groupGuids: string[]) {
 }
 
 /** Soft-delete several devices at once (no revoke, cascade or hard delete) */
-export function bulkDelete(ids: string[]) {
-	return api(Ok, '/api/devices/bulk-delete', { method: 'POST', body: { ids } });
+/** Soft-delete several devices; resolves how many the server deleted */
+export async function bulkDelete(ids: string[]): Promise<number> {
+	const out = await api(
+		v.looseObject({ data: v.optional(v.looseObject({ deleted: v.optional(v.number()) })) }),
+		'/api/devices/bulk-delete',
+		{ method: 'POST', body: { ids } }
+	);
+	return out.data?.deleted ?? ids.length;
 }
 
 export const AccessPolicy = v.looseObject({

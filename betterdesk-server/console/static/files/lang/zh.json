@@ -638,7 +638,8 @@
     "bulk_tags_title": "{count} 台设备的标签",
     "bulk_tags_hint": "勾选的标签会加到每台所选设备，取消勾选的会移除。部分勾选的标签保持不变。",
     "bulk_tags_saved": "已更改 {count} 台设备的标签。",
-    "remote_disabled_badge": "已禁用"
+    "remote_disabled_badge": "已禁用",
+    "bulk_delete_partial": "已删除 {count} 台设备中的 {deleted} 台。其余设备无法删除。"
   },
   "keys": {
     "title": "服务器密钥",

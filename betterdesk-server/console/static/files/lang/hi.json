@@ -644,7 +644,8 @@
     "bulk_tags_title": "{count} डिवाइस के टैग",
     "bulk_tags_hint": "टिक किए गए टैग हर चुने गए डिवाइस पर लगेंगे, हटाए गए टैग निकल जाएँगे। आधे टिक वाले टैग जैसे हैं वैसे ही रहेंगे।",
     "bulk_tags_saved": "{count} डिवाइस पर टैग बदले गए।",
-    "remote_disabled_badge": "अक्षम"
+    "remote_disabled_badge": "अक्षम",
+    "bulk_delete_partial": "{count} में से {deleted} डिवाइस हटाए गए। बाकी नहीं हटाए जा सके।"
   },
   "keys": {
     "title": "सर्वर कुंजी",

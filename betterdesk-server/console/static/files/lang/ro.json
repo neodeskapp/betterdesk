@@ -644,7 +644,8 @@
     "bulk_tags_title": "Etichetele a {count} dispozitive",
     "bulk_tags_hint": "Etichetele bifate se adaugă pe fiecare dispozitiv ales, cele debifate se elimină. Etichetele bifate parțial rămân neschimbate.",
     "bulk_tags_saved": "Etichete modificate pe {count} dispozitive.",
-    "remote_disabled_badge": "Dezactivat"
+    "remote_disabled_badge": "Dezactivat",
+    "bulk_delete_partial": "{deleted} din {count} dispozitive șterse. Celelalte nu au putut fi șterse."
   },
   "keys": {
     "title": "Cheile serverului",

@@ -527,10 +527,24 @@ export async function deleteDevices(devices: readonly DeviceLike[]): Promise<boo
 	});
 	if (!ok) return false;
 	try {
-		await devicesApi.bulkDelete(ids(list));
+		const deleted = await devicesApi.bulkDelete(ids(list));
+		devicesChanged(...ids(list));
+		if (deleted < count) {
+			// The answer does not say which ones failed: the panels stay open and the list reloads
+			toast.warning(
+				tf(
+					'devices.bulk_delete_partial',
+					'{deleted} of {count} devices deleted. The others could not be deleted.',
+					{
+						deleted,
+						count
+					}
+				)
+			);
+			return deleted > 0;
+		}
 		toast.success(t('devices.bulk_delete_success', { count }));
 		for (const d of list) closeIfOpen(d.id);
-		devicesChanged(...ids(list));
 		return true;
 	} catch (err) {
 		return fail(err, 'errors.bulk_delete_failed');

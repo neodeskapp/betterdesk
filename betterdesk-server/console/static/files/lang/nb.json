@@ -644,7 +644,8 @@
     "bulk_tags_title": "Tagger for {count} enheter",
     "bulk_tags_hint": "Avkryssede tagger legges på hver valgte enhet, tagger uten kryss tas bort. Halvt avkryssede tagger blir som de er.",
     "bulk_tags_saved": "Tagger endret på {count} enheter.",
-    "remote_disabled_badge": "Deaktivert"
+    "remote_disabled_badge": "Deaktivert",
+    "bulk_delete_partial": "{deleted} av {count} enheter slettet. De andre kunne ikke slettes."
   },
   "keys": {
     "title": "Servernøkler",

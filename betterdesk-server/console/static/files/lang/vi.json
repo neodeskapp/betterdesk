@@ -644,7 +644,8 @@
     "bulk_tags_title": "Thẻ của {count} thiết bị",
     "bulk_tags_hint": "Thẻ được đánh dấu sẽ gắn vào mọi thiết bị đã chọn, thẻ bị bỏ đánh dấu sẽ bị gỡ. Thẻ đánh dấu một phần giữ nguyên.",
     "bulk_tags_saved": "Đã đổi thẻ trên {count} thiết bị.",
-    "remote_disabled_badge": "Đã tắt"
+    "remote_disabled_badge": "Đã tắt",
+    "bulk_delete_partial": "Đã xóa {deleted} trên {count} thiết bị. Không thể xóa các thiết bị còn lại."
   },
   "keys": {
     "title": "Khóa máy chủ",

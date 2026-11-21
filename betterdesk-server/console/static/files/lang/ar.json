@@ -645,7 +645,8 @@
     "bulk_tags_title": "وسوم {count} أجهزة",
     "bulk_tags_hint": "تُضاف الوسوم المحددة إلى كل جهاز مختار، وتُزال الوسوم غير المحددة. تبقى الوسوم المحددة جزئيًا كما هي.",
     "bulk_tags_saved": "تم تغيير الوسوم على {count} أجهزة.",
-    "remote_disabled_badge": "معطّل"
+    "remote_disabled_badge": "معطّل",
+    "bulk_delete_partial": "تم حذف {deleted} من {count} أجهزة. تعذّر حذف الأجهزة الأخرى."
   },
   "keys": {
     "title": "مفاتيح الخادم",

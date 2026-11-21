@@ -638,7 +638,8 @@
     "bulk_tags_title": "Tagi urządzeń ({count})",
     "bulk_tags_hint": "Zaznaczone tagi trafią na każde wybrane urządzenie, odznaczone zostaną usunięte. Częściowo zaznaczone pozostaną bez zmian.",
     "bulk_tags_saved": "Zmieniono tagi na urządzeniach: {count}.",
-    "remote_disabled_badge": "Wyłączony"
+    "remote_disabled_badge": "Wyłączony",
+    "bulk_delete_partial": "Usunięto {deleted} z {count} urządzeń. Pozostałych nie udało się usunąć."
   },
   "keys": {
     "title": "Klucze serwera",

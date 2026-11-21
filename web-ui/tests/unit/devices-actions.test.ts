@@ -12,7 +12,7 @@ vi.mock('#lib/api/devices.ts', () => ({
 	unbanDevice: vi.fn(async () => ({})),
 	deleteDevice: vi.fn(async () => ({})),
 	restoreDevice: vi.fn(async () => ({})),
-	bulkDelete: vi.fn(async () => ({})),
+	bulkDelete: vi.fn(async (ids: string[]) => ids.length),
 	changeDeviceId: vi.fn(async () => ({})),
 	setDeviceTags: vi.fn(async (_id: string, tags: string[]) => ({ tags })),
 	setDeviceFolder: vi.fn(async () => ({})),
@@ -89,6 +89,7 @@ import * as targetsApi from '#lib/api/remoteTargets.ts';
 import * as meshApi from '#lib/api/mesh.ts';
 import * as guestApi from '#lib/api/guest.ts';
 import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
+import { dismissAll, toasts } from '#lib/ui/toasts.svelte.ts';
 import { session } from '../../src/lib/state/session.svelte.ts';
 import { devicePanel, openDevice } from '../../src/lib/state/devicePanel.svelte.ts';
 import { ask } from '../../src/lib/devices/ask.svelte.ts';
@@ -302,6 +303,16 @@ describe('what the actions send', () => {
 		await act.deleteDevices([dev({ id: 'a' }), dev({ id: 'b' }), dev({ id: 'c', soft_deleted: true })]);
 		expect(confirm).toHaveBeenCalledTimes(1);
 		expect(devicesApi.bulkDelete).toHaveBeenCalledWith(['a', 'b']);
+	});
+
+	test('bulk delete says how many the server deleted when it is fewer than asked', async () => {
+		as('device.delete');
+		dismissAll();
+		vi.mocked(devicesApi.bulkDelete).mockResolvedValueOnce(1);
+		await act.deleteDevices([dev({ id: 'a' }), dev({ id: 'b' })]);
+		expect(toasts.items.map((x) => [x.type, x.message])).toEqual([
+			['warning', '1 of 2 devices deleted. The others could not be deleted.']
+		]);
 	});
 
 	test('every change tells the list', async () => {

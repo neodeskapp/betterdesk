@@ -638,7 +638,8 @@
     "bulk_tags_title": "Štítky zařízení ({count})",
     "bulk_tags_hint": "Zaškrtnuté štítky se přidají ke každému vybranému zařízení, odškrtnuté se odeberou. Částečně zaškrtnuté zůstanou beze změny.",
     "bulk_tags_saved": "Štítky změněny na zařízeních: {count}.",
-    "remote_disabled_badge": "Vypnuto"
+    "remote_disabled_badge": "Vypnuto",
+    "bulk_delete_partial": "Smazáno {deleted} z {count} zařízení. Ostatní se smazat nepodařilo."
   },
   "keys": {
     "title": "Klíče serveru",

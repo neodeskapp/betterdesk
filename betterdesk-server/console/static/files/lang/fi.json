@@ -644,7 +644,8 @@
     "bulk_tags_title": "{count} laitteen tagit",
     "bulk_tags_hint": "Valitut tagit lisätään jokaiseen valittuun laitteeseen ja tyhjennetyt poistetaan. Osittain valitut pysyvät ennallaan.",
     "bulk_tags_saved": "Tagit muutettu {count} laitteessa.",
-    "remote_disabled_badge": "Poistettu käytöstä"
+    "remote_disabled_badge": "Poistettu käytöstä",
+    "bulk_delete_partial": "{deleted}/{count} laitetta poistettu. Muita ei voitu poistaa."
   },
   "keys": {
     "title": "Palvelimen avaimet",
