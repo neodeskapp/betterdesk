@@ -540,10 +540,14 @@ func (s *Service) write(ctx context.Context, status *branding.Object) (*Result, 
 	}
 	finalPath := filepath.Join(destination, filename)
 	tempPath := fmt.Sprintf("%s.%d.%d.tmp", finalPath, s.o.PID, s.o.Now().UnixMilli())
+	// the temporary file holds what the archive holds: it goes on every
+	// failure
 	if err := os.WriteFile(tempPath, archive, 0o600); err != nil {
+		removeFile(tempPath)
 		return nil, backup.NodeFSError(err, "open", tempPath)
 	}
 	if err := os.Rename(tempPath, finalPath); err != nil {
+		removeFile(tempPath)
 		return nil, backup.NodeFSError(err, "rename", tempPath)
 	}
 	persisted, err := os.ReadFile(finalPath)
@@ -560,6 +564,7 @@ func (s *Service) write(ctx context.Context, status *branding.Object) (*Result, 
 	if err := os.WriteFile(finalPath+".sha256", []byte(digest+"  "+filename+"\n"), 0o600); err != nil {
 		return nil, backup.NodeFSError(err, "open", finalPath+".sha256")
 	}
+	removeStaleTemporaryFiles(destination, s.o.Now().Add(-staleTemporary))
 	deleted := prune(destination, int(schedule.RetentionCount))
 
 	var components any = []any{}
@@ -623,6 +628,34 @@ func prune(dir string, keep int) []string {
 		deleted = append(deleted, a.name)
 	}
 	return deleted
+}
+
+// temporaryName is the name of a run's temporary file:
+// <archive name>.<pid>.<milliseconds>.tmp.
+var temporaryName = regexp.MustCompile(`^betterdesk-backup-[^\n\r\x{2028}\x{2029}]*\.tar\.gz\.[0-9]+\.[0-9]+\.tmp$`)
+
+// staleTemporary is the age from which a temporary file counts as left by
+// a run that ended without removing it (a crash, a kill); a younger one
+// may belong to a run of another process that still writes it.
+const staleTemporary = time.Hour
+
+// removeStaleTemporaryFiles removes the temporary files of runs in dir
+// last changed before the given time.
+func removeStaleTemporaryFiles(dir string, before time.Time) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, e := range entries {
+		if !temporaryName.MatchString(e.Name()) {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil || !info.Mode().IsRegular() || !info.ModTime().Before(before) {
+			continue
+		}
+		removeFile(filepath.Join(dir, e.Name()))
+	}
 }
 
 // removeFile is fs.rmSync(path, {force: true}): a missing file is fine, a

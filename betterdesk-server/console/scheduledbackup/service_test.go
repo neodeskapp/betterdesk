@@ -229,6 +229,66 @@ func TestFailedRunsAreRecorded(t *testing.T) {
 	}
 }
 
+// RV20: a run that cannot put its archive in place removes its temporary
+// file, and a run that succeeds removes the temporary files earlier runs
+// left an hour or more ago, but not a younger one, which a run may still
+// be writing.
+func TestTemporaryFilesDoNotStay(t *testing.T) {
+	s, _, clk, data := newTestService(t)
+	ctx := context.Background()
+	dir := filepath.Join(data, "scheduled-backups")
+	name := "betterdesk-backup-2026-11-10-10-00-00.tar.gz"
+	// a folder that holds a file cannot take the archive's place
+	if err := os.MkdirAll(filepath.Join(dir, name, "inside"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.CreateScheduledBackup(ctx); err == nil {
+		t.Fatal("the run put its archive over a folder")
+	}
+	tmpFiles := func() []string {
+		var out []string
+		entries, _ := os.ReadDir(dir)
+		for _, e := range entries {
+			if strings.HasSuffix(e.Name(), ".tmp") {
+				out = append(out, e.Name())
+			}
+		}
+		return out
+	}
+	if left := tmpFiles(); len(left) != 0 {
+		t.Fatalf("the failed run left %v", left)
+	}
+	if err := os.RemoveAll(filepath.Join(dir, name)); err != nil {
+		t.Fatal(err)
+	}
+
+	old := filepath.Join(dir, name+".7.1762768800000.tmp")
+	young := filepath.Join(dir, name+".8.1762772000000.tmp")
+	other := filepath.Join(dir, "notes.tmp")
+	for _, p := range []string{old, young, other} {
+		if err := os.WriteFile(p, []byte("partial"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	clk.add(time.Minute)
+	for p, age := range map[string]time.Duration{old: 61 * time.Minute, young: 10 * time.Minute, other: 5 * time.Hour} {
+		at := clk.now().Add(-age)
+		if err := os.Chtimes(p, at, at); err != nil {
+			t.Fatal(err)
+		}
+	}
+	res, err := s.CreateScheduledBackup(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if left := tmpFiles(); strings.Join(left, ",") != filepath.Base(young)+",notes.tmp" {
+		t.Errorf("temporary files after the run: %v", left)
+	}
+	if len(res.Deleted) != 0 {
+		t.Errorf("deleted %v", res.Deleted)
+	}
+}
+
 func TestOneRunAtATime(t *testing.T) {
 	s, fb, _, _ := newTestService(t)
 	ctx := context.Background()
