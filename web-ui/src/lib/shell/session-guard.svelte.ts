@@ -8,7 +8,9 @@
  *   storage key "betterdesk.session.expired"; they go to the sign-in page.
  * - Idle: a warning `warnBeforeMs` before `idleTimeoutMs` without
  *   activity (mouse, keys, scroll, touch), with "Stay signed in". At the
- *   end the session is checked once; if it is gone, sign-in.
+ *   end the session is checked: a 401 is sign-in; a session another tab
+ *   kept alive hides the warning and the idle clock follows the server; a
+ *   check that failed otherwise (network, 502, 429) runs again later.
  * - Every 5 minutes (while the tab is visible) GET /api/auth/verify brings
  *   the policy and the server's last activity.
  * - The server counts writes and page loads as activity, not reads or polls
@@ -18,13 +20,15 @@
  *   than this tab does.
  */
 
-import { setUnauthorizedHandler } from '#lib/api/client.ts';
+import { ApiError, setUnauthorizedHandler } from '#lib/api/client.ts';
 import { poll } from '#lib/state/live.ts';
 import { verifySession, type SessionInfo } from './api.ts';
 
 export const CHANNEL = 'betterdesk-panel-session';
 export const EXPIRED_KEY = 'betterdesk.session.expired';
 export const SYNC_MS = 5 * 60_000;
+/** How soon the check at the end of the idle time runs again when it could not decide */
+export const RECHECK_MS = 30_000;
 const ACTIVITY = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'] as const;
 
 export interface Policy {
@@ -102,12 +106,27 @@ function schedule(): void {
 	warnTimer = setTimeout(() => {
 		guard.warning = Math.max(1, Math.ceil((lastActivity + idle - Date.now()) / 1000));
 	}, untilWarn);
-	expireTimer = setTimeout(
-		() => {
-			// The server decides; a 401 sends the browser to sign-in through the API client
-			verifySession().catch(() => goLogin());
+	expireTimer = setTimeout(checkExpiry, Math.max(0, lastActivity + idle - Date.now()) + 500);
+}
+
+function recheckLater(): void {
+	if (expireTimer) clearTimeout(expireTimer);
+	expireTimer = setTimeout(checkExpiry, RECHECK_MS);
+}
+
+/** The idle time is over here: the server decides */
+function checkExpiry(): void {
+	verifySession().then(
+		(info) => {
+			applyPolicy(info);
+			// Still valid on the server without newer activity: ask again later, not in a loop
+			if (lastActivity + policy.idleTimeoutMs <= Date.now()) recheckLater();
 		},
-		Math.max(0, lastActivity + idle - Date.now()) + 500
+		(err: unknown) => {
+			// A 401 is sign-in (the API client sends it there too); nothing else means signed out
+			if (err instanceof ApiError && err.status === 401) goLogin();
+			else recheckLater();
+		}
 	);
 }
 
@@ -153,6 +172,9 @@ function applyPolicy(info: SessionInfo): void {
 		warnBeforeMs: s.warnBeforeMs && s.warnBeforeMs > 0 ? s.warnBeforeMs : policy.warnBeforeMs
 	};
 	if (s.lastActivityAt) lastActivity = Math.max(lastActivity, s.lastActivityAt);
+	// Activity in another tab moved the end: the warning goes until it is due again
+	if (guard.warning !== null && lastActivity + policy.idleTimeoutMs - policy.warnBeforeMs > Date.now())
+		guard.warning = null;
 	schedule();
 }
 

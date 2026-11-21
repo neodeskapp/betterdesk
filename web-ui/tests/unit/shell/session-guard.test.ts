@@ -116,4 +116,40 @@ describe('session guard', () => {
 		document.dispatchEvent(new Event('keydown'));
 		expect(g.guard.warning).toBeNull();
 	});
+
+	test('at the end of the idle time a failed check (502, network) signs nobody out and is tried again', async () => {
+		const g = await import('../../../src/lib/shell/session-guard.svelte.ts');
+		g.startGuard({ idleTimeoutMs: 120_000, warnBeforeMs: 30_000 });
+		vi.mocked(fetch).mockImplementation(() => Promise.resolve(new Response('bad gateway', { status: 502 })));
+		await vi.advanceTimersByTimeAsync(125_000);
+		expect(assign).not.toHaveBeenCalled();
+		const checks = () =>
+			vi.mocked(fetch).mock.calls.filter(([url]) => String(url).startsWith('/api/auth/verify')).length;
+		const before = checks();
+		expect(before).toBeGreaterThan(0);
+		vi.mocked(fetch).mockImplementation(() => Promise.reject(new TypeError('offline')));
+		await vi.advanceTimersByTimeAsync(60_000);
+		expect(checks()).toBeGreaterThan(before);
+		expect(assign).not.toHaveBeenCalled();
+	});
+
+	test('a passed check after another tab kept the session alive hides the warning and waits again', async () => {
+		const g = await import('../../../src/lib/shell/session-guard.svelte.ts');
+		g.startGuard({ idleTimeoutMs: 120_000, warnBeforeMs: 30_000 });
+		await vi.advanceTimersByTimeAsync(91_000);
+		expect(g.guard.warning).not.toBeNull();
+		vi.mocked(fetch).mockImplementation(() =>
+			Promise.resolve(
+				new Response(JSON.stringify({ session: { lastActivityAt: Date.now() + 20_000 } }), {
+					headers: { 'Content-Type': 'application/json' }
+				})
+			)
+		);
+		await vi.advanceTimersByTimeAsync(30_000);
+		expect(g.guard.warning).toBeNull();
+		expect(assign).not.toHaveBeenCalled();
+		// The other tab's activity counts: the warning comes again before its idle time ends
+		await vi.advanceTimersByTimeAsync(112_000);
+		expect(g.guard.warning).not.toBeNull();
+	});
 });
