@@ -68,6 +68,9 @@ var fixedSteps = []fixedStep{
 	{"node_agent", `19 GET /api/devices/A1001/processes as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
 	{"node_agent", `20 GET /api/devices/A1001/clipboard as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
 	{"node_agent", `55 GET /api/devices/A1001/services as admin agent {"ok":false,"error":"agent_offline"}`, "WS8"},
+	// Reading a device's clipboard needs device.connect, which a viewer
+	// has not: 403 before the agent is asked.
+	{"node_agent", "154 GET /api/devices/C1003/clipboard as viewer", "RV67"},
 	// The tag cut to 50 characters stops before the emoji that does not fit
 	// whole, where Node kept half of it.
 	{"node", `135 PUT /api/devices/A1001/tags {"tags":[" a ","",5,null,"b","  ","` + strings.Repeat("c", 60) + `","` + strings.Repeat("d😀", 30) + `"]} as admin`, "DGR2"},

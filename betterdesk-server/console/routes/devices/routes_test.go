@@ -271,6 +271,37 @@ func TestScreenshotNeedsDeviceEdit(t *testing.T) {
 	}
 }
 
+// TestClipboardNeedsDeviceConnect reads a device's clipboard as each
+// built-in role, past the panel access guard: the roles without
+// device.connect (viewer, guest_issuer, server_admin) are refused, the
+// others reach the route; the processes, services, events and activity of
+// the device stay with device.view (BUGS RV67, A82).
+func TestClipboardNeedsDeviceConnect(t *testing.T) {
+	w, _ := world(t, storetest.Migrated(t), nil, nil)
+	d := w.Server.Deps()
+	const denied = `{"success":false,"error":"Permission denied: device.connect"}`
+	for _, c := range []struct {
+		role    string
+		refused bool
+	}{
+		{"viewer", true}, {"guest_issuer", true}, {"server_admin", true},
+		{"operator", false}, {"global_admin", false}, {"admin", false},
+	} {
+		for _, path := range []string{"clipboard", "processes", "services", "events", "activity"} {
+			r := kit.Begin(httptest.NewRequest("GET", "/api/devices/A/"+path, nil), httpx.TrustProxy{}, nil)
+			kit.SetAccess(r, d.Access.Load(r.Context(), access.Session{UserID: routetest.RoleIDs[c.role], HasUser: true, Role: c.role}))
+			got := httptest.NewRecorder()
+			if !w.Server.Router().Serve(got, r) {
+				t.Fatalf("no route answered GET /api/devices/A/%s", path)
+			}
+			refused := got.Code == http.StatusForbidden
+			if want := c.refused && path == "clipboard"; refused != want || refused && got.Body.String() != denied {
+				t.Errorf("%s as %s: %d %s, want refused %v", path, c.role, got.Code, got.Body.String(), want)
+			}
+		}
+	}
+}
+
 // TestListSortFields orders two devices by every field the list may be
 // ordered by, and by one it may not, which falls back on the last
 // contact. P1 comes first by every field but the last contact.

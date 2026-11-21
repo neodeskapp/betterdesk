@@ -1,4 +1,14 @@
 {
+ "154 GET /api/devices/C1003/clipboard as viewer": {
+  "bug": "RV67",
+  "answer": {
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"Permission denied: device.connect\"}",
+   "calls": [
+    "GET /api/peers/C1003"
+   ]
+  }
+ },
  "17 GET /api/devices/A1001/services as admin agent {\"ok\":false,\"error\":\"agent_timeout\"}": {
   "bug": "WS8",
   "answer": {
