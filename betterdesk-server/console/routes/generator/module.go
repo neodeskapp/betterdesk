@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"os"
@@ -76,12 +77,24 @@ type codedFailure struct {
 	Code    string `json:"code"`
 }
 
+// installDeadline bounds a template install or a source sync.
+const installDeadline = 30 * time.Minute
+
+// installContext is the context of a template install or a source sync:
+// the work goes on when the browser or a proxy gives up on the request,
+// and the page sees the result at its next status poll.
+func installContext(r *http.Request) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(r.Context()), installDeadline)
+}
+
 // install answers POST /api/generator/module/install. Download mode
 // fetches the templates of the newest client release (or body.repo,
 // body.tag); embedded mode syncs the client source (body.repo, body.ref
 // or body.tag) after making sure a signing key exists.
 func (h *handlers) install(w http.ResponseWriter, r *http.Request) {
 	body := requestBody(r)
+	ctx, cancel := installContext(r)
+	defer cancel()
 	var data any
 	var err error
 	if h.gen.Embedded() {
@@ -91,7 +104,7 @@ func (h *handlers) install(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			var result gen.SyncResult
-			if result, err = h.gen.SyncSource(r.Context(), prop(body, "repo"), or(prop(body, "ref"), prop(body, "tag")), true); err == nil {
+			if result, err = h.gen.SyncSource(ctx, prop(body, "repo"), or(prop(body, "ref"), prop(body, "tag")), true); err == nil {
 				data = result.Object()
 			}
 		}
@@ -104,7 +117,7 @@ func (h *handlers) install(w http.ResponseWriter, r *http.Request) {
 			tag = jsTrim(jsString(v))
 		}
 		var state *goapi.Object
-		if state, err = h.gen.InstallFromGitHub(r.Context(), repo, tag); err == nil {
+		if state, err = h.gen.InstallFromGitHub(ctx, repo, tag); err == nil {
 			data = state
 		}
 	}
@@ -199,7 +212,9 @@ func (h *handlers) installLocal(w http.ResponseWriter, r *http.Request) {
 	}
 	fields, _ := gen.Parse(string(raw(form.Fields)))
 	version := jsSlice(jsTrim(jsString(or(prop(fields, "version"), "local"))), 100)
-	state, err := h.gen.InstallFromLocalArchive(r.Context(), form.File.Path, version)
+	ctx, cancel := installContext(r)
+	defer cancel()
+	state, err := h.gen.InstallFromLocalArchive(ctx, form.File.Path, version)
 	if err != nil {
 		h.log.Error("[generator] local module install error:", err.Error())
 		code := gen.ErrorCode(err)
