@@ -52,11 +52,14 @@ func runAccounts(ctx context.Context, args []string, getenv func(string) string,
 	if f.get("now", "") != "" {
 		clock = func() time.Time { return at }
 	}
-	db, err := openDatabase(ctx, databaseFrom(f.get("go-db", ""), getenv), true)
+	db, err := openDatabase(ctx, databaseFrom(f.get("go-db", ""), getenv))
 	if err != nil {
 		return err
 	}
 	defer db.Close()
+	if err := requireMarker(ctx, db); err != nil {
+		return err
+	}
 	// The service hashes passwords and issues tokens; neither asks the
 	// signal server, so its API client goes nowhere.
 	svc, err := authn.New(authn.Options{

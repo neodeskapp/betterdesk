@@ -8,7 +8,14 @@
 //	go run ./cmd/devseed accounts <file with the password>
 //
 // It runs where the console runs: it writes into the console's database
-// (the SQLite file, or PostgreSQL) and signs in to the console's API. For
+// (the SQLite file, or PostgreSQL) and signs in to the console's API.
+//
+// demo, many-devices and accounts write only into a database that carries
+// the test stack's marker: the row ('devseed_test_stack', '1') in
+// server_config, the table the Go server keeps its settings in and that
+// no route lists. The test stack (.ui-rework/go/stack/instance.sh) writes
+// it before it seeds; a real install never has it, so the commands refuse
+// a live database. demo asks it of a separate auth.db as well. For
 // a console in Docker, build it for Linux and copy it into the container:
 //
 //	cd betterdesk-server
@@ -40,8 +47,6 @@
 //	                  AUTH_DB_PATH or /app/data/auth.db when it exists)
 //	--online-file     where the ids for heartbeats go (default
 //	                  /app/data/dev-online-ids.json)
-//	--force           seed although NODE_ENV is production (a throwaway
-//	                  container)
 //	--now             the time to seed at, milliseconds since 1970 or RFC
 //	                  3339 (default now); the same time gives the same rows
 //
@@ -68,6 +73,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -224,9 +230,9 @@ type database struct {
 	label string
 }
 
-// openDatabase opens a SQLite file or a postgres:// address. mustExist
-// refuses a SQLite file that is not there instead of creating it.
-func openDatabase(ctx context.Context, dsn string, mustExist bool) (*database, error) {
+// openDatabase opens a SQLite file or a postgres:// address. A SQLite file
+// that is not there is refused instead of created.
+func openDatabase(ctx context.Context, dsn string) (*database, error) {
 	if postgresURL.MatchString(dsn) {
 		pool, err := pgxpool.New(ctx, dsn)
 		if err != nil {
@@ -238,16 +244,35 @@ func openDatabase(ctx context.Context, dsn string, mustExist bool) (*database, e
 		}
 		return &database{DB: store.OpenPostgres(pool), pool: pool, label: "postgres"}, nil
 	}
-	if mustExist {
-		if _, err := os.Stat(dsn); err != nil {
-			return nil, fmt.Errorf("open %s: %w", dsn, err)
-		}
+	if _, err := os.Stat(dsn); err != nil {
+		return nil, fmt.Errorf("open %s: %w", dsn, err)
 	}
 	db, err := store.OpenSQLite(dsn)
 	if err != nil {
 		return nil, err
 	}
 	return &database{DB: db, label: dsn}, nil
+}
+
+// The test stack's marker: a server_config row the stack writes before it
+// seeds.
+const (
+	markerKey   = "devseed_test_stack"
+	markerValue = "1"
+)
+
+// requireMarker refuses a database without the test stack's marker.
+func requireMarker(ctx context.Context, d *database) error {
+	var value string
+	err := d.QueryRow(ctx, `SELECT value FROM server_config WHERE key = ?`, markerKey).Scan(&value)
+	switch {
+	case errors.Is(err, sql.ErrNoRows) || err == nil && value != markerValue:
+		return fmt.Errorf("refusing to seed %s: it has no test stack marker (server_config key %q with the value %q), "+
+			"which the test stack writes before it seeds; devseed is for test stacks only", d.label, markerKey, markerValue)
+	case err != nil:
+		return fmt.Errorf("refusing to seed %s: cannot read the test stack marker (server_config key %q): %w", d.label, markerKey, err)
+	}
+	return nil
 }
 
 func (d *database) Close() {

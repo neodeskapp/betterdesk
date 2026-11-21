@@ -69,6 +69,7 @@ func TestPerfDevicesAreTheScriptsRows(t *testing.T) {
 func TestManyDevicesAddsAndRemovesOnlyPerfDevices(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		storetest.Prepare(t, db, storetest.GoServerFirst)
+		markStack(t, db)
 		ctx := context.Background()
 		if _, err := db.Exec(ctx, `INSERT INTO peers (id, hostname) VALUES ('900100001', 'demo-reception-01'), ('960000000', 'not-perf')`); err != nil {
 			t.Fatal(err)

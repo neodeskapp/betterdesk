@@ -11,7 +11,7 @@ import (
 func runDemo(ctx context.Context, args []string, getenv func(string) string, out, errOut io.Writer) error {
 	f, err := parseFlags(args,
 		[]string{"go-db", "auth-db", "panel", "admin-user", "admin-password", "cookie-file", "online-file", "now"},
-		[]string{"force"})
+		nil)
 	if err != nil {
 		return err
 	}
@@ -25,9 +25,6 @@ func runDemo(ctx context.Context, args []string, getenv func(string) string, out
 	adminPassword := f.get("admin-password", getenv("ADMIN_PASSWORD"))
 	cookieFile := f.get("cookie-file", "")
 	onlineFile := f.get("online-file", "/app/data/dev-online-ids.json")
-	if getenv("NODE_ENV") == "production" && !f.switches["force"] {
-		return errors.New("refusing to seed with NODE_ENV=production; pass --force for a throwaway container")
-	}
 	if adminPassword == "" && cookieFile == "" {
 		return errors.New("pass --cookie-file <storageState.json> or --admin-password (or set ADMIN_PASSWORD)")
 	}
@@ -37,11 +34,28 @@ func runDemo(ctx context.Context, args []string, getenv func(string) string, out
 	}
 	d := newDemo(at)
 
-	goStore, err := openDatabase(ctx, goDB, true)
+	goStore, err := openDatabase(ctx, goDB)
 	if err != nil {
 		return err
 	}
 	defer goStore.Close()
+	if err := requireMarker(ctx, goStore); err != nil {
+		return err
+	}
+	// Newer installs keep the console tables in the server's database;
+	// only older SQLite ones still have a separate auth.db, which must
+	// carry the marker too
+	auth := goStore
+	if authPath := authDatabase(f.get("auth-db", ""), goDB, getenv); authPath != goDB {
+		if auth, err = openDatabase(ctx, authPath); err != nil {
+			return err
+		}
+		defer auth.Close()
+		if err := requireMarker(ctx, auth); err != nil {
+			return err
+		}
+	}
+
 	mainWriter, err := newWriter(ctx, goStore.DB)
 	if err != nil {
 		return err
@@ -49,15 +63,8 @@ func runDemo(ctx context.Context, args []string, getenv func(string) string, out
 	if err := d.seedGoDB(ctx, mainWriter, out); err != nil {
 		return err
 	}
-
-	// Newer installs keep the console tables in the server's database;
-	// only older SQLite ones still have a separate auth.db.
-	auth, authWriter := goStore, mainWriter
-	if authPath := authDatabase(f.get("auth-db", ""), goDB, getenv); authPath != goDB {
-		if auth, err = openDatabase(ctx, authPath, true); err != nil {
-			return err
-		}
-		defer auth.Close()
+	authWriter := mainWriter
+	if auth != goStore {
 		if authWriter, err = newWriter(ctx, auth.DB); err != nil {
 			return err
 		}

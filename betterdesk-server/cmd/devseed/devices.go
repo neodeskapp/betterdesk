@@ -68,11 +68,14 @@ func runManyDevices(ctx context.Context, args []string, getenv func(string) stri
 		fixed := float64(at.UnixMilli())
 		now = func() float64 { return fixed }
 	}
-	db, err := openDatabase(ctx, databaseFrom(f.get("go-db", ""), getenv), false)
+	db, err := openDatabase(ctx, databaseFrom(f.get("go-db", ""), getenv))
 	if err != nil {
 		return err
 	}
 	defer db.Close()
+	if err := requireMarker(ctx, db); err != nil {
+		return err
+	}
 
 	if f.switches["remove"] {
 		res, err := db.Exec(ctx, db.Pick(

@@ -21,6 +21,7 @@ import (
 func TestAccountsMakesOneAccountPerRoleAndTheDeviceTokens(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		storetest.Prepare(t, db, storetest.GoServerFirst)
+		markStack(t, db)
 		ctx := context.Background()
 		// The first account gets the id 1, the owner of the tokens
 		for _, name := range []string{"admin", "e2e_viewer"} {
@@ -128,6 +129,7 @@ func TestAccountsMakesOneAccountPerRoleAndTheDeviceTokens(t *testing.T) {
 func TestAccountsNeedTheTokenOwner(t *testing.T) {
 	db := storetest.SQLite(t)
 	storetest.Prepare(t, db, storetest.GoServerFirst)
+	markStack(t, db)
 	dir := t.TempDir()
 	passwordFile := filepath.Join(dir, "e2e_password")
 	if err := os.WriteFile(passwordFile, []byte("x"), 0o600); err != nil {
