@@ -107,7 +107,7 @@ type Server struct {
 	pairingLimiter *ratelimit.IPLimiter
 	// The single sign-on start routes are public and each call keeps a
 	// pending entry for minutes.
-	oidcStartLimiter *ratelimit.IPLimiter
+	oidcStartLimiter  *ratelimit.IPLimiter
 	keyPair           *crypto.KeyPair // Ed25519 keypair for signing
 	telemetryPrivate  [32]byte        // X25519 private key for telemetry envelopes
 	telemetryPublic   [32]byte        // X25519 public key for telemetry envelopes
@@ -160,7 +160,7 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		// need ~10^7 minutes at this rate.
 		pairingLimiter: ratelimit.NewIPLimiter(10, 1*time.Minute, 5*time.Minute),
 		// 20/min per IP: a person starts a sign-in a few times at most.
-		oidcStartLimiter: ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),
+		oidcStartLimiter:  ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),
 		clientTFASessions: newTFASessionStore(),
 		secureClientKeys:  make(map[string][32]byte),
 		panelNonces:       newPanelNonceCache(),
@@ -910,7 +910,8 @@ func (s *Server) handleHealthDetail(w http.ResponseWriter, r *http.Request) {
 // handlePubKey returns the server's Ed25519 public key in base64 format.
 // This is the "key" value that RustDesk clients use for E2E encryption verification.
 // Public endpoint — no authentication required.
-func (s *Server) handlePubKey(w http.ResponseWriter, r *http.Request) {	if s.keyPair == nil {
+func (s *Server) handlePubKey(w http.ResponseWriter, r *http.Request) {
+	if s.keyPair == nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "Server keypair not initialized",
 		})
