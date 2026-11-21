@@ -343,12 +343,17 @@ func (p *replayer) restore(tables []string) {
 
 // nodeCalls are the calls the Node console made to the API server, without
 // the list of users that its user sync asked for on PostgreSQL to copy
-// roles back (not ported, DECISIONS A17, BUGS D13).
+// roles back (not ported, DECISIONS A17, BUGS D13). Where Node asked for
+// the enabled remote targets of the device list, the Go console asks for
+// the disabled ones too and lists them (BUGS.md RV25).
 func nodeCalls(calls []apiCall) []string {
 	var out []string
 	for _, c := range calls {
 		if c.Method == http.MethodGet && c.URL == "/api/users" {
 			continue
+		}
+		if c.URL == "/api/remote-targets?org_id=&include_disabled=false" {
+			c.URL = "/api/remote-targets?org_id=&include_disabled=true"
 		}
 		line := c.Method + " " + c.URL
 		if c.Body != "" {

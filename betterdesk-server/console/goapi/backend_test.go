@@ -105,7 +105,7 @@ func TestGetAllDevicesMergesAndOverlays(t *testing.T) {
 	b, api := deviceBackend(store)
 	devices := b.GetAllDevices(context.Background(), DeviceFilters{})
 
-	if got := strings.Join(api.requests, " | "); got != "GET /api/peers | GET /api/remote-targets?org_id=&include_disabled=false" {
+	if got := strings.Join(api.requests, " | "); got != "GET /api/peers | GET /api/remote-targets?org_id=&include_disabled=true" {
 		t.Errorf("requests = %s", got)
 	}
 	// Ordered by last_online, newest first; the target has none and comes last.
@@ -166,6 +166,33 @@ func TestGetAllDevicesFiltersAndSorts(t *testing.T) {
 		if got := strings.Join(api.requests, " | "); c.request != "" && got != c.request {
 			t.Errorf("%s: requests = %s", c.name, got)
 		}
+	}
+}
+
+// A disabled RDP or VNC target is listed without IncludeDeleted too,
+// marked remote_target and soft_deleted with status DISABLED and enabled
+// false, which the web app shows as disabled (BUGS.md RV25).
+func TestGetAllDevicesListsDisabledTargets(t *testing.T) {
+	api := &fakeAPI{answer: func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/api/peers":
+			answerJSON(200, `[]`)(w, r)
+		case r.URL.Path == "/api/remote-targets" && r.URL.Query().Get("include_disabled") == "true":
+			answerJSON(200, `{"targets":[{"id":"rt_on","name":"on","protocol":"rdp","enabled":true},{"id":"rt_off","name":"off","protocol":"vnc","enabled":false}]}`)(w, r)
+		default:
+			answerJSON(200, `{"targets":[{"id":"rt_on","name":"on","protocol":"rdp","enabled":true}]}`)(w, r)
+		}
+	}}
+	devices := NewBackend(New(api), &fakeStore{}).GetAllDevices(context.Background(), DeviceFilters{SortBy: "id", SortOrder: "asc"})
+	if got := ids(devices); got != "rt_off,rt_on" {
+		t.Fatalf("devices = %s, want both targets", got)
+	}
+	off := devices[0]
+	if !off.Bool("remote_target") || !off.Bool("soft_deleted") || off.Str("status") != "DISABLED" || off.Get("enabled") != false {
+		t.Errorf("the disabled target = %s", toJSON(t, off))
+	}
+	if on := devices[1]; on.Bool("soft_deleted") || on.Str("status") != "OFFLINE" {
+		t.Errorf("the enabled target = %s", toJSON(t, on))
 	}
 }
 

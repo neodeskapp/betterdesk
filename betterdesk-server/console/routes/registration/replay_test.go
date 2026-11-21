@@ -556,9 +556,17 @@ func (p *replayer) calls() []apiCall {
 	return out
 }
 
+// nodeTargets and allTargets are the device list's call for the remote
+// targets: Node asked for the enabled ones, the Go console asks for the
+// disabled ones too and lists them (BUGS.md RV25).
+const nodeTargets, allTargets = "/api/remote-targets?org_id=&include_disabled=false", "/api/remote-targets?org_id=&include_disabled=true"
+
 func sameCalls(got, want []apiCall) bool {
 	var w []apiCall
 	for _, c := range want {
+		if c.URL == nodeTargets {
+			c.URL = allTargets
+		}
 		if !strings.HasPrefix(c.URL, "/api/roles/") {
 			w = append(w, c)
 		}

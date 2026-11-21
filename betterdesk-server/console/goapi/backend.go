@@ -94,7 +94,8 @@ func (b *Backend) GetServerInfo(ctx context.Context) *Object { return b.api.GetS
 
 // DeviceFilters select and order the devices of GetAllDevices.
 type DeviceFilters struct {
-	// IncludeDeleted adds deleted peers and disabled remote targets.
+	// IncludeDeleted adds deleted peers. Disabled remote targets are
+	// always listed.
 	IncludeDeleted bool
 	// Search keeps devices whose id, username, hostname or note contains
 	// the text, whatever the case.
@@ -111,14 +112,15 @@ type DeviceFilters struct {
 }
 
 // GetAllDevices returns the peers (Client.GetAllPeers) followed by the
-// remote targets (Client.GetAllRemoteTargets), with folder_id from the
-// console's folder assignments, with hostname, platform, os and version
-// filled in from the console's system information where the API server has
-// none, filtered and ordered by filters. The order compares the fields as
-// text.
+// remote targets (Client.GetAllRemoteTargets), disabled ones included
+// (soft_deleted and status DISABLED, which the web app shows as
+// disabled), with folder_id from the console's folder assignments, with
+// hostname, platform, os and version filled in from the console's system
+// information where the API server has none, filtered and ordered by
+// filters. The order compares the fields as text.
 func (b *Backend) GetAllDevices(ctx context.Context, filters DeviceFilters) []*Object {
 	peers := b.api.GetAllPeers(ctx, filters.IncludeDeleted)
-	peers = append(peers, b.api.GetAllRemoteTargets(ctx, "", filters.IncludeDeleted)...)
+	peers = append(peers, b.api.GetAllRemoteTargets(ctx, "", true)...)
 
 	if assignments, err := b.store.GetAllFolderAssignments(ctx); err != nil {
 		logging.Logf("goapi", "failed to overlay folder assignments: %v", err)
