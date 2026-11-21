@@ -296,8 +296,8 @@ func TestImportLatest(t *testing.T) {
 			t.Errorf("file request: %s", r)
 		}
 	}
-	// A second import of the same tag cannot rename onto the full folder
-	if _, err := s.ImportLatest(context.Background()); err == nil || !strings.Contains(err.Error(), "rename") {
+	// A second import of the same tag is not newer than the cache
+	if _, err := s.ImportLatest(context.Background()); !errors.Is(err, ErrNotNewer) {
 		t.Errorf("second import: %v", err)
 	}
 }

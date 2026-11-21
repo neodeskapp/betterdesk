@@ -36,7 +36,8 @@ type Imported struct {
 }
 
 // ImportLatest imports the newest release of the repository whose tag
-// starts with support-v and that is no draft and no pre-release. It checks
+// starts with support-v and that is no draft and no pre-release. Before
+// anything is downloaded it checks the tag (checkReleaseTag). It checks
 // the manifest's signature with the signing key, the manifest itself, and
 // the size and SHA-256 of every file against the manifest and SHA256SUMS,
 // and refuses archives that carry a custom.txt. The files go into a
@@ -45,6 +46,10 @@ type Imported struct {
 // (generic_agent_release_...).
 func (s *Service) ImportLatest(ctx context.Context) (Imported, error) {
 	release, err := s.fetchLatestRelease(ctx)
+	if err != nil {
+		return Imported{}, err
+	}
+	tag, err := s.checkReleaseTag(goapi.Dig(release, "tag_name"))
 	if err != nil {
 		return Imported{}, err
 	}
@@ -151,10 +156,6 @@ func (s *Service) ImportLatest(ctx context.Context) (Imported, error) {
 		files = append(files, file)
 	}
 
-	tag, ok := goapi.Dig(release, "tag_name").(string)
-	if !ok {
-		return Imported{}, errors.New(`The "path" argument must be of type string. ` + received(goapi.Dig(release, "tag_name")))
-	}
 	destination := filepath.Join(s.root, tag)
 	now := s.opts.Now()
 	staging := destination + ".tmp-" + strconv.Itoa(s.opts.PID) + "-" + strconv.FormatInt(now.UnixMilli(), 10)
@@ -235,6 +236,110 @@ func (s *Service) fetchLatestRelease(ctx context.Context) (any, error) {
 		}
 	}
 	return nil, errors.New("generic_agent_release_not_found")
+}
+
+// ErrNotNewer refuses a release whose tag is not higher than every
+// release in the cache. Its error text is the code, a colon and the tag.
+var ErrNotNewer = errors.New("generic_agent_release_not_newer")
+
+// checkReleaseTag takes a release's tag as the name of its cache folder:
+// a plain file name that starts with support-v and is higher than the
+// tag of every release in the cache (compareTags). Only manifest.json is
+// signed and it does not name its release, so the files of an older
+// signed release published under a new tag would otherwise be offered
+// as the newest agent.
+func (s *Service) checkReleaseTag(v any) (string, error) {
+	tag, ok := v.(string)
+	if !ok {
+		return "", errors.New(`The "path" argument must be of type string. ` + received(v))
+	}
+	if safeName(tag) == "" || !strings.HasPrefix(tag, releasePrefix) || tag == releasePrefix {
+		return "", errors.New("generic_agent_release_tag_invalid")
+	}
+	for _, cached := range s.ListCached() {
+		if strings.HasPrefix(cached.Tag, releasePrefix) && compareTags(tag, cached.Tag) <= 0 {
+			return "", fmt.Errorf("%w:%s", ErrNotNewer, tag)
+		}
+	}
+	return tag, nil
+}
+
+// compareTags orders two support-v tags by their versions as semantic
+// versioning does: the dotted parts before the first "-" one by one
+// (numbers by value, a missing part as 0), then a version without a
+// suffix after "-" above one with it, then the suffixes' dotted parts.
+// It returns -1, 0 or 1.
+func compareTags(a, b string) int {
+	coreA, preA, hasPreA := strings.Cut(strings.TrimPrefix(a, releasePrefix), "-")
+	coreB, preB, hasPreB := strings.Cut(strings.TrimPrefix(b, releasePrefix), "-")
+	partsA, partsB := strings.Split(coreA, "."), strings.Split(coreB, ".")
+	for i := 0; i < max(len(partsA), len(partsB)); i++ {
+		x, y := "0", "0"
+		if i < len(partsA) {
+			x = partsA[i]
+		}
+		if i < len(partsB) {
+			y = partsB[i]
+		}
+		if c := comparePart(x, y); c != 0 {
+			return c
+		}
+	}
+	switch {
+	case hasPreA != hasPreB:
+		if hasPreA {
+			return -1
+		}
+		return 1
+	case !hasPreA:
+		return 0
+	}
+	partsA, partsB = strings.Split(preA, "."), strings.Split(preB, ".")
+	for i := 0; i < min(len(partsA), len(partsB)); i++ {
+		if c := comparePart(partsA[i], partsB[i]); c != 0 {
+			return c
+		}
+	}
+	switch {
+	case len(partsA) < len(partsB):
+		return -1
+	case len(partsA) > len(partsB):
+		return 1
+	}
+	return 0
+}
+
+// comparePart orders two version parts: numbers by value and below
+// text, text by its bytes.
+func comparePart(x, y string) int {
+	numX, numY := isDigits(x), isDigits(y)
+	switch {
+	case numX && numY:
+		x, y = strings.TrimLeft(x, "0"), strings.TrimLeft(y, "0")
+		if len(x) != len(y) {
+			if len(x) < len(y) {
+				return -1
+			}
+			return 1
+		}
+	case numX:
+		return -1
+	case numY:
+		return 1
+	}
+	return strings.Compare(x, y)
+}
+
+func isDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 type downloaded struct {
