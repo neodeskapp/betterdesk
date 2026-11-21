@@ -16,8 +16,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 )
 
-// goOnly is a console without the Node console behind it, with a probe
-// route in each stage.
+// goOnly is a console with a probe route in each stage.
 func goOnly(t *testing.T, o setup) *world {
 	t.Helper()
 	w := newWorld(t, o)
@@ -49,14 +48,6 @@ func TestStepOrderIsTheOneOfTheNodeConsole(t *testing.T) {
 		"17 compression mark|18 JSON content type|18 routes|19 web app"
 	if strings.Join(got, "|") != want {
 		t.Errorf("steps = %s\nwant    %s", strings.Join(got, "|"), want)
-	}
-
-	mixed := newWorld(t, setup{node: true})
-	for _, st := range mixed.s.steps() {
-		off := st.n == 9 || st.n == 19
-		if (st.use == nil) != off {
-			t.Errorf("with the Node console, step %d %q off = %v, want %v", st.n, st.name, st.use == nil, off)
-		}
 	}
 }
 
@@ -447,6 +438,10 @@ func TestStep12EarlyStageHasNoLanguageNoCSRFCheckNoCompression(t *testing.T) {
 		}
 		if res.header.Get("Cache-Control") != "no-store" {
 			t.Errorf("%s: Cache-Control = %q, want step 1's", name, res.header.Get("Cache-Control"))
+		}
+		// The body step comes before the early stage
+		if !strings.Contains(res.body, `"body":{"a":1}`) {
+			t.Errorf("%s: the early route did not see the parsed body: %s", name, res.body)
 		}
 	}
 	// The early stage does not ask for JSON either

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,10 +24,9 @@ var fixtures = filepath.Join("..", "..", "branding", "testdata", "console")
 
 // world is a console with three small language files (English, German,
 // Arabic), the branding fixtures and a product version of 9.8.7.
-// nodeBehind makes it a console with the Node console behind it.
-func world(t *testing.T, db *store.DB, nodeBehind bool) *routetest.World {
+func world(t *testing.T, db *store.DB) *routetest.World {
 	t.Helper()
-	return worldWithLanguages(t, db, nodeBehind, smallLangDir(t))
+	return worldWithLanguages(t, db, smallLangDir(t))
 }
 
 // smallLangDir is a folder with three language files of a few texts.
@@ -47,7 +45,7 @@ func smallLangDir(t *testing.T) string {
 	return dir
 }
 
-func worldWithLanguages(t *testing.T, db *store.DB, nodeBehind bool, langDir string) *routetest.World {
+func worldWithLanguages(t *testing.T, db *store.DB, langDir string) *routetest.World {
 	t.Helper()
 	w := routetest.New(t, routetest.Options{DB: db, Config: func(cfg *config.Config) {
 		cfg.LangDir = langDir
@@ -56,9 +54,6 @@ func worldWithLanguages(t *testing.T, db *store.DB, nodeBehind bool, langDir str
 		cfg.SupportersFile = filepath.Join(fixtures, "config", "supporters.json")
 		cfg.FaviconFile = filepath.Join(fixtures, "public", "favicon.svg")
 		cfg.ThemesDir = filepath.Join(fixtures, "themes")
-		if nodeBehind {
-			cfg.NodeUpstream = &url.URL{Scheme: "http", Host: "127.0.0.1:9"}
-		}
 	}})
 	w.Server.Router().Get("/__test/emergency", func(rw http.ResponseWriter, r *http.Request) {
 		kit.Session(r).Set("emergencyMode", true)
@@ -137,7 +132,7 @@ func TestBootstrapUnderAPolicyAsNodeAnswered(t *testing.T) {
 		langDir, texts = smallLangDir(t), false
 	}
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := worldWithLanguages(t, db, false, langDir)
+		w := worldWithLanguages(t, db, langDir)
 		for role, want := range fixture.Roles {
 			// One session per account: a new sign-in as admin ends the last one
 			admin := w.As("admin")
@@ -196,7 +191,7 @@ func itoa(n int64) string {
 
 func TestBootstrap(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := world(t, db, false)
+		w := world(t, db)
 		ctx := context.Background()
 		if res := w.SignedOut().Do("GET", "/api/console/bootstrap", ""); res.Status != http.StatusUnauthorized {
 			t.Errorf("signed out: %d %s", res.Status, res.Body)
@@ -291,33 +286,30 @@ func keyOrder(t *testing.T, body string) string {
 	return strings.Join(keys, ",")
 }
 
-// The boot script and the bootstrap read the branding service's cache,
-// with or without the Node console behind this one: a save through the
-// service shows in the next answer, a row written past it only after the
-// next load, as in the Node console.
+// The boot script and the bootstrap read the branding service's cache: a
+// save through the service shows in the next answer, a row written past
+// it only after the next load, as in the Node console.
 func TestBrandingSavedShowsAtOnce(t *testing.T) {
-	for _, nodeBehind := range []bool{true, false} {
-		storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-			w := world(t, db, nodeBehind)
-			ctx := context.Background()
-			w.Server.Deps().Branding.LoadBranding(ctx)
-			viewer := w.As("viewer")
-			appName := func() any {
-				return decode(t, viewer.Do("GET", "/api/console/bootstrap", "").Body)["branding"].(map[string]any)["appName"]
-			}
-			before := bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body)
-			exec(t, db, "INSERT INTO branding_config (key, value, updated_at) VALUES ('appName', 'Written past it', '2026-01-02 03:04:05')")
-			if name, after := appName(), bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body); name != "BetterDesk" || after != before {
-				t.Errorf("Node behind %v: a row written past the service shows: appName %v, revision %q before and %q after", nodeBehind, name, before, after)
-			}
-			if err := w.Server.Deps().Branding.SaveBranding(ctx, branding.NewObject()); err != nil {
-				t.Fatal(err)
-			}
-			if name, after := appName(), bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body); name != "Written past it" || after == before {
-				t.Errorf("Node behind %v: after a save: appName %v, revision %q before and %q after", nodeBehind, name, before, after)
-			}
-		})
-	}
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db)
+		ctx := context.Background()
+		w.Server.Deps().Branding.LoadBranding(ctx)
+		viewer := w.As("viewer")
+		appName := func() any {
+			return decode(t, viewer.Do("GET", "/api/console/bootstrap", "").Body)["branding"].(map[string]any)["appName"]
+		}
+		before := bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body)
+		exec(t, db, "INSERT INTO branding_config (key, value, updated_at) VALUES ('appName', 'Written past it', '2026-01-02 03:04:05')")
+		if name, after := appName(), bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body); name != "BetterDesk" || after != before {
+			t.Errorf("a row written past the service shows: appName %v, revision %q before and %q after", name, before, after)
+		}
+		if err := w.Server.Deps().Branding.SaveBranding(ctx, branding.NewObject()); err != nil {
+			t.Fatal(err)
+		}
+		if name, after := appName(), bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body); name != "Written past it" || after == before {
+			t.Errorf("after a save: appName %v, revision %q before and %q after", name, before, after)
+		}
+	})
 }
 
 // bootRevision is the branding revision a boot script carries.
@@ -340,7 +332,7 @@ func tailOf(s string) string {
 
 func TestSupportersAndBootScript(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := world(t, db, false)
+		w := world(t, db)
 		if res := w.SignedOut().Do("GET", "/api/console/supporters", ""); res.Status != http.StatusUnauthorized {
 			t.Errorf("supporters signed out: %d", res.Status)
 		}

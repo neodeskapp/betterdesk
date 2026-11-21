@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
@@ -122,28 +121,20 @@ func TestBillingClockChangeIsCanceledThroughTheRestartRoutes(t *testing.T) {
 	}
 }
 
-// TestHelpRequestMailRunsOnlyWithoutNode pins where the help request mail
-// job runs: in a console alone, and not in front of a Node console, which
-// mails help requests itself.
-func TestHelpRequestMailRunsOnlyWithoutNode(t *testing.T) {
-	build := func(upstream *url.URL) *Server {
-		cfg := &config.Config{
-			Host: "127.0.0.1", DataDir: t.TempDir(), UploadsDir: t.TempDir(), LangDir: filepath.Join("static", "files", "lang"),
-			DefaultLanguage: "en", NodeUpstream: upstream, TrustProxy: httpx.TrustProxy{},
-			Getenv: func(key string) string { return map[string]string{"SESSION_SECRET": testSecret}[key] },
-		}
-		s, err := New(context.Background(), Options{Config: cfg, Store: storetest.Migrated(t), API: http.NotFoundHandler()})
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Cleanup(s.Stop)
-		return s
+// TestHelpRequestMailRuns pins that the help request mail is a job of the
+// console.
+func TestHelpRequestMailRuns(t *testing.T) {
+	cfg := &config.Config{
+		Host: "127.0.0.1", DataDir: t.TempDir(), UploadsDir: t.TempDir(), LangDir: filepath.Join("static", "files", "lang"),
+		DefaultLanguage: "en", TrustProxy: httpx.TrustProxy{},
+		Getenv: func(key string) string { return map[string]string{"SESSION_SECRET": testSecret}[key] },
 	}
-	if names := build(nil).Jobs().Names(); !slices.Contains(names, "help request mail") {
-		t.Errorf("without a Node console the job must run here, jobs = %q", names)
+	s, err := New(context.Background(), Options{Config: cfg, Store: storetest.Migrated(t), API: http.NotFoundHandler()})
+	if err != nil {
+		t.Fatal(err)
 	}
-	upstream, _ := url.Parse("http://127.0.0.1:1")
-	if names := build(upstream).Jobs().Names(); slices.Contains(names, "help request mail") {
-		t.Errorf("with a Node console behind it the job must not run here, jobs = %q", names)
+	t.Cleanup(s.Stop)
+	if names := s.Jobs().Names(); !slices.Contains(names, "help request mail") {
+		t.Errorf("the job must run, jobs = %q", names)
 	}
 }

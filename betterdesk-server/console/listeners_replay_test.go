@@ -20,7 +20,6 @@ import (
 	"math/big"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -227,7 +226,6 @@ func (c *testCerts) path(recorded string) string {
 type goStack struct {
 	s     *Server
 	api   *echoAPI
-	reg   *fakeRegistration
 	ports map[string]string
 }
 
@@ -271,16 +269,12 @@ func newGoStack(t *testing.T, db *store.DB, scenario oracleScenario, certs *test
 	cfg.LangDir = filepath.Join("static", "files", "lang")
 	cfg.WebUIDir = filepath.Join(data, "no-build")
 	cfg.NodeEnv, cfg.Production = "production", true
-	g := &goStack{api: newEchoAPI(t), reg: newFakeRegistration(t), ports: map[string]string{}}
+	g := &goStack{api: newEchoAPI(t), ports: map[string]string{}}
 	cfg.APIHost, cfg.APIURL = g.api.host(), g.api.URL+"/api"
-	cfg.NodeUpstream, _ = url.Parse(g.reg.URL)
 	s, err := New(context.Background(), Options{Config: cfg, Store: db, API: http.NotFoundHandler()})
 	if err != nil {
 		return nil, err
 	}
-	// The registration stand-in is the Node console for the client API port
-	// only: the console port answers everything itself
-	s.node = nil
 	g.s = s
 	if err := s.Start(context.Background()); err != nil {
 		s.Stop()
@@ -785,13 +779,6 @@ func TestClientAPIProxyModeAgainstNode(t *testing.T) {
 	if res.same < 600 {
 		t.Errorf("only %d answers compared", res.same)
 	}
-	// The registration routes are answered by the console's own routes
-	// (routes/registration ClientAPI): nothing reaches the Node console
-	g.reg.mu.Lock()
-	defer g.reg.mu.Unlock()
-	if len(g.reg.seen) != 0 {
-		t.Errorf("%d registration requests reached the Node console", len(g.reg.seen))
-	}
 }
 
 // In proxy mode the port reads the JSON body of its own registration
@@ -844,8 +831,7 @@ func TestClientAPILocalModeAgainstNode(t *testing.T) {
 // API port of a running test instance (BD_CLIENT_API_ADDR; an instance
 // started with STACK_CLIENT_API=1 TRUST_PROXY=true): every request goes,
 // and the answers the port decides itself are compared, with those of the
-// registration routes, which come from the instance's real Node console.
-// Answers of the real API server are not the recording's echo and are
+// registration routes. Answers of the real API server are not the recording's echo and are
 // left out.
 func TestClientAPILive(t *testing.T) {
 	addr := os.Getenv("BD_CLIENT_API_ADDR")

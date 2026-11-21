@@ -3,6 +3,7 @@ package console
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -13,49 +14,39 @@ import (
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
 
-// TestUpgradeGoesToTheGoSocketOrToNode: an upgrade to a path a Go socket
-// has goes to it, outside the pipeline; any other upgrade still goes to
-// Node. The routing report says the same.
-func TestUpgradeGoesToTheGoSocketOrToNode(t *testing.T) {
-	w := mixed(t, setup{debug: true})
+// TestUpgradeGoesToTheSocketOrThePipeline: an upgrade to a path a socket
+// has goes to it, outside the pipeline; any other upgrade passes the
+// pipeline like a plain request and ends in its 404.
+func TestUpgradeGoesToTheSocketOrThePipeline(t *testing.T) {
+	w := newWorld(t, setup{})
 	addr := strings.TrimPrefix(w.front.URL, "http://")
-	request := func(path string) string {
-		return "GET " + path + " HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n" +
-			"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n"
-	}
-	before := w.node.count()
-	// The Go socket refuses a signed-out upgrade with a bare status line,
+	// The socket refuses a signed-out upgrade with a bare status line,
 	// without the pipeline's headers.
-	got, err := wstest.Raw(addr, request("/ws/device-status"))
+	got, err := wstest.Raw(addr, "GET /ws/device-status HTTP/1.1\r\nHost: x\r\n"+
+		"Upgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got != "HTTP/1.1 401 Unauthorized\r\n\r\n" {
-		t.Errorf("Go socket: %q", got)
+		t.Errorf("socket: %q", got)
 	}
-	if w.node.count() != before {
-		t.Error("the upgrade to a Go socket reached Node")
+	res := w.agent().get("/ws/echo", "Upgrade", "websocket", "Connection", "Upgrade",
+		"Sec-WebSocket-Key", "dGhlIHNhbXBsZSBub25jZQ==", "Sec-WebSocket-Version", "13")
+	if res.status != http.StatusNotFound {
+		t.Errorf("an upgrade no socket takes: %d %.100s, want the 404", res.status, res.body)
 	}
-	c, _, err := wstest.Dial(addr, "/ws/echo", nil)
-	if err != nil || c == nil {
-		t.Fatalf("Node socket: %v", err)
-	}
-	_ = c.Text("hello")
-	if !c.Wait(5*time.Second, func(f []wstest.Frame, _ bool) bool { return len(f) > 0 }) || c.Frames()[0].Text() != "node:hello" {
-		t.Errorf("Node socket answered %+v", c.Frames())
-	}
-	c.Close(1000)
-	for path, want := range map[string]string{"/ws/device-status": "go", "/ws/bd-signal": "go", "/ws/echo": "node", "/ws/chat/1": "go",
-		"/ws/chat-operator/panel": "go", "/api/cdap/devices/1/terminal": "go", "/api/cdap/devices/1/audio": "go", "/control.ashx": "go",
-		"/api/cdap/devices/1/other": "node", "/api/cdap/devices/./terminal": "node", "/ws/chat/a/b": "node"} {
-		res := w.agent().get("/__bd/routing?method=GET&upgrade=websocket&path=" + url.QueryEscape(path))
-		if res.json(t)["handler"] != want {
-			t.Errorf("routing report for an upgrade to %s: %s", path, res.body)
+	wantSecurityHeaders(t, res)
+
+	// Which paths the sockets take
+	for path, want := range map[string]bool{"/ws/device-status": true, "/ws/bd-signal": true, "/ws/echo": false, "/ws/chat/1": true,
+		"/ws/chat-operator/panel": true, "/api/cdap/devices/1/terminal": true, "/api/cdap/devices/1/audio": true, "/control.ashx": true,
+		"/api/cdap/devices/1/other": false, "/api/cdap/devices/./terminal": false, "/ws/chat/a/b": false} {
+		r := httptest.NewRequest("GET", path, nil)
+		r.Header.Set("Upgrade", "websocket")
+		r.Header.Set("Connection", "Upgrade")
+		if got := w.s.Deps().Sockets.Serves(r); got != want {
+			t.Errorf("an upgrade to %s goes to a socket: %v, want %v", path, got, want)
 		}
-	}
-	// Without upgrade the report still answers for the route tables
-	if res := w.agent().get("/__bd/routing?method=GET&path=/ws/device-status"); res.json(t)["handler"] != "node" {
-		t.Errorf("routing report for a plain GET: %s", res.body)
 	}
 }
 

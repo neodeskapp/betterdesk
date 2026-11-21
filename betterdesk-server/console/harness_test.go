@@ -6,15 +6,11 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
-
-	"github.com/coder/websocket"
 
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -24,80 +20,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// seen is one request the fake Node console received.
-type seen struct {
-	Server string `json:"server"`
-	Method string `json:"method"`
-	URI    string `json:"uri"`
-	Host   string `json:"host"`
-	XFF    string `json:"xff"`
-	Proto  string `json:"proto"`
-	XFHost string `json:"xfhost"`
-	RealIP string `json:"realip"`
-	Cookie string `json:"cookie"`
-	Type   string `json:"type"`
-	Body   string `json:"body"`
-}
-
-// fakeNode stands in for the Node console: it answers 418 with what it
-// received, and remembers every request.
-type fakeNode struct {
-	*httptest.Server
-	mu       sync.Mutex
-	requests []seen
-}
-
-func (n *fakeNode) count() int {
-	n.mu.Lock()
-	defer n.mu.Unlock()
-	return len(n.requests)
-}
-
-func newFakeNode(t *testing.T) *fakeNode {
-	t.Helper()
-	node := &fakeNode{}
-	mux := http.NewServeMux()
-	echoSocket := func(w http.ResponseWriter, r *http.Request) {
-		conn, err := websocket.Accept(w, r, nil)
-		if err != nil {
-			t.Errorf("upstream accept: %v", err)
-			return
-		}
-		defer conn.Close(websocket.StatusNormalClosure, "")
-		typ, msg, err := conn.Read(r.Context())
-		if err != nil {
-			return
-		}
-		_ = conn.Write(r.Context(), typ, append([]byte("node:"), msg...))
-	}
-	mux.HandleFunc("/ws/echo", echoSocket)
-	mux.HandleFunc("/api/socket", echoSocket)
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
-		got := seen{
-			Server: "node", Method: r.Method, URI: r.RequestURI, Host: r.Host,
-			XFF: r.Header.Get("X-Forwarded-For"), Proto: r.Header.Get("X-Forwarded-Proto"),
-			XFHost: r.Header.Get("X-Forwarded-Host"), RealIP: r.Header.Get("X-Real-IP"),
-			Cookie: r.Header.Get("Cookie"), Type: r.Header.Get("Content-Type"), Body: string(body),
-		}
-		node.mu.Lock()
-		node.requests = append(node.requests, got)
-		node.mu.Unlock()
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("X-Node", "1")
-		w.Header().Add("Set-Cookie", "node.sid=abc; Path=/; HttpOnly")
-		w.WriteHeader(http.StatusTeapot)
-		_ = json.NewEncoder(w).Encode(got)
-	})
-	node.Server = httptest.NewServer(mux)
-	t.Cleanup(node.Close)
-	return node
-}
-
 // setup says what kind of console a test wants.
 type setup struct {
-	// node puts a fake Node console behind the Go one.
-	node bool
 	// build serves the web app from the test build of package webui.
 	build bool
 	// public is the folder served as static files, "" for none.
@@ -125,7 +49,6 @@ type world struct {
 	s     *Server
 	db    *store.DB
 	front *httptest.Server
-	node  *fakeNode
 }
 
 const testSecret = "test-secret-0123456789abcdef0123456789abcdef"
@@ -188,10 +111,6 @@ func newWorld(t *testing.T, o setup) *world {
 		apiHandler = http.NotFoundHandler()
 	}
 	w := &world{t: t, db: db}
-	if o.node {
-		w.node = newFakeNode(t)
-		cfg.NodeUpstream, _ = url.Parse(w.node.URL)
-	}
 	s, err := New(context.Background(), Options{Config: cfg, Store: db, API: apiHandler, APIListener: o.listener})
 	if err != nil {
 		t.Fatalf("New: %v", err)

@@ -21,50 +21,37 @@ func adminHash(t *testing.T, w *world) string {
 }
 
 // An installer asks for a new admin password with FORCE_PASSWORD_UPDATE.
-// The console acts on it at start, but leaves it to the Node console while
-// that one is behind it.
-func TestStartLooksAfterTheFirstAccountUnlessNodeDoes(t *testing.T) {
+// The console acts on it at start.
+func TestStartLooksAfterTheFirstAccount(t *testing.T) {
 	env := map[string]string{
 		"DEFAULT_ADMIN_USERNAME": "e2e_admin",
 		"DEFAULT_ADMIN_PASSWORD": "Start-Test-1!pass",
 		"FORCE_PASSWORD_UPDATE":  "true",
 	}
-	alone := newWorld(t, setup{env: env})
-	if err := alone.s.Start(context.Background()); err != nil {
+	w := newWorld(t, setup{env: env})
+	if err := w.s.Start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if hash := adminHash(t, alone); !strings.HasPrefix(hash, "pbkdf2-sha256$") {
-		t.Errorf("without the Node console the admin's password was not set at start: %q", hash)
-	}
-
-	front := newWorld(t, setup{env: env, node: true})
-	if err := front.s.Start(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	if hash := adminHash(t, front); hash != "x" {
-		t.Error("in front of the Node console the Go console set the admin's password")
+	if hash := adminHash(t, w); !strings.HasPrefix(hash, "pbkdf2-sha256$") {
+		t.Errorf("the admin's password was not set at start: %q", hash)
 	}
 }
 
 // The other way an installer asks is a file in the data folder. It works
-// once: the console deletes it. In front of the Node console the file is
-// left for that console.
+// once: the console deletes it.
 func TestStartTakesTheForceFileOfTheDataFolder(t *testing.T) {
 	env := map[string]string{"DEFAULT_ADMIN_USERNAME": "e2e_admin", "DEFAULT_ADMIN_PASSWORD": "Start-Test-1!pass"}
-	for _, node := range []bool{false, true} {
-		w := newWorld(t, setup{env: env, node: node})
-		file := filepath.Join(w.s.cfg.DataDir, ".force_password_update")
-		if err := os.WriteFile(file, nil, 0o600); err != nil {
-			t.Fatal(err)
-		}
-		if err := w.s.Start(context.Background()); err != nil {
-			t.Fatal(err)
-		}
-		_, err := os.Stat(file)
-		taken, changed := os.IsNotExist(err), adminHash(t, w) != "x"
-		if taken == node || changed == node {
-			t.Errorf("Node console behind: %v. File taken: %v, password set: %v", node, taken, changed)
-		}
+	w := newWorld(t, setup{env: env})
+	file := filepath.Join(w.s.cfg.DataDir, ".force_password_update")
+	if err := os.WriteFile(file, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.s.Start(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	_, err := os.Stat(file)
+	if taken, changed := os.IsNotExist(err), adminHash(t, w) != "x"; !taken || !changed {
+		t.Errorf("file taken: %v, password set: %v", taken, changed)
 	}
 }
 

@@ -9,7 +9,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
@@ -20,45 +19,29 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// TestAlertSweepRunsOnlyWithoutNode pins the rule that keeps alerts from
-// being raised and mailed twice: with a Node console behind this one, Node
-// runs the offline sweep and the Go console must not register its own.
-func TestAlertSweepRunsOnlyWithoutNode(t *testing.T) {
-	build := func(upstream *url.URL) *Server {
-		t.Helper()
-		cfg := &config.Config{
-			Host: "127.0.0.1", NodeUpstream: upstream, DataDir: t.TempDir(), UploadsDir: t.TempDir(),
-			LangDir: "static/files/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
-			Getenv: func(key string) string {
-				if key == "SESSION_SECRET" {
-					return testSecret
-				}
-				return ""
-			},
-		}
-		s, err := New(context.Background(), Options{Config: cfg, Store: storetest.Migrated(t), API: http.NotFoundHandler()})
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Cleanup(s.Stop)
-		return s
+// TestAlertSweepRuns pins that the offline sweep is a job of the console
+// and that the mail service and the alert engine are in Deps.
+func TestAlertSweepRuns(t *testing.T) {
+	cfg := &config.Config{
+		Host: "127.0.0.1", DataDir: t.TempDir(), UploadsDir: t.TempDir(),
+		LangDir: "static/files/lang", WebUIDir: t.TempDir(), DefaultLanguage: "en",
+		Getenv: func(key string) string {
+			if key == "SESSION_SECRET" {
+				return testSecret
+			}
+			return ""
+		},
 	}
-
-	alone := build(nil)
-	if names := alone.Jobs().Names(); !slices.Contains(names, "alert sweep") {
-		t.Errorf("without a Node console the sweep must run here, jobs = %q", names)
+	s, err := New(context.Background(), Options{Config: cfg, Store: storetest.Migrated(t), API: http.NotFoundHandler()})
+	if err != nil {
+		t.Fatal(err)
 	}
-	if alone.Deps().Mail == nil || alone.Deps().Alerts == nil {
+	t.Cleanup(s.Stop)
+	if names := s.Jobs().Names(); !slices.Contains(names, "alert sweep") {
+		t.Errorf("the sweep must run, jobs = %q", names)
+	}
+	if s.Deps().Mail == nil || s.Deps().Alerts == nil {
 		t.Error("the mail service and the alert engine must be in Deps")
-	}
-
-	upstream, _ := url.Parse("http://127.0.0.1:1")
-	front := build(upstream)
-	if names := front.Jobs().Names(); slices.Contains(names, "alert sweep") {
-		t.Errorf("with a Node console behind it the sweep must not run here, jobs = %q", names)
-	}
-	if front.Deps().Mail == nil || front.Deps().Alerts == nil {
-		t.Error("the mail service and the alert engine must be in Deps in front of Node too")
 	}
 }
 

@@ -3,7 +3,6 @@ package console
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"io"
 	"net"
 	"net/http"
@@ -161,80 +160,6 @@ func (e *echoAPI) serve(w http.ResponseWriter, r *http.Request) {
 	h.Set("Content-Length", strconv.Itoa(len(text)))
 	w.WriteHeader(status)
 	_, _ = w.Write(text)
-}
-
-// fakeRegistration stands in for the Node console behind the client API
-// port: the two registration routes as routes/registration.routes.js
-// answers them on a fresh database, with some of the console's own
-// headers around them, which the port must not pass on.
-type fakeRegistration struct {
-	*httptest.Server
-	mu   sync.Mutex
-	ids  map[string]int
-	seen []registrationSeen
-}
-
-type registrationSeen struct {
-	method, uri, xff, contentType string
-	body                          string
-}
-
-func newFakeRegistration(t *testing.T) *fakeRegistration {
-	t.Helper()
-	f := &fakeRegistration{ids: map[string]int{}}
-	f.Server = httptest.NewServer(http.HandlerFunc(f.serve))
-	t.Cleanup(f.Server.Close)
-	return f
-}
-
-type regAnswer struct {
-	Success bool   `json:"success"`
-	Status  string `json:"status,omitempty"`
-	ID      int    `json:"id,omitempty"`
-	Error   string `json:"error,omitempty"`
-}
-
-func (f *fakeRegistration) serve(w http.ResponseWriter, r *http.Request) {
-	body, _ := io.ReadAll(r.Body)
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	f.seen = append(f.seen, registrationSeen{r.Method, r.RequestURI, r.Header.Get("X-Forwarded-For"), r.Header.Get("Content-Type"), string(body)})
-	h := w.Header()
-	h.Set("X-Frame-Options", "SAMEORIGIN")
-	h.Set("Cache-Control", "no-cache, no-store, must-revalidate")
-	h.Set("RateLimit-Limit", "1000000")
-	h.Set("Vary", "Accept-Encoding")
-	h.Set("Set-Cookie", "__csrf_h=x; Path=/")
-	switch {
-	case r.Method == http.MethodPost && r.URL.Path == "/api/bd/register-request":
-		var in map[string]any
-		if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") && len(body) > 0 {
-			_ = json.Unmarshal(body, &in)
-		}
-		id, _ := in["device_id"].(string)
-		if len(id) < 3 {
-			httpx.WriteJSON(w, r, http.StatusBadRequest, regAnswer{Error: "Invalid device_id"})
-			return
-		}
-		if f.ids[id] == 0 {
-			f.ids[id] = len(f.ids) + 1
-		}
-		httpx.WriteJSON(w, r, http.StatusOK, regAnswer{Success: true, Status: "pending", ID: f.ids[id]})
-	case r.Method == http.MethodGet && r.URL.Path == "/api/bd/register-status":
-		ids := r.URL.Query()["device_id"]
-		switch {
-		case len(ids) == 0:
-			httpx.WriteJSON(w, r, http.StatusBadRequest, regAnswer{Error: "Missing device_id"})
-		case len(ids) > 1:
-			httpx.WriteJSON(w, r, http.StatusInternalServerError, regAnswer{Error: "Internal server error"})
-		case f.ids[ids[0]] == 0:
-			httpx.WriteJSON(w, r, http.StatusOK, regAnswer{Success: true, Status: "not_found"})
-		default:
-			httpx.WriteJSON(w, r, http.StatusOK, regAnswer{Success: true, Status: "pending", ID: f.ids[ids[0]]})
-		}
-	default:
-		http.Error(w, "the fake console has no "+r.Method+" "+r.URL.Path, http.StatusTeapot)
-	}
 }
 
 // freePortHolder keeps a port taken for a test.

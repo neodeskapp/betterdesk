@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -95,13 +94,11 @@ func TestLoginPage(t *testing.T) {
 	})
 }
 
-// The sign-in page shows a save of the branding at once, also with the
-// Node console behind this one: it reads the cache every save reloads.
+// The sign-in page shows a save of the branding at once: it reads the
+// cache every save reloads.
 func TestLoginPageShowsASaveAtOnce(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := routetest.New(t, routetest.Options{DB: db, Config: func(cfg *config.Config) {
-			cfg.NodeUpstream = &url.URL{Scheme: "http", Host: "127.0.0.1:9"}
-		}})
+		w := routetest.New(t, routetest.Options{DB: db})
 		updates, err := branding.ParseJSON([]byte(`{"appName":"Saved"}`))
 		if err != nil {
 			t.Fatal(err)
