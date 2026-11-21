@@ -250,3 +250,51 @@ describe('remote viewer with a mesh session', () => {
 		expect(err).toHaveBeenCalled();
 	});
 });
+
+describe('mesh file transfer', () => {
+	const f: Loaded = loadScripts(['mesh-files.js'], ['MeshFileTransfer']);
+
+	test('the files tunnel request carries the CSRF token', async () => {
+		(window as unknown as { BetterDesk: Record<string, unknown> }).BetterDesk = { csrfToken: 'csrf-1' };
+		const fetchMock = vi.fn(async () => ({ ok: false, json: async () => ({ error: 'stop here' }) }));
+		vi.stubGlobal('fetch', fetchMock);
+		const ft = new f.MeshFileTransfer('mesh01', () => {});
+		await expect(ft._ensureConnected()).rejects.toThrow('stop here');
+		const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1];
+		expect((init.headers as Record<string, string>)['X-CSRF-Token']).toBe('csrf-1');
+	});
+
+	test('an upload sends each chunk once, in order, then says it is done', async () => {
+		const sent: unknown[] = [];
+		const events: [string, Record<string, unknown>][] = [];
+		const ft = new f.MeshFileTransfer('mesh01', (ev: string, data: Record<string, unknown>) =>
+			events.push([ev, data])
+		);
+		ft._ws = { readyState: WebSocket.OPEN, send: (d: unknown) => sent.push(d) };
+		ft._relayReady = true;
+		ft.enable();
+		const bytes = new Uint8Array(150 * 1024).map((_, i) => i % 251);
+		const id = ft.uploadFile(new File([bytes], 'tool.bin'), '/tmp');
+		const binary = () => sent.filter((d): d is Uint8Array => d instanceof Uint8Array);
+		await vi.waitFor(() => expect(binary()).toHaveLength(1));
+		const start = JSON.parse(sent[0] as string);
+		expect(start).toMatchObject({ action: 'upload', path: '/tmp/tool.bin' });
+		for (const n of [2, 3]) {
+			ft._onJson(JSON.stringify({ action: 'uploadack', reqid: start.reqid }));
+			await vi.waitFor(() => expect(binary()).toHaveLength(n));
+		}
+		ft._onJson(JSON.stringify({ action: 'uploadack', reqid: start.reqid }));
+		await vi.waitFor(() => expect(events.some(([ev]) => ev === 'file_transfer_complete')).toBe(true));
+		const body = binary().map((c) => c.slice(1));
+		expect(body.map((c) => c.length)).toEqual([65536, 65536, 150 * 1024 - 131072]);
+		const joined = new Uint8Array(body.reduce((n, c) => n + c.length, 0));
+		let o = 0;
+		for (const c of body) {
+			joined.set(c, o);
+			o += c.length;
+		}
+		expect(joined).toEqual(bytes);
+		expect(JSON.parse(sent.at(-1) as string)).toEqual({ action: 'uploaddone', reqid: start.reqid });
+		expect(events.find(([ev]) => ev === 'file_transfer_complete')?.[1]).toEqual({ id, type: 'upload' });
+	});
+});

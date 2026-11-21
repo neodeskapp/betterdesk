@@ -55,12 +55,15 @@
         var self = this;
         this._connecting = (async function () {
             var relayBase = window.location.origin + '/';
+            var headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+            var csrf = (window.BetterDesk && window.BetterDesk.csrfToken) || '';
+            if (csrf) headers['X-CSRF-Token'] = csrf;
             var resp = await fetch(
                 '/api/mesh/devices/' + encodeURIComponent(self._deviceId) + '/files?relay_base=' + encodeURIComponent(relayBase),
                 {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                    headers: headers,
                 }
             );
             if (!resp.ok) {
@@ -186,13 +189,10 @@
                     break;
                 }
             }
-            if (upload && upload.pendingChunk) {
-                this._sendUploadChunk(upload.pendingChunk);
-                upload.pendingChunk = null;
-                if (upload.offset >= upload.fileSize) {
-                    this._emit('file_transfer_complete', { id: upload.id, type: 'upload' });
-                    this._transfers.delete(upload.id);
-                }
+            // The agent took the last chunk: send the next one, or say the file is done
+            if (upload) {
+                if (upload.offset < upload.fileSize) this._readUploadChunk(upload);
+                else this._finishUpload(upload);
             }
             return;
         }
@@ -353,7 +353,6 @@
             fileSize: file.size,
             offset: 0,
             reqid: this._nextReqId++,
-            pendingChunk: null,
         };
         this._transfers.set(id, transfer);
 
@@ -366,7 +365,8 @@
 
         this._ensureConnected().then(function () {
             self._sendJson({ action: 'upload', path: fullPath, reqid: transfer.reqid });
-            self._readUploadChunk(transfer);
+            if (transfer.fileSize > 0) self._readUploadChunk(transfer);
+            else self._finishUpload(transfer);
         }).catch(function (err) {
             self._emit('file_transfer_error', { id: id, error: err.message });
             self._transfers.delete(id);
@@ -375,6 +375,7 @@
         return id;
     };
 
+    /** Read the next 64 KB of the file and send it; the agent's uploadack asks for the one after */
     MeshFileTransfer.prototype._readUploadChunk = function (transfer) {
         var chunkSize = 65536;
         var start = transfer.offset;
@@ -382,11 +383,19 @@
         var slice = transfer.file.slice(start, end);
         var self = this;
         slice.arrayBuffer().then(function (buf) {
+            if (!self._transfers.has(transfer.id)) return;
             transfer.offset = end;
-            transfer.pendingChunk = new Uint8Array(buf);
-            if (transfer.pendingChunk.length === 0) return;
-            self._sendUploadChunk(transfer.pendingChunk);
+            self._sendUploadChunk(new Uint8Array(buf));
+        }).catch(function (err) {
+            self._emit('file_transfer_error', { id: transfer.id, error: err.message });
+            self._transfers.delete(transfer.id);
         });
+    };
+
+    MeshFileTransfer.prototype._finishUpload = function (transfer) {
+        this._sendJson({ action: 'uploaddone', reqid: transfer.reqid });
+        this._emit('file_transfer_complete', { id: transfer.id, type: 'upload' });
+        this._transfers.delete(transfer.id);
     };
 
     MeshFileTransfer.prototype._sendUploadChunk = function (chunk) {
