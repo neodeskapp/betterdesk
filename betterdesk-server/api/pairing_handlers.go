@@ -483,8 +483,17 @@ func (s *Server) handlePairingRedeem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
-	if strings.TrimSpace(body.DeviceID) == "" {
-		http.Error(w, "device_id is required", http.StatusBadRequest)
+	enrollment := &EnrollmentRequest{
+		DeviceID:   body.DeviceID,
+		UUID:       body.UUID,
+		Hostname:   body.Hostname,
+		Platform:   body.Platform,
+		Version:    body.Version,
+		DeviceType: body.DeviceType,
+		PublicKey:  body.PublicKey,
+	}
+	if reason := checkEnrollmentFields(enrollment); reason != "" {
+		http.Error(w, reason, http.StatusBadRequest)
 		return
 	}
 
@@ -499,15 +508,6 @@ func (s *Server) handlePairingRedeem(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	enrollment := &EnrollmentRequest{
-		DeviceID:   body.DeviceID,
-		UUID:       body.UUID,
-		Hostname:   body.Hostname,
-		Platform:   body.Platform,
-		Version:    body.Version,
-		DeviceType: body.DeviceType,
-		PublicKey:  body.PublicKey,
-	}
 	resp := s.enrollPairedDevice(r, enrollment)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success":    resp.Status == "approved" || resp.Status == "pending",

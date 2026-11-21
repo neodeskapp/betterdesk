@@ -420,6 +420,43 @@ type EnrollmentResponse struct {
 	SuggestedDeviceID string          `json:"suggested_device_id,omitempty"`
 }
 
+// enrollmentFieldCaps are the longest values the enrollment routes take,
+// in bytes.
+var enrollmentFieldCaps = []struct {
+	name string
+	max  int
+	get  func(*EnrollmentRequest) string
+}{
+	{"uuid", 256, func(r *EnrollmentRequest) string { return r.UUID }},
+	{"hostname", 255, func(r *EnrollmentRequest) string { return r.Hostname }},
+	{"platform", 64, func(r *EnrollmentRequest) string { return r.Platform }},
+	{"version", 64, func(r *EnrollmentRequest) string { return r.Version }},
+	{"device_type", 32, func(r *EnrollmentRequest) string { return r.DeviceType }},
+	{"bundle_id", 255, func(r *EnrollmentRequest) string { return r.BundleID }},
+	{"tags", 1024, func(r *EnrollmentRequest) string { return r.Tags }},
+	{"public_key", 512, func(r *EnrollmentRequest) string { return r.PublicKey }},
+	{"token", 512, func(r *EnrollmentRequest) string { return r.Token }},
+}
+
+// checkEnrollmentFields answers why an enrollment request is refused
+// before anything is read or stored for it, "" when it is not: the device
+// id must have one of the forms the device layer uses, and no field may be
+// longer than its cap.
+func checkEnrollmentFields(req *EnrollmentRequest) string {
+	if req.DeviceID == "" {
+		return "device_id is required"
+	}
+	if !cdapDeviceIDRegexp.MatchString(req.DeviceID) {
+		return "invalid device_id"
+	}
+	for _, field := range enrollmentFieldCaps {
+		if len(field.get(req)) > field.max {
+			return field.name + " is too long"
+		}
+	}
+	return ""
+}
+
 // handleDeviceRegister handles desktop client self-registration.
 // POST /api/devices/register
 //
@@ -433,8 +470,8 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.DeviceID == "" {
-		http.Error(w, "device_id is required", http.StatusBadRequest)
+	if reason := checkEnrollmentFields(&req); reason != "" {
+		http.Error(w, reason, http.StatusBadRequest)
 		return
 	}
 	if req.PublicKey != "" {
