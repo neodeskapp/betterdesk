@@ -239,7 +239,6 @@ docs/important/betterdesk-server-deploy-paths.md
 .github/rustdesk_encryption_analysis.md
 .github/new_functions.md
 .github/rustdesk_client.md
-.github/copilot-instructions.md
 
 # --- Playwright MCP screenshots ---
 .playwright-mcp/

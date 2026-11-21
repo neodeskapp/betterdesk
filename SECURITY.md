@@ -92,7 +92,7 @@ reason to relax them:
 
 Recent internal audits are published under `docs/security/` (e.g.
 `AUDIT_PRODUCTION_2026-04-10.md`). Fixes are referenced in commit messages and
-in `.github/copilot-instructions.md` under the relevant Phase.
+in `CHANGELOG.md`.
 
 ---
 
