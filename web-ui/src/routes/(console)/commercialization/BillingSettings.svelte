@@ -4,7 +4,8 @@
   clock settings, whether email sending works, and the help request email
   options (the other three show while "Send email for new help requests"
   is on). Loads when it opens. People without billing.manage see the
-  options switched off and no save bar.
+  options switched off and no save bar. The options show only once the
+  stored values loaded, so a save never writes the start values.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -26,6 +27,8 @@
 	let isOpen = $state(open);
 	let loaded = $state(false);
 	let loadError = $state(false);
+	/** The stored values are in the form */
+	let ready = $state(false);
 	let smtp = $state<boolean | null>(null);
 	let host = $state<HTMLElement | null>(null);
 
@@ -46,8 +49,10 @@
 			(on) => (smtp = on),
 			() => (smtp = false)
 		);
+		loadError = false;
 		try {
 			form.reset(await getEmailConfig());
+			ready = true;
 		} catch {
 			loadError = true;
 		}
@@ -89,36 +94,38 @@
 						onretry={() => void load()}
 					/>
 				{/if}
-				<Checkbox
-					class="notif-help"
-					label={t('commercialization.notifications.help_requests_enabled')}
-					disabled={!canManage}
-					aria-controls="{uid}-options"
-					aria-expanded={form.values.help_requests_enabled}
-					bind:checked={form.values.help_requests_enabled}
-				/>
-				<ShowWhen id="{uid}-options" when={form.values.help_requests_enabled}>
-					<div class="options">
-						<Checkbox
-							label={t('commercialization.notifications.notify_assigned_operators')}
-							disabled={!canManage}
-							bind:checked={form.values.notify_assigned_operators}
-						/>
-						<Checkbox
-							label={t('commercialization.notifications.fallback_alert_email')}
-							disabled={!canManage}
-							bind:checked={form.values.fallback_alert_email}
-						/>
-						<Checkbox
-							label={t('commercialization.notifications.include_folder_in_subject')}
-							disabled={!canManage}
-							bind:checked={form.values.include_folder_in_subject}
-						/>
-					</div>
-				</ShowWhen>
-				<p class="hint">{t('commercialization.ui.applies_now')}</p>
-				{#if canManage}
-					<SaveBar {form} label={t('commercialization.notifications.save')} />
+				{#if ready}
+					<Checkbox
+						class="notif-help"
+						label={t('commercialization.notifications.help_requests_enabled')}
+						disabled={!canManage}
+						aria-controls="{uid}-options"
+						aria-expanded={form.values.help_requests_enabled}
+						bind:checked={form.values.help_requests_enabled}
+					/>
+					<ShowWhen id="{uid}-options" when={form.values.help_requests_enabled}>
+						<div class="options">
+							<Checkbox
+								label={t('commercialization.notifications.notify_assigned_operators')}
+								disabled={!canManage}
+								bind:checked={form.values.notify_assigned_operators}
+							/>
+							<Checkbox
+								label={t('commercialization.notifications.fallback_alert_email')}
+								disabled={!canManage}
+								bind:checked={form.values.fallback_alert_email}
+							/>
+							<Checkbox
+								label={t('commercialization.notifications.include_folder_in_subject')}
+								disabled={!canManage}
+								bind:checked={form.values.include_folder_in_subject}
+							/>
+						</div>
+					</ShowWhen>
+					<p class="hint">{t('commercialization.ui.applies_now')}</p>
+					{#if canManage}
+						<SaveBar {form} label={t('commercialization.notifications.save')} />
+					{/if}
 				{/if}
 			</form>
 		</div>
