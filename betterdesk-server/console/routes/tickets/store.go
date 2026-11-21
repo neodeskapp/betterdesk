@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
@@ -74,8 +75,9 @@ const maxListed = 500
 // listTickets returns the tickets that pass every filter and whose title
 // or description holds the search text, newest first and maxListed at
 // most; tickets of the same second by their id. search is undefined for a
-// list without a search.
-func listTickets(ctx context.Context, db *store.DB, filters []filter, search jsbind.Value) ([]ticket, error) {
+// list without a search. A limited scope keeps the tickets of its devices
+// and those of no device.
+func listTickets(ctx context.Context, db *store.DB, filters []filter, search jsbind.Value, scope *access.DeviceScope) ([]ticket, error) {
 	where := "WHERE 1=1"
 	var values []jsbind.Value
 	placeholders := 0
@@ -84,6 +86,10 @@ func listTickets(ctx context.Context, db *store.DB, filters []filter, search jsb
 		values = append(values, f.value)
 		placeholders++
 	}
+	scoped, ids := inScope(scope)
+	where += scoped
+	values = append(values, ids...)
+	placeholders += len(ids)
 	if !search.IsUndefined() {
 		// Only a text is searched for; any other value matches everything
 		pattern := jsbind.String("%" + store.EscapeLike(search.Str()) + "%")
@@ -127,27 +133,50 @@ type ticketStats struct {
 
 // countTickets counts every ticket, or with assignee set the tickets
 // assigned to it.
-func countTickets(ctx context.Context, db *store.DB, assignee jsbind.Value) (ticketStats, error) {
+func countTickets(ctx context.Context, db *store.DB, assignee jsbind.Value, scope *access.DeviceScope) (ticketStats, error) {
 	var s ticketStats
 	query := `SELECT COUNT(*),
 		COUNT(CASE WHEN status = 'open' THEN 1 END),
 		COUNT(CASE WHEN status = 'in_progress' THEN 1 END),
 		COUNT(CASE WHEN status = 'resolved' THEN 1 END),
 		COUNT(CASE WHEN status = 'closed' THEN 1 END)
-		FROM tickets`
-	var args []any
+		FROM tickets WHERE 1=1`
+	var values []jsbind.Value
 	if !assignee.IsUndefined() {
-		query += " WHERE assigned_to = ?"
-		var err error
-		if args, err = jsbind.Args(db.Dialect(), 1, assignee); err != nil {
-			return s, fmt.Errorf("count tickets: %w", err)
-		}
+		query += " AND assigned_to = ?"
+		values = append(values, assignee)
 	}
-	err := store.SelectRow(ctx, db, query, args...).Scan(&s.Total, &s.Open, &s.InProgress, &s.Resolved, &s.Closed)
+	scoped, ids := inScope(scope)
+	query += scoped
+	values = append(values, ids...)
+	args, err := jsbind.Args(db.Dialect(), len(values), values...)
+	if err != nil {
+		return s, fmt.Errorf("count tickets: %w", err)
+	}
+	err = store.SelectRow(ctx, db, query, args...).Scan(&s.Total, &s.Open, &s.InProgress, &s.Resolved, &s.Closed)
 	if err != nil {
 		return s, fmt.Errorf("count tickets: %w", err)
 	}
 	return s, nil
+}
+
+// inScope is the condition that keeps the tickets of a limited scope's
+// devices and those of no device, with its values; "" for no limit.
+func inScope(scope *access.DeviceScope) (string, []jsbind.Value) {
+	if scope.Unlimited() {
+		return "", nil
+	}
+	ids := scope.IDs()
+	values := make([]jsbind.Value, len(ids))
+	marks := make([]string, len(ids))
+	for i, id := range ids {
+		values[i], marks[i] = jsbind.String(id), "?"
+	}
+	condition := " AND (device_id IS NULL OR device_id = ''"
+	if len(ids) > 0 {
+		condition += " OR device_id IN (" + strings.Join(marks, ", ") + ")"
+	}
+	return condition + ")", values
 }
 
 // newTicket is what a ticket is made from. Empty values have been

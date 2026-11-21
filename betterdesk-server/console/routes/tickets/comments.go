@@ -48,11 +48,12 @@ type commentList struct {
 	Comments []comment `json:"comments"`
 }
 
-// comments answers GET /api/tickets/{id}/comments. A viewer does not get
-// the internal ones, and gets none of a ticket it may not read.
+// comments answers GET /api/tickets/{id}/comments. An account without
+// device.edit does not get the internal ones, and an account gets none of
+// a ticket it may not read (mayRead).
 func (h *handlers) comments(w http.ResponseWriter, r *http.Request) {
 	id, ok := ticketID(r, "id")
-	if ok && kit.User(r).Role == "viewer" {
+	if ok {
 		t, err := h.readable(r, id)
 		if err != nil {
 			h.serverError(w, r, "Comments list error", err)

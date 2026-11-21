@@ -64,7 +64,7 @@ func (h *handlers) createFromAgent(w http.ResponseWriter, r *http.Request) {
 // device, newest first.
 func (h *handlers) listForAgent(w http.ResponseWriter, r *http.Request) {
 	filters := []filter{{"device_id", jsbind.String(kit.Device(r).DeviceID)}}
-	tickets, err := listTickets(r.Context(), h.db, filters, jsbind.Undefined)
+	tickets, err := listTickets(r.Context(), h.db, filters, jsbind.Undefined, nil)
 	if err != nil {
 		h.serverError(w, r, "Agent list error", err)
 		return

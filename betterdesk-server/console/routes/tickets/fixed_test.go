@@ -408,3 +408,19 @@ var _ = ticketFixes.Add("S17", map[string]replay.Fix{
 var _ = ticketFixes.Add("RV62", map[string]replay.Fix{
 	"viewer GET /api/tickets/stats ": {Status: 200, Answer: `{"total":2,"open":1,"in_progress":0,"resolved":1,"closed":0}`},
 })
+
+// RV62: internal comments are for accounts with device.edit; a
+// guest_issuer and a server admin read a ticket without them (DECISIONS
+// A98).
+var internalLacks = []string{`"is_internal":1`, `"is_internal":true`}
+
+var _ = ticketFixes.Add("RV62", map[string]replay.Fix{
+	"guest_issuer GET /api/tickets/1 ":          {Status: 200, Has: []string{`"body":"public one"`, `"body":"public two"`}, Lacks: internalLacks},
+	"guest_issuer GET /api/tickets/3 ":          {Status: 200, Has: []string{`"comments":[]`}, Lacks: internalLacks},
+	"guest_issuer GET /api/tickets/1/comments ": {Status: 200, Has: []string{`"body":"public one"`}, Lacks: internalLacks},
+	"guest_issuer GET /api/tickets/5 ":          {Status: 200, Has: []string{`"body":"trimmed"`}, Lacks: internalLacks},
+	"guest_issuer GET /api/tickets/5/comments ": {Status: 200, Has: []string{`"body":"trimmed"`}, Lacks: internalLacks},
+	"server_admin GET /api/tickets/1 ":          {Status: 200, Has: []string{`"body":"public one"`, `"body":"public two"`}, Lacks: internalLacks},
+	"server_admin GET /api/tickets/3 ":          {Status: 200, Has: []string{`"comments":[]`}, Lacks: internalLacks},
+	"server_admin GET /api/tickets/1/comments ": {Status: 200, Has: []string{`"body":"public one"`}, Lacks: internalLacks},
+})

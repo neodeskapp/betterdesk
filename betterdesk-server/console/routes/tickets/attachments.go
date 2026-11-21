@@ -191,11 +191,11 @@ type attachmentList struct {
 	Attachments []attachment `json:"attachments"`
 }
 
-// attachments answers GET /api/tickets/{id}/attachments; a viewer gets
-// none of a ticket it may not read.
+// attachments answers GET /api/tickets/{id}/attachments; an account gets
+// none of a ticket it may not read (mayRead).
 func (h *handlers) attachments(w http.ResponseWriter, r *http.Request) {
 	id, ok := ticketID(r, "id")
-	if ok && kit.User(r).Role == "viewer" {
+	if ok {
 		t, err := h.readable(r, id)
 		if err != nil {
 			h.serverError(w, r, "Attachments list error", err)
@@ -227,7 +227,7 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	if id, ok := ticketID(r, "aid"); ok {
 		a, err = attachmentByID(r.Context(), h.db, id)
 	}
-	if err == nil && a != nil && kit.User(r).Role == "viewer" {
+	if err == nil && a != nil {
 		var t *ticket
 		if t, err = h.readable(r, a.TicketID.Value()); t == nil {
 			a = nil

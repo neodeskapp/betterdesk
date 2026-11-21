@@ -2,9 +2,11 @@
 // their comments and their attachments.
 //
 // Reading needs the permission device.view, changing a ticket or
-// commenting on it device.edit. A viewer sees the tickets assigned to it
-// (mayRead), with their comments and attachments, and no internal
-// comments.
+// commenting on it device.edit. A viewer sees the tickets assigned to it,
+// and an account whose device scope is limited the tickets of the devices
+// in its scope and the tickets of no device (mayRead), with their
+// comments and attachments. Internal comments are for accounts with
+// device.edit.
 //
 // The two routes for devices, POST and GET /api/tickets/bd, take a device
 // token instead of a session (device.go).
@@ -16,7 +18,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -158,18 +162,43 @@ func (h *handlers) ticketOf(r *http.Request) (*ticket, error) {
 // when there is none or it may not.
 func (h *handlers) readable(r *http.Request, id jsbind.Value) (*ticket, error) {
 	t, err := ticketByID(r.Context(), h.db, id)
-	if err != nil || t == nil || !mayRead(r, t) {
+	if err != nil || t == nil {
+		return nil, err
+	}
+	scope, err := h.deviceScope(r)
+	if err != nil || !mayRead(r, scope, t) {
 		return nil, err
 	}
 	return t, nil
 }
 
+// deviceScope is the device scope of the request's account, nil when it
+// sees every device: whether there is a limit is decided first, and only
+// for an account that has one is the scope read over every device of the
+// device layer, deleted ones included.
+func (h *handlers) deviceScope(r *http.Request) (*access.DeviceScope, error) {
+	ctx := r.Context()
+	return h.d.DeviceGroups.LimitedScope(ctx, kit.User(r), func() []*goapi.Object {
+		return h.d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{IncludeDeleted: true})
+	})
+}
+
 // mayRead reports whether the account may read the ticket, its comments
-// and its attachments: a viewer only the tickets assigned to it, every
-// other role every ticket.
-func mayRead(r *http.Request, t *ticket) bool {
+// and its attachments, and change it: a viewer only the tickets assigned
+// to it, an account whose device scope is limited only the tickets of a
+// device in its scope and those of no device.
+func mayRead(r *http.Request, scope *access.DeviceScope, t *ticket) bool {
 	user := kit.User(r)
-	return user.Role != "viewer" || t.AssignedTo.Valid && t.AssignedTo.String == user.Username
+	if user.Role == "viewer" && (!t.AssignedTo.Valid || t.AssignedTo.String != user.Username) {
+		return false
+	}
+	return deviceInScope(scope, t.DeviceID.String)
+}
+
+// deviceInScope reports whether a ticket's device is in the scope: no
+// device ("" or null) always is.
+func deviceInScope(scope *access.DeviceScope, device string) bool {
+	return device == "" || scope.Has(device)
 }
 
 // number is `${n}` for a row id.
@@ -192,8 +221,9 @@ var filterKeys = []string{"status", "priority", "category", "assigned_to", "devi
 
 // list answers GET /api/tickets?status=&priority=&category=&assigned_to=
 // &device_id=&search=. A viewer gets the tickets assigned to it, whatever
-// assigned_to says. A filter is one text: given twice, in brackets or as
-// an object it is refused.
+// assigned_to says, and an account whose device scope is limited those of
+// its devices and of no device. A filter is one text: given twice, in
+// brackets or as an object it is refused.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	user := kit.User(r)
 	var filters []filter
@@ -214,7 +244,12 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	if !search.Truthy() {
 		search = jsbind.Undefined
 	}
-	tickets, err := listTickets(r.Context(), h.db, filters, search)
+	scope, err := h.deviceScope(r)
+	if err != nil {
+		h.serverError(w, r, "List error", err)
+		return
+	}
+	tickets, err := listTickets(r.Context(), h.db, filters, search, scope)
 	if err != nil {
 		h.serverError(w, r, "List error", err)
 		return
@@ -222,14 +257,20 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, ticketList{Tickets: tickets, Total: len(tickets)})
 }
 
-// stats answers GET /api/tickets/stats; a viewer's counts take the
-// tickets assigned to it.
+// stats answers GET /api/tickets/stats over the tickets the account may
+// read: a viewer's counts take the tickets assigned to it, a limited
+// account's those of its devices and of no device.
 func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
 	assignee := jsbind.Undefined
 	if user := kit.User(r); user.Role == "viewer" {
 		assignee = jsbind.String(user.Username)
 	}
-	stats, err := countTickets(r.Context(), h.db, assignee)
+	scope, err := h.deviceScope(r)
+	if err != nil {
+		h.serverError(w, r, "Stats error", err)
+		return
+	}
+	stats, err := countTickets(r.Context(), h.db, assignee, scope)
 	if err != nil {
 		h.serverError(w, r, "Stats error", err)
 		return
@@ -285,6 +326,9 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	if !h.textMembers(w, r, "description", "device_id", "assigned_to") {
 		return
 	}
+	if !h.deviceAllowed(w, r, jsbind.Of(body.Get("device_id"))) {
+		return
+	}
 	user := kit.User(r)
 	effective := priority.Or(jsbind.String("medium"))
 	id, err := createTicket(r.Context(), h.db, newTicket{
@@ -304,6 +348,25 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	h.audit(r, "ticket_created", "Ticket #"+number(id)+": "+rawTitle.Str())
 	h.log.Info("#" + number(id) + " created by " + user.Username + ": " + rawTitle.Str())
 	kit.JSON(w, r, http.StatusCreated, created{Success: true, Ticket: createdTicket{ID: id, Title: title}})
+}
+
+// deviceAllowed checks the device a ticket is written for: none, or one
+// in the account's device scope. It answers 403 for another and 500 for a
+// failed scope check, and then reports false.
+func (h *handlers) deviceAllowed(w http.ResponseWriter, r *http.Request, device jsbind.Value) bool {
+	if !device.IsString() {
+		return true
+	}
+	scope, err := h.deviceScope(r)
+	if err != nil {
+		h.serverError(w, r, "Device scope error", err)
+		return false
+	}
+	if !deviceInScope(scope, jsbind.Trim(device.Str())) {
+		fail(w, r, http.StatusForbidden, "Device is outside your device scope")
+		return false
+	}
+	return true
 }
 
 // textMembers checks that the members of the body are text, null or
@@ -337,9 +400,10 @@ type ticketDetail struct {
 	Attachments []attachment `json:"attachments"`
 }
 
-// visible drops the internal comments for a viewer.
+// visible drops the internal comments for an account without
+// device.edit.
 func visible(r *http.Request, comments []comment) []comment {
-	if kit.User(r).Role != "viewer" {
+	if kit.HasPermission(r, "device.edit") {
 		return comments
 	}
 	shown := []comment{}
@@ -411,6 +475,9 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !h.textMembers(w, r, "description", "assigned_to") {
+		return
+	}
+	if !h.deviceAllowed(w, r, deviceID) {
 		return
 	}
 	if body.Has("category") && !oneOf(jsbind.Of(body.Get("category")), validCategories) {

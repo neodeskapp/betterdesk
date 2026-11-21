@@ -15,9 +15,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -44,11 +46,24 @@ type group struct {
 }
 
 var testUsers = map[string]session.User{
-	"admin":    {ID: 1, Username: "e2e_admin", Role: "admin"},
-	"operator": {ID: 5, Username: "e2e_operator", Role: "operator"},
-	"viewer":   {ID: 6, Username: "e2e_viewer", Role: "viewer"},
-	"pro":      {ID: 8, Username: "e2e_pro", Role: "pro"},
+	"admin":        {ID: 1, Username: "e2e_admin", Role: "admin"},
+	"operator":     {ID: 5, Username: "e2e_operator", Role: "operator"},
+	"viewer":       {ID: 6, Username: "e2e_viewer", Role: "viewer"},
+	"guest_issuer": {ID: 7, Username: "e2e_guest_issuer", Role: "guest_issuer"},
+	"pro":          {ID: 8, Username: "e2e_pro", Role: "pro"},
 }
+
+// peers stands in for the API server of the device layer: it knows the
+// devices A, B and C.
+var peers = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.URL.Path == "/api/peers" {
+		_, _ = w.Write([]byte(`{"peers":[{"id":"A","hostname":"a"},{"id":"B","hostname":"b"},{"id":"C","hostname":"c"}]}`))
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+	_, _ = w.Write([]byte(`{"error":"not found"}`))
+})
 
 func newGroup(t *testing.T, db *store.DB) *group {
 	t.Helper()
@@ -62,16 +77,21 @@ func newGroup(t *testing.T, db *store.DB) *group {
 		t.Fatal(err)
 	}
 	dir := t.TempDir()
+	scopes := access.New(db, access.NewDBRoleSource(nil), access.Options{})
+	groups := devicegroups.New(devicegroups.Options{DB: db, Access: scopes})
 	d := &kit.Deps{
-		Authn:    devices,
-		Router:   kit.NewRouter().Mount("/api/tickets"),
-		Config:   &config.Config{ConsoleDir: dir, Production: true},
-		Store:    db,
-		Sessions: sessions,
-		Audit:    auditlog.New(db),
-		Log:      kit.NewLogger("error", true),
-		Limits:   limits.NewSet(limits.Options{ClientIP: httpx.SocketIP, UserKey: func(*http.Request) string { return "" }, Getenv: func(string) string { return "1000000" }}),
-		WebUI:    webui.New(webui.Options{Dir: filepath.Join(dir, "no-build"), Production: true}),
+		Access:       scopes,
+		DeviceGroups: groups,
+		Backend:      goapi.NewBackend(goapi.New(peers), devicegroups.DeviceStore{Groups: groups}),
+		Authn:        devices,
+		Router:       kit.NewRouter().Mount("/api/tickets"),
+		Config:       &config.Config{ConsoleDir: dir, Production: true},
+		Store:        db,
+		Sessions:     sessions,
+		Audit:        auditlog.New(db),
+		Log:          kit.NewLogger("error", true),
+		Limits:       limits.NewSet(limits.Options{ClientIP: httpx.SocketIP, UserKey: func(*http.Request) string { return "" }, Getenv: func(string) string { return "1000000" }}),
+		WebUI:        webui.New(webui.Options{Dir: filepath.Join(dir, "no-build"), Production: true}),
 	}
 	g := &group{t: t, db: db, h: newHandlers(d), cookies: map[string]string{}}
 	register(d, g.h)
