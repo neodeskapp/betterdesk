@@ -86,6 +86,7 @@ func (ds *DelegationStore) GetEffectiveRole(username, deviceID, widgetID string)
 
 	now := time.Now()
 	bestLevel := 0
+	bestRole := ""
 
 	for _, d := range ds.byGrantee[username] {
 		if d.ExpiresAt.Before(now) {
@@ -107,19 +108,11 @@ func (ds *DelegationStore) GetEffectiveRole(username, deviceID, widgetID string)
 				continue
 			}
 		}
-		level := roleLevel[d.Role]
-		if level > bestLevel {
-			bestLevel = level
+		if level := RoleLevel(d.Role); level > bestLevel {
+			bestLevel, bestRole = level, d.Role
 		}
 	}
-
-	// Map back to role name
-	for role, level := range roleLevel {
-		if level == bestLevel {
-			return role
-		}
-	}
-	return ""
+	return bestRole
 }
 
 // ListByGrantee returns all active (non-expired) delegations for a user.

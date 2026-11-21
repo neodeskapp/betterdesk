@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/unitronix/betterdesk-server/auth"
 )
 
 // Manifest describes a CDAP device's capabilities, identity, and widget definitions.
@@ -172,18 +174,12 @@ var allowedCapabilities = map[string]bool{
 // maxWidgets is the hard limit on widget count per device.
 const maxWidgets = 200
 
-// roleLevel maps a role name to a numeric authority level.
-// Higher number = more privilege.
-var roleLevel = map[string]int{
-	"viewer":   1,
-	"operator": 2,
-	"admin":    3,
-}
-
-// RoleLevel returns the numeric authority level for a role name.
-// Returns 0 for unknown roles.
+// RoleLevel returns the numeric authority level for a role name, higher is
+// more privilege: auth's order of every role it knows (super_admin and
+// admin highest, then server_admin and global_admin, operator, viewer and
+// guest_issuer). Returns 0 for unknown roles.
 func RoleLevel(role string) int {
-	return roleLevel[role]
+	return auth.RoleLevel(role)
 }
 
 // allowedRoles is used for validation of permission fields.
@@ -262,9 +258,7 @@ func CheckWidgetPermission(role, action string, w *Widget) bool {
 		requiredRole = perm.Control
 	}
 
-	userLevel := roleLevel[role]
-	requiredLevel := roleLevel[requiredRole]
-	return userLevel >= requiredLevel
+	return RoleLevel(role) >= RoleLevel(requiredRole)
 }
 
 // ParseManifest parses and validates a CDAP device manifest from raw JSON.
