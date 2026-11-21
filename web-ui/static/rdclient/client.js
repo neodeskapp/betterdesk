@@ -420,9 +420,10 @@ class RDClient {
                     this.fileTransfer.handleSendConfirm(action.sendConfirm);
                 }
             });
-            this._fileConnection.on('2fa_required', () => this._emit('2fa_required'));
-            this._fileConnection.on('2fa_error', (err) => this._emit('2fa_error', err));
-            this._fileConnection.on('login_error', (err) => this._emit('login_error', err));
+            // The file transfer session signs in on its own: its questions go to the file sheet
+            this._fileConnection.on('2fa_required', () => this._emit('file_2fa_required'));
+            this._fileConnection.on('2fa_error', (err) => this._emit('file_2fa_error', err));
+            this._fileConnection.on('login_error', (err) => this._emit('file_login_error', err));
             this._fileConnection.on('disconnected', () => {
                 if (this._fileConnection && this._fileConnection.state !== 'ready') {
                     this._fileConnection = null;
@@ -443,6 +444,14 @@ class RDClient {
             throw new Error('File transfer session is not connected');
         }
         this._fileConnection.sendMessage(msgObj);
+    }
+
+    /**
+     * The second factor the file transfer session asked for (file_2fa_required)
+     * @param {string} code - 6-digit TOTP code
+     */
+    submitFile2FA(code) {
+        if (this._fileConnection) this._fileConnection.submit2FA(String(code || '').trim());
     }
 
     disconnectFileConnection() {

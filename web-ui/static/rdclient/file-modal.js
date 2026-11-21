@@ -456,6 +456,18 @@
             self._renderRemoteError(data.error || t('remote.file_connect_failed', 'Could not open file transfer session'));
             self._setDropzoneEnabled(false);
         });
+        // The file transfer session signs in on its own; a device with 2FA asks again
+        client.on('file_2fa_required', function () {
+            self._renderRemoteTfa('');
+            self._setDropzoneEnabled(false);
+        });
+        client.on('file_2fa_error', function (error) {
+            self._renderRemoteTfa(String(error || t('remote.2fa_invalid', 'Enter a valid 6-digit code')));
+        });
+        client.on('file_login_error', function (error) {
+            self._renderRemoteError(String(error || t('remote.file_connect_failed', 'Could not open file transfer session')));
+            self._setDropzoneEnabled(false);
+        });
         client.on('file_dir', function (data) {
             self._remoteEntries = data.entries || [];
             self._selectedRemote = null;
@@ -582,6 +594,33 @@
             var ft = self._session.client?.fileTransfer;
             if (ft) ft.browseDir(ft.currentPath || '');
         });
+    };
+
+    /** The code form for the file transfer session's second factor, in the remote pane */
+    FileTransferModal.prototype._renderRemoteTfa = function (error) {
+        var list = this._el.querySelector('.ft-remote-list');
+        list.innerHTML =
+            '<form class="ft-empty ft-tfa" novalidate>' +
+            '<label><span>' + escapeHtml(t('remote.2fa_hint', 'Enter the 6-digit code from your authenticator app')) + '</span>' +
+            '<input class="form-input" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7"></label>' +
+            (error ? '<span class="ft-error" role="alert">' + escapeHtml(error) + '</span>' : '') +
+            '<button type="submit" class="btn btn-sm">' + escapeHtml(t('remote.verify', 'Verify')) + '</button>' +
+            '</form>';
+        var self = this;
+        var form = list.querySelector('form');
+        var input = form.querySelector('input');
+        form.addEventListener('submit', function (ev) {
+            ev.preventDefault();
+            var code = input.value.replace(/\s/g, '');
+            if (!/^\d{6}$/.test(code)) {
+                self._renderRemoteTfa(t('remote.2fa_invalid', 'Enter a valid 6-digit code'));
+                return;
+            }
+            var client = self._session && self._session.client;
+            if (client && typeof client.submitFile2FA === 'function') client.submitFile2FA(code);
+            self._renderRemoteLoading(t('remote.file_connecting', 'Connecting file transfer session…'));
+        });
+        input.focus();
     };
 
     FileTransferModal.prototype._buildRemoteFullPath = function (entry) {

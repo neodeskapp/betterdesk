@@ -298,3 +298,32 @@ describe('mesh file transfer', () => {
 		expect(events.find(([ev]) => ev === 'file_transfer_complete')?.[1]).toEqual({ id, type: 'upload' });
 	});
 });
+
+describe('file sheet: a second factor for the file transfer session', () => {
+	const f: Loaded = loadScripts(['file-modal.js'], ['FileTransferModal']);
+
+	test('asks for the code inside the sheet and sends it to the file transfer session', () => {
+		const listeners = new Map<string, ((...a: unknown[]) => void)[]>();
+		const client = {
+			on: (ev: string, fn: (...a: unknown[]) => void) =>
+				listeners.set(ev, [...(listeners.get(ev) ?? []), fn]),
+			fileTransfer: { browseDir: vi.fn(), enabled: true, currentPath: '' },
+			submitFile2FA: vi.fn()
+		};
+		const emit = (ev: string, ...a: unknown[]) => (listeners.get(ev) ?? []).forEach((fn) => fn(...a));
+		const modal = new f.FileTransferModal();
+		modal.open({ deviceId: '900100012', client });
+		emit('file_2fa_required');
+		const list = modal._el.querySelector('.ft-remote-list') as HTMLElement;
+		const input = list.querySelector('input') as HTMLInputElement;
+		expect(input).not.toBeNull();
+		input.value = '123 456';
+		(list.querySelector('form') as HTMLFormElement).requestSubmit();
+		expect(client.submitFile2FA).toHaveBeenCalledWith('123456');
+
+		emit('file_2fa_error', 'Wrong 2FA Code');
+		expect(list.textContent).toContain('Wrong 2FA Code');
+		expect(list.querySelector('input')).not.toBeNull();
+		modal.close();
+	});
+});

