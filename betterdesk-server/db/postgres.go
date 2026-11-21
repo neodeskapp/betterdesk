@@ -1500,8 +1500,20 @@ func (pg *PostgresDB) cascadePeerIDInTx(ctx context.Context, tx pgx.Tx, oldID, n
 		{`UPDATE device_tokens SET peer_id = $1 WHERE peer_id = $2`, []any{newID, oldID}},
 		{`UPDATE org_devices SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE peers SET linked_peer_id = $1 WHERE linked_peer_id = $2`, []any{newID, oldID}},
-		{`UPDATE device_folder_assignments SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		// Groups, folder, direct grants and access policy: a row a device
+		// that once had the new id left behind gives way to the device's own
+		{`DELETE FROM device_group_members WHERE peer_id = $1 AND device_group_id IN
+			(SELECT device_group_id FROM device_group_members WHERE peer_id = $2)`, []any{newID, oldID}},
 		{`UPDATE device_group_members SET peer_id = $1 WHERE peer_id = $2`, []any{newID, oldID}},
+		{`DELETE FROM device_folder_assignments WHERE device_id = $1 AND EXISTS
+			(SELECT 1 FROM device_folder_assignments WHERE device_id = $2)`, []any{newID, oldID}},
+		{`UPDATE device_folder_assignments SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		{`DELETE FROM user_peer_grants WHERE peer_id = $1 AND user_id IN
+			(SELECT user_id FROM user_peer_grants WHERE peer_id = $2)`, []any{newID, oldID}},
+		{`UPDATE user_peer_grants SET peer_id = $1 WHERE peer_id = $2`, []any{newID, oldID}},
+		{`DELETE FROM access_policies WHERE peer_id = $1 AND EXISTS
+			(SELECT 1 FROM access_policies WHERE peer_id = $2)`, []any{newID, oldID}},
+		{`UPDATE access_policies SET peer_id = $1 WHERE peer_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_connection_policies SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},

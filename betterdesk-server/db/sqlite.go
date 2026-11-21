@@ -1790,6 +1790,20 @@ func (s *SQLiteDB) cascadePeerIDInTx(tx *sql.Tx, oldID, newID string) error {
 		{`UPDATE device_tokens SET peer_id = ? WHERE peer_id = ?`, []any{newID, oldID}},
 		{`UPDATE org_devices SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE peers SET linked_peer_id = ? WHERE linked_peer_id = ?`, []any{newID, oldID}},
+		// Groups, folder, direct grants and access policy: a row a device
+		// that once had the new id left behind gives way to the device's own
+		{`DELETE FROM device_group_members WHERE peer_id = ? AND device_group_id IN
+			(SELECT device_group_id FROM device_group_members WHERE peer_id = ?)`, []any{newID, oldID}},
+		{`UPDATE device_group_members SET peer_id = ? WHERE peer_id = ?`, []any{newID, oldID}},
+		{`DELETE FROM device_folder_assignments WHERE device_id = ? AND EXISTS
+			(SELECT 1 FROM device_folder_assignments WHERE device_id = ?)`, []any{newID, oldID}},
+		{`UPDATE device_folder_assignments SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
+		{`DELETE FROM user_peer_grants WHERE peer_id = ? AND user_id IN
+			(SELECT user_id FROM user_peer_grants WHERE peer_id = ?)`, []any{newID, oldID}},
+		{`UPDATE user_peer_grants SET peer_id = ? WHERE peer_id = ?`, []any{newID, oldID}},
+		{`DELETE FROM access_policies WHERE peer_id = ? AND EXISTS
+			(SELECT 1 FROM access_policies WHERE peer_id = ?)`, []any{newID, oldID}},
+		{`UPDATE access_policies SET peer_id = ? WHERE peer_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_connection_policies SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
