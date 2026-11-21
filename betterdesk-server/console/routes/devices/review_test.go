@@ -294,3 +294,56 @@ func TestStrategyRoutesKeepTheScope(t *testing.T) {
 		}
 	})
 }
+
+// TestDeleteAndBanRevokeTheDeviceTokens: every delete of the device page
+// (soft, hard, with cascade, the bulk delete) and its ban revoke the device
+// tokens of each device the server deleted or banned, once the server did
+// it; an unban gives no token back, and a delete or ban the server refused
+// leaves the token live (BUGS RV227).
+func TestDeleteAndBanRevokeTheDeviceTokens(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, api := world(t, db, nil, nil)
+		ctx := context.Background()
+		authn := w.Server.Deps().Authn
+		devices := []string{"dev-ban", "dev-soft", "dev-hard", "dev-linked", "dev-bulk1", "dev-bulk2", "dev-keep"}
+		tokens := map[string]string{}
+		for _, id := range devices {
+			api.On("GET /api/peers/"+id, 200, `{"id":"`+id+`","hostname":"h"}`)
+			token, err := authn.IssueDeviceToken(ctx, 1, id, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			tokens[id] = token
+		}
+		live := func(id string) bool {
+			_, err := authn.RequireDeviceToken(ctx, "Bearer "+tokens[id])
+			return err == nil
+		}
+		admin := w.As("admin")
+
+		api.On("POST /api/peers/dev-keep/ban", 500, `{"error":"ban failed"}`)
+		api.On("DELETE /api/peers/dev-keep", 500, `{"error":"delete failed"}`)
+		api.On("DELETE /api/peers/dev-hard?cascade=true&hard=true", 200, `{"status":"deleted","id":"dev-hard","revoked":false,"cascaded":["dev-linked"]}`)
+		for _, c := range []struct {
+			method, path, body string
+			status             int
+		}{
+			{"POST", "/api/devices/dev-keep/ban", `{}`, http.StatusBadGateway},
+			{"DELETE", "/api/devices/dev-keep", ``, http.StatusInternalServerError},
+			{"POST", "/api/devices/dev-ban/ban", `{"reason":"stolen"}`, http.StatusOK},
+			{"POST", "/api/devices/dev-ban/unban", `{}`, http.StatusOK},
+			{"DELETE", "/api/devices/dev-soft", ``, http.StatusOK},
+			{"DELETE", "/api/devices/dev-hard?cascade=true&hard=true", ``, http.StatusOK},
+			{"POST", "/api/devices/bulk-delete", `{"ids":["dev-bulk1","dev-bulk2"]}`, http.StatusOK},
+		} {
+			if got := admin.Do(c.method, c.path, c.body); got.Status != c.status {
+				t.Errorf("%s %s: %d %s, want %d", c.method, c.path, got.Status, got.Body, c.status)
+			}
+		}
+		for _, id := range devices {
+			if want := id == "dev-keep"; live(id) != want {
+				t.Errorf("device token of %s live: %v, want %v", id, !want, want)
+			}
+		}
+	})
+}

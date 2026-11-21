@@ -445,3 +445,22 @@ func deviceKnown(ctx context.Context, q store.Querier, id string) (bool, error) 
 	}
 	return false, fmt.Errorf("look up a device: %w", err)
 }
+
+// deviceShutOut reports whether the signal server holds the device as
+// banned or soft-deleted in peers. A device without a row there (one the
+// console admitted before it reached the signal server) and a database
+// without the table or its columns are not shut out.
+func deviceShutOut(ctx context.Context, q store.Querier, id string) (bool, error) {
+	var one int
+	err := store.SelectRow(ctx, q, `SELECT 1 FROM peers WHERE id = ? AND (banned OR soft_deleted)`, id).Scan(&one)
+	switch {
+	case err == nil:
+		return true, nil
+	case errors.Is(err, sql.ErrNoRows):
+		return false, nil
+	case q.Dialect() == store.SQLite && (strings.Contains(err.Error(), "no such table") || strings.Contains(err.Error(), "no such column")),
+		q.Dialect() != store.SQLite && strings.Contains(err.Error(), "does not exist"):
+		return false, nil
+	}
+	return false, fmt.Errorf("look up the ban of a device: %w", err)
+}

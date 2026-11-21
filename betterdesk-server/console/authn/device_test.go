@@ -50,6 +50,53 @@ func TestDeviceSocketRefusesAnUnboundTokenForAKnownDevice(t *testing.T) {
 	})
 }
 
+// TestABannedOrDeletedDeviceProvesNothing: a device token of a device the
+// signal server holds as banned or soft-deleted is refused on the device
+// routes and the device sockets, whichever port banned or deleted it; a
+// device the signal server has no row for yet keeps its token, and the
+// device comes back with it when the ban ends (BUGS RV227).
+func TestABannedOrDeletedDeviceProvesNothing(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
+		ctx := context.Background()
+		s, _, _ := testService(t, db, nil)
+		id := addUser(t, s, "admin", "pw", "admin", "local")
+		set := db.Pick("1", "TRUE")
+		mustExec(t, db, `INSERT INTO peers (id) VALUES ('dev-ok')`)
+		mustExec(t, db, `INSERT INTO peers (id, banned) VALUES ('dev-banned', `+set+`)`)
+		mustExec(t, db, `INSERT INTO peers (id, soft_deleted) VALUES ('dev-binned', `+set+`)`)
+		tokens := map[string]string{}
+		for _, device := range []string{"dev-ok", "dev-banned", "dev-binned", "dev-new"} {
+			token, err := s.IssueDeviceToken(ctx, id, device, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			tokens[device] = token
+		}
+		check := func(device string, want bool) {
+			t.Helper()
+			_, err := s.RequireDeviceToken(ctx, "Bearer "+tokens[device])
+			var refused *DeviceAuthError
+			if want && err != nil {
+				t.Errorf("device request of %s: %v, want it through", device, err)
+			}
+			if !want && (!errors.As(err, &refused) || refused.Status != 401 || refused.Text != "Invalid or unbound access token") {
+				t.Errorf("device request of %s: %v, want 401 Invalid or unbound access token", device, err)
+			}
+			if ok, err := s.VerifyDeviceWSAuth(ctx, device, tokens[device]); ok != want || err != nil {
+				t.Errorf("device socket of %s: %v, %v; want %v", device, ok, err, want)
+			}
+		}
+		check("dev-ok", true)
+		check("dev-new", true)
+		check("dev-banned", false)
+		check("dev-binned", false)
+
+		mustExec(t, db, `UPDATE peers SET banned = `+db.Pick("0", "FALSE")+` WHERE id = 'dev-banned'`)
+		check("dev-banned", true)
+	})
+}
+
 // Only a token the console issued for a device proves the device: an
 // account's sign-in token proves none, whatever client id it stored, and a
 // device token signs no account in. The revocations of an account's

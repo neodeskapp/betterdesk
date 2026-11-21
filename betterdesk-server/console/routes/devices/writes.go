@@ -82,7 +82,7 @@ func changesOf(result *goapi.Object) any {
 // account may not see one of them; one linked after that check stays),
 // hard deletes it for good
 // (also one that is soft-deleted already) and clears what the console
-// keeps of it.
+// keeps of it. Every device the server deleted loses its device tokens.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
@@ -124,18 +124,21 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	}
 	// The server names the devices it deleted with this one
 	cascaded := or(dig(result.Get("data"), "cascaded"), []any{})
+	gone := []string{id}
+	if list, ok := cascaded.([]any); ok {
+		for _, item := range list {
+			if s, isText := item.(string); isText && s != "" {
+				gone = append(gone, s)
+			}
+		}
+	}
+	// A deleted device keeps no device token, also when it is only in the
+	// bin: a restored one registers again
+	h.revokeDeviceTokens(r, gone...)
 	// A soft-deleted device can come back and keeps what the console holds
 	// of it; after a hard delete there is nothing to come back to, also for
 	// the devices deleted with it
 	if opts.Hard {
-		gone := []string{id}
-		if list, ok := cascaded.([]any); ok {
-			for _, item := range list {
-				if s, isText := item.(string); isText && s != "" {
-					gone = append(gone, s)
-				}
-			}
-		}
 		for _, deviceID := range gone {
 			if err := clearDeletedDevice(ctx, h.d.Store, deviceID); err != nil {
 				h.log.Warn("Clean-up after a device delete failed:", err)
@@ -184,6 +187,17 @@ func (h *handlers) linkedInScope(r *http.Request, id string) ([]string, bool, er
 	}
 	ok, err := h.allInScope(r, ids)
 	return ids, ok, err
+}
+
+// revokeDeviceTokens revokes the device tokens of devices the server
+// deleted or banned, so that none of them keeps the device routes and
+// sockets. A revocation that fails is logged; the server's change stands.
+func (h *handlers) revokeDeviceTokens(r *http.Request, ids ...string) {
+	for _, id := range ids {
+		if err := h.d.Authn.RevokeDeviceTokens(r.Context(), id); err != nil {
+			h.log.Error("Revoke the device tokens of a deleted or banned device:", err)
+		}
+	}
 }
 
 type deleted struct {
@@ -289,7 +303,8 @@ func banRefused(w http.ResponseWriter, r *http.Request, result *goapi.Object) {
 }
 
 // ban answers POST /api/devices/{id}/ban with {reason}. The audit entry
-// is where the device page reads who banned it from.
+// is where the device page reads who banned it from. A banned device
+// loses its device tokens; an unban gives none back.
 func (h *handlers) ban(w http.ResponseWriter, r *http.Request) {
 	reason := slice(jsTrim(kit.Body(r).Text("reason", "")), 500)
 	if _, ok := h.found(w, r, "Ban device error:"); !ok {
@@ -301,6 +316,7 @@ func (h *handlers) ban(w http.ResponseWriter, r *http.Request) {
 		banRefused(w, r, result)
 		return
 	}
+	h.revokeDeviceTokens(r, id)
 	details := "Device " + id + " banned"
 	if reason != "" {
 		details += ": " + reason
@@ -403,7 +419,7 @@ func changeIDError(r *http.Request, refusal any) (any, error) {
 // bulkDelete answers POST /api/devices/bulk-delete with {ids}: every
 // device must exist and be one the account may see, else nothing is
 // deleted; then each is soft-deleted, and the answer counts those the
-// server deleted.
+// server deleted, which lose their device tokens.
 func (h *handlers) bulkDelete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ids, isList := value(r, "ids").([]any)
@@ -436,6 +452,7 @@ func (h *handlers) bulkDelete(w http.ResponseWriter, r *http.Request) {
 		result := h.backend.DeleteDevice(ctx, id, goapi.DeleteOptions{})
 		if result.Bool("success") || result.Bool("changes") {
 			count++
+			h.revokeDeviceTokens(r, id)
 		}
 	}
 	if err := h.d.LogAction(r, "devices_bulk_deleted", strconv.Itoa(count)+" devices deleted"); err != nil {

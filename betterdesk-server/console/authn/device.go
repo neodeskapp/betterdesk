@@ -14,7 +14,10 @@ import (
 // (IssueDeviceToken), or on the device sockets also an enrollment token of
 // the signal server. An account's sign-in token proves no device, whatever
 // client id it stored. The header X-Device-Id names a device and proves
-// nothing.
+// nothing. A device token proves nothing while the signal server holds
+// its device as banned or soft-deleted, whoever banned or deleted it; the
+// console's own deletes and bans also revoke the device's tokens
+// (RevokeDeviceTokens), which a hard delete leaves no row to check.
 
 // deviceIDPattern is the form of a device id a token can be bound to.
 var deviceIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{3,64}$`)
@@ -57,13 +60,15 @@ type DeviceAuth struct {
 }
 
 // RequireDeviceToken checks the Authorization header of a device request.
-// It needs a Bearer device token that is live and bound to a device id,
-// and notes the use on the token. It refuses with a *DeviceAuthError:
+// It needs a Bearer device token that is live and bound to a device id
+// the signal server does not hold as banned or soft-deleted, and notes the
+// use on the token. It refuses with a *DeviceAuthError:
 //
 //	401 "Bearer access token required"     no Bearer token
-//	401 "Invalid or expired access token"  the lookup failed
+//	401 "Invalid or expired access token"  a lookup failed
 //	401 "Invalid or unbound access token"  no such token, an account's
-//	                                       token, or not bound to a device id
+//	                                       token, not bound to a device id,
+//	                                       or its device banned or deleted
 func (s *Service) RequireDeviceToken(ctx context.Context, authorization string) (*DeviceAuth, error) {
 	token, ok := ExtractBearerToken(authorization)
 	if !ok {
@@ -74,6 +79,13 @@ func (s *Service) RequireDeviceToken(ctx context.Context, authorization string) 
 		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or expired access token"}
 	}
 	if !row.IsDeviceToken() || row.ClientID.String == "" || !IsDeviceID(row.ClientID.String) {
+		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or unbound access token"}
+	}
+	shutOut, err := deviceShutOut(ctx, s.db, row.ClientID.String)
+	if err != nil {
+		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or expired access token"}
+	}
+	if shutOut {
 		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or unbound access token"}
 	}
 	// The token is good; a failure to note its use changes nothing.
@@ -240,10 +252,11 @@ func enrollmentExpiry(value store.Time, zone *time.Location) (time.Time, bool) {
 // VerifyDeviceWSAuth checks the token a device presents on one of the
 // device sockets. The device id and a token of 8 characters or more are
 // needed. The token passes as an enrollment token (VerifyEnrollmentToken)
-// or as a live device token bound to this device id.
+// or as a live device token bound to this device id, whose device the
+// signal server does not hold as banned or soft-deleted.
 //
 // A failed enrollment lookup is returned as an error. A failed access
-// token lookup counts as "no".
+// token or ban lookup counts as "no".
 func (s *Service) VerifyDeviceWSAuth(ctx context.Context, deviceID, token string) (bool, error) {
 	if deviceID == "" || token == "" || utf16Len(toWellFormed(token)) < minDeviceTokenLength {
 		return false, nil
@@ -256,8 +269,9 @@ func (s *Service) VerifyDeviceWSAuth(ctx context.Context, deviceID, token string
 		return true, nil
 	}
 	row, err := getAccessToken(ctx, s.db, token)
-	if err != nil {
+	if err != nil || !row.IsDeviceToken() || !row.ClientID.Valid || row.ClientID.String != deviceID {
 		return false, nil
 	}
-	return row.IsDeviceToken() && row.ClientID.Valid && row.ClientID.String == deviceID, nil
+	shutOut, err := deviceShutOut(ctx, s.db, deviceID)
+	return err == nil && !shutOut, nil
 }
