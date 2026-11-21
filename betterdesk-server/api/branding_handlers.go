@@ -1012,7 +1012,19 @@ func (s *Server) removeEnrollmentRejectAuditPeer(deviceID string) error {
 
 // enrollmentRejectAuditPeer reports whether clearing rejection / unban should
 // remove the peers row so the device must re-enter the pending queue.
+//
+// A rejection marker names whether the rejection created the row
+// (audit_peer); a device row that existed before is never removed. Markers
+// without the field come from before it existed and keep the old rule.
 func enrollmentRejectAuditPeer(peerRow *db.Peer, rejectedRaw, decisionRaw string) bool {
+	if rejectedRaw != "" {
+		var meta struct {
+			AuditPeer *bool `json:"audit_peer"`
+		}
+		if json.Unmarshal([]byte(rejectedRaw), &meta) == nil && meta.AuditPeer != nil {
+			return *meta.AuditPeer
+		}
+	}
 	if peerRow != nil && peerRow.BanReason == enrollmentRejectBanReason {
 		return true
 	}
@@ -1298,11 +1310,28 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 	// Body is optional; ignore decode errors (empty body = no ban).
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	pendingJSON, _ := s.db.GetConfig(pendingDevicePrefix + deviceID)
+	// Only a pending request is rejected: an enrolled device is banned or
+	// deleted through the device routes, with their permissions.
+	pendingJSON, err := s.db.GetConfig(pendingDevicePrefix + deviceID)
+	if err != nil {
+		writeInternalError(w, err, "GetConfig")
+		return
+	}
+	if pendingJSON == "" {
+		http.Error(w, "No pending enrollment for device", http.StatusNotFound)
+		return
+	}
 	pending := parsePendingEnrollmentMeta(pendingJSON)
 	if pending.DeviceID == "" {
 		pending.DeviceID = deviceID
 	}
+	existing, err := s.db.GetPeer(deviceID)
+	if err != nil {
+		log.Printf("[API] handleRejectDevice: GetPeer %s: %v", deviceID, err)
+	}
+	// The ban creates the device row a pending request has none of yet;
+	// clearing the rejection removes the row again only then.
+	auditPeer := req.Ban && existing == nil
 
 	// Remove from pending
 	s.db.DeleteConfig(pendingDevicePrefix + deviceID)
@@ -1321,6 +1350,7 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 		"ip":          pending.IP,
 		"created_at":  pending.CreatedAt,
 		"banned":      req.Ban,
+		"audit_peer":  auditPeer,
 		"decided_at":  timeNowISO(),
 	})
 	s.db.SetConfig(rejectedDevicePrefix+deviceID, string(rejectedPayload))
@@ -1328,10 +1358,6 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 	// Optionally ban so Devices → Banned shows the device (#351).
 	// Pending enrollments often have no peers row yet — create one first.
 	if req.Ban {
-		existing, err := s.db.GetPeer(deviceID)
-		if err != nil {
-			log.Printf("[API] handleRejectDevice: GetPeer %s: %v", deviceID, err)
-		}
 		if existing == nil {
 			if err := s.createPeerFromEnrollment(&EnrollmentRequest{
 				DeviceID:   pending.DeviceID,
@@ -1427,6 +1453,14 @@ func (s *Server) handleClearEnrollmentRejection(w http.ResponseWriter, r *http.R
 		} else {
 			unbanned = true
 			peerRemoved = true
+		}
+	} else if peerRow != nil && peerRow.Banned && peerRow.BanReason == enrollmentRejectBanReason {
+		// A device row that existed before the rejection keeps its row and
+		// loses the rejection's ban.
+		if err := s.db.UnbanPeer(deviceID); err != nil {
+			log.Printf("[API] handleClearEnrollmentRejection: unban %s: %v", deviceID, err)
+		} else {
+			unbanned = true
 		}
 	}
 

@@ -1497,7 +1497,10 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	peerRow, _ := s.db.GetPeer(id)
-	enrollmentRejectBan := peerRow != nil && peerRow.BanReason == enrollmentRejectBanReason
+	rejected, _ := s.db.GetConfig(rejectedDevicePrefix + id)
+	decision, _ := s.db.GetConfig(enrollmentDecisionPrefix + id)
+	enrollmentRejectBan := peerRow != nil && peerRow.BanReason == enrollmentRejectBanReason &&
+		enrollmentRejectAuditPeer(peerRow, rejected, decision)
 
 	// Enrollment Reject & Ban created an audit-only peer. Unban must remove it
 	// so managed mode re-queues for approval instead of treating the ID as enrolled (#351).
