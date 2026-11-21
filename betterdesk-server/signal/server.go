@@ -183,6 +183,12 @@ type Server struct {
 	// refusals decides which refusals of unauthenticated requests are
 	// audited.
 	refusals *refusalCounter
+
+	// panelProof is the encoded secret field the console's bridge sends
+	// first (see panel_proof.go); panelConns holds the open TCP
+	// connections that sent it, by normalizeAddrKey of their address.
+	panelProof []byte
+	panelConns sync.Map // map[string]net.Conn
 }
 
 // New creates a new signal server instance.
@@ -199,6 +205,7 @@ func New(cfg *config.Config, kp *crypto.KeyPair, database db.Database) *Server {
 
 		maxPendingEnrollments: defaultMaxPendingEnrollments,
 		refusals:              newRefusalCounter(refusalAuditWindow, refusalAuditBudget),
+		panelProof:            newPanelProof(),
 	}
 	if cfg != nil {
 		s.lanNet = parseLANMask(cfg.Mask)
@@ -636,7 +643,8 @@ func (s *Server) handleSecureTCPConn(sc *crypto.SecureTCPConn, addrKey string) {
 }
 
 // handlePlainTCPConn handles a plain (unencrypted) TCP connection — used by
-// old clients that don't perform KeyExchange.
+// old clients that don't perform KeyExchange, and by the console's bridge
+// for the browser's web client, whose first message is the panel proof.
 func (s *Server) handlePlainTCPConn(conn net.Conn, addrKey string, firstMsg *pb.RendezvousMessage) {
 	pc := &tcpPunchConn{conn: conn, createdAt: time.Now()}
 	registered := false
@@ -646,6 +654,19 @@ func (s *Server) handlePlainTCPConn(conn net.Conn, addrKey string, firstMsg *pb.
 			log.Printf("[signal] TCP punch conn unregistered: %s", addrKey)
 		}
 	}()
+
+	panel := false
+	if s.isPanelProof(firstMsg) {
+		firstMsg = nil
+		if s.panelSourceAllowed(conn.RemoteAddr()) {
+			panel = true
+			s.panelConns.Store(addrKey, conn)
+			defer s.panelConns.CompareAndDelete(addrKey, conn)
+			log.Printf("[signal] TCP session %s is the console's web client", addrKey)
+		} else {
+			log.Printf("[signal] console proof from %s, which is outside PANEL_SIGNAL_PROXY_CIDRS: treated as any client", addrKey)
+		}
+	}
 
 	// Process the first message that was already read during handshake.
 	if firstMsg != nil {
@@ -662,7 +683,7 @@ func (s *Server) handlePlainTCPConn(conn net.Conn, addrKey string, firstMsg *pb.
 				log.Printf("[signal] TCP punch conn registered: %s", addrKey)
 			}
 
-			resp := s.handleMessage(firstMsg, conn.RemoteAddr())
+			resp := s.dispatchMessage(firstMsg, conn.RemoteAddr(), panel)
 			if resp != nil {
 				if err := pc.writeProto(resp); err != nil {
 					log.Printf("[signal] TCP write to %s: %v", addrKey, err)
@@ -701,7 +722,7 @@ func (s *Server) handlePlainTCPConn(conn net.Conn, addrKey string, firstMsg *pb.
 			log.Printf("[signal] TCP punch conn registered: %s", addrKey)
 		}
 
-		resp := s.handleMessage(msg, conn.RemoteAddr())
+		resp := s.dispatchMessage(msg, conn.RemoteAddr(), panel)
 		if resp != nil {
 			if err := pc.writeProto(resp); err != nil {
 				log.Printf("[signal] TCP write to %s: %v", addrKey, err)

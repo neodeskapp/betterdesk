@@ -242,40 +242,61 @@ func TestRelayResponseForwardHydratesPKAndUsesUDP(t *testing.T) {
 	}
 }
 
-func TestRelayResponseForwardHonorsPanelProxyCIDR(t *testing.T) {
+// A RelayResponse whose initiator is the open connection of the panel's
+// web client gets a relay ticket for panel-web-remote; one that names
+// another loopback address does not.
+func TestRelayResponseForwardHonorsPanelWebClient(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	initiatorAddr := udpAddr("127.0.0.1", 51757)
+	otherLoopback := udpAddr("127.0.0.1", 51758)
 	targetAddr := udpAddr("198.51.100.99", 58002)
 	putOnlinePeer(srv, "TGTPANEL399", targetAddr.IP.String(), targetAddr.Port, peer.ConnTCP)
 
-	client, server := net.Pipe()
-	t.Cleanup(func() { client.Close(); server.Close() })
-	go func() {
-		buf := make([]byte, 64*1024)
-		for {
-			if _, err := client.Read(buf); err != nil {
-				return
+	for _, addr := range []*net.UDPAddr{initiatorAddr, otherLoopback} {
+		client, server := net.Pipe()
+		t.Cleanup(func() { client.Close(); server.Close() })
+		go func() {
+			buf := make([]byte, 64*1024)
+			for {
+				if _, err := client.Read(buf); err != nil {
+					return
+				}
 			}
+		}()
+		srv.tcpPunchConns.Store(normalizeAddrKey(addr.String()), &tcpPunchConn{
+			conn:      server,
+			createdAt: time.Now(),
+		})
+		if addr == initiatorAddr {
+			srv.panelConns.Store(normalizeAddrKey(addr.String()), server)
 		}
-	}()
-	srv.tcpPunchConns.Store(normalizeAddrKey(initiatorAddr.String()), &tcpPunchConn{
-		conn:      server,
-		createdAt: time.Now(),
-	})
+	}
+
+	forward := func(addr *net.UDPAddr, relayUUID string) {
+		srv.handleRelayResponseForward(&pb.RendezvousMessage{
+			Union: &pb.RendezvousMessage_RelayResponse{
+				RelayResponse: &pb.RelayResponse{
+					SocketAddr: cryptopkg.EncodeAddr(addr),
+					Uuid:       relayUUID,
+					Union:      &pb.RelayResponse_Id{Id: "TGTPANEL399"},
+				},
+			},
+		}, targetAddr)
+	}
 
 	const relayUUID = "399-panel-proxy-forward-uuid"
-	srv.handleRelayResponseForward(&pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_RelayResponse{
-			RelayResponse: &pb.RelayResponse{
-				SocketAddr: cryptopkg.EncodeAddr(initiatorAddr),
-				Uuid:       relayUUID,
-				Union:      &pb.RelayResponse_Id{Id: "TGTPANEL399"},
-			},
-		},
-	}, targetAddr)
+	forward(initiatorAddr, relayUUID)
+	// A ticket that exists refuses other initiators; a missing one would be
+	// made for the first caller.
+	if relay.AuthorizeRelayPair(relayUUID, "not-the-panel", "TGTPANEL399") ||
+		!relay.AuthorizeRelayPair(relayUUID, panelWebRemoteInitiatorID, "TGTPANEL399") {
+		t.Fatal("the panel's web client must be authorized on RelayResponse forward")
+	}
 
-	if !relay.AuthorizeRelayPair(relayUUID, panelWebRemoteInitiatorID, "TGTPANEL399") {
-		t.Fatal("panel proxy initiator must be authorized on RelayResponse forward")
+	const otherUUID = "399-other-loopback-forward-uuid"
+	forward(otherLoopback, otherUUID)
+	if relay.ClaimRelayPair(otherUUID) {
+		t.Fatal("a loopback address without the panel proof must get no relay ticket")
 	}
 }
 

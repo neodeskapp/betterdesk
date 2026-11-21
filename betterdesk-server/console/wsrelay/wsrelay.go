@@ -16,13 +16,16 @@
 // (InvalidateGuestGrant) ends its bridges at once.
 //
 // The bridge dials the signal and relay servers over TCP even though they
-// run in this process: the signal server lets the panel's web client start
-// connections because the TCP peer is a trusted address (loopback or
-// PANEL_SIGNAL_PROXY_CIDRS), and the relay counts and pairs connections by
-// their remote address, so a connection handed over in memory would change
-// those decisions. For the same reason a relay address on loopback is
-// replaced by the machine's first other IPv4 address: the relay treats
-// loopback connections as its admin interface.
+// run in this process. Its first frame to the signal server is the panel
+// proof (Options.SignalProof), a secret the signal server made at start:
+// with it, from an address of PANEL_SIGNAL_PROXY_CIDRS (default loopback),
+// the signal server lets the bridge start connections as the panel's web
+// client without a registered peer. A signal server in another process
+// does not know the secret and treats the bridge as any client. The relay
+// counts and pairs connections by their remote address, so a connection
+// handed over in memory would change its decisions; for the same reason a
+// relay address on loopback is replaced by the machine's first other IPv4
+// address: the relay treats loopback connections as its admin interface.
 //
 // Differences from the old service, on purpose: Node handled a guest's
 // messages in asynchronous callbacks, so a later frame could reach the
@@ -104,6 +107,12 @@ type Options struct {
 	// (WS_HBBS_HOST, default localhost; WS_HBBS_PORT, default 21116).
 	SignalHost string
 	SignalPort int
+	// SignalProof is the frame a bridge writes to the signal server before
+	// anything of the browser's (signal.Server.PanelProof of this
+	// process): by it the signal server takes the connection for the
+	// panel's web client, which needs no registered peer. nil writes none,
+	// and the signal server treats the bridge as any client.
+	SignalProof []byte
 	// RelayHost and RelayPort are the relay server's TCP address
 	// (WS_HBBR_HOST, default localhost; WS_HBBR_PORT, default 21117). A
 	// loopback host is replaced at New by the first IPv4 address of

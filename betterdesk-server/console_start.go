@@ -24,7 +24,9 @@ import (
 // its own connections to the same file. The returned function stops the
 // console and everything it started. requestRestart ends the process to
 // be started again; the console calls it only under a supervisor.
-func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, requestRestart func()) (func(), error) {
+// signalProof is the panel proof of the signal server in this process
+// (signal.Server.PanelProof), which the web client's bridge presents.
+func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof []byte, requestRestart func()) (func(), error) {
 	ccfg, err := consoleconfig.LoadEnv()
 	if err != nil {
 		return nil, fmt.Errorf("console configuration: %w", err)
@@ -55,6 +57,7 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		Commit:      Commit,
 		Exit:        requestRestart,
 		ServerDB:    cfg.DBPath,
+		SignalProof: signalProof,
 	})
 	if err != nil {
 		_ = sdb.Close()

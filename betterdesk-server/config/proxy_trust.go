@@ -64,8 +64,9 @@ func (c *Config) RemoteAddrIsTrustedProxy(remoteAddr string) bool {
 	return false
 }
 
-// IPIsPanelSignalProxy reports whether ip is in PanelSignalProxyCIDRs
-// (Node panel → hbbs TCP proxy for Web Remote). Empty allowlist → false.
+// IPIsPanelSignalProxy reports whether ip is in PanelSignalProxyCIDRs, the
+// addresses the console's web client bridge may connect from. Empty
+// allowlist → false.
 func (c *Config) IPIsPanelSignalProxy(ip net.IP) bool {
 	if c == nil || ip == nil || len(c.PanelSignalProxyCIDRs) == 0 {
 		return false

@@ -1207,10 +1207,10 @@ func TestPanelWebRemoteCanRelayToWSTarget(t *testing.T) {
 	srv.localIP.Store("198.51.100.20")
 	putOnlinePeer(srv, "WSTGT397", "203.0.113.97", 52000, peer.ConnWS)
 
-	resp := srv.handleRequestRelayTCP(&pb.RequestRelay{
+	resp := srv.requestRelayTCP(&pb.RequestRelay{
 		Id:   "WSTGT397",
 		Uuid: "panel-to-ws-relay-uuid",
-	}, udpAddr("127.0.0.1", 51000), peer.ConnTCP)
+	}, udpAddr("127.0.0.1", 51000), peer.ConnTCP, true)
 
 	rr := resp.GetRelayResponse()
 	if rr == nil {
@@ -1816,32 +1816,39 @@ func TestUnavailableTargetCannotReceiveRelay(t *testing.T) {
 	}
 }
 
-func TestPanelProxyLoopbackCanPunchHoleWithoutPeer(t *testing.T) {
+func TestPanelWebClientCanPunchHoleWithoutPeer(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeManaged)
 	putOnlinePeer(srv, "TGTWEB1", "203.0.113.90", 52000, peer.ConnTCP)
 
-	id, ok := srv.requireAuthorizedInitiator(udpAddr("127.0.0.1", 51000), "TGTWEB1", "", 0)
+	id, ok := srv.authorizeInitiator(udpAddr("127.0.0.1", 51000), "TGTWEB1", "", 0, true)
 	if !ok || id != panelWebRemoteInitiatorID {
-		t.Fatalf("loopback panel proxy = (%q, %v), want (%q, true)", id, ok, panelWebRemoteInitiatorID)
+		t.Fatalf("panel web client = (%q, %v), want (%q, true)", id, ok, panelWebRemoteInitiatorID)
+	}
+	if id, ok := srv.requireAuthorizedInitiator(udpAddr("127.0.0.1", 51000), "TGTWEB1", "", 0); ok {
+		t.Fatalf("loopback without the panel proof = (%q, %v), want refused", id, ok)
 	}
 
-	// Web Remote: panel bridges from loopback; no RegisterPeer for the browser.
+	// Web Remote: the panel's bridge has no RegisterPeer for the browser.
 	// P2P-first may return nil while forwarding to the target; unauthorized always
 	// returns PunchHoleResponse{Failure: ID_NOT_EXIST}.
-	resp := srv.handlePunchHoleRequestTCP(&pb.PunchHoleRequest{Id: "TGTWEB1"}, udpAddr("127.0.0.1", 51000))
+	resp := srv.punchHoleRequestTCP(&pb.PunchHoleRequest{Id: "TGTWEB1"}, udpAddr("127.0.0.1", 51000), peer.ConnTCP, true)
 	if phr := resp.GetPunchHoleResponse(); phr != nil && phr.Failure == pb.PunchHoleResponse_ID_NOT_EXIST {
-		t.Fatal("panel loopback PunchHole must not be refused as unauthorized")
+		t.Fatal("the panel's PunchHole must not be refused as unauthorized")
+	}
+	resp = srv.handlePunchHoleRequestTCP(&pb.PunchHoleRequest{Id: "TGTWEB1"}, udpAddr("127.0.0.1", 51001))
+	if phr := resp.GetPunchHoleResponse(); phr == nil || phr.Failure != pb.PunchHoleResponse_ID_NOT_EXIST {
+		t.Fatalf("loopback PunchHole without the panel proof = %+v, want refused as unauthorized", resp)
 	}
 }
 
-func TestPanelProxyLoopbackCanRequestRelayWithoutPeer(t *testing.T) {
+func TestPanelWebClientCanRequestRelayWithoutPeer(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeManaged)
 	putOnlinePeer(srv, "TGTWEB2", "203.0.113.91", 52000, peer.ConnTCP)
 
-	resp := srv.handleRequestRelayTCP(&pb.RequestRelay{
+	resp := srv.requestRelayTCP(&pb.RequestRelay{
 		Id:   "TGTWEB2",
 		Uuid: "web-remote-relay-uuid",
-	}, udpAddr("127.0.0.1", 51000), peer.ConnTCP)
+	}, udpAddr("127.0.0.1", 51000), peer.ConnTCP, true)
 	rr := resp.GetRelayResponse()
 	if rr == nil {
 		t.Fatalf("expected RelayResponse, got %+v", resp)
@@ -2208,9 +2215,12 @@ func TestLoggedInOnlyInitiatorAllowsValidTokenAndPanelProxy(t *testing.T) {
 		t.Fatalf("valid token auth = (%q, %v), want VALIDLOGIN1", id, ok)
 	}
 
-	id, ok = srv.requireAuthorizedInitiator(udpAddr("127.0.0.1", 49995), "TGTLOGIN3", "", 0)
+	id, ok = srv.authorizeInitiator(udpAddr("127.0.0.1", 49995), "TGTLOGIN3", "", 0, true)
 	if !ok || id != panelWebRemoteInitiatorID {
-		t.Fatalf("panel proxy auth = (%q, %v), want %s", id, ok, panelWebRemoteInitiatorID)
+		t.Fatalf("panel web client auth = (%q, %v), want %s", id, ok, panelWebRemoteInitiatorID)
+	}
+	if id, ok := srv.requireAuthorizedInitiator(udpAddr("127.0.0.1", 49995), "TGTLOGIN3", "", 0); ok {
+		t.Fatalf("loopback without the panel proof = (%q, %v), want refused", id, ok)
 	}
 }
 
@@ -2290,9 +2300,12 @@ func TestOperatorOnlyOutboundKeepsPanelProxyAndAuditsAllowedConnection(t *testin
 	srv.cfg.OperatorOnlyOutbound = true
 	srv.SetAuditLogger(audit.NewLogger(""))
 
-	id, ok := srv.requireAuthorizedInitiator(udpAddr("127.0.0.1", 42500), "TGT425PANEL", "", 0)
+	if id, ok := srv.requireAuthorizedInitiator(udpAddr("127.0.0.1", 42500), "TGT425PANEL", "", 0); ok {
+		t.Fatalf("loopback without the panel proof = (%q, %v), want refused", id, ok)
+	}
+	id, ok := srv.authorizeInitiator(udpAddr("127.0.0.1", 42500), "TGT425PANEL", "", 0, true)
 	if !ok || id != panelWebRemoteInitiatorID {
-		t.Fatalf("panel proxy auth = (%q, %v), want %s", id, ok, panelWebRemoteInitiatorID)
+		t.Fatalf("panel web client auth = (%q, %v), want %s", id, ok, panelWebRemoteInitiatorID)
 	}
 
 	srv.logAuthorizedInitiator(udpAddr("127.0.0.1", 42500), id, "TGT425PANEL", "", "punch_hole")

@@ -296,10 +296,16 @@ func grantLabel(g *guestGrant) string {
 
 // dialAndRead opens the TCP connection, then passes what the server sends
 // to the browser: as it comes, or with ?transport=message one message per
-// RustDesk frame without its header.
+// RustDesk frame without its header. A connection to the signal server
+// gets the panel proof first, before any message of the browser.
 func (b *bridge) dialAndRead(ctx context.Context) {
 	defer b.wg.Done()
 	tcp, err := b.s.opts.Dial(ctx, "tcp", b.target)
+	if err == nil && b.label == "rendezvous" && len(b.s.opts.SignalProof) > 0 {
+		if _, err = tcp.Write(b.s.opts.SignalProof); err != nil {
+			_ = tcp.Close()
+		}
+	}
 	if err != nil {
 		if !b.isCleaned() {
 			logf("ERROR: WS proxy [%s]: TCP error (%s): %s", b.label, b.target, err.Error())

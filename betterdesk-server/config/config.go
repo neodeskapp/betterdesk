@@ -87,10 +87,12 @@ type Config struct {
 	// X-Forwarded-For / X-Real-IP. Required when TrustProxy is true — empty
 	// means forwarded headers are ignored (security-first, issue #276).
 	TrustedProxies []*net.IPNet
-	// PanelSignalProxyCIDRs is the allowlist of source IPs for the Node panel
-	// WebSocket→TCP proxy (/ws/rendezvous → hbbs). Web Remote never registers
-	// as a RustDesk peer; PunchHole/RequestRelay from these CIDRs are treated
-	// as panel-authorized initiators (#302 regression fix). Default: loopback.
+	// PanelSignalProxyCIDRs are the source addresses the console's bridge
+	// for the web client (/ws/rendezvous) may reach the signal server from.
+	// A TCP connection is the panel's web client only when its first frame
+	// is the panel proof the signal server made at start and it comes from
+	// one of these addresses; the address alone counts for nothing.
+	// Default: loopback.
 	PanelSignalProxyCIDRs []*net.IPNet
 	RelayMaxConnsIP       int    // Max relay connections per IP (0 = unlimited)
 	InitAdminUser         string // Initial admin username (created on first start)
@@ -275,8 +277,8 @@ func (s ConnectionSettings) Validate() error {
 	return nil
 }
 
-// DefaultPanelSignalProxyCIDRs is the loopback allowlist for the panel→hbbs
-// TCP proxy used by Web Remote (all-in-one and same-host native installs).
+// DefaultPanelSignalProxyCIDRs are the addresses the console's bridge
+// connects from when it dials the signal server on localhost.
 const DefaultPanelSignalProxyCIDRs = "127.0.0.0/8,::1/128"
 
 // DefaultConfig returns a Config with sensible defaults.
@@ -465,9 +467,9 @@ func (c *Config) LoadEnv() {
 			c.TrustedProxies = nets
 		}
 	}
-	// Panel Web Remote proxy CIDRs (#302 regression). Unset keeps DefaultConfig
-	// loopback allowlist; set to override (e.g. Docker bridge when panel and Go
-	// run in separate containers).
+	// Source addresses of the console's web client bridge. Unset keeps the
+	// loopback default; set it when WS_HBBS_HOST names another address of
+	// this machine.
 	if v := os.Getenv("PANEL_SIGNAL_PROXY_CIDRS"); v != "" {
 		nets, err := ParseTrustedProxies(v)
 		if err != nil {
@@ -522,8 +524,8 @@ func (c *Config) LoadEnv() {
 		}
 	}
 	// Issue #414: require a valid BetterDesk client login token for stock
-	// PunchHole/RequestRelay initiators. Panel Web Remote remains allowed via
-	// PANEL_SIGNAL_PROXY_CIDRS.
+	// PunchHole/RequestRelay initiators. The console's web client, which
+	// proves itself to the signal server, remains allowed.
 	if v := os.Getenv("LOGGED_IN_ONLY_INITIATOR"); v != "" {
 		switch strings.ToUpper(strings.TrimSpace(v)) {
 		case "Y", "YES", "1", "TRUE", "ON":
@@ -534,7 +536,8 @@ func (c *Config) LoadEnv() {
 	}
 	// Issue #425: require a valid client session belonging to a user with
 	// device.connect permission for stock PunchHole/RequestRelay initiators.
-	// PANEL_SIGNAL_PROXY_CIDRS remains the authenticated Web Remote exception.
+	// The console's web client, which proves itself to the signal server,
+	// remains the authenticated Web Remote exception.
 	if v := os.Getenv("OPERATOR_ONLY_OUTBOUND"); v != "" {
 		switch strings.ToUpper(strings.TrimSpace(v)) {
 		case "Y", "YES", "1", "TRUE", "ON":

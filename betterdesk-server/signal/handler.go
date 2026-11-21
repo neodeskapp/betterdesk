@@ -35,7 +35,8 @@ const refuseRelayProtocolMismatch = "Protocol mismatch: WebSocket and native TCP
 const refuseInitiatorNotAuthorized = "Not authorized"
 
 // panelWebRemoteInitiatorID is the synthetic initiator id logged when PunchHole/
-// RequestRelay arrives from the Node panel WebSocket→TCP proxy (#302 Web Remote).
+// RequestRelay arrives from the console's web client bridge, on a connection
+// that sent the panel proof (#302 Web Remote).
 const panelWebRemoteInitiatorID = "panel-web-remote"
 
 // sharedNATInitiatorID is the synthetic initiator used when ALLOW_SHARED_NAT_INITIATOR
@@ -415,6 +416,13 @@ func (s *Server) allowSignalConnection(clientHost string) bool {
 // because the signal server holds the TCP connection open and forwards the
 // target's response later via tcpPunchConns.
 func (s *Server) handleMessage(msg *pb.RendezvousMessage, raddr net.Addr) *pb.RendezvousMessage {
+	return s.dispatchMessage(msg, raddr, false)
+}
+
+// dispatchMessage is handleMessage for a connection that may be the
+// panel's web client: panel is true when the connection's first frame was
+// the panel proof (see panel_proof.go).
+func (s *Server) dispatchMessage(msg *pb.RendezvousMessage, raddr net.Addr, panel bool) *pb.RendezvousMessage {
 	switch {
 	case msg.GetRegisterPk() != nil:
 		return s.handleRegisterPkTCP(msg.GetRegisterPk(), raddr)
@@ -423,12 +431,12 @@ func (s *Server) handleMessage(msg *pb.RendezvousMessage, raddr net.Addr) *pb.Re
 		// If target is online, return nil (keep TCP open for later response).
 		// If target is offline/not found, return PunchHoleResponse with failure.
 		udpAddr, _ := net.ResolveUDPAddr("udp", raddr.String())
-		return s.handlePunchHoleRequestTCP(msg.GetPunchHoleRequest(), udpAddr)
+		return s.punchHoleRequestTCP(msg.GetPunchHoleRequest(), udpAddr, peer.ConnTCP, panel)
 	case msg.GetRequestRelay() != nil:
 		// TCP relay request: forward to target via UDP AND send immediate
 		// RelayResponse to TCP initiator with signed PK (matching UDP behavior).
 		udpAddr, _ := net.ResolveUDPAddr("udp", raddr.String())
-		return s.handleRequestRelayTCP(msg.GetRequestRelay(), udpAddr, peer.ConnTCP)
+		return s.requestRelayTCP(msg.GetRequestRelay(), udpAddr, peer.ConnTCP, panel)
 	case msg.GetRelayResponse() != nil:
 		// Target sends RelayResponse to be forwarded to the initiator via TCP.
 		udpAddr, _ := net.ResolveUDPAddr("udp", raddr.String())
@@ -1264,6 +1272,12 @@ func (s *Server) handlePunchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.
 }
 
 func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, raddr *net.UDPAddr, initiatorHint peer.ConnType) *pb.RendezvousMessage {
+	return s.punchHoleRequestTCP(msg, raddr, initiatorHint, false)
+}
+
+// punchHoleRequestTCP is handlePunchHoleRequestTCPWithHint; panel is true
+// on the connection of the panel's web client.
+func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAddr, initiatorHint peer.ConnType, panel bool) *pb.RendezvousMessage {
 	connection := s.cfg.ConnectionSettings()
 	if raddr == nil {
 		log.Printf("[signal] PunchHoleRequest (TCP): nil address, ignoring")
@@ -1280,7 +1294,7 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 
 	log.Printf("[signal] PunchHoleRequest (TCP) from %s for target %s", raddr, targetID)
 
-	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), msg.GetUdpPort())
+	initiatorID, ok := s.authorizeInitiator(raddr, targetID, msg.GetToken(), msg.GetUdpPort(), panel)
 	if !ok {
 		return s.punchHoleUnauthorizedResponse()
 	}
@@ -1784,6 +1798,12 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 // registration type while a new WebSocket session is already handling this
 // request.
 func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initiatorHint peer.ConnType) *pb.RendezvousMessage {
+	return s.requestRelayTCP(msg, raddr, initiatorHint, false)
+}
+
+// requestRelayTCP is handleRequestRelayTCP; panel is true on the
+// connection of the panel's web client.
+func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initiatorHint peer.ConnType, panel bool) *pb.RendezvousMessage {
 	if raddr == nil {
 		log.Printf("[signal] RequestRelay (TCP): nil address, ignoring")
 		return nil
@@ -1805,7 +1825,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 
 	log.Printf("[signal] RequestRelay (TCP) from %s for target %s (uuid=%q, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
 
-	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), 0)
+	initiatorID, ok := s.authorizeInitiator(raddr, targetID, msg.GetToken(), 0, panel)
 	if !ok {
 		return s.relayUnauthorizedResponse(relayServer)
 	}
@@ -2080,9 +2100,9 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	if initiatorID == "" {
 		initiatorID = s.peerIDForAddr(initiatorAddr)
 	}
-	if initiatorID == "" && initiatorAddr != nil && s.cfg != nil && s.cfg.IPIsPanelSignalProxy(initiatorAddr.IP) {
+	if initiatorID == "" && s.isPanelConnAddr(initiatorAddr) {
 		initiatorID = panelWebRemoteInitiatorID
-		log.Printf("[signal] RelayResponse forward: initiator %s authorized via signal-proxy allowlist", initiatorAddr)
+		log.Printf("[signal] RelayResponse forward: initiator %s is the console's web client", initiatorAddr)
 	}
 	if initiatorID == "" && initiatorAddr != nil && connection.AllowSharedNATInitiator &&
 		s.peers != nil && s.peers.CountByIP(initiatorAddr.IP) > 1 {
@@ -2580,14 +2600,22 @@ func (s *Server) admitSession(relayUUID, initiatorID, targetID string) string {
 	return ""
 }
 
-// requireAuthorizedInitiator enforces that PunchHole/RequestRelay may only be
-// started by an authorized initiator (#302 / #327), or by the Node panel Web
-// Remote proxy (trusted PANEL_SIGNAL_PROXY_CIDRS — typically loopback).
+// requireAuthorizedInitiator is authorizeInitiator for a request that does
+// not come from the panel's web client.
+func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token string, udpPort int32) (string, bool) {
+	return s.authorizeInitiator(raddr, targetID, token, udpPort, false)
+}
+
+// authorizeInitiator enforces that PunchHole/RequestRelay may only be
+// started by an authorized initiator (#302 / #327), or by the console's
+// bridge for the browser's web client: panel is true on its TCP connection,
+// which proved itself with the panel proof (see panel_proof.go). The
+// sender's address alone never makes a request the panel's.
 //
 // Authorization sources (first match wins):
 //  1. Same Secure TCP session that already completed RegisterPk (#327)
 //  2. Valid BetterDesk client login token on the punch/relay message (#327)
-//  3. Panel signal-proxy CIDR (Web Remote)
+//  3. The panel's web client (panel)
 //  4. Live peer with exact ip:port match (FindByAddr)
 //  5. PunchHoleRequest.udp_port hint: stock clients advertise their NAT-mapped
 //     UDP port; when it uniquely matches a live peer at this public IP, authorize
@@ -2603,11 +2631,12 @@ func (s *Server) admitSession(relayUUID, initiatorID, targetID string) string {
 // device.connect permission; it implies LOGGED_IN_ONLY_INITIATOR semantics.
 //
 // Managed and locked modes additionally require an approved DB peer row (pending
-// enrollment alone is not enough). Panel proxy initiators skip peer-map / DB
-// checks: operator auth is enforced at the panel WS upgrade before TCP is
-// bridged to hbbs. Shared-NAT synthetic initiators similarly skip peer-row
-// checks (opt-in connectivity tradeoff documented in enrollment docs).
-func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token string, udpPort int32) (string, bool) {
+// enrollment alone is not enough). The panel's web client skips peer-map / DB
+// checks: the console checks the account or the guest link at the websocket
+// upgrade and each target before it passes a request on. Shared-NAT
+// synthetic initiators similarly skip peer-row checks (opt-in connectivity
+// tradeoff documented in enrollment docs).
+func (s *Server) authorizeInitiator(raddr *net.UDPAddr, targetID, token string, udpPort int32, panel bool) (string, bool) {
 	connection := s.cfg.ConnectionSettings()
 	if raddr == nil {
 		return "", false
@@ -2615,10 +2644,10 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 	operatorOnly := connection.OperatorOnlyOutbound
 	loginOnly := connection.LoggedInOnlyInitiator || operatorOnly
 
-	// The panel proxy is already authenticated at the WebSocket upgrade. Keep
-	// Web Remote working in login-only mode without requiring a stock-client
-	// session token.
-	if loginOnly && s.cfg.IPIsPanelSignalProxy(raddr.IP) {
+	// The panel's web client is already authenticated at the websocket
+	// upgrade. Keep Web Remote working in login-only mode without requiring
+	// a stock-client session token.
+	if loginOnly && panel {
 		return panelWebRemoteInitiatorID, true
 	}
 
@@ -2664,8 +2693,8 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 		return "", false
 	}
 
-	// 3. Panel Web Remote proxy (loopback / PANEL_SIGNAL_PROXY_CIDRS).
-	if s.cfg != nil && s.cfg.IPIsPanelSignalProxy(raddr.IP) {
+	// 3. The panel's web client.
+	if panel {
 		return panelWebRemoteInitiatorID, true
 	}
 

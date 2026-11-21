@@ -15,8 +15,9 @@ import (
 
 // registerSockets adds the websockets, in the order web-nodejs/server.js
 // set its websocket services up. An upgrade to any other path passes the
-// pipeline like a plain request.
-func registerSockets(d *kit.Deps) {
+// pipeline like a plain request. signalProof is what the web client's
+// bridge presents to the signal server (Options.SignalProof).
+func registerSockets(d *kit.Deps, signalProof []byte) {
 	// services/wsRelay.js: /ws/rendezvous, /ws/relay. A guest link that is
 	// taken back ends its bridges at once; an account with a device scope
 	// reaches the devices of its scope only, looked up as the remote
@@ -24,6 +25,7 @@ func registerSockets(d *kit.Deps) {
 	webClient := wsrelay.New(wsrelay.Options{
 		SignalHost:  d.Config.SignalHost,
 		SignalPort:  d.Config.SignalPort,
+		SignalProof: signalProof,
 		RelayHost:   d.Config.RelayHost,
 		RelayPort:   d.Config.RelayPort,
 		GoAPI:       d.GoAPI,

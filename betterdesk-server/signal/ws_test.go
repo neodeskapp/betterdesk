@@ -651,20 +651,32 @@ func TestWSRequestRelayFirstFrameIsRelayResponse(t *testing.T) {
 	if resp := readWSProtoSkippingKeepAlive(t, ctx, targetWS); resp.GetRegisterPeerResponse() == nil {
 		t.Fatalf("expected target RegisterPeerResponse, got: %v", resp)
 	}
-	// Pre-authorize initiator by IP so RequestRelay can be the first WS frame
-	// (preserves #276 first-frame assertion) while satisfying #302.
-	srv.PeerMap().Put(&peer.Entry{
-		ID:       "RELAYINIT",
-		IP:       "127.0.0.1:0",
-		ConnType: peer.ConnWS,
-		LastReg:  time.Now(),
+	// Pre-authorize the initiator by its exact address so RequestRelay can be
+	// the first WS frame (preserves #276 first-frame assertion) while
+	// satisfying #302. A loopback address alone authorizes nothing.
+	var local net.Addr
+	var dialer net.Dialer
+	ws, _, err := websocket.Dial(ctx, "ws://127.0.0.1:29192/ws/id", &websocket.DialOptions{
+		HTTPClient: &http.Client{Transport: &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				c, err := dialer.DialContext(ctx, network, addr)
+				if err == nil {
+					local = c.LocalAddr()
+				}
+				return c, err
+			},
+		}},
 	})
-
-	ws, _, err := websocket.Dial(ctx, "ws://127.0.0.1:29192/ws/id", nil)
 	if err != nil {
 		t.Fatalf("WS dial: %v", err)
 	}
 	defer ws.CloseNow()
+	srv.PeerMap().Put(&peer.Entry{
+		ID:       "RELAYINIT",
+		IP:       local.String(),
+		ConnType: peer.ConnWS,
+		LastReg:  time.Now(),
+	})
 
 	req := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{

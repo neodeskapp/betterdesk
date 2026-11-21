@@ -95,6 +95,11 @@ type Options struct {
 	// SQLite file a data backup holds and a restore of the server's
 	// database is left next to. Empty takes DB_PATH.
 	ServerDB string
+	// SignalProof is the frame the web client's bridge writes first on its
+	// connection to the signal server of this process
+	// (signal.Server.PanelProof). nil: the bridge sends none, and the
+	// signal server treats it as any client.
+	SignalProof []byte
 	// updaterOptions changes the updater's options before it is built:
 	// tests give it a GitHub and a binary of their own.
 	updaterOptions func(*updater.Options)
@@ -427,7 +432,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		s.jobs.Add("mDNS announcement", func(ctx context.Context) { discovery.NewMDNS(s.announced(lan)).Run(ctx) })
 	}
 	registerRoutes(s.deps, backups)
-	registerSockets(s.deps)
+	registerSockets(s.deps, opts.SignalProof)
 	s.newClientAPI()
 	s.pipeline = s.buildPipeline()
 	return s, nil
