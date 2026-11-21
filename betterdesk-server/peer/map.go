@@ -311,6 +311,48 @@ func (m *Map) UpdateHeartbeat(id string, addr *net.UDPAddr, serial int32) bool {
 	return true
 }
 
+// Endpoint returns the IP and transport a peer is registered on. The IP is
+// the WebSocket client's for a WebSocket peer, otherwise the UDP heartbeat
+// address, and the address of its last RegisterPk when it has none. ip is
+// nil when the entry holds no parseable address.
+func (m *Map) Endpoint(id string) (ip net.IP, connType ConnType, ok bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return nil, 0, false
+	}
+	if e.ConnType != ConnWS && e.UDPAddr != nil {
+		return e.UDPAddr.IP, e.ConnType, true
+	}
+	host, _, err := net.SplitHostPort(e.IP)
+	if err != nil {
+		host = e.IP
+	}
+	return net.ParseIP(host), e.ConnType, true
+}
+
+// MoveToUDP points a peer at a new UDP address, after its RegisterPk over UDP
+// was accepted. A WebSocket peer that proved itself over UDP leaves the
+// WebSocket transport.
+func (m *Map) MoveToUDP(id string, addr *net.UDPAddr) bool {
+	if addr == nil {
+		return false
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return false
+	}
+	e.UDPAddr = addr
+	e.IP = addr.String()
+	e.ConnType = ConnUDP
+	e.WSConn = nil
+	e.LastReg = time.Now()
+	return true
+}
+
 // TouchHeartbeat refreshes the heartbeat timestamp without changing address or serial.
 // It is used by transports where protocol-level keepalive frames prove the peer is alive.
 func (m *Map) TouchHeartbeat(id string) bool {

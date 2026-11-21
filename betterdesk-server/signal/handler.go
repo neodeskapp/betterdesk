@@ -464,6 +464,43 @@ func hostFromAddrString(addrStr string) string {
 	return addrStr
 }
 
+// keyedPeerMoves reports whether a heartbeat from ip over transport would move
+// a live peer whose key is stored to another IP, or between WebSocket and the
+// native transports. Such a peer moves only after a RegisterPk whose uuid and
+// pk match: hbbs asks for the key again when the address changes. A new port
+// on the same IP (NAT rebinding) is not a move.
+func (s *Server) keyedPeerMoves(id string, existing *peer.Entry, ip net.IP, transport peer.ConnType) bool {
+	if len(s.peerPublicKey(id, existing)) == 0 {
+		return false
+	}
+	knownIP, knownType, ok := s.peers.Endpoint(id)
+	if !ok || knownIP == nil {
+		return false
+	}
+	if (knownType == peer.ConnWS) != (transport == peer.ConnWS) {
+		return true
+	}
+	return !knownIP.Equal(ip)
+}
+
+// storedPeerMoves is keyedPeerMoves for a peer that is not live: its stored
+// key and the last address the database holds for it.
+func storedPeerMoves(stored *db.Peer, ip net.IP) bool {
+	if stored == nil || len(stored.PK) == 0 {
+		return false
+	}
+	knownIP := net.ParseIP(hostFromAddrString(strings.TrimSpace(stored.IP)))
+	return knownIP != nil && !knownIP.Equal(ip)
+}
+
+func registerPeerResponse(requestPk bool) *pb.RendezvousMessage {
+	return &pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_RegisterPeerResponse{
+			RegisterPeerResponse: &pb.RegisterPeerResponse{RequestPk: requestPk},
+		},
+	}
+}
+
 // handleRegisterPeer processes a heartbeat registration from a client.
 // This is the most frequent message — called every ~12 seconds per device.
 func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
@@ -530,6 +567,12 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 				log.Printf("[signal] Rejected banned peer heartbeat: %s from %s", id, raddr.IP)
 				s.revokeBannedPeerAccess(id, nil)
 			}
+			return
+		}
+
+		if s.keyedPeerMoves(id, existing, raddr.IP, peer.ConnUDP) {
+			log.Printf("[signal] Heartbeat for %s from new address %s: asking for its key before moving it", id, raddr)
+			s.sendUDP(registerPeerResponse(true), raddr)
 			return
 		}
 
@@ -602,8 +645,16 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 		return
 	}
 
-	// New peer — add to memory map
-	// Try to load existing PK from database first (peer may have registered PK before server restart)
+	if dbPeer == nil {
+		dbPeer, _ = s.db.GetPeer(id)
+	}
+	if storedPeerMoves(dbPeer, raddr.IP) {
+		log.Printf("[signal] Heartbeat for stored peer %s from new address %s: asking for its key before registering it", id, raddr)
+		s.sendUDP(registerPeerResponse(true), raddr)
+		return
+	}
+
+	// New peer — add to memory map with the PK and UUID stored for it
 	now := time.Now()
 	entry := &peer.Entry{
 		ID:              id,
@@ -618,10 +669,6 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 		LastStatusCheck: now,
 	}
 
-	// Load PK and UUID from database if available (survives server restarts)
-	if dbPeer == nil {
-		dbPeer, _ = s.db.GetPeer(id)
-	}
 	if dbPeer != nil {
 		if len(dbPeer.PK) > 0 {
 			entry.PK = dbPeer.PK
@@ -653,7 +700,18 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 // handleRegisterPk processes a public key registration.
 func (s *Server) handleRegisterPk(msg *pb.RegisterPk, raddr *net.UDPAddr) {
 	resp := s.processRegisterPk(msg, raddr.String())
+	if registerPkAccepted(msg, resp) {
+		s.peers.MoveToUDP(msg.Id, raddr)
+	}
 	s.sendUDP(resp, raddr)
+}
+
+// registerPkAccepted reports whether resp accepted msg as the identity of
+// msg.Id, so the sender's transport may now carry that peer. A
+// no-register-device exchange proves nothing about the id.
+func registerPkAccepted(msg *pb.RegisterPk, resp *pb.RendezvousMessage) bool {
+	rpk := resp.GetRegisterPkResponse()
+	return rpk != nil && rpk.GetResult() == pb.RegisterPkResponse_OK && !msg.GetNoRegisterDevice()
 }
 
 // handleRegisterPkTCP handles RegisterPk over TCP (returns response).
@@ -754,8 +812,43 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 	}
 
-	// Get or create peer entry in memory
+	// The identity stored for the id, live or persisted. After a restart
+	// peer.Map is empty; the persisted identity still binds the id. Empty
+	// stored fields remain enrollable for legacy rows and first enrollment.
 	entry := s.peers.Get(id)
+	var storedUUID, storedPK []byte
+	if entry != nil {
+		storedUUID, storedPK = entry.UUID, entry.PK
+	}
+	if existingPeer != nil {
+		if len(storedUUID) == 0 && existingPeer.UUID != "" {
+			storedUUID = peerUUIDFromDB(existingPeer.UUID)
+		}
+		if len(storedPK) == 0 && len(existingPeer.PK) > 0 {
+			storedPK = append([]byte(nil), existingPeer.PK...)
+		}
+	}
+
+	// Existing identity is immutable through RegisterPk, and nothing is
+	// changed or bound for a known id without both fields matching. hbbs
+	// drops a RegisterPk with an empty uuid or pk without an answer; stock
+	// clients always send both.
+	if len(storedUUID) > 0 || len(storedPK) > 0 {
+		if len(msg.Uuid) == 0 || len(msg.Pk) == 0 {
+			log.Printf("[signal] Dropped RegisterPk for known peer %s from %s without uuid or pk", id, clientHost)
+			return nil
+		}
+		if len(storedUUID) > 0 && !peerUUIDEqual(storedUUID, msg.Uuid) {
+			log.Printf("[signal] UUID mismatch for %s: registered=%x, received=%x",
+				id, storedUUID, msg.Uuid)
+			return registerPkResponse(pb.RegisterPkResponse_UUID_MISMATCH)
+		}
+		if len(storedPK) > 0 && !bytes.Equal(storedPK, msg.Pk) {
+			log.Printf("[signal] PK mismatch for %s", id)
+			return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
+		}
+	}
+
 	if entry == nil {
 		entry = &peer.Entry{
 			ID:      id,
@@ -763,33 +856,7 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 		}
 		s.peers.Put(entry)
 	}
-
-	// Bind the persisted device identity before processing RegisterPk. After a
-	// restart peer.Map is empty; without this hydration any caller could replace
-	// the stored PK/UUID on its first RegisterPk. Empty stored fields remain
-	// enrollable for legacy rows and legitimate first enrollment.
-	if existingPeer != nil {
-		if len(entry.UUID) == 0 && existingPeer.UUID != "" {
-			entry.UUID = peerUUIDFromDB(existingPeer.UUID)
-		}
-		if len(entry.PK) == 0 && len(existingPeer.PK) > 0 {
-			entry.PK = append([]byte(nil), existingPeer.PK...)
-		}
-	}
-
-	// Existing identity is immutable through RegisterPk. RustDesk public keys
-	// are long-lived; rotation must use an authenticated management workflow.
-	if len(entry.UUID) > 0 && len(msg.Uuid) > 0 && !peerUUIDEqual(entry.UUID, msg.Uuid) {
-		log.Printf("[signal] UUID mismatch for %s: registered=%x, received=%x",
-			id, entry.UUID, msg.Uuid)
-		return registerPkResponse(pb.RegisterPkResponse_UUID_MISMATCH)
-	}
-	if len(entry.PK) > 0 && len(msg.Pk) > 0 && !bytes.Equal(entry.PK, msg.Pk) {
-		log.Printf("[signal] PK mismatch for %s", id)
-		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
-	}
-
-	// Preserve a persisted identity when a compatible client omits either field.
+	entry.UUID, entry.PK = storedUUID, storedPK
 	if len(msg.Uuid) > 0 {
 		entry.UUID = normalizePeerUUIDBytes(msg.Uuid)
 	}

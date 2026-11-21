@@ -319,7 +319,7 @@ func TestProcessRegisterPkLockedDoesNotQueueUnknownPeer(t *testing.T) {
 func TestHandleRegisterPeerWSManagedRetainsPendingTransport(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
 
-	resp := srv.handleRegisterPeerWS(&pb.RegisterPeer{Id: "WSDENY1", Serial: 1}, "203.0.113.11:51234")
+	resp, _ := srv.handleRegisterPeerWS(&pb.RegisterPeer{Id: "WSDENY1", Serial: 1}, "203.0.113.11:51234")
 	if resp == nil || resp.GetRegisterPeerResponse() == nil || resp.GetRegisterPeerResponse().GetRequestPk() {
 		t.Fatalf("handleRegisterPeerWS should retain pending transport without requesting PK: %+v", resp)
 	}
@@ -352,7 +352,7 @@ func TestHandleRegisterPeerWSRejectsSoftDeletedPeer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp := srv.handleRegisterPeerWS(&pb.RegisterPeer{Id: "WSDEL1", Serial: 1}, "203.0.113.12:51234")
+	resp, _ := srv.handleRegisterPeerWS(&pb.RegisterPeer{Id: "WSDEL1", Serial: 1}, "203.0.113.12:51234")
 	if resp != nil {
 		t.Fatalf("handleRegisterPeerWS should reject soft-deleted peer, got: %+v", resp)
 	}
@@ -385,7 +385,7 @@ func TestHandleRegisterPeerWSRejectsSoftDeletedHeartbeat(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp := srv.handleRegisterPeerWS(&pb.RegisterPeer{Id: "WSHB1", Serial: 2}, "203.0.113.13:51234")
+	resp, _ := srv.handleRegisterPeerWS(&pb.RegisterPeer{Id: "WSHB1", Serial: 2}, "203.0.113.13:51234")
 	if resp != nil {
 		t.Fatalf("heartbeat for soft-deleted peer should be rejected, got: %+v", resp)
 	}

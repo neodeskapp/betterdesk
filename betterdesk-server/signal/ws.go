@@ -15,6 +15,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/unitronix/betterdesk-server/codec"
 	"github.com/unitronix/betterdesk-server/config"
+	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/peer"
 	pb "github.com/unitronix/betterdesk-server/proto"
 )
@@ -239,12 +240,14 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 		switch {
 		case msg.GetRegisterPeer() != nil:
 			registerPeer := msg.GetRegisterPeer()
-			resp := s.handleRegisterPeerWS(registerPeer, remoteAddr)
-			if resp != nil {
+			resp, accepted := s.handleRegisterPeerWS(registerPeer, remoteAddr)
+			if accepted {
 				peerID = registerPeer.Id
 				bindPeerWSConn(s, peerID, wsc)
 				s.registerWSPunchConn(remoteAddr, wsc)
 				notifyRegistered()
+			}
+			if resp != nil {
 				wsc.WriteMessage(resp)
 			}
 
@@ -252,7 +255,7 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 			registerPK := msg.GetRegisterPk()
 			resp := s.processRegisterPk(registerPK, remoteAddr)
 			if resp != nil {
-				if rpk := resp.GetRegisterPkResponse(); rpk != nil && rpk.GetResult() == pb.RegisterPkResponse_OK {
+				if registerPkAccepted(registerPK, resp) {
 					peerID = registerPK.Id
 					bindPeerWSConn(s, peerID, wsc)
 					s.registerWSPunchConn(remoteAddr, wsc)
@@ -455,40 +458,44 @@ func (s *Server) wsSignalKeepAlive(wsc *codec.WSConn, done <-chan struct{}, regi
 }
 
 // handleRegisterPeerWS processes a heartbeat over WebSocket.
-// Similar to handleRegisterPeer but uses the WS remote address.
-func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) *pb.RendezvousMessage {
+// Similar to handleRegisterPeer but uses the WS remote address. accepted
+// reports whether the WebSocket now carries the peer; a response that only
+// asks for the key is not accepted.
+func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) (*pb.RendezvousMessage, bool) {
 	id := msg.Id
 	if id == "" {
-		return nil
+		return nil, false
 	}
 	clientHost := hostFromAddrString(remoteAddr)
 
 	if !isValidPeerID(id) {
 		log.Printf("[signal] Rejected invalid WS peer ID format: %q from %s", id, clientHost)
-		return nil
+		return nil, false
 	}
 
 	if s.blocklist != nil {
 		if s.blocklist.IsIPBlocked(clientHost) {
 			log.Printf("[signal] Blocked IP %s tried WS registration", clientHost)
-			return nil
+			return nil, false
 		}
 		if s.blocklist.IsIDBlocked(id) {
 			log.Printf("[signal] Blocked ID %s tried WS registration", id)
-			return nil
+			return nil, false
 		}
 	}
 
 	if effectiveID, ok := s.resolveRegistrationPeerID(id, clientHost, nil, nil); !ok {
-		return nil
+		return nil, false
 	} else if effectiveID != id {
 		id = effectiveID
 	}
 
 	existing := s.peers.Get(id)
 	knownPeer := existing != nil
+	var dbPeer *db.Peer
 	if !knownPeer {
-		if dbPeer, err := s.db.GetPeer(id); err == nil && dbPeer != nil {
+		if loaded, err := s.db.GetPeer(id); err == nil && loaded != nil {
+			dbPeer = loaded
 			knownPeer = true
 		}
 	}
@@ -498,26 +505,31 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) *
 		} else {
 			log.Printf("[signal] Rate limited new WS registration from %s for peer %s", clientHost, id)
 		}
-		return nil
+		return nil, false
 	}
 	if existing != nil {
 		// Reject banned peers — do not heartbeat or respond
 		if existing.Banned {
 			log.Printf("[signal] Rejected banned WS peer heartbeat: %s from %s", id, remoteAddr)
 			s.revokeBannedPeerAccess(id, nil)
-			return nil
+			return nil, false
 		}
 		if s.rejectIfPeerSoftDeleted(id, clientHost) {
-			return nil
+			return nil, false
 		}
 		if banned, err := s.db.IsPeerBanned(id); err != nil || banned {
 			if err != nil {
 				log.Printf("[signal] Failed ban check for WS peer heartbeat %s: %v", id, err)
-				return nil
+				return nil, false
 			}
 			log.Printf("[signal] Rejected banned WS peer heartbeat: %s from %s", id, remoteAddr)
 			s.revokeBannedPeerAccess(id, nil)
-			return nil
+			return nil, false
+		}
+
+		if s.keyedPeerMoves(id, existing, net.ParseIP(clientHost), peer.ConnWS) {
+			log.Printf("[signal] WS heartbeat for %s from new address %s: asking for its key before moving it", id, remoteAddr)
+			return registerPeerResponse(true), false
 		}
 
 		// Update heartbeat (WS has no real UDP addr)
@@ -529,17 +541,11 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) *
 		requestPk := len(existing.PK) == 0
 		s.db.UpdatePeerStatus(id, "ONLINE", remoteAddr, "signal")
 
-		return &pb.RendezvousMessage{
-			Union: &pb.RendezvousMessage_RegisterPeerResponse{
-				RegisterPeerResponse: &pb.RegisterPeerResponse{
-					RequestPk: requestPk,
-				},
-			},
-		}
+		return registerPeerResponse(requestPk), true
 	}
 
 	if s.rejectIfPeerSoftDeleted(id, clientHost) {
-		return nil
+		return nil, false
 	}
 
 	if !s.checkEnrollmentPermission(id, clientHost) {
@@ -550,13 +556,9 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) *
 			// targetAcceptsInboundSession until the DB peer row exists.
 			s.retainPendingSignalPeer(id, remoteAddr, nil, msg.Serial, peer.ConnWS)
 			log.Printf("[signal] Retained pending WS peer transport: %s from %s", id, remoteAddr)
-			return &pb.RendezvousMessage{
-				Union: &pb.RendezvousMessage_RegisterPeerResponse{
-					RegisterPeerResponse: &pb.RegisterPeerResponse{RequestPk: false},
-				},
-			}
+			return registerPeerResponse(false), true
 		}
-		return nil
+		return nil, false
 	}
 
 	// Check if this peer is banned in the database (e.g. removed from memory
@@ -564,11 +566,16 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) *
 	if banned, err := s.db.IsPeerBanned(id); err != nil || banned {
 		if err != nil {
 			log.Printf("[signal] Failed ban check for WS peer registration %s: %v", id, err)
-			return nil
+			return nil, false
 		}
 		log.Printf("[signal] Rejected banned WS peer registration: %s from %s", id, remoteAddr)
 		s.revokeBannedPeerAccess(id, nil)
-		return nil
+		return nil, false
+	}
+
+	if storedPeerMoves(dbPeer, net.ParseIP(clientHost)) {
+		log.Printf("[signal] WS heartbeat for stored peer %s from new address %s: asking for its key before registering it", id, remoteAddr)
+		return registerPeerResponse(true), false
 	}
 
 	// New peer via WS
@@ -585,13 +592,7 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) *
 	s.db.UpdatePeerStatus(id, "ONLINE", remoteAddr, "signal")
 	s.publishPeerOnline(id)
 
-	return &pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_RegisterPeerResponse{
-			RegisterPeerResponse: &pb.RegisterPeerResponse{
-				RequestPk: true,
-			},
-		},
-	}
+	return registerPeerResponse(true), true
 }
 
 // sendToWSPeer sends a protobuf message to a peer connected via WebSocket.
