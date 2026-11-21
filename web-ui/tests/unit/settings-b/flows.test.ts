@@ -300,6 +300,42 @@ describe('restart prompt flow', () => {
 		expect(restartFlow.reason).toMatch(/did not come back/);
 	});
 
+	test('a refused restart (500 no_restart) that the server rolled back says so and tells the pages', async () => {
+		const seen: string[] = [];
+		onRestartCanceled((item) => seen.push(item.id));
+		api.confirmRestart.mockRejectedValue(new ApiError('no_restart', 500));
+		api.getPendingRestart.mockResolvedValue({
+			...ITEM,
+			phase: 'failed',
+			error: 'service_restart_failed_rolled_back'
+		});
+		api.completeRestart.mockResolvedValue({ completed: true });
+		showRestartPrompt(ITEM);
+		await confirmPendingRestart();
+		expect(restartFlow.view).toBe('failed');
+		expect(restartFlow.reason).toMatch(/previous values were put back/);
+		expect(seen).toEqual(['r1']);
+		await dismissFailedRestart();
+		expect(restartFlow.view).toBe('hidden');
+		expect(toastMock.warning).not.toHaveBeenCalled();
+	});
+
+	test('the failure dialog after a rollback offers Close, not "Keep the saved values"', async () => {
+		vi.useRealTimers();
+		session.permissions = ['server.config'];
+		session.isSuperAdmin = false;
+		api.getPendingRestart.mockResolvedValue({
+			...ITEM,
+			phase: 'failed',
+			error: 'service_restart_failed_rolled_back'
+		});
+		render(RestartPrompt);
+		await screen.findByRole('dialog');
+		expect(screen.queryByRole('button', { name: 'Keep the saved values' })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'Try the restart again' })).toBeNull();
+		expect(screen.getAllByRole('button', { name: 'actions.close' }).length).toBeGreaterThan(0);
+	});
+
 	test('keeping the saved values after a failure forgets the restart', async () => {
 		api.completeRestart.mockResolvedValue({ completed: true });
 		showRestartPrompt({ ...ITEM, phase: 'failed', error: 'rollback_failed' });

@@ -43,6 +43,8 @@ class RestartFlow {
 	busy = $state(false);
 	/** True from the confirmed restart until the services answer; sockets and polls may wait */
 	restarting = $state(false);
+	/** The failed restart was undone on the server: the previous values are back */
+	rolledBack = $state(false);
 }
 
 export const restartFlow = new RestartFlow();
@@ -134,6 +136,27 @@ function showFailed(code: string | null | undefined): void {
 	restartFlow.reason = restartReason(code);
 	restartFlow.status = '';
 	restartFlow.view = 'failed';
+	restartFlow.rolledBack = code === 'service_restart_failed_rolled_back';
+	// The server put the previous values back: the pages show them again, as after Cancel
+	const item = restartFlow.item;
+	if (restartFlow.rolledBack && item) {
+		for (const fn of canceledListeners) fn(item);
+		window.dispatchEvent(new CustomEvent('betterdesk:restart-canceled', { detail: item }));
+	}
+}
+
+/**
+ * A confirm that failed, answered or thrown: the stored restart says how it
+ * ended (a refused restart is rolled back on the server), else `code`.
+ */
+async function showFailedFromServer(code: string | null | undefined): Promise<void> {
+	try {
+		const stored = await getPendingRestart();
+		if (stored?.error) code = stored.error;
+	} catch {
+		/* the answer's code is all there is */
+	}
+	showFailed(code);
 }
 
 function message(err: unknown, fallback: string): string {
@@ -171,7 +194,7 @@ export async function confirmPendingRestart(): Promise<void> {
 	try {
 		const result = await confirmRestart(item.id);
 		if (result.phase === 'failed' || result.failed) {
-			showFailed(result.error);
+			await showFailedFromServer(result.error);
 			return;
 		}
 		restartFlow.restarting = true;
@@ -180,7 +203,7 @@ export async function confirmPendingRestart(): Promise<void> {
 		restartFlow.view = 'restarting';
 		startPolling(item.id, result.token ?? '');
 	} catch (err) {
-		showFailed(message(err, ''));
+		await showFailedFromServer(message(err, ''));
 	} finally {
 		restartFlow.busy = false;
 	}
@@ -267,7 +290,7 @@ export async function finishAndSignIn(
 	go('/login');
 }
 
-/** After a failure: keep the saved values and stop asking */
+/** After a failure: stop asking; the saved values stay unless the server already put the previous ones back */
 export async function dismissFailedRestart(): Promise<void> {
 	const item = restartFlow.item;
 	if (!item || restartFlow.busy) return;
@@ -276,6 +299,7 @@ export async function dismissFailedRestart(): Promise<void> {
 		await completeRestart(item.id);
 		restartFlow.item = null;
 		restartFlow.view = 'hidden';
+		if (restartFlow.rolledBack) return;
 		toast.warning(
 			tf(
 				'settings.restart_prompt.dismissed',
@@ -304,5 +328,6 @@ export function resetRestartFlow(): void {
 	restartFlow.reason = '';
 	restartFlow.busy = false;
 	restartFlow.restarting = false;
+	restartFlow.rolledBack = false;
 	canceledListeners.clear();
 }

@@ -13,7 +13,7 @@
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { tf } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
@@ -109,6 +109,11 @@
 						busy={restartFlow.busy}
 						onclick={() => void finishAndSignIn()}
 						>{tf('settings.restart_prompt.ready_button', 'Go to sign-in')}</Button
+					>
+				{:else if view === 'failed' && restartFlow.rolledBack}
+					<!-- The previous values are back: nothing to keep and nothing to restart -->
+					<Button busy={restartFlow.busy} onclick={() => void dismissFailedRestart()}
+						>{t('actions.close')}</Button
 					>
 				{:else if view === 'failed'}
 					<Button icon="check" busy={restartFlow.busy} onclick={() => void dismissFailedRestart()}
