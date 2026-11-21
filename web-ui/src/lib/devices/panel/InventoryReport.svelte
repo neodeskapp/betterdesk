@@ -147,7 +147,7 @@
 {#snippet nicName(n: Nic)}{n.name}{/snippet}
 {#snippet nicMac(n: Nic)}<ValueCopy value={n.mac} label={t('inventory.mac_address')} />{/snippet}
 {#snippet nicIps(n: Nic)}
-	{#each n.ips as ip (ip)}<span class="dp-ip"><ValueCopy value={ip} /></span>{:else}<Empty />{/each}
+	{#each n.ips as ip, i (i)}<span class="dp-ip"><ValueCopy value={ip} /></span>{:else}<Empty />{/each}
 {/snippet}
 {#snippet appName(a: InventoryApp)}
 	{a.name}{#if a.publisher}<span class="dp-sub dp-phone-only">{a.publisher}</span>{/if}

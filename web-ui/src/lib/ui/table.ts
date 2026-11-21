@@ -147,6 +147,21 @@ export function sortRows<T>(rows: readonly T[], spec: SortSpec<T>): T[] {
 	return order.map((i) => rows[i] as T);
 }
 
+/**
+ * The keys made unique for a keyed list: a key that came before gets a
+ * count appended after a NUL, the first count not taken yet. A device can
+ * report two equal rows, and a repeated key in a keyed each block throws.
+ */
+export function uniqueKeys(keys: readonly string[]): string[] {
+	const used = new Set<string>();
+	return keys.map((k) => {
+		let u = k;
+		for (let n = 1; used.has(u); n++) u = `${k}\u0000${n}`;
+		used.add(u);
+		return u;
+	});
+}
+
 /* ── Visible window of a long table ───────────────────────────────── */
 
 export interface WindowInput {

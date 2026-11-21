@@ -37,6 +37,7 @@
 		isSortable,
 		nextSort,
 		sortRows,
+		uniqueKeys,
 		visibleWindow,
 		type Column,
 		type SortState
@@ -173,6 +174,10 @@
 		return { start, end, padTop: start * rowH, padBottom: (count - end) * rowH };
 	});
 	const windowRows = $derived(virtual ? sorted.slice(range.start, range.end) : sorted);
+	/* Keys of the rendered rows for the keyed each block, unique even when
+	   two rows share a key (a device reporting one program twice) */
+	const rowKeys = $derived(uniqueKeys(sorted.map((row) => key(row))));
+	const windowEntries = $derived(windowRows.map((row, i) => ({ row, id: rowKeys[range.start + i] ?? '' })));
 
 	type ScrollTarget = HTMLElement | Window;
 
@@ -459,7 +464,7 @@
 				{#if range.padTop > 0}
 					<tr class="spacer" aria-hidden="true"><td {colspan} style:height="{range.padTop}px"></td></tr>
 				{/if}
-				{#each windowRows as row, i (key(row))}
+				{#each windowEntries as { row, id }, i (id)}
 					{@const k = key(row)}
 					{@const index = range.start + i}
 					{@const selected = selectable && selection.has(k)}

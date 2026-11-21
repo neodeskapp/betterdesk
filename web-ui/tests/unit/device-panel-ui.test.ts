@@ -6,6 +6,8 @@ import DevicePanelHost from '../../src/lib/devices/DevicePanelHost.svelte';
 // Loaded up front so the host's lazy import resolves at once
 import '../../src/lib/devices/DevicePanel.svelte';
 import DialogHost from '../../src/lib/ui/DialogHost.svelte';
+import InventoryReport from '../../src/lib/devices/panel/InventoryReport.svelte';
+import { inventoryView } from '../../src/lib/devices/panel-logic.ts';
 import {
 	closeDevice,
 	devicePanel,
@@ -333,5 +335,27 @@ describe('text from the device is text', () => {
 		expect(document.querySelector('img[src="x"]')).toBeNull();
 		expect(document.querySelector('script')).toBeNull();
 		expect((window as { __pwned?: number }).__pwned).toBeUndefined();
+	});
+});
+
+describe('repeats in what the device reports', () => {
+	test('a program listed twice, two unnamed adapters and an address twice still render', () => {
+		const report = inventoryView({
+			hardware: {
+				network_interfaces: [{ ip_addresses: ['10.0.0.5', '10.0.0.5'] }, { ip_addresses: [] }]
+			},
+			software: {
+				apps: [
+					{ name: 'Viewer', version: '1.0', publisher: 'ACME' },
+					{ name: 'Viewer', version: '1.0', publisher: 'ACME' }
+				]
+			}
+		});
+		render(InventoryReport, { report });
+		const programs = screen.getByRole('table', { name: 'inventory.installed_programs' });
+		expect(within(programs).getAllByText('Viewer')).toHaveLength(2);
+		const nics = screen.getByRole('table', { name: 'inventory.network_interfaces' });
+		expect(within(nics).getAllByRole('row')).toHaveLength(3);
+		expect(within(nics).getAllByText('10.0.0.5')).toHaveLength(2);
 	});
 });

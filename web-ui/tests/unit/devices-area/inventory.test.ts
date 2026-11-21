@@ -168,6 +168,20 @@ describe('GET /api/inventory', () => {
 		expect(out.peerList).toBe(true);
 	});
 
+	test('a device on two pages (it moved while they were read) is listed once', async () => {
+		vi.stubGlobal('fetch', async (input: string) => {
+			const page = Number(new URL(input, location.origin).searchParams.get('page'));
+			const devices =
+				page === 1 ? [{ device_id: 'a' }, { device_id: 'b' }] : [{ device_id: 'b' }, { device_id: 'c' }];
+			return new Response(JSON.stringify({ devices, total_pages: 2 }), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			});
+		});
+		const out = await listInventory();
+		expect(out.rows.map((r) => r.device_id)).toEqual(['a', 'b', 'c']);
+	});
+
 	test('stops after fifty pages, as the old page did', async () => {
 		const seen = pages(400);
 		const out = await listInventory();

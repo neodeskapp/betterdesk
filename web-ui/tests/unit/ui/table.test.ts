@@ -283,6 +283,20 @@ describe('Table: states', () => {
 	});
 });
 
+describe('Table: repeated keys', () => {
+	test('two rows with one key both render, and a third one after a change too', async () => {
+		const twins: Dev[] = [
+			{ id: 'same', name: 'Office', seen: 1 },
+			{ id: 'same', name: 'Office', seen: 1 },
+			{ id: 'd9', name: 'Lab', seen: 2 }
+		];
+		const { rerender } = render(Table<Dev>, { ...base, rows: twins, columns: cols() });
+		expect(names()).toEqual(['Office', 'Office', 'Lab']);
+		await rerender({ rows: [...twins, { id: 'same', name: 'Office', seen: 1 }] });
+		expect(names()).toEqual(['Office', 'Office', 'Lab', 'Office']);
+	});
+});
+
 describe('Table: scroll box', () => {
 	test('while the table is wider than its box, the box is a focusable region named by the caption', async () => {
 		// jsdom has no layout: report sizes and run the observer by hand

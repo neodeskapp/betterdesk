@@ -73,6 +73,10 @@ export async function listInventory(
 	const first = await getPage(1, signal);
 	const pages = Math.min(MAX_PAGES, Math.max(1, first.total_pages ?? 1));
 	const rest = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => getPage(i + 2, signal)));
-	const rows = [first, ...rest].flatMap((p) => p.devices ?? []);
+	// A device that moved between pages while they were read comes twice: keep the first
+	const seen = new Set<string>();
+	const rows = [first, ...rest]
+		.flatMap((p) => p.devices ?? [])
+		.filter((r) => !seen.has(r.device_id) && !!seen.add(r.device_id));
 	return { rows, peerList: rows.some((r) => r.source === 'peer_list') };
 }

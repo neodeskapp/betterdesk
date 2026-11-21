@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { ariaSort, nextSort, sortRows, visibleWindow } from '../../src/lib/ui/table.ts';
+import { ariaSort, nextSort, sortRows, uniqueKeys, visibleWindow } from '../../src/lib/ui/table.ts';
 
 interface Row {
 	id: string;
@@ -194,5 +194,14 @@ describe('visibleWindow', () => {
 			padTop: 0,
 			padBottom: 0
 		});
+	});
+});
+
+describe('uniqueKeys', () => {
+	test('repeats get a count, also when a key already looks like a repeat', () => {
+		const keys = uniqueKeys(['a', 'b', 'a', `a${String.fromCharCode(0)}1`, 'a']);
+		expect(keys[0]).toBe('a');
+		expect(keys[1]).toBe('b');
+		expect(new Set(keys).size).toBe(5);
 	});
 });
