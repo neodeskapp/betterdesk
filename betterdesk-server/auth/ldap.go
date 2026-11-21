@@ -402,42 +402,49 @@ func (p *LDAPProvider) resolveGroups(conn *ldapv3.Conn, cfg *LDAPConfig, result 
 	}
 }
 
-// ldapCommonName extracts the CN component from an LDAP DN.
+// ldapCommonName is the value of the first CN of a DN, with escapes
+// resolved; "" when the text is no DN or has no CN.
 func ldapCommonName(dn string) string {
-	for _, part := range strings.Split(dn, ",") {
-		part = strings.TrimSpace(part)
-		if len(part) >= 3 && strings.EqualFold(part[:3], "CN=") {
-			return part[3:]
+	parsed, err := ldapv3.ParseDN(dn)
+	if err != nil {
+		return ""
+	}
+	for _, rdn := range parsed.RDNs {
+		for _, attr := range rdn.Attributes {
+			if strings.EqualFold(attr.Type, "CN") {
+				return attr.Value
+			}
 		}
 	}
 	return ""
 }
 
 // ldapGroupMatches checks whether a group_role_map key matches a memberOf DN.
-// Supports full DN equality (case-insensitive), CN-only keys, and CN= keys.
+// A key written as a DN of more than one part matches that DN only (case
+// and spaces between the parts aside): a CN is unique only inside its
+// container. A key that is a bare name or one CN=<name> matches the
+// group's CN wherever the group is.
 func ldapGroupMatches(mapKey, groupDN string) bool {
 	mapKey = strings.TrimSpace(mapKey)
 	groupDN = strings.TrimSpace(groupDN)
 	if mapKey == "" || groupDN == "" {
 		return false
 	}
-	if strings.EqualFold(mapKey, groupDN) {
-		return true
+	group, groupErr := ldapv3.ParseDN(groupDN)
+	if key, err := ldapv3.ParseDN(mapKey); err == nil && len(key.RDNs) > 1 {
+		if groupErr != nil {
+			return strings.EqualFold(mapKey, groupDN)
+		}
+		return key.EqualFold(group)
 	}
 	groupCN := ldapCommonName(groupDN)
 	if groupCN == "" {
 		return false
 	}
-	if strings.EqualFold(mapKey, groupCN) {
-		return true
+	if keyCN := ldapCommonName(mapKey); keyCN != "" {
+		return strings.EqualFold(keyCN, groupCN)
 	}
-	if strings.EqualFold(mapKey, "CN="+groupCN) {
-		return true
-	}
-	if mapCN := ldapCommonName(mapKey); mapCN != "" && strings.EqualFold(mapCN, groupCN) {
-		return true
-	}
-	return false
+	return strings.EqualFold(mapKey, groupCN)
 }
 
 // parseGroupRoleMap parses a JSON-like group→role mapping string.
