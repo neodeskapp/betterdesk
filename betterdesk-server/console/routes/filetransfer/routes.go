@@ -10,6 +10,8 @@
 package filetransfer
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"path/filepath"
 
@@ -18,15 +20,24 @@ import (
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
+	"github.com/unitronix/betterdesk-server/console/session"
 )
 
 type handlers struct {
 	transfers *filetransfer.Service
+	d         *kit.Deps
 }
 
 // Register adds the group's routes below the mount of d.
+//
+// The routes for people keep to the account's device scope: the list
+// leaves out the transfers of devices the account may not see, their
+// progress, cancel and download answer as for no transfer, and a start
+// with such a device is 403. The rule is kit.RequireDeviceInScope's: the
+// four admin roles see every device, and a device the device layer does
+// not know, or a transfer whose device is no text, is kept from nobody.
 func Register(d *kit.Deps) {
-	h := &handlers{transfers: d.FileTransfer}
+	h := &handlers{transfers: d.FileTransfer, d: d}
 	connect := d.RequirePermission("device.connect")
 
 	r := d.Router
@@ -47,6 +58,60 @@ type failure struct {
 
 func fail(w http.ResponseWriter, r *http.Request, status int, message string) {
 	kit.JSON(w, r, status, failure{Error: message})
+}
+
+// scopeFailed answers a scope check that failed.
+func (h *handlers) scopeFailed(w http.ResponseWriter, r *http.Request, err error) {
+	h.d.Log.Error("Device scope guard error:", err.Error())
+	fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+}
+
+// seesEveryDevice reports whether the account of the request has no device
+// scope to keep to.
+func seesEveryDevice(user *session.User) bool {
+	if user == nil {
+		return true
+	}
+	switch user.Role {
+	case "super_admin", "admin", "global_admin", "server_admin":
+		return true
+	}
+	return false
+}
+
+// maySee reports whether an account outside the admin roles may see the
+// device of a transfer: true for a device that is no text or that the
+// device layer does not know.
+func (h *handlers) maySee(ctx context.Context, user *session.User, device any) (bool, error) {
+	id, isText := device.(string)
+	if !isText || id == "" {
+		return true, nil
+	}
+	row := h.d.Backend.GetDeviceByID(ctx, id, true)
+	if row == nil {
+		return true, nil
+	}
+	allowed, err := h.d.DeviceGroups.UserCanAccessDevice(ctx, user, row)
+	if err != nil {
+		return false, fmt.Errorf("check the scope of device %s: %w", id, err)
+	}
+	return allowed, nil
+}
+
+// visibleTransfer is the transfer with the id when the account of the
+// request may see its device, nil when there is no such transfer or the
+// account may not see it.
+func (h *handlers) visibleTransfer(r *http.Request, id string) (*filetransfer.Transfer, error) {
+	transfer := h.transfers.GetTransfer(id)
+	user := kit.User(r)
+	if transfer == nil || seesEveryDevice(user) {
+		return transfer, nil
+	}
+	allowed, err := h.maySee(r.Context(), user, transfer.DeviceID)
+	if err != nil || !allowed {
+		return nil, err
+	}
+	return transfer, nil
 }
 
 // bodyValue is req.body[key] as a parsed JSON value, nil when the body
@@ -82,6 +147,17 @@ func (h *handlers) start(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, `direction must be "upload" or "download"`)
 		return
 	}
+	if user := kit.User(r); !seesEveryDevice(user) {
+		allowed, err := h.maySee(r.Context(), user, device)
+		if err != nil {
+			h.scopeFailed(w, r, err)
+			return
+		}
+		if !allowed {
+			fail(w, r, http.StatusForbidden, "Access denied")
+			return
+		}
+	}
 	size, err := filetransfer.ParseSize(bodyValue(r, "size"))
 	if err != nil {
 		fail(w, r, http.StatusBadRequest, err.Error())
@@ -106,20 +182,49 @@ func (h *handlers) start(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusCreated, transfer)
 }
 
-// list answers GET /transfers with every transfer, newest first, or with
-// those of ?device_id=, ?status= and ?direction=.
+// list answers GET /transfers with every transfer the account may see,
+// newest first, or with those of ?device_id=, ?status= and ?direction=.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	query := reqquery.Of(r)
-	kit.JSON(w, r, http.StatusOK, h.transfers.ListTransfers(filetransfer.Filter{
+	transfers := h.transfers.ListTransfers(filetransfer.Filter{
 		DeviceID:  query.Get("device_id").JSON(),
 		Status:    query.Get("status").JSON(),
 		Direction: query.Get("direction").JSON(),
-	}))
+	})
+	if user := kit.User(r); !seesEveryDevice(user) {
+		visible := map[any]bool{}
+		kept := transfers[:0]
+		for _, transfer := range transfers {
+			seen, known := visible[transfer.DeviceID]
+			if !known {
+				var err error
+				if seen, err = h.maySee(r.Context(), user, transfer.DeviceID); err != nil {
+					h.scopeFailed(w, r, err)
+					return
+				}
+				visible[transfer.DeviceID] = seen
+			}
+			if seen {
+				kept = append(kept, transfer)
+			}
+		}
+		transfers = kept
+	}
+	kit.JSON(w, r, http.StatusOK, transfers)
 }
 
 // progress answers GET /transfers/{id} with how far the transfer is.
 func (h *handlers) progress(w http.ResponseWriter, r *http.Request) {
-	progress := h.transfers.GetProgress(r.PathValue("id"))
+	id := r.PathValue("id")
+	transfer, err := h.visibleTransfer(r, id)
+	if err != nil {
+		h.scopeFailed(w, r, err)
+		return
+	}
+	var progress *filetransfer.Progress
+	if transfer != nil {
+		progress = h.transfers.GetProgress(id)
+	}
 	if progress == nil {
 		fail(w, r, http.StatusNotFound, "Transfer not found")
 		return
@@ -134,7 +239,13 @@ type cancelled struct {
 
 // cancel answers POST /transfers/{id}/cancel.
 func (h *handlers) cancel(w http.ResponseWriter, r *http.Request) {
-	if !h.transfers.CancelTransfer(r.PathValue("id")) {
+	id := r.PathValue("id")
+	transfer, err := h.visibleTransfer(r, id)
+	if err != nil {
+		h.scopeFailed(w, r, err)
+		return
+	}
+	if transfer == nil || !h.transfers.CancelTransfer(id) {
 		fail(w, r, http.StatusNotFound, "Transfer not found")
 		return
 	}
@@ -147,7 +258,11 @@ func (h *handlers) cancel(w http.ResponseWriter, r *http.Request) {
 // file that went away meanwhile 500, each {"error":"Download failed"}.
 func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	transfer := h.transfers.GetTransfer(id)
+	transfer, err := h.visibleTransfer(r, id)
+	if err != nil {
+		h.scopeFailed(w, r, err)
+		return
+	}
 	if transfer == nil {
 		fail(w, r, http.StatusNotFound, "Transfer not found")
 		return

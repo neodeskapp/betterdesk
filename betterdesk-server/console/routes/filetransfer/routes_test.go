@@ -62,7 +62,11 @@ func newWorld(t *testing.T) *world {
 			return clock
 		},
 	})
+	// The devices of the Node run are unknown to the device layer, so the
+	// scope keeps no transfer from anyone
+	devices := withDevices(t, "open", nil)
 	w.World = proxytest.NewWorld(t, func(d *kit.Deps) {
+		devices(d)
 		d.Limits = limits.NewSet(limits.Options{
 			ClientIP: httpx.SocketIP,
 			UserKey:  func(*http.Request) string { return "" },
