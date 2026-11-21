@@ -148,10 +148,15 @@ func (s *Server) handleListOrgs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Data scoping: users below the super admin roles only see orgs they
-	// belong to
+	// belong to; a caller with an org scope belongs to that org.
 	if !auth.IsSuperAdminRole(userRole) {
+		scope := getOrgIDFromCtx(r)
 		var filtered []*db.Organization
 		for _, org := range orgs {
+			if scope != "" && org.ID == scope {
+				filtered = append(filtered, org)
+				continue
+			}
 			member, err := s.db.GetOrgUserByUsername(org.ID, username)
 			if err == nil && member != nil {
 				filtered = append(filtered, org)

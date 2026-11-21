@@ -1157,10 +1157,36 @@ func hashAPIKey(key string) string {
 	return hex.EncodeToString(h[:])
 }
 
+// orgTokenRole is the server role of a caller signed in at /api/org/login.
+// It is no role of the server's role map, so it holds no server permission
+// and no role level: such a caller reaches the routes of its own
+// organization (by the org scope) and the routes that ask no permission.
+const orgTokenRole = "org_user"
+
+// orgTokenSubject is the username a caller signed in at /api/org/login acts
+// as. It cannot be the name of a server account, so nothing keyed by the
+// username (address books, memberships, the user row) mixes the two.
+func orgTokenSubject(orgID, username string) string {
+	return "org:" + orgID + ":" + username
+}
+
+// orgTokenPrincipal resolves an organization token: the organization user
+// must still exist, and the organization role never becomes a server role.
+func (s *Server) orgTokenPrincipal(claims *auth.Claims) (username, role string, ok bool) {
+	if s.db == nil {
+		return "", "", false
+	}
+	if u, err := s.db.GetOrgUserByUsername(claims.OrgID, claims.Sub); err != nil || u == nil {
+		return "", "", false
+	}
+	return orgTokenSubject(claims.OrgID, claims.Sub), orgTokenRole, true
+}
+
 // authenticateRequest extracts and validates credentials from a request.
-// Returns (username, role, ok). If ok is false, an error response has been written.
+// Returns (username, role, orgID, ok); orgID is set only for an
+// organization token.
 // Auth order: Bearer JWT → X-API-Key (scoped DB lookup).
-func (s *Server) authenticateRequest(r *http.Request) (username, role string, ok bool) {
+func (s *Server) authenticateRequest(r *http.Request) (username, role, orgID string, ok bool) {
 	// 0. Panel trust bridge — a statement signed by the Node console for a
 	//    signed-in operator. Only accepted on the loopback hop (unless the
 	//    operator explicitly allows remote panel hosts) and only when the
@@ -1170,13 +1196,13 @@ func (s *Server) authenticateRequest(r *http.Request) (username, role string, ok
 		claim, err := s.verifyPanelTrust(r)
 		if err != nil {
 			log.Printf("[panel-trust] rejected %s %s: %v", r.Method, redactPathSegment(r.URL.Path), err)
-			return "", "", false
+			return "", "", "", false
 		}
 		role := s.resolvePanelRole(claim)
 		if role == "" {
-			return "", "", false
+			return "", "", "", false
 		}
-		return claim.Subject, role, true
+		return claim.Subject, role, "", true
 	}
 
 	// 1. Bearer token — opaque client session (RustDesk desktop) or JWT (panel/API)
@@ -1184,14 +1210,18 @@ func (s *Server) authenticateRequest(r *http.Request) (username, role string, ok
 		token := strings.TrimSpace(bearer[7:])
 		if isOpaqueClientToken(token) {
 			if username, role, ok := s.authenticateClientSession(token); ok {
-				return username, role, true
+				return username, role, "", true
 			}
-			return "", "", false
+			return "", "", "", false
 		}
 		if s.jwtManager != nil {
 			claims, err := s.jwtManager.Validate(token)
 			if err == nil && claims.Role != "__2fa_pending__" {
-				return claims.Sub, claims.Role, true
+				if claims.OrgID != "" {
+					username, role, ok := s.orgTokenPrincipal(claims)
+					return username, role, claims.OrgID, ok
+				}
+				return claims.Sub, claims.Role, "", true
 			}
 		}
 	}
@@ -1204,33 +1234,16 @@ func (s *Server) authenticateRequest(r *http.Request) (username, role string, ok
 			// Check expiry
 			if k.ExpiresAt != "" {
 				if exp, err := time.Parse("2006-01-02 15:04:05", k.ExpiresAt); err == nil && exp.Before(time.Now()) {
-					return "", "", false
+					return "", "", "", false
 				}
 			}
 			// Update last_used in background
 			go func() { _ = s.db.TouchAPIKey(k.ID) }()
-			return "apikey:" + k.Name, k.Role, true
+			return "apikey:" + k.Name, k.Role, "", true
 		}
 	}
 
-	return "", "", false
-}
-
-// extractOrgIDFromRequest reads the org_id from the Bearer JWT token.
-// Returns empty string if no JWT, no org_id, or API key auth (non-JWT).
-func (s *Server) extractOrgIDFromRequest(r *http.Request) string {
-	if s.jwtManager == nil {
-		return ""
-	}
-	bearer := r.Header.Get("Authorization")
-	if len(bearer) <= 7 || bearer[:7] != "Bearer " {
-		return ""
-	}
-	claims, err := s.jwtManager.Validate(bearer[7:])
-	if err != nil {
-		return ""
-	}
-	return claims.OrgID
+	return "", "", "", false
 }
 
 // redactPathSegment masks high-cardinality identifiers in URL paths so that
@@ -1326,7 +1339,7 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		username, role, ok := s.authenticateRequest(r)
+		username, role, orgID, ok := s.authenticateRequest(r)
 		if !ok {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid or missing credentials"})
 			return
@@ -1342,15 +1355,17 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), ctxKeyRole, role)
 		ctx = context.WithValue(ctx, ctxKeyUsername, username)
 
-		// Extract org_id from JWT claims (if present)
-		orgID := s.extractOrgIDFromRequest(r)
 		if orgID != "" {
 			ctx = context.WithValue(ctx, ctxKeyOrgID, orgID)
 		}
 
-		// Optionally load full user object for handlers that need it
-		if user, err := s.db.GetUser(username); err == nil && user != nil {
-			ctx = context.WithValue(ctx, ctxKeyUser, user)
+		// Load the server account for handlers that need it. An
+		// organization token stands for an organization user, never for
+		// a server account.
+		if role != orgTokenRole {
+			if user, err := s.db.GetUser(username); err == nil && user != nil {
+				ctx = context.WithValue(ctx, ctxKeyUser, user)
+			}
 		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))

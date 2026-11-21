@@ -197,7 +197,7 @@ func TestPanelTrustDisabledKeepsLegacyAuth(t *testing.T) {
 	}
 	req := httptest.NewRequest(http.MethodGet, "/api/peers", nil)
 	// No credentials at all: the usual 401 path, not a trust decision.
-	if _, _, ok := s.authenticateRequest(req); ok {
+	if _, _, _, ok := s.authenticateRequest(req); ok {
 		t.Fatal("an unauthenticated request must not pass")
 	}
 }
