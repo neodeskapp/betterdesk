@@ -20,7 +20,9 @@ import (
 //     as guest, without t, so the API server checks the link again and
 //     writes the tunnel to the link's creator; a link that only allows
 //     watching sets view_only=1, whatever the query says.
-//   - Someone signed in with device.connect. The query is not passed on.
+//   - Someone signed in with device.connect. Of the query only the
+//     tunnel's flags record and relay_base go on (sessionParameters),
+//     each one text: a list or an object among them is 400.
 //
 // A share token wins over a guest token; the guest token is then not
 // checked here. A token that cannot be turned into text is refused with
@@ -84,9 +86,19 @@ func (h *handlers) desktop(w http.ResponseWriter, r *http.Request) {
 // the API server reads: the link's token and the flags of the tunnel.
 var linkParameters = []string{"mesh_share", "guest", "view_only", "record", "relay_base"}
 
+// sessionParameters are the parameters of a signed-in account's desktop
+// request that the API server reads: server recording and the address
+// the relay is reached at.
+var sessionParameters = []string{"record", "relay_base"}
+
 // desktopTunnel opens the tunnel for a signed-in account.
 func (h *handlers) desktopTunnel(w http.ResponseWriter, r *http.Request) {
-	h.pass(w, r, http.MethodPost, devicePath(r.PathValue("id"), "desktop"))
+	search, bad := requestQuery(r).only(sessionParameters...)
+	if bad != "" {
+		badParameter(w, r, bad)
+		return
+	}
+	h.pass(w, r, http.MethodPost, withSearch(devicePath(r.PathValue("id"), "desktop"), search))
 }
 
 // trimmedText is the value as text without the white space around it,

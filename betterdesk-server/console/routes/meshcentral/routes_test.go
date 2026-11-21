@@ -575,9 +575,39 @@ func TestDesktopWithoutALinkNeedsTheSession(t *testing.T) {
 			t.Errorf("%q: a refused request reached the API server: %s", query, got)
 		}
 		expect(t, "operator "+query, w.do("operator", "POST", target, "{}"), 200, `{"relay_id":"r1"}`)
-		// The query of a signed-in caller is not passed on
-		if got := w.sent(); got != "POST /mesh/devices/d1/desktop" {
-			t.Errorf("%q: the API server got %q", query, got)
+		// Of a signed-in caller's query only record goes on (RV222)
+		want := "POST /mesh/devices/d1/desktop"
+		if strings.Contains(query, "record=1") {
+			want += "?record=1"
+		}
+		if got := w.sent(); got != want {
+			t.Errorf("%q: the API server got %q, want %q", query, got, want)
+		}
+	}
+}
+
+// RV222: the tunnel of a signed-in caller gets the flags the web client
+// sets for it, record (server recording) and relay_base, each one text,
+// and nothing else of the query; a list or an object among them is 400
+// before the API server is asked.
+func TestDesktopForASessionPassesTheTunnelFlags(t *testing.T) {
+	w := newWorld(t, func(string, string) answer { return jsonAnswer(200, `{"relay_id":"r1"}`) })
+	for _, c := range []struct{ query, status, sent string }{
+		{"?relay_base=https%3A%2F%2Fpanel.example%2F&record=1", "200", "POST /mesh/devices/d1/desktop?relay_base=https%3A%2F%2Fpanel.example%2F&record=1"},
+		{"?record=1&view_only=1&evil=x", "200", "POST /mesh/devices/d1/desktop?record=1"},
+		{"?relay_base=%2F", "200", "POST /mesh/devices/d1/desktop?relay_base=%2F"},
+		{"?record=1&record=1", "400 record", ""},
+		{"?relay_base[x]=1", "400 relay_base", ""},
+	} {
+		rec := w.do("operator", "POST", "/api/mesh/devices/d1/desktop"+c.query, "{}")
+		if c.status == "200" {
+			expect(t, c.query, rec, 200, `{"relay_id":"r1"}`)
+		} else {
+			name := strings.TrimPrefix(c.status, "400 ")
+			expect(t, c.query, rec, 400, `{"error":"Invalid query parameter: `+name+`"}`)
+		}
+		if got := w.sent(); got != c.sent {
+			t.Errorf("%s: the API server got %q, want %q", c.query, got, c.sent)
 		}
 	}
 }
