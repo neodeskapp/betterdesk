@@ -186,3 +186,35 @@ func TestBlocklistInvalidCIDR(t *testing.T) {
 		t.Fatal("should error on invalid CIDR")
 	}
 }
+
+// A blocked address matches the client's address however either is
+// written: letter case, zeros written out, IPv4 written as IPv6 (RV125).
+func TestBlocklistIPSpellings(t *testing.T) {
+	bl := NewBlocklist()
+	bl.BlockIP("2001:DB8::1", "upper case")
+	bl.BlockIP("2001:db8:0:0:0:0:0:2", "written out")
+	bl.BlockIP("::ffff:198.51.100.7", "mapped")
+	for _, client := range []string{"2001:db8::1", "[2001:db8::1]:443", "2001:db8::2", "198.51.100.7", "198.51.100.7:5000"} {
+		if !bl.IsIPBlocked(client) {
+			t.Errorf("%s is not blocked", client)
+		}
+	}
+	if bl.IsIPBlocked("2001:db8::3") {
+		t.Error("2001:db8::3 is blocked")
+	}
+	if !bl.UnblockIP("2001:db8::1") || bl.IsIPBlocked("2001:db8::1") {
+		t.Error("unblocking in another spelling did not unblock")
+	}
+
+	path := filepath.Join(t.TempDir(), "blocklist.txt")
+	if err := os.WriteFile(path, []byte("2001:0DB8::0005,from the file\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	fromFile := NewBlocklist()
+	if err := fromFile.LoadFromFile(path); err != nil {
+		t.Fatal(err)
+	}
+	if !fromFile.IsIPBlocked("2001:db8::5") {
+		t.Error("an address from the file in another spelling is not blocked")
+	}
+}

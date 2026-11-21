@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"log"
 	"net"
+	"net/netip"
 	"os"
 	"strings"
 	"sync"
@@ -16,8 +17,8 @@ import (
 type BlockType string
 
 const (
-	BlockIP BlockType = "ip"
-	BlockID BlockType = "id"
+	BlockIP  BlockType = "ip"
+	BlockID  BlockType = "id"
 	BlockNet BlockType = "cidr"
 )
 
@@ -33,15 +34,27 @@ type BlockEntry struct {
 // Thread-safe — uses sync.RWMutex for concurrent access.
 type Blocklist struct {
 	mu       sync.RWMutex
-	ips      map[string]*BlockEntry  // Exact IP matches
-	ids      map[string]*BlockEntry  // Device ID matches
-	networks []*networkEntry         // CIDR network matches
-	filePath string                  // Path to blocklist file (optional)
+	ips      map[string]*BlockEntry // Exact IP matches, keyed by ipKey
+	ids      map[string]*BlockEntry // Device ID matches
+	networks []*networkEntry        // CIDR network matches
+	filePath string                 // Path to blocklist file (optional)
 }
 
 type networkEntry struct {
 	net   *net.IPNet
 	entry *BlockEntry
+}
+
+// ipKey is the key of an address in the exact matches: the address in its
+// one spelling (lower case, zeros shortened, IPv4 written as IPv6 as IPv4),
+// so that an entry matches the client however either is written. Text that
+// is no address is its own key.
+func ipKey(ip string) string {
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
+		return ip
+	}
+	return addr.Unmap().WithZone("").String()
 }
 
 // NewBlocklist creates a new empty blocklist.
@@ -105,7 +118,7 @@ func (b *Blocklist) LoadFromFile(path string) error {
 			b.networks = append(b.networks, &networkEntry{net: ipNet, entry: entry})
 		} else {
 			entry.Type = BlockIP
-			b.ips[value] = entry
+			b.ips[ipKey(value)] = entry
 		}
 		loaded++
 	}
@@ -128,7 +141,7 @@ func (b *Blocklist) IsIPBlocked(ipStr string) bool {
 	}
 
 	// Exact match
-	if _, ok := b.ips[host]; ok {
+	if _, ok := b.ips[ipKey(host)]; ok {
 		return true
 	}
 
@@ -158,7 +171,7 @@ func (b *Blocklist) IsIDBlocked(id string) bool {
 func (b *Blocklist) BlockIP(ip, reason string) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.ips[ip] = &BlockEntry{
+	b.ips[ipKey(ip)] = &BlockEntry{
 		Value:     ip,
 		Type:      BlockIP,
 		Reason:    reason,
@@ -203,8 +216,8 @@ func (b *Blocklist) BlockCIDR(cidr, reason string) error {
 func (b *Blocklist) UnblockIP(ip string) bool {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	if _, ok := b.ips[ip]; ok {
-		delete(b.ips, ip)
+	if _, ok := b.ips[ipKey(ip)]; ok {
+		delete(b.ips, ipKey(ip))
 		return true
 	}
 	return false
