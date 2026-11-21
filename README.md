@@ -85,8 +85,8 @@ One container runs the server and the web console. It builds from this
 repository, so the first start takes a few minutes.
 
 ```bash
-git clone https://github.com/trybetterdesk/BetterDesk.git
-cd BetterDesk
+git clone https://github.com/trybetterdesk/betterdesk.git
+cd betterdesk
 docker compose -f docker-compose.single.yml up -d --build
 docker compose -f docker-compose.single.yml exec betterdesk betterdesk-show-admin-credentials
 ```
@@ -101,8 +101,8 @@ For PostgreSQL instead of SQLite, see the comments at the top of
 ### Linux
 
 ```bash
-git clone https://github.com/trybetterdesk/BetterDesk.git
-cd BetterDesk
+git clone https://github.com/trybetterdesk/betterdesk.git
+cd betterdesk
 sudo ./betterdesk.sh
 ```
 
