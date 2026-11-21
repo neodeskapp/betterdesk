@@ -3084,16 +3084,20 @@ func (s *SQLiteDB) GetChatGroup(id string) (*ChatGroup, error) {
 	return &g, nil
 }
 
-// ListChatGroups returns all groups where memberID is in the members list.
+// ListChatGroups returns all groups that have memberID as one whole member
+// of their members list.
 func (s *SQLiteDB) ListChatGroups(memberID string) ([]*ChatGroup, error) {
+	if strings.TrimSpace(memberID) == "" {
+		return nil, nil
+	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	// Use LIKE with escaped wildcards for comma-separated member search
-	pattern := "%" + memberID + "%"
+	// instr finds the id as plain text, case-sensitive; the member check
+	// below drops the groups that hold it only as part of another id
 	rows, err := s.db.Query(
 		`SELECT id, name, members, created_by, created_at FROM chat_groups
-		 WHERE members LIKE ?`, pattern,
+		 WHERE instr(members, ?) > 0`, memberID,
 	)
 	if err != nil {
 		return nil, err
@@ -3108,9 +3112,11 @@ func (s *SQLiteDB) ListChatGroups(memberID string) ([]*ChatGroup, error) {
 			return nil, err
 		}
 		g.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
-		groups = append(groups, &g)
+		if chatGroupHasMember(g.Members, memberID) {
+			groups = append(groups, &g)
+		}
 	}
-	return groups, nil
+	return groups, rows.Err()
 }
 
 // UpdateChatGroup updates a chat group's name or members.

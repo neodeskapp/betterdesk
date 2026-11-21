@@ -2534,10 +2534,16 @@ func (pg *PostgresDB) GetChatGroup(id string) (*ChatGroup, error) {
 	return &g, nil
 }
 
+// ListChatGroups returns all groups that have memberID as one whole member
+// of their members list.
 func (pg *PostgresDB) ListChatGroups(memberID string) ([]*ChatGroup, error) {
-	pattern := "%" + memberID + "%"
+	if strings.TrimSpace(memberID) == "" {
+		return nil, nil
+	}
+	// strpos finds the id as plain text; the member check below drops the
+	// groups that hold it only as part of another id
 	rows, err := pg.pool.Query(pg.ctx,
-		`SELECT id, name, members, created_by, created_at FROM chat_groups WHERE members LIKE $1`, pattern)
+		`SELECT id, name, members, created_by, created_at FROM chat_groups WHERE strpos(members, $1) > 0`, memberID)
 	if err != nil {
 		return nil, err
 	}
@@ -2549,9 +2555,11 @@ func (pg *PostgresDB) ListChatGroups(memberID string) ([]*ChatGroup, error) {
 		if err := rows.Scan(&g.ID, &g.Name, &g.Members, &g.CreatedBy, &g.CreatedAt); err != nil {
 			return nil, err
 		}
-		groups = append(groups, &g)
+		if chatGroupHasMember(g.Members, memberID) {
+			groups = append(groups, &g)
+		}
 	}
-	return groups, nil
+	return groups, rows.Err()
 }
 
 func (pg *PostgresDB) UpdateChatGroup(g *ChatGroup) error {

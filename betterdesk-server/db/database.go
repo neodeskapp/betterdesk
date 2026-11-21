@@ -4,6 +4,7 @@ package db
 
 import (
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -248,6 +249,17 @@ type ChatGroup struct {
 	Members   string    `json:"members"`    // comma-separated device IDs
 	CreatedBy string    `json:"created_by"` // device_id or operator name
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// chatGroupHasMember reports whether a comma-separated members list has id
+// as one of its members.
+func chatGroupHasMember(members, id string) bool {
+	for _, member := range strings.Split(members, ",") {
+		if strings.TrimSpace(member) == id {
+			return true
+		}
+	}
+	return false
 }
 
 // ChatContact represents a peer visible for chat (derived from peers table).
