@@ -107,10 +107,15 @@ func NewLogger(filePath string) *Logger {
 	}
 
 	if filePath != "" {
-		f, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		// Only the server's user may read the file: it holds addresses,
+		// user names and device ids. An existing file is narrowed too.
+		f, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
 		if err != nil {
 			log.Printf("[audit] Failed to open audit log file %s: %v", filePath, err)
 		} else {
+			if err := f.Chmod(0o600); err != nil {
+				log.Printf("[audit] Failed to restrict audit log file %s: %v", filePath, err)
+			}
 			l.file = f
 		}
 	}

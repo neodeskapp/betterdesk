@@ -140,3 +140,29 @@ func TestRecentEmpty(t *testing.T) {
 		t.Errorf("expected nil for empty logger, got %v", recent)
 	}
 }
+
+// The audit file holds addresses, user names and device ids: only the
+// server's own user may read it, also when an older file was readable.
+func TestAuditFileIsPrivate(t *testing.T) {
+	dir := t.TempDir()
+	fresh := filepath.Join(dir, "fresh.log")
+	old := filepath.Join(dir, "old.log")
+	if err := os.WriteFile(old, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(old, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{fresh, old} {
+		l := NewLogger(path)
+		l.Log(ActionPeerBanned, "api", "ABC123", nil)
+		l.Close()
+		info, err := os.Stat(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if perm := info.Mode().Perm(); perm != 0o600 {
+			t.Errorf("%s mode = %o, want 600", filepath.Base(path), perm)
+		}
+	}
+}
