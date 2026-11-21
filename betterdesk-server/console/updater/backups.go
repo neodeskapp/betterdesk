@@ -18,8 +18,9 @@ import (
 // A backup before an install is a folder DATA_DIR/backups/pre-update-<time>
 // with manifest.json. The old console's backups hold console, script and
 // server source files; a backup of this updater holds the binary that ran
-// before the install, as server/<binary name>, and the full data backup
-// of console/backup beside it.
+// before the install, as server/<binary name>, and, only when
+// Options.DataBackup is set, the full data backup of console/backup
+// beside it, named in the manifest's dataBackup.
 
 // backupKind marks a manifest this updater wrote.
 const backupKind = "betterdesk-server-binary"

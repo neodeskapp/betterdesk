@@ -128,6 +128,30 @@ func TestInstallMakesTheDataBackup(t *testing.T) {
 	}
 }
 
+// RV17: without a data backup the answer and the manifest name the binary
+// alone, and the folder holds nothing else.
+func TestInstallWithoutDataBackupClaimsNone(t *testing.T) {
+	in := newInstall(t)
+	in.gh.serve(newTestRelease("3.6.0", newCommit, BranchStable))
+	result := installed(t, in, newCommit)
+	if result.BackupPath == nil || result.BackedUp != 1 {
+		t.Fatalf("backup %v, backedUp %d", result.BackupPath, result.BackedUp)
+	}
+	var bm BackupManifest
+	in.readJSON(filepath.Join(*result.BackupPath, "manifest.json"), &bm)
+	if bm.DataBackup != "" || bm.FilesBackedUp != 1 {
+		t.Errorf("manifest %+v", bm)
+	}
+	entries, _ := os.ReadDir(*result.BackupPath)
+	var names []string
+	for _, e := range entries {
+		names = append(names, e.Name())
+	}
+	if strings.Join(names, ",") != "manifest.json,server" {
+		t.Errorf("the backup folder holds %v", names)
+	}
+}
+
 type fakeBackup struct {
 	data []byte
 	name string

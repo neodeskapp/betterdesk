@@ -38,8 +38,10 @@
 // the binary into DATA_DIR/updates/<version>/, its size and SHA-256,
 // "<binary> -version" naming the manifest's version and commit (which
 // ties the unsigned version to the signed binary, and catches a binary
-// for another processor), the backup (the running binary and the data
-// backup of console/backup into DATA_DIR/backups/pre-update-<time>/),
+// for another processor), the backup into
+// DATA_DIR/backups/pre-update-<time>/ (the running binary, and the full
+// data backup of console/backup only when Options.DataBackup is set; the
+// answer's backedUp and the manifest's dataBackup say which were made),
 // the swap, and the pending marker. The route then answers, and with a
 // supervisor (BETTERDESK_SUPERVISOR) the process ends with ExitRestart
 // two seconds later.
