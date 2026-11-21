@@ -154,9 +154,29 @@ func NewClientAPI(opts ClientAPIOptions) *ClientAPI {
 			badRequest(w)
 			return
 		}
-		stack.ServeHTTP(w, r)
+		stack.ServeHTTP(w, withoutFragment(r))
 	})
 	return c
+}
+
+// withoutFragment is the request with the path and query that come before
+// a "#" in the target. net/http keeps "#x" in the path the route table
+// reads, while the path list and the forward read the target up to the
+// "#"; Node cut it there for both.
+func withoutFragment(r *http.Request) *http.Request {
+	before, _, cut := strings.Cut(r.RequestURI, "#")
+	if !cut {
+		return r
+	}
+	u, err := url.ParseRequestURI(before)
+	if err != nil {
+		return r
+	}
+	clean := *r.URL
+	clean.Path, clean.RawPath, clean.RawQuery, clean.ForceQuery = u.Path, u.RawPath, u.RawQuery, u.ForceQuery
+	out := r.WithContext(r.Context())
+	out.URL = &clean
+	return out
 }
 
 // Handler is what the port answers with.

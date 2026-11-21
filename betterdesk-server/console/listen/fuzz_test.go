@@ -188,15 +188,10 @@ func FuzzClientAPIPathList(f *testing.F) {
 				t.Fatalf("%s %q: status %d", method, target, rec.Code)
 			}
 			p := httpx.RawPath(r)
-			// A "#" in the target is part of the path the route table reads,
-			// so no route of the port takes it, while the path list reads the
-			// path up to the "#": such a registration request goes on to the
-			// server's API
-			fragment := strings.Contains(r.RequestURI, "#")
 			for _, seen := range api.take() {
 				m, uri, _ := strings.Cut(seen, " ")
 				path, _, _ := strings.Cut(uri, "?")
-				if m != r.Method || path != p || !mayPass(m, path) || (strings.HasPrefix(path, "/api/bd/") && !fragment) {
+				if m != r.Method || path != p || !mayPass(m, path) || strings.HasPrefix(path, "/api/bd/") {
 					t.Fatalf("%s %q reached the API as %q", method, target, seen)
 				}
 			}
