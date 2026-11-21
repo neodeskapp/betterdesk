@@ -161,6 +161,7 @@ func TestStrategyRoutesKeepTheScope(t *testing.T) {
 			t.Fatalf("assign as admin: %d %s", got.Status, got.Body)
 		}
 		mine := create(admin, `{"name":"Mine"}`)
+		bound := create(admin, `{"name":"Bound","device_group_guid":"g-viewer"}`)
 		state := func() string {
 			t.Helper()
 			var rules, assignments int
@@ -203,6 +204,8 @@ func TestStrategyRoutesKeepTheScope(t *testing.T) {
 			{"DELETE", mixed, ``},
 			{"POST", "/api/panel/strategies", `{"name":"Closed","device_group_guid":"g-viewer"}`},
 			{"PATCH", mine, `{"device_group_guid":"g-viewer"}`},
+			{"PATCH", bound, `{"device_group_guid":"g-open"}`},
+			{"DELETE", bound, ``},
 		} {
 			api.Calls()
 			if got := operator.Do(c.method, c.path, c.body); got.Status != http.StatusForbidden || got.Body != forbidden {
