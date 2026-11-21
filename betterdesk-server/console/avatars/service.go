@@ -16,6 +16,7 @@ package avatars
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -111,8 +112,14 @@ func (s *Service) forget() {
 // ResetCache drops the cached list of who has a picture.
 func (s *Service) ResetCache() { s.forget() }
 
+// storePicture fetches or decodes a picture and stores it for the user.
+// A picture of the profile, whose address every account sets, never comes
+// from a private network; one from single sign-on may come from the LAN,
+// where identity providers often run.
 func (s *Service) storePicture(ctx context.Context, userID int64, picture, source string) error {
-	img, err := LoadPicture(ctx, picture, s.fetch)
+	opts := s.fetch
+	opts.RefusePrivate = source == "profile"
+	img, err := LoadPicture(ctx, picture, opts)
 	if err != nil {
 		return err
 	}
@@ -224,7 +231,10 @@ func (s *Service) Wait() { s.running.Wait() }
 // profile. An http or https address is fetched and stored ("stored"). An
 // empty value removes a picture that came from the profile ("cleared",
 // or "skipped" when there was none); a picture from single sign-on stays.
-// Anything else is "failed" with the code "invalid_url".
+// Anything else is "failed" with the code "invalid_url". Every fetch that
+// fails is "failed" with the code "fetch_failed", whatever went wrong, so
+// the answer tells nothing about the host the address names; the log
+// keeps the reason.
 func (s *Service) SyncProfileAvatarURL(ctx context.Context, userID int64, avatarURL string) Result {
 	value := jsTrim(avatarURL)
 	var err error
@@ -247,6 +257,13 @@ func (s *Service) SyncProfileAvatarURL(ctx context.Context, userID int64, avatar
 	}
 	result := failed(err)
 	s.log.Warn(fmt.Sprintf("Profile picture for user %d not stored (%s): %s", userID, result.Code, err.Error()))
+	var refusal *Error
+	if errors.As(err, &refusal) {
+		result.Code = "fetch_failed"
+		if _, err := checkURL(value, true); errorCode(err) == "invalid_url" {
+			result.Code = "invalid_url"
+		}
+	}
 	return result
 }
 

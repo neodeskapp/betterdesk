@@ -19,6 +19,16 @@ var refusedV4 = []netip.Prefix{
 	netip.MustParsePrefix("240.0.0.0/4"),        // reserved and broadcast
 }
 
+// privateV4 are the IPv4 ranges of private networks, refused for a
+// picture source that may not reach the console's network (FetchOptions
+// RefusePrivate).
+var privateV4 = []netip.Prefix{
+	netip.MustParsePrefix("10.0.0.0/8"),
+	netip.MustParsePrefix("172.16.0.0/12"),
+	netip.MustParsePrefix("192.168.0.0/16"),
+	netip.MustParsePrefix("100.64.0.0/10"), // carrier-grade NAT
+}
+
 // IsRefusedAddress reports whether the console must not fetch a picture
 // from this address. Text that is no IP address is refused. An IPv6
 // address may carry a zone of letters, digits and "-.:".
@@ -32,7 +42,7 @@ func IsRefusedAddress(ip string) bool {
 	if err != nil {
 		return true
 	}
-	return refusedAddr(addr)
+	return refusedAddr(addr, false)
 }
 
 func validZone(zone string) bool {
@@ -48,13 +58,16 @@ func validZone(zone string) bool {
 	return true
 }
 
-// refusedAddr is IsRefusedAddress for a parsed address.
-func refusedAddr(addr netip.Addr) bool {
+// refusedAddr is IsRefusedAddress for a parsed address. With private set
+// the addresses of private networks are refused too: privateV4, IPv6
+// unique local (fc00::/7) and site-local (fec0::/10) addresses, and
+// addresses that carry a private IPv4 address.
+func refusedAddr(addr netip.Addr, private bool) bool {
 	if !addr.IsValid() {
 		return true
 	}
 	if addr.Is4() {
-		return refusedV4Addr(addr)
+		return refusedV4Addr(addr, private)
 	}
 	b := addr.As16()
 	var g [8]uint16
@@ -70,7 +83,7 @@ func refusedAddr(addr netip.Addr) bool {
 		return true
 	}
 	v4 := func(hi, lo uint16) bool {
-		return refusedV4Addr(netip.AddrFrom4([4]byte{byte(hi >> 8), byte(hi), byte(lo >> 8), byte(lo)}))
+		return refusedV4Addr(netip.AddrFrom4([4]byte{byte(hi >> 8), byte(hi), byte(lo >> 8), byte(lo)}), private)
 	}
 	switch {
 	case zeroUpTo(8): // ::
@@ -83,6 +96,8 @@ func refusedAddr(addr netip.Addr) bool {
 		return true
 	case g[0] == 0xfd00 && g[1] == 0x0ec2 && g[2] == 0 && g[3] == 0 && g[4] == 0 && g[5] == 0 && g[6] == 0 && g[7] == 0x254:
 		return true // AWS metadata fd00:ec2::254
+	case private && (g[0]&0xfe00 == 0xfc00 || g[0]&0xffc0 == 0xfec0): // unique local, site-local
+		return true
 	}
 	// Addresses that carry an IPv4 address are judged by that address
 	switch {
@@ -98,10 +113,17 @@ func refusedAddr(addr netip.Addr) bool {
 	return false
 }
 
-func refusedV4Addr(addr netip.Addr) bool {
+func refusedV4Addr(addr netip.Addr, private bool) bool {
 	for _, prefix := range refusedV4 {
 		if prefix.Contains(addr) {
 			return true
+		}
+	}
+	if private {
+		for _, prefix := range privateV4 {
+			if prefix.Contains(addr) {
+				return true
+			}
 		}
 	}
 	return false

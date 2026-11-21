@@ -34,6 +34,10 @@ type FetchOptions struct {
 	// Dial opens the connection to a checked address. Nil means a plain
 	// net.Dialer.
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)
+	// RefusePrivate refuses the addresses of private networks too: the
+	// ranges of RFC 1918, carrier-grade NAT and IPv6 unique local
+	// addresses. Without it a picture may come from the console's LAN.
+	RefusePrivate bool
 	// Transport sends the requests in place of the console's own
 	// transport, which checks every address before it connects. Tests set
 	// it; with it Lookup and Dial are not used.
@@ -75,7 +79,7 @@ func (o FetchOptions) guardedDial(ctx context.Context, network, address string) 
 		}
 	}
 	for _, addr := range addrs {
-		if refusedAddr(addr) {
+		if refusedAddr(addr, o.RefusePrivate) {
 			return nil, refuse("address_refused", host+" resolves to refused address "+addr.String())
 		}
 	}
@@ -131,7 +135,7 @@ func FetchURL(ctx context.Context, address string, opts FetchOptions) (Image, er
 		defer closer.CloseIdleConnections()
 	}
 
-	current, err := checkURL(address)
+	current, err := checkURL(address, opts.RefusePrivate)
 	if err != nil {
 		return Image{}, err
 	}
@@ -146,7 +150,7 @@ func FetchURL(ctx context.Context, address string, opts FetchOptions) (Image, er
 		if redirects >= maxRedirects {
 			return Image{}, refuse("too_many_redirects", "Too many redirects")
 		}
-		if current, err = checkURL(current.resolve(location)); err != nil {
+		if current, err = checkURL(current.resolve(location), opts.RefusePrivate); err != nil {
 			return Image{}, err
 		}
 	}

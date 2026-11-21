@@ -160,13 +160,17 @@ func TestInstallersOfAnIncompleteCache(t *testing.T) {
 
 // A web address saved as the profile picture is fetched and stored by the
 // console, never linked; one the console may not fetch from is reported,
-// and the save still succeeds.
+// and the save still succeeds. Every failed fetch, a private address
+// included, is reported with one code (RV10).
 func TestProfilePicture(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		admin := routetest.New(t, routetest.Options{DB: db}).As("admin")
 		save := func(body string) string { return admin.Do("PUT", "/api/users/me/profile", body).Body }
-		if got := save(`{"first_name":"Alice","avatar_url":"http://127.0.0.1/x.png"}`); got != `{"success":true,"avatar":"failed","avatar_error":"address_refused"}` {
+		if got := save(`{"first_name":"Alice","avatar_url":"http://127.0.0.1/x.png"}`); got != `{"success":true,"avatar":"failed","avatar_error":"fetch_failed"}` {
 			t.Errorf("loopback address: %s", got)
+		}
+		if got := save(`{"first_name":"Alice","avatar_url":"http://192.168.0.10/x.png"}`); got != `{"success":true,"avatar":"failed","avatar_error":"fetch_failed"}` {
+			t.Errorf("private address: %s", got)
 		}
 		if got := save(`{"first_name":"Alice","avatar_url":""}`); got != `{"success":true,"avatar":"skipped"}` {
 			t.Errorf("emptied address without a picture: %s", got)

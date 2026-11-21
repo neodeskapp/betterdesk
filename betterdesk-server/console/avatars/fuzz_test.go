@@ -151,7 +151,7 @@ func FuzzCheckURL(f *testing.F) {
 		f.Add(seed, "/next")
 	}
 	f.Fuzz(func(t *testing.T, text, location string) {
-		target, err := checkURL(text)
+		target, err := checkURL(text, false)
 		if err != nil {
 			if code := codeOf(err); code != "invalid_url" && code != "address_refused" {
 				t.Fatalf("checkURL(%q) failed with %q", text, code)
@@ -175,6 +175,6 @@ func FuzzCheckURL(f *testing.F) {
 			t.Fatalf("checkURL(%q): the request would go to %q with path %q", text, u.Host, target.path)
 		}
 		// A redirect is read against the address and checked like one
-		_, _ = checkURL(target.resolve(location))
+		_, _ = checkURL(target.resolve(location), false)
 	})
 }

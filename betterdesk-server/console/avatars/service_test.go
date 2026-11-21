@@ -119,6 +119,30 @@ func resultJSON(r Result) map[string]string {
 	return out
 }
 
+// fetchCodes are the codes Node answered for a profile picture whose fetch
+// failed.
+var fetchCodes = map[string]bool{
+	"address_refused": true, "dns_failed": true, "fetch_failed": true, "http_status": true, "not_an_image": true,
+	"timeout": true, "too_large": true, "too_many_redirects": true, "type_mismatch": true,
+}
+
+// intendedProfileResult is Node's result of a profile picture sync with
+// what Go answers on purpose in its place: one code, fetch_failed, for
+// every failed fetch, where Node named the reason (RV10).
+func intendedProfileResult(t *testing.T, recorded json.RawMessage) json.RawMessage {
+	t.Helper()
+	var result map[string]string
+	if err := json.Unmarshal(recorded, &result); err != nil {
+		t.Fatalf("profile result %s: %v", recorded, err)
+	}
+	if result["action"] != "failed" || !fetchCodes[result["code"]] {
+		return recorded
+	}
+	result["code"] = "fetch_failed"
+	out, _ := json.Marshal(result)
+	return out
+}
+
 func TestOracleStore(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		var scenario storeScenario
@@ -167,6 +191,7 @@ func TestOracleStore(t *testing.T) {
 				got = resultJSON(svc.SyncOIDCPicture(ctx, step.UserID, exchange))
 			case "profile":
 				got = resultJSON(svc.SyncProfileAvatarURL(ctx, step.UserID, step.URL))
+				step.Result = intendedProfileResult(t, step.Result)
 			case "avatar":
 				a, err := svc.GetAvatar(ctx, step.UserID)
 				if err != nil {

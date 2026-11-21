@@ -55,14 +55,14 @@ func invalidURL(message string) *Error { return refuse("invalid_url", message) }
 // checkURL reads a picture address and refuses what the console never
 // fetches: anything but http and https, credentials in the address, the
 // names of this machine and of cloud metadata services, and refused
-// addresses written as literals. A name is judged again when it has been
-// resolved (guardedDial).
+// addresses written as literals, private ones too with private set. A
+// name is judged again when it has been resolved (guardedDial).
 //
 // The text is read as a browser reads it: white space around it and line
 // breaks inside are dropped, backslashes count as slashes, any number of
 // slashes may follow the scheme, and an IPv4 address may be written with
 // hex, octal or fewer than four numbers ("0x7f.1" is 127.0.0.1).
-func checkURL(text string) (target, error) {
+func checkURL(text string, private bool) (target, error) {
 	t, ok := parseTarget(text)
 	if !ok {
 		return target{}, invalidURL("Not a valid URL")
@@ -80,7 +80,7 @@ func checkURL(text string) (target, error) {
 	if refusedHostnames[host] || strings.HasSuffix(host, ".localhost") {
 		return target{}, refuse("address_refused", "Host "+host+" is refused")
 	}
-	if addr, err := netip.ParseAddr(host); err == nil && refusedAddr(addr) {
+	if addr, err := netip.ParseAddr(host); err == nil && refusedAddr(addr, private) {
 		return target{}, refuse("address_refused", "Address "+host+" is refused")
 	}
 	return t.target, nil
