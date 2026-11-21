@@ -241,7 +241,7 @@ func (s *Server) handleBillingStats(w http.ResponseWriter, r *http.Request) {
 		active = s.billing.ActiveSessionCount()
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"active_sessions":      active,
+		"active_sessions":        active,
 		"contracts_expiring_30d": expiring,
 	})
 }
@@ -649,19 +649,19 @@ func (s *Server) handleBillingPackagePreview(w http.ResponseWriter, r *http.Requ
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"package":              pkg,
-		"period_ym":            period,
-		"timezone":             tzName,
-		"companies":            uniqueStrings(companyNames),
-		"groups":               groups,
-		"device_count":         len(deviceSet),
-		"included_limit":       limitSnapshot,
+		"package":               pkg,
+		"period_ym":             period,
+		"timezone":              tzName,
+		"companies":             uniqueStrings(companyNames),
+		"groups":                groups,
+		"device_count":          len(deviceSet),
+		"included_limit":        limitSnapshot,
 		"included_minutes_used": includedUsed,
-		"remaining_minutes":    remaining,
-		"overage_minutes":      overageMin,
-		"amount_overage":       amountOverage,
-		"currency":             pkg.Currency,
-		"available_periods":    periodList,
+		"remaining_minutes":     remaining,
+		"overage_minutes":       overageMin,
+		"amount_overage":        amountOverage,
+		"currency":              pkg.Currency,
+		"available_periods":     periodList,
 	})
 }
 
