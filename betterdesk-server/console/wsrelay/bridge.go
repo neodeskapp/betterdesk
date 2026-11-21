@@ -194,8 +194,9 @@ func (b *bridge) onMessage(data []byte) {
 
 // readTargets runs the target checks on a message of a guest or of an
 // account with a device scope. On /ws/rendezvous every frame must be a
-// rendezvous message whose request (punch_hole_request, else
-// request_relay) names a device the link or the scope holds, or none. On
+// rendezvous message the web client sends (see rendezvousMessage.WebClient)
+// whose request (punch_hole_request, else request_relay) names a device
+// the link or the scope holds, or none. On
 // /ws/relay the first bytes must decode to a rendezvous message: for a
 // guest a relay request for the link's device, for an account a relay
 // request for a device of its scope or no relay request. They are held
@@ -213,7 +214,7 @@ func (b *bridge) readTargets(data []byte) (send []byte, pass, opening bool) {
 		}
 		for _, payload := range frames {
 			msg, err := decodeRendezvous(payload)
-			if err != nil || !b.targetAllowed(msg) {
+			if err != nil || !msg.WebClient || !b.targetAllowed(msg) {
 				b.targetMismatch("")
 				return nil, false, false
 			}
