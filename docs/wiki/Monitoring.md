@@ -31,7 +31,7 @@ Point Prometheus at that URL; Grafana uses a normal Prometheus datasource.
 
 ## Audit log
 
-Auth and device actions land in your audit store. Review in the panel (**Audit**) or:
+Auth and device actions land in your audit store. Review in the panel (**Activity → Security and audit**) or:
 
 ```bash
 curl http://localhost:21114/api/audit \

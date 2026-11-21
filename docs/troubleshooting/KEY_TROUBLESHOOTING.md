@@ -371,8 +371,8 @@ cat ~/rustdesk_diagnostics.txt
 
 - [RustDesk Official Docs](https://rustdesk.com/docs/)
 - [SSH Key Generation Guide](https://www.ssh.com/academy/ssh/keygen)
-- [BetterDesk Installation Guide](INSTALLATION_V8.md)
-- [Project Documentation](PROJECT_STRUCTURE.md)
+- [BetterDesk Installation Guide](../wiki/Installation.md)
+- [Project Documentation](../architecture/PROJECT_STRUCTURE.md)
 
 ---
 

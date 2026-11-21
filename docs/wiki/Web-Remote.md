@@ -32,7 +32,7 @@ Browser remote from the web console — no separate desktop app required. Prefer
 ### Direct URL
 
 ```
-http://your-server:5000/remote?id=DEVICE_ID
+http://your-server:5000/remote/DEVICE_ID
 ```
 
 ---
@@ -144,8 +144,8 @@ If no frames arrive for 5 seconds, the client automatically requests a `refreshV
 
 ### Connection Flow
 
-1. Client opens WebSocket to Node.js console (`/ws/remote/{id}`)
-2. Console proxies through Go server relay
+1. The browser opens WebSockets to the web console (`/ws/rendezvous` and `/ws/relay`)
+2. The console bridges them to the signal and relay servers in `betterdesk-server`
 3. NaCl key exchange establishes encrypted channel
 4. Login message sent with password, codec preferences, FPS
 5. Peer responds with video/audio streams

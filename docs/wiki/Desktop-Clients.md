@@ -5,12 +5,12 @@ BetterDesk provides two Tauri v2 desktop applications and a headless Go agent fo
 > [!WARNING]
 > **The MGMT Client and Agent Client are in early alpha (v1.0.0-alpha) and are NOT production-ready.**
 > They are under active development, may contain bugs, incomplete features, and breaking changes between versions.
-> **Do not deploy these clients in production environments.** For production use, rely on the **Web Console** (Node.js) for administration and the **standard RustDesk client** for remote desktop connections. See the [[Alpha Software Notice]] page for full details.
+> **Do not deploy these clients in production environments.** For production use, rely on the **Web Console** for administration and the **standard RustDesk client** for remote desktop connections. See the [[Alpha Software Notice]] page for full details.
 
 | Component | Status | Production Use |
 |-----------|--------|----------------|
 | **Go Server** | ✅ Stable | ✅ Recommended |
-| **Web Console (Node.js)** | ✅ Stable | ✅ Recommended |
+| **Web Console** (built into the Go server) | ✅ Stable | ✅ Recommended |
 | **Support Agent (Go/Wails)** | ✅ Active | ✅ Recommended end-user agent |
 | **MGMT Client (Tauri)** | ⚠️ Alpha | ❌ Do not use in production |
 | **Agent Client (Tauri)** | ⚠️ Alpha | ❌ Do not use in production (Support Agent is preferred) |
@@ -40,13 +40,11 @@ BetterDesk provides two Tauri v2 desktop applications and a headless Go agent fo
 
 ### Build & deploy
 
-1. Console → **BetterDesk Agents** → **Import latest release** (or BetterDesk-Client GitHub releases)
+1. Console → **Settings → Support agents** → **Import latest release** (or BetterDesk-Client GitHub releases)
 2. Set branding, server host, optional unattended
 3. Wait for platform builds (toolchain status shown in the editor)
 4. Share the public hub link `/d/:slug`
 5. After panel updates that change agent source, bundles are requeued automatically
-
-See also [`betterdesk-support-agent/README.md`](../../betterdesk-support-agent/README.md).
 
 ---
 

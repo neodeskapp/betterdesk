@@ -35,11 +35,11 @@ SSL_KEY_PATH=/opt/rustdesk/ssl/privkey.pem
 HTTP_REDIRECT_HTTPS=true
 ```
 
-Restart the console service and access it at `https://your-server:5443`.
+Restart the service (`sudo systemctl restart betterdesk-server`) and open `https://your-server:5443`.
 
 ### Option 2: Let's Encrypt (Production)
 
-The recommended path on Linux is **`sudo betterdesk.sh`** → **Protocol Toggle (T)** or **SSL Configuration (C)** → **Let's Encrypt**. The installer runs certbot, **copies** certificate material into `$RUSTDESK_PATH/ssl/betterdesk.{crt,key}` (readable by the `betterdesk` console user — see #219), and configures auto-renew via a certbot deploy hook.
+The recommended path on Linux is **`sudo betterdesk.sh`** → **Protocol Toggle (T)** or **SSL Configuration (C)** → **Let's Encrypt**. The installer runs certbot, **copies** certificate material into `$RUSTDESK_PATH/ssl/betterdesk.{crt,key}` (readable by the `betterdesk` service user, see #219), and configures auto-renew via a certbot deploy hook.
 
 After setup, open the panel at **`https://your-domain:5443`** (default HTTPS port). Use the domain from the certificate SAN, not the raw server IP.
 
@@ -47,12 +47,12 @@ Manual certbot (only if you are not using the installer menus):
 
 ```bash
 sudo apt install certbot
-sudo systemctl stop betterdesk-console
+sudo systemctl stop betterdesk-server
 sudo certbot certonly --standalone -d console.yourdomain.com
-sudo systemctl start betterdesk-console
+sudo systemctl start betterdesk-server
 ```
 
-Then deploy the certificate for the console user (copy, do not symlink into `/etc/letsencrypt/`):
+Then deploy the certificate for the service user (copy, do not symlink into `/etc/letsencrypt/`):
 
 ```bash
 sudo betterdesk.sh   # Protocol Toggle → HTTPS → Keep existing certificate
@@ -83,17 +83,17 @@ To serve **`https://your-domain`** without a port number:
 2. When prompted, choose **Use standard HTTPS port 443**, or edit `/opt/BetterDeskConsole/.env`:
    ```env
    HTTPS_PORT=443
-   PORT=80
+   CONSOLE_PORT=80
    HTTP_REDIRECT_HTTPS=true
    ```
-3. Run **Settings → Updates** or `sudo betterdesk.sh` → **Repair → Repair permissions** — adds `CAP_NET_BIND_SERVICE` and `BETTERDESK_HAS_BIND_SERVICE=1` to `betterdesk-console.service` so the `betterdesk` user can bind ports 80/443.
+3. Run `sudo betterdesk.sh` → **Repair → Repair permissions**. It adds `CAP_NET_BIND_SERVICE` to `betterdesk-server.service` so the `betterdesk` user can bind ports 80/443.
 4. Ensure nothing else listens on **443** (stop nginx on that host, or use Option B below).
 5. Open firewall ports if needed:
    ```bash
    sudo ufw allow 443/tcp
    sudo ufw allow 80/tcp   # only when HTTP redirect on :80 is enabled
    ```
-6. Restart: `sudo systemctl restart betterdesk-console`
+6. Restart: `sudo systemctl restart betterdesk-server`
 7. Verify: `curl -sI https://your-domain/ | head -3`
 
 RustDesk signal/relay ports (**21116/21117**) are unchanged — only the web panel URL changes.
@@ -414,7 +414,7 @@ The server will log this warning and fall back to HTTP mode. Check:
 
 Let's Encrypt live directories are root-only. **BetterDesk copies** renewed material into `$RUSTDESK_PATH/ssl/betterdesk.{crt,key}` with `root:betterdesk` permissions when you use Protocol Toggle or SSL config in `betterdesk.sh`.
 
-If an older build left **symlinks** into `/etc/letsencrypt/` and HTTPS fails (panel on `:5000` only, journal shows *Falling back to HTTP*), run **Settings → Updates** or `sudo betterdesk.sh` → Update/Repair permissions — both re-copy LE material automatically (#219). Manual copy if needed:
+If an older build left **symlinks** into `/etc/letsencrypt/` and HTTPS fails (panel on `:5000` only, journal shows *Falling back to HTTP*), run `sudo betterdesk.sh` → Update or Repair permissions. Both re-copy LE material automatically (#219). Manual copy if needed:
 
 ```bash
 sudo betterdesk.sh   # Update or Repair → Repair permissions
@@ -424,7 +424,7 @@ sudo cp -L /etc/letsencrypt/live/YOUR_DOMAIN/fullchain.pem /opt/rustdesk/ssl/bet
 sudo cp -L /etc/letsencrypt/live/YOUR_DOMAIN/privkey.pem /opt/rustdesk/ssl/betterdesk.key
 sudo chown root:betterdesk /opt/rustdesk/ssl/betterdesk.{crt,key}
 sudo chmod 640 /opt/rustdesk/ssl/betterdesk.{crt,key}
-sudo systemctl restart betterdesk-console betterdesk-server
+sudo systemctl restart betterdesk-server
 ```
 
 **Let's Encrypt domain names:** open the panel at `https://your-domain:5443`. Using the server IP in the browser will show a certificate name mismatch even when HTTPS is configured correctly.
@@ -443,7 +443,7 @@ If you access the console via HTTPS but see mixed content warnings, ensure `HTTP
 
 ### Behind a Reverse Proxy
 
-When using a reverse proxy (Caddy/Nginx), keep `HTTPS_ENABLED=false` and let the proxy handle TLS. Set **`TRUST_PROXY=Y`** in `.env` (Node.js panel and Go server both accept `Y`; Node also accepts `1` / `yes`). Bind the panel to **`HOST=127.0.0.1`** so it is not exposed without proxy TLS.
+When using a reverse proxy (Caddy/Nginx), keep `HTTPS_ENABLED=false` and let the proxy handle TLS. Set **`TRUST_PROXY=Y`** in `.env` (the signal server accepts only `Y`; the web console also accepts `1`, `true` and `yes`). Bind the panel to **`HOST=127.0.0.1`** so it is not exposed without proxy TLS.
 
 The proxy must send **`X-Forwarded-Proto: https`** so secure cookies and redirects work. Caddy does this by default; for Nginx use `proxy_set_header X-Forwarded-Proto $scheme`.
 
@@ -592,31 +592,23 @@ The BetterDesk ALL-IN-ONE installers (`betterdesk.sh`, `betterdesk.ps1`, `better
 | **2. Custom Certificate** | Use your own certificate from a CA or existing infrastructure |
 | **3. Self-Signed Certificate** | Generate a self-signed cert (development/testing/LAN only) |
 | **4. Disable SSL** | Remove TLS configuration, run in HTTP-only mode |
-| **5. Enterprise TLS** | Full HTTPS on ALL ports including Go server API (21114) |
+| **5. Enterprise TLS** | TLS on the panel, signal and relay ports; the API (21114) stays HTTP |
+| **6. External reverse proxy** | TLS at Caddy/Nginx, panel on plain HTTP on localhost (`betterdesk.sh` only) |
 
 ### During Fresh Install
 
-After a successful fresh installation, the installer prompts:
-
-```
-🔒 Enterprise TLS enables full HTTPS on ALL ports (panel, signal, relay, API)
-   Recommended for production. Requires RustDesk client >= 1.3.x
-
-Would you like to configure HTTPS Enterprise now? (Option 5 in SSL menu) [y/N]
-```
-
-Selecting "y" opens the SSL configuration menu where you can choose **Option 5** for full Enterprise TLS.
+After a successful fresh installation, `betterdesk.sh` asks whether TLS will terminate at an external reverse proxy (Caddy/Nginx). If yes, it runs the reverse proxy setup. If no, it offers to open the SSL configuration menu, where **Option 5** sets up Enterprise TLS. `betterdesk.ps1` offers only the SSL configuration menu.
 
 ---
 
-## Enterprise TLS (Full HTTPS on All Ports)
+## Enterprise TLS (panel, signal and relay)
 
-Enterprise TLS enables HTTPS/TLS on **all BetterDesk ports**, not just the web console:
+Enterprise TLS enables TLS on the web console, signal and relay ports. The API port stays on HTTP, because RustDesk clients call it without TLS:
 
 | Port | Component | Without Enterprise TLS | With Enterprise TLS |
 |------|-----------|------------------------|---------------------|
 | 5000/5443 | Web Console | HTTP/HTTPS | HTTPS |
-| 21114 | Go Server API | HTTP | **HTTPS** |
+| 21114 | Go Server API | HTTP | HTTP |
 | 21116 | Signal Server (TCP) | Plain TCP | **TLS** |
 | 21117 | Relay Server (TCP) | Plain TCP | **TLS** |
 | 21118 | Signal WebSocket | WS | **WSS** |
@@ -652,26 +644,26 @@ The Go server supports the following TLS-related flags:
 
 ### Systemd Service Configuration (Linux)
 
-When Enterprise TLS is enabled via the installer, the systemd service is configured with:
+When Enterprise TLS is enabled via the installer, the `betterdesk-server` service is configured with:
 
 ```ini
 [Service]
 ExecStart=/opt/rustdesk/betterdesk-server \
-    -key-dir /opt/rustdesk \
-    -db-path /opt/rustdesk/db_v2.sqlite3 \
-    -relay-servers YOUR_PUBLIC_IP:21117 \
+    -mode all \
+    -relay-servers YOUR_PUBLIC_IP \
+    -key-file /opt/rustdesk/id_ed25519 \
+    -api-port 21114 \
     -tls-cert /opt/rustdesk/ssl/betterdesk.crt \
     -tls-key /opt/rustdesk/ssl/betterdesk.key \
     -tls-signal \
     -tls-relay
-
-Environment="TLS_SIGNAL=Y"
-Environment="TLS_RELAY=Y"
 ```
 
-### Node.js Console Configuration
+`TLS_SIGNAL=Y` and `TLS_RELAY=Y` in the environment do the same as `-tls-signal` and `-tls-relay`.
 
-The `.env` file is updated with:
+### Web console configuration
+
+The `.env` file in the console folder (`/opt/BetterDeskConsole/.env`) is updated with:
 
 ```env
 HTTPS_ENABLED=true
@@ -685,7 +677,7 @@ ENTERPRISE_TLS=true
 
 ### Important Notes
 
-1. **Self-signed certificates and API**: When using self-signed certificates, the Go server API (21114) is kept on HTTP to avoid breaking internal communication between Node.js console and Go server. Signal/relay ports still use TLS.
+1. **API port**: The installer keeps the Go server API (21114) on HTTP, because RustDesk clients call it without TLS. Signal/relay ports still use TLS. Put the API behind a reverse proxy with TLS when it is reachable from the internet ([REVERSE_PROXY.md](REVERSE_PROXY.md)).
 
 2. **Browser certificate warnings**: Self-signed certificates will cause browser warnings. Users must manually accept the certificate or add it to their trusted store.
 
@@ -705,9 +697,3 @@ ENTERPRISE_TLS=true
 
 - The client is trying TLS but the server isn't configured for it (or vice versa)
 - Check `-tls-signal` flag is present in Go server ExecStart
-
-#### Web console shows "0 devices" after enabling Enterprise TLS
-
-- Internal Node.js → Go API communication may be broken if API is now HTTPS with self-signed
-- For self-signed certs, check `ALLOW_SELF_SIGNED_CERTS=true` in `.env`
-- Or keep API on HTTP (don't use `-tls-api`) — only signal/relay need TLS for security

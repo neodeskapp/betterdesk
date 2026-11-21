@@ -16,16 +16,15 @@ Applies to: host + short-code pairing, desktop clients, Web Remote, and the cons
 | **21117** | TCP | `betterdesk-server` | **WAN** | Relay data when a direct path fails | Connections fail behind NAT/symmetric firewalls. |
 | **21114** | TCP | `betterdesk-server` | **WAN via TLS**, prefer `443` | Go Client API: `/api/branding`, `/api/pairing/*`, `/api/devices/register`, login, address book | Pairing, branding, enrollment and login fail while remote sessions may still work — the most confusing failure mode. |
 | **443** | TCP | Caddy/Nginx (or BetterDesk native TLS) | **WAN** | TLS termination for the panel and Client API | Recommended entry point for everything HTTP. |
-| **21121** | TCP | Node proxy to Go | **WAN only for legacy fleets** | Compatibility path for clients configured with `:21121` | New deployments do not need it. |
+| **21121** | TCP | `betterdesk-server` | Docker: **WAN**. Native: **WAN only for legacy fleets** | Client API port. The Docker image runs the Go Client API here; native installs pass it on to the API (`21114`) for clients configured with `:21121` | Docker: same as `21114`. Native: new deployments do not need it. |
 | **21118** | TCP | `betterdesk-server` | via proxy `/ws/id` | WSS signal (WebSocket Mode) | WebSocket Mode clients cannot connect; native TCP/UDP still works. |
 | **21119** | TCP | `betterdesk-server` | via proxy `/ws/relay` | WSS relay | WebSocket Mode relay fails; direct connections still work. |
-| **5000** | TCP | `betterdesk-console` | **localhost only** | Panel UI (HTTP) | Nothing, as long as a reverse proxy reaches it on `127.0.0.1`. **Never expose to WAN.** |
-| **5443** | TCP | `betterdesk-console` | localhost / LAN | Panel UI (native HTTPS) | Only used without an external proxy. |
+| **5000** | TCP | `betterdesk-server` | **localhost only** | Panel UI (HTTP) | Nothing, as long as a reverse proxy reaches it on `127.0.0.1`. **Never expose to WAN.** |
+| **5443** | TCP | `betterdesk-server` | localhost / LAN | Panel UI (native HTTPS) | Only used without an external proxy. |
 | **21115** | TCP | `betterdesk-server` | optional WAN | NAT type test | Clients fall back to a slower connection strategy. |
 | **21122** | TCP | `betterdesk-server` | optional | CDAP gateway (WebSocket) | CDAP agents and tooling cannot connect. |
 
-> **Port 21120 does not exist.** Any document mentioning it is stale; see
-> `docs/architecture/PORT_SECURITY.md`, which is kept only as a historical record.
+> **Port 21120 does not exist.** Any document mentioning it is stale.
 
 ---
 
@@ -102,10 +101,10 @@ Ports are published by Compose, not the host firewall.
 
 | Host port | Container | Notes |
 |-----------|-----------|-------|
-| `21116/tcp+udp`, `21117/tcp` | `betterdesk-server` | Required. |
-| `21121` | Go (single-image) **or** Node proxy (split) | In AIO, `:21121` is Go itself. In split, it proxies to Go `:21114`. |
+| `21116/tcp+udp`, `21117/tcp` | `betterdesk` | Required. |
+| `21121` | `betterdesk` | The Go Client API itself; the image does not listen on `21114`. |
 | `443` | proxy container | Terminates TLS. |
-| `5000` | panel | Bind to `127.0.0.1:` in the Compose port mapping so it never reaches WAN. |
+| `5000` | `betterdesk` (web console) | Bind to `127.0.0.1:` in the Compose port mapping so it never reaches WAN. |
 
 ---
 
@@ -200,7 +199,7 @@ Windows equivalent of steps 1-2: `powershell -File scripts/check-connection-port
 ## 8. Keeping this document true
 
 `scripts/check-port-docs.js` parses the port constants from
-`betterdesk-server/config/constants.go` and `web-nodejs/config/config.js`, compares them with
+`betterdesk-server/config/constants.go` and `betterdesk-server/console/config/config.go`, compares them with
 the table above, and also fails when a document reintroduces `21120` as a live port. It runs
 in CI, so a port change cannot ship with a stale cheat sheet.
 

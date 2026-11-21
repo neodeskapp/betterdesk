@@ -11,15 +11,15 @@ BetterDesk is configured through **CLI flags**, **environment variables**, and *
 ```bash
 betterdesk-server [flags]
 
+  -mode string     Server mode: all (signal, relay, API and web console in one process)
   -port int        Signal server port (default 21116)
   -relay-port int  Relay server port (default 21117)
-  -key string      Ed25519 key file path (default "id_ed25519")
+  -api-port int    HTTP API port (default 21114)
+  -key-file string Ed25519 key file path, without extension (default "id_ed25519")
   -db string       Database path or DSN (default "db_v2.sqlite3")
 
   -relay-servers string     Comma-separated relay servers (e.g., "1.2.3.4:21117")
-  -always-use-relay         Force all connections through relay
-  -register-require-token   Require token for client registration
-  -register-token string    Registration token value
+  -always-relay             Force all connections through relay
 
   -tls-cert string   TLS certificate file path
   -tls-key string    TLS private key file path
@@ -46,8 +46,6 @@ Prometheus text is served at `GET /metrics` on the admin API port (gated by auth
 | `DB_URL` | `db_v2.sqlite3` | Database path or PostgreSQL DSN |
 | `RELAY_SERVERS` | auto-detected | Comma-separated relay addresses |
 | `ALWAYS_USE_RELAY` | `N` | Force relay for all connections |
-| `REGISTER_REQUIRE_TOKEN` | `N` | Require registration token |
-| `REGISTER_TOKEN` | (empty) | Registration token value |
 | `TLS_SIGNAL` | `N` | Enable TLS on signal |
 | `TLS_RELAY` | `N` | Enable TLS on relay |
 | `TLS_API` | `N` | Enable TLS on API |
@@ -67,16 +65,16 @@ Prometheus text is served at `GET /metrics` on the admin API port (gated by auth
 
 ---
 
-## Node.js Console Configuration
+## Web Console Configuration
 
-The Node.js console is configured through `/opt/BetterDeskConsole/.env`:
+The web console runs inside `betterdesk-server`. On a native install it is configured through `/opt/BetterDeskConsole/.env` (`C:\BetterDeskConsole\.env` on Windows); the service points the server at that file with `BETTERDESK_ENV_FILE`. Docker passes the same settings as container environment variables.
 
 ### Managed configuration and capability checks
 
-The installers and the web panel use the same allowlist from
-`web-nodejs/.env.example`. Before changing runtime settings, check whether
-the console can write configuration, deploy updates and restart both
-BetterDesk services:
+The installers and the web panel use the same allowlist, built into
+`betterdesk-server`. Before changing runtime settings, check whether
+the console can write configuration, deploy updates and restart the
+BetterDesk service:
 
 ```bash
 sudo ./betterdesk.sh --check-permissions
@@ -96,30 +94,26 @@ BETTERDESK_API_URL=http://localhost:21114/api
 API_KEY=<your-api-key>
 
 # Web Console
-PORT=5000
-HOST=127.0.0.1           # Panel bind address (LAN-only by default)
+CONSOLE_PORT=5000        # 0 turns the web console off
+HOST=127.0.0.1           # Panel bind address (localhost-only by default)
 SESSION_SECRET=<random>
 
 # RustDesk Client API
-CLIENT_API_PORT=21121
+API_PORT=21121
 API_HOST=0.0.0.0          # Client API bind address (WAN-facing)
 
 # Database
-DB_TYPE=sqlite             # sqlite or postgresql
-DATABASE_URL=              # PostgreSQL DSN (required when DB_TYPE=postgresql)
+DB_TYPE=sqlite             # sqlite or postgres
+DATABASE_URL=              # PostgreSQL DSN (required when DB_TYPE=postgres)
+DB_URL=/opt/betterdesk/db_v2.sqlite3  # The server's database: SQLite path or the PostgreSQL DSN
 
 # Security
-TRUST_PROXY=false          # Set Y behind reverse proxy (Go also needs TRUSTED_PROXIES)
+TRUST_PROXY=false          # Set Y behind reverse proxy (the API also needs TRUSTED_PROXIES)
 # TRUSTED_PROXIES=127.0.0.1/32,::1/128
 STORE_ADMIN_CREDENTIALS=false  # Persist admin credentials to file
 
-# Chat
-CHAT_ENABLED=true
-CHAT_PORT=21130
-CHAT_MAX_FILE_SIZE=52428800  # 50 MB
-
 # Optional
-NODE_ENV=production
+NODE_ENV=production        # production hides error details in answers
 LOG_LEVEL=info
 ```
 
@@ -134,9 +128,9 @@ LOG_LEVEL=info
 
 Set to **`Y`** or **`1`** when running behind a reverse proxy (nginx, Caddy, Cloudflare). This enables:
 - Reading `X-Forwarded-For` for real client IPs in rate limiting
-- Proper `req.protocol` detection for secure cookies
+- Proper HTTPS detection for secure cookies
 
-The Go server requires **`TRUST_PROXY=Y`** (or `-trust-proxy`); the Node.js panel also accepts `1` / `yes`.
+The server's API needs **`TRUST_PROXY=Y`** (or `-trust-proxy`); the web console also accepts `1`, `yes`, `true`, a number of proxy hops, or a comma-separated list of proxy addresses.
 
 #### `TRUSTED_PROXIES`
 
@@ -152,9 +146,9 @@ TRUSTED_PROXIES=127.0.0.1/32,::1/128
 
 #### Panel read rate limiting
 
-The general Node.js API limit remains controlled by `RATE_LIMIT_MAX` (default
+The general web console API limit is controlled by `RATE_LIMIT_MAX` (default
 `100` requests per minute). Lightweight authenticated Settings reads use a
-separate quota so loading the UX 3.5 console does not consume the mutation
+separate quota so loading the console does not consume the mutation
 budget:
 
 ```env
@@ -170,9 +164,11 @@ limits.
 
 #### `GO_API_PORT` vs `API_PORT`
 
-When both Go server and Node.js console share `.env`:
-- **`GO_API_PORT=21114`** — Go admin REST API (panel proxy)
-- **`API_PORT` / `CLIENT_API_PORT=21121`** — RustDesk Client API (Go handlers; optional Node compat proxy on the same port)
+In the console's `.env` on a native install:
+- **`GO_API_PORT=21114`** — the server's own HTTP API (admin REST and the RustDesk client handlers)
+- **`API_PORT=21121`** — RustDesk Client API port. The web console listens on it inside `betterdesk-server` and passes the client API on to the server's API (`RUSTDESK_API_PROXY=true`). The installers take this port from `CLIENT_API_PORT`.
+
+In Docker the server's API itself listens on `21121` and the console's own client API listener is off (`API_ENABLED=false`).
 
 The installer sets `GO_API_PORT=21114` on `betterdesk-server.service` to avoid HTTP/HTTPS toggle conflicts (#219).
 
@@ -194,7 +190,7 @@ Switch in **Settings → Updates → Update channel**. See [[Panel Updates|Panel
 | 21117 | TCP | Relay | Bidirectional stream relay |
 | 21118 | WS | WS Signal | WebSocket signal (21116 + 2) |
 | 21119 | WS | WS Relay | WebSocket relay (21117 + 2) |
-| 21121 | TCP (HTTP) | Client API | RustDesk Client API (Go; optional Node proxy) |
+| 21121 | TCP (HTTP) | Client API | RustDesk Client API |
 | 21122 | WS | CDAP | CDAP WebSocket gateway |
 | 5000 | TCP (HTTP) | Web Console | Admin/operator panel |
 
@@ -236,44 +232,40 @@ New-NetFirewallRule -DisplayName "BetterDesk UDP" -Direction Inbound `
 
 ## Systemd Service Configuration
 
-### Go Server (`/etc/systemd/system/betterdesk-server.service`)
+### `/etc/systemd/system/betterdesk-server.service`
+
+The one service runs signal, relay, API and the web console. The installer writes it along these lines:
 
 ```ini
 [Unit]
-Description=BetterDesk Server
-After=network.target postgresql.service
+Description=BetterDesk server and web console
+After=network-online.target postgresql.service
+Wants=network-online.target
 
 [Service]
 Type=simple
-User=root
+User=betterdesk
+Group=betterdesk
 WorkingDirectory=/opt/betterdesk
-ExecStart=/opt/betterdesk/betterdesk-server -port 21116 -relay-port 21117 -key id_ed25519
+Environment=BETTERDESK_ENV_FILE=/opt/BetterDeskConsole/.env
+Environment=BETTERDESK_SUPERVISOR=systemd
+Environment=SIGNAL_PORT=21116
+Environment=RELAY_PORT=21117
+Environment=GO_API_PORT=21114
+Environment=MESH_ENABLED=Y
+ExecStart=/opt/betterdesk/betterdesk-server -mode all -relay-servers YOUR.PUBLIC.IP -key-file /opt/betterdesk/id_ed25519 -api-port 21114
 Restart=always
-RestartSec=5
+RestartSec=2
+SuccessExitStatus=3
+LimitNOFILE=1000000
+NoNewPrivileges=yes
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-### Node.js Console (`/etc/systemd/system/betterdesk-console.service`)
-
-```ini
-[Unit]
-Description=BetterDesk Console
-After=network.target betterdesk-server.service
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/BetterDeskConsole
-ExecStart=/usr/bin/node server.js
-EnvironmentFile=/opt/BetterDeskConsole/.env
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
+The server reads the console's `.env` itself and fills only what the unit leaves unset. Exit status 3 is the server asking to be started again (a restart, an update or a restore from the panel).
 
 ---
 

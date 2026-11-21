@@ -8,18 +8,17 @@ BetterDesk can update itself through **Settings → Updates** in the web panel, 
 
 1. Log in as **super_admin** or **server_admin**
 2. Open **Settings → Updates**
-3. Review available version and changelog preview
-4. Run **Preflight** (checks disk space, build tools, server binary)
-5. Click **Install** — panel downloads GitHub changes, merges `.env` keys, rebuilds Go server if needed, rebuilds the new web console (`web-ui/`, needs Node.js 22.17 or newer) when its sources changed, restarts services
+3. Click **Check for updates** and review the available version and changelog preview; the panel runs its preflight checks and shows anything that blocks the install
+4. Click **Install** — the panel downloads the `betterdesk-server` release binary for this platform from GitHub, checks its SHA-256 (and the manifest signature when the release is signed), backs up the running binary, swaps in the new one and restarts the server. The web console is part of that binary; no toolchain, Node.js or source is needed on the host.
 
-If the web console build fails, the update still completes and the console keeps its previous build; the log is in `data/web-ui-build.log` in the console folder, and the next update tries the build again.
+If the new binary does not start properly, the server puts the previous binary back on its fourth failed start and the panel shows the failed update.
 
 ### What is preserved
 
-- Database files (`auth.db`, `db_v2.sqlite3`, PostgreSQL data)
+- Database files (`db_v2.sqlite3`, legacy `auth.db`, PostgreSQL data)
 - User passwords and TOTP secrets
 - SSL certificates and API keys
-- Operator secrets in `.env` (only **missing keys** appended from `.env.example`)
+- Operator settings and secrets in `.env` (a script update appends only **missing keys**)
 
 ### Update channels
 
@@ -48,7 +47,7 @@ Script updates also clear stale panel warning banners from failed in-panel attem
 
 ## Docker (GHCR images)
 
-When running pre-built images from GHCR (all-in-one `docker-compose.quick.single.yml`, or legacy split `docker-compose.quick.yml`):
+When running pre-built images from GHCR (`docker-compose.quick.single.yml`):
 
 - In-panel **Install** is disabled — use image pull instead
 - Panel shows pull instructions:
@@ -57,7 +56,7 @@ When running pre-built images from GHCR (all-in-one `docker-compose.quick.single
 docker compose pull && docker compose up -d
 ```
 
-Each console image embeds its build commit; startup syncs `data/.update_sha`.
+Each image embeds its build commit; startup syncs `data/.update_sha`.
 
 ---
 
@@ -66,9 +65,9 @@ Each console image embeds its build commit; startup syncs `data/.update_sha`.
 | Symptom | Fix |
 |---------|-----|
 | Red banner after successful script update | Update to latest build — banner cleared on script/Docker success (#192) |
-| Go server build failed | Check preflight; use **Rebuild server binary** in Updates |
-| Permission errors on `/opt/` | Run panel update as root or fix ownership |
-| Stale server binary | Updates force full server source sync before compile |
+| Server update failed | Check the preflight notes; use **Rebuild server binary** in Updates to install the running version's release again |
+| Permission errors on `/opt/` | Fix ownership: `sudo ./betterdesk.sh --repair-permissions` |
+| Stale server binary | Use **Rebuild server binary**, or update with the installer script |
 
 ---
 

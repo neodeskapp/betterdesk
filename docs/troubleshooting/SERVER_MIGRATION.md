@@ -174,4 +174,4 @@ After refreshing config on one client, you should see `RegisterPeer` / `New peer
 - [RUSTDESK_CLIENT_DEPLOYMENT.md](../setup/RUSTDESK_CLIENT_DEPLOYMENT.md) — mass client config
 - Go signal handler: `betterdesk-server/signal/handler.go` (UDP `RegisterPeer`)
 - HTTP heartbeat (DB only): `betterdesk-server/api/client_api_handlers.go`
-- Panel mapping: `web-nodejs/services/betterdeskApi.js` (`online: !!peer.live_online`)
+- Panel mapping: `betterdesk-server/console/goapi/normalise.go` (`live_online` becomes `online`)

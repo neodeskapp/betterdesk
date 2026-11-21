@@ -7,8 +7,8 @@ integrate with the BetterDesk management platform.
 
 | SDK | Language | Package | Directory |
 |-----|----------|---------|-----------|
-| Python | Python 3.8+ | `betterdesk-cdap` | `sdks/python/` |
-| Node.js | Node.js 18+ | `betterdesk-cdap` | `sdks/nodejs/` |
+| Python | Python 3.9+ | `betterdesk-cdap` | `sdks/python/` |
+| Node.js | Node.js 22+ | `betterdesk-cdap` | `sdks/nodejs/` |
 
 ## Architecture
 

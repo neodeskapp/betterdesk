@@ -36,7 +36,7 @@ Session recording: open web remote with `?record=1` for server-side `.mcrec` cap
 
 ## Web remote integration
 
-Mesh KVM sessions use the same [[Web Remote Desktop|Web-Remote]] UI with `transport=mesh`. HTTPS panel proxy must forward `.ashx` paths to the Go API (automatic with Node.js console).
+Mesh KVM sessions use the same [[Web Remote Desktop|Web-Remote]] UI with `transport=mesh`. The web console answers the `.ashx` paths on its own port and hands them to the Go API in the same process.
 
 ---
 
@@ -52,7 +52,7 @@ sudo systemctl edit betterdesk-server
 sudo systemctl restart betterdesk-server
 ```
 
-Panel HTTPS (`:5443` or reverse proxy) should proxy MeshCentral-style paths to the **panel** (`:5000`), which forwards `.ashx` WebSockets to Go API port **21114**.
+Panel HTTPS (`:5443` or reverse proxy) should proxy MeshCentral-style paths to the **panel** (`:5000`), which passes the `.ashx` WebSockets to the Go API inside `betterdesk-server`.
 
 Behind an external TLS-terminating proxy, set `MESH_WEB_CERT_FILE` to the public certificate MeshAgent sees (e.g. Let's Encrypt fullchain), or leave both `MESH_WEB_CERT_FILE` and `TLS_CERT` unset to skip web-hash validation. See [MeshAgent onboarding](https://github.com/UNITRONIX/BetterDesk/blob/main/docs/features/MESHAGENT_ONBOARDING.md).
 

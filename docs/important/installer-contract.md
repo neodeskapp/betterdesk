@@ -10,13 +10,10 @@ result.
 | Path | Runtime | Scope |
 |---|---|---|
 | `install.sh` | Linux | Docker quick install, native bootstrap, Docker rescue/uninstall |
-| `betterdesk.sh` | Linux | Native server and console lifecycle manager |
-| `betterdesk.ps1` | Windows | Native server and console lifecycle manager |
+| `betterdesk.sh` | Linux | Native lifecycle manager for `betterdesk-server` (server and web console) |
+| `betterdesk.ps1` | Windows | Native lifecycle manager for `betterdesk-server` (server and web console) |
 | `betterdesk-docker.sh` | Linux + Docker | Compose lifecycle, rescue, migration and diagnostics |
-| `betterdesk-agent/install/install.sh` | Linux | Native agent install/uninstall |
-| `betterdesk-agent/install/install.ps1` | Windows | Native agent install/uninstall |
-| `betterdesk-support-agent/install.go` | Linux, Windows, macOS | Support-agent self-install/uninstall |
-| `scripts/installer-protocol-check.js` | Linux, Windows, Docker | Shared HTTP/HTTPS, redirect, SAN and TCP verification |
+| `betterdesk-server check` | Linux, Windows, Docker | Shared HTTP/HTTPS, redirect, SAN and TCP verification from the server binary (`scripts/installer-protocol-check.js` takes the same options and needs Node.js) |
 
 `install.sh` embeds `BETTERDESK_INSTALLER_CHANNEL` so a one-line install from
 `.../dev/install.sh` clones `dev` and `.../main/install.sh` clones `main`.
@@ -45,9 +42,10 @@ with a clear message and non-zero exit code:
 3. **Update** — download a complete, validated source/image, preserve runtime
    state, apply migrations, deploy writable binaries atomically, restart
    affected services and write the commit/version marker only after
-   verification. Root-owned Linux systemd units and Go binaries require the
-   documented root maintenance/deploy step; the panel must not sudo mutable
-   repository scripts.
+   verification. When the service account can't write the folder of the
+   server binary, the panel reports its update as unavailable and the
+   installer's update does it as root; the panel never runs repository
+   scripts through `sudo`.
 4. **Repair** — restore missing binaries, dependencies, permissions, service
    definitions and TLS material without requiring legacy RustDesk artifacts for
    the Go deployment. `--repair-permissions` is idempotent and does not delete
@@ -76,7 +74,7 @@ An operation is successful only when all of the following are true:
 - failures leave the previous binary/configuration usable or provide a
   verified rollback path.
 
-An update must not advance `.update_sha`, `.agent_source_sha` or clear a
+An update must not advance `.update_sha` or clear a
 previous failure marker while a critical source, binary, migration or service
 step is incomplete.
 
@@ -85,8 +83,9 @@ step is incomplete.
 - Native Linux and Windows: panel health on the configured HTTP/HTTPS port,
   Go API on `21114`, client API on `21121`, and signal/relay listeners as
   configured.
-- Docker single layout: Go/client API on `21121` and console on `5000`.
-- Docker split layout: Go API on `21114` and console on `5000`.
+- Docker (one `betterdesk` container): Go/client API on `21121` and console
+  on `5000`. `betterdesk-docker.sh` moves an older split install (separate
+  server and console containers) to this layout on update.
 
 The protocol verification must distinguish a successful TCP listener from a
 successful HTTP response and, for HTTPS, a valid certificate/SAN and TLS
@@ -100,12 +99,13 @@ handshake.
 - Never require `hbbs`, `hbbr` or `hbbs-patch-v2` to repair a Go
   `betterdesk-server` installation.
 - Never grant sudoers permission to execute a mutable repository script as
-  root. Linux panel restarts use only the fixed root-owned
-  `betterdesk-privileged-update.js` broker with an allowlisted action set.
+  root. A restart from the panel ends the `betterdesk-server` process and
+  the service manager the installer named (`BETTERDESK_SUPERVISOR`) starts
+  it again.
 - Never report success after a partial update merely because the process
   restarted.
 - Runtime configuration changes use an allowlist generated from
-  `web-nodejs/.env.example`, validate ports/booleans/enums, create a backup,
+  `betterdesk-server/console/managedconfig/env.example`, validate ports/booleans/enums, create a backup,
   write atomically and require a dependent-service restart plus health check.
   Unknown environment keys, arbitrary service names and shell fragments are
   rejected.
@@ -138,6 +138,5 @@ sudo ./betterdesk-docker.sh --set-config LOG_LEVEL=info
 
 The web console exposes the same read-only report at
 `GET /api/settings/management/capabilities` and allowlisted configuration
-operations at `GET/PUT /api/settings/management/config`. Linux root operations
-use only the fixed root-owned BetterDesk broker; the panel never executes a
-mutable repository script through `sudo`.
+operations at `GET/PUT /api/settings/management/config`. The panel never
+executes a repository script through `sudo`.

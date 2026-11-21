@@ -140,6 +140,6 @@ For stricter account-bound initiation, enable `LOGGED_IN_ONLY_INITIATOR=Y` on th
 
 ## Related docs
 
-- [README — RustDesk Client Configuration](../../README.md#-rustdesk-client-configuration)
+- [Client setup (wiki)](../wiki/Client-Setup.md)
 - [RustDesk client deployment (upstream)](https://rustdesk.com/docs/en/self-host/client-deployment/)
 - [RustDesk MSI parameters](https://rustdesk.com/docs/en/client/windows/msi/)

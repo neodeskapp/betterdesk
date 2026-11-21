@@ -11,7 +11,7 @@ Some desktop apps in this repo are still alpha. The Go server, web console, stoc
 | Component | Status | Production |
 |-----------|--------|------------|
 | Go server | Stable (3.5.x) | Yes |
-| Web console (Node.js 22+) | Stable (3.5.x) | Yes |
+| Web console (built into the Go server) | Stable (3.5.x) | Yes |
 | Stock RustDesk client | Stable | Yes |
 | Support Agent (incoming-only) | Production path | Yes — import from [[BetterDesk Agents\|Client-Generator]] / BetterDesk-Client |
 | Native CDAP agent (Go) | Stable | Yes for headless / IoT |

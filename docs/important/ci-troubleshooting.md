@@ -8,7 +8,8 @@ Quick map of CI workflows, common failures, and local commands that mirror branc
 |---|---|---|
 | **Version Verify** | Tier 1/2 files match `VERSION` | `node scripts/bump-version.js --verify` |
 | **Secret Scan** | Gitleaks + operator fingerprint ban | `gitleaks detect --source . --config .gitleaks.toml` and `bash scripts/check-no-sensitive-paths.sh` |
-| **Web Console CI** | `npm ci`, moderate+ audit, Jest | `cd web-nodejs && npm ci && npm audit --omit=dev --audit-level=moderate && npm run test:ci` |
+| **Go Server CI** | `go vet`, race tests, `govulncheck`, the release build with the web app embedded (server and web console) | `cd betterdesk-server && go vet ./... && go test -race -count=1 ./...` |
+| **Web UI CI** | `npm ci`, high+ audit, lint, type check, Vitest, build (the web app) | `cd web-ui && npx -y npm@11.6.2 ci && npm run lint && npm run check && npm test && npm run build` |
 
 ## Why many jobs run after one push
 
@@ -38,19 +39,20 @@ Operator fingerprints must not appear in tracked sources:
 - Developer home paths under `/home/...` (build machines must not leak into commits)
 - SSH `user@internal-ip` patterns from private runbooks
 
-Sidecar binaries under `betterdesk-agent-client/src-tauri/binaries/` are **not** committed; they are built locally/CI with `go build -trimpath` via `build.rs`.
-
-### Web Console CI — Jest failures
+### Web UI CI: test or type-check failures
 
 ```bash
-cd web-nodejs
-npm ci
-npm run test:ci
+cd web-ui
+npx -y npm@11.6.2 ci
+npm run check
+npm test
 ```
 
-### Web Console CI — `npm audit`
+npm 10 (bundled with Node 22) can't resolve the web app's dependency tree, so install with npm 11 as above.
 
-Moderate+ production vulnerabilities fail CI. Fix with dependency bumps or documented `overrides` in `web-nodejs/package.json`.
+### Web UI CI: `npm audit`
+
+High+ vulnerabilities fail CI. Fix with dependency bumps or documented `overrides` in `web-ui/package.json`.
 
 ### CodeQL red on Dependabot PRs
 
@@ -70,7 +72,8 @@ See [PRE_RELEASE_CHECKLIST.md](../PRE_RELEASE_CHECKLIST.md). Minimum before open
 
 ```bash
 node scripts/bump-version.js --verify
-cd web-nodejs && npm ci && npm audit --omit=dev --audit-level=moderate && npm run test:ci
+(cd betterdesk-server && go vet ./... && go test -race -count=1 ./...)
+(cd web-ui && npx -y npm@11.6.2 ci && npm run check && npm test)
 gitleaks detect --source . --config .gitleaks.toml
 bash scripts/check-no-sensitive-paths.sh
 ```

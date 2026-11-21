@@ -153,5 +153,5 @@ when the previous peer row is gone. Soft-deleted peers and failed public-key
 registration attempts must not clear this state or rotate the device identity.
 For installations upgraded from 3.5.201, an orphaned
 `telemetry_seq_<DEVICE_ID>` row may remain after a permanent delete. Back up
-the database, remove only that exact row, restart the Go API, and update the
+the database, remove only that exact row, restart `betterdesk-server`, and update the
 server before enrolling the replacement device.

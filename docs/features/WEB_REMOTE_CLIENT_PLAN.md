@@ -6,6 +6,11 @@
 > [`support-agent-provenance.md`](../important/support-agent-provenance.md)
 > and a BetterDesk-owned, versioned wire specification.
 
+> The Node.js console, EJS views and `web-nodejs/` paths below are part of
+> that history. The web remote client that ships is in the Svelte app
+> (`web-ui/src/lib/remote`, `web-ui/src/routes/(remote)`), and its socket
+> bridge to the signal and relay servers is `betterdesk-server/console/wsrelay`.
+
 > Browser-based remote desktop client integrated into the BetterDesk web panel.  
 > Users click a device in the device list → connect and control it via the browser.
 

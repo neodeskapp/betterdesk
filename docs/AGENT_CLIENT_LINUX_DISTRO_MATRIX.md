@@ -30,7 +30,7 @@ Preflight in the agent Status panel (admin → Advanced) reports missing tools b
 | `.tar.gz` portable | Manual deploy without package manager |
 | `.msi` / NSIS | Windows installed / portable |
 
-Build pipeline: `web-nodejs/services/agentClientBuildWorker.js` on the Linux console host.
+Build pipeline: the generator's build worker in `betterdesk-server/console/generator` (`worker.go`), inside the server process on the Linux host.
 
 ## Acceptance checklist (per distro)
 

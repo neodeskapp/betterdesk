@@ -18,13 +18,12 @@ Common issues and their solutions.
 | Client pointing to wrong server | Verify ID Server address in client settings |
 | Public key mismatch | Check `id_ed25519.pub` matches client config |
 | Firewall blocking ports | Open 21116 TCP+UDP, 21117 TCP |
-| Wrong API key | Check `.api_key` file matches `.env` `API_KEY` |
 
 ### Devices Go Offline Intermittently
 
 **Possible causes:**
-- **Strict NAT** — Enable `--always-use-relay`
-- **Firewall timeout** — Reduce `PEER_TIMEOUT_SECS` or check firewall keepalive settings
+- **Strict NAT** — Enable `-always-relay` (`ALWAYS_USE_RELAY=Y`)
+- **Firewall timeout** — Check firewall keepalive settings
 - **Server resource exhaustion** — Check CPU/memory on server
 
 ### "Zombie" Devices Reappearing After Delete
@@ -42,7 +41,7 @@ This has been fixed. Signal handlers now check `IsPeerSoftDeleted()` — deleted
 **Solutions:**
 1. Update to the latest Go server binary
 2. Check TLS configuration — if using self-signed certs, ensure `--tls-api` is NOT set
-3. Verify relay server IP: `curl http://your-server:21114/api/server-config`
+3. Verify the relay server address on **Settings → Client setup** in the web console
 4. If server is behind NAT, set `RELAY_SERVERS=YOUR.PUBLIC.IP`
 
 ### Relay Connections Fail
@@ -58,9 +57,9 @@ This has been fixed. Signal handlers now check `IsPeerSoftDeleted()` — deleted
 
 ### "client sent an HTTP request to an HTTPS server"
 
-**Cause:** API port 21114 has TLS enabled (`--tls-api`) but Node.js console connects via HTTP.
+**Cause:** API port 21114 has TLS enabled (`-tls-api`) but a client or reverse proxy connects to it over plain HTTP.
 
-**Solution:** Remove `--tls-api` flag, or for self-signed certs:
+**Solution:** Point that connection at `https://`, or remove the `-tls-api` flag. For self-signed certs:
 ```bash
 # Edit service file
 sudo systemctl edit --full betterdesk-server
@@ -71,36 +70,6 @@ sudo systemctl restart betterdesk-server
 ---
 
 ## Web Console Issues
-
-### 0 Devices in Panel but Dashboard Shows Count
-
-**Cause:** Missing or mismatched API key. Dashboard uses public `/api/server/stats`, Devices uses protected `/api/peers`.
-
-**Solution:**
-```bash
-# Check API key on Go server
-cat /opt/betterdesk/.api_key
-
-# Check API key in Node.js console
-grep API_KEY /opt/BetterDeskConsole/.env
-
-# They must match. If not, copy from Go server:
-cp /opt/betterdesk/.api_key /opt/BetterDeskConsole/.api_key
-# Update .env
-sudo systemctl restart betterdesk-console
-```
-
-### Users Page Returns 401
-
-**Cause:** Route conflict — RustDesk client API route `/api/users` (Bearer token) intercepting panel requests (session cookie).
-
-**Solution:** Update to the current panel (3.5.x).
-
-### Password Change Shows "Password is Required"
-
-**Cause:** Field name mismatch — frontend sends `current_password` (snake_case), backend expects `currentPassword` (camelCase).
-
-**Solution:** Update to the current panel (3.5.x).
 
 ### Login Page Redirects in Loop
 
@@ -167,9 +136,9 @@ sudo ./betterdesk.sh
 
 ### Port 5000 Conflict (Single Container)
 
-**Cause:** Go server reads generic `PORT=5000` env var (intended for Node.js) and sets signal port to 5000.
+**Cause:** When `SIGNAL_PORT` is unset, the server takes its signal port from a generic `PORT` variable, and an older compose file sets `PORT=5000`.
 
-**Solution:** Ensure `SIGNAL_PORT=21116` is set in Go server environment:
+**Solution:** The image sets `SIGNAL_PORT=21116`. If you replace the container environment, keep it:
 ```yaml
 environment:
   SIGNAL_PORT: "21116"
@@ -185,7 +154,7 @@ volumes:
 
 # Option 2: :z flag
 volumes:
-  - ./data:/data:z
+  - ./data:/opt/rustdesk:z
 
 # Option 3: Set SELinux context
 sudo chcon -Rt svirt_sandbox_file_t ./data
@@ -197,7 +166,7 @@ sudo chcon -Rt svirt_sandbox_file_t ./data
 # Add DNS to Docker daemon
 echo '{"dns": ["8.8.8.8", "8.8.4.4"]}' | sudo tee /etc/docker/daemon.json
 sudo systemctl restart docker
-docker compose build --no-cache
+docker compose -f docker-compose.single.yml build --no-cache
 ```
 
 ---
@@ -225,32 +194,23 @@ This checks:
 
 ```bash
 # Service status
-sudo systemctl status betterdesk-server betterdesk-console
+sudo systemctl status betterdesk-server
 
 # Logs
 journalctl -u betterdesk-server --since "1 hour ago" --no-pager
-journalctl -u betterdesk-console --since "1 hour ago" --no-pager
 
 # Port check
-ss -tlnp | grep -E '21114|21116|21117|5000'
+ss -tlnp | grep -E '21114|21116|21117|21121|5000'
 
 # API health
 curl -s http://localhost:21114/api/health
 
-# Peer count
-curl -s http://localhost:21114/api/server/stats
+# Peer count (needs the server's API key)
+curl -s -H "X-API-Key: $(sudo cat /opt/betterdesk/.api_key)" http://localhost:21114/api/server/stats
 
 # Public IP
 curl -4 ifconfig.me
 ```
-
-### Dev Diagnostics Script
-
-```bash
-./dev_modules/diagnose_offline_status.sh
-```
-
-Detailed offline status diagnostics including network, DNS, and process analysis.
 
 ---
 
@@ -258,7 +218,7 @@ Detailed offline status diagnostics including network, DNS, and process analysis
 
 **Symptoms:** Desktop/mobile RustDesk clients lose server login after ~24 hours.
 
-**Solution:** Update to v3.3.129+. Sessions are now DB-backed (7-day sliding, 30-day max). After updating, sign in once in each RustDesk client. Adjust TTL under **Settings → Authentication → RustDesk clients**.
+**Solution:** Update to v3.3.129+. Sessions are now DB-backed (7-day sliding, 30-day max). After updating, sign in once in each RustDesk client. Adjust TTL under **Settings → Sign-in → RustDesk client sessions**.
 
 ---
 
@@ -266,9 +226,9 @@ Detailed offline status diagnostics including network, DNS, and process analysis
 
 **Symptoms:** After toggling HTTP/HTTPS, Go API calls fail or hit port 21121 instead of 21114.
 
-**Cause:** Shared `.env` uses `API_PORT=21121` for the Node Client API proxy; the Go server needs `GO_API_PORT=21114`.
+**Cause:** The console's `.env` uses `API_PORT=21121` for the Client API listener; the server's own API needs `GO_API_PORT=21114`.
 
-**Solution:** Update to latest build. Verify `betterdesk-server.service` includes `Environment=GO_API_PORT=21114`. Restart both services after toggle.
+**Solution:** Update to latest build. Verify `betterdesk-server.service` includes `Environment=GO_API_PORT=21114`. Restart `betterdesk-server` after toggle.
 
 ---
 
@@ -276,7 +236,7 @@ Detailed offline status diagnostics including network, DNS, and process analysis
 
 1. Check the [GitHub Issues](https://github.com/UNITRONIX/BetterDesk/issues) for known problems
 2. Run diagnostics and include the output in your bug report
-3. Include Go server and Node.js console versions
+3. Include the BetterDesk server version
 4. Include relevant log output (redact sensitive data)
 
 ---

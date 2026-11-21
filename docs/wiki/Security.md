@@ -64,7 +64,7 @@ Chat crypto details: [[Chat E2E Encryption|Chat-E2E]] (operator summary up front
 
 | Method | Usage |
 |--------|-------|
-| **API Key** (`X-API-Key` header) | Server-to-server (Node.js ↔ Go) |
+| **API Key** (`X-API-Key` header) | Scripts and integrations |
 | **JWT Bearer** (`Authorization: Bearer` header) | User API access (Pro/Admin/Operator) |
 | **Session cookie** | Web panel requests |
 
@@ -140,10 +140,10 @@ See [[User Management|User-Management]] for details.
 ## CSRF Protection
 
 The web console uses double-submit cookie pattern:
-- CSRF token generated per session
-- Token included in forms and AJAX requests
+- CSRF token and its hash kept in an `HttpOnly` cookie
+- Token sent back in the `X-CSRF-Token` header (or a `_csrf` body field)
 - Server validates token against cookie
-- Implemented via `csrf-csrf` middleware
+- Implemented in `betterdesk-server/console/csrf`
 
 ---
 
@@ -196,11 +196,11 @@ Banned devices:
 
 ## Dependency Security
 
-### Node.js Console
+### Web app (`web-ui`)
 
-- `npm audit --omit=dev --audit-level=moderate` must report **0 vulnerabilities** (CI enforced)
-- `tar` package overridden to ^7.5.16+ (GHSA-vmf3-w455-68vh)
-- Dependencies pinned via committed `web-nodejs/package-lock.json`; production installs use `npm ci`
+- Built at release time and embedded into the server binary; a running install has no Node.js and no npm packages
+- `npm audit --audit-level=high` runs in CI (`web-ui-ci.yml`)
+- Dependencies pinned via committed `web-ui/package-lock.json`; builds use `npm ci`
 
 ### Go Server
 
@@ -212,7 +212,7 @@ Banned devices:
 ### Rust (Tauri clients)
 
 - `cargo audit` in CI (known glib RUSTSEC-2024-0429 ignored until GTK stack migration)
-- Dependabot weekly for Cargo, npm (`web-nodejs`), and Go modules
+- Dependabot weekly for npm (`web-ui` and the repository root), Go modules and GitHub Actions
 
 ---
 
@@ -220,7 +220,7 @@ Banned devices:
 
 | Component | Control | Default (production) |
 |-----------|---------|-------------------|
-| Node console | `LOG_LEVEL=error\|warn\|info\|debug` | `warn` |
+| Web console | `LOG_LEVEL=error\|warn\|info\|debug` | `warn` |
 | Go server | `LOG_LEVEL` or `-log-level` | `info` |
 
 Auth and audit details redact usernames and secrets before stdout/DB insert. Set `LOG_LEVEL=info` temporarily when debugging auth issues.
@@ -244,7 +244,7 @@ Recommended before Internet-facing deployment:
 | Relay limits | `RELAY_MAX_CONNS_PER_IP` | `20` (adjust for NAT scale) |
 | Signal rate limit | `SIGNAL_RATE_LIMIT_PER_IP` | Default `20`; raise for large NAT |
 
-Startup banners log **ERROR** when open enrollment is combined with missing signal/relay TLS (Go) or HTTP panel on `0.0.0.0` with open enrollment (Node).
+Startup banners log **ERROR** when open enrollment is combined with missing signal/relay TLS.
 
 ---
 

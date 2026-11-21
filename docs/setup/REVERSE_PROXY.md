@@ -44,14 +44,14 @@ Internet
    │
    ▼
 [Caddy/Nginx :443 TLS]
-   ├── /                 ──► http://127.0.0.1:5000   (Node.js panel)
+   ├── /                 ──► http://127.0.0.1:5000   (web console)
    ├── /ws/rendezvous    ──► http://127.0.0.1:5000   (Web Remote → hbbs TCP :21116)
    ├── /ws/relay         ──► http://127.0.0.1:5000   (Web Remote → hbbr TCP :21117)
    ├── /ws/id            ──► http://127.0.0.1:21118  (native RustDesk signal WSS, optional)
    └── /ws/relay (native)──► http://127.0.0.1:21119  (native RustDesk relay WSS — same path; see collision note)
 
 Clients (RustDesk native) ──► TCP/UDP :21116, TCP :21117  (direct to host — not HTTP-proxied)
-Client API                ──► TCP :21114 (split) or :21121 (single / compat) — see below
+Client API                ──► TCP :21114 (native install) or :21121 (Docker; also the compat port of native installs), see below
 ```
 
 > **Web Remote vs native WSS:** Never route `/ws/rendezvous` to Go `:21118`. The browser client sends **TCP-framed** protobufs and the panel bridges them to hbbs TCP. Go WSS expects **raw** protobuf — a wrong upstream closes the socket immediately with code **1000** (see [#329](https://github.com/UNITRONIX/BetterDesk/issues/329)). `/ws/relay` is owned by **both** Web Remote (panel `:5000`) and optional native WebSocket Mode (Go `:21119`); on one hostname prefer the panel catch-all for Web Remote, or put native WSS on a separate host/port.
@@ -65,7 +65,7 @@ Panel routes under `/api/...` (auth, settings, panel REST) and RustDesk **Client
 | Hostname / port | Upstream | Client field |
 |-----------------|----------|--------------|
 | `console.example.com` → `:5000` | Panel + Web Remote | browser only |
-| `api.example.com` → `:21114` (split) or `:21121` (single) | Go Client API | RustDesk **API Server** |
+| `api.example.com` → `:21114` (native) or `:21121` (Docker) | Go Client API | RustDesk **API Server** |
 | `desk.example.com` → `/ws/id` `:21118`, `/ws/relay` `:21119` | Native WSS | ID / Relay + WebSocket Mode |
 
 Nginx sketch (API vhost — adjust port for your layout):
@@ -77,7 +77,7 @@ server {
     # ssl_certificate …;
 
     location / {
-        proxy_pass http://127.0.0.1:21114;   # split Go; use 21121 for AIO / Node compat proxy
+        proxy_pass http://127.0.0.1:21114;   # native install; use 21121 for the Docker image
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -128,7 +128,7 @@ HOST=127.0.0.1
 HTTPS_ENABLED=false
 HTTP_REDIRECT_HTTPS=false
 TRUST_PROXY=Y
-PORT=5000
+CONSOLE_PORT=5000
 
 # When the public hostname differs from how you reach the server locally:
 PANEL_PUBLIC_HOST=console.example.com
@@ -144,7 +144,7 @@ WS_ALLOWED_ORIGINS=https://console.example.com
 Restart after changes:
 
 ```bash
-sudo systemctl restart betterdesk-console betterdesk-server
+sudo systemctl restart betterdesk-server
 ```
 
 ### Go server trust proxy
@@ -167,11 +167,11 @@ TRUST_PROXY=Y
 TRUSTED_PROXIES=192.168.1.5/32
 ```
 
-Or add `-trust-proxy` and `-trusted-proxies=127.0.0.1/32` to `ExecStart`. The installer sets `-trust-proxy` in reverse-proxy mode; after this release, also set `TRUSTED_PROXIES` in `.env` (panel update merges the key from `.env.example`).
+Or add `-trust-proxy` and `-trusted-proxies=127.0.0.1/32` to `ExecStart`. The installer sets `-trust-proxy` and `TRUSTED_PROXIES` in reverse-proxy mode.
 
 > **Security:** `TRUST_PROXY=Y` alone is not enough. If `TRUSTED_PROXIES` is empty, the Go server **ignores** forwarded headers and logs a configuration warning. Bind signal/API so only the proxy can connect, or attackers could otherwise spoof client IPs.
 
-> **Note:** `TRUST_PROXY=Y` in `.env` enables trust for **both** the Node.js panel and the Go server. Node also accepts `1` / `yes`; Go requires **`Y`**. `TRUSTED_PROXIES` is read by the **Go server** (session keys / API client IP).
+> **Note:** `TRUST_PROXY=Y` in `.env` enables trust for **both** the web console and the signal server/API, which run in the one `betterdesk-server` process. The web console also accepts `1` / `yes`; the signal server and API require **`Y`**. `TRUSTED_PROXIES` is read by the signal server and API (session keys / API client IP).
 
 > **UDP/TCP signal** on port **21116** cannot use HTTP headers. `TRUST_PROXY` / `TRUSTED_PROXIES` do not apply to native UDP/TCP rendezvous.
 

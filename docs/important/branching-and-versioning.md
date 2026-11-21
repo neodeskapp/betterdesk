@@ -39,21 +39,20 @@ Every automated bump updates these together:
 **Tier 1**
 
 - `VERSION`
-- `web-nodejs/package.json` (npm mirror; panel reads root `VERSION` via `web-nodejs/lib/productVersion.js`)
 - `betterdesk-server/VERSION` and `betterdesk-server/internal/productversion/VERSION` (Go `go:embed` + builds)
-- `betterdesk.sh`, `betterdesk.ps1`, `betterdesk-docker.sh`
+- `betterdesk.sh`, `betterdesk.ps1`, `betterdesk-docker.sh`, `install.sh`
 - `CHANGELOG.md` (moves `[Unreleased]` → new section)
 - `README.md` (version badge)
 
 **Tier 2 (Docker)**
 
-- `Dockerfile`, `Dockerfile.server`, `Dockerfile.console`
-- `docker-compose.quick.yml`, `docker-compose.quick.macvlan.yml`
-- `docker/entrypoint.sh`, `docker-entrypoint.sh`
+- `Dockerfile`, `Dockerfile.server`
+- `docker-compose.quick.single.yml`, `docker-compose.quick.single.macvlan.yml`
+- `docker/entrypoint.sh`
 
-The web console and Go server should report the **same product semver** after a normal install, panel update, or release build. Settings → Server Information shows both the product version and the live Go server version from `/api/health`.
+The web console is part of `betterdesk-server`, so the console and the server report the **same product semver**.
 
-Sub-project versions (`betterdesk-mgmt`, `betterdesk-agent-client`, SDKs) are **not** bumped with the main product unless explicitly requested.
+Sub-project versions (the SDKs under `sdks/`) are **not** bumped with the main product unless explicitly requested.
 
 ### Maintainer commands
 
@@ -76,23 +75,23 @@ node scripts/bump-version.js --patch --dry-run
 Configure once in GitHub (not in git):
 
 1. **Default branch → `dev`** — new clones and PRs target active development.
-2. **Protect `main`** — require PR, require status checks (`Web Console CI`, `Secret Scan`, `Version Verify`), disallow direct push.
+2. **Protect `main`** — require PR, require status checks (`Go Server CI`, `Web UI CI`, `Secret Scan`, `Version Verify`), disallow direct push.
 3. **Optional: protect `dev`** — require CI on PRs without release checklist.
 
 ## Update channel (stable / development)
 
-Installations pull updates from a GitHub branch:
+Installations take updates from the GitHub releases of one channel:
 
-| Channel | Branch | Use case |
-|---------|--------|----------|
-| **Stable** | `main` | Production (default) |
-| **Development** | `dev` | Early testing |
+| Channel | Branch | Installs | Use case |
+|---------|--------|----------|----------|
+| **Stable** | `main` | The newest release `vX.Y.Z` | Production (default) |
+| **Development** | `dev` | The `dev` pre-release, rebuilt on every push to `dev` | Early testing |
 
 ### Panel (Settings → Updates)
 
-Select **Stable (main)** or **Development (dev)** and click **Apply channel**. The setting is stored in `web-nodejs/.env` as `UPDATE_GITHUB_BRANCH`. Systemd loads it via `EnvironmentFile`; Windows NSSM loads `.env` at console startup.
+Select **Stable** or **Development** and confirm. The setting is stored in the console's `.env` as `UPDATE_GITHUB_BRANCH`; the server reads that file through `BETTERDESK_ENV_FILE`.
 
-After switching channel, run **Check for updates** — the tracked commit SHA is kept, so the first check against a new branch may show a large diff.
+After switching channel, run **Check for updates**: the next check compares the installed version with the new channel.
 
 ### Installer scripts
 
@@ -116,7 +115,7 @@ UPDATE_GITHUB_BRANCH=dev    # development
 | `version-verify.yml` | Push/PR touching version files | Fail if files disagree |
 | `release-go.yml` | Tag `v*`, push to `dev`, or dispatch | The only publisher of server binaries: the stable release `vX.Y.Z` for a tag, the pre-release `dev` for `dev`. Binaries with the web console built in, `manifest.json`, `SHA256SUMS` and, when signed, `manifest.sig`, which the console's updater installs from |
 | `release-server.yml` | Push to `main`/`dev`, tag `v*` | Builds the server binaries and the migration tool as run artifacts only; attaches nothing to a release |
-| `docker-publish.yml` | Tag, release, push to `main`/`dev`, or dispatch from `version-bump-dev` | GHCR images: on **branch** pushes, builds only version-bump subjects so image VERSION matches tip (#401); `version-bump-dev` dispatches `tag=dev` because GITHUB_TOKEN pushes do not re-trigger workflows. Tags/release/dispatch always build. `latest` on stable release/main; `dev` on development publishes; semver on `v*` / Release. AIO/server/console are multi-arch (amd64 then native ARM); soft-merge still publishes amd64 if ARM fails (#476) |
+| `docker-publish.yml` | Tag, release, push to `main`/`dev`, or dispatch from `version-bump-dev` | GHCR images: on **branch** pushes, builds only version-bump subjects so image VERSION matches tip (#401); `version-bump-dev` dispatches `tag=dev` because GITHUB_TOKEN pushes do not re-trigger workflows. Tags/release/dispatch always build. `latest` on stable release/main; `dev` on development publishes; semver on `v*` / Release. `betterdesk` and `betterdesk-server` are multi-arch (amd64 then native ARM); soft-merge still publishes amd64 if ARM fails (#476) |
 
 ## First stable release note
 

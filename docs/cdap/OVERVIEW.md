@@ -23,24 +23,25 @@ bidirectional communication between the management server and endpoint agents. I
 │   Node.js binary)  │                           │  cdap/handler.go     │
 └────────────────────┘                           └──────────┬───────────┘
                                                             │
-                                                   REST API │ + WS proxy
+                                       REST API, in process │ + WS proxy
                                                             │
                                                  ┌──────────▼───────────┐
-                                                 │  Node.js Console     │
-                                                 │  (:5000)             │
-                                                 │  routes/cdap.routes  │
-                                                 │  cdapMediaProxy.js   │
+                                                 │  Web console (:5000) │
+                                                 │  console/routes/cdap │
+                                                 │  console/cdapproxy   │
                                                  └──────────┬───────────┘
                                                             │
                                                    Browser  │ WS
                                                             │
                                                  ┌──────────▼───────────┐
                                                  │  Web Console UI      │
-                                                 │  cdap-widgets.js     │
-                                                 │  cdap-desktop.js     │
-                                                 │  cdap-audio.js       │
+                                                 │  (Svelte, web-ui)    │
+                                                 │  cdap/devices/[id]   │
+                                                 │  *Widget.svelte      │
                                                  └──────────────────────┘
 ```
+
+The gateway and the web console run in the same `betterdesk-server` process.
 
 ## Message Flow
 
@@ -77,7 +78,8 @@ Each agent declares its capabilities in the manifest:
 | `betterdesk-server/cdap/clipboard.go` | Clipboard sync logic |
 | `betterdesk-server/cdap/media_control.go` | Cursor, quality, codec, multi-monitor |
 | `betterdesk-server/api/cdap_handlers.go` | REST + WS HTTP handlers |
-| `web-nodejs/routes/cdap.routes.js` | Node.js proxy routes |
-| `web-nodejs/services/cdapMediaProxy.js` | WebSocket proxy factory |
+| `betterdesk-server/console/routes/cdap/routes.go` | Console CDAP routes |
+| `betterdesk-server/console/cdapproxy/proxy.go` | Device sockets (terminal, desktop, video, files, audio) passed on to the API server |
+| `web-ui/src/routes/(console)/cdap/devices/[id]/` | Device page and widgets |
 
 See also: [PROTOCOL.md](PROTOCOL.md), [AGENT_GUIDE.md](AGENT_GUIDE.md), [BRIDGE_GUIDE.md](BRIDGE_GUIDE.md)

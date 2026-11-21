@@ -4,12 +4,11 @@
 
 # BetterDesk Wiki
 
-Self-hosted RustDesk-compatible server (Go) plus a Node.js web console.
+Self-hosted RustDesk-compatible server in Go, with the web console built in.
 
 ![Version](https://img.shields.io/badge/version-3.5.83-brightgreen.svg)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
-![Go](https://img.shields.io/badge/Go-1.25+-00ADD8.svg)
-![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
+![Go](https://img.shields.io/badge/Go-1.26+-00ADD8.svg)
 
 </div>
 
@@ -24,7 +23,7 @@ One binary replaces `hbbs` + `hbbr`. The panel handles devices, users, updates, 
 
 1. Install (Linux script, Windows script, or Docker — below).
 2. Open `http://your-server:5000` and sign in.
-3. Copy ID / Relay / Key / API from **Settings → Server Configuration**.
+3. Copy ID / Relay / Key / API from **Settings → Client setup**.
 4. Point a RustDesk client at those values ([[Client Setup|Client-Setup]]).
 5. Optional: TLS ([[TLS / SSL Certificates|TLS-SSL]]), then [[Panel Updates|Panel-Updates]].
 
@@ -48,7 +47,9 @@ docker compose pull && docker compose up -d
 docker compose exec betterdesk betterdesk-show-admin-credentials
 ```
 
-Panel: **http://your-server:5000** (plain HTTP). Default paths: Go `/opt/betterdesk`, console `/opt/BetterDeskConsole` (legacy `/opt/rustdesk` still detected). The two-container split layout lives in `docker-compose.quick.yml` — see [[Docker]].
+Panel: **http://your-server:5000** (plain HTTP). See [[Docker]] for the details.
+
+Native installs keep the server in `/opt/betterdesk` and the console's `.env` and `data/` in `/opt/BetterDeskConsole` (legacy `/opt/rustdesk` is still detected).
 
 Windows: see [[Installation]].
 
@@ -75,7 +76,7 @@ Deep dive in the repo: [docs/](https://github.com/UNITRONIX/BetterDesk/tree/dev/
 ## Ports (short)
 
 ```
-Clients  → :21116 signal, :21117 relay, :21121 Client API (Go; optional Node proxy)
+Clients  → :21116 signal, :21117 relay, :21121 Client API
 Panel    → :5000 console, :21114 admin REST (often localhost)
 Optional → :21122 CDAP, :21118/:21119 WebSocket signal/relay
 ```

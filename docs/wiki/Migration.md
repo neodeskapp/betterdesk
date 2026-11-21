@@ -195,12 +195,11 @@ sudo ./betterdesk.sh
 ### Step 4: Verify
 
 ```bash
-# Check device count
-curl http://localhost:21114/api/server/stats
-
-# Verify in web console
-open http://localhost:5000
+# Check device count (the stats route needs the server's API key)
+curl -H "X-API-Key: $(sudo cat /opt/betterdesk/.api_key)" http://localhost:21114/api/server/stats
 ```
+
+Then sign in to the web console at `http://your-server:5000` and check the device list.
 
 ### Step 5: Clean Up
 
@@ -221,10 +220,12 @@ Always create a backup before migrating:
 sudo ./betterdesk.sh
 # Choose option 5 — Backup
 
-# Manual backup
+# Manual backup (SQLite)
 cp /opt/betterdesk/db_v2.sqlite3 /opt/betterdesk/db_v2.sqlite3.backup
-cp /opt/BetterDeskConsole/data/auth.db /opt/BetterDeskConsole/data/auth.db.backup
+cp /opt/BetterDeskConsole/.env /opt/BetterDeskConsole/.env.backup
 ```
+
+Devices, accounts, groups and console settings are all in `db_v2.sqlite3`. An install that began with the older split layout may still have `/opt/BetterDeskConsole/data/auth.db`. The server copies it into `db_v2.sqlite3` once, at its first start, and only reads it, so back it up as well if it is there.
 
 ---
 

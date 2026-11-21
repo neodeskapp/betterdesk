@@ -1,7 +1,7 @@
 # Console backend strangler — moving the Node.js panel into the Go server
 
 **Status:** planned (stage P0 — this document)
-**Related:** [Discussion #496](https://github.com/UNITRONIX/BetterDesk/discussions/496), [issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493), [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495), [betterdesk-go-centralization.md](./betterdesk-go-centralization.md), [betterdesk-api-port-consolidation.md](./betterdesk-api-port-consolidation.md), [sqlite-auth-consolidation.md](./sqlite-auth-consolidation.md), [betterdesk-update-flow.md](./betterdesk-update-flow.md)
+**Related:** [Discussion #496](https://github.com/UNITRONIX/BetterDesk/discussions/496), [issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493), [PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495), [betterdesk-api-port-consolidation.md](./betterdesk-api-port-consolidation.md), [sqlite-auth-consolidation.md](./sqlite-auth-consolidation.md), [betterdesk-update-flow.md](./betterdesk-update-flow.md)
 
 ## Status
 

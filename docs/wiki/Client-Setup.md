@@ -9,12 +9,10 @@ This guide covers configuring RustDesk desktop and mobile clients to connect to 
 ### From the Web Console
 
 1. Log in to **http://your-server:5000**
-2. Go to **Settings** → **Server Configuration**
-3. You'll see:
-   - **Server Address** (e.g., `your-server.com`)
-   - **Public Key** (e.g., `OeVuKk5nl...`)
-4. Use the **QR Code** button for easy mobile setup
-5. Use the **Copy Config** button for clipboard-ready values
+2. Go to **Settings** → **Client setup**
+3. Under **Connection values** you'll see the ID server, relay server, API server and the **Public Key** (e.g., `OeVuKk5nl...`), each with a copy button
+4. Use the QR code under **Set up a phone** for easy mobile setup
+5. Use the **Config string** for all values in one clipboard-ready string
 
 ### From the CLI
 
@@ -23,7 +21,7 @@ This guide covers configuring RustDesk desktop and mobile clients to connect to 
 cat /opt/betterdesk/id_ed25519.pub
 
 # Or from the API
-curl http://your-server:21114/api/server-config
+curl http://your-server:21114/api/server/pubkey
 ```
 
 ---
@@ -43,8 +41,8 @@ curl http://your-server:21114/api/server-config
 | Deploy layout | API Server |
 |---------------|------------|
 | Official **single-container** Docker / AIO | `http://your-server.com:21121` |
-| **Split** Docker / systemd (Go on 21114) | `http://your-server.com:21114` (preferred) |
-| Split with Node compat proxy enabled | `http://your-server.com:21121` also works |
+| Native install (systemd / Windows service, Go API on 21114) | `http://your-server.com:21114` (preferred) |
+| Native install, through the console's Client API listener | `http://your-server.com:21121` also works |
 
 > **Important:** Point **API Server** at the **Client API** (Go `:21114` or `:21121`), never at the web panel `:5000`. Include the `http://` or `https://` prefix. Wrong API routing after login often surfaces as `initiator_token_rejected` — see [DOCKER_TROUBLESHOOTING](../docker/DOCKER_TROUBLESHOOTING.md#problem-logged-in-client-fails-with-initiator_token_rejected).
 
@@ -74,7 +72,7 @@ key = "OeVuKk5nl..."
 3. Scan the QR code from the web console, or enter manually:
    - **ID Server**: `your-server.com`
    - **Relay Server**: `your-server.com`
-   - **API Server**: same rules as desktop (`:21121` single / `:21114` split) — not panel `:5000`
+   - **API Server**: same rules as desktop (`:21121` Docker / `:21114` native) — not panel `:5000`
    - **Key**: paste the public key
 
 ---
@@ -98,7 +96,7 @@ RustDesk clients can optionally log in to the server for:
 RustDesk client login tokens are **DB-backed** (v3.3.129+):
 - Default **7 days** with sliding renewal on activity
 - Maximum **30 days**
-- Configure under **Settings → Authentication → RustDesk clients** in the web panel
+- Configure under **Settings → Sign-in → RustDesk client sessions** in the web panel
 
 After a server update that changes session handling, users may need to **sign in once** in the RustDesk client.
 
@@ -110,7 +108,7 @@ If login shows **Token generation failed**, update to a build that includes the 
 |--------|--------|
 | RustDesk **1.4.7+** | Full AB + TOTP challenge shape |
 | RustDesk **1.4.9** | Compatible; audit attribution enhancements are optional server follow-up |
-| RustDesk **≤1.4.6** | TOTP challenge shape may fail; prefer 1.4.7+ or disable client TOTP only via documented Node env (legacy) |
+| RustDesk **≤1.4.6** | TOTP challenge shape may fail; prefer 1.4.7+ |
 
 ### User Roles on Client
 
@@ -147,9 +145,9 @@ msiexec /i rustdesk.msi /quiet \
   KEY=OeVuKk5nl...
 ```
 
-### Configuration via betterdesk.sh
+### Pre-configured agent packages
 
-The ALL-IN-ONE Linux script can generate pre-configured client packages. Choose option **7** (Build binaries) from the interactive menu.
+The web console hands out pre-configured incoming-only Support agents under **Settings → Support agents**. See [[BetterDesk Agents|Client-Generator]].
 
 ---
 
@@ -170,7 +168,7 @@ After configuring a client:
 | Client shows "Connecting..." | Check firewall ports 21116 TCP/UDP, 21117 TCP |
 | No ID assigned | Verify ID Server address and public key match |
 | "Failed to secure TCP" | Check TLS configuration, ensure key file matches |
-| Address book not syncing | Verify API Server is `http://server:21121` (with `http://` prefix) |
+| Address book not syncing | Verify API Server is the Client API, e.g. `http://server:21121` (with `http://` prefix; see the table above) |
 | Login fails | Check user exists in web console, verify TOTP if enabled |
 
 ### Test with Command Line
@@ -190,7 +188,7 @@ curl http://your-server.com:21121/api/login-options
 
 ## Custom Client Branding
 
-For incoming-only BetterDesk Support agents, use **BetterDesk Agents** in the web panel (import signed releases) — see [[BetterDesk Agents|Client-Generator]]. Appearance comes from **Client Branding** at runtime.
+For incoming-only BetterDesk Support agents, use **Support agents** in the web panel (import signed releases) — see [[BetterDesk Agents|Client-Generator]]. Appearance comes from **Client app branding** at runtime.
 
 ---
 

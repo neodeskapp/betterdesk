@@ -81,8 +81,8 @@ This does **not** replace the RustDesk relay-based pipeline — it provides a *f
 
 ## References
 
-- `web-nodejs/public/js/rdclient/client.js` — main browser client
-- `web-nodejs/public/js/rdclient/protocol.js` — RustDesk protocol layer
+- `web-ui/static/rdclient/client.js` — main browser client
+- `web-ui/static/rdclient/protocol.js` — RustDesk protocol layer
 - `betterdesk-agent-client/src-tauri/src/bd_signal.rs` — agent signal/control channel
 - `betterdesk-agent-client/src-tauri/src/cdap_client.rs` — CDAP gateway client
 - Upstream RustDesk: <https://github.com/rustdesk/rustdesk>

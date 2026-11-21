@@ -37,7 +37,7 @@ GitHub Actions job `mesh-interop` in `.github/workflows/go-server-ci.yml` runs b
 
 The MeshCentral compatibility layer is **enabled by default** on full and minimal installs (`MESH_ENABLED=Y`). To disable, set `MESH_ENABLED=N` in the `betterdesk-server` service environment and restart the service.
 
-1. Ensure panel HTTPS (`:5443`) proxies `.ashx` paths to the Go API port (default `21114`) — enabled automatically when using the Node.js console.
+The web console (`:5000`, or `:5443` with native HTTPS) passes the `.ashx` paths to the MeshCentral gateway in the same process. There is nothing to set up for this.
 
 ## Install endpoints
 
@@ -60,7 +60,7 @@ TLS usually terminates at the proxy. MeshAgent hashes the **public TLS cert** it
 
 Preferred proxy path: `wss://host/agent.ashx` → panel `:5000` (`.ashx` WebSocket proxy to Go). Direct proxy to `:21114` works if Upgrade headers are set, but still requires a matching web cert hash when validation is enabled.
 
-If logs show `bad web cert hash` / `agent web cert hash mismatch`: mount the proxy’s leaf/fullchain into the Go container and set `MESH_WEB_CERT_FILE`, or unset both `MESH_WEB_CERT_FILE` and `TLS_CERT` to skip the check.
+If logs show `bad web cert hash` / `agent web cert hash mismatch`: mount the proxy’s leaf/fullchain into the `betterdesk` container and set `MESH_WEB_CERT_FILE`, or unset both `MESH_WEB_CERT_FILE` and `TLS_CERT` to skip the check.
 
 ## Verify
 
@@ -79,4 +79,4 @@ When MeshAgent and RustDesk client run on the same machine, BetterDesk auto-link
 
 ## Update
 
-Ships via **Settings → Updates** (panel updater) like other `betterdesk-server` and `web-nodejs` changes.
+Ships with `betterdesk-server` releases, installed through **Settings → Updates** (panel updater).

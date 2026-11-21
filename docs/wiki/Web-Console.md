@@ -1,17 +1,14 @@
 # Web Console
 
-The BetterDesk Web Console is a Node.js (Express.js) management panel accessible at **http://your-server:5000**.
+The BetterDesk Web Console is part of `betterdesk-server` and is accessible at **http://your-server:5000**. Its pages are the Svelte app in `web-ui/`, built into the server binary.
 
-The console ships with **UX 3.5** as its default layout (full-list sidebar + solid topbar — not glass).
-An optional **UX 3.6 beta** groups the sidebar into Devices / Support / People / Activity / Settings and
-adds the list-first Devices and per-topic Settings layouts; it is enabled per browser in
-**Settings → General → Console interface**. See [[UX 3.5|UX-3.5]].
+The sidebar groups the pages into Devices / Support / People / Activity / Settings, with a list-first Devices page and per-topic Settings.
 
 ---
 
 ## Visual preview
 
-The following screenshots show the current UX 3.5 panel in the dark theme and English locale. All device names, IDs, notes, and network values are fictional test data.
+The following screenshots are from an earlier version of the console, in the dark theme and English locale. All device names, IDs, notes, and network values are fictional test data.
 
 <table>
   <tr>
@@ -45,8 +42,6 @@ The source files are kept in [`screenshots/generated/`](../../screenshots/genera
 ## Dashboard
 
 Overview cards: device counts, online status, server uptime, versions.
-
-OS-style **Desktop Mode** is not loaded anymore. Use UX 3.5 or [[UX 3.6 beta|UX-3.5]]. Old notes: [[Desktop Dashboard|Desktop-Dashboard]].
 
 ---
 
@@ -140,19 +135,19 @@ Manage console users and roles. See [[User Management|User-Management]] and [[Or
 | **Security Audit** | Login and API security events |
 | **Server Management** | Go server health, config, API keys |
 | **Settings → Updates** | In-panel updates — [[Panel Updates\|Panel-Updates]] |
-| **Settings → Authentication** | RustDesk client session TTL, OIDC — [[OIDC SSO\|OIDC-SSO]] |
+| **Settings → Sign-in** | RustDesk client session TTL, OIDC — [[OIDC SSO\|OIDC-SSO]] |
 
 ---
 
 ## Settings Page
 
-### Server Configuration
+### Client setup (Settings → Client setup)
 - View server address and public key
 - Generate QR codes for client setup
 - Copy configuration strings
 
 ### Console Settings
-- Language selection (**26 locales** — auto-discovered from `web-nodejs/lang/`)
+- Language selection (**26 locales** from `betterdesk-server/console/static/files/lang/`)
 - Console version info
 - Session timeout configuration
 
@@ -165,7 +160,7 @@ Manage console users and roles. See [[User Management|User-Management]] and [[Or
 
 ## Login screen
 
-UX 3.5 and UX 3.6 use the standard panel login (username / password / optional TOTP). The old Windows 11-style desktop login is retired with Desktop Mode.
+The console uses the standard panel login (username / password / optional TOTP).
 
 ---
 
@@ -200,7 +195,7 @@ UX 3.5 and UX 3.6 use the standard panel login (username / password / optional T
 
 ## Internationalization (i18n)
 
-The console supports **26 languages** (including EN, PL, DE, FR, ES, JA, ZH, ZH-TW, and more). Languages are auto-discovered from `web-nodejs/lang/*.json`.
+The console supports **26 languages** (including EN, PL, DE, FR, ES, JA, ZH, ZH-TW, and more). The language files are `betterdesk-server/console/static/files/lang/*.json`, built into the server binary.
 
 | Language | Code | Status |
 |----------|------|--------|
@@ -209,10 +204,11 @@ The console supports **26 languages** (including EN, PL, DE, FR, ES, JA, ZH, ZH-
 
 ### Adding a Language
 
-1. Copy `web-nodejs/lang/en.json` to `web-nodejs/lang/{code}.json`
+1. Copy `betterdesk-server/console/static/files/lang/en.json` to `{code}.json` in the same folder
 2. Translate all values (keep keys as-is)
 3. Update the `meta` section with language info
-4. The language auto-appears in the selector (auto-discovery from `lang/` directory)
+4. Add the code to `knownLanguages` in `betterdesk-server/console/i18n/bundle.go`; the console loads only the languages listed there
+5. Run `npm run i18n:check` from the repository root, then rebuild `betterdesk-server`
 
 See the [Contributing Translations](https://github.com/UNITRONIX/BetterDesk/blob/main/docs/development/CONTRIBUTING_TRANSLATIONS.md) guide for details.
 
@@ -220,7 +216,6 @@ See the [Contributing Translations](https://github.com/UNITRONIX/BetterDesk/blob
 
 ## See also
 
-- [[Desktop Widget Dashboard|Desktop-Dashboard]] — widget reference
 - [[Web Remote Desktop|Web-Remote]] — browser remote sessions
 - [[User Management|User-Management]] — roles and 2FA
 - [[Panel Updates|Panel-Updates]] — upgrading the panel

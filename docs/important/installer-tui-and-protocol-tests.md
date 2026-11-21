@@ -3,20 +3,17 @@
 ## Added functions
 - `tui_available()` — true only when TTY on stdin+stdout and BETTERDESK_CLASSIC_MENU!=1.
 - `tui_select "title" "subtitle" item...` — pure-bash arrow-key menu. Items use `label\tdesc`. Result in global `TUI_RESULT` (0-based index). Returns 0=selected, 2=cancel(q/Esc/0), 1=unavailable. Hides cursor, `_tui_restore` on exit/INT/TERM.
-- `read_effective_console_setting(key)` — runtime value from systemd `Environment=` (overrides `.env`).
-- `apply_console_protocol_mode(http|https)` — syncs `.env` + `betterdesk-console.service` for protocol toggle (#219).
+- `read_effective_console_setting(key)` — the value the running console sees: the `betterdesk-server` unit's `Environment=` first, then `.env`.
+- `apply_console_protocol_mode(http|https)` — syncs the console `.env` for protocol toggle (#219).
 - `apply_console_reverse_proxy_mode()` — panel HTTP on `127.0.0.1`, `TRUST_PROXY=Y`, Go `-trust-proxy`; clears panel/signal native TLS (#267).
 - `sync_go_server_trust_proxy()` / cleared when switching to plain HTTP or native HTTPS.
 - `generate_reverse_proxy_config()` / `do_configure_reverse_proxy()` — writes Caddy/Nginx snippets + verify script to `$RUSTDESK_PATH/reverse-proxy/` (#267).
 - `deploy_ssl_material_to_rustdesk_dir()` — copies TLS cert/key into `$RUSTDESK_PATH/ssl/betterdesk.{crt,key}` (not symlinks); tracks `LE_CERT_LIVE_DIR` for certbot renew (#219).
 - `install_le_certbot_renew_hook()` — deploy hook re-copies renewed LE certs then restarts services.
-- `maybe_repair_le_ssl_symlinks()` — auto-fixes legacy LE symlink installs when `ensure_betterdesk_console_user` runs.
-- `repair_console_service_user_line()` — fixes corrupted `User=` lines in `betterdesk-console.service` when repair warnings were captured into command substitution (#219).
-- `_sync_betterdesk_console_user_permissions()` — internal permission sync; LE repair output goes to stderr so `ensure_betterdesk_console_user` stdout stays username-only (#219).
+- `maybe_repair_le_ssl_symlinks()` — auto-fixes legacy LE symlink installs; runs from the HTTPS repair and from `ensure_console_tls_material_readable()`.
 - `kill_processes_holding_ports()` — frees 21116/21117/5000/5443 after graceful stop when orphan listeners remain (#219).
 - `ensure_console_tls_material_readable()` — on update/repair/toggle restart, re-copies LE material when HTTPS is enabled but the console user cannot read the TLS key (#219).
-- `_wait_for_http_code()` — retry helper used by `run_protocol_tests()` so post-restart checks wait for Node boot (#219).
-- `linux-ensure-console-user.js` → `repairLetsEncryptSslMaterial()` — same LE redeploy during Settings → Updates (#219); resolves live dir from `LE_CERT_LIVE_DIR`, cert paths, or `LE_CERT_DOMAIN`.
+- `_wait_for_http_code()` — retry helper used by `run_protocol_tests()` so post-restart checks wait for the console to start (#219).
 - `sync_go_server_signal_relay_tls()` / `clear_go_server_signal_relay_tls()` — shared Go server TLS patching for menus **C** and **T**.
 - `do_configure_ssl` (menu **C**) — unified with `apply_console_protocol_mode` + cert deploy/repair (#219); option **6 External reverse proxy** (#267).
 - `resolve_panel_http_port()` / `resolve_panel_https_port()` / `resolve_panel_health_port()` — HTTPS mode health checks use `HTTPS_PORT` (5443), not `PORT` (5000 redirect listener).
@@ -47,14 +44,14 @@
 - Toggle lives in **`sudo betterdesk.sh`** → **Protocol Toggle (T)** or **SSL Configuration (C)** — not in the web panel Settings UI.
 - After enabling HTTPS with Let's Encrypt, open **`https://<your-domain>:5443`** (cert SAN matches the domain; raw IP often shows certificate errors).
 - HTTP `:5000` is a redirect listener only when HTTPS + `HTTP_REDIRECT_HTTPS=true`; plain panel URL in HTTP mode is `http://<server>:5000`.
-- If stuck after a failed toggle: **Repair → Repair HTTPS / TLS**, then restart services. Panel updates also re-run LE redeploy + `SIGNAL_PORT=21116` isolation (#219).
+- If stuck after a failed toggle: **Repair → Repair HTTPS / TLS**, then restart services. The installer's update (`prepare_console_after_update`) also re-runs LE redeploy + `SIGNAL_PORT=21116` isolation (#219).
 
 Windows now performs HTTP health verification for the Go API and web console
 after service start. Docker installers verify the API and console health
 endpoints after containers start, and the rescue diagnostics remain
 non-destructive. Linux keeps the full `run_protocol_tests()` reverse-proxy
-matrix; Linux, Windows and Docker also share the built-in
-`scripts/installer-protocol-check.js` harness for HTTP/HTTPS, redirects,
-certificate SANs and TCP listeners. Run it with the endpoint/port matrix from
+matrix. The server binary carries the shared check for HTTP/HTTPS, redirects,
+certificate SANs and TCP listeners as `betterdesk-server check`; the Windows
+installer runs it after service start. Run it with the endpoint/port matrix from
 [`installer-contract.md`](installer-contract.md) whenever a platform-specific
 TLS or reverse-proxy check is needed.

@@ -15,13 +15,13 @@ BetterDesk uses layered encryption to protect data in transit and at rest across
 | Key exchange (P2P) | X25519 (Curve25519 DH) | 256-bit | Derive shared secret between peers |
 | Symmetric encryption (P2P) | XSalsa20-Poly1305 (NaCl box) | 256-bit key, 192-bit nonce | Authenticated encryption for peer-to-peer |
 | TLS transport | TLS 1.2+ (auto-negotiated) | Depends on cipher suite | Signal, relay, API server connections |
-| Password hashing (admin) | bcrypt | Cost factor 12 | Web console admin accounts |
-| Password hashing (org users) | PBKDF2-SHA256 | 100K iterations, 32-byte salt | Organization user accounts |
+| Password hashing (console accounts) | PBKDF2-HMAC-SHA256 | 600,000 iterations, 16-byte salt | Web console accounts; bcrypt hashes from older versions still verify |
+| Password hashing (org users) | bcrypt | Cost factor 10 (Go default) | Organization user accounts |
 | JWT signing | HMAC-SHA256 | 256-bit | API authentication tokens |
 | TOTP 2FA | HMAC-SHA1 (RFC 6238) | 160-bit shared secret | 6-digit codes, 30-second step |
-| Session secret | Random bytes | 256-bit | Express session signing |
-| API key | Cryptographically random hex | 256-bit (32 bytes) | Server ↔ console authentication |
-| CSRF token | Double-submit cookie | 256-bit | Cross-site request forgery prevention |
+| Session secret | Random bytes | 256-bit | Signs the console session cookie (HMAC-SHA256) and CSRF token |
+| API key | Cryptographically random hex | 256-bit (32 bytes) | Go API authentication (`X-API-Key`); the built-in console acts as this key |
+| CSRF token | Double-submit cookie | 512-bit (64 random bytes) | Cross-site request forgery prevention |
 
 ## Connection Encryption Matrix
 
@@ -32,7 +32,7 @@ BetterDesk uses layered encryption to protect data in transit and at rest across
 | Client ↔ Relay Server (TCP) | Optional TLS (`--tls-relay`) | Transparent relay (E2E between peers) | Via P2P layer |
 | Client ↔ Client (P2P) | Direct TCP | NaCl box (X25519 + XSalsa20-Poly1305) | Yes (per-session DH) |
 | Browser ↔ Web Console | HTTPS (recommended) | Session cookie + CSRF token | Via TLS |
-| Console ↔ Go Server API | HTTP localhost | API key header | No (planned: mTLS) |
+| Console ↔ Go Server API | In process (no network) | Calls act as the API key | Not applicable |
 | CDAP Agent ↔ Gateway | WebSocket (WSS recommended) | API key authentication | Via TLS |
 
 ## Key Management
@@ -51,14 +51,14 @@ BetterDesk uses layered encryption to protect data in transit and at rest across
 - Manual rotation via admin panel or file replacement
 
 ### Session Secrets
-- Random 64-byte hex string generated on first console startup
-- Stored in `.env` file (`SESSION_SECRET` variable)
-- Used to sign Express session cookies
+- Taken from `SESSION_SECRET` when it is set
+- Otherwise read from `.session_secret` in the console data folder, or generated on first start (32 random bytes as 64 hex characters) and saved there with mode `0600`
+- Signs the session cookie (HMAC-SHA256) and the CSRF token
 
 ### TOTP Secrets
 - Per-user, generated during 2FA enrollment
-- Stored encrypted in database (`totp_secret` column)
-- Recovery codes: 10 single-use codes generated at enrollment
+- Stored in the database as-is (`totp_secret` column)
+- Recovery codes: 8 single-use codes generated at enrollment, stored as bcrypt hashes
 
 ## TLS Configuration
 
@@ -80,6 +80,6 @@ BetterDesk uses layered encryption to protect data in transit and at rest across
 | Database (SQLite) | None (filesystem permissions) | `db_v2.sqlite3` |
 | Database (PostgreSQL) | TLS in transit, at-rest depends on PG config | PostgreSQL server |
 | Ed25519 private key | None (file permissions `0600`) | `id_ed25519` |
-| Admin password hash | bcrypt (irreversible) | `auth.db` |
+| Console password hash | PBKDF2-SHA256, or bcrypt from older versions (irreversible) | `auth.db` |
 | TOTP secrets | Stored as-is in DB | `auth.db` / `users` table |
-| Session data | Server-side storage (not in cookie) | Memory / session store |
+| Session data | Server-side storage (not in cookie) | `panel_sessions` table |

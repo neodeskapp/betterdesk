@@ -17,12 +17,14 @@ BetterDesk uses a JSON-based internationalization (i18n) system that allows comm
 
 Language files are stored in:
 ```
-web/lang/
+betterdesk-server/console/static/files/lang/
 ├── en.json    # English (default)
 ├── pl.json    # Polish
-├── de.json    # German (you can add this)
+├── de.json    # German
 └── ...        # Other languages
 ```
+
+They are built into the `betterdesk-server` binary.
 
 ## Language File Structure
 
@@ -82,7 +84,7 @@ Each language file is a JSON object with nested categories:
 ### 1. Copy the English Template
 
 ```bash
-cd web/lang
+cd betterdesk-server/console/static/files/lang
 cp en.json de.json  # Replace 'de' with your language code
 ```
 
@@ -143,7 +145,7 @@ You can validate at: https://jsonlint.com/
 
 ### 6. Test Locally (Optional)
 
-1. Start the BetterDesk console
+1. Start `betterdesk-server` with `CONSOLE_LANG_DIR` set to your `lang` folder, so the console reads the language files from disk instead of the binary
 2. Open browser at `http://localhost:5000`
 3. Your language should appear in the language selector
 
@@ -170,11 +172,7 @@ Before submitting translation changes, run the strict i18n audit from the reposi
 npm run i18n:check
 ```
 
-The audit compares every active locale against the combined `en.json` + `pl.json` key baseline for each product surface:
-
-- `web-nodejs/lang/` for the web console
-- `betterdesk-agent-client/src/locales/` for the endpoint agent UI
-- `betterdesk-mgmt/src/locales/` for the operator desktop app
+The audit compares every locale in `betterdesk-server/console/static/files/lang/` against the combined `en.json` + `pl.json` key baseline.
 
 Every active locale must have the same key set as the EN/PL baseline, no empty values, and no visible English fallback text. The old `i18n:fix` workflow is intentionally disabled because copying English values into another locale creates a false-complete translation.
 

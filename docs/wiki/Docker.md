@@ -6,7 +6,7 @@ Run BetterDesk in containers. Quickest path uses pre-built GHCR images.
 
 ## Quick Start (Pre-built Images)
 
-Prefer the official **all-in-one** image (no build required):
+Use the official **all-in-one** image (no build required). One container runs `betterdesk-server`, which serves signal, relay, API and the web console in one process:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml \
@@ -14,29 +14,19 @@ curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-co
 docker compose pull && docker compose up -d
 ```
 
-Legacy **split** GHCR images:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml \
-  -o docker-compose.yml
-docker compose pull && docker compose up -d
-```
-
 Default access:
 - **Web Console:** http://localhost:5000
-- **Client API:** `:21121` (single) or `:21114` (split) — never panel `:5000`
-- **Default admin:** `docker compose exec betterdesk betterdesk-show-admin-credentials` (single) or `… exec console …` (split)
+- **Client API:** `:21121` — never panel `:5000`
+- **Default admin:** `docker compose exec betterdesk betterdesk-show-admin-credentials`
 
-**Image tags:** prefer pinned versions or `:latest` for stable; `:dev` tracks the development channel. All-in-one, server, and console **`:dev` images are multi-arch** (amd64 + arm64). CI builds ARM after amd64; if ARM fails, tags may briefly be amd64-only until the next green ARM publish.
-
-Node console images target **Node.js 22** (avoid Node 24.19.x for the panel).
+**Image tags:** prefer pinned versions or `:latest` for stable; `:dev` tracks the development channel. The all-in-one (`betterdesk`) and server-only (`betterdesk-server`) **`:dev` images are multi-arch** (amd64 + arm64). CI builds ARM after amd64; if ARM fails, tags may briefly be amd64-only until the next green ARM publish.
 
 ### Source build vs GHCR updates
 
 | File | Images | Update |
 |------|--------|--------|
-| `docker-compose.quick*.yml` | `ghcr.io/unitronix/…` | `docker compose pull && docker compose up -d` |
-| `docker-compose.yml` / `.single.yml` | `betterdesk-*:local` (`pull_policy: never`) | `git pull` then `docker compose up -d --build` |
+| `docker-compose.quick.single*.yml` | `ghcr.io/unitronix/betterdesk` | `docker compose pull && docker compose up -d` |
+| `docker-compose.single.yml` | `betterdesk:local` (`pull_policy: never`) | `git pull` then `docker compose -f docker-compose.single.yml up -d --build` |
 
 `docker compose pull` does **not** refresh local source-build tags. See [DOCKER_QUICKSTART](../docker/DOCKER_QUICKSTART.md#source-build-vs-prebuilt-ghcr-do-not-mix-update-commands) and [initiator_token_rejected](../docker/DOCKER_TROUBLESHOOTING.md#problem-logged-in-client-fails-with-initiator_token_rejected).
 
@@ -44,33 +34,19 @@ Node console images target **Node.js 22** (avoid Node 24.19.x for the panel).
 
 ## Deployment Options
 
-### Option 1: Multi-Container (source build)
-
-Separate containers for each service:
+### Option 1: Build from source
 
 ```bash
 git clone https://github.com/UNITRONIX/BetterDesk.git
 cd BetterDesk
-docker compose up -d --build
-```
-
-**`docker-compose.yml`** runs:
-- `betterdesk-server` — Go server (signal + relay + API on **21114**)
-- `betterdesk-console` — Node.js web console (**5000**) + optional Client API compat proxy (**21121**)
-- Shared volume for database and keys
-
-### Option 2: Single Container
-
-All services in one container (simpler, good for testing):
-
-```bash
 docker compose -f docker-compose.single.yml up -d --build
 ```
 
-Uses `supervisord` to run Go server + Node.js console in a single container. Client API listens on **21121**.
+The image builds the web app, embeds it into `betterdesk-server` and runs that one process. The web console listens on **5000** and the Client API on **21121**.
 
-> ⚠️ **Note:** In single-container mode, `SIGNAL_PORT=21116` is set explicitly to prevent conflict with `PORT=5000` (used by Node.js).
-### Option 3: Interactive Docker Script
+> ⚠️ **Note:** The signal port is always `SIGNAL_PORT` (default `21116`). A `PORT` variable from an older compose file does not change it.
+
+### Option 2: Interactive Docker Script
 
 ```bash
 ./betterdesk-docker.sh
@@ -90,16 +66,17 @@ Expose the following ports in your Docker configuration:
 
 ```yaml
 ports:
-  - "21114:21114"   # Go API
   - "21115:21115"   # NAT test
   - "21116:21116"   # Signal (TCP)
   - "21116:21116/udp"  # Signal (UDP)
   - "21117:21117"   # Relay
   - "21118:21118"   # WS Signal
   - "21119:21119"   # WS Relay
-  - "21121:21121"   # Client API (Go; optional Node proxy)
+  - "21121:21121"   # API (RustDesk Client API + REST)
   - "5000:5000"     # Web Console
 ```
+
+In the container the server's API listens on `21121`; there is no separate `21114`.
 
 ---
 
@@ -109,13 +86,13 @@ ports:
 
 ```yaml
 volumes:
-  betterdesk-data:
-    driver: local
+  - betterdesk-data:/opt/rustdesk
+  - console-data:/app/data
 ```
 
 Persist these paths:
-- `/data/` — Database files, keys, API key
-- `/opt/BetterDeskConsole/data/` — Console database, auth
+- `/opt/rustdesk/` — Database files, keys, API key
+- `/app/data/` — Web console data (uploads, fonts, agent builds, legacy `auth.db`)
 
 ### Important Files in Volume
 
@@ -123,9 +100,9 @@ Persist these paths:
 |------|-------------|
 | `id_ed25519` | Server private key |
 | `id_ed25519.pub` | Server public key |
-| `db_v2.sqlite3` | Main SQLite DB (Go + consolidated auth on fresh installs) |
+| `db_v2.sqlite3` | Main SQLite DB (devices, accounts and console settings) |
 | `.api_key` | API authentication key |
-| `auth.db` | Legacy console auth DB — only if you still use legacy SQLite auth mode |
+| `auth.db` | Legacy console auth DB in `/app/data` from older installs; the server copies it into `db_v2.sqlite3` once at its first start |
 
 > ⚠️ Never delete `id_ed25519` — all connected clients use this key. Regenerating it requires reconfiguring every client.
 
@@ -134,6 +111,20 @@ Persist these paths:
 ## PostgreSQL with Docker
 
 ### Add PostgreSQL Container
+
+`docker-compose.single.yml` has a `postgres` profile. Put the settings in a `.env` file next to it:
+
+```env
+DB_TYPE=postgres
+DATABASE_URL=postgres://betterdesk:your-secure-password@postgres:5432/betterdesk
+PG_PASSWORD=your-secure-password
+```
+
+```bash
+docker compose -f docker-compose.single.yml --profile postgres up -d --build
+```
+
+With another compose file, add a `postgres` service and give the `betterdesk` service the database settings:
 
 ```yaml
 services:
@@ -151,19 +142,15 @@ services:
       timeout: 5s
       retries: 5
 
-  server:
+  betterdesk:
     # ... existing config ...
     environment:
-      DB_URL: postgres://betterdesk:your-secure-password@postgres:5432/betterdesk?sslmode=disable
+      - DB_TYPE=postgres
+      - DATABASE_URL=postgres://betterdesk:your-secure-password@postgres:5432/betterdesk?sslmode=disable
+      - DB_URL=postgres://betterdesk:your-secure-password@postgres:5432/betterdesk?sslmode=disable
     depends_on:
       postgres:
         condition: service_healthy
-
-  console:
-    # ... existing config ...
-    environment:
-      DB_TYPE: postgresql
-      DATABASE_URL: postgres://betterdesk:your-secure-password@postgres:5432/betterdesk?sslmode=disable
 
 volumes:
   postgres-data:
@@ -173,7 +160,7 @@ volumes:
 
 ## Environment Variables
 
-### Go Server Container
+### `betterdesk` Container
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -183,15 +170,9 @@ volumes:
 | `RELAY_SERVERS` | auto-detected | Relay server addresses |
 | `API_KEY` | auto-generated | API authentication key |
 | `CDAP_ENABLED` | `N` | Enable CDAP gateway |
-
-### Node.js Console Container
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `5000` | Web console port |
-| `BETTERDESK_API_URL` | `http://server:21114/api` | Go API URL |
-| `API_KEY` | from file | API key |
-| `DB_TYPE` | `sqlite` | Database type |
+| `CONSOLE_PORT` | `5000` | Web console port (`0` turns it off) |
+| `BETTERDESK_API_URL` | `http://127.0.0.1:21121/api` | Address of the server's API |
+| `DB_TYPE` | `sqlite` | Database type (`sqlite` or `postgres`) |
 | `DATABASE_URL` | (empty) | PostgreSQL DSN |
 | `SESSION_SECRET` | auto-generated | Session encryption key |
 
@@ -199,23 +180,20 @@ volumes:
 
 ## Building Images
 
-### Build All Images
+### Build With Compose
 
 ```bash
-docker compose build
+docker compose -f docker-compose.single.yml build
 ```
 
 ### Build Individual Images
 
 ```bash
-# Go server
+# All-in-one: server with the web console
+docker build -t betterdesk:local .
+
+# Server only, web console off (CONSOLE_PORT=0)
 docker build -f Dockerfile.server -t betterdesk-server .
-
-# Node.js console
-docker build -f Dockerfile.console -t betterdesk-console .
-
-# Single container (all-in-one)
-docker build -t betterdesk .
 ```
 
 ---
@@ -228,19 +206,18 @@ docker build -t betterdesk .
 # All services
 docker compose logs -f
 
-# Specific service
-docker compose logs -f server
-docker compose logs -f console
+# The BetterDesk container
+docker compose logs -f betterdesk
 ```
 
 ### Health Check
 
 ```bash
-# Server health
-curl http://localhost:21114/api/health
+# API health
+curl http://localhost:21121/api/health
 
 # Console health
-curl http://localhost:5000
+curl http://localhost:5000/health
 ```
 
 ### Container Status
@@ -278,7 +255,7 @@ If pre-built images from `ghcr.io` are not available:
 
 ```bash
 # Option 1: Build locally
-docker compose up -d --build
+docker compose -f docker-compose.single.yml up -d --build
 
 # Option 2: Authenticate with GitHub
 echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
@@ -300,19 +277,15 @@ On RHEL/CentOS with SELinux:
 
 ```bash
 # Option 1: Named volumes (recommended)
-# Already used in docker-compose.yml
+# Already used in the compose files
 
 # Option 2: :z flag for bind mounts
 volumes:
-  - ./data:/data:z
+  - ./data:/opt/rustdesk:z
 
 # Option 3: Set context
 sudo chcon -Rt svirt_sandbox_file_t ./data
 ```
-
-### Port 5000 Conflict (Single Container)
-
-If both Go server and Node.js try to bind port 5000, ensure `SIGNAL_PORT=21116` is set in the Go server environment. This is set automatically in `supervisord.conf` and `entrypoint.sh`.
 
 ---
 

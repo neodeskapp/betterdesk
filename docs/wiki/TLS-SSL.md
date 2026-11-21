@@ -14,7 +14,7 @@ BetterDesk supports TLS encryption for all communication channels.
 | WS Signal | Auto with `--tls-signal` | 21118 | WS |
 | WS Relay | Auto with `--tls-relay` | 21119 | WS |
 
-> **Important:** By default, the API port (21114) stays HTTP even when `--tls-cert` and `--tls-key` are provided. This is intentional — the Node.js console connects to the Go API at `http://localhost:21114` and self-signed certs would break this local connection.
+> **Important:** By default, the API port (21114) stays HTTP even when `--tls-cert` and `--tls-key` are provided. This is intentional: RustDesk desktop clients call the API without TLS, so the installer leaves `-tls-api` off.
 
 ---
 
@@ -54,7 +54,7 @@ sudo certbot certonly --standalone -d betterdesk.example.com
 ```
 
 **Let's Encrypt behavior:**
-- All channels encrypted (signal, relay, API)
+- Signal, relay and the web console encrypted (the API port 21114 stays HTTP, see above)
 - Certificate auto-renewal via certbot timer
 - No client warnings (trusted CA)
 
@@ -98,10 +98,10 @@ TLS_API=Y         # Only for proper (non-self-signed) certs
 The installer automatically adds TLS flags to the systemd service:
 
 ```ini
-ExecStart=/opt/betterdesk/betterdesk-server \
-  -port 21116 -relay-port 21117 \
-  -tls-cert /opt/betterdesk/cert.pem \
-  -tls-key /opt/betterdesk/key.pem \
+ExecStart=/opt/betterdesk/betterdesk-server -mode all \
+  -relay-servers YOUR.PUBLIC.IP -key-file /opt/betterdesk/id_ed25519 -api-port 21114 \
+  -tls-cert /opt/betterdesk/ssl/betterdesk.crt \
+  -tls-key /opt/betterdesk/ssl/betterdesk.key \
   -tls-signal -tls-relay
 ```
 
@@ -140,9 +140,8 @@ The installer offers:
 
 1. Installs/generates certificates
 2. Updates systemd service with TLS flags
-3. Restarts Go server
-4. Updates `.env` with correct API URL scheme
-5. Restarts Node.js console
+3. Updates `.env` with the certificate paths and HTTPS mode for the web console
+4. Restarts `betterdesk-server`
 
 ### Windows
 
@@ -155,9 +154,11 @@ Same certificate options available. Certificates are stored in `C:\BetterDesk\`.
 
 ---
 
-## Node.js Console + TLS
+## Web Console + TLS
 
-The Node.js web console (port 5000) does **not** directly use TLS from BetterDesk. For HTTPS on the web console, use a reverse proxy:
+The web console serves HTTPS itself when `HTTPS_ENABLED=true` and `SSL_CERT_PATH` / `SSL_KEY_PATH` point at a certificate: it listens with TLS on `HTTPS_PORT` (default 5443), and port 5000 redirects there (`HTTP_REDIRECT_HTTPS`, on by default). The installer's option C sets this up.
+
+Behind a reverse proxy, keep `HTTPS_ENABLED=false` and let the proxy terminate TLS:
 
 ### Nginx Example
 
@@ -200,9 +201,9 @@ Set `TRUST_PROXY=true` in `.env` when using a reverse proxy.
 
 ### API returns "client sent an HTTP request to an HTTPS server"
 
-The API is running HTTPS but the Node.js console is connecting via HTTP. Fix:
-- Remove `--tls-api` flag (recommended for self-signed certs)
-- Or update `.env`: `BETTERDESK_API_URL=https://localhost:21114/api`
+The API port runs HTTPS (`-tls-api`) but a caller, such as a RustDesk client, a reverse proxy or a script, connects over plain HTTP. Fix:
+- Remove the `-tls-api` flag (recommended; RustDesk clients expect plain HTTP on 21114)
+- Or point that caller at `https://`
 
 ### WebSocket connection fails
 

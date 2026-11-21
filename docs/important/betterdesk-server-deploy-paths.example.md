@@ -13,8 +13,11 @@
 - Query peers: `sudo -u postgres psql betterdesk -c "SELECT id FROM peers"`
 
 ## Deploy procedure
+The binary serves the web console, so build the web app and embed it before
+`go build`; without that step the console answers no pages.
 ```
-cd betterdesk-server && go build -o /tmp/betterdesk-server-new .
+(cd web-ui && npx -y npm@11.6.2 ci && npm run build)
+cd betterdesk-server && go run ./cmd/embed-webui && go build -o /tmp/betterdesk-server-new .
 scp /tmp/betterdesk-server-new YOUR_SSH_USER@YOUR_SERVER_IP:/tmp/
 ssh YOUR_SSH_USER@YOUR_SERVER_IP 'sudo systemctl stop betterdesk-server && \
   sudo cp /tmp/betterdesk-server-new /opt/betterdesk/betterdesk-server && \

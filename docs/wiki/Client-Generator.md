@@ -1,6 +1,6 @@
 # BetterDesk Agents (Client distribution)
 
-The console page **BetterDesk Agents** (`/agents`; old `/generator` redirects
+The console page **Support agents** (`/agents`; old `/generator` redirects
 here) explains how to get **incoming-only** desktop agents. Production
 BetterDesk servers (typically Linux) **do not compile** clients on the panel
 host — the old in-panel “Client Generator” build UI was removed to avoid
@@ -21,14 +21,14 @@ client loads branding at runtime from the Console **Client Branding API**.
 ## Quick start (production — download-only)
 
 1. Log in as **admin**.
-2. Open **BetterDesk Agents** (`/agents`).
+2. Open **Settings → Support agents** (`/agents`).
 3. Click **Import latest release** (or download signed packages from
    BetterDesk-Client releases).
 4. Share the public download / portal links with end users.
 5. After install, the generic agent asks for the BetterDesk HTTPS address
    (local IP or public), downloads the server public key, and can show a
    pairing QR (`type: betterdesk-agent-pairing`).
-6. In **Główne → Pair agent** an operator with `enrollment.approve` enters the
+6. In **Devices → Pair agent** an operator with `enrollment.approve` enters the
    short one-time code (10 minutes, single use) and the server address. The QR
    scanner is still reachable from that dialog (**Scan agent QR**) for agents
    that display one.
@@ -135,4 +135,4 @@ Both are disabled by default.
 - Do not expose `agent-builds`, builder requests or Client source trees as
   static web directories.
 - The signing seed (embedded mode) is secret and must be readable only by
-  the console service.
+  the `betterdesk-server` service.

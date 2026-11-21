@@ -68,9 +68,9 @@ sudo ./betterdesk.sh   # option 6 — Reset admin password
 # Windows
 .\betterdesk.ps1       # option 6
 
-# Manual (Node.js console)
-cd /opt/BetterDeskConsole
-node reset-password.js
+# Manual (Linux; the new password is read from standard input)
+printf '%s\n' 'NewPassword' | sudo -u betterdesk env BETTERDESK_ENV_FILE=/opt/BetterDeskConsole/.env \
+  /opt/betterdesk/betterdesk-server reset-password admin
 ```
 
 ---
@@ -81,8 +81,8 @@ Compatible with Google Authenticator, Authy, and other TOTP apps.
 
 ### Enable 2FA
 
-1. **Settings** → **Change Password**
-2. **Enable 2FA** → scan QR code
+1. **Settings** → **Sign-in** → **Two-factor sign-in**
+2. Turn on 2FA → scan QR code
 3. Enter verification code and save recovery codes
 
 ### Login with 2FA
@@ -93,13 +93,13 @@ Enter username/password, then the 6-digit TOTP code (30-second window with toler
 
 - Use a one-time recovery code
 - Another admin can disable 2FA from **Users**
-- CLI password reset clears 2FA as well
+- The CLI password reset sets only the password; it leaves 2FA as it is
 
 ---
 
 ## LDAP / Active Directory
 
-Directory authentication for the web console and RustDesk desktop client. Configure under **Settings → Authentication → LDAP**. See [[LDAP / Active Directory|LDAP-AD]] for AD setup, group→role mapping, and client login steps.
+Directory authentication for the web console and RustDesk desktop client. Configure under **Settings → Sign-in → LDAP / Active Directory**. See [[LDAP / Active Directory|LDAP-AD]] for AD setup, group→role mapping, and client login steps.
 
 ---
 
@@ -135,7 +135,7 @@ See [[API Reference|API-Reference]] for all endpoints.
 
 ### RustDesk client sessions
 - DB-backed tokens (default **7 days**, sliding renewal, max **30 days**)
-- Configure under **Settings → Authentication → RustDesk clients**
+- Configure under **Settings → Sign-in → RustDesk client sessions**
 
 ### Password policy
 - Minimum 6 characters, bcrypt hashing

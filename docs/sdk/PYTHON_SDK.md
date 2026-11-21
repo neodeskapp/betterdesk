@@ -8,7 +8,7 @@ pip install betterdesk-cdap
 pip install -e sdks/python/
 ```
 
-**Requirements:** Python 3.8+, `websockets >= 12.0`
+**Requirements:** Python 3.9+, `websockets >= 12.0`
 
 ## CDAPBridge
 

@@ -7,15 +7,14 @@
 <br><br>
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
-![Go](https://img.shields.io/badge/Go-1.25+-00ADD8.svg)
-![Node.js](https://img.shields.io/badge/Node.js-22+-339933.svg)
+![Go](https://img.shields.io/badge/Go-1.26+-00ADD8.svg)
 ![Version](https://img.shields.io/badge/version-3.5.266-brightgreen.svg)
 
 [![Sponsor](https://img.shields.io/badge/GitHub-Sponsor-181717?logo=github&logoColor=white&style=flat)](https://github.com/sponsors/UNITRONIX)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%23FFDD00?logo=buy-me-a-coffee&logoColor=black&style=flat)](https://buymeacoffee.com/unitronix)
 [![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white&style=flat)](https://discord.gg/MPp9hyyG97)
 
-**Self-hosted RustDesk-compatible server in Go** (one binary instead of hbbs + hbbr) **plus a Node.js web console.**
+**Self-hosted RustDesk-compatible server in Go** (one binary instead of hbbs + hbbr) **with the web console built in.**
 
 [Wiki](https://github.com/UNITRONIX/BetterDesk/wiki) · [Privacy](PRIVACY.md) · [Sponsors](SPONSORS.md) · [Changelog](CHANGELOG.md)
 
@@ -65,19 +64,6 @@ docker compose exec betterdesk betterdesk-show-admin-credentials
 
 Open **http://your-server:5000** (plain HTTP, not HTTPS).
 
-<details>
-<summary>Legacy two-container layout (split images)</summary>
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.yml -o docker-compose.yml
-docker compose pull && docker compose up -d
-docker compose exec console betterdesk-show-admin-credentials
-```
-
-The split layout is kept for existing deployments (API port **21114**, single container uses **21121**). New installs should use the all-in-one image above.
-
-</details>
-
 ### Windows
 
 Run `betterdesk.ps1` as Administrator — see the [Installation wiki](https://github.com/UNITRONIX/BetterDesk/wiki/Installation).
@@ -102,9 +88,9 @@ Wiki source in-repo: [`docs/wiki/`](docs/wiki/) (sync with `scripts/sync-wiki.ps
 
 ## Web console preview
 
-The BetterDesk web console defaults to the UX 3.5 interface; an opt-in **UX 3.6 beta** layout
-(grouped sidebar, list-first devices, per-topic settings) is available in Settings → General.
-These preview images show the UX 3.5 dark theme in English with fictional device data:
+The BetterDesk web console has a grouped sidebar (Devices / Support / People / Activity / Settings),
+a list-first device view with side panels and per-topic Settings with search.
+These preview images are from an earlier version of the console, in the dark theme in English with fictional device data:
 
 <table>
   <tr>
@@ -141,7 +127,7 @@ See the [Web Console wiki page](https://github.com/UNITRONIX/BetterDesk/wiki/Web
 |------|------|
 | 21116 TCP+UDP | Signal |
 | 21117 TCP | Relay |
-| 21121 | RustDesk Client API (Go; optional Node proxy) |
+| 21121 | RustDesk Client API |
 | 21114 | Admin REST (usually localhost) |
 | 5000 | Web console |
 | 21122 | CDAP (optional) |
@@ -156,21 +142,19 @@ Diagnostics → [issue](https://github.com/UNITRONIX/BetterDesk/issues) → fork
 
 ## Credits
 
-### Console redesign — UX 3.6
+### Console redesign
 
-The **UX 3.6 beta** console layout is modelled on the community redesign by
+The web console's layout is modelled on the community redesign by
 **[Linus Rath (@rathlinus)](https://github.com/rathlinus)** — the grouped
 sidebar (Devices / Support / People / Activity / Settings), the list-first
 device view with side panels, per-topic Settings with search, and light/dark
 coverage across all 26 locales. The redesign was proposed in
 [issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493)
-([PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)) and is
-implemented in BetterDesk's existing EJS/JavaScript/CSS stack rather than
-merged as a branch.
+([PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)). The console is
+the Svelte app in [`web-ui/`](web-ui/), built into the `betterdesk-server` binary.
 
 Design credit is recorded in
-[docs/development/CONTRIBUTOR-ATTRIBUTIONS.md](docs/development/CONTRIBUTOR-ATTRIBUTIONS.md)
-and shown in the console (Settings → General → Console interface).
+[docs/development/CONTRIBUTOR-ATTRIBUTIONS.md](docs/development/CONTRIBUTOR-ATTRIBUTIONS.md).
 
 ---
 

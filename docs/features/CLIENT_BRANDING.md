@@ -5,8 +5,8 @@ White-label profile for **desktop remote clients** connected to a BetterDesk ser
 ## Source of truth
 
 - Stored in the **Go** API (`server_config` keys `branding_*`).
-- Edited in the web console: **Main → Client Branding** (`/client-branding`).
-- Distinct from **Settings → Branding** (console / RdClient appearance via `brandingService`).
+- Edited in the web console: **Clients and enrollment → Client app branding** (`/client-branding`).
+- Distinct from **Settings → Appearance** (console / RdClient appearance).
 
 ## Public read API
 
@@ -42,5 +42,5 @@ Additive schema (`schema_version: 1`):
 ## Related files
 
 - Go: `betterdesk-server/api/branding_handlers.go`, `client_api_handlers.go`
-- Panel: `web-nodejs/routes/client-branding.routes.js`, `views/client-branding.ejs`
+- Panel: `betterdesk-server/console/routes/clientbranding/routes.go`, `web-ui/src/routes/(console)/client-branding/+page.svelte`
 - Desktop client: `BetterDesk-Client/src/hbbs_http/betterdesk.rs`, `sync.rs`

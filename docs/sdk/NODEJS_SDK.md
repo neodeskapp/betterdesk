@@ -8,7 +8,7 @@ npm install betterdesk-cdap
 npm install ./sdks/nodejs/
 ```
 
-**Requirements:** Node.js 18+, `ws ^8.18.0`
+**Requirements:** Node.js 22+, `ws ^8.18.0`
 
 ## CDAPBridge
 

@@ -8,7 +8,7 @@ Frequently asked questions about BetterDesk.
 
 ### What is BetterDesk?
 
-BetterDesk is a complete RustDesk-compatible remote desktop infrastructure. It replaces the original RustDesk `hbbs` + `hbbr` servers with a single Go binary, adds a Node.js web management console, desktop clients, and an IoT device management protocol (CDAP).
+BetterDesk is a complete RustDesk-compatible remote desktop infrastructure. It replaces the original RustDesk `hbbs` + `hbbr` servers with a single Go binary that also serves a web management console, and adds desktop clients and an IoT device management protocol (CDAP).
 
 ### Is BetterDesk compatible with RustDesk clients?
 
@@ -28,7 +28,6 @@ BetterDesk is an independent, open-source project that provides features beyond 
 - CDAP IoT protocol
 - PostgreSQL support
 - Docker single-container deployment
-- Optional UX 3.5 console shell
 
 ### Is it free?
 
@@ -85,8 +84,9 @@ sudo ./betterdesk.sh   # Choose option 6
 # Windows
 .\betterdesk.ps1       # Choose option 6
 
-# Manual
-cd /opt/BetterDeskConsole && node reset-password.js
+# Manual (Linux; the new password is read from standard input)
+printf '%s\n' 'NewPassword' | sudo -u betterdesk env BETTERDESK_ENV_FILE=/opt/BetterDeskConsole/.env \
+  /opt/betterdesk/betterdesk-server reset-password admin
 ```
 
 ### How do I switch from SQLite to PostgreSQL?
@@ -103,10 +103,11 @@ Or manually:
   -dst "postgres://user:pass@localhost:5432/betterdesk"
 ```
 
-Then update `.env`:
+Then update `.env` and restart `betterdesk-server`:
 ```env
-DB_TYPE=postgresql
+DB_TYPE=postgres
 DATABASE_URL=postgres://user:pass@localhost:5432/betterdesk
+DB_URL=postgres://user:pass@localhost:5432/betterdesk
 ```
 
 ### How do I set up TLS/SSL?
@@ -226,7 +227,7 @@ The relay proxies peer-to-peer traffic via `io.Copy`. Each active remote desktop
 ### Will updating break my setup?
 
 No. Current panel updates (Settings → Updates or `betterdesk.sh` option 2) keep your data in place:
-- Database files (`db_v2.sqlite3` on fresh installs; legacy `auth.db` only if you still use SQLite auth legacy mode)
+- Database files (`db_v2.sqlite3`; legacy `auth.db` from older installs)
 - PostgreSQL configuration
 - SSL certificates
 - API keys and admin credentials
@@ -277,9 +278,10 @@ See [[CDAP]] for the full protocol specification.
 
 ### How do I add a new language?
 
-1. Copy `web-nodejs/lang/en.json` to `web-nodejs/lang/{code}.json`
+1. Copy `betterdesk-server/console/static/files/lang/en.json` to `{code}.json` in the same folder
 2. Translate all values
-3. The language auto-appears in the console
+3. Add the code to `knownLanguages` in `betterdesk-server/console/i18n/bundle.go`; the console loads only the languages listed there
+4. Run `npm run i18n:check` from the repository root, then rebuild `betterdesk-server` (the language files are built into the binary)
 
 ### Where do I report bugs?
 
@@ -299,7 +301,7 @@ Organizations let you scope devices and users for multi-team or MSP deployments.
 
 ### Can I use Azure AD / Okta / Google login?
 
-Yes. Configure **OIDC / OAuth2** under **Settings → Authentication**. See [[OIDC SSO|OIDC-SSO]].
+Yes. Configure **OIDC / OAuth2** under **Settings → Sign-in**. See [[OIDC SSO|OIDC-SSO]].
 
 ### Does BetterDesk send my data to the maintainers?
 
@@ -311,7 +313,7 @@ No. It is self-hosted. Fleet metrics go to **your** server. Update checks hit Gi
 
 ### Why do RustDesk clients disconnect after ~24 hours?
 
-Fixed in v3.3.129+: client sessions are DB-backed (7-day sliding, 30-day max). Update the server, then sign in once in the RustDesk client. Configure TTL under **Settings → Authentication → RustDesk clients**.
+Fixed in v3.3.129+: client sessions are DB-backed (7-day sliding, 30-day max). Update the server, then sign in once in the RustDesk client. Configure TTL under **Settings → Sign-in → RustDesk client sessions**.
 
 ---
 

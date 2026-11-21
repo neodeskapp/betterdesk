@@ -62,28 +62,34 @@ or an explicitly approved stable hotfix.
 
 - Git
 - Go version required by `betterdesk-server/go.mod`
-- Node.js version required by `web-nodejs/package.json`
+- Node.js version required by `web-ui/package.json` (22.17 or newer), to
+  build and test the web app
 - Docker when changing images, compose files, or entrypoints
 
 ### Local validation
 
 ```bash
-# Console
-cd web-nodejs
-npm ci
-npm test
-
-# Go server
-cd ../betterdesk-server
+# Go server and web console
+cd betterdesk-server
 go test -race -count=1 ./...
 go vet ./...
+
+# Web app (npm 10 can't resolve its dependency tree, so install with npm 11)
+cd ../web-ui
+npx -y npm@11.6.2 ci
+npm run check
+npm test
+
+# Language files
+cd ..
+npm run i18n:check
 ```
 
 ### Local-only diagnostic gate
 
 Before enabling the local hooks, install the required local tools:
 
-- Node.js and npm versions accepted by `web-nodejs/package.json`
+- Node.js and npm versions accepted by `web-ui/package.json`
 - Go accepted by `betterdesk-server/go.mod` and `govulncheck`
 - Docker Desktop with the Compose plugin and the `postgres:16-alpine` image
 - Bash, ShellCheck, PowerShell, ripgrep, gitleaks, Trivy
@@ -103,10 +109,11 @@ It does not change the repository or GitHub workflows. Both `pre-commit` and
 npm run local:gate
 ```
 
-The gate runs the Node.js console and SDK tests, Go vet/race/vulnerability
-checks/builds, Python compilation/tests and `pip-audit`, all npm audits,
-gitleaks, the sensitive-path scan, Trivy filesystem and local-image scans,
-installer syntax/unit checks, protocol/i18n/provenance/version checks, Compose
+The gate runs the web app tests and type check, the Node.js SDK tests, Go
+vet/race/vulnerability checks/builds, Python compilation/tests and
+`pip-audit`, all npm audits, gitleaks, the sensitive-path scan, Trivy
+filesystem and local-image scans, installer syntax/unit checks,
+i18n/provenance/version checks, Compose
 validation, isolated PostgreSQL tests, and local Docker health/login/restart
 smoke tests. It creates JSON and Markdown diagnostics in
 `.local-test-results/`.

@@ -9,8 +9,8 @@ workflow files do not call the local gate.
 
 Install the following commands and make them available on `PATH`:
 
-- Node.js 22 or newer and npm
-- Go 1.25 or newer and `govulncheck`
+- Node.js 22.17 or newer and npm
+- The Go version `betterdesk-server/go.mod` requires, and `govulncheck`
 - Docker Desktop with the Compose plugin
 - Bash and ShellCheck (Git Bash or WSL can provide Bash)
 - PowerShell, ripgrep, gitleaks, and Trivy
@@ -61,9 +61,9 @@ npm run local:gate:dry-run
 
 The gate fails closed when any required stage is missing or incomplete.
 
-- Node.js: clean installs and audits for the root package, console, and Node
-  SDK; frontend syntax; protocol artifacts; all locale parity; provenance;
-  full Jest tests; and SDK tests.
+- Node.js: clean installs and audits for the root package, the web app
+  (`web-ui`), and the Node SDK; locale parity; provenance; the web app's unit
+  tests and type check; and SDK tests.
 - Go: `go vet`, race-enabled tests, `govulncheck`, native build/help,
   Linux amd64/arm64 and Windows amd64 cross-builds, and PostgreSQL tests.
 - Python: bytecode compilation for SDK/bridges, Python SDK unit tests, and

@@ -1,6 +1,6 @@
 # rdclient WebCodecs black-screen fix
 
-Path: web-nodejs/public/js/rdclient/
+Path: web-ui/static/rdclient/
 
 ## Root cause (black screen, 0 FPS on HTTPS / native RustDesk)
 - On HTTPS (port 5443) browser is secure context -> WebCodecs VideoDecoder path (NOT JMuxer).
@@ -23,4 +23,5 @@ Path: web-nodejs/public/js/rdclient/
 ## Proto facts
 - message.proto: `bool refresh_video = 10;` -> buildMisc('refreshVideo', true) is correct.
 - Mouse mask must be TYPE | (BUTTON << 3) (RustDesk: button=mask>>3, type=mask&7).
-- cacheVersion = appVersion + Date.now() (server.js) -> service restart busts browser cache.
+- web-ui/src/lib/remote/rdclient.ts loads each rdclient script with `?v=<web app build version>`
+  -> a new web app build busts the browser cache.

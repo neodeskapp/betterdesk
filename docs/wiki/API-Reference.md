@@ -7,7 +7,7 @@ BetterDesk exposes two HTTP APIs on the Go server:
 | **21114** | Admin REST API (panel, automation; often bound to localhost) |
 | **21121** | RustDesk **Client API** (login, address book, heartbeat) |
 
-On some installs the Node console still listens on **21121** as a **compat reverse-proxy** to Go. Handlers live in Go (`client_api_handlers.go`). Point RustDesk **API Server** at `:21121` (with `http://` or `https://`).
+On a native install the web console inside `betterdesk-server` listens on **21121** and passes the Client API on to the Go API on 21114; in Docker the Go API itself listens on **21121**. Handlers live in Go (`client_api_handlers.go`). Point RustDesk **API Server** at `:21121` (with `http://` or `https://`).
 
 ---
 
@@ -19,7 +19,7 @@ On some installs the Node console still listens on **21121** as a **compat rever
 X-API-Key: <your-api-key>
 ```
 
-Used by the panel talking to Go. Key file is typically `/opt/betterdesk/.api_key`.
+Used by scripts and integrations talking to the API. Key file is typically `/opt/betterdesk/.api_key`.
 
 ### JWT (user / client)
 
@@ -39,11 +39,12 @@ Base URL: `http://your-server:21114/api`
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/server-config` | Address, public key, version |
+| `GET` | `/api/server/pubkey` | Public key |
 | `POST` | `/api/heartbeat` | Client heartbeat |
 | `POST` | `/api/sysinfo` | System info upload |
 | `POST` | `/api/sysinfo_ver` | Sysinfo hash check |
-| `GET` | `/api/server/stats` | Peer counts |
+
+`GET /api/server/stats` (peer counts) needs an API key, or a caller address on `METRICS_IP_ALLOWLIST`.
 
 ### Devices (API key)
 

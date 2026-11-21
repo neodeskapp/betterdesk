@@ -316,10 +316,10 @@ To enable: Click the monitor icon (🖥️) in the top navigation bar.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding standards, and pull request guidelines.
+See [CONTRIBUTING.md](../development/CONTRIBUTING.md) for development setup, coding standards, and pull request guidelines.
 
-See [CONTRIBUTING_TRANSLATIONS.md](CONTRIBUTING_TRANSLATIONS.md) for adding new languages.
+See [CONTRIBUTING_TRANSLATIONS.md](../development/CONTRIBUTING_TRANSLATIONS.md) for adding new languages.
 
 ## License
 
-GNU Affero General Public License v3.0 (AGPL-3.0) — See [LICENSE](../LICENSE) for details.
+GNU Affero General Public License v3.0 (AGPL-3.0) — See [LICENSE](../../LICENSE) for details.

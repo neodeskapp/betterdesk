@@ -3,7 +3,7 @@
 > **Version**: 1.0.0  
 > **Status**: Draft (planning only — no implementation yet)  
 > **Created**: 2026-06-09  
-> **Depends on**: [BETTERDESK_v3_OVERVIEW.md](BETTERDESK_v3_OVERVIEW.md), [CDAP_PROTOCOL.md](CDAP_PROTOCOL.md), [REMOTE_CLIENT_UNIFICATION_PLAN.md](../REMOTE_CLIENT_UNIFICATION_PLAN.md)  
+> **Depends on**: [BETTERDESK_v3_OVERVIEW.md](BETTERDESK_v3_OVERVIEW.md), [CDAP_PROTOCOL.md](CDAP_PROTOCOL.md)  
 > **Upstream reference**: [MeshCentral](https://github.com/Ylianst/MeshCentral) (Apache-2.0), target pin **1.2.x**
 
 ---
@@ -140,7 +140,7 @@ device_type=os_agent || cdap_connected    →  transport=cdap
 else                                      →  transport=rd (RustDesk)
 ```
 
-**Rationale**: Aligns with [REMOTE_CLIENT_UNIFICATION_PLAN.md](../REMOTE_CLIENT_UNIFICATION_PLAN.md) — one URL `/remote/:id`, pluggable transports.
+**Rationale**: One URL `/remote/:id`, pluggable transports.
 
 ### AD-6: Pinned upstream version
 
@@ -424,7 +424,6 @@ See [Feature Gap Analysis](#feature-gap-analysis). Includes terminal (`p=1`), fi
 ### Phase 5 — Client ecosystem strategy (documentation + panel UX)
 
 - Document community path: MeshAgent → BetterDesk `.msh`.
-- Continue [AGENT_CLIENT_ROADMAP_2026-05-27.md](../AGENT_CLIENT_ROADMAP_2026-05-27.md) without pause.
 - Future MGMT client: fourth transport `mesh` in device list.
 - `linked_peer_id` UX for hybrid hosts.
 
@@ -625,8 +624,6 @@ Ships via built-in panel updater (`updateService.js`) and `betterdesk.sh` / `bet
 - [MeshCtrl documentation](https://docs.meshcentral.com/meshctrl/)
 - [BetterDesk v3 Overview](BETTERDESK_v3_OVERVIEW.md)
 - [CDAP Protocol](CDAP_PROTOCOL.md)
-- [Remote Client Unification Plan](../REMOTE_CLIENT_UNIFICATION_PLAN.md)
-- [Agent Client Roadmap](../AGENT_CLIENT_ROADMAP_2026-05-27.md)
 
 ---
 

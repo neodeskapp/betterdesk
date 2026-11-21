@@ -2,7 +2,7 @@
 
 **Image:** `ghcr.io/unitronix/betterdesk`
 
-This is the **recommended** BetterDesk Docker deployment. It bundles the Go server (signal, relay, HTTP API) and the Node.js web console in a single container, managed by supervisord.
+This is the **recommended** BetterDesk Docker deployment. One container runs one process, `betterdesk-server`, which serves signal, relay, the HTTP API and the web console.
 
 ## Quick start
 
@@ -36,6 +36,6 @@ Pin a release tag with `BETTERDESK_IMAGE_TAG` (see [DOCKER_QUICKSTART.md](DOCKER
 | 21118–21119 | WebSocket signal/relay |
 | 21121 | HTTP API (RustDesk client + REST) |
 
-## Legacy split images
+## Server-only image
 
-For two-container deployments, use `betterdesk-server` and `betterdesk-console` with `docker-compose.quick.yml` or `install.sh --split`.
+`ghcr.io/unitronix/betterdesk-server` is the same server with its web console off (`CONSOLE_PORT=0`). An older two-container install (server and console containers) moves to the all-in-one image with `install.sh --migrate-split`; the named volumes are kept.

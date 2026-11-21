@@ -53,8 +53,7 @@ docker compose -f docker-compose.single.yml up -d
 
 ### Symptom
 ```
-Error: EACCES: permission denied, open '/opt/rustdesk/db_v2.sqlite3'
-Error: cannot open database file
+ERROR: /opt/rustdesk is NOT writable by the betterdesk user (UID 10001).
 ```
 
 Or containers fail to start with permission errors when using bind mounts.
@@ -71,7 +70,7 @@ On Synology / NAS bind mounts, host folders are often owned by DSM UIDs that are
 The default docker-compose.yml uses named volumes which work correctly with SELinux:
 ```yaml
 volumes:
-  - rustdesk-data:/opt/rustdesk    # Named volume - SELinux compatible
+  - betterdesk-data:/opt/rustdesk  # Named volume - SELinux compatible
   - console-data:/app/data         # Named volume - SELinux compatible
 ```
 
@@ -206,11 +205,11 @@ docker compose exec -u betterdesk betterdesk sh -lc '
   ls -la /opt/rustdesk/.admin_credentials /app/data/.admin_credentials 2>&1
 '
 
-# Capture the CSRF token from the login page, then log in from inside the
-# container so Nginx Proxy Manager is not part of this test.
+# Capture the CSRF token from the sign-in page data, then log in from inside
+# the container so Nginx Proxy Manager is not part of this test.
 docker compose exec betterdesk sh -lc '
-  curl -sS -c /tmp/bd-cookies http://127.0.0.1:5000/login > /tmp/bd-login.html
-  grep -o "csrfToken: '[^']*'" /tmp/bd-login.html
+  curl -sS -c /tmp/bd-cookies http://127.0.0.1:5000/api/auth/login-page > /tmp/bd-login.json
+  grep -o "\"csrfToken\":\"[^\"]*\"" /tmp/bd-login.json
   # Copy the token printed above into <CSRF_TOKEN>.
   curl -i -sS -b /tmp/bd-cookies -c /tmp/bd-cookies \
     -H "Content-Type: application/json" \
