@@ -54,7 +54,7 @@ func TestDeviceRoutesKeepToTheScope(t *testing.T) {
 		{http.MethodGet, "/api/peers/%s/access-policy", ""},
 		{http.MethodPost, "/api/peers/%s/session-grant", `{}`},
 		{http.MethodGet, "/api/peers/%s/connect-password", ""},
-		{http.MethodPost, "/api/peers/%s/exec", `{"command":"whoami"}`},
+		{http.MethodPost, "/api/mesh/devices/%s/share", `{}`},
 		{http.MethodPost, "/api/cdap/devices/%s/command", `{"widget_id":"w","action":"a"}`},
 		{http.MethodPost, "/api/mesh/devices/%s/desktop", `{}`},
 		{http.MethodPost, "/api/guest/access-links", `{"peer_ids":["%s"],"ttl_minutes":30}`},

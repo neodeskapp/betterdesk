@@ -607,9 +607,9 @@ func (s *Server) routes() *http.ServeMux {
 	// Enrollment — operator approval (admin/operator)
 	mux.HandleFunc("GET /api/enrollment/pending", s.requireRole(auth.RoleOperator, s.handleListPendingDevices))
 	mux.HandleFunc("GET /api/enrollment/history", s.requireRole(auth.RoleOperator, s.handleListEnrollmentHistory))
-	mux.HandleFunc("POST /api/enrollment/approve/{id}", s.requireRole(auth.RoleOperator, s.handleApproveDevice))
-	mux.HandleFunc("POST /api/enrollment/reject/{id}", s.requireRole(auth.RoleOperator, s.handleRejectDevice))
-	mux.HandleFunc("POST /api/enrollment/clear-rejection/{id}", s.requireRole(auth.RoleOperator, s.handleClearEnrollmentRejection))
+	mux.HandleFunc("POST /api/enrollment/approve/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleApproveDevice))
+	mux.HandleFunc("POST /api/enrollment/reject/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleRejectDevice))
+	mux.HandleFunc("POST /api/enrollment/clear-rejection/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleClearEnrollmentRejection))
 
 	// LDAP configuration (server.config permission)
 	mux.HandleFunc("GET /api/auth/ldap/config", s.requirePermission(auth.PermServerConfig, s.handleGetLDAPConfig))
@@ -652,7 +652,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/cdap/devices/{id}", s.scopedDevice(s.handleCDAPDeviceInfo))
 	mux.HandleFunc("GET /api/cdap/devices/{id}/manifest", s.scopedDevice(s.handleCDAPDeviceManifest))
 	mux.HandleFunc("GET /api/cdap/devices/{id}/state", s.scopedDevice(s.handleCDAPDeviceState))
-	mux.HandleFunc("POST /api/cdap/devices/{id}/command", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleCDAPSendCommand)))
+	mux.HandleFunc("POST /api/cdap/devices/{id}/command", s.requirePermission(auth.PermCDAPCommand, s.scopedDevice(s.handleCDAPSendCommand)))
 	mux.HandleFunc("GET /api/cdap/alerts", s.handleCDAPAlerts)
 
 	// CDAP auth delegation (admin only)
@@ -702,8 +702,10 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/mesh/recordings", s.requirePermission(auth.PermDeviceView, s.handleMeshRecordingsList))
 	mux.HandleFunc("GET /api/mesh/recordings/{id}", s.requirePermission(auth.PermDeviceConnect, s.handleMeshRecordingDownload))
 	mux.HandleFunc("GET /api/session/recordings", s.requirePermission(auth.PermDeviceView, s.handleSessionRecordingsList))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/exec", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleMeshExec)))
-	mux.HandleFunc("POST /api/peers/{id}/exec", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleUnifiedPeerExec)))
+	// A command runs on the device like one typed into the mesh terminal,
+	// so both exec routes ask the terminal's permission.
+	mux.HandleFunc("POST /api/mesh/devices/{id}/exec", s.requirePermission(auth.PermMeshTerminal, s.scopedDevice(s.handleMeshExec)))
+	mux.HandleFunc("POST /api/peers/{id}/exec", s.requirePermission(auth.PermMeshTerminal, s.scopedDevice(s.handleUnifiedPeerExec)))
 
 	if s.meshGw != nil {
 		s.meshGw.RegisterRoutes(mux)

@@ -12,10 +12,10 @@ import (
 // existed before keeps its row and loses the rejection's ban (RV171).
 func TestEnrollmentRejectTouchesOnlyPendingRequests(t *testing.T) {
 	srv, database := newInternalServer(t, nil)
-	operator := map[string]string{"X-API-Key": testOperatorKey}
+	admin := map[string]string{"X-API-Key": testAPIKey}
 	call := func(method, path, body string) (int, string) {
 		t.Helper()
-		return listenerCall(t, srv, method, path, body, operator)
+		return listenerCall(t, srv, method, path, body, admin)
 	}
 
 	if status, body := call(http.MethodPost, "/api/enrollment/reject/PEERAAA1", `{"ban":true}`); status != http.StatusNotFound {
