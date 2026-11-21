@@ -11,12 +11,14 @@ import (
 // PostgresDB implements PanelSyncStore when panel tables are in the consolidated database.
 var _ PanelSyncStore = (*PostgresDB)(nil)
 
+// pgHasTable reports whether the table is in the connection's current
+// schema, where Migrate and the console create their tables.
 func (pg *PostgresDB) pgHasTable(name string) bool {
 	var exists bool
 	err := pg.pool.QueryRow(pg.ctx,
 		`SELECT EXISTS (
 			SELECT 1 FROM information_schema.tables
-			WHERE table_schema = 'public' AND table_name = $1
+			WHERE table_schema = current_schema() AND table_name = $1
 		)`, name).Scan(&exists)
 	return err == nil && exists
 }
