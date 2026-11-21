@@ -117,11 +117,9 @@ function walk(dir) {
         }
         if (!STALE_PORT.test(text)) continue;
 
-        // Allowed only where the text explains that the port does not exist, or in the
-        // historical document that is explicitly marked as such.
-        const historical =
-            full.endsWith(path.join('docs', 'architecture', 'PORT_SECURITY.md')) ||
-            /does not exist|never shipped|HISTORICAL|histor/i.test(text);
+        // Allowed only where the text explains that the port does not exist, or in a
+        // document that is explicitly marked as historical.
+        const historical = /does not exist|never shipped|HISTORICAL|histor/i.test(text);
         if (!historical) {
             failures.push(
                 `${path.relative(ROOT, full)} mentions port 21120, which does not exist in the code`

@@ -16,7 +16,6 @@
 - [[Fleet and Policies|Fleet-and-Policies]]
 - [[Unattended Access and WoL|Unattended-and-WoL]]
 - [[Web Remote Desktop|Web-Remote]]
-- [[UX 3.5|UX-3.5]]
 
 ### Ops
 - [[Configuration]]
