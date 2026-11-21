@@ -176,6 +176,9 @@ type Server struct {
 	// signal port and the NAT test port.
 	wsConns  *connLimiter
 	natConns *connLimiter
+
+	// maxPendingEnrollments caps the managed-mode approval queue.
+	maxPendingEnrollments int
 }
 
 // New creates a new signal server instance.
@@ -189,6 +192,8 @@ func New(cfg *config.Config, kp *crypto.KeyPair, database db.Database) *Server {
 		networkPolicy: policy.NewNetworkResolver(database),
 		wsConns:       newConnLimiter(maxWSSignalConnsPerHost, maxWSSignalConns),
 		natConns:      newConnLimiter(maxNATConnsPerHost, maxNATConns),
+
+		maxPendingEnrollments: defaultMaxPendingEnrollments,
 	}
 	if cfg != nil {
 		s.lanNet = parseLANMask(cfg.Mask)

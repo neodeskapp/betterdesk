@@ -799,6 +799,13 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 		log.Printf("[signal] Failed to check peer %s before RegisterPk enrollment: %v", id, err)
 		return registerPkResponse(pb.RegisterPkResponse_SERVER_ERROR)
 	}
+	// A RegisterPk for an id the server does not know writes a row (a peer,
+	// or an approval queue entry), so it counts against the same per-address
+	// limit as a heartbeat for a new id.
+	if existingPeer == nil && s.peers.Get(id) == nil && !s.allowRegistration(clientHost, id, false) {
+		log.Printf("[signal] Rate limited RegisterPk for new peer %s from %s", id, clientHost)
+		return registerPkResponse(pb.RegisterPkResponse_TOO_FREQUENT)
+	}
 	if existingPeer == nil && !s.checkEnrollmentPermission(id, clientHost) {
 		log.Printf("[signal] Rejected new peer PK registration: %s from %s (enrollment policy)", id, clientHost)
 		// A pending managed peer may already have a retained signal transport.
@@ -3371,6 +3378,10 @@ type pendingEnrollmentMeta struct {
 	Version  string
 }
 
+// defaultMaxPendingEnrollments caps the managed-mode approval queue: new
+// unknown devices are not queued while it holds this many entries.
+const defaultMaxPendingEnrollments = 1000
+
 // recordPendingEnrollment stores an unknown peer in the pending enrollment
 // queue (server_config key "pending_device_<id>") so operators can review it.
 // Existing created_at is preserved; empty hostname/platform/version may be
@@ -3419,6 +3430,11 @@ func (s *Server) recordPendingEnrollment(peerID, clientIP string, meta pendingEn
 		if err := s.db.SetConfig(key, string(data)); err != nil {
 			log.Printf("[signal] recordPendingEnrollment: enrich store failed for %s: %v", peerID, err)
 		}
+		return
+	}
+
+	if queued, err := s.db.ListConfigByPrefix("pending_device_"); err != nil || len(queued) >= s.maxPendingEnrollments {
+		log.Printf("[signal] recordPendingEnrollment: %s from %s not queued: the approval queue is full (%d entries, err=%v)", peerID, clientIP, len(queued), err)
 		return
 	}
 
