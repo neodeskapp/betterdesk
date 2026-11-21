@@ -2,9 +2,11 @@ package alerts
 
 import (
 	"context"
+	"maps"
 	"math"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -129,6 +131,53 @@ func subsequence(got, want []string) bool {
 		}
 	}
 	return k == len(got)
+}
+
+// Reports of one device that arrive together raise one alert and one mail
+// per rule: the cooldown's check and the alert's insert are one step, so
+// the reports do not all find no recent alert (BUGS RV34). Another device
+// and another rule still get their own alert.
+func TestReportsAtTheSameTimeRaiseOneAlert(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		cpu := addRule(t, db, "cpu_usage", "gt", 80, map[string]any{"cooldown_secs": 300, "notify_emails": "ops@example.com"})
+		other := addRule(t, db, "cpu_usage", "gt", 50, map[string]any{"cooldown_secs": 300})
+		mailer := &fakeMailer{}
+		engine := New(Options{DB: db, Mail: mailer, Logger: &logLines{}})
+		start := make(chan struct{})
+		var wg sync.WaitGroup
+		for i := range 20 {
+			device := "dev-1"
+			if i == 0 {
+				device = "dev-2"
+			}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				<-start
+				if err := engine.EvaluateRules(ctx, jsbind.String(device), "cpu_usage", jsbind.Number(95), EvalOptions{}); err != nil {
+					t.Error(err)
+				}
+			}()
+		}
+		close(start)
+		wg.Wait()
+		engine.Wait()
+		got := map[string]int{}
+		for _, a := range alertsIn(t, db) {
+			got[strconv.FormatInt(a.ruleID, 10)+" "+a.deviceID]++
+		}
+		want := map[string]int{
+			strconv.FormatInt(cpu, 10) + " dev-1": 1, strconv.FormatInt(cpu, 10) + " dev-2": 1,
+			strconv.FormatInt(other, 10) + " dev-1": 1, strconv.FormatInt(other, 10) + " dev-2": 1,
+		}
+		if !maps.Equal(got, want) {
+			t.Fatalf("alerts per rule and device %v, want %v", got, want)
+		}
+		if n := len(mailer.keys()); n != 2 {
+			t.Fatalf("%d mails, want one per device for the rule with recipients", n)
+		}
+	})
 }
 
 // A stored cooldown counts when it is a whole number of seconds above 0;

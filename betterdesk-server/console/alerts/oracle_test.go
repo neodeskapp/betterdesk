@@ -275,6 +275,10 @@ func (s *memStore) enabledRules(_ context.Context, conditionType string) ([]Rule
 	return rules, nil
 }
 
+func (s *memStore) cooldownStep(_ context.Context, _, _ jsbind.Value, fn func(alertStore) error) error {
+	return fn(s)
+}
+
 func (s *memStore) recentAlert(_ context.Context, ruleID, deviceID, cooldown jsbind.Value) (bool, error) {
 	s.recent = append(s.recent, [3]string{dumpBind(ruleID), dumpBind(deviceID), dumpBind(cooldown)})
 	if s.c.Recent == "throws" {

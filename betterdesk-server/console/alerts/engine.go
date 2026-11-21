@@ -236,21 +236,39 @@ func (e *Engine) evaluateAgainst(ctx context.Context, rules []Rule, deviceID jsb
 			return err
 		}
 		cooldown = jsMax(cooldown, minCooldownSecs)
-		// A check that fails does not hold the alert back
-		if recent, err := e.store.recentAlert(ctx, rule.ID, deviceID, jsbind.Number(cooldown)); err == nil && recent {
+
+		// The check and the insert are one step, so reports that arrive
+		// together raise one alert
+		var (
+			message, triggeredAt string
+			inCooldown           bool
+			textErr              error
+		)
+		severity := rule.Severity.Or(jsbind.String("warning"))
+		err = e.store.cooldownStep(ctx, rule.ID, deviceID, func(s alertStore) error {
+			// A check that fails does not hold the alert back
+			if recent, err := s.recentAlert(ctx, rule.ID, deviceID, jsbind.Number(cooldown)); err == nil && recent {
+				inCooldown = true
+				return nil
+			}
+			var t texts
+			message = t.of(rule.Name) + ": " + metricType + " = " + jsbind.NumberString(metric) +
+				" (" + op + " " + t.of(rule.ConditionValue) + ")"
+			if textErr = t.err; textErr != nil {
+				return textErr
+			}
+			// The database stamps the alert: its clock is the one the
+			// cooldown is checked against
+			var err error
+			triggeredAt, err = s.createAlert(ctx, NewAlert{RuleID: rule.ID, DeviceID: deviceID, Severity: severity, Message: jsbind.String(message)})
+			return err
+		})
+		if textErr != nil {
+			return textErr
+		}
+		if inCooldown {
 			continue
 		}
-
-		var t texts
-		message := t.of(rule.Name) + ": " + metricType + " = " + jsbind.NumberString(metric) +
-			" (" + op + " " + t.of(rule.ConditionValue) + ")"
-		if t.err != nil {
-			return t.err
-		}
-		severity := rule.Severity.Or(jsbind.String("warning"))
-		// The database stamps the alert: its clock is the one the cooldown
-		// is checked against
-		triggeredAt, err := e.store.createAlert(ctx, NewAlert{RuleID: rule.ID, DeviceID: deviceID, Severity: severity, Message: jsbind.String(message)})
 		var device string
 		if err == nil {
 			device, err = jsString(deviceID)

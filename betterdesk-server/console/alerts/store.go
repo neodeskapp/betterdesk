@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"hash/fnv"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -176,6 +177,15 @@ func CreateAlert(ctx context.Context, q store.Querier, alert NewAlert) (string, 
 type ruleStore interface {
 	// enabledRules is getAlertRules({ enabled: true, condition_type }).
 	enabledRules(ctx context.Context, conditionType string) ([]Rule, error)
+	// cooldownStep runs fn as one step for a rule and a device: no other
+	// step for the same rule and device, in this console or another one
+	// on the same database, checks or writes alerts while fn runs. fn's
+	// error ends the step without its writes.
+	cooldownStep(ctx context.Context, ruleID, deviceID jsbind.Value, fn func(alertStore) error) error
+}
+
+// alertStore checks and writes alerts inside a cooldown step.
+type alertStore interface {
 	recentAlert(ctx context.Context, ruleID, deviceID, cooldown jsbind.Value) (bool, error)
 	// createAlert writes an alert and returns its time as ISO text.
 	createAlert(ctx context.Context, alert NewAlert) (string, error)
@@ -188,10 +198,53 @@ func (s dbStore) enabledRules(ctx context.Context, conditionType string) ([]Rule
 	return GetAlertRules(ctx, s.db, RuleFilter{Enabled: &on, ConditionType: conditionType})
 }
 
-func (s dbStore) recentAlert(ctx context.Context, ruleID, deviceID, cooldown jsbind.Value) (bool, error) {
-	return GetRecentAlert(ctx, s.db, ruleID, deviceID, cooldown)
+// cooldownStep is a transaction. On SQLite the console's transactions
+// take the write lock when they begin, so they run one after the other.
+// On PostgreSQL the transaction takes an advisory lock for the rule and
+// the device first; two pairs that share a lock key just wait for each
+// other.
+func (s dbStore) cooldownStep(ctx context.Context, ruleID, deviceID jsbind.Value, fn func(alertStore) error) error {
+	return s.db.InTx(ctx, func(tx *store.Tx) error {
+		if tx.Dialect() == store.Postgres {
+			if _, err := tx.Exec(ctx, "SELECT pg_advisory_xact_lock(?)", cooldownLockKey(ruleID, deviceID)); err != nil {
+				return fmt.Errorf("lock the alert cooldown: %w", err)
+			}
+		}
+		return fn(txStore{tx: tx})
+	})
 }
 
-func (s dbStore) createAlert(ctx context.Context, alert NewAlert) (string, error) {
-	return CreateAlert(ctx, s.db, alert)
+// cooldownLockKey is the advisory lock of a rule and a device: a hash of
+// both as text, in the key space of the alert engine.
+func cooldownLockKey(ruleID, deviceID jsbind.Value) int64 {
+	h := fnv.New64a()
+	h.Write([]byte("betterdesk alert cooldown\x00" + ruleID.ToString() + "\x00" + deviceID.ToString()))
+	return int64(h.Sum64())
+}
+
+type txStore struct{ tx *store.Tx }
+
+// recentAlert runs the check under a savepoint on PostgreSQL: a check
+// that fails does not hold the alert back, and the insert after it must
+// not find the transaction aborted.
+func (s txStore) recentAlert(ctx context.Context, ruleID, deviceID, cooldown jsbind.Value) (bool, error) {
+	if s.tx.Dialect() != store.Postgres {
+		return GetRecentAlert(ctx, s.tx, ruleID, deviceID, cooldown)
+	}
+	if _, err := s.tx.Exec(ctx, "SAVEPOINT cooldown_check"); err != nil {
+		return false, fmt.Errorf("look for a recent alert: %w", err)
+	}
+	recent, err := GetRecentAlert(ctx, s.tx, ruleID, deviceID, cooldown)
+	end := "RELEASE SAVEPOINT cooldown_check"
+	if err != nil {
+		end = "ROLLBACK TO SAVEPOINT cooldown_check"
+	}
+	if _, endErr := s.tx.Exec(ctx, end); endErr != nil && err == nil {
+		err = fmt.Errorf("look for a recent alert: %w", endErr)
+	}
+	return recent, err
+}
+
+func (s txStore) createAlert(ctx context.Context, alert NewAlert) (string, error) {
+	return CreateAlert(ctx, s.tx, alert)
 }
