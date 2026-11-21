@@ -179,3 +179,26 @@ func FuzzParseJSON(f *testing.F) {
 		toText(v)
 	})
 }
+
+// TestIndentedLen: the counted length is the length stringify writes, at
+// any depth.
+func TestIndentedLen(t *testing.T) {
+	for _, text := range []string{`0`, `"a\"b\u00e9\n"`, `[]`, `{}`, `[1,[2,[3,{}]],{"a":[],"b":{"c":null}}]`, `{"x":{"y":[true,false,1e21,-0.5]}}`, `[[[[["€"]]]]]`} {
+		v, err := parseJSON(text)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, indent := range []int{0, 2} {
+			want, _ := stringify(v, strings.Repeat(" ", indent))
+			if got := indentedLen(v, indent, 0, 1<<30); got != len(want) {
+				t.Errorf("%s with %d spaces: counted %d, written %d", text, indent, got, len(want))
+			}
+		}
+		file := newObject()
+		file.set("flow", v)
+		whole, _ := stringify(file, "  ")
+		if got := indentedLen(v, 2, 1, 1<<30); got != len(whole)-len("{\n  \"flow\": \n}") {
+			t.Errorf("%s one level in: counted %d, written %d", text, got, len(whole)-len("{\n  \"flow\": \n}"))
+		}
+	}
+}

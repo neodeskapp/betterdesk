@@ -567,3 +567,23 @@ func TestDryRunOfOddFlows(t *testing.T) {
 		expect(t, c.flow, w.do("alice", "POST", "/api/cdap-studio/flows/"+answer.ID+"/test", `{}`, ""), 200, c.want)
 	}
 }
+
+// TestFlowWhoseExportIsTooLargeIsRefused: a flow whose export, with two
+// spaces per level, would be over 8 MiB is refused when it is made,
+// changed or imported, and a stored one is not exported: 30000 zeros 199
+// levels deep are 60 KB stored and 12 MB exported (BUGS RV165).
+func TestFlowWhoseExportIsTooLargeIsRefused(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	tooLarge := `{"success":false,"error":"Flow data too large (max 2MB)"}`
+	deep := strings.Repeat("[", 199) + strings.Repeat("0,", 29999) + "0" + strings.Repeat("]", 199)
+	shallow := "[" + strings.Repeat("0,", 29999) + "0]"
+	expect(t, "a shallow flow", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Wide","flow_json":"`+shallow+`"}`, ""), 200, `{"success":true,"id":"a0a1a2a3a4a50000"}`)
+	expect(t, "as text", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Deep","flow_json":"`+deep+`"}`, ""), 400, tooLarge)
+	expect(t, "as a value", w.do("alice", "POST", "/api/cdap-studio/flows", `{"name":"Deep","flow_json":`+deep+`}`, ""), 400, tooLarge)
+	expect(t, "an update", w.do("alice", "PUT", "/api/cdap-studio/flows/a0a1a2a3a4a50000", `{"flow_json":"`+deep+`"}`, ""), 400, tooLarge)
+	expect(t, "an import", w.do("alice", "POST", "/api/cdap-studio/flows/import", `{"name":"Deep","flow":`+deep+`}`, ""), 400, tooLarge)
+	if _, err := w.db.Exec(context.Background(), "UPDATE studio_flows SET flow_json = ? WHERE id = ?", deep, "a0a1a2a3a4a50000"); err != nil {
+		t.Fatal(err)
+	}
+	expect(t, "the export of a stored one", w.do("alice", "GET", "/api/cdap-studio/flows/a0a1a2a3a4a50000/export", "", ""), 400, tooLarge)
+}

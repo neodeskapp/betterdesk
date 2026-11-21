@@ -22,6 +22,18 @@ import (
 // again (1e20 is stored as 21 digits).
 const maxFlowBytes = middleware.DefaultBodyLimit
 
+// maxExportFlowBytes is the most bytes a flow may take in its export,
+// where it is written with two spaces per level: deep nesting makes that
+// many times its stored length, so a flow over it is refused when it is
+// stored and is not exported.
+const maxExportFlowBytes = 8 << 20
+
+// exportTooLarge reports whether the flow, one level into the export file,
+// takes more than maxExportFlowBytes there.
+func exportTooLarge(flow any) bool {
+	return indentedLen(flow, 2, 1, maxExportFlowBytes) > maxExportFlowBytes
+}
+
 const (
 	notFound     = "Flow not found"
 	invalidJSON  = "Invalid flow JSON"
@@ -96,8 +108,12 @@ func flowText(value middleware.Value) (text, problem string) {
 	if len(text) > maxFlowBytes {
 		return "", flowTooLarge
 	}
-	if _, err := parseJSON(text); err != nil {
+	parsed, err := parseJSON(text)
+	if err != nil {
 		return "", invalidJSON
+	}
+	if exportTooLarge(parsed) {
+		return "", flowTooLarge
 	}
 	return text, ""
 }
@@ -378,6 +394,10 @@ func (h *handlers) export(w http.ResponseWriter, r *http.Request) {
 	data, err := parseJSON(string(f.FlowJSON))
 	if err != nil {
 		kit.Fail(w, r, http.StatusBadRequest, invalidJSON)
+		return
+	}
+	if exportTooLarge(data) {
+		kit.Fail(w, r, http.StatusBadRequest, flowTooLarge)
 		return
 	}
 	user := kit.User(r)

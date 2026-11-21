@@ -467,6 +467,74 @@ func writeJSON(b *strings.Builder, v any, indent, current string) {
 	}
 }
 
+// indentedLen is the length of v written by stringify with indent spaces
+// per level, starting depth levels in, counted without writing it. It
+// stops counting once the length is over limit.
+func indentedLen(v any, indent, depth, limit int) int {
+	switch t := v.(type) {
+	case nil, missingValue:
+		return len("null")
+	case bool:
+		return len(strconv.FormatBool(t))
+	case float64:
+		if math.IsNaN(t) || math.IsInf(t, 0) {
+			return len("null")
+		}
+		return len(numberText(t))
+	case string:
+		return quotedLen(t)
+	case []any:
+		if len(t) == 0 {
+			return 2
+		}
+		n := 2 + len(t) - 1 + len(t)*indentOverhead(indent, depth+1) + indentOverhead(indent, depth)
+		for _, item := range t {
+			if n > limit {
+				return n
+			}
+			n += indentedLen(item, indent, depth+1, limit)
+		}
+		return n
+	case *object:
+		n, wrote := 2, 0
+		for _, key := range t.keys() {
+			item, _ := t.get(key)
+			if item == missing {
+				continue
+			}
+			if n > limit {
+				return n
+			}
+			wrote++
+			n += indentOverhead(indent, depth+1) + quotedLen(key) + 1 + indentedLen(item, indent, depth+1, limit)
+			if indent > 0 {
+				n++
+			}
+		}
+		if wrote > 0 {
+			n += wrote - 1 + indentOverhead(indent, depth)
+		}
+		return n
+	}
+	return 0
+}
+
+// indentOverhead is the line break and the indentation at depth, none
+// without indentation.
+func indentOverhead(indent, depth int) int {
+	if indent == 0 {
+		return 0
+	}
+	return 1 + indent*depth
+}
+
+// quotedLen is the length of s written by quote.
+func quotedLen(s string) int {
+	var b strings.Builder
+	quote(&b, s)
+	return b.Len()
+}
+
 // quote writes s as a JSON string the way JSON.stringify does: only the
 // quote, the backslash and control characters are escaped, and half a
 // surrogate pair is written as \udXXX.
