@@ -2,6 +2,8 @@ package authn
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/netip"
 	"strconv"
 	"strings"
@@ -75,17 +77,27 @@ func SuggestOIDCRedirectURL(panelOrigin string) string {
 	return u.origin() + oidcCallbackPath
 }
 
+// ErrUsernameCollision is the error of a single sign-on whose user name
+// belongs to a local or directory account.
+var ErrUsernameCollision = errors.New("the user name belongs to an account of another provider")
+
 // OIDCUser returns the local account of a user the signal server signed in
 // through single sign-on, with what the session should carry as the role.
 // A user without a local row gets one with provider "oidc", the given role
-// (else "viewer") and an unusable password. An existing row gets the role
-// (else it keeps its own) and provider "oidc". A failure to create or to
-// update is logged, and the row is returned as it then is; the account is
-// nil when there is still none.
+// (else "viewer") and an unusable password. An existing single sign-on row
+// gets the role (else it keeps its own). A row of another provider is
+// never taken over: the error is ErrUsernameCollision. A failure to create
+// or to update is logged, and the row is returned as it then is; the
+// account is nil when there is still none.
 func (s *Service) OIDCUser(ctx context.Context, username, role string) (*Account, error) {
 	user, err := getUserByUsername(ctx, s.db, username)
 	if err != nil {
 		return nil, err
+	}
+	if user != nil && normalizeAuthProvider(user.AuthProvider.String) != providerOIDC {
+		s.log.Info(fmt.Sprintf("[OIDC] Login blocked: username collision for '%s' (provider=%s)",
+			logName(username), normalizeAuthProvider(user.AuthProvider.String)))
+		return nil, ErrUsernameCollision
 	}
 	if user == nil {
 		hash, err := s.unusablePasswordHash(ctx)
@@ -101,8 +113,7 @@ func (s *Service) OIDCUser(ctx context.Context, username, role string) (*Account
 		}
 		return getUserByUsername(ctx, s.db, username)
 	}
-	change := userSync{authProvider: new(string)}
-	*change.authProvider = providerOIDC
+	var change userSync
 	switch {
 	case role != "":
 		change.role = &role

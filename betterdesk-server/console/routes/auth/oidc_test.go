@@ -200,7 +200,7 @@ func TestSingleSignOn(t *testing.T) {
 
 func TestSingleSignOnRolesAndWaysBack(t *testing.T) {
 	w := newWorld(t, nil, setup{})
-	stored := w.addUser(user{name: "known", role: "global_admin", language: "fr"})
+	stored := w.addUser(user{name: "known", role: "global_admin", language: "fr", provider: "oidc"})
 
 	// Without a role from the provider the stored one counts, and a new
 	// account is a viewer
@@ -234,6 +234,38 @@ func TestSingleSignOnRolesAndWaysBack(t *testing.T) {
 	if res := w.agent().get("/api/auth/oidc/session?code=x"); res.status != http.StatusFound || res.header.Get("Location") != "/" {
 		t.Errorf("an unsafe way back from the signal server: %d %q", res.status, res.header.Get("Location"))
 	}
+}
+
+// A single sign-on whose name belongs to a local or directory account gets
+// the answer of the password sign-in's collision and no session; the
+// account stays as it was (RV116).
+func TestSingleSignOnLeavesOtherAccountsAlone(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		local := w.addUser(user{name: "admin", role: "admin"})
+		directory := w.addUser(user{name: "carol", role: "operator", provider: "ldap"})
+		for _, tc := range []struct {
+			name string
+			id   int64
+			row  string
+		}{{"admin", local, "admin|local"}, {"carol", directory, "operator|ldap"}} {
+			w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t","username":"`+tc.name+`","role":"viewer"}`)
+			a := w.agent()
+			res := a.get("/api/auth/oidc/session?code=c")
+			if res.status != http.StatusFound || res.header.Get("Location") != "/login?error=username_collision" {
+				t.Errorf("%s: %d %q", tc.name, res.status, res.header.Get("Location"))
+			}
+			if row := w.rows(`SELECT role, auth_provider FROM users WHERE id = ?`, tc.id); row[0] != tc.row {
+				t.Errorf("%s afterwards: %v", tc.name, row)
+			}
+			want(t, tc.name+" verify", a.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
+		}
+		if n := w.int(`SELECT COUNT(*) FROM panel_sessions WHERE user_id IS NOT NULL`); n != 0 {
+			t.Errorf("%d signed-in sessions", n)
+		}
+		if rows := w.audit(); len(rows) != 0 {
+			t.Errorf("audit: %v", rows)
+		}
+	})
 }
 
 func TestSingleSignOnRefusals(t *testing.T) {
@@ -417,8 +449,8 @@ func TestOIDCStatus(t *testing.T) {
 
 func TestSingleSignOnWhenTheAccountCannotBeWritten(t *testing.T) {
 	w := newWorld(t, nil, setup{})
-	known := w.addUser(user{name: "known", role: "viewer"})
-	blank := w.addUser(user{name: "blank"})
+	known := w.addUser(user{name: "known", role: "viewer", provider: "oidc"})
+	blank := w.addUser(user{name: "blank", provider: "oidc"})
 	w.exec(`UPDATE users SET role = '' WHERE id = ?`, blank)
 	w.exec(`CREATE TRIGGER roles_are_fixed BEFORE UPDATE OF role ON users BEGIN SELECT RAISE(ABORT, 'roles are fixed'); END`)
 

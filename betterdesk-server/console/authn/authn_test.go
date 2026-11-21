@@ -388,21 +388,43 @@ func TestOIDCUser(t *testing.T) {
 			t.Errorf("new user without a role: %+v, %v", noRole, err)
 		}
 
-		id := addUser(t, s, "was-local", "pw", "admin", "local")
-		synced, err := s.OIDCUser(ctx, "was-local", "viewer")
+		id := addUser(t, s, "was-sso", "pw", "admin", "oidc")
+		synced, err := s.OIDCUser(ctx, "was-sso", "viewer")
 		if err != nil || synced == nil || synced.ID.V != id || synced.Role.String != "viewer" || synced.AuthProvider.String != "oidc" {
 			t.Errorf("existing user: %+v, %v", synced, err)
 		}
-		kept, err := s.OIDCUser(ctx, "was-local", "")
+		kept, err := s.OIDCUser(ctx, "was-sso", "")
 		if err != nil || kept == nil || kept.Role.String != "viewer" {
 			t.Errorf("existing user, no role from the server: %+v, %v", kept, err)
 		}
-		// Its password still fits the hash, but the provider forbids it.
-		if ok, _ := s.VerifyPassword(ctx, "pw", synced.PasswordHash.String); !ok {
-			t.Error("the existing user's hash was replaced")
+	})
+}
+
+// A single sign-on never takes over a local or directory account of the
+// same name (RV116).
+func TestOIDCUserLeavesOtherProvidersAlone(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		s, _, _ := testService(t, db, nil)
+		for _, provider := range []string{"local", "ldap", ""} {
+			name := "boss-" + provider
+			id := addUser(t, s, name, "pw", "admin", provider)
+			if provider == "" {
+				if _, err := db.Exec(ctx, `UPDATE users SET auth_provider = NULL WHERE id = ?`, id); err != nil {
+					t.Fatal(err)
+				}
+			}
+			user, err := s.OIDCUser(ctx, name, "viewer")
+			if !errors.Is(err, ErrUsernameCollision) || user != nil {
+				t.Errorf("provider %q: %+v, %v", provider, user, err)
+			}
+			row, err := getUserByUsername(ctx, db, name)
+			if err != nil || row == nil || row.Role.String != "admin" || row.AuthProvider.String != provider {
+				t.Errorf("provider %q, the row afterwards: %+v, %v", provider, row, err)
+			}
 		}
-		if outcome, _ := s.Authenticate(ctx, "was-local", "pw"); outcome.User != nil {
-			t.Error("the account still signs in with its password")
+		if outcome, _ := s.Authenticate(ctx, "boss-local", "pw"); outcome.User == nil {
+			t.Error("the local account no longer signs in with its password")
 		}
 	})
 }

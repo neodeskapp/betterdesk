@@ -613,8 +613,10 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 		result.Picture = SanitizeOIDCPicture(pic)
 	}
 
-	// Fallback: use email prefix as username if preferred_username is empty
-	if result.Username == "" && result.Email != "" {
+	// Without a name claim the part of the e-mail address before the @ is
+	// the user name, but only for an address the provider verified: anyone
+	// can put any address into an account at some providers.
+	if result.Username == "" && result.Email != "" && emailVerified(claims) {
 		if idx := strings.Index(result.Email, "@"); idx > 0 {
 			result.Username = result.Email[:idx]
 		}
@@ -1019,6 +1021,19 @@ func getStringClaim(claims map[string]interface{}, key string) string {
 		return s
 	}
 	return fmt.Sprintf("%v", v)
+}
+
+// emailVerified reports whether the claims say the e-mail address is
+// verified: email_verified is true, or the text "true" as some providers
+// send it.
+func emailVerified(claims map[string]interface{}) bool {
+	switch v := claims["email_verified"].(type) {
+	case bool:
+		return v
+	case string:
+		return strings.EqualFold(strings.TrimSpace(v), "true")
+	}
+	return false
 }
 
 // getStringSliceClaim extracts a string slice from a claims map.

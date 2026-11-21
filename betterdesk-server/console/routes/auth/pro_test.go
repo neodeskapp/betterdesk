@@ -39,8 +39,8 @@ func TestLoginRefusesProWith403(t *testing.T) {
 // server's (BUGS.md S11).
 func TestOIDCSessionRefusesPro(t *testing.T) {
 	w := newWorld(t, nil, setup{})
-	desk := w.addUser(user{name: "desk", role: "pro"})
-	w.addUser(user{name: "ops", role: "operator"})
+	desk := w.addUser(user{name: "desk", role: "pro", provider: "oidc"})
+	w.addUser(user{name: "ops", role: "operator", provider: "oidc"})
 	for _, c := range []struct{ what, user string }{
 		{"a stored pro account", `"token":"t1","username":"desk"`},
 		{"the role pro from the signal server", `"token":"t2","username":"ops","role":"pro"`},
