@@ -154,7 +154,8 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 			}
 			return true, user.Role
 		},
-		Secure: func(r *http.Request) bool { return cfg.TrustProxy.Scheme(r) == "https" },
+		Secure:   func(r *http.Request) bool { return cfg.TrustProxy.Scheme(r) == "https" },
+		ClientIP: cfg.TrustProxy.ClientIP,
 	})
 	sessions, err := session.New(ctx, session.Options{
 		DB:         opts.Store,

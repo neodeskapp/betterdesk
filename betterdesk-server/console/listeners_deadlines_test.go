@@ -4,9 +4,11 @@ import (
 	"crypto/tls"
 	"errors"
 	"io"
+	"log"
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -134,4 +136,40 @@ func TestConsoleListenerTimeLimits(t *testing.T) {
 	if !strings.HasPrefix(got, "HTTP/1.1 4") || after < 3*time.Second {
 		t.Errorf("steady body: after %v: %.60q", after, got)
 	}
+}
+
+// TestNotFoundLogNamesTheTrustedAddress: the 404 log line of an unmatched
+// API path names the client's address as TRUST_PROXY gives it, not what
+// X-Forwarded-For claims (BUGS.md RV194).
+func TestNotFoundLogNamesTheTrustedAddress(t *testing.T) {
+	var logged syncBuffer
+	previous := log.Writer()
+	log.SetOutput(&logged)
+	defer log.SetOutput(previous)
+	for _, c := range []struct{ trust, want string }{{"", "from 127.0.0.1 "}, {"loopback", "from 203.0.113.99 "}} {
+		w := goOnly(t, setup{trustProxy: c.trust})
+		before := len(logged.String())
+		w.agent().get("/api/rv194-nope", "X-Forwarded-For", "203.0.113.99")
+		if line := logged.String()[before:]; !strings.Contains(line, "404 GET /api/rv194-nope "+c.want) {
+			t.Errorf("TRUST_PROXY %q: logged %q", c.trust, line)
+		}
+	}
+}
+
+// syncBuffer is a log output that tests read while the server writes.
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf strings.Builder
+}
+
+func (b *syncBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *syncBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
 }

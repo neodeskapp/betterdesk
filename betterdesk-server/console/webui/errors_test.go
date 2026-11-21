@@ -183,20 +183,28 @@ func TestNotFoundLogsUnmatchedAPIAndSocketPaths(t *testing.T) {
 		record(func(w http.ResponseWriter) { h.NotFound(w, r) })
 	}
 	notFound("/api/nothing?x=1", map[string]string{"User-Agent": strings.Repeat("u", 79) + "END-and-more"})
-	notFound("/ws/nothing", map[string]string{"X-Forwarded-For": "203.0.113.9, 10.0.0.1"})
+	// The address is the connection's, whatever X-Forwarded-For claims, and
+	// the agent is quoted with its quotes and line breaks escaped (BUGS.md
+	// RV194)
+	notFound("/ws/nothing", map[string]string{"X-Forwarded-For": "203.0.113.9, 10.0.0.1", "User-Agent": "a\" from=x\n"})
 	notFound("/missing.txt", nil)
 	notFound("/api", nil)
 	notFound("/apix/y", nil)
 	notFound("/API/upper", nil)
+	behind := New(Options{Production: true, ClientIP: func(r *http.Request) string { return "198.51.100.4" }})
+	record(func(w http.ResponseWriter) { behind.NotFound(w, rawRequest("GET", "/api/x", nil)) })
 	lines := strings.Split(strings.TrimSpace(logged.String()), "\n")
-	if len(lines) != 2 {
-		t.Fatalf("logged %d lines, want 2:\n%s", len(lines), logged.String())
+	if len(lines) != 3 {
+		t.Fatalf("logged %d lines, want 3:\n%s", len(lines), logged.String())
 	}
 	if want := `[panel] 404 PUT /api/nothing?x=1 from 192.0.2.7 ua="` + strings.Repeat("u", 79) + `E"`; !strings.HasSuffix(lines[0], want) {
 		t.Errorf("first line %q, want it to end with %q", lines[0], want)
 	}
-	if want := `[panel] 404 PUT /ws/nothing from 203.0.113.9, 10.0.0.1 ua=""`; !strings.HasSuffix(lines[1], want) {
+	if want := `[panel] 404 PUT /ws/nothing from 192.0.2.7 ua="a\" from=x\n"`; !strings.HasSuffix(lines[1], want) {
 		t.Errorf("second line %q, want it to end with %q", lines[1], want)
+	}
+	if want := `[panel] 404 GET /api/x from 198.51.100.4 ua=""`; !strings.HasSuffix(lines[2], want) {
+		t.Errorf("third line %q, want it to end with %q", lines[2], want)
 	}
 }
 

@@ -33,13 +33,16 @@ func acceptsHTML(r *http.Request) bool {
 // not-found page (plain text without a build); the API, sockets and
 // clients that do not take HTML get JSON.
 //
-// Unmatched paths under /api/ and /ws/ are logged, with the first 80
-// characters of the user agent.
+// Unmatched paths under /api/ and /ws/ are logged with the client's
+// address (Options.ClientIP) and the first 80 characters of the user
+// agent, quoted with Go's escapes so that it cannot add to the line.
 func (h *Host) NotFound(w http.ResponseWriter, r *http.Request) {
 	req := parseRequest(r)
 	if strings.HasPrefix(req.original, "/api/") || strings.HasPrefix(req.original, "/ws/") {
-		from := strings.Join(r.Header.Values("X-Forwarded-For"), ", ")
-		if from == "" {
+		var from string
+		if h.clientIP != nil {
+			from = h.clientIP(r)
+		} else {
 			from = httpx.SocketIP(r)
 		}
 		if from == "" {
@@ -49,7 +52,7 @@ func (h *Host) NotFound(w http.ResponseWriter, r *http.Request) {
 		if len(agent) > 80 {
 			agent = agent[:80]
 		}
-		logging.Logf("panel", `404 %s %s from %s ua="%s"`, r.Method, req.original, from, string(agent))
+		logging.Logf("panel", `404 %s %s from %s ua=%q`, r.Method, req.original, from, string(agent))
 	}
 	if !isServerPath(req.path) && acceptsHTML(r) {
 		if !h.ErrorPage(w, r, http.StatusNotFound, ErrorOptions{}) {

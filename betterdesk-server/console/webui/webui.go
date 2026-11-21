@@ -78,6 +78,9 @@ type Options struct {
 	// proxy. nil means the connection's own TLS state. Only the hint in the
 	// CSRF error depends on it.
 	Secure func(r *http.Request) bool
+	// ClientIP is the client's address as TRUST_PROXY gives it, for the
+	// log. nil means the connection's address.
+	ClientIP func(r *http.Request) string
 }
 
 // Host serves one build of the web app.
@@ -88,6 +91,7 @@ type Host struct {
 	production bool
 	session    func(r *http.Request) (bool, string)
 	secure     func(r *http.Request) bool
+	clientIP   func(r *http.Request) string
 	files      fileSystem
 
 	mu   sync.Mutex
@@ -122,6 +126,7 @@ func newHost(opts Options, dir string, files fileSystem) *Host {
 		production: opts.Production,
 		session:    opts.Session,
 		secure:     opts.Secure,
+		clientIP:   opts.ClientIP,
 		files:      files,
 	}
 	h.page = h.loadPage()
