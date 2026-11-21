@@ -224,14 +224,17 @@ func overlayFolder(peer *Object, assignments map[string]any) {
 	peer.Set("folder_id", raw)
 }
 
-// GetDeviceByID returns one device: the remote target for an id that starts
-// with "rt_" (Client.GetRemoteTarget), else the peer (Client.GetPeer, or
+// GetDeviceByID returns one device: the remote target with the id when it
+// starts with "rt_" and the API server has such a target
+// (Client.GetRemoteTarget), else the peer (Client.GetPeer, or
 // Client.GetPeerIncludingDeleted when includeDeleted is set) with folder_id
-// from the console's folder assignments. Nil when there is none, and for
-// every failed call.
+// from the console's folder assignments. A peer's id may start with "rt_"
+// too. Nil when there is none, and for every failed call.
 func (b *Backend) GetDeviceByID(ctx context.Context, id string, includeDeleted bool) *Object {
 	if strings.HasPrefix(id, "rt_") {
-		return b.api.GetRemoteTarget(ctx, id)
+		if target := b.api.GetRemoteTarget(ctx, id); target != nil {
+			return target
+		}
 	}
 	var peer *Object
 	if includeDeleted {

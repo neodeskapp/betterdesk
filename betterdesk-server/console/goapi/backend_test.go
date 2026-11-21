@@ -220,6 +220,37 @@ func TestGetDeviceByID(t *testing.T) {
 	}
 }
 
+// TestAnIDWithTheTargetPrefixIsAPeerWhenNoTargetHasIt: a device of the
+// signal server may have an id that starts with rt_, as remote targets
+// do. Such an id is a remote target only when the API server has a target
+// of that id; otherwise it is the peer, with its folder, also among the
+// deleted ones (BUGS RV30).
+func TestAnIDWithTheTargetPrefixIsAPeerWhenNoTargetHasIt(t *testing.T) {
+	api := routedAPI(map[string]string{
+		"GET /api/peers/rt_peer1":      `{"id":"rt_peer1","hostname":"named like a target"}`,
+		"GET /api/peers":               `[{"id":"rt_gone1","soft_deleted":true}]`,
+		"GET /api/remote-targets/rt_9": `{"id":"rt_9","name":"alpha rdp","protocol":"rdp"}`,
+	})
+	b := NewBackend(New(api), &fakeStore{folders: map[string]any{"rt_peer1": 4.0, "rt_9": 5.0}})
+	ctx := context.Background()
+	if got := b.GetDeviceByID(ctx, "rt_peer1", false); got == nil || got.Str("hostname") != "named like a target" || got.Bool("remote_target") || toJSON(t, got.Get("folder_id")) != "4" {
+		t.Errorf("a peer whose id starts with rt_: %s", toJSON(t, got))
+	}
+	if got := b.GetDeviceByID(ctx, "rt_gone1", true); got == nil || !got.Bool("soft_deleted") {
+		t.Errorf("a deleted peer whose id starts with rt_: %s", toJSON(t, got))
+	}
+	api.requests = nil
+	if got := b.GetDeviceByID(ctx, "rt_9", false); !got.Bool("remote_target") || got.Has("folder_id") {
+		t.Errorf("a target: %s", toJSON(t, got))
+	}
+	if got := strings.Join(api.requests, " | "); got != "GET /api/remote-targets/rt_9" {
+		t.Errorf("requests for a target = %s", got)
+	}
+	if got := b.GetDeviceByID(ctx, "rt_none1", false); got != nil {
+		t.Errorf("an id neither has: %s", toJSON(t, got))
+	}
+}
+
 func TestGetStats(t *testing.T) {
 	ctx := context.Background()
 	cases := []struct {
