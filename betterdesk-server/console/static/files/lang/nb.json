@@ -3501,7 +3501,8 @@
     "advanced": "Avanserte alternativer",
     "section_covers": "Hva den gjelder",
     "policy_sheet_desc": "Hvilke overføringer retningslinjen gjelder, og om enhetene blokkerer, registrerer eller tillater dem.",
-    "saving": "Lagrer…"
+    "saving": "Lagrer…",
+    "older_events": "Eldre hendelser"
   },
   "reports": {
     "title": "Rapporter",

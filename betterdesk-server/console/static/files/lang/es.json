@@ -3495,7 +3495,8 @@
     "advanced": "Opciones avanzadas",
     "section_covers": "Qué cubre",
     "policy_sheet_desc": "Qué transferencias cubre la política y si los dispositivos las bloquean, registran o permiten.",
-    "saving": "Guardando…"
+    "saving": "Guardando…",
+    "older_events": "Eventos más antiguos"
   },
   "reports": {
     "title": "Informes",

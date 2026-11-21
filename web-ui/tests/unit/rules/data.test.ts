@@ -12,12 +12,11 @@ import {
 	sortRecords
 } from '../../../src/lib/rules/attestation.ts';
 import {
-	countByAction,
 	detailText,
 	dgTabFrom,
-	eventsPerPolicy,
 	filterEvents,
 	filterPolicies,
+	mergeOlderEvents,
 	parseRules,
 	rulesText,
 	typeOf
@@ -102,15 +101,10 @@ describe('data loss prevention', () => {
 		expect(detailText(event({ details: 'plain' }))).toBe('plain');
 	});
 
-	test('counts per policy and per action', () => {
-		const list = [
-			event(),
-			event(),
-			event({ policy_id: '2', action: 'allow' }),
-			event({ policy_id: null, action: 'x' })
-		];
-		expect(Object.fromEntries(eventsPerPolicy(list))).toEqual({ '1': 2, '2': 1 });
-		expect(countByAction(list)).toEqual({ block: 2, log: 0, allow: 1 });
+	test('an older page drops the events of the oldest time it repeats', () => {
+		const shown = [event({ id: '9' }), event({ id: '8' })];
+		const older = [event({ id: '8' }), event({ id: '7' }), event({ device_id: 'no id' })];
+		expect(mergeOlderEvents(shown, older).map((e) => e.id ?? e.device_id)).toEqual(['9', '8', '7', 'no id']);
 	});
 
 	test('?tab=events opens the events, anything else the policies', () => {

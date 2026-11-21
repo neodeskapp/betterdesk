@@ -3501,7 +3501,8 @@
     "advanced": "Gelişmiş seçenekler",
     "section_covers": "Neleri kapsar",
     "policy_sheet_desc": "Politikanın hangi aktarımları kapsadığı ve cihazların bunları engelleyip kaydedip izin verip vermediği.",
-    "saving": "Kaydediliyor…"
+    "saving": "Kaydediliyor…",
+    "older_events": "Daha eski olaylar"
   },
   "reports": {
     "title": "Raporlar",

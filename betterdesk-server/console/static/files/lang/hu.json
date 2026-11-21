@@ -3501,7 +3501,8 @@
     "advanced": "Speciális beállítások",
     "section_covers": "Mire vonatkozik",
     "policy_sheet_desc": "Mely átvitelekre vonatkozik az irányelv, és az eszközök letiltják, naplózzák vagy engedélyezik-e őket.",
-    "saving": "Mentés…"
+    "saving": "Mentés…",
+    "older_events": "Régebbi események"
   },
   "reports": {
     "title": "Jelentések",

@@ -3501,7 +3501,8 @@
     "advanced": "Avancerade alternativ",
     "section_covers": "Vad den gäller",
     "policy_sheet_desc": "Vilka överföringar policyn gäller och om enheterna blockerar, loggar eller tillåter dem.",
-    "saving": "Sparar…"
+    "saving": "Sparar…",
+    "older_events": "Äldre händelser"
   },
   "reports": {
     "title": "Rapporter",

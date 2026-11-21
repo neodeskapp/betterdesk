@@ -3513,7 +3513,8 @@
     "advanced": "Opcje zaawansowane",
     "section_covers": "Czego dotyczy",
     "policy_sheet_desc": "Których transferów dotyczy polityka i czy urządzenia je blokują, rejestrują czy zezwalają na nie.",
-    "saving": "Zapisywanie…"
+    "saving": "Zapisywanie…",
+    "older_events": "Starsze zdarzenia"
   },
   "reports": {
     "title": "Raporty",

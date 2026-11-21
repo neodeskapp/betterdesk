@@ -3517,7 +3517,8 @@
     "advanced": "Options avancées",
     "section_covers": "Ce qu’elle couvre",
     "policy_sheet_desc": "Les transferts couverts par la règle, et si les appareils les bloquent, les enregistrent ou les autorisent.",
-    "saving": "Enregistrement…"
+    "saving": "Enregistrement…",
+    "older_events": "Événements plus anciens"
   },
   "reports": {
     "title": "Rapports",

@@ -3501,7 +3501,8 @@
     "advanced": "Tùy chọn nâng cao",
     "section_covers": "Phạm vi áp dụng",
     "policy_sheet_desc": "Những lần truyền mà chính sách áp dụng và thiết bị sẽ chặn, ghi lại hay cho phép chúng.",
-    "saving": "Đang lưu…"
+    "saving": "Đang lưu…",
+    "older_events": "Sự kiện cũ hơn"
   },
   "reports": {
     "title": "Báo cáo",

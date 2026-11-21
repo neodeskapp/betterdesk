@@ -77,16 +77,12 @@ export function filterEvents(list: readonly DlpEvent[], query: string, action: s
 	);
 }
 
-/** Events per policy id, for the policy table's Events column */
-export function eventsPerPolicy(events: readonly DlpEvent[]): Map<string, number> {
-	const out = new Map<string, number>();
-	for (const e of events) if (e.policy_id !== null) out.set(e.policy_id, (out.get(e.policy_id) ?? 0) + 1);
-	return out;
-}
-
-export function countByAction(events: readonly DlpEvent[]): Record<(typeof DLP_ACTIONS)[number], number> {
-	const out = { block: 0, log: 0, allow: 0 };
-	for (const e of events)
-		if (e.action === 'block' || e.action === 'log' || e.action === 'allow') out[e.action]++;
-	return out;
+/**
+ * The events shown with an older page appended. The older page starts at
+ * the oldest time shown, so it repeats the events of that time: those are
+ * dropped by id.
+ */
+export function mergeOlderEvents(shown: readonly DlpEvent[], older: readonly DlpEvent[]): DlpEvent[] {
+	const ids = new Set(shown.map((e) => e.id));
+	return [...shown, ...older.filter((e) => e.id === undefined || !ids.has(e.id))];
 }

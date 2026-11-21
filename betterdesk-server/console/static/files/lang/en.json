@@ -3574,7 +3574,8 @@
         "advanced": "Advanced options",
         "section_covers": "What it covers",
         "policy_sheet_desc": "Which transfers the policy covers and whether devices block, record or allow them.",
-        "saving": "Saving…"
+        "saving": "Saving…",
+        "older_events": "Older events"
     },
     "reports": {
         "title": "Reports",

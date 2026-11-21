@@ -3501,7 +3501,8 @@
     "advanced": "Lisäasetukset",
     "section_covers": "Mitä se koskee",
     "policy_sheet_desc": "Mitä siirtoja käytäntö koskee ja estävätkö laitteet ne, kirjaavatko ne vai sallivatko ne.",
-    "saving": "Tallennetaan…"
+    "saving": "Tallennetaan…",
+    "older_events": "Vanhemmat tapahtumat"
   },
   "reports": {
     "title": "Raportit",

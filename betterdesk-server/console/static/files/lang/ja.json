@@ -3495,7 +3495,8 @@
     "advanced": "詳細オプション",
     "section_covers": "対象",
     "policy_sheet_desc": "ポリシーの対象となる転送と、デバイスがそれをブロック、記録、許可のどれにするかを決めます。",
-    "saving": "保存中…"
+    "saving": "保存中…",
+    "older_events": "古いイベント"
   },
   "reports": {
     "title": "レポート",

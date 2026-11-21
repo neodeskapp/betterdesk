@@ -3517,7 +3517,8 @@
     "advanced": "進階選項",
     "section_covers": "涵蓋範圍",
     "policy_sheet_desc": "策略涵蓋哪些傳輸，以及裝置要封鎖、記錄還是允許。",
-    "saving": "正在儲存…"
+    "saving": "正在儲存…",
+    "older_events": "較舊的事件"
   },
   "reports": {
     "title": "報表",

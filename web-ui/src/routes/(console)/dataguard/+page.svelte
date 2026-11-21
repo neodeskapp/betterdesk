@@ -2,7 +2,9 @@
   Data loss prevention (/dataguard, ?tab=events). Two tabs: the policies
   (search, create, edit and delete in a sheet; a click on a row opens it)
   and the events devices reported (search, filter by action, the share of
-  blocked, logged and allowed).
+  blocked, logged and allowed). Events come one page at a time, newest
+  first, with Older events for the next page; the counts of all events,
+  also per policy, come from the server's stats.
 
   Who: server.config (the page route). Events need audit.view; without it
   the Events tab and the Events column stay out instead of failing.
@@ -11,16 +13,23 @@
 	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { replaceState } from '$app/navigation';
-	import { listDlpEvents, listDlpPolicies, type DlpEvent, type DlpPolicy } from '#lib/api/dataguard.ts';
+	import {
+		DLP_EVENT_PAGE,
+		getDlpStats,
+		listDlpEvents,
+		listDlpPolicies,
+		type DlpEvent,
+		type DlpPolicy,
+		type DlpStats
+	} from '#lib/api/dataguard.ts';
 	import { formatNumber } from '#lib/i18n/format.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import {
 		actionLabel,
-		countByAction,
 		detailText,
 		dgTabFrom,
-		eventsPerPolicy,
 		filterEvents,
+		mergeOlderEvents,
 		filterPolicies,
 		typeLabel,
 		typeOf,
@@ -79,10 +88,22 @@
 	let policiesLoaded = $state(false);
 	let policiesError = $state<string | null>(null);
 	let policyQuery = $state('');
+	/** The server's counts of all events; null while unknown */
+	let stats = $state.raw<DlpStats | null>(null);
 	/** Events per policy for the Events column; null while unknown */
-	let perPolicy = $state.raw<Map<string, number> | null>(null);
+	const perPolicy = $derived(stats?.by_policy ?? null);
+
+	async function loadStats() {
+		if (!canEvents) return;
+		try {
+			stats = await getDlpStats();
+		} catch {
+			stats = null;
+		}
+	}
 
 	async function loadPolicies() {
+		void loadStats();
 		try {
 			policies = await listDlpPolicies();
 			policiesError = null;
@@ -90,15 +111,6 @@
 			policiesError = `${t('dataguard.load_policies_failed')} ${message(err)}`.trim();
 		} finally {
 			policiesLoaded = true;
-		}
-		if (canEvents) {
-			try {
-				events = await listDlpEvents();
-				eventsLoaded = true;
-				perPolicy = eventsPerPolicy(events);
-			} catch {
-				perPolicy = null;
-			}
 		}
 	}
 
@@ -122,14 +134,14 @@
 		{ id: 'action', label: t('dataguard.action'), cell: actionCell, sortValue: (p) => p.action },
 		{ id: 'scope', label: t('dataguard.scope'), cell: scopeCell, class: 'col-scope' },
 		{ id: 'enabled', label: t('dataguard.status'), cell: enabledCell, sortValue: (p) => (p.enabled ? 1 : 0) },
-		...(canEvents
+		...(canEvents && perPolicy
 			? [
 					{
 						id: 'events',
 						label: t('dataguard.events_count'),
 						cell: eventsCell,
 						align: 'num' as const,
-						sortValue: (p: DlpPolicy) => perPolicy?.get(p.id) ?? 0
+						sortValue: (p: DlpPolicy) => perPolicy?.[p.id] ?? 0
 					}
 				]
 			: []),
@@ -143,11 +155,16 @@
 	let eventsError = $state<string | null>(null);
 	let eventQuery = $state('');
 	let eventAction = $state('');
+	/** The last page was full: older events may be there */
+	let moreEvents = $state(false);
+	let loadingOlder = $state(false);
 
 	async function loadEvents() {
+		void loadStats();
 		try {
-			events = await listDlpEvents();
-			perPolicy = eventsPerPolicy(events);
+			const page = await listDlpEvents();
+			events = page;
+			moreEvents = page.length >= DLP_EVENT_PAGE;
 			eventsError = null;
 		} catch (err) {
 			eventsError = `${t('dataguard.load_events_failed')} ${message(err)}`.trim();
@@ -156,13 +173,38 @@
 		}
 	}
 
+	async function loadOlder() {
+		const oldest = events.at(-1)?.created_at;
+		if (loadingOlder || !oldest) return;
+		loadingOlder = true;
+		try {
+			const page = await listDlpEvents({ to: oldest });
+			const merged = mergeOlderEvents(events, page);
+			// A page with nothing new (all of one time, shown already) is the end too
+			moreEvents = page.length >= DLP_EVENT_PAGE && merged.length > events.length;
+			events = merged;
+			eventsError = null;
+		} catch (err) {
+			eventsError = `${t('dataguard.load_events_failed')} ${message(err)}`.trim();
+		} finally {
+			loadingOlder = false;
+		}
+	}
+
 	const shownEvents = $derived(filterEvents(events, eventQuery, eventAction));
-	const byAction = $derived(countByAction(events));
-	const eventShare = $derived([
-		{ value: byAction.block, label: t('dataguard.legend_blocked'), tone: 'danger' as const },
-		{ value: byAction.log, label: t('dataguard.legend_logged'), tone: 'warning' as const },
-		{ value: byAction.allow, label: t('dataguard.legend_allowed'), tone: 'muted' as const }
-	]);
+	const eventShare = $derived(
+		stats
+			? [
+					{ value: stats.blocked, label: t('dataguard.legend_blocked'), tone: 'danger' as const },
+					{ value: stats.logged, label: t('dataguard.legend_logged'), tone: 'warning' as const },
+					{
+						value: Math.max(0, stats.total - stats.blocked - stats.logged),
+						label: t('dataguard.legend_allowed'),
+						tone: 'muted' as const
+					}
+				]
+			: []
+	);
 	const actionOptions = $derived([
 		{ value: '', label: t('common.all') },
 		{ value: 'block', label: t('dataguard.action_block') },
@@ -207,7 +249,7 @@
 		on={t('dataguard.enabled')}
 		off={t('dataguard.disabled')}
 	/>{/snippet}
-{#snippet eventsCell(p: DlpPolicy)}{#if perPolicy}{formatNumber(perPolicy.get(p.id) ?? 0)}{:else}<Empty
+{#snippet eventsCell(p: DlpPolicy)}{#if perPolicy}{formatNumber(perPolicy[p.id] ?? 0)}{:else}<Empty
 		/>{/if}{/snippet}
 {#snippet editCell(p: DlpPolicy)}<Button
 		size="sm"
@@ -283,10 +325,10 @@
 								bind:value={eventAction}
 							/>
 						</Toolbar>
-						{#if eventsLoaded && events.length}
+						{#if stats && stats.total}
 							<CountLine
-								text={t(events.length === 1 ? 'dataguard.event_total_one' : 'dataguard.event_total_many')}
-								values={{ count: events.length }}
+								text={t(stats.total === 1 ? 'dataguard.event_count_one' : 'dataguard.event_count_many')}
+								values={{ count: stats.total, blocked: stats.blocked, logged: stats.logged }}
 							/>
 							<ShareBar parts={eventShare} label={t('dataguard.tab_events')} />
 						{/if}
@@ -303,6 +345,13 @@
 								? t('dataguard.empty_events_filtered')
 								: t('dataguard.empty_events')}
 						/>
+						{#if moreEvents && !eventsError}
+							<div class="more">
+								<Button busy={loadingOlder} onclick={() => void loadOlder()}
+									>{tf('dataguard.older_events', 'Older events')}</Button
+								>
+							</div>
+						{/if}
 					</div>
 				{/if}
 			{/snippet}
@@ -336,6 +385,10 @@
 	}
 	.strong {
 		font-weight: 600;
+	}
+	.more {
+		display: flex;
+		justify-content: center;
 	}
 	.dg-page :global(.cell-sub) {
 		display: block;

@@ -3501,7 +3501,8 @@
     "advanced": "Avancerede indstillinger",
     "section_covers": "Hvad den dækker",
     "policy_sheet_desc": "Hvilke overførsler politikken dækker, og om enhederne blokerer, registrerer eller tillader dem.",
-    "saving": "Gemmer…"
+    "saving": "Gemmer…",
+    "older_events": "Ældre hændelser"
   },
   "reports": {
     "title": "Rapporter",

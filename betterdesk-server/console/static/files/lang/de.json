@@ -3495,7 +3495,8 @@
     "advanced": "Erweiterte Optionen",
     "section_covers": "Was sie abdeckt",
     "policy_sheet_desc": "Welche Übertragungen die Richtlinie abdeckt und ob die Geräte sie sperren, protokollieren oder erlauben.",
-    "saving": "Wird gespeichert…"
+    "saving": "Wird gespeichert…",
+    "older_events": "Ältere Ereignisse"
   },
   "reports": {
     "title": "Berichte",

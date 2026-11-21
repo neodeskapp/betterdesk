@@ -3495,7 +3495,8 @@
     "advanced": "高级选项",
     "section_covers": "适用范围",
     "policy_sheet_desc": "策略涵盖哪些传输，以及设备是阻止、记录还是允许。",
-    "saving": "正在保存…"
+    "saving": "正在保存…",
+    "older_events": "较早的事件"
   },
   "reports": {
     "title": "报表",

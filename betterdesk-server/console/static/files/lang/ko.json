@@ -3495,7 +3495,8 @@
     "advanced": "고급 옵션",
     "section_covers": "적용 대상",
     "policy_sheet_desc": "정책이 적용되는 전송과 장치가 이를 차단, 기록, 허용 중 무엇으로 처리할지 정합니다.",
-    "saving": "저장 중…"
+    "saving": "저장 중…",
+    "older_events": "이전 이벤트"
   },
   "reports": {
     "title": "보고서",

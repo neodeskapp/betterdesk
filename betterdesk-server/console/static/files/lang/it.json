@@ -3495,7 +3495,8 @@
     "advanced": "Opzioni avanzate",
     "section_covers": "Cosa copre",
     "policy_sheet_desc": "Quali trasferimenti copre il criterio e se i dispositivi li bloccano, li registrano o li consentono.",
-    "saving": "Salvataggio…"
+    "saving": "Salvataggio…",
+    "older_events": "Eventi meno recenti"
   },
   "reports": {
     "title": "Report",

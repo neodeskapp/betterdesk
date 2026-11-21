@@ -72,6 +72,42 @@ export const DlpEvent = v.looseObject({
 });
 export type DlpEvent = v.InferOutput<typeof DlpEvent>;
 
-export async function listDlpEvents(signal?: AbortSignal): Promise<DlpEvent[]> {
-	return api(listIn(DlpEvent, 'events', 'data'), '/api/dataguard/events', { signal });
+/** Events per request: one page of the event table */
+export const DLP_EVENT_PAGE = 100;
+
+/**
+ * One page of events, newest first: at most `limit`, and with `to` only
+ * those reported at that time or before (the oldest time of the page
+ * before, so the events of that very time come again and are dropped by
+ * the caller).
+ */
+export async function listDlpEvents(
+	opts: { limit?: number; to?: string } = {},
+	signal?: AbortSignal
+): Promise<DlpEvent[]> {
+	const query: Record<string, string> = { limit: String(opts.limit ?? DLP_EVENT_PAGE) };
+	if (opts.to) query.to = opts.to;
+	return api(listIn(DlpEvent, 'events', 'data'), '/api/dataguard/events', { query, signal });
+}
+
+const Count = v.pipe(
+	v.optional(v.nullable(v.union([v.number(), v.string()])), null),
+	v.transform((n) => {
+		const num = Number(n ?? 0);
+		return Number.isFinite(num) ? num : 0;
+	})
+);
+
+export const DlpStats = v.looseObject({
+	total: Count,
+	blocked: Count,
+	logged: Count,
+	/** Events per policy id; null when the server does not count them */
+	by_policy: v.optional(v.nullable(v.record(v.string(), Count)), null)
+});
+export type DlpStats = v.InferOutput<typeof DlpStats>;
+
+/** The number of events of all time, by action and per policy */
+export async function getDlpStats(signal?: AbortSignal): Promise<DlpStats> {
+	return api(DlpStats, '/api/dataguard/stats', { signal });
 }
