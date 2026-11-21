@@ -319,11 +319,10 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 
 	// Org role boundary: check caller's authority within this org.
 	callerRole := getRoleFromCtx(r)
-	callerUsername := getUsernameFromCtx(r)
 
 	// Super/global admins can assign any org role.
 	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerOrgUser, _ := s.db.GetOrgUserByUsername(orgID, callerUsername)
+		callerOrgUser := s.callerOrgUser(r, orgID)
 		if callerOrgUser == nil {
 			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
 			return
@@ -385,12 +384,11 @@ func (s *Server) handleListOrgUsers(w http.ResponseWriter, r *http.Request) {
 	// Org User scope: can only see themselves.
 	callerRole := getRoleFromCtx(r)
 	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerUsername := getUsernameFromCtx(r)
-		callerOrgUser, _ := s.db.GetOrgUserByUsername(orgID, callerUsername)
+		callerOrgUser := s.callerOrgUser(r, orgID)
 		if callerOrgUser != nil && callerOrgUser.Role == db.OrgRoleUser {
 			filtered := []*db.OrgUser{}
 			for _, u := range users {
-				if u.Username == callerUsername {
+				if u.ID == callerOrgUser.ID {
 					filtered = append(filtered, u)
 					break
 				}
@@ -441,8 +439,7 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Self-modification block: cannot change own org role.
-		callerUsername := getUsernameFromCtx(r)
-		if user.Username == callerUsername {
+		if self := s.callerOrgUser(r, user.OrgID); self != nil && self.ID == user.ID {
 			http.Error(w, `{"error":"cannot modify your own org role"}`, http.StatusForbidden)
 			return
 		}
@@ -450,7 +447,7 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 		// Org role boundary: check caller's authority.
 		callerRole := getRoleFromCtx(r)
 		if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-			callerOrgUser, _ := s.db.GetOrgUserByUsername(user.OrgID, callerUsername)
+			callerOrgUser := s.callerOrgUser(r, user.OrgID)
 			if callerOrgUser == nil {
 				http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
 				return
@@ -1098,10 +1095,9 @@ func (s *Server) handleLinkUserToOrg(w http.ResponseWriter, r *http.Request) {
 
 	// Org role boundary: check caller's authority within this org.
 	callerRole := getRoleFromCtx(r)
-	callerUsername := getUsernameFromCtx(r)
 
 	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerOrgUser, _ := s.db.GetOrgUserByUsername(orgID, callerUsername)
+		callerOrgUser := s.callerOrgUser(r, orgID)
 		if callerOrgUser == nil {
 			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
 			return
@@ -1134,7 +1130,7 @@ func (s *Server) handleLinkUserToOrg(w http.ResponseWriter, r *http.Request) {
 
 	// Audit
 	if s.auditLog != nil {
-		s.auditLog.Log("org_user_linked", s.remoteIP(r), callerUsername, map[string]string{
+		s.auditLog.Log("org_user_linked", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
 			"org_id":  orgID,
 			"user_id": fmt.Sprintf("%d", body.UserID),
 			"role":    body.Role,
@@ -1165,10 +1161,9 @@ func (s *Server) handleUnlinkUserFromOrg(w http.ResponseWriter, r *http.Request)
 
 	// Check authority: super/global admin can always unlink
 	callerRole := getRoleFromCtx(r)
-	callerUsername := getUsernameFromCtx(r)
 
 	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerOrgUser, _ := s.db.GetOrgUserByUsername(orgID, callerUsername)
+		callerOrgUser := s.callerOrgUser(r, orgID)
 		if callerOrgUser == nil {
 			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
 			return
@@ -1192,7 +1187,7 @@ func (s *Server) handleUnlinkUserFromOrg(w http.ResponseWriter, r *http.Request)
 
 	// Audit
 	if s.auditLog != nil {
-		s.auditLog.Log("org_user_unlinked", s.remoteIP(r), callerUsername, map[string]string{
+		s.auditLog.Log("org_user_unlinked", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
 			"org_id":  orgID,
 			"user_id": userIDStr,
 		})
@@ -1329,10 +1324,9 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 
 	// Auth check (same logic as handleLinkUserToOrg)
 	callerRole := getRoleFromCtx(r)
-	callerUsername := getUsernameFromCtx(r)
 
 	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerOrgUser, _ := s.db.GetOrgUserByUsername(orgID, callerUsername)
+		callerOrgUser := s.callerOrgUser(r, orgID)
 		if callerOrgUser == nil {
 			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
 			return
@@ -1360,7 +1354,7 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 
 	// Audit
 	if s.auditLog != nil {
-		s.auditLog.Log("user_org_assigned", s.remoteIP(r), callerUsername, map[string]string{
+		s.auditLog.Log("user_org_assigned", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
 			"user_id": userIDStr,
 			"org_id":  orgID,
 			"role":    body.Role,

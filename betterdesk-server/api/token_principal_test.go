@@ -118,6 +118,18 @@ func TestOrgTokenIsNoServerRole(t *testing.T) {
 		t.Errorf("an org user named like a server account read its address book: %d %s", status, body)
 	}
 
+	// An org user with the role user sees only its own row of the org's users.
+	status, body = listenerCall(t, srv, http.MethodGet, "/api/org/org-a/users", "", bearer(victim))
+	if status != http.StatusOK || !strings.Contains(body, `"victim"`) || strings.Contains(body, `"orgboss"`) {
+		t.Errorf("org users with the token of an org user: %d %s, want its own row only", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodGet, "/api/org/org-a/invitations", "", bearer(victim)); status != http.StatusForbidden {
+		t.Errorf("invitations with the token of an org user: %d %s, want 403", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodGet, "/api/org/org-a/invitations", "", bearer(boss)); status != http.StatusOK {
+		t.Errorf("invitations with the token of an org admin: %d %s, want 200", status, body)
+	}
+
 	status, body = listenerCall(t, srv, http.MethodGet, "/api/org", "", bearer(boss))
 	if status != http.StatusOK || !strings.Contains(body, `"org-a"`) || strings.Contains(body, `"org-b"`) {
 		t.Errorf("org list with an org token: %d %s, want org-a only", status, body)
