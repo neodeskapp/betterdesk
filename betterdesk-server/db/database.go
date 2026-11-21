@@ -91,6 +91,10 @@ type User struct {
 	TOTPRecoveryCodes string `json:"-"` // JSON array of bcrypt-hashed recovery codes (H4)
 	CreatedAt         string `json:"created_at"`
 	LastLogin         string `json:"last_login,omitempty"`
+	// CredentialsChangedAt is when the password or the second factor last
+	// changed, in Unix seconds; 0 when never since the column exists. A
+	// sign-in token issued before it is no longer good.
+	CredentialsChangedAt int64 `json:"-"`
 }
 
 // RolePermission represents a custom permission override for a role.

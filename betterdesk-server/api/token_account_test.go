@@ -65,3 +65,78 @@ func TestServerTokenFollowsTheAccount(t *testing.T) {
 		t.Errorf("admin claim of a viewer account: %d %s, want 403", status, body)
 	}
 }
+
+// nextSecond waits until the clock's second changes, so a credentials
+// change comes strictly after a token issued before the call (both count
+// in whole seconds).
+func nextSecond() {
+	time.Sleep(time.Until(time.Unix(time.Now().Unix()+1, 0)))
+}
+
+// TestPasswordChangeEndsTheAccountsTokens: a sign-in token issued before
+// the account's password changed is refused, also a partial token still
+// waiting for its second factor; a token issued after the change works
+// (RV181).
+func TestPasswordChangeEndsTheAccountsTokens(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	srv.SetJWTManager(auth.NewJWTManager("password-change-test-secret", time.Hour))
+	user := &db.User{Username: "pwchange", PasswordHash: mustHash(t, "first-pass-1"), Role: auth.RoleOperator}
+	if err := database.CreateUser(user); err != nil {
+		t.Fatal(err)
+	}
+	login := func(password string) string {
+		t.Helper()
+		status, body := listenerCall(t, srv, http.MethodPost, "/api/auth/login", `{"username":"pwchange","password":"`+password+`"}`, nil)
+		var out struct {
+			Token        string `json:"token"`
+			PartialToken string `json:"partial_token"`
+		}
+		if err := json.Unmarshal([]byte(body), &out); status != http.StatusOK || err != nil || out.Token+out.PartialToken == "" {
+			t.Fatalf("login: %d %s", status, body)
+		}
+		return out.Token + out.PartialToken
+	}
+	patch := func(token string) int {
+		t.Helper()
+		status, _ := listenerCall(t, srv, http.MethodPatch, "/api/peers/PEERAAA1", `{"note":"x"}`, bearer(token))
+		return status
+	}
+	setPassword := func(password string) {
+		t.Helper()
+		user.PasswordHash = mustHash(t, password)
+		if err := database.UpdateUser(user); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	old := login("first-pass-1")
+	if got := patch(old); got != http.StatusOK {
+		t.Fatalf("token before the change: %d, want 200", got)
+	}
+	nextSecond()
+	setPassword("second-pass-2")
+	if got := patch(old); got != http.StatusUnauthorized {
+		t.Errorf("token issued before the password change: %d, want 401", got)
+	}
+	if got := patch(login("second-pass-2")); got != http.StatusOK {
+		t.Errorf("token issued after the password change: %d, want 200", got)
+	}
+
+	secret := auth.GenerateTOTPSecret()
+	user.TOTPSecret, user.TOTPEnabled = secret, true
+	if err := database.UpdateUser(user); err != nil {
+		t.Fatal(err)
+	}
+	nextSecond()
+	partial := login("second-pass-2")
+	nextSecond()
+	setPassword("third-pass-3")
+	code, err := auth.ComputeTOTP(secret, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, body := listenerCall(t, srv, http.MethodPost, "/api/auth/login/2fa", `{"partial_token":"`+partial+`","code":"`+code+`"}`, nil)
+	if status != http.StatusUnauthorized {
+		t.Errorf("second factor of a sign-in begun before the password change: %d %s, want 401", status, body)
+	}
+}

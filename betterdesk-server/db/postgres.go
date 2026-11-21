@@ -176,7 +176,8 @@ func (pg *PostgresDB) Migrate() error {
 			totp_enabled         BOOLEAN NOT NULL DEFAULT FALSE,
 			totp_recovery_codes  TEXT DEFAULT NULL,
 			created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			last_login           TIMESTAMPTZ
+			last_login           TIMESTAMPTZ,
+			credentials_changed_at BIGINT
 		)`,
 
 		`CREATE TABLE IF NOT EXISTS api_keys (
@@ -756,6 +757,8 @@ func (pg *PostgresDB) Migrate() error {
 		`ALTER TABLE billing_packages ADD COLUMN IF NOT EXISTS rounding_minutes INTEGER NOT NULL DEFAULT 10`,
 		`ALTER TABLE billing_contracts ADD COLUMN IF NOT EXISTS current_period_ym TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE billing_period_totals ADD COLUMN IF NOT EXISTS included_limit_snapshot INTEGER NOT NULL DEFAULT 0`,
+		// users: when the password or the second factor last changed
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS credentials_changed_at BIGINT`,
 	}
 
 	for _, ddl := range columnMigrations {
@@ -794,6 +797,12 @@ func (pg *PostgresDB) Migrate() error {
 		return err
 	}
 
+	for _, stmt := range pgCredentialsChangedTrigger {
+		if _, err := pg.pool.Exec(pg.ctx, stmt); err != nil {
+			return fmt.Errorf("db: users credentials trigger: %w\nStatement: %s", err, stmt)
+		}
+	}
+
 	// A table both programs create keeps the shape of the one that made
 	// it; writes follow that shape (DECISIONS D2)
 	var flagType string
@@ -805,6 +814,38 @@ func (pg *PostgresDB) Migrate() error {
 	pg.auditFileFlagBool.Store(flagType == "boolean")
 
 	return nil
+}
+
+// pgCredentialsChangedTrigger stamps users.credentials_changed_at (Unix
+// seconds, rounded down) when an update changes the password hash,
+// switches the second factor on or off, or replaces the secret of a second
+// factor that is on. It is a trigger so that every writer of the table
+// counts: the API, the console's own account routes and the password reset
+// of the command line. A secret written by a setup that is not confirmed
+// yet does not count. totp_enabled is compared as text, so the check holds
+// whether the table that was there first has it as boolean or integer.
+var pgCredentialsChangedTrigger = []string{
+	`CREATE OR REPLACE FUNCTION users_credentials_changed() RETURNS trigger AS $$
+	BEGIN
+		IF NEW.password_hash IS DISTINCT FROM OLD.password_hash
+			OR NEW.totp_enabled IS DISTINCT FROM OLD.totp_enabled
+			OR (NEW.totp_secret IS DISTINCT FROM OLD.totp_secret
+				AND COALESCE(NEW.totp_enabled::text, '') NOT IN ('', '0', 'false', 'f')) THEN
+			NEW.credentials_changed_at := FLOOR(EXTRACT(EPOCH FROM NOW()))::bigint;
+		END IF;
+		RETURN NEW;
+	END
+	$$ LANGUAGE plpgsql`,
+	`DO $$
+	BEGIN
+		IF NOT EXISTS (
+			SELECT 1 FROM pg_trigger
+			WHERE tgname = 'users_credentials_changed' AND tgrelid = 'users'::regclass
+		) THEN
+			CREATE TRIGGER users_credentials_changed BEFORE UPDATE ON users
+				FOR EACH ROW EXECUTE PROCEDURE users_credentials_changed();
+		END IF;
+	END $$`,
 }
 
 // migrateBillingOrgContracts copies legacy billing_org_contracts into billing_contracts.
@@ -1803,7 +1844,8 @@ func scanUser(row pgx.Row) (*User, error) {
 	var authProvider *string
 
 	err := row.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.Role,
-		&u.TOTPSecret, &u.TOTPEnabled, &createdAt, &lastLogin, &u.IsServerAdmin, &recoveryCodes, &authProvider)
+		&u.TOTPSecret, &u.TOTPEnabled, &createdAt, &lastLogin, &u.IsServerAdmin, &recoveryCodes, &authProvider,
+		&u.CredentialsChangedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -1831,7 +1873,8 @@ func scanUser(row pgx.Row) (*User, error) {
 // often leave totp_secret NULL; scanning NULL into Go string fails and breaks
 // GET /api/users, which in turn triggered mirrorCreate retry loops.
 const userSelectColsPG = `id, username, password_hash, role, COALESCE(totp_secret, ''), totp_enabled,
-		        created_at, last_login, COALESCE(is_server_admin, FALSE), totp_recovery_codes, COALESCE(auth_provider, 'local')`
+		        created_at, last_login, COALESCE(is_server_admin, FALSE), totp_recovery_codes, COALESCE(auth_provider, 'local'),
+		        COALESCE(credentials_changed_at, 0)`
 
 // GetUser returns a user by username, or nil if not found.
 func (pg *PostgresDB) GetUser(username string) (*User, error) {

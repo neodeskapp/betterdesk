@@ -135,7 +135,8 @@ func (s *SQLiteDB) Migrate() error {
 			totp_enabled INTEGER DEFAULT 0,
 			totp_recovery_codes TEXT DEFAULT NULL,
 			created_at TEXT DEFAULT (datetime('now')),
-			last_login TEXT DEFAULT ''
+			last_login TEXT DEFAULT '',
+			credentials_changed_at INTEGER DEFAULT NULL
 		)`,
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)`,
 
@@ -719,6 +720,8 @@ func (s *SQLiteDB) Migrate() error {
 		{"billing_packages", "rounding_minutes", `ALTER TABLE billing_packages ADD COLUMN rounding_minutes INTEGER NOT NULL DEFAULT 10`},
 		{"billing_contracts", "current_period_ym", `ALTER TABLE billing_contracts ADD COLUMN current_period_ym TEXT NOT NULL DEFAULT ''`},
 		{"billing_period_totals", "included_limit_snapshot", `ALTER TABLE billing_period_totals ADD COLUMN included_limit_snapshot INTEGER NOT NULL DEFAULT 0`},
+		// users: when the password or the second factor last changed
+		{"users", "credentials_changed_at", `ALTER TABLE users ADD COLUMN credentials_changed_at INTEGER DEFAULT NULL`},
 	}
 
 	for _, m := range columnMigrations {
@@ -779,6 +782,10 @@ func (s *SQLiteDB) Migrate() error {
 		return err
 	}
 
+	if _, err := s.db.Exec(sqliteCredentialsChangedTrigger); err != nil {
+		return fmt.Errorf("db: users credentials trigger: %w", err)
+	}
+
 	if err := s.migrateBillingOrgContracts(); err != nil {
 		return err
 	}
@@ -789,6 +796,22 @@ func (s *SQLiteDB) Migrate() error {
 
 	return nil
 }
+
+// sqliteCredentialsChangedTrigger stamps users.credentials_changed_at (Unix
+// seconds) when an update changes the password hash, switches the second
+// factor on or off, or replaces the secret of a second factor that is on.
+// It is a trigger so that every writer of the table counts: the API, the
+// console's own account routes and the password reset of the command line.
+// A secret written by a setup that is not confirmed yet does not count.
+const sqliteCredentialsChangedTrigger = `CREATE TRIGGER IF NOT EXISTS users_credentials_changed
+	AFTER UPDATE OF password_hash, totp_secret, totp_enabled ON users
+	FOR EACH ROW
+	WHEN OLD.password_hash IS NOT NEW.password_hash
+		OR OLD.totp_enabled IS NOT NEW.totp_enabled
+		OR (OLD.totp_secret IS NOT NEW.totp_secret AND COALESCE(NEW.totp_enabled, 0) NOT IN (0, '0', 'false', ''))
+	BEGIN
+		UPDATE users SET credentials_changed_at = CAST(strftime('%s', 'now') AS INTEGER) WHERE id = NEW.id;
+	END`
 
 // usersHasLegacyRoleCheck detects upgraded SQLite installs that still enforce
 // CHECK (role IN ('admin', 'operator', 'viewer')) from the pre-Phase-52 schema.
@@ -2164,7 +2187,7 @@ func formatTime(t time.Time) string {
 // COALESCE guards against NULL text columns that Scan into string (Issue #292).
 const userSelectCols = `id, username, password_hash, role, COALESCE(is_server_admin, 0),
 		COALESCE(auth_provider, 'local'), COALESCE(totp_secret, ''), totp_enabled, COALESCE(totp_recovery_codes, ''),
-		COALESCE(created_at, datetime('now')), COALESCE(last_login, '')`
+		COALESCE(created_at, datetime('now')), COALESCE(last_login, ''), COALESCE(credentials_changed_at, 0)`
 
 // CreateUser inserts a new user.
 func (s *SQLiteDB) CreateUser(u *User) error {
@@ -2190,7 +2213,7 @@ func (s *SQLiteDB) GetUser(username string) (*User, error) {
 	u := &User{}
 	err := s.db.QueryRow(`SELECT `+userSelectCols+` FROM users WHERE username = ?`, username).Scan(
 		&u.ID, &u.Username, &u.PasswordHash, &u.Role, &u.IsServerAdmin,
-		&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin)
+		&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin, &u.CredentialsChangedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -2204,7 +2227,7 @@ func (s *SQLiteDB) GetUserByID(id int64) (*User, error) {
 	u := &User{}
 	err := s.db.QueryRow(`SELECT `+userSelectCols+` FROM users WHERE id = ?`, id).Scan(
 		&u.ID, &u.Username, &u.PasswordHash, &u.Role, &u.IsServerAdmin,
-		&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin)
+		&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin, &u.CredentialsChangedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -2224,7 +2247,7 @@ func (s *SQLiteDB) ListUsers() ([]*User, error) {
 	for rows.Next() {
 		u := &User{}
 		if err := rows.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.Role, &u.IsServerAdmin,
-			&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin); err != nil {
+			&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin, &u.CredentialsChangedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, u)
