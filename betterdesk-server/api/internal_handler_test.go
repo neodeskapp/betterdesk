@@ -304,7 +304,7 @@ var adminSample = []sampleCall{
 	{method: "GET", path: "/api/help/requests", wantStatus: 200},
 	{method: "POST", path: "/api/help/requests/999/acknowledge", wantStatus: 404},
 	{method: "POST", path: "/api/help/requests", body: `{}`, wantStatus: 400},
-	{method: "POST", path: "/api/pairing/codes",body: `{"label":"desk"}`, wantStatus: 201, mask: []string{"id", "code", "expires_at"}},
+	{method: "POST", path: "/api/pairing/codes", body: `{"label":"desk"}`, wantStatus: 201, mask: []string{"id", "code", "expires_at"}},
 	{method: "GET", path: "/api/pairing/codes", wantStatus: 200},
 	{method: "GET", path: "/api/auth/me", wantStatus: 401},
 	{method: "GET", path: "/api/server/stats", wantStatus: 200},
