@@ -131,6 +131,11 @@ var fixedSteps = []fixedStep{
 	// operator's scope, and the next step answers Node's 404 for folder
 	// 999 again.
 	{"node", `402 PATCH /api/devices/A1001/folder {"folderId":5} as operator`, "RV11"},
+	// An id that starts with rt_ and names no remote target is looked up
+	// as a peer too, alive and deleted: the answers stay, the calls to the
+	// API server grow.
+	{"node", "42 GET /api/devices/rt_nope as admin", "RV30"},
+	{"node", `304 POST /api/devices/A1001/change-id {"newId":"rt_target1"} as admin`, "RV30"},
 }
 
 // fixedStep is a step of a recording that the fix of a bug changed. The

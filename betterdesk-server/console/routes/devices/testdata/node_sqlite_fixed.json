@@ -544,6 +544,22 @@
    "answer": "{\"success\":false,\"error\":\"Invalid device ID (6-16 characters required)\"}"
   }
  },
+ "304 POST /api/devices/A1001/change-id {\"newId\":\"rt_target1\"} as admin": {
+  "bug": "RV30",
+  "answer": {
+   "status": 200,
+   "answer": "{\"success\":true}",
+   "calls": [
+    "GET /api/peers/A1001",
+    "GET /api/remote-targets/rt_target1",
+    "GET /api/peers/rt_target1",
+    "GET /api/remote-targets/rt_target1",
+    "GET /api/peers/rt_target1",
+    "GET /api/peers?include_deleted=true",
+    "POST /api/peers/A1001/change-id {\"new_id\":\"rt_target1\"}"
+   ]
+  }
+ },
  "356 GET /api/devices/C1003/groups as viewer": {
   "bug": "DGR5, RV59",
   "answer": {
@@ -579,6 +595,20 @@
    "calls": [
     "GET /api/peers/A1001",
     "GET /api/peers/A1001"
+   ]
+  }
+ },
+ "42 GET /api/devices/rt_nope as admin": {
+  "bug": "RV30",
+  "answer": {
+   "status": 404,
+   "answer": "{\"success\":false,\"error\":\"Device not found\"}",
+   "calls": [
+    "GET /api/remote-targets/rt_nope",
+    "GET /api/peers/rt_nope",
+    "GET /api/remote-targets/rt_nope",
+    "GET /api/peers/rt_nope",
+    "GET /api/peers?include_deleted=true"
    ]
   }
  },
