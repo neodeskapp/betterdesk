@@ -464,10 +464,14 @@ func allDigits(value string) bool {
 	return ok
 }
 
-// splitPath cuts the request path into its parts. ok is false for a path
-// no route can match: one with an empty part or a dot segment.
+// splitPath cuts the request path into its parts. It reads the path as the
+// client sent it (httpx.RawPath), the text every step in front of the
+// router reads: Go's EscapedPath is written anew from the decoded path as
+// soon as the path holds a byte Go would have escaped, which would make an
+// escaped fixed segment match. ok is false for a path no route can match:
+// one with an empty part or a dot segment.
 func splitPath(r *http.Request) (parts []string, trailing, ok bool) {
-	escaped := r.URL.EscapedPath()
+	escaped := httpx.RawPath(r)
 	trailing = len(escaped) > 1 && strings.HasSuffix(escaped, "/")
 	if trailing {
 		escaped = escaped[:len(escaped)-1]

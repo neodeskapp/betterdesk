@@ -106,6 +106,53 @@ func TestRouterServe(t *testing.T) {
 	}
 }
 
+// The table reads the path as the client sent it, the text the steps in
+// front of it read: Go writes the path anew as soon as it holds a byte Go
+// would have escaped, and must not turn an escaped fixed segment into one
+// that matches.
+func TestRouterMatchesThePathAsSent(t *testing.T) {
+	rt := newTestRouter()
+	cases := []struct {
+		target   string
+		route    string // "" means no route
+		id, rest string
+	}{
+		{`/api/%64evices/7"`, "", "", ""},
+		{`/api/devices%2F7"`, "", "", ""},
+		{"/api/devic%65s/st%61ts|", "", "", ""},
+		{"/%61pi/devices/x|y", "", "", ""},
+		{`/api/devices/a"b%20c`, "one", `a"b c`, ""},
+		{"/api/devices/\xc3\xa4|", "one", "ä|", ""},
+		{"/api/devices/7#x", "one", "7", ""},
+		{"/files/a%2Fb|c", "files", "", "a/b|c"},
+		{"/files/a{b}/c^", "files", "", "a{b}/c^"},
+	}
+	for _, c := range cases {
+		t.Run(c.target, func(t *testing.T) {
+			rec, ok := serve(rt, "GET", c.target)
+			found, inTable := find(rt, "GET", c.target)
+			if c.route == "" {
+				if ok || inTable {
+					t.Fatalf("answered by %q, Find %v %q; want no route", rec.Header().Get("X-Route"), inTable, found.Path)
+				}
+				return
+			}
+			if !ok || !inTable {
+				t.Fatalf("Serve %v, Find %v; want %q", ok, inTable, c.route)
+			}
+			if got := rec.Header().Get("X-Route"); got != c.route {
+				t.Errorf("route = %q, want %q", got, c.route)
+			}
+			if got := rec.Header().Get("X-Id"); got != c.id {
+				t.Errorf("id = %q, want %q", got, c.id)
+			}
+			if got := rec.Header().Get("X-Rest"); got != c.rest {
+				t.Errorf("rest = %q, want %q", got, c.rest)
+			}
+		})
+	}
+}
+
 func TestRouterMiddlewareOrder(t *testing.T) {
 	rt := NewRouter()
 	var order []string
