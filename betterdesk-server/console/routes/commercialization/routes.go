@@ -2,7 +2,8 @@
 // server's clock and its time sync, billing packages, contracts,
 // sessions, work reports and their exports, currencies, the help request
 // mail settings and the SMTP status. Most routes pass the call on to the
-// API server and answer with what it said; the clock settings are the
+// API server and answer with what it said, cut to the devices of an
+// account limited to some (see scope.go); the clock settings are the
 // console's own (package billingclock), and so is the mail configuration
 // (package helpmail).
 package commercialization
@@ -52,19 +53,19 @@ func Register(d *kit.Deps) {
 	r.Put("/api/panel/billing/packages/{packageId}", h.passBody("PUT", "/billing/packages/{packageId}"), auth, manage)
 	r.Delete("/api/panel/billing/packages/{packageId}", h.pass("DELETE", "/billing/packages/{packageId}"), auth, manage)
 
-	r.Get("/api/panel/billing/contracts", h.withQuery("/billing/contracts"), auth, view)
+	r.Get("/api/panel/billing/contracts", h.listInScope("/billing/contracts", "contracts", contractInScope), auth, view)
 	r.Post("/api/panel/billing/contracts", h.passBody("POST", "/billing/contracts"), auth, manage)
 	r.Put("/api/panel/billing/contracts/{contractId}", h.passBody("PUT", "/billing/contracts/{contractId}"), auth, manage)
 	r.Delete("/api/panel/billing/contracts/{contractId}", h.pass("DELETE", "/billing/contracts/{contractId}"), auth, manage)
 
 	r.Get("/api/panel/billing/stats", h.pass("GET", "/billing/stats"), auth, view)
-	r.Get("/api/panel/billing/sessions", h.withQuery("/billing/sessions"), auth, view)
-	r.Get("/api/panel/billing/check", h.withQuery("/billing/check"), auth, d.RequirePermission("device.connect"))
-	r.Get("/api/panel/billing/sessions/pending", h.withQuery("/billing/sessions/pending"), auth, reports)
-	r.Get("/api/panel/billing/sessions/export", h.export("/billing/sessions/export"), auth, export)
-	r.Get("/api/panel/billing/reports", h.withQuery("/billing/reports"), auth, view)
-	r.Get("/api/panel/billing/reports/export", h.export("/billing/reports/export"), auth, export)
-	r.Post("/api/panel/billing/sessions/{sessionId}/report", h.passBody("POST", "/billing/sessions/{sessionId}/report"), auth, reports)
+	r.Get("/api/panel/billing/sessions", h.listInScope("/billing/sessions", "sessions", sessionInScope), auth, view)
+	r.Get("/api/panel/billing/check", h.deviceInScope("/billing/check"), auth, d.RequirePermission("device.connect"))
+	r.Get("/api/panel/billing/sessions/pending", h.deviceInScope("/billing/sessions/pending"), auth, reports)
+	r.Get("/api/panel/billing/sessions/export", h.exportInScope("/billing/sessions/export"), auth, export)
+	r.Get("/api/panel/billing/reports", h.scoped(h.withQuery("/billing/reports"), h.reportsInScope), auth, view)
+	r.Get("/api/panel/billing/reports/export", h.exportInScope("/billing/reports/export"), auth, export)
+	r.Post("/api/panel/billing/sessions/{sessionId}/report", h.reportInScope("/billing/sessions/{sessionId}/report"), auth, reports)
 	r.Get("/api/panel/billing/currencies", h.pass("GET", "/billing/currencies"), auth, view)
 	r.Put("/api/panel/billing/currencies/{currencyCode}", h.passBody("PUT", "/billing/currencies/{currencyCode}"), auth, manage)
 
