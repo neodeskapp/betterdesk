@@ -255,8 +255,7 @@ func readRustDB(path string) ([]rustPeer, error) {
 			scanArgs = append(scanArgs, &p.LastOnline)
 		}
 		if err := rows.Scan(scanArgs...); err != nil {
-			log.Printf("WARN: skipping row: %v", err)
-			continue
+			return nil, fmt.Errorf("read peer row %d: %w", len(peers)+1, err)
 		}
 		peers = append(peers, p)
 	}
@@ -293,8 +292,7 @@ func copyRustPeers2SQLite(db *sql.DB, peers []rustPeer) (int, error) {
 		_, err := stmt.Exec(p.ID, uuid, p.PK, user, info.Hostname, info.OS, info.Version,
 			status, lastOnline, p.CreatedAt, banned, deleted, note)
 		if err != nil {
-			log.Printf("WARN: peer %s: %v", p.ID, err)
-			continue
+			return count, fmt.Errorf("peer %s: %w", p.ID, err)
 		}
 		count++
 	}
@@ -328,8 +326,7 @@ func writeRustPeersPG(dsn string, peers []rustPeer) (int, error) {
 			status, parseTime(lastOnline), parseTime(p.CreatedAt),
 			banned != 0, deleted != 0, note)
 		if err != nil {
-			log.Printf("WARN: peer %s: %v", p.ID, err)
-			continue
+			return count, fmt.Errorf("peer %s: %w", p.ID, err)
 		}
 		count++
 	}
@@ -475,21 +472,18 @@ func copyPeersSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (in
 	count := 0
 	for rows.Next() {
 		var (
-			id, uuid, ip, user, hostname, osStr, version, status string
-			banReason, note, tags                                string
-			natType                                              int
-			heartbeatSeq                                         int64
+			id                                                   string
 			pk                                                   []byte
-			lastOnlineStr, createdAtStr                          string
-			bannedAtStr, deletedAtStr                            sql.NullString
-			disabledInt, bannedInt, softDeletedInt               int
+			uuid, ip, user, hostname, osStr, version, status     sql.NullString
+			banReason, note, tags                                sql.NullString
+			lastOnline, createdAt, bannedAt, deletedAt           sql.NullString
+			natType, heartbeatSeq, disabled, banned, softDeleted sql.NullInt64
 		)
 		if err := rows.Scan(&id, &uuid, &pk, &ip, &user, &hostname, &osStr, &version,
-			&status, &natType, &lastOnlineStr, &createdAtStr,
-			&disabledInt, &bannedInt, &banReason, &bannedAtStr,
-			&softDeletedInt, &deletedAtStr, &note, &tags, &heartbeatSeq); err != nil {
-			log.Printf("WARN: skip peer row: %v", err)
-			continue
+			&status, &natType, &lastOnline, &createdAt,
+			&disabled, &banned, &banReason, &bannedAt,
+			&softDeleted, &deletedAt, &note, &tags, &heartbeatSeq); err != nil {
+			return count, fmt.Errorf("read peer row %d: %w", count+1, err)
 		}
 
 		_, err := dst.Exec(ctx, `
@@ -499,13 +493,12 @@ func copyPeersSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (in
 			    soft_deleted, deleted_at, note, tags, heartbeat_seq)
 			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
 			ON CONFLICT (id) DO NOTHING`,
-			id, uuid, pk, ip, user, hostname, osStr, version,
-			status, natType, parseTime(lastOnlineStr), parseTimeDefault(createdAtStr),
-			disabledInt != 0, bannedInt != 0, banReason, parseNullTime(bannedAtStr),
-			softDeletedInt != 0, parseNullTime(deletedAtStr), note, tags, heartbeatSeq)
+			id, uuid.String, pk, ip.String, user.String, hostname.String, osStr.String, version.String,
+			status.String, natType.Int64, parseNullTime(lastOnline), parseTimeDefault(createdAt.String),
+			disabled.Int64 != 0, banned.Int64 != 0, banReason.String, parseNullTime(bannedAt),
+			softDeleted.Int64 != 0, parseNullTime(deletedAt), note.String, tags.String, heartbeatSeq.Int64)
 		if err != nil {
-			log.Printf("WARN: peer %s: %v", id, err)
-			continue
+			return count, fmt.Errorf("peer %s: %w", id, err)
 		}
 		count++
 	}
@@ -521,15 +514,15 @@ func copyConfigSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (i
 
 	count := 0
 	for rows.Next() {
-		var key, value string
+		var key string
+		var value sql.NullString
 		if err := rows.Scan(&key, &value); err != nil {
-			continue
+			return count, fmt.Errorf("read config row %d: %w", count+1, err)
 		}
 		_, err := dst.Exec(ctx, `INSERT INTO server_config (key, value) VALUES ($1, $2)
-			ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, key, value)
+			ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, key, value.String)
 		if err != nil {
-			log.Printf("WARN: config %s: %v", key, err)
-			continue
+			return count, fmt.Errorf("config %s: %w", key, err)
 		}
 		count++
 	}
@@ -545,16 +538,15 @@ func copyIDHistorySQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool)
 
 	count := 0
 	for rows.Next() {
-		var oldID, newID, reason string
-		var changedAtStr string
-		if err := rows.Scan(&oldID, &newID, &changedAtStr, &reason); err != nil {
-			continue
+		var oldID, newID string
+		var changedAt, reason sql.NullString
+		if err := rows.Scan(&oldID, &newID, &changedAt, &reason); err != nil {
+			return count, fmt.Errorf("read id_change_history row %d: %w", count+1, err)
 		}
 		_, err := dst.Exec(ctx, `INSERT INTO id_change_history (old_id, new_id, changed_at, reason)
-			VALUES ($1, $2, $3, $4)`, oldID, newID, parseTimeDefault(changedAtStr), reason)
+			VALUES ($1, $2, $3, $4)`, oldID, newID, parseTimeDefault(changedAt.String), reason.String)
 		if err != nil {
-			log.Printf("WARN: id_history %s→%s: %v", oldID, newID, err)
-			continue
+			return count, fmt.Errorf("id_history %s→%s: %w", oldID, newID, err)
 		}
 		count++
 	}
@@ -572,20 +564,13 @@ func copyUsersSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (in
 	count := 0
 	for rows.Next() {
 		var (
-			username, passwordHash, role string
-			totpSecret                   sql.NullString
-			totpEnabled                  int
-			createdAt, lastLogin         string
+			username, passwordHash, role     string
+			totpSecret, createdAt, lastLogin sql.NullString
+			totpEnabled                      sql.NullInt64
 		)
 		if err := rows.Scan(&username, &passwordHash, &role, &totpSecret,
 			&totpEnabled, &createdAt, &lastLogin); err != nil {
-			log.Printf("WARN: skip user row: %v", err)
-			continue
-		}
-
-		secret := ""
-		if totpSecret.Valid {
-			secret = totpSecret.String
+			return count, fmt.Errorf("read user row %d: %w", count+1, err)
 		}
 
 		_, err := dst.Exec(ctx, `
@@ -593,11 +578,10 @@ func copyUsersSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (in
 			    created_at, last_login)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
 			ON CONFLICT (username) DO NOTHING`,
-			username, passwordHash, role, secret, totpEnabled != 0,
-			parseTimeDefault(createdAt), parseTime(lastLogin))
+			username, passwordHash, role, totpSecret.String, totpEnabled.Int64 != 0,
+			parseTimeDefault(createdAt.String), parseNullTime(lastLogin))
 		if err != nil {
-			log.Printf("WARN: user %s: %v", username, err)
-			continue
+			return count, fmt.Errorf("user %s: %w", username, err)
 		}
 		count++
 	}
@@ -615,19 +599,18 @@ func copyAPIKeysSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (
 	count := 0
 	for rows.Next() {
 		var keyHash, keyPrefix, name, role string
-		var createdAt, expiresAt, lastUsed string
+		var createdAt, expiresAt, lastUsed sql.NullString
 		if err := rows.Scan(&keyHash, &keyPrefix, &name, &role, &createdAt, &expiresAt, &lastUsed); err != nil {
-			continue
+			return count, fmt.Errorf("read api_keys row %d: %w", count+1, err)
 		}
 		_, err := dst.Exec(ctx, `
 			INSERT INTO api_keys (key_hash, key_prefix, name, role, created_at, expires_at, last_used)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
 			ON CONFLICT (key_hash) DO NOTHING`,
 			keyHash, keyPrefix, name, role,
-			parseTimeDefault(createdAt), parseTime(expiresAt), parseTime(lastUsed))
+			parseTimeDefault(createdAt.String), parseNullTime(expiresAt), parseNullTime(lastUsed))
 		if err != nil {
-			log.Printf("WARN: api_key %s: %v", keyPrefix, err)
-			continue
+			return count, fmt.Errorf("api_key %s: %w", keyPrefix, err)
 		}
 		count++
 	}
@@ -712,29 +695,26 @@ func copyPeersPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (in
 	count := 0
 	for rows.Next() {
 		var (
-			id, uuid, ip, user, hostname, osStr, version, status string
-			banReason, note, tags                                string
-			natType                                              int
-			heartbeatSeq                                         int64
-			pk                                                   []byte
-			lastOnline, createdAt                                *time.Time
-			bannedAt, deletedAt                                  *time.Time
-			disabled, banned, softDeleted                        bool
+			id                                               string
+			pk                                               []byte
+			uuid, ip, user, hostname, osStr, version, status *string
+			banReason, note, tags                            *string
+			natType, heartbeatSeq                            *int64
+			lastOnline, createdAt, bannedAt, deletedAt       *time.Time
+			disabled, banned, softDeleted                    *bool
 		)
 		if err := rows.Scan(&id, &uuid, &pk, &ip, &user, &hostname, &osStr, &version,
 			&status, &natType, &lastOnline, &createdAt,
 			&disabled, &banned, &banReason, &bannedAt,
 			&softDeleted, &deletedAt, &note, &tags, &heartbeatSeq); err != nil {
-			log.Printf("WARN: skip peer: %v", err)
-			continue
+			return count, fmt.Errorf("read peer row %d: %w", count+1, err)
 		}
-		_, err := stmt.Exec(id, uuid, pk, ip, user, hostname, osStr, version,
-			status, natType, formatTime(lastOnline), formatTimeDefault(createdAt),
-			boolToInt(disabled), boolToInt(banned), banReason, formatTime(bannedAt),
-			boolToInt(softDeleted), formatTime(deletedAt), note, tags, heartbeatSeq)
+		_, err := stmt.Exec(id, ptrStr(uuid), pk, ptrStr(ip), ptrStr(user), ptrStr(hostname), ptrStr(osStr), ptrStr(version),
+			ptrStr(status), ptrInt64(natType), formatTime(lastOnline), formatTimeDefault(createdAt),
+			ptrBoolInt(disabled), ptrBoolInt(banned), ptrStr(banReason), formatTime(bannedAt),
+			ptrBoolInt(softDeleted), formatTime(deletedAt), ptrStr(note), ptrStr(tags), ptrInt64(heartbeatSeq))
 		if err != nil {
-			log.Printf("WARN: peer %s: %v", id, err)
-			continue
+			return count, fmt.Errorf("peer %s: %w", id, err)
 		}
 		count++
 	}
@@ -759,11 +739,14 @@ func copyConfigPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (i
 
 	count := 0
 	for rows.Next() {
-		var key, value string
+		var key string
+		var value *string
 		if err := rows.Scan(&key, &value); err != nil {
-			continue
+			return count, fmt.Errorf("read config row %d: %w", count+1, err)
 		}
-		tx.Exec(`INSERT OR REPLACE INTO server_config (key, value) VALUES (?, ?)`, key, value)
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO server_config (key, value) VALUES (?, ?)`, key, ptrStr(value)); err != nil {
+			return count, fmt.Errorf("config %s: %w", key, err)
+		}
 		count++
 	}
 	if err := rows.Err(); err != nil {
@@ -787,13 +770,16 @@ func copyIDHistoryPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB)
 
 	count := 0
 	for rows.Next() {
-		var oldID, newID, reason string
-		var changedAt time.Time
+		var oldID, newID string
+		var changedAt *time.Time
+		var reason *string
 		if err := rows.Scan(&oldID, &newID, &changedAt, &reason); err != nil {
-			continue
+			return count, fmt.Errorf("read id_change_history row %d: %w", count+1, err)
 		}
-		tx.Exec(`INSERT INTO id_change_history (old_id, new_id, changed_at, reason) VALUES (?, ?, ?, ?)`,
-			oldID, newID, changedAt.Format("2006-01-02 15:04:05"), reason)
+		if _, err := tx.Exec(`INSERT INTO id_change_history (old_id, new_id, changed_at, reason) VALUES (?, ?, ?, ?)`,
+			oldID, newID, formatTimeDefault(changedAt), ptrStr(reason)); err != nil {
+			return count, fmt.Errorf("id_history %s→%s: %w", oldID, newID, err)
+		}
 		count++
 	}
 	if err := rows.Err(); err != nil {
@@ -819,21 +805,22 @@ func copyUsersPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (in
 	count := 0
 	for rows.Next() {
 		var (
-			username, passwordHash, role, totpSecret string
-			totpEnabled                              bool
-			createdAt                                *time.Time
-			lastLogin                                *time.Time
+			username, passwordHash, role string
+			totpSecret                   *string
+			totpEnabled                  *bool
+			createdAt, lastLogin         *time.Time
 		)
 		if err := rows.Scan(&username, &passwordHash, &role, &totpSecret, &totpEnabled,
 			&createdAt, &lastLogin); err != nil {
-			log.Printf("WARN: skip user: %v", err)
-			continue
+			return count, fmt.Errorf("read user row %d: %w", count+1, err)
 		}
-		tx.Exec(`INSERT OR REPLACE INTO users
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO users
 			(username, password_hash, role, totp_secret, totp_enabled, created_at, last_login)
 			VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			username, passwordHash, role, totpSecret, boolToInt(totpEnabled),
-			formatTimeDefault(createdAt), formatTime(lastLogin))
+			username, passwordHash, role, ptrStr(totpSecret), ptrBoolInt(totpEnabled),
+			formatTimeDefault(createdAt), formatTime(lastLogin)); err != nil {
+			return count, fmt.Errorf("user %s: %w", username, err)
+		}
 		count++
 	}
 	if err := rows.Err(); err != nil {
@@ -861,13 +848,15 @@ func copyAPIKeysPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (
 		var keyHash, keyPrefix, name, role string
 		var createdAt, expiresAt, lastUsed *time.Time
 		if err := rows.Scan(&keyHash, &keyPrefix, &name, &role, &createdAt, &expiresAt, &lastUsed); err != nil {
-			continue
+			return count, fmt.Errorf("read api_keys row %d: %w", count+1, err)
 		}
-		tx.Exec(`INSERT OR REPLACE INTO api_keys
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO api_keys
 			(key_hash, key_prefix, name, role, created_at, expires_at, last_used)
 			VALUES (?, ?, ?, ?, ?, ?, ?)`,
 			keyHash, keyPrefix, name, role,
-			formatTimeDefault(createdAt), formatTime(expiresAt), formatTime(lastUsed))
+			formatTimeDefault(createdAt), formatTime(expiresAt), formatTime(lastUsed)); err != nil {
+			return count, fmt.Errorf("api_key %s: %w", keyPrefix, err)
+		}
 		count++
 	}
 	if err := rows.Err(); err != nil {
@@ -1088,11 +1077,12 @@ func copyNodePeers2SQLite(src, dst *sql.DB) (int, error) {
 	count := 0
 	for rows.Next() {
 		var (
-			id, uuid, note, createdAt, infoStr string
-			pk                                 []byte
-			statusOnline, isDeleted, isBanned  *int64
-			lastOnline, ip, user               *string
-			bannedAt, bannedReason             *string
+			id, uuid, createdAt, infoStr      string
+			note                              sql.NullString
+			pk                                []byte
+			statusOnline, isDeleted, isBanned *int64
+			lastOnline, ip, user              *string
+			bannedAt, bannedReason            *string
 		)
 
 		scanArgs := []any{&id, &uuid, &pk, &note, &createdAt, &infoStr}
@@ -1122,8 +1112,7 @@ func copyNodePeers2SQLite(src, dst *sql.DB) (int, error) {
 		}
 
 		if err := rows.Scan(scanArgs...); err != nil {
-			log.Printf("WARN: skip Node.js peer: %v", err)
-			continue
+			return count, fmt.Errorf("read Node.js peer row %d: %w", count+1, err)
 		}
 
 		var info peerInfo
@@ -1136,11 +1125,13 @@ func copyNodePeers2SQLite(src, dst *sql.DB) (int, error) {
 			status = "ONLINE"
 		}
 
-		stmt.Exec(id, uuid, pk, ptrStr(ip), ptrStr(user),
+		if _, err := stmt.Exec(id, uuid, pk, ptrStr(ip), ptrStr(user),
 			info.Hostname, info.OS, info.Version, status,
 			ptrStr(lastOnline), createdAt,
 			ptrIntBool(isBanned), ptrStr(bannedReason), ptrStr(bannedAt),
-			ptrIntBool(isDeleted), note)
+			ptrIntBool(isDeleted), note.String); err != nil {
+			return count, fmt.Errorf("Node.js peer %s: %w", id, err)
+		}
 		count++
 	}
 	if err := rows.Err(); err != nil {
@@ -1197,11 +1188,12 @@ func copyNodePeers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 	count := 0
 	for rows.Next() {
 		var (
-			id, uuid, note, createdAt, infoStr string
-			pk                                 []byte
-			statusOnline, isDeleted, isBanned  *int64
-			lastOnline, ip, user               *string
-			bannedAt, bannedReason             *string
+			id, uuid, createdAt, infoStr      string
+			note                              sql.NullString
+			pk                                []byte
+			statusOnline, isDeleted, isBanned *int64
+			lastOnline, ip, user              *string
+			bannedAt, bannedReason            *string
 		)
 
 		scanArgs := []any{&id, &uuid, &pk, &note, &createdAt, &infoStr}
@@ -1231,8 +1223,7 @@ func copyNodePeers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 		}
 
 		if err := rows.Scan(scanArgs...); err != nil {
-			log.Printf("WARN: skip Node.js peer: %v", err)
-			continue
+			return count, fmt.Errorf("read Node.js peer row %d: %w", count+1, err)
 		}
 
 		var info peerInfo
@@ -1255,10 +1246,9 @@ func copyNodePeers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 			info.Hostname, info.OS, info.Version, status,
 			parseTime(ptrStr(lastOnline)), parseTime(createdAt),
 			ptrIntBool(isBanned) != 0, ptrStr(bannedReason), parseTime(ptrStr(bannedAt)),
-			ptrIntBool(isDeleted) != 0, note)
+			ptrIntBool(isDeleted) != 0, note.String)
 		if err != nil {
-			log.Printf("WARN: Node.js peer %s: %v", id, err)
-			continue
+			return count, fmt.Errorf("Node.js peer %s: %w", id, err)
 		}
 		count++
 	}
@@ -1295,11 +1285,12 @@ func copyNodeUsers2SQLite(src, dst *sql.DB) (int, error) {
 	count := 0
 	for rows.Next() {
 		var (
-			username, passwordHash, role string
-			createdAt                    sql.NullString
-			lastLogin                    sql.NullString
-			totpSecret                   sql.NullString
-			totpEnabled                  *int64
+			username, role string
+			passwordHash   sql.NullString
+			createdAt      sql.NullString
+			lastLogin      sql.NullString
+			totpSecret     sql.NullString
+			totpEnabled    *int64
 		)
 		scanArgs := []any{&username, &passwordHash, &role, &createdAt, &lastLogin}
 		if hasTotpSecret {
@@ -1309,8 +1300,7 @@ func copyNodeUsers2SQLite(src, dst *sql.DB) (int, error) {
 			scanArgs = append(scanArgs, &totpEnabled)
 		}
 		if err := rows.Scan(scanArgs...); err != nil {
-			log.Printf("WARN: skip Node.js user: %v", err)
-			continue
+			return count, fmt.Errorf("read Node.js user row %d: %w", count+1, err)
 		}
 
 		secret := ""
@@ -1322,11 +1312,13 @@ func copyNodeUsers2SQLite(src, dst *sql.DB) (int, error) {
 			enabled = 1
 		}
 
-		tx.Exec(`INSERT OR REPLACE INTO users
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO users
 			(username, password_hash, role, totp_secret, totp_enabled, created_at, last_login)
 			VALUES (?, ?, ?, ?, ?, ?, ?)`,
 			username, passwordHash, role, secret, enabled,
-			nullStr(createdAt), nullStr(lastLogin))
+			nullStr(createdAt), nullStr(lastLogin)); err != nil {
+			return count, fmt.Errorf("Node.js user %s: %w", username, err)
+		}
 		count++
 	}
 	if err := rows.Err(); err != nil {
@@ -1359,11 +1351,12 @@ func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 	count := 0
 	for rows.Next() {
 		var (
-			username, passwordHash, role string
-			createdAt                    sql.NullString
-			lastLogin                    sql.NullString
-			totpSecret                   sql.NullString
-			totpEnabled                  *int64
+			username, role string
+			passwordHash   sql.NullString
+			createdAt      sql.NullString
+			lastLogin      sql.NullString
+			totpSecret     sql.NullString
+			totpEnabled    *int64
 		)
 		scanArgs := []any{&username, &passwordHash, &role, &createdAt, &lastLogin}
 		if hasTotpSecret {
@@ -1373,8 +1366,7 @@ func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 			scanArgs = append(scanArgs, &totpEnabled)
 		}
 		if err := rows.Scan(scanArgs...); err != nil {
-			log.Printf("WARN: skip Node.js user: %v", err)
-			continue
+			return count, fmt.Errorf("read Node.js user row %d: %w", count+1, err)
 		}
 
 		secret := ""
@@ -1391,8 +1383,7 @@ func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 			username, passwordHash, role, secret, enabled,
 			parseTimeDefault(nullStr(createdAt)), parseTime(nullStr(lastLogin)))
 		if err != nil {
-			log.Printf("WARN: Node.js user %s: %v", username, err)
-			continue
+			return count, fmt.Errorf("Node.js user %s: %w", username, err)
 		}
 		count++
 	}
@@ -1890,6 +1881,20 @@ func ptrStr(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+func ptrInt64(i *int64) int64 {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
+
+func ptrBoolInt(b *bool) int {
+	if b == nil {
+		return 0
+	}
+	return boolToInt(*b)
 }
 
 func ptrIntBool(i *int64) int {

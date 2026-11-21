@@ -463,3 +463,185 @@ func TestPG2SQLiteReplacesAnExistingDestinationOnlyWhenTheCopySucceeds(t *testin
 		t.Errorf("files left behind: %v", left)
 	}
 }
+
+// countPG counts the rows of table in the PostgreSQL schema dsn names.
+func countPG(t *testing.T, dsn, table string) int {
+	t.Helper()
+	pool, err := pgxpool.New(context.Background(), dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	var n int
+	if err := pool.QueryRow(context.Background(), "SELECT COUNT(*) FROM "+table).Scan(&n); err != nil {
+		t.Fatalf("count %s: %v", table, err)
+	}
+	return n
+}
+
+func TestNodeJS2GoCopiesAPeerWithoutNote(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "db_v2.sqlite3")
+	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	execSQLite(t, src, nodePeerTable,
+		`INSERT INTO peer (guid, id, uuid, pk, note, info) VALUES (x'01', '123456789', x'02', x'03', NULL, '{}')`)
+	if err := runNodeJS2Go(src, "", dst, false); err != nil {
+		t.Fatal(err)
+	}
+	if n := countRows(t, dst, "peers"); n != 1 {
+		t.Errorf("destination has %d peers, want the one without a note", n)
+	}
+}
+
+func TestNodeJS2GoFailsOnAPeerItCannotRead(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "db_v2.sqlite3")
+	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	execSQLite(t, src, strings.Replace(nodePeerTable, "info TEXT NOT NULL", "info TEXT", 1),
+		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '111111111', x'02', x'03', '{}')`,
+		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'04', '222222222', x'05', x'06', NULL)`)
+	if err := runNodeJS2Go(src, "", dst, false); err == nil {
+		t.Error("a peer that could not be read was skipped and the migration succeeded")
+	}
+	if exists(dst) {
+		t.Error("the failed migration left a destination")
+	}
+}
+
+func TestNodeJS2GoFailsOnAUserItCannotWrite(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "db_v2.sqlite3")
+	auth := filepath.Join(dir, "auth.sqlite3")
+	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	execSQLite(t, src, nodePeerTable)
+	execSQLite(t, auth, "CREATE TABLE users (username TEXT, password_hash TEXT, role TEXT, created_at TEXT, last_login TEXT)",
+		"INSERT INTO users VALUES ('admin', 'hash', 'admin', NULL, NULL)",
+		"INSERT INTO users VALUES ('broken', NULL, 'viewer', NULL, NULL)")
+	if err := runNodeJS2Go(src, auth, dst, false); err == nil {
+		t.Error("a user the destination refused was dropped and the migration succeeded")
+	}
+	if exists(dst) {
+		t.Error("the failed migration left a destination")
+	}
+}
+
+func TestRust2GoFailsOnAPeerItCannotRead(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "db_v2.sqlite3")
+	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	execSQLite(t, src, strings.Replace(rustPeerTable, "info TEXT NOT NULL", "info TEXT", 1),
+		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '111111111', x'02', x'03', '{}')`,
+		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'04', '222222222', x'05', x'06', NULL)`)
+	if err := runRust2Go(src, dst, false); err == nil {
+		t.Error("a peer that could not be read was skipped and the migration succeeded")
+	}
+	if exists(dst) {
+		t.Error("the failed migration left a destination")
+	}
+}
+
+func TestSQLite2PGCopiesRowsWithNulls(t *testing.T) {
+	dsn := pgDSN(t)
+	src := filepath.Join(t.TempDir(), "db_v2.sqlite3")
+	execSQLite(t, src, sqliteSchemaStatements()...)
+	execSQLite(t, src,
+		`INSERT INTO peers (id, uuid, pk, ip, user, hostname, os, version, status, nat_type,
+			last_online, created_at, disabled, banned, ban_reason, banned_at,
+			soft_deleted, deleted_at, note, tags, heartbeat_seq)
+		 VALUES ('123456789', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+			NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)`,
+		`INSERT INTO server_config (key, value) VALUES ('relay', NULL)`,
+		`INSERT INTO id_change_history (old_id, new_id, changed_at, reason) VALUES ('1', '2', NULL, NULL)`,
+		`INSERT INTO users (username, password_hash, role, totp_secret, totp_enabled, created_at, last_login)
+		 VALUES ('never-signed-in', 'hash', 'viewer', NULL, NULL, NULL, NULL)`,
+		`INSERT INTO api_keys (key_hash, key_prefix, name, role, created_at, expires_at, last_used)
+		 VALUES ('kh', 'p', 'n', 'viewer', NULL, NULL, NULL)`)
+
+	if err := runSQLite2PG(src, dsn); err != nil {
+		t.Fatal(err)
+	}
+	for _, table := range []string{"peers", "server_config", "id_change_history", "users", "api_keys"} {
+		if n := countPG(t, dsn, table); n != 1 {
+			t.Errorf("%s: %d rows in PostgreSQL, want 1", table, n)
+		}
+	}
+}
+
+func TestSQLite2PGFailsOnARowItCannotCopy(t *testing.T) {
+	for name, rows := range map[string][]string{
+		// A user without password hash cannot be read into the tool's shape.
+		"user without password": {
+			"INSERT INTO users (username, password_hash) VALUES ('fine', 'hash')",
+			"INSERT INTO users (username, password_hash) VALUES ('broken', NULL)",
+		},
+		// PostgreSQL refuses text that is not UTF-8.
+		"peer PostgreSQL refuses": {
+			"INSERT INTO peers (id, hostname) VALUES ('111111111', 'fine')",
+			"INSERT INTO peers (id, hostname) VALUES ('222222222', CAST(x'41ff42' AS TEXT))",
+		},
+		"setting PostgreSQL refuses": {
+			"CREATE TABLE server_config (key TEXT PRIMARY KEY, value TEXT)",
+			"INSERT INTO server_config VALUES ('fine', 'yes')",
+			"INSERT INTO server_config VALUES ('broken', CAST(x'41ff42' AS TEXT))",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			dsn := pgDSN(t)
+			src := filepath.Join(t.TempDir(), "db_v2.sqlite3")
+			execSQLite(t, src,
+				"CREATE TABLE users (username TEXT, password_hash TEXT, role TEXT DEFAULT 'viewer', totp_secret TEXT, totp_enabled INTEGER, created_at TEXT, last_login TEXT)",
+				sqliteSchemaStatements()[0]) // peers
+			execSQLite(t, src, rows...)
+			if err := runSQLite2PG(src, dsn); err == nil {
+				t.Error("a row that could not be copied was dropped and the migration succeeded")
+			}
+		})
+	}
+}
+
+// consoleShapedPG is what the console's own PostgreSQL schema allows on
+// top of the tool's: NULL in columns the tool declares NOT NULL.
+var consoleShapedPG = []string{
+	`ALTER TABLE users ALTER COLUMN totp_secret DROP NOT NULL, ALTER COLUMN totp_enabled DROP NOT NULL,
+		ALTER COLUMN created_at DROP NOT NULL`,
+	`ALTER TABLE peers ALTER COLUMN uuid DROP NOT NULL, ALTER COLUMN note DROP NOT NULL,
+		ALTER COLUMN nat_type DROP NOT NULL, ALTER COLUMN banned DROP NOT NULL,
+		ALTER COLUMN created_at DROP NOT NULL, ALTER COLUMN heartbeat_seq DROP NOT NULL`,
+	`ALTER TABLE server_config ALTER COLUMN value DROP NOT NULL`,
+	`ALTER TABLE id_change_history ALTER COLUMN reason DROP NOT NULL`,
+	`ALTER TABLE api_keys ALTER COLUMN created_at DROP NOT NULL`,
+}
+
+func TestPG2SQLiteCopiesRowsWithNulls(t *testing.T) {
+	dsn := pgDSN(t, append(consoleShapedPG,
+		`INSERT INTO peers (id, uuid, note, nat_type, banned, created_at, heartbeat_seq)
+		 VALUES ('123456789', NULL, NULL, NULL, NULL, NULL, NULL)`,
+		`INSERT INTO server_config (key, value) VALUES ('relay', NULL)`,
+		`INSERT INTO id_change_history (old_id, new_id, reason) VALUES ('1', '2', NULL)`,
+		`INSERT INTO users (username, password_hash, totp_secret, totp_enabled, created_at, last_login)
+		 VALUES ('never-signed-in', 'hash', NULL, NULL, NULL, NULL)`,
+		`INSERT INTO api_keys (key_hash, created_at) VALUES ('kh', NULL)`)...)
+	dst := filepath.Join(t.TempDir(), "db_v2.sqlite3")
+
+	if err := runPG2SQLite(dsn, dst, false); err != nil {
+		t.Fatal(err)
+	}
+	for _, table := range []string{"peers", "server_config", "id_change_history", "users", "api_keys"} {
+		if n := countRows(t, dst, table); n != 1 {
+			t.Errorf("%s: %d rows in SQLite, want 1", table, n)
+		}
+	}
+}
+
+func TestPG2SQLiteFailsOnARowItCannotRead(t *testing.T) {
+	dsn := pgDSN(t,
+		`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`,
+		`INSERT INTO users (username, password_hash) VALUES ('fine', 'hash'), ('broken', NULL)`)
+	dst := filepath.Join(t.TempDir(), "db_v2.sqlite3")
+	if err := runPG2SQLite(dsn, dst, false); err == nil {
+		t.Error("a user that could not be read was dropped and the migration succeeded")
+	}
+	if exists(dst) {
+		t.Error("the failed migration left a destination")
+	}
+}
