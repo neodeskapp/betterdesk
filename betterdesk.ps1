@@ -4887,13 +4887,12 @@ function Do-MigrateDatabase {
     Write-Host ""
     $items = @(
         "Rust -> Go`tLegacy Rust hbbs database to Go server",
-        "Node.js -> Go`tNode.js web console to Go server",
         "SQLite -> PostgreSQL`tWhole install (every server and console table) to PostgreSQL",
         "PostgreSQL -> SQLite`tWhole install from PostgreSQL to a SQLite file",
         "Backup`tCreate a timestamped SQLite backup",
         "Back`tReturn to the main menu"
     )
-    $returns = @("1", "2", "3", "4", "5", "0")
+    $returns = @("1", "2", "3", "4", "0")
     Invoke-MenuChoose -Title "Database Migration" -Subtitle "Move data between BetterDesk components" -Items $items -Returns $returns
     $migChoice = $script:MENU_CHOICE
 
@@ -4936,55 +4935,6 @@ function Do-MigrateDatabase {
             }
         }
         "2" {
-            # Node.js -> Go
-            Write-Host ""
-            $defaultSrc = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
-            $defaultAuth = Join-Path $script:CONSOLE_PATH "data\auth.db"
-
-            $srcDb = Read-Host "Source Node.js peer database [$defaultSrc]"
-            if ([string]::IsNullOrEmpty($srcDb)) { $srcDb = $defaultSrc }
-
-            if (-not (Test-Path $srcDb)) {
-                Print-Error "Source peer database not found: $srcDb"
-                Press-Enter
-                return
-            }
-
-            $authDb = Read-Host "Node.js auth database [$defaultAuth]"
-            if ([string]::IsNullOrEmpty($authDb)) { $authDb = $defaultAuth }
-
-            $dstDb = Read-Host "Destination (SQLite path or postgres:// URI) [new file next to source]"
-            if ([string]::IsNullOrEmpty($dstDb)) { $dstDb = Join-Path (Split-Path -Parent $srcDb) "betterdesk.sqlite3" }
-            if (-not (Confirm-MigrateOverwrite $dstDb)) {
-                Press-Enter
-                return
-            }
-
-            Print-Step "Creating backup before migration..."
-            & $migrateBin -mode backup -src $srcDb 2>&1 | ForEach-Object { Write-Host $_ }
-            if (Test-Path $authDb) {
-                & $migrateBin -mode backup -src $authDb 2>&1 | ForEach-Object { Write-Host $_ }
-            }
-            if ($script:MIGRATE_OVERWRITE -and (Test-Path -LiteralPath $dstDb)) {
-                & $migrateBin -mode backup -src $dstDb 2>&1 | ForEach-Object { Write-Host $_ }
-            }
-
-            Print-Step "Running Node.js -> Go migration..."
-            $migrateArgs = @("-mode", "nodejs2go", "-src", $srcDb)
-            if (Test-Path $authDb) {
-                $migrateArgs += @("-node-auth", $authDb)
-            }
-            $migrateArgs += @("-dst", $dstDb)
-            if ($script:MIGRATE_OVERWRITE) { $migrateArgs += $script:MIGRATE_OVERWRITE }
-            & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
-
-            if ($LASTEXITCODE -eq 0) {
-                Print-Success "Node.js -> Go migration completed successfully!"
-            } else {
-                Print-Error "Migration failed. Check the output above for details."
-            }
-        }
-        "3" {
             # SQLite -> PostgreSQL
             Write-Host ""
             $defaultSrc = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
@@ -5021,7 +4971,7 @@ function Do-MigrateDatabase {
                 Print-Error "Migration failed. Check the output above for details."
             }
         }
-        "4" {
+        "3" {
             # PostgreSQL -> SQLite
             Write-Host ""
             $pgUri = Read-Host "PostgreSQL connection URI (postgres://user:pass@host:5432/dbname)"
@@ -5055,7 +5005,7 @@ function Do-MigrateDatabase {
                 Print-Error "Migration failed. Check the output above for details."
             }
         }
-        "5" {
+        "4" {
             # Backup
             Write-Host ""
             $defaultSrc = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"

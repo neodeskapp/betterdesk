@@ -13,7 +13,7 @@ The migration tool supports 5 modes:
 | `rust2go` | RustDesk Rust `db_v2.sqlite3` | BetterDesk Go SQLite | Migrate from original RustDesk server |
 | `sqlite2pg` | BetterDesk Go SQLite | PostgreSQL | Move to PostgreSQL for production |
 | `pg2sqlite` | PostgreSQL | BetterDesk Go SQLite | Reverse migration for backup/testing |
-| `nodejs2go` | Node.js console SQLite | BetterDesk Go SQLite | Merge Node.js console data |
+| `nodejs2go` | Node.js console SQLite | BetterDesk Go SQLite | Copy a few Node.js console tables (to upgrade such an install, see below) |
 | `backup` | Any SQLite | SQLite copy | Create timestamped backup |
 
 ---
@@ -103,20 +103,18 @@ Migrated data:
 
 Useful for creating portable backups or moving to a smaller deployment.
 
-#### Node.js Console → Go Server
+#### Install with the Node.js console
+
+An install that still runs the Node.js web console does not need the migration tool. Run the installer's update instead:
 
 ```bash
-./migrate -mode nodejs2go \
-  -src /opt/BetterDeskConsole/data/auth.db \
-  -dst /opt/betterdesk/db_v2.sqlite3 \
-  -node-auth /opt/BetterDeskConsole/data/auth.db
+sudo ./betterdesk.sh --update     # Linux
+.\betterdesk.ps1 -Update          # Windows
 ```
 
-Merges:
-- `peer` table → `peers`
-- `users` table → `users`
-- Folder assignments
-- Tags
+The update moves the install to the Go server in place and keeps all data, keys and accounts. Roll it back with `sudo ./betterdesk.sh --rollback-go` or `.\betterdesk.ps1 -RollbackGo`.
+
+The tool's `nodejs2go` mode copies only a few tables, so it is no substitute for the update.
 
 ---
 

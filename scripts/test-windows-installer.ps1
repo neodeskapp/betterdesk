@@ -180,27 +180,24 @@ function Test-MigrationMenusPassOverwrite {
     # RV81: sqlite2pg and pg2sqlite move the whole install, and the menu
     # says so. sqlite2pg replaces a PostgreSQL database with data in it only
     # after the user agreed.
-    $runs = Invoke-TestMenu '3' @('', 'postgres://u@h/db', 'y')
+    $runs = Invoke-TestMenu '2' @('', 'postgres://u@h/db', 'y')
+    $offered = (@($script:menuItems | ForEach-Object { ($_ -split "`t")[0] }) -join '|')
+    if ($offered -ne 'Rust -> Go|SQLite -> PostgreSQL|PostgreSQL -> SQLite|Backup|Back') { Fail "the migration menu offers: $offered" }
     if (-not ($script:menuItems -match '^SQLite -> PostgreSQL\tWhole install')) { Fail "the menu does not say SQLite -> PostgreSQL moves the whole install: $($script:menuItems)" }
     if (-not ($script:menuItems -match '^PostgreSQL -> SQLite\tWhole install')) { Fail "the menu does not say PostgreSQL -> SQLite moves the whole install: $($script:menuItems)" }
     if ("$runs" -ne "-mode sqlite2pg -src $src -dst postgres://u@h/db -overwrite") { Fail "sqlite2pg after an agreed replace ran as: $runs" }
-    $runs = Invoke-TestMenu '3' @('', 'postgres://u@h/db', 'n')
+    $runs = Invoke-TestMenu '2' @('', 'postgres://u@h/db', 'n')
     if ("$runs" -ne "-mode sqlite2pg -src $src -dst postgres://u@h/db") { Fail "sqlite2pg after a declined replace ran as: $runs" }
 
-    $runs = Invoke-TestMenu '4' @('postgres://u@h/db', '', 'y')
+    $runs = Invoke-TestMenu '3' @('postgres://u@h/db', '', 'y')
     if ($runs -notcontains "-mode pg2sqlite -src postgres://u@h/db -dst $src -overwrite") { Fail "pg2sqlite after an agreed overwrite ran as: $runs" }
-    $runs = Invoke-TestMenu '4' @('postgres://u@h/db', '', 'n')
+    $runs = Invoke-TestMenu '3' @('postgres://u@h/db', '', 'n')
     if ($runs.Count -ne 0) { Fail "pg2sqlite ran although the overwrite was declined: $runs" }
 
     $runs = Invoke-TestMenu '1' @('', '', 'y')
     if ($runs -notcontains "-mode rust2go -src $src -dst $dst -overwrite") { Fail "rust2go after an agreed overwrite ran as: $runs" }
     $runs = Invoke-TestMenu '1' @('', '', 'n')
     if ($runs.Count -ne 0) { Fail "rust2go ran although the overwrite was declined: $runs" }
-
-    $runs = Invoke-TestMenu '2' @('', '', '', 'y')
-    if ($runs -notcontains "-mode nodejs2go -src $src -dst $dst -overwrite") { Fail "nodejs2go after an agreed overwrite ran as: $runs" }
-    $runs = Invoke-TestMenu '2' @('', '', '', 'n')
-    if ($runs.Count -ne 0) { Fail "nodejs2go ran although the overwrite was declined: $runs" }
 
     Remove-Item -Force $dst
     $runs = Invoke-TestMenu '1' @('', '')

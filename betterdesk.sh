@@ -7337,13 +7337,12 @@ do_migrate_database() {
     echo ""
     local _menu_items=(
         $'Rust -> Go\tMigrate legacy Rust hbbs database to the Go server'
-        $'Node.js -> Go\tMigrate the Node.js web console DB to the Go server'
         $'SQLite -> PostgreSQL\tMove the whole install (every server and console table) to PostgreSQL'
         $'PostgreSQL -> SQLite\tMove the whole install from PostgreSQL to a SQLite file'
         $'Backup\tCreate a timestamped SQLite database backup'
         $'Back\tReturn to the main menu'
     )
-    local _menu_returns=( 1 2 3 4 5 0 )
+    local _menu_returns=( 1 2 3 4 0 )
     menu_choose "Database Migration" "Migrate databases between BetterDesk components"
     local mig_choice="$MENU_CHOICE"
 
@@ -7383,59 +7382,6 @@ do_migrate_database() {
             fi
             ;;
         2)
-            # Node.js → Go
-            echo ""
-            local default_src="$RUSTDESK_PATH/db_v2.sqlite3"
-            local default_auth="$CONSOLE_PATH/data/auth.db"
-
-            read -p "Source Node.js peer database [$default_src]: " src_db
-            src_db="${src_db:-$default_src}"
-
-            if [ ! -f "$src_db" ]; then
-                print_error "Source peer database not found: $src_db"
-                press_enter
-                return
-            fi
-
-            read -p "Node.js auth database [$default_auth]: " auth_db
-            auth_db="${auth_db:-$default_auth}"
-
-            read -p "Destination (SQLite path or postgres:// URI) [new file next to source]: " dst_db
-            dst_db="${dst_db:-$(dirname "$src_db")/betterdesk.sqlite3}"
-            if ! migrate_dst_overwrite "$dst_db"; then
-                press_enter
-                return
-            fi
-
-            print_step "Creating backup before migration..."
-            "$migrate_bin" -mode backup -src "$src_db" 2>&1 || true
-            if [ -f "$auth_db" ]; then
-                "$migrate_bin" -mode backup -src "$auth_db" 2>&1 || true
-            fi
-            if [ -n "$MIGRATE_OVERWRITE" ] && [ -f "$dst_db" ]; then
-                "$migrate_bin" -mode backup -src "$dst_db" 2>&1 || true
-            fi
-
-            print_step "Running Node.js → Go migration..."
-            # SECURITY (audit fix M-04, 2026-04-10): use a bash array + direct exec
-            # instead of cmd-string + eval to avoid shell injection if any input
-            # contains spaces / metacharacters.
-            local args=("-mode" "nodejs2go" "-src" "$src_db")
-            if [ -f "$auth_db" ]; then
-                args+=("-node-auth" "$auth_db")
-            fi
-            args+=("-dst" "$dst_db")
-            if [ -n "$MIGRATE_OVERWRITE" ]; then
-                args+=("$MIGRATE_OVERWRITE")
-            fi
-            if "$migrate_bin" "${args[@]}" 2>&1; then
-                migrate_sqlite_dst_done "$dst_db"
-                print_success "Node.js → Go migration completed successfully!"
-            else
-                print_error "Migration failed. Check the output above for details."
-            fi
-            ;;
-        3)
             # SQLite → PostgreSQL
             echo ""
             local default_src="$RUSTDESK_PATH/db_v2.sqlite3"
@@ -7474,7 +7420,7 @@ do_migrate_database() {
                 print_error "Migration failed. Check the output above for details."
             fi
             ;;
-        4)
+        3)
             # PostgreSQL → SQLite
             echo ""
             read -p "PostgreSQL connection URI (postgres://user:pass@host:5432/dbname): " pg_uri
@@ -7505,7 +7451,7 @@ do_migrate_database() {
                 print_error "Migration failed. Check the output above for details."
             fi
             ;;
-        5)
+        4)
             # Backup
             echo ""
             local default_src="$RUSTDESK_PATH/db_v2.sqlite3"

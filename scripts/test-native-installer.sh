@@ -238,37 +238,34 @@ FAKE_MIGRATE
     # RV81: sqlite2pg and pg2sqlite move the whole install, and the menu
     # says so. sqlite2pg replaces a PostgreSQL database with data in it
     # only after the user agreed.
-    run_menu 3 $'\npostgres://u@h/db\ny'
+    run_menu 2 $'\npostgres://u@h/db\ny'
+    [ "$(cut -f1 "$temp_dir/items" | paste -sd '|')" = "Rust -> Go|SQLite -> PostgreSQL|PostgreSQL -> SQLite|Backup|Back" ] \
+        || fail "the migration menu offers: $(cut -f1 "$temp_dir/items" | paste -sd '|')"
     grep -q $'^SQLite -> PostgreSQL\tMove the whole install' "$temp_dir/items" \
         || fail "the menu does not say SQLite -> PostgreSQL moves the whole install: $(cat "$temp_dir/items")"
     grep -q $'^PostgreSQL -> SQLite\tMove the whole install' "$temp_dir/items" \
         || fail "the menu does not say PostgreSQL -> SQLite moves the whole install: $(cat "$temp_dir/items")"
     [ "$(migrations)" = "-mode sqlite2pg -src $src -dst postgres://u@h/db -overwrite" ] \
         || fail "sqlite2pg after an agreed replace ran as: $(migrations)"
-    run_menu 3 $'\npostgres://u@h/db\nn'
+    run_menu 2 $'\npostgres://u@h/db\nn'
     [ "$(migrations)" = "-mode sqlite2pg -src $src -dst postgres://u@h/db" ] \
         || fail "sqlite2pg after a declined replace ran as: $(migrations)"
 
     # pg2sqlite into the existing default file: agreed, then declined
-    run_menu 4 $'postgres://u@h/db\n\ny'
+    run_menu 3 $'postgres://u@h/db\n\ny'
     [[ "$(migrations)" == *"-mode pg2sqlite -src postgres://u@h/db -dst $src -overwrite"* ]] \
         || fail "pg2sqlite after an agreed overwrite ran as: $(migrations)"
     grep -qx "$src" "$owned" || fail "pg2sqlite's new file was not handed to the service account"
-    run_menu 4 $'postgres://u@h/db\n\nn'
+    run_menu 3 $'postgres://u@h/db\n\nn'
     [ -z "$(migrations)" ] || fail "pg2sqlite ran although the overwrite was declined: $(migrations)"
 
-    # rust2go and nodejs2go into the existing file next to the source
+    # rust2go into the existing file next to the source
     run_menu 1 $'\n\ny'
     [[ "$(migrations)" == *"-mode rust2go -src $src -dst $dst -overwrite"* ]] \
         || fail "rust2go after an agreed overwrite ran as: $(migrations)"
     grep -qx "$dst" "$owned" || fail "rust2go's new file was not handed to the service account"
     run_menu 1 $'\n\nn'
     [ -z "$(migrations)" ] || fail "rust2go ran although the overwrite was declined: $(migrations)"
-    run_menu 2 $'\n\n\ny'
-    [[ "$(migrations)" == *"-mode nodejs2go -src $src -dst $dst -overwrite"* ]] \
-        || fail "nodejs2go after an agreed overwrite ran as: $(migrations)"
-    run_menu 2 $'\n\n\nn'
-    [ -z "$(migrations)" ] || fail "nodejs2go ran although the overwrite was declined: $(migrations)"
 
     # a new file needs no -overwrite, and a PostgreSQL destination no chown
     rm -f "$dst"
