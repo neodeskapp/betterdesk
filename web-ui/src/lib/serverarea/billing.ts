@@ -61,6 +61,27 @@ export function thisMonth(now = new Date()): string {
 	return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
+/**
+ * The billing month the server is in: it writes periods in its billing
+ * time zone, so around the turn of a month the browser's month can be
+ * another. A package's preview names it; without a package, or when the
+ * preview fails, the browser's month.
+ */
+export async function serverMonth(
+	packages: readonly Pick<BillingPackage, 'id'>[],
+	preview: (id: string) => Promise<{ period_ym: string }>,
+	now = new Date()
+): Promise<string> {
+	const first = packages[0];
+	if (!first) return thisMonth(now);
+	try {
+		const ym = (await preview(first.id)).period_ym;
+		return /^\d{4}-\d{2}$/.test(ym) ? ym : thisMonth(now);
+	} catch {
+		return thisMonth(now);
+	}
+}
+
 /** Active: good. Pending report: waits for the operator. Closed and suspended: ended or paused, nothing wrong. */
 export const STATUS_TONE: Record<string, string> = {
 	active: 'good',

@@ -15,6 +15,7 @@
 	import { untrack } from 'svelte';
 	import {
 		listBillingPackages,
+		packagePreview,
 		listContracts,
 		listOrgs,
 		listReports,
@@ -35,7 +36,7 @@
 		mergeEnded,
 		sameDay,
 		STATUS_TONE,
-		thisMonth,
+		serverMonth,
 		usageRows,
 		type UsageRow
 	} from '#lib/serverarea/billing.ts';
@@ -165,7 +166,7 @@
 		usageError = false;
 		try {
 			const [c, p] = await Promise.all([listContracts(), listBillingPackages()]);
-			usage = usageRows(c, p, thisMonth());
+			usage = usageRows(c, p, await serverMonth(p, (id) => packagePreview(id)));
 		} catch {
 			usageError = true;
 		}

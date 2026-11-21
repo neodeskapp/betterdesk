@@ -19,6 +19,7 @@ import {
 	roundingChoice,
 	roundingMinutes,
 	sameDay,
+	serverMonth,
 	thisMonth,
 	usageRows,
 	type AssignValues,
@@ -248,5 +249,29 @@ describe('validity dates', () => {
 			expect(formatDate('2026-11-01T00:00:00Z', VALIDITY_DAY)).toBe('Nov 1, 2026');
 			expect(formatDate('2026-11-30T23:59:59Z', VALIDITY_DAY)).toBe('Nov 30, 2026');
 		}
+	});
+});
+
+describe('the month of included time', () => {
+	test("the server's billing month counts, not the browser's", async () => {
+		const browserInDecember = new Date(2026, 11, 1, 0, 30);
+		const month = await serverMonth(
+			[{ id: 'p1' }],
+			async () => ({ period_ym: '2026-11' }),
+			browserInDecember
+		);
+		expect(month).toBe('2026-11');
+		const [row] = usageRows(
+			[contract({ package_id: 'p1', remaining_minutes: 100, current_period_ym: '2026-11' })],
+			[{ id: 'p1', name: 'Basic', included_minutes: 600 }],
+			month
+		);
+		expect(row?.used).toBe(500);
+	});
+
+	test("without a package or a preview, the browser's month", async () => {
+		const now = new Date(2026, 11, 1, 0, 30);
+		expect(await serverMonth([], async () => ({ period_ym: '2026-11' }), now)).toBe('2026-12');
+		expect(await serverMonth([{ id: 'p1' }], () => Promise.reject(new Error('x')), now)).toBe('2026-12');
 	});
 });
