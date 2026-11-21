@@ -417,13 +417,16 @@ func timeArg(db *store.DB, at time.Time) any {
 	return at.UTC().Format(time.DateTime)
 }
 
-// eventStats is the number of events, all and by action and source.
+// eventStats is the number of events, all and by action and source, and
+// the number of each policy's events by the policy's id (events without a
+// policy count only in the totals).
 type eventStats struct {
-	Total      jsbind.Cell `json:"total"`
-	Blocked    jsbind.Cell `json:"blocked"`
-	Logged     jsbind.Cell `json:"logged"`
-	USBEvents  jsbind.Cell `json:"usb_events"`
-	FileEvents jsbind.Cell `json:"file_events"`
+	Total      jsbind.Cell      `json:"total"`
+	Blocked    jsbind.Cell      `json:"blocked"`
+	Logged     jsbind.Cell      `json:"logged"`
+	USBEvents  jsbind.Cell      `json:"usb_events"`
+	FileEvents jsbind.Cell      `json:"file_events"`
+	ByPolicy   map[string]int64 `json:"by_policy"`
 }
 
 func countEvents(ctx context.Context, db *store.DB) (eventStats, error) {
@@ -446,7 +449,33 @@ func countEvents(ctx context.Context, db *store.DB) (eventStats, error) {
 	if err != nil {
 		return s, fmt.Errorf("count events: %w", err)
 	}
+	if s.ByPolicy, err = countEventsPerPolicy(ctx, db); err != nil {
+		return s, err
+	}
 	return s, nil
+}
+
+// countEventsPerPolicy is the number of events of each policy, by the
+// policy's id as text.
+func countEventsPerPolicy(ctx context.Context, db *store.DB) (map[string]int64, error) {
+	rows, err := db.Query(ctx, `SELECT CAST(policy_id AS TEXT), COUNT(*) FROM dlp_events WHERE policy_id IS NOT NULL GROUP BY CAST(policy_id AS TEXT)`)
+	if err != nil {
+		return nil, fmt.Errorf("count events per policy: %w", err)
+	}
+	defer rows.Close()
+	out := map[string]int64{}
+	for rows.Next() {
+		var id string
+		var n int64
+		if err := rows.Scan(&id, &n); err != nil {
+			return nil, fmt.Errorf("count events per policy: %w", err)
+		}
+		out[id] = n
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("count events per policy: %w", err)
+	}
+	return out, nil
 }
 
 // activePolicy is a policy as a device gets it.

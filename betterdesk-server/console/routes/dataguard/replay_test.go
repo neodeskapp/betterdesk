@@ -30,10 +30,13 @@ func TestNodeAnswers(t *testing.T) {
 		guarded := 0
 		defer policyFixes.Unused(t, db)
 		w.Run(replay.Load(t, db, "node"), policyFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
-			// SQLite summed no event to null; the counts are 0 (BUGS DG4)
-			if strings.HasSuffix(step.Path, "/stats") && strings.Contains(step.Answer, ":null") && got.Status == 200 {
-				if want := strings.ReplaceAll(step.Answer, ":null", ":0"); got.Body != want {
-					t.Errorf("%s: %s, want %s", step.Name, got.Body, want)
+			// The statistics end with the events per policy, which Node did
+			// not count (BUGS.md RV27); SQLite summed no event to null, the
+			// counts are 0 (BUGS DG4)
+			if strings.HasSuffix(step.Path, "/stats") && step.Status == 200 && got.Status == 200 {
+				rest, perPolicy, found := strings.Cut(got.Body, `,"by_policy":{`)
+				if want := strings.ReplaceAll(step.Answer, ":null", ":0"); !found || !strings.HasSuffix(perPolicy, "}}") || rest+"}" != want {
+					t.Errorf("%s: %s, want %s with by_policy", step.Name, got.Body, want)
 				}
 				return true
 			}

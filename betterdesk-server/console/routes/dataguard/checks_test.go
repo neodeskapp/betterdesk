@@ -139,8 +139,26 @@ func TestStatsWithoutEventsAreZero(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		for _, path := range []string{"/api/dataguard/stats", "/api/bd/stats"} {
-			if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 200 || got.Body != `{"total":0,"blocked":0,"logged":0,"usb_events":0,"file_events":0}` {
+			if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 200 || got.Body != `{"total":0,"blocked":0,"logged":0,"usb_events":0,"file_events":0,"by_policy":{}}` {
 				t.Errorf("%s: %d %s", path, got.Status, got.Body)
+			}
+		}
+	})
+}
+
+// The statistics count the events of each policy by its id, for the
+// Events column of the policy table; events without a policy count only
+// in the totals (BUGS.md RV27).
+func TestStatsCountEventsPerPolicy(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := replay.NewWorld(t, db, nil)
+		w.Exec("INSERT INTO dlp_policies (id, name) VALUES (3, 'usb'), (12, 'files')", nil)
+		w.Exec(`INSERT INTO dlp_events (device_id, event_source, action, policy_id) VALUES
+			('D1', 'usb', 'block', 3), ('D2', 'usb', 'log', 3), ('D1', 'file', 'log', 12), ('D3', 'file', 'log', NULL)`, nil)
+		want := `{"total":4,"blocked":1,"logged":3,"usb_events":2,"file_events":2,"by_policy":{"12":1,"3":2}}`
+		for _, path := range []string{"/api/dataguard/stats", "/api/bd/stats"} {
+			if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 200 || got.Body != want {
+				t.Errorf("%s: %d %s, want 200 %s", path, got.Status, got.Body, want)
 			}
 		}
 	})
