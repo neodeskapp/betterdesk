@@ -566,7 +566,10 @@ func (h *handlers) rebuild(w http.ResponseWriter, r *http.Request) {
 
 // rebuildPlatform answers POST
 // /api/generator/bundles/{bundleId}/rebuild/{platform}/{arch}/{format}:
-// one build queued again.
+// one build of the bundle's current generation queued again. The worker
+// builds from the bundle's current profile and client commit, so a build
+// of an older generation the bundle still hands out cannot be made again;
+// that one stays until the current generation is promoted.
 func (h *handlers) rebuildPlatform(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	row, err := h.gen.GetBundle(ctx, r.PathValue("bundleId"))
@@ -595,7 +598,7 @@ func (h *handlers) rebuildPlatform(w http.ResponseWriter, r *http.Request) {
 		kit.JSON(w, r, http.StatusBadRequest, failure{Error: h.notReadyCode()})
 		return
 	}
-	hash := row.ActiveBuildHash()
+	hash := row.BrandingHash
 	refused, err := h.gen.RequeuePlatformBuild(ctx, hash, r.PathValue("platform"), r.PathValue("arch"), r.PathValue("format"))
 	if err != nil {
 		h.serverError(w, r, "rebuild platform", err)
