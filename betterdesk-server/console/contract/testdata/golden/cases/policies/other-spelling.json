@@ -45,7 +45,7 @@
    "status": 403,
    "headers": {
     "cache-control": "no-store",
-    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-xTQM7V4ywctaWeIGqiJ1amibCKKSO4IoqejxLuLjYYc='; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-<inline-script>'; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
     "content-type": "text/html; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
@@ -69,8 +69,8 @@
    "body": {
     "kind": "bytes",
     "type": "text/html",
-    "length": 3098,
-    "sha256": "ced757ed2394a62dcdcdad86ec3107c7368009c18d4ad6cc0fecd77a45112413",
+    "length": 2594,
+    "sha256": "b78c49e157224ea7e6731af121f3b7cd03c40fa0b6e6ceaabcb287aed1999e2d",
     "head": "<!doctype html>\n<html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\">\n\t<head><meta name=\"bd-error\" content=\"403\">\n\t\t<meta charset=\"utf-8\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />\n\t\t<meta name=\"robots\" content=\"noindex, nofollow\""
    }
   },

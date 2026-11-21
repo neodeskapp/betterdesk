@@ -435,9 +435,22 @@ An answer is:
     for their numbers. `RateLimit-Limit` and `RateLimit-Policy` are compared
     as sent.
   - A nonce in a `Content-Security-Policy` becomes `'nonce-<nonce>'`.
+  - In a `Content-Security-Policy` of an HTML page, a `'sha256-...'` that
+    is the hash of an inline script of the same page becomes
+    `'sha256-<inline-script>'`. A hash that matches no script of the page
+    stays as sent, so a wrong one still shows.
 - **The body.** JSON (by content type) is kept parsed. Anything else is kept
   as media type, length and SHA-256, and for text also the first 300 bytes
   to make a diff readable. An event stream is not read.
+- **The web app's page** (`text/html`) is kept in a form that every build
+  of the web app gives: the hash of its own inline script in its `<meta>`
+  policy becomes `'sha256-<inline-script>'` as in the header, the text of
+  SvelteKit's start script (the inline script that names `__sveltekit_`)
+  becomes `<start-script>`, and the build's hashed files become
+  `/_ui/immutable/<build-file>`. The rest of the page is compared: its
+  template, the tags the server puts in (`bd-error`), how many files it
+  loads and in which order. Not pinned: which build it is, the names of
+  its files and what the start script says.
 
 In headers and bodies the instance's own address becomes `<base>`
 (`http://bdgo-c1:5000`), `<host>` or `<hostname>`, the IP address the

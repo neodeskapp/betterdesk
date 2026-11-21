@@ -14,7 +14,7 @@
    "status": 404,
    "headers": {
     "cache-control": "no-store",
-    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-xTQM7V4ywctaWeIGqiJ1amibCKKSO4IoqejxLuLjYYc='; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-<inline-script>'; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
     "content-type": "text/html; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
@@ -31,8 +31,8 @@
    "body": {
     "kind": "bytes",
     "type": "text/html",
-    "length": 3098,
-    "sha256": "2ba222b6e4ecee9c58aa9005b97de62d54e536ab6771e9dc1b38ac44fbc3e475",
+    "length": 2594,
+    "sha256": "9e9413b0c339fb690ae63616a266b16bc594d6dfbb6e2b8a44a28e55ea66eae8",
     "head": "<!doctype html>\n<html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\">\n\t<head><meta name=\"bd-error\" content=\"404\">\n\t\t<meta charset=\"utf-8\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />\n\t\t<meta name=\"robots\" content=\"noindex, nofollow\""
    }
   },
@@ -49,7 +49,7 @@
    "status": 404,
    "headers": {
     "cache-control": "no-store",
-    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-xTQM7V4ywctaWeIGqiJ1amibCKKSO4IoqejxLuLjYYc='; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-<inline-script>'; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
     "content-type": "text/html; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
@@ -69,8 +69,8 @@
    "body": {
     "kind": "bytes",
     "type": "text/html",
-    "length": 3098,
-    "sha256": "2ba222b6e4ecee9c58aa9005b97de62d54e536ab6771e9dc1b38ac44fbc3e475",
+    "length": 2594,
+    "sha256": "9e9413b0c339fb690ae63616a266b16bc594d6dfbb6e2b8a44a28e55ea66eae8",
     "head": "<!doctype html>\n<html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\">\n\t<head><meta name=\"bd-error\" content=\"404\">\n\t\t<meta charset=\"utf-8\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />\n\t\t<meta name=\"robots\" content=\"noindex, nofollow\""
    }
   }

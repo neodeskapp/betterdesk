@@ -14,7 +14,7 @@
    "headers": {
     "allow": "POST",
     "cache-control": "no-store",
-    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-xTQM7V4ywctaWeIGqiJ1amibCKKSO4IoqejxLuLjYYc='; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "content-security-policy": "default-src 'self'; frame-src 'none'; worker-src 'self' blob:; connect-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; object-src 'none'; script-src 'self' 'sha256-<inline-script>'; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
     "content-type": "text/html; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
@@ -34,8 +34,8 @@
    "body": {
     "kind": "bytes",
     "type": "text/html",
-    "length": 3244,
-    "sha256": "6e32ba7c966a79d591cfd5badf03cce6f8df001f8ae60db34f6b96c2b516bdf8",
+    "length": 2740,
+    "sha256": "0445005f43d308c45dd4076fe8f4920a5ccf91d7a53ca8ee46b77fa34cbf9fc7",
     "head": "<!doctype html>\n<html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\">\n\t<head><meta name=\"bd-error\" content=\"500\" data-title=\"Logout requires POST\" data-message=\"Signing out changed to a POST request for CSRF protection. Use the sign-out button in the panel.\">\n\t\t<meta charset=\"utf-8\""
    }
   }

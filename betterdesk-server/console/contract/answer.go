@@ -3,6 +3,7 @@ package contract
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"mime"
@@ -274,8 +275,12 @@ func (n *Normalizer) maskJSON(value any) any {
 // after any Content-Encoding the suite understands was undone; undecoded
 // says the encoding could not be undone.
 func NewAnswer(status int, header http.Header, body []byte, undecoded bool, n *Normalizer) Answer {
-	a := Answer{Status: status, Headers: NormalizeHeaders(header, n)}
 	mediaType := mediaTypeOf(header.Get("Content-Type"))
+	var scripts map[string]bool
+	if mediaType == "text/html" && !undecoded {
+		scripts = inlineScriptHashes(body)
+	}
+	a := Answer{Status: status, Headers: normalizeHeaders(header, n, scripts)}
 	switch {
 	case mediaType == "text/event-stream":
 		a.Body = Body{Kind: BodyStream}
@@ -284,12 +289,16 @@ func NewAnswer(status int, header http.Header, body []byte, undecoded bool, n *N
 	case len(body) == 0:
 		a.Body = Body{Kind: BodyEmpty}
 	default:
-		a.Body = newBody(mediaType, body, n)
+		a.Body = newBody(mediaType, body, n, scripts)
 	}
 	return a
 }
 
-func newBody(mediaType string, body []byte, n *Normalizer) Body {
+// newBody keeps a body: JSON parsed, anything else as media type, length
+// and hash. scripts are the hashes of the inline scripts of an HTML page
+// (inlineScriptHashes); such a page is kept in its stable form
+// (stablePage).
+func newBody(mediaType string, body []byte, n *Normalizer, scripts map[string]bool) Body {
 	if isJSONType(mediaType) {
 		text := []byte(n.Text(string(body)))
 		if value, err := decodeJSON(text); err == nil {
@@ -299,6 +308,9 @@ func newBody(mediaType string, body []byte, n *Normalizer) Body {
 	b := Body{Kind: BodyBytes, Type: mediaType}
 	if isTextType(mediaType) {
 		body = []byte(n.Text(string(body)))
+		if mediaType == "text/html" {
+			body = []byte(stablePage(string(body), scripts))
+		}
 		head := body
 		if len(head) > headBytes {
 			head = head[:headBytes]
@@ -370,6 +382,13 @@ func encodeJSON(value any) json.RawMessage {
 // lower case. What changes from one answer to the next without meaning
 // anything is replaced by a placeholder: see the rules at keptHeaders.
 func NormalizeHeaders(header http.Header, n *Normalizer) map[string][]string {
+	return normalizeHeaders(header, n, nil)
+}
+
+// normalizeHeaders is NormalizeHeaders for an answer whose body has the
+// inline scripts scripts (inlineScriptHashes): a policy's hash of one of
+// them becomes a word.
+func normalizeHeaders(header http.Header, n *Normalizer, scripts map[string]bool) map[string][]string {
 	out := map[string][]string{}
 	for name, values := range header {
 		rule, ok := headerRuleFor(name)
@@ -390,6 +409,7 @@ func NormalizeHeaders(header http.Header, n *Normalizer) map[string][]string {
 				value = normalizeSetCookie(value)
 			case keepPolicy:
 				value = nonce.ReplaceAllString(value, "'nonce-<nonce>'")
+				value = ownScriptHashes(value, scripts)
 			}
 			kept = append(kept, value)
 		}
@@ -408,6 +428,85 @@ var (
 	digits = regexp.MustCompile(`[0-9]+`)
 	nonce  = regexp.MustCompile(`'nonce-[^']*'`)
 )
+
+// The web app's page carries a Content-Security-Policy, in the header and
+// in a <meta> tag, that allows its inline start script by the script's
+// SHA-256, and it names the build's files by their hashes. Both change
+// with every build of the web app, not with the server. So a hash in a
+// policy that is the hash of an inline script of the same page is written
+// as the word inlineScriptWord (a hash of no script on the page stays as
+// sent, so a wrong one still shows), and an HTML page is kept in a stable
+// form (stablePage).
+
+// inlineScriptWord stands in a policy for the hash of an inline script of
+// the page.
+const inlineScriptWord = "'sha256-<inline-script>'"
+
+var (
+	// scriptElement is a <script> element with its attributes and text.
+	scriptElement = regexp.MustCompile(`(?is)<script\b([^>]*)>(.*?)</script\s*>`)
+	// hasSrc finds a src attribute.
+	hasSrc = regexp.MustCompile(`(?i)(^|\s)src\s*=`)
+	// policyHash is a SHA-256 source of a policy.
+	policyHash = regexp.MustCompile(`'sha256-([A-Za-z0-9+/_-]+=*)'`)
+	// buildFile is a file of the web app's build that is named by its
+	// hash: /_ui/immutable/entry/start.U1O-cXFv.js (or /_app/... for a
+	// build with SvelteKit's default folder).
+	buildFile = regexp.MustCompile(`(/_(?:ui|app)/immutable/)[A-Za-z0-9._/~-]+`)
+)
+
+// inlineScriptHashes lists the SHA-256 (base64, as a policy writes it) of
+// every inline script of an HTML page: the text of each <script> element
+// without a src attribute, as the browser hashes it.
+func inlineScriptHashes(page []byte) map[string]bool {
+	hashes := map[string]bool{}
+	for _, m := range scriptElement.FindAllSubmatch(page, -1) {
+		if hasSrc.Match(m[1]) {
+			continue
+		}
+		sum := sha256.Sum256(m[2])
+		hashes[base64.StdEncoding.EncodeToString(sum[:])] = true
+	}
+	return hashes
+}
+
+// ownScriptHashes writes each hash in a policy that is the hash of one of
+// the page's inline scripts as inlineScriptWord.
+func ownScriptHashes(policy string, scripts map[string]bool) string {
+	if len(scripts) == 0 {
+		return policy
+	}
+	return policyHash.ReplaceAllStringFunc(policy, func(source string) string {
+		if scripts[policyHash.FindStringSubmatch(source)[1]] {
+			return inlineScriptWord
+		}
+		return source
+	})
+}
+
+// startScriptWord stands where the web app's start script was.
+const startScriptWord = "<start-script>"
+
+// stablePage is an HTML page without what changes with each build of the
+// web app: in the policy of its <meta> tag the hash of its own inline
+// script is a word (ownScriptHashes), the text of SvelteKit's start script
+// (the inline script that names __sveltekit_ and the build's entry files)
+// is startScriptWord, and the build's hashed file names are
+// /_ui/immutable/<build-file>. Everything else of the page stays and is
+// compared: the template, the tags the server puts in (bd-error), how many
+// files the page loads and the order of its tags. scripts are the hashes
+// of the inline scripts of the page as sent.
+func stablePage(page string, scripts map[string]bool) string {
+	page = scriptElement.ReplaceAllStringFunc(page, func(element string) string {
+		m := scriptElement.FindStringSubmatch(element)
+		if hasSrc.MatchString(m[1]) || !strings.Contains(m[2], "__sveltekit_") {
+			return element
+		}
+		return "<script" + m[1] + ">" + startScriptWord + "</script>"
+	})
+	page = ownScriptHashes(page, scripts)
+	return buildFile.ReplaceAllString(page, "${1}<build-file>")
+}
 
 // normalizeDate replaces an HTTP date by <date>, or by <past> when it lies
 // before the year 2000, which is how a cookie or an answer is expired.
