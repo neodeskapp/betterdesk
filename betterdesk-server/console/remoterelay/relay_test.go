@@ -250,8 +250,17 @@ func TestTheSixthViewerIsClosed(t *testing.T) {
 	for i := 0; i < MaxViewers; i++ {
 		five = append(five, dial(t, addr, "/ws/remote-viewer/dev1", operator))
 	}
+	// The sixth comes only once the five are registered: under load the
+	// last of them can still be on its way in
+	deadline := time.Now().Add(5 * time.Second)
+	for state := svc.SessionState("dev1"); state == nil || state.ViewerCount != MaxViewers; state = svc.SessionState("dev1") {
+		if time.Now().After(deadline) {
+			t.Fatalf("the five viewers are not registered: %+v", state)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	sixth := dial(t, addr, "/ws/remote-viewer/dev1", operator)
-	if !sixth.Wait(time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
+	if !sixth.Wait(5*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
 		t.Fatal("the sixth viewer stays open")
 	}
 	if _, code, reason := sixth.Closed(); code != 1008 || reason != "Max viewers reached" || len(sixth.Frames()) != 0 {
