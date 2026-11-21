@@ -62,3 +62,54 @@ func TestNetworkResolverAllowedRelayServers(t *testing.T) {
 		t.Fatalf("ResolveRelay = %q, want org allowlist entry", got)
 	}
 }
+
+func TestRelayAllowedComparesHostAndPortExactly(t *testing.T) {
+	cases := []struct {
+		entry, relay string
+		want         bool
+	}{
+		{"relay.corp", "relay.corp:21117", true},
+		{"relay.corp", "RELAY.corp", true},
+		{"relay.corp", "relay.corp.attacker.net:21117", false},
+		{"relay.corp:21117", "relay.corp:21117", true},
+		{"relay.corp:21117", "relay.corp:211170", false},
+		{"relay.corp:21117", "relay.corp:21118", false},
+		{"relay.corp:21117", "relay.corp", false},
+		{"[2001:db8::1]:21117", "[2001:db8::1]:21117", true},
+		{"2001:db8::1", "[2001:db8::1]:21117", true},
+		{"10.0.0.1", "10.0.0.10:21117", false},
+	}
+	for _, tc := range cases {
+		if got := relayAllowed(tc.entry, tc.relay); got != tc.want {
+			t.Errorf("relayAllowed(%q, %q) = %v, want %v", tc.entry, tc.relay, got, tc.want)
+		}
+	}
+}
+
+func TestResolveRelayRefusesHostThatOnlyStartsWithAllowedOne(t *testing.T) {
+	database, err := db.OpenSQLite(filepath.Join(t.TempDir(), "policy-prefix.db"))
+	if err != nil {
+		t.Fatalf("OpenSQLite: %v", err)
+	}
+	t.Cleanup(func() { database.Close() })
+	if err := database.Migrate(); err != nil {
+		t.Fatalf("Migrate: %v", err)
+	}
+	if err := database.CreateOrganization(&db.Organization{ID: "org3", Name: "Prefix Org"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SetOrgSetting("org3", networkPolicyKey, `{"allowed_relay_servers":["relay.corp"]}`); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.AssignDeviceToOrg(&db.OrgDevice{OrgID: "org3", DeviceID: "devP"}); err != nil {
+		t.Fatal(err)
+	}
+
+	r := NewNetworkResolver(database)
+	if got := r.ResolveRelay("relay.corp.attacker.net:21117", "devP"); got != "relay.corp" {
+		t.Fatalf("ResolveRelay = %q, want the allowlist entry instead of the look-alike host", got)
+	}
+	if got := r.ResolveRelay("relay.corp:21117", "devP"); got != "relay.corp:21117" {
+		t.Fatalf("ResolveRelay = %q, want the allowed relay kept", got)
+	}
+}

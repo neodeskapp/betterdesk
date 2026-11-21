@@ -3,6 +3,7 @@ package policy
 
 import (
 	"encoding/json"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -117,20 +118,32 @@ func (r *NetworkResolver) ResolveRelay(defaultRelay string, deviceIDs ...string)
 		return defaultRelay
 	}
 
-	normalizedDefault := strings.TrimSpace(defaultRelay)
 	for _, entry := range allowed {
-		entry = strings.TrimSpace(entry)
-		if entry == "" {
-			continue
-		}
-		if entry == normalizedDefault {
-			return defaultRelay
-		}
-		if normalizedDefault != "" && strings.HasPrefix(normalizedDefault, entry) {
+		if relayAllowed(entry, defaultRelay) {
 			return defaultRelay
 		}
 	}
 	return strings.TrimSpace(allowed[0])
+}
+
+// relayAllowed reports whether relay matches an allowlist entry: the same
+// host, and the same port when the entry names one.
+func relayAllowed(entry, relay string) bool {
+	entryHost, entryPort := splitRelayAddr(entry)
+	relayHost, relayPort := splitRelayAddr(relay)
+	if entryHost == "" || !strings.EqualFold(entryHost, relayHost) {
+		return false
+	}
+	return entryPort == "" || entryPort == relayPort
+}
+
+// splitRelayAddr splits "host", "host:port", "[v6]" or "[v6]:port".
+func splitRelayAddr(addr string) (host, port string) {
+	addr = strings.TrimSpace(addr)
+	if h, p, err := net.SplitHostPort(addr); err == nil {
+		return h, p
+	}
+	return strings.Trim(addr, "[]"), ""
 }
 
 // InvalidateOrg drops cached org/device entries after policy updates.
