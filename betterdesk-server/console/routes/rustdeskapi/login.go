@@ -60,6 +60,17 @@ func clientRef(body middleware.JSONObject, name string) (text string, given bool
 	return text, given
 }
 
+// clientDevice is the id of a sign-in body, the device the token is
+// stored for: text of the form of a device id (authn.IsDeviceID, 3 to 64
+// letters, digits, "_" and "-"). Anything else counts as missing, so no
+// text of any length or form ends up as a token's client id.
+func clientDevice(body middleware.JSONObject) string {
+	if id, _ := clientRef(body, "id"); authn.IsDeviceID(id) {
+		return id
+	}
+	return ""
+}
+
 // firstText is a || b || ” for texts.
 func firstText(values ...string) string {
 	for _, v := range values {
@@ -89,7 +100,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	password, _ := member(body, "password").(string)
 	h.log.Info(fmt.Sprintf("[API:LOGIN] Login attempt from %s user=%s", ip, auditlog.RedactUsername(username)))
 
-	clientID, _ := clientRef(body, "id")
+	clientID := clientDevice(body)
 	clientUUID, uuidGiven := clientRef(body, "uuid")
 	code := or(member(body, "tfaCode"), member(body, "verificationCode"))
 	if truthy(code) && truthy(member(body, "secret")) {
@@ -284,7 +295,7 @@ func (h *handlers) secondStep(w http.ResponseWriter, r *http.Request, ip string,
 	_ = h.d.Authn.RecordAttempt(ctx, pending.username, ip, true)
 	// The client id and UUID of this step, else those of the first step;
 	// the tokens of that UUID are revoked, also of the empty one
-	bodyID, _ := clientRef(body, "id")
+	bodyID := clientDevice(body)
 	bodyUUID, _ := clientRef(body, "uuid")
 	clientID, clientUUID := firstText(bodyID, pending.clientID), firstText(bodyUUID, pending.clientUUID)
 	if banned, err := h.refuseBannedDevice(w, r, clientID, pending.username, ip); err != nil || banned {

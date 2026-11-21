@@ -84,8 +84,13 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Operator login error:", err, "Authentication failed")
 		return
 	}
+	// The token is stored for a device_id of the form of a device id (3 to
+	// 64 letters, digits, "_" and "-"); any other counts as none
+	if !deviceIDPattern(device) {
+		device = ""
+	}
 	userID := user.ID.V
-	token, err := h.d.Authn.GenerateAccessToken(ctx, userID, cut(device, 32), "", ip)
+	token, err := h.d.Authn.GenerateAccessToken(ctx, userID, device, "", ip)
 	if err == nil {
 		err = h.d.Authn.TouchLastLogin(ctx, userID)
 	}

@@ -104,3 +104,36 @@ func TestSessionHistoryIsNotForgedThroughTheClientAudit(t *testing.T) {
 		}
 	})
 }
+
+// The operator sign-in stores its device_id as the token's client id only
+// when it has the form of a device id; a longer or other text counts as
+// none (BUGS RV1).
+func TestOperatorLoginTakesOnlyADeviceID(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000", "LOGIN_RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
+		hash, err := w.Server.Deps().Authn.HashPassword(ctx, "Rv1-Op-1!x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.Exec(ctx, `UPDATE users SET password_hash = ? WHERE id = 5`, hash); err != nil {
+			t.Fatal(err)
+		}
+		for id, want := range map[string]string{
+			"OPDESK-1":              "OPDESK-1",
+			strings.Repeat("7", 40): strings.Repeat("7", 40),
+			strings.Repeat("7", 65): "",
+			"desk 1":                "",
+		} {
+			body, _ := json.Marshal(map[string]string{"username": "e2e_operator", "password": "Rv1-Op-1!x", "device_id": id})
+			got := w.SignedOut().Do("POST", "/api/bd/operator/login", string(body))
+			if got.Status != 200 {
+				t.Fatalf("operator sign-in with %q: %d %s", id, got.Status, got.Body)
+			}
+			var stored string
+			if err := db.QueryRow(ctx, `SELECT client_id FROM access_tokens WHERE user_id = 5 ORDER BY id DESC LIMIT 1`).Scan(&stored); err != nil || stored != want {
+				t.Errorf("operator sign-in with %q stored client id %q (%v), want %q", id, stored, err, want)
+			}
+		}
+	})
+}

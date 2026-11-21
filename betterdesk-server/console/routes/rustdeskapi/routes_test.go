@@ -133,7 +133,7 @@ func TestSecondStepRefusesAWrongCode(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := world(t, db, nil)
 		setTOTP(t, w, db)
-		first := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"Rd-Test-1!x","id":"c1","uuid":"u1"}`)})
+		first := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"Rd-Test-1!x","id":"cl-1","uuid":"u1"}`)})
 		m := secretField.FindStringSubmatch(first.Body)
 		if first.Status != http.StatusOK || m == nil || !strings.Contains(first.Body, `"type":"email_check","tfa_type":"tfa_check"`) {
 			t.Fatalf("password step: %d %s", first.Status, first.Body)
@@ -151,7 +151,7 @@ func TestSecondStepRefusesAWrongCode(t *testing.T) {
 			}
 		}
 		var action, details string
-		if err := db.QueryRow(context.Background(), "SELECT action, details FROM audit_log ORDER BY id DESC LIMIT 1").Scan(&action, &details); err != nil || action != "api_tfa_failed" || details != "Client: c1" {
+		if err := db.QueryRow(context.Background(), "SELECT action, details FROM audit_log ORDER BY id DESC LIMIT 1").Scan(&action, &details); err != nil || action != "api_tfa_failed" || details != "Client: cl-1" {
 			t.Errorf("audit entry of a wrong code: %q %q, %v", action, details, err)
 		}
 		var failed int
@@ -167,7 +167,7 @@ func TestSecondStepRefusesAWrongCode(t *testing.T) {
 		}
 		// The token of the second step names the client of the first
 		var client string
-		if err := db.QueryRow(context.Background(), "SELECT client_id || '/' || client_uuid FROM access_tokens WHERE user_id = 6 AND client_id = 'c1'").Scan(&client); err != nil || client != "c1/u1" {
+		if err := db.QueryRow(context.Background(), "SELECT client_id || '/' || client_uuid FROM access_tokens WHERE user_id = 6 AND client_id = 'cl-1'").Scan(&client); err != nil || client != "cl-1/u1" {
 			t.Errorf("the token's client: %q, %v", client, err)
 		}
 	})
@@ -184,7 +184,7 @@ func TestSecondStepChecksTheLockout(t *testing.T) {
 			return w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"tfaCode":"` + code + `","secret":"` + secret + `"}`)})
 		}
 		pending := func(w *replay.World) string {
-			first := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"Rd-Test-1!x","id":"c1","uuid":"u1"}`)})
+			first := w.Do(replay.Request{Method: "POST", Path: "/api/login", Body: replay.Text(`{"username":"e2e_viewer","password":"Rd-Test-1!x","id":"cl-1","uuid":"u1"}`)})
 			m := secretField.FindStringSubmatch(first.Body)
 			if first.Status != http.StatusOK || m == nil {
 				t.Fatalf("password step: %d %s", first.Status, first.Body)
@@ -201,7 +201,7 @@ func TestSecondStepChecksTheLockout(t *testing.T) {
 		}
 		tokens := func() int {
 			var n int
-			if err := db.QueryRow(ctx, "SELECT COUNT(*) FROM access_tokens WHERE user_id = 6 AND client_id = 'c1'").Scan(&n); err != nil {
+			if err := db.QueryRow(ctx, "SELECT COUNT(*) FROM access_tokens WHERE user_id = 6 AND client_id = 'cl-1'").Scan(&n); err != nil {
 				t.Fatal(err)
 			}
 			return n

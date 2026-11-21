@@ -55,6 +55,8 @@ var fixedSteps = []fixedStep{
 	// A client id or UUID that is no text counts as missing: the sign-in
 	// stores the empty text in its place and gives the token, its audit
 	// entry names the client "unknown", and such a UUID revokes nothing.
+	// So does a client id without the form of a device id, as the
+	// replay's "x" and "y" (RV1).
 	{"node_sqlite", "462 POST /api/login", "RD7"},
 	{"node_sqlite", "463 POST /api/login", "RD7"},
 	{"node_sqlite", "465 POST /api/login", "RD7"},
@@ -62,11 +64,11 @@ var fixedSteps = []fixedStep{
 	{"node_sqlite", "467 POST /api/login", "RD7"},
 	{"node_sqlite", "468 POST /api/login", "RD7"},
 	{"node", "469 POST /api/login", "RD7"},
-	{"node", "the tokens", "RD7"},
-	{"node", "the tokens after sign-out", "RD7"},
+	{"node", "the tokens", "RD7, RV1"},
+	{"node", "the tokens after sign-out", "RD7, RV1"},
 	// The audit entry of a sign-in from a banned device names the account
 	// in full: only a failed sign-in's "Username: " entry is shortened.
-	{"node", "the audit entries", "RD7, AL1"},
+	{"node", "the audit entries", "RD7, AL1, RV1"},
 	// The accessible route gives the short form in any letter case.
 	{"node", "609 GET /API/Device-Group/Accessible", "RD11"},
 	// A device group whose team id is a number is refused, where Node

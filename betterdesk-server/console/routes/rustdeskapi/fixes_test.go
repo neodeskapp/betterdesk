@@ -297,3 +297,37 @@ func TestSignInChecksTheBanAfterThePassword(t *testing.T) {
 	})
 }
 
+// The id of a sign-in is stored as the token's client id only when it has
+// the form of a device id: 3 to 64 letters, digits, "_" and "-". Any other
+// text, also a longer one, counts as missing (BUGS RV1).
+func TestSignInTakesOnlyADeviceIDAsClientID(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000", "LOGIN_RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
+		hash, err := w.Server.Deps().Authn.HashPassword(ctx, "Rv1-Test-1!x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		mustExec(t, db, `UPDATE users SET password_hash = ? WHERE id = 6`, hash)
+		for id, want := range map[string]string{
+			"900100001":             "900100001",
+			"dev_1-a":               "dev_1-a",
+			strings.Repeat("9", 64): strings.Repeat("9", 64),
+			strings.Repeat("9", 65): "",
+			"ab":                    "",
+			"a b":                   "",
+			"a.b":                   "",
+			"<script>":              "",
+		} {
+			body, _ := json.Marshal(map[string]string{"username": "e2e_viewer", "password": "Rv1-Test-1!x", "id": id, "uuid": "u-" + id})
+			got := w.SignedOut().Do("POST", "/api/login", string(body))
+			if got.Status != 200 {
+				t.Fatalf("sign-in with id %q: %d %s", id, got.Status, got.Body)
+			}
+			var stored string
+			if err := db.QueryRow(ctx, `SELECT client_id FROM access_tokens WHERE user_id = 6 ORDER BY id DESC LIMIT 1`).Scan(&stored); err != nil || stored != want {
+				t.Errorf("sign-in with id %q stored client id %q (%v), want %q", id, stored, err, want)
+			}
+		}
+	})
+}
