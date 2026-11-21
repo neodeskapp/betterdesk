@@ -5,6 +5,9 @@
 // check the role: super_admin, admin and global_admin may, everyone else
 // gets 403. GET /api/reports/trends is another group's, registered in
 // front.
+//
+// An account limited to some devices gets reports of those devices (see
+// engine.Filters), and reads the saved reports it saved itself.
 package reports
 
 import (
@@ -23,9 +26,14 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
+// scopeFunc is the device scope of the account of a request, nil when
+// it sees every device.
+type scopeFunc func(r *http.Request) (*access.DeviceScope, error)
+
 type handlers struct {
 	db     *store.DB
 	engine *engine.Engine
+	scope  scopeFunc
 	log    *kit.Logger
 	now    func() time.Time
 }
@@ -33,10 +41,12 @@ type handlers struct {
 // Register adds the group's routes below the mount (/api/reports).
 func Register(d *kit.Deps) {
 	opts := engine.Options{DB: d.Store}
+	scope := func(*http.Request) (*access.DeviceScope, error) { return nil, nil }
 	if d.DeviceGroups != nil {
 		opts.SyncPeers = d.DeviceGroups.SyncServerPeers
+		scope = scopeOf(d)
 	}
-	h := &handlers{db: d.Store, engine: engine.New(opts), log: d.Log.Child("Reports"), now: time.Now}
+	h := &handlers{db: d.Store, engine: engine.New(opts), scope: scope, log: d.Log.Child("Reports"), now: time.Now}
 	r := d.Router
 	r.Get("/types", h.types, requireSession)
 	r.Post("/generate", h.generate, requireSession)
@@ -45,6 +55,31 @@ func Register(d *kit.Deps) {
 	r.Get("/saved/{id}", h.getSaved, requireSession)
 	r.Post("/save", h.save, requireSession, requireAdmin)
 	r.Delete("/saved/{id}", h.deleteSaved, requireSession, requireAdmin)
+}
+
+// scopeOf reads the scope over every device of the device layer, which
+// knows their folders and tags, and only for an account that has a limit,
+// as the trends do.
+func scopeOf(d *kit.Deps) scopeFunc {
+	return func(r *http.Request) (*access.DeviceScope, error) {
+		ctx, user := r.Context(), kit.User(r)
+		scope, err := d.DeviceGroups.DeviceScopeForUser(ctx, user, nil)
+		if err != nil || scope == nil {
+			return scope, err
+		}
+		return d.DeviceGroups.DeviceScopeForUser(ctx, user, d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{}))
+	}
+}
+
+// readsSaved reports whether the account of the request may read a saved
+// report that createdBy saved: without a scope limit it reads them all,
+// with one those it saved.
+func readsSaved(r *http.Request, scope *access.DeviceScope, createdBy any) bool {
+	if scope.Unlimited() {
+		return true
+	}
+	name, _ := createdBy.(string)
+	return name != "" && name == kit.User(r).Username
 }
 
 // failure is the group's error answer: {"error":"..."}.
@@ -123,17 +158,25 @@ func (h *handlers) types(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, engine.ListTypes())
 }
 
-// generated is the report the body asks for. It answers itself and
-// returns nil when there is none: 400 without a type, for a type there is
-// no report of and for a range that is no time (the engine's text), 500
-// with failed for anything else.
+// generated is the report the body asks for, of the devices the account
+// may see. It answers itself and returns nil when there is none: 400
+// without a type, for a type there is no report of and for a range that
+// is no time (the engine's text), 500 with failed for anything else.
 func (h *handlers) generated(w http.ResponseWriter, r *http.Request, body middleware.JSONObject, logPrefix, failed string) *engine.Report {
 	typ := jsbind.Of(body.Get("type"))
 	if !typ.Truthy() {
 		fail(w, r, http.StatusBadRequest, "Report type is required")
 		return nil
 	}
-	report, err := h.engine.Generate(r.Context(), typ, filtersOf(body))
+	filters := filtersOf(body)
+	scope, err := h.scope(r)
+	if err != nil {
+		h.log.Error(logPrefix, err)
+		fail(w, r, http.StatusInternalServerError, failed)
+		return nil
+	}
+	filters.Scope = scope
+	report, err := h.engine.Generate(r.Context(), typ, filters)
 	if err != nil {
 		h.log.Error(logPrefix, err)
 		var unknown *engine.UnknownTypeError
@@ -173,37 +216,60 @@ func (h *handlers) generateCSV(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteBody(w, r, http.StatusOK, "text/csv; charset=utf-8", []byte(csv))
 }
 
-// listSaved answers GET /api/reports/saved: every saved report, newest
-// first, its columns as the database gave them.
+// listSaved answers GET /api/reports/saved: every saved report the account
+// may read, newest first, its columns as the database gave them.
 func (h *handlers) listSaved(w http.ResponseWriter, r *http.Request) {
-	rows, err := savedReports(r.Context(), h.db)
+	rows, scope, err := h.savedReports(r)
 	if err != nil {
 		h.log.Error("get saved error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch saved reports")
 		return
 	}
-	list := make([]any, len(rows))
-	for i, row := range rows {
-		list[i] = row
+	list := []any{}
+	for _, row := range rows {
+		if readsSaved(r, scope, row.Get("created_by")) {
+			list = append(list, row)
+		}
 	}
 	kit.JSON(w, r, http.StatusOK, value{list})
 }
 
+// savedReports reads the scope of the account and every saved report.
+func (h *handlers) savedReports(r *http.Request) ([]*goapi.Object, *access.DeviceScope, error) {
+	scope, err := h.scope(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	rows, err := savedReports(r.Context(), h.db)
+	return rows, scope, err
+}
+
+// savedReport reads the scope of the account and the saved report id.
+func (h *handlers) savedReport(r *http.Request, id jsbind.Value) (*goapi.Object, *access.DeviceScope, error) {
+	scope, err := h.scope(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	report, err := savedReportByID(r.Context(), h.db, id)
+	return report, scope, err
+}
+
 // getSaved answers GET /api/reports/saved/{id}: the saved report with its
-// payload parsed. A payload that is text and no JSON is {}.
+// payload parsed. A payload that is text and no JSON is {}. A report the
+// account may not read is not found.
 func (h *handlers) getSaved(w http.ResponseWriter, r *http.Request) {
 	id, ok := savedID(r)
 	if !ok {
 		fail(w, r, http.StatusNotFound, "Saved report not found")
 		return
 	}
-	report, err := savedReportByID(r.Context(), h.db, id)
+	report, scope, err := h.savedReport(r, id)
 	if err != nil {
 		h.log.Error("get saved/:id error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch report")
 		return
 	}
-	if report == nil {
+	if report == nil || !readsSaved(r, scope, report.Get("created_by")) {
 		fail(w, r, http.StatusNotFound, "Saved report not found")
 		return
 	}

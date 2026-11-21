@@ -15,6 +15,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -65,10 +66,17 @@ func New(opts Options) *Engine {
 	return &Engine{db: opts.DB, now: opts.Now, clock: clock{loc: opts.Location, zoneName: opts.ZoneName}, sync: opts.SyncPeers}
 }
 
-// Filters are the time range of a report as the request gave it. Only the
-// activity report reads it; it goes back in every report's filters.
+// Filters are the time range of a report as the request gave it, and the
+// devices of the account it is made for. Only the activity report reads
+// the range; it goes back in every report's filters.
 type Filters struct {
 	From, To jsbind.Value
+	// Scope holds the devices the account may see; nil sees every device.
+	// The devices outside it, and their activity, data guard events,
+	// inventories and alerts, are left out of the reports. The alert
+	// rules, the audit log, the tickets and the network targets are read
+	// whole.
+	Scope *access.DeviceScope
 	// from and to are the range as the statements bind it (see bound),
 	// set by Generate.
 	from, to string
@@ -227,12 +235,12 @@ func (e *Engine) numberOrZero(v any, found bool) float64 {
 }
 
 // devices is generateDeviceReport.
-func (e *Engine) devices(ctx context.Context, _ Filters) (*goapi.Object, error) {
-	peers, err := e.allPeers(ctx)
+func (e *Engine) devices(ctx context.Context, f Filters) (*goapi.Object, error) {
+	peers, err := e.allPeers(ctx, f.Scope)
 	if err != nil {
 		return nil, err
 	}
-	stats, err := e.peerStats(ctx)
+	stats, err := e.peerStats(ctx, f.Scope)
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +274,7 @@ type appUsage struct {
 
 // activity is generateActivityReport.
 func (e *Engine) activity(ctx context.Context, f Filters) (*goapi.Object, error) {
-	summaries, err := e.allActivitySummaries(ctx, f.from, f.to)
+	summaries, err := e.allActivitySummaries(ctx, f.from, f.to, f.Scope)
 	if err != nil {
 		return nil, err
 	}
@@ -339,19 +347,19 @@ func (e *Engine) activity(ctx context.Context, f Filters) (*goapi.Object, error)
 }
 
 // security is generateSecurityReport.
-func (e *Engine) security(ctx context.Context, _ Filters) (*goapi.Object, error) {
-	stats, err := e.dlpEventStats(ctx)
+func (e *Engine) security(ctx context.Context, f Filters) (*goapi.Object, error) {
+	stats, err := e.dlpEventStats(ctx, f.Scope)
 	if err != nil {
 		stats = goapi.NewObject("total", 0.0, "blocked", 0.0, "logged", 0.0, "usb_events", 0.0, "file_events", 0.0)
 	}
 
 	// The events with details parsed
 	var recent []*goapi.Object
-	if events, err := e.dlpEvents(ctx, 50); err == nil {
+	if events, err := e.dlpEvents(ctx, 50, f.Scope); err == nil {
 		recent = withParsedDetails(events)
 	}
 
-	peers, err := e.allPeers(ctx)
+	peers, err := e.allPeers(ctx, f.Scope)
 	if err != nil {
 		return nil, err
 	}
@@ -466,8 +474,8 @@ func (e *Engine) network(ctx context.Context, _ Filters) (*goapi.Object, error) 
 }
 
 // inventory is generateInventoryReport.
-func (e *Engine) inventory(ctx context.Context, _ Filters) (*goapi.Object, error) {
-	inventories, err := e.allInventories(ctx)
+func (e *Engine) inventory(ctx context.Context, f Filters) (*goapi.Object, error) {
+	inventories, err := e.allInventories(ctx, f.Scope)
 	if err != nil {
 		inventories = nil
 	}
@@ -504,12 +512,12 @@ func (e *Engine) inventory(ctx context.Context, _ Filters) (*goapi.Object, error
 }
 
 // alerts is generateAlertReport.
-func (e *Engine) alerts(ctx context.Context, _ Filters) (*goapi.Object, error) {
+func (e *Engine) alerts(ctx context.Context, f Filters) (*goapi.Object, error) {
 	rules, err := e.alertRules(ctx)
 	if err != nil {
 		rules = nil
 	}
-	history, err := e.alertHistory(ctx)
+	history, err := e.alertHistory(ctx, f.Scope)
 	if err != nil {
 		history = nil
 	}

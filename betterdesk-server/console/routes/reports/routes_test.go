@@ -349,6 +349,116 @@ func TestDatabaseFailures(t *testing.T) {
 	})
 }
 
+// TestReportsKeepToTheDeviceScope closes devices a and c to the viewer
+// with a device group whose access list names the operator (BUGS.md
+// RV90). The viewer's reports count device b alone: its peer row, data
+// guard events, activity, inventory and alerts, and the alerts that name
+// no device; the admin's count every device. A saved report is read by
+// the account that saved it, or by an account without a scope limit.
+func TestReportsKeepToTheDeviceScope(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		api.On("GET /api/peers", 200, `[{"id":"a"},{"id":"b"},{"id":"c"}]`)
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		ctx := context.Background()
+		for _, statement := range []string{
+			"INSERT INTO device_groups (id, guid, name) VALUES (90, 'closed', 'Closed')",
+			"INSERT INTO device_group_members (device_group_id, peer_id) VALUES (90, 'a'), (90, 'c')",
+			"INSERT INTO device_group_user_access (device_group_id, user_id) VALUES (90, 5)",
+			`INSERT INTO peer (id, note, info, status_online, is_banned, banned_reason, is_deleted) VALUES
+				('a', 'Alpha box', '{"os":"Windows"}', TRUE, TRUE, 'Stolen', FALSE),
+				('b', 'Beta box', '{"os":"Linux"}', TRUE, FALSE, '', FALSE),
+				('c', 'Gamma box', '{"os":"macOS"}', FALSE, TRUE, 'Lost', FALSE)`,
+			`INSERT INTO dlp_events (device_id, event_source, action, details, created_at) VALUES
+				('a', 'usb', 'block', '{"file":"alpha.txt"}', '2019-11-01 10:00:00'),
+				('b', 'file', 'log', '{"file":"beta.txt"}', '2019-11-01 11:00:00'),
+				('c', 'usb', 'block', '{"file":"gamma.txt"}', '2019-11-01 12:00:00')`,
+			`INSERT INTO activity_summaries (device_id, total_active_secs, idle_seconds, reported_at, received_at) VALUES
+				('a', 100, 1, '2019-11-01T00:00:00.000Z', '2019-11-01 00:00:00'),
+				('b', 200, 2, '2019-11-01T00:00:00.000Z', '2019-11-01 00:00:00'),
+				('c', 400, 4, '2019-11-01T00:00:00.000Z', '2019-11-01 00:00:00')`,
+			`INSERT INTO activity_sessions (device_id, app_name, category, started_at, ended_at, duration_secs) VALUES
+				('a', 'AlphaApp', 'x', '2019-11-01T01:00:00.000Z', '2019-11-01T02:00:00.000Z', 30),
+				('b', 'BetaApp', 'y', '2019-11-01T01:00:00.000Z', '2019-11-01T02:00:00.000Z', 20),
+				('c', 'GammaApp', 'z', '2019-11-01T01:00:00.000Z', '2019-11-01T02:00:00.000Z', 10)`,
+			`INSERT INTO device_inventory (device_id, hardware, software) VALUES
+				('a', '{"os_name":"Windows 11"}', '{}'), ('b', '{"os_name":"Ubuntu"}', '{}'), ('c', '{"os_name":"macOS 15"}', '{}')`,
+			"INSERT INTO alert_rules (id, name, condition_type) VALUES (1, 'Offline', 'offline')",
+			`INSERT INTO alert_history (rule_id, device_id, message, triggered_at) VALUES
+				(1, 'a', 'alpha offline', '2019-11-01 10:00:00'), (1, 'b', 'beta offline', '2019-11-01 11:00:00'),
+				(1, 'c', 'gamma offline', '2019-11-01 12:00:00'), (1, NULL, 'server check', '2019-11-01 13:00:00')`,
+			`INSERT INTO saved_reports (id, title, report_type, payload, created_by) VALUES
+				(1, 'Admin''s', 'devices', '{"note":"Alpha box"}', 'e2e_admin'), (2, 'Viewer''s', 'devices', '{}', 'e2e_viewer')`,
+		} {
+			if _, err := db.Exec(ctx, statement); err != nil {
+				t.Fatalf("%s: %v", statement, err)
+			}
+		}
+		check := func(role, body string, has, lacks []string) {
+			t.Helper()
+			path := "/api/reports/generate"
+			if strings.Contains(body, `"section"`) {
+				path += "/csv"
+			}
+			got := w.As(role).Do("POST", path, body)
+			if got.Status != 200 {
+				t.Fatalf("%s %s: %d %s", role, body, got.Status, got.Body)
+			}
+			for _, part := range has {
+				if !strings.Contains(got.Body, part) {
+					t.Errorf("%s %s lacks %s: %s", role, body, part, got.Body)
+				}
+			}
+			for _, part := range lacks {
+				if strings.Contains(got.Body, part) {
+					t.Errorf("%s %s holds %s: %s", role, body, part, got.Body)
+				}
+			}
+		}
+		closed := []string{"Alpha", "Gamma", "alpha", "gamma", `"a"`, `"c"`}
+		check("viewer", `{"type":"devices"}`, []string{
+			`"total_devices":1,"online":1,"offline":0,"banned":0,"platform_distribution":{"Linux":1},"stats":{"total":1,"online":1,"banned":0,"offline":0}`,
+		}, nil)
+		check("viewer", `{"type":"security"}`, []string{`"stats":{"total":1,`, `"banned_devices":[]`, `beta.txt`}, closed)
+		check("viewer", `{"type":"activity","section":"top_applications"}`, []string{"BetaApp"}, closed)
+		check("viewer", `{"type":"activity"}`, []string{
+			`"devices_with_activity":1,"daily_reports":1,"total_active_secs":200,"total_idle_secs":2,"top_applications":[{"name":"BetaApp"`,
+		}, closed)
+		check("viewer", `{"type":"inventory"}`, []string{`"total_inventoried":1,"os_distribution":{"Ubuntu":1}`}, nil)
+		check("viewer", `{"type":"alerts"}`, []string{`"total_alerts":2,`, "beta offline", "server check"}, closed)
+		check("admin", `{"type":"devices"}`, []string{`"total_devices":3,"online":2,"offline":1,"banned":2,`, `"stats":{"total":3,`}, nil)
+		check("admin", `{"type":"security"}`, []string{`"stats":{"total":3,`, "Alpha box", "Gamma box", "alpha.txt"}, nil)
+		check("admin", `{"type":"activity"}`, []string{`"devices_with_activity":3,`, "AlphaApp", "GammaApp"}, nil)
+		check("admin", `{"type":"inventory"}`, []string{`"total_inventoried":3,`}, nil)
+		check("admin", `{"type":"alerts"}`, []string{`"total_alerts":4,`, "alpha offline"}, nil)
+
+		// The operator is limited too, although its scope holds every
+		// device: like the viewer it reads the reports it saved alone
+		for _, role := range []string{"viewer", "operator"} {
+			got := w.As(role).Do("GET", "/api/reports/saved", "")
+			want := `"title":"Viewer's"`
+			if role == "operator" {
+				want = `[]`
+			}
+			if got.Status != 200 || strings.Contains(got.Body, "Admin's") || !strings.Contains(got.Body, want) {
+				t.Errorf("saved as %s: %d %s", role, got.Status, got.Body)
+			}
+			if got := w.As(role).Do("GET", "/api/reports/saved/1", ""); got.Status != 404 || got.Body != `{"error":"Saved report not found"}` {
+				t.Errorf("the admin's saved report as %s: %d %s", role, got.Status, got.Body)
+			}
+		}
+		if got := w.As("viewer").Do("GET", "/api/reports/saved/2", ""); got.Status != 200 || !strings.Contains(got.Body, `"title":"Viewer's"`) {
+			t.Errorf("its own saved report as viewer: %d %s", got.Status, got.Body)
+		}
+		if got := w.As("admin").Do("GET", "/api/reports/saved", ""); got.Status != 200 || !strings.Contains(got.Body, "Admin's") || !strings.Contains(got.Body, "Viewer's") {
+			t.Errorf("saved as admin: %d %s", got.Status, got.Body)
+		}
+		if got := w.As("admin").Do("GET", "/api/reports/saved/2", ""); got.Status != 200 {
+			t.Errorf("the viewer's saved report as admin: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
 func jsonNumber(n int) string {
 	out, _ := json.Marshal(n)
 	return string(out)

@@ -2,8 +2,10 @@ package reports
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/netmonitor"
@@ -23,19 +25,50 @@ func (e *Engine) rows(ctx context.Context, query string, args ...any) ([]*goapi.
 	return SelectRows(ctx, e.db, e.clock.loc, query, args...)
 }
 
+// inScope is the condition that keeps the rows whose column names a
+// device of the scope, and its parameter: the ids as one JSON list, which
+// holds a scope of any size. ok is false for a scope without a limit,
+// which keeps every row.
+func (e *Engine) inScope(scope *access.DeviceScope, column string) (condition string, arg any, ok bool) {
+	if scope.Unlimited() {
+		return "", nil, false
+	}
+	ids, err := json.Marshal(scope.IDs())
+	if err != nil {
+		panic(err)
+	}
+	return column + e.db.Pick(
+		" IN (SELECT value FROM json_each(?))",
+		" IN (SELECT jsonb_array_elements_text(?::jsonb))",
+	), string(ids), true
+}
+
+// andInScope is inScope as a condition to add to a WHERE clause, and the
+// arguments with its parameter appended; nothing for a scope without a
+// limit.
+func (e *Engine) andInScope(scope *access.DeviceScope, column string, args []any) (string, []any) {
+	condition, arg, ok := e.inScope(scope, column)
+	if !ok {
+		return "", args
+	}
+	return " AND " + condition, append(args, arg)
+}
+
 // peer is what the reports read of a device after parsePeer.
 type peer struct {
 	id, hostname, ip, platform, banReason any
 	online, banned                        bool
 }
 
-// allPeers is getAllPeers() without filters: the devices not deleted, by id.
-func (e *Engine) allPeers(ctx context.Context) ([]peer, error) {
+// allPeers is getAllPeers() without filters: the devices of the scope
+// not deleted, by id.
+func (e *Engine) allPeers(ctx context.Context, scope *access.DeviceScope) ([]peer, error) {
 	e.sync(ctx)
+	condition, args := e.andInScope(scope, "id", nil)
 	rows, err := e.rows(ctx, e.db.Pick(
-		"SELECT * FROM peer WHERE is_deleted = 0 ORDER BY id",
-		"SELECT * FROM peer WHERE NOT is_deleted ORDER BY id",
-	))
+		"SELECT * FROM peer WHERE is_deleted = 0"+condition+" ORDER BY id",
+		"SELECT * FROM peer WHERE NOT is_deleted"+condition+" ORDER BY id",
+	), args...)
 	if err != nil {
 		return nil, fmt.Errorf("read the devices: %w", err)
 	}
@@ -85,10 +118,12 @@ func (e *Engine) parsePeer(row *goapi.Object) peer {
 	return p
 }
 
-// peerStats is getPeerStats(): {total, online, banned, offline}.
-func (e *Engine) peerStats(ctx context.Context) (*goapi.Object, error) {
+// peerStats is getPeerStats(): {total, online, banned, offline} of the
+// devices of the scope.
+func (e *Engine) peerStats(ctx context.Context, scope *access.DeviceScope) (*goapi.Object, error) {
 	e.sync(ctx)
 	var total, online, banned float64
+	condition, args := e.andInScope(scope, "id", nil)
 	if e.db.IsPostgres() {
 		rows, err := e.rows(ctx, `
                 SELECT
@@ -96,7 +131,7 @@ func (e *Engine) peerStats(ctx context.Context) (*goapi.Object, error) {
                     COUNT(*) FILTER (WHERE NOT is_deleted AND status_online) as online,
                     COUNT(*) FILTER (WHERE NOT is_deleted AND is_banned) as banned
                 FROM peer
-            `)
+            WHERE TRUE`+condition, args...)
 		if err != nil {
 			return nil, fmt.Errorf("count the devices: %w", err)
 		}
@@ -104,13 +139,13 @@ func (e *Engine) peerStats(ctx context.Context) (*goapi.Object, error) {
 		total, online, banned = e.clock.Number(r.Get("total")), e.clock.Number(r.Get("online")), e.clock.Number(r.Get("banned"))
 	} else {
 		var err error
-		if total, err = e.count(ctx, "SELECT COUNT(*) as c FROM peer WHERE is_deleted = 0"); err != nil {
+		if total, err = e.count(ctx, "SELECT COUNT(*) as c FROM peer WHERE is_deleted = 0"+condition, args...); err != nil {
 			return nil, err
 		}
-		if online, err = e.count(ctx, "SELECT COUNT(*) as c FROM peer WHERE is_deleted = 0 AND status_online = 1"); err != nil {
+		if online, err = e.count(ctx, "SELECT COUNT(*) as c FROM peer WHERE is_deleted = 0 AND status_online = 1"+condition, args...); err != nil {
 			return nil, err
 		}
-		if banned, err = e.count(ctx, "SELECT COUNT(*) as c FROM peer WHERE is_deleted = 0 AND is_banned = 1"); err != nil {
+		if banned, err = e.count(ctx, "SELECT COUNT(*) as c FROM peer WHERE is_deleted = 0 AND is_banned = 1"+condition, args...); err != nil {
 			return nil, err
 		}
 	}
@@ -118,8 +153,8 @@ func (e *Engine) peerStats(ctx context.Context) (*goapi.Object, error) {
 }
 
 // count runs a SQLite statement whose one row has the count in column c.
-func (e *Engine) count(ctx context.Context, query string) (float64, error) {
-	rows, err := e.rows(ctx, query)
+func (e *Engine) count(ctx context.Context, query string, args ...any) (float64, error) {
+	rows, err := e.rows(ctx, query, args...)
 	if err != nil {
 		return 0, fmt.Errorf("count: %w", err)
 	}
@@ -164,12 +199,14 @@ func bindValue(v any) jsbind.Value {
 }
 
 // allActivitySummaries is getAllActivitySummaries({from, to}): every
-// summary of the range, newest received first.
-func (e *Engine) allActivitySummaries(ctx context.Context, from, to string) ([]*goapi.Object, error) {
+// summary of the range and the scope, newest received first.
+func (e *Engine) allActivitySummaries(ctx context.Context, from, to string, scope *access.DeviceScope) ([]*goapi.Object, error) {
 	conditions, args, err := e.rangeArgs(from, to, " AND s.reported_at >= ?", " AND s.reported_at <= ?")
 	if err != nil {
 		return nil, err
 	}
+	inScope, args := e.andInScope(scope, "s.device_id", args)
+	conditions += inScope
 	query := `SELECT s.*, (
                 SELECT COUNT(*) FROM activity_sessions a
                 WHERE a.device_id = s.device_id
@@ -202,9 +239,11 @@ func (e *Engine) topApps(ctx context.Context, deviceID any, from, to string) ([]
 	return rows, nil
 }
 
-// dlpEventStats is getDlpEventStats(). On SQLite the sums of an empty
-// table are null, on PostgreSQL every count is a number.
-func (e *Engine) dlpEventStats(ctx context.Context) (*goapi.Object, error) {
+// dlpEventStats is getDlpEventStats() over the events of the scope. On
+// SQLite the sums of no events are null, on PostgreSQL every count is a
+// number.
+func (e *Engine) dlpEventStats(ctx context.Context, scope *access.DeviceScope) (*goapi.Object, error) {
+	condition, args := e.andInScope(scope, "device_id", nil)
 	rows, err := e.rows(ctx, e.db.Pick(`
                 SELECT
                     COUNT(*) AS total,
@@ -213,7 +252,7 @@ func (e *Engine) dlpEventStats(ctx context.Context) (*goapi.Object, error) {
                     SUM(CASE WHEN event_source = 'usb' THEN 1 ELSE 0 END) AS usb_events,
                     SUM(CASE WHEN event_source = 'file' THEN 1 ELSE 0 END) AS file_events
                 FROM dlp_events
-            `, `
+            WHERE 1=1`+condition, `
                 SELECT
                     COUNT(*)::INTEGER AS total,
                     COUNT(*) FILTER (WHERE action = 'block')::INTEGER AS blocked,
@@ -221,22 +260,23 @@ func (e *Engine) dlpEventStats(ctx context.Context) (*goapi.Object, error) {
                     COUNT(*) FILTER (WHERE event_source = 'usb')::INTEGER AS usb_events,
                     COUNT(*) FILTER (WHERE event_source = 'file')::INTEGER AS file_events
                 FROM dlp_events
-            `))
+            WHERE 1=1`+condition), args...)
 	if err != nil {
 		return nil, fmt.Errorf("count the data guard events: %w", err)
 	}
 	return rows[0], nil
 }
 
-// dlpEvents is getDlpEvents({limit}): the newest events. On SQLite
-// created_at is declared DATETIME, which the Go driver would turn into a
-// time; the second created_at (+created_at has no declared type) puts the
-// stored text in its place.
-func (e *Engine) dlpEvents(ctx context.Context, limit int) ([]*goapi.Object, error) {
+// dlpEvents is getDlpEvents({limit}): the newest events of the scope. On
+// SQLite created_at is declared DATETIME, which the Go driver would turn
+// into a time; the second created_at (+created_at has no declared type)
+// puts the stored text in its place.
+func (e *Engine) dlpEvents(ctx context.Context, limit int, scope *access.DeviceScope) ([]*goapi.Object, error) {
+	condition, args := e.andInScope(scope, "dlp_events.device_id", nil)
 	rows, err := e.rows(ctx, e.db.Pick(
-		"SELECT *, +created_at AS created_at FROM dlp_events WHERE 1=1 ORDER BY dlp_events.created_at DESC LIMIT ?",
-		"SELECT * FROM dlp_events WHERE 1=1 ORDER BY created_at DESC LIMIT ?",
-	), limit)
+		"SELECT *, +created_at AS created_at FROM dlp_events WHERE 1=1"+condition+" ORDER BY dlp_events.created_at DESC LIMIT ?",
+		"SELECT * FROM dlp_events WHERE 1=1"+condition+" ORDER BY created_at DESC LIMIT ?",
+	), append(args, limit)...)
 	if err != nil {
 		return nil, fmt.Errorf("read the data guard events: %w", err)
 	}
@@ -310,11 +350,12 @@ type inventory struct {
 	hardware any
 }
 
-// allInventories is getAllInventories(): every report, newest received
-// first, with its hardware parsed. A report whose hardware does not parse
-// is left out; the software is not read.
-func (e *Engine) allInventories(ctx context.Context) ([]inventory, error) {
-	rows, err := e.rows(ctx, "SELECT * FROM device_inventory ORDER BY received_at DESC")
+// allInventories is getAllInventories(): every report of the scope, newest
+// received first, with its hardware parsed. A report whose hardware does
+// not parse is left out; the software is not read.
+func (e *Engine) allInventories(ctx context.Context, scope *access.DeviceScope) ([]inventory, error) {
+	condition, args := e.andInScope(scope, "device_id", nil)
+	rows, err := e.rows(ctx, "SELECT * FROM device_inventory WHERE 1=1"+condition+" ORDER BY received_at DESC", args...)
 	if err != nil {
 		return nil, fmt.Errorf("read the inventory: %w", err)
 	}
@@ -350,9 +391,16 @@ func (e *Engine) alertRules(ctx context.Context) ([]*goapi.Object, error) {
 }
 
 // alertHistory is getAlertHistory() without filters: every alert with its
-// rule's name, newest first.
-func (e *Engine) alertHistory(ctx context.Context) ([]*goapi.Object, error) {
-	rows, err := e.rows(ctx, "SELECT h.*, r.name as rule_name FROM alert_history h LEFT JOIN alert_rules r ON h.rule_id = r.id WHERE 1=1 ORDER BY h.triggered_at DESC")
+// rule's name, newest first. A scope keeps the alerts of its devices and
+// those that name no device.
+func (e *Engine) alertHistory(ctx context.Context, scope *access.DeviceScope) ([]*goapi.Object, error) {
+	condition, arg, scoped := e.inScope(scope, "h.device_id")
+	var args []any
+	if scoped {
+		condition = " AND (h.device_id IS NULL OR " + condition + ")"
+		args = append(args, arg)
+	}
+	rows, err := e.rows(ctx, "SELECT h.*, r.name as rule_name FROM alert_history h LEFT JOIN alert_rules r ON h.rule_id = r.id WHERE 1=1"+condition+" ORDER BY h.triggered_at DESC", args...)
 	if err != nil {
 		return nil, fmt.Errorf("read the alert history: %w", err)
 	}
