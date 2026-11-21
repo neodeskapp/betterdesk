@@ -23,6 +23,7 @@ type WSConn struct {
 	Addr             string // remote address string (for logging)
 	writeMu          sync.Mutex
 	keepAliveHandler func()
+	readTimeout      time.Duration
 	connectedAt      time.Time
 	framesRead       int
 	framesWrite      int
@@ -40,10 +41,26 @@ func (c *WSConn) SetKeepAliveHandler(handler func()) {
 	c.keepAliveHandler = handler
 }
 
+// SetReadTimeout bounds the wait for each frame ReadMessage reads, empty
+// keepalive frames included; zero waits without limit. A frame that does not
+// arrive in time closes the connection.
+func (c *WSConn) SetReadTimeout(d time.Duration) {
+	c.readTimeout = d
+}
+
+func (c *WSConn) readFrame() (websocket.MessageType, []byte, error) {
+	if c.readTimeout <= 0 {
+		return c.WS.Read(c.Ctx)
+	}
+	ctx, cancel := context.WithTimeout(c.Ctx, c.readTimeout)
+	defer cancel()
+	return c.WS.Read(ctx)
+}
+
 // ReadMessage reads one binary WS frame and decodes it as a RendezvousMessage.
 func (c *WSConn) ReadMessage() (*pb.RendezvousMessage, error) {
 	for {
-		typ, data, err := c.WS.Read(c.Ctx)
+		typ, data, err := c.readFrame()
 		if err != nil {
 			return nil, fmt.Errorf("ws read: %w", err)
 		}

@@ -171,6 +171,11 @@ type Server struct {
 	networkPolicy *policy.NetworkResolver
 
 	billing *billing.Service
+
+	// wsConns and natConns count the open connections of the WebSocket
+	// signal port and the NAT test port.
+	wsConns  *connLimiter
+	natConns *connLimiter
 }
 
 // New creates a new signal server instance.
@@ -182,6 +187,8 @@ func New(cfg *config.Config, kp *crypto.KeyPair, database db.Database) *Server {
 		peers:         peer.NewMap(),
 		eventBus:      events.NewBus(),
 		networkPolicy: policy.NewNetworkResolver(database),
+		wsConns:       newConnLimiter(maxWSSignalConnsPerHost, maxWSSignalConns),
+		natConns:      newConnLimiter(maxNATConnsPerHost, maxNATConns),
 	}
 	if cfg != nil {
 		s.lanNet = parseLANMask(cfg.Mask)
@@ -928,7 +935,15 @@ func (s *Server) serveNAT() {
 				continue
 			}
 		}
-		go s.recoverMessagePanic("NAT", conn.RemoteAddr().String(), func() { s.handleNATConn(conn) })
+		host := hostFromAddrString(conn.RemoteAddr().String())
+		if !s.natConns.acquire(host) {
+			conn.Close()
+			continue
+		}
+		go func() {
+			defer s.natConns.release(host)
+			s.recoverMessagePanic("NAT", conn.RemoteAddr().String(), func() { s.handleNATConn(conn) })
+		}()
 	}
 }
 
@@ -937,7 +952,7 @@ func (s *Server) serveNAT() {
 func (s *Server) handleNATConn(conn net.Conn) {
 	defer conn.Close()
 
-	msg, err := codec.ReadRawProto(conn, 30*time.Second)
+	msg, err := codec.ReadRawProto(conn, natReadTimeout())
 	if err != nil {
 		return
 	}

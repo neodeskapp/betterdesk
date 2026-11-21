@@ -47,6 +47,29 @@ func setWSSignalIdleKeepAliveDelay(d time.Duration) (old time.Duration) {
 	return old
 }
 
+// Read deadlines of the WebSocket signal port and the NAT test port. A
+// WebSocket client must send its first frame within wsSignalFirstReadNs and
+// then a frame (keepalives count; the server sends one every few seconds and
+// clients answer) within wsSignalIdleReadNs. A NAT port client sends its one
+// request right after connecting.
+var (
+	wsSignalFirstReadNs = int64(30 * time.Second)
+	wsSignalIdleReadNs  = int64(2 * time.Minute)
+	natReadNs           = int64(10 * time.Second)
+)
+
+func wsSignalFirstReadTimeout() time.Duration {
+	return time.Duration(atomic.LoadInt64(&wsSignalFirstReadNs))
+}
+
+func wsSignalIdleReadTimeout() time.Duration {
+	return time.Duration(atomic.LoadInt64(&wsSignalIdleReadNs))
+}
+
+func natReadTimeout() time.Duration {
+	return time.Duration(atomic.LoadInt64(&natReadNs))
+}
+
 // serveWS starts the WebSocket signal listener (e.g., port 21118).
 // RustDesk web clients connect here for the same signal protocol,
 // using raw protobuf in binary WS frames (no 2-byte TCP header).
@@ -106,12 +129,20 @@ func (s *Server) handleWSUpgrade(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	remoteAddr := wsEffectiveRemoteAddr(r, s.cfg)
+	host := hostFromAddrString(remoteAddr)
+	if !s.wsConns.acquire(host) {
+		log.Printf("[signal] WS connection from %s refused: too many open connections", remoteAddr)
+		http.Error(w, "too many connections", http.StatusServiceUnavailable)
+		return
+	}
+	defer s.wsConns.release(host)
+
 	ws, err := websocket.Accept(w, r, opts)
 	if err != nil {
 		log.Printf("[signal] WS upgrade error: %v", err)
 		return
 	}
-	remoteAddr := wsEffectiveRemoteAddr(r, s.cfg)
 
 	log.Printf("[signal] WS upgrade remote=%s effective=%s path=%s origin=%q ua=%q xff=%q xri=%q",
 		r.RemoteAddr, remoteAddr, r.URL.Path,
@@ -221,6 +252,7 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 	go s.wsSignalKeepAlive(wsc, keepAliveDone, registered)
 	defer close(keepAliveDone)
 
+	wsc.SetReadTimeout(wsSignalFirstReadTimeout())
 	for {
 		msg, err := wsc.ReadMessage()
 		if err != nil {
@@ -236,6 +268,7 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 			}
 			return
 		}
+		wsc.SetReadTimeout(wsSignalIdleReadTimeout())
 
 		switch {
 		case msg.GetRegisterPeer() != nil:

@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/coder/websocket"
@@ -22,6 +23,14 @@ import (
 // MaxWSRelayMessage is the max WebSocket binary message size for relay data.
 // Matches RustDesk / support-agent MaxPeerFrameSize (16 MiB).
 const MaxWSRelayMessage = 16 * 1024 * 1024
+
+// wsFirstReadNs bounds the wait for a WebSocket client's first message
+// (RequestRelay or HealthCheck), in nanoseconds; tests shorten it.
+var wsFirstReadNs = int64(config.WSConnTimeout)
+
+func wsFirstReadTimeout() time.Duration {
+	return time.Duration(atomic.LoadInt64(&wsFirstReadNs))
+}
 
 // serveWS starts the WebSocket relay listener (e.g., port 21119).
 // RustDesk WebSocket Mode clients use this for relay traffic over WSS.
@@ -110,7 +119,9 @@ func (s *Server) handleWSRelayUpgrade(w http.ResponseWriter, r *http.Request) {
 
 	wsc := codec.NewWSConn(ws, s.ctx, remoteAddr)
 
-	// Read the first message — must be RequestRelay or HealthCheck
+	// Read the first message — must be RequestRelay or HealthCheck. It must
+	// come within wsFirstReadTimeout; after it the raw WebSocket is piped.
+	wsc.SetReadTimeout(wsFirstReadTimeout())
 	msg, err := wsc.ReadMessage()
 	if err != nil {
 		log.Printf("[relay] WS ReadMessage failed from %s: %v", remoteAddr, err)

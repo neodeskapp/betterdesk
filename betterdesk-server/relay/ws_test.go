@@ -3,8 +3,10 @@ package relay
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -339,5 +341,36 @@ func TestRelayBridgesMixedTCPAndWS(t *testing.T) {
 	}
 	if !bytes.Equal(gotTCP, payloadWS) {
 		t.Fatalf("TCP got %q, want %q", gotTCP, payloadWS)
+	}
+}
+
+// A WebSocket client that never sends its RequestRelay is closed after the
+// first-read deadline instead of holding the socket for ever.
+func TestWSRelayClosesSilentClient(t *testing.T) {
+	old := atomic.SwapInt64(&wsFirstReadNs, int64(200*time.Millisecond))
+	t.Cleanup(func() { atomic.StoreInt64(&wsFirstReadNs, old) })
+	cfg := config.DefaultConfig()
+	cfg.RelayPort = 29470
+
+	srv := New(cfg)
+	ctx := t.Context()
+	if err := srv.Start(ctx); err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Stop()
+	time.Sleep(200 * time.Millisecond)
+
+	ws, _, err := websocket.Dial(ctx, fmt.Sprintf("ws://127.0.0.1:%d/", cfg.WSRelayPort()), nil)
+	if err != nil {
+		t.Fatalf("WS dial: %v", err)
+	}
+	defer ws.CloseNow()
+
+	readCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	start := time.Now()
+	_, _, err = ws.Read(readCtx)
+	if err == nil || errors.Is(err, context.DeadlineExceeded) || time.Since(start) > 2*time.Second {
+		t.Fatalf("silent client still connected after %s (err=%v)", time.Since(start).Round(time.Millisecond), err)
 	}
 }
