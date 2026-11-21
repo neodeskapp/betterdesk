@@ -361,10 +361,16 @@ func (s *Server) handleTestLDAPConnection(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// If password is masked, use current stored password
+	// A masked or empty password stands for the stored one, but only for the
+	// stored host and bind DN: a test against another host or account must
+	// bring its own password, or the stored one would go to that host.
 	if cfg.BindPassword == "••••••••" || cfg.BindPassword == "" {
-		currentCfg := s.loadLDAPConfigFromDB()
-		cfg.BindPassword = currentCfg.BindPassword
+		cfg.BindPassword = ""
+		stored := s.loadLDAPConfigFromDB()
+		if strings.EqualFold(strings.TrimSpace(cfg.Host), strings.TrimSpace(stored.Host)) &&
+			strings.TrimSpace(cfg.BindDN) == strings.TrimSpace(stored.BindDN) {
+			cfg.BindPassword = stored.BindPassword
+		}
 	}
 
 	if cfg.Host == "" {
