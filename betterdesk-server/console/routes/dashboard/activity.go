@@ -3,6 +3,7 @@ package dashboard
 import (
 	"net/http"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
 )
@@ -18,7 +19,8 @@ type activityAnswer struct {
 // activity answers GET /api/dashboard/activity: the ten newest entries of
 // the server's audit log, and when it has none, of the console's own. An
 // account limited to some devices gets none of the server's entries about
-// a device outside its scope.
+// a device outside its scope; entries about something that is no device,
+// such as a setting, stay.
 func (h *handlers) activity(w http.ResponseWriter, r *http.Request) {
 	scope, err := h.scope(r)
 	if err != nil {
@@ -27,9 +29,10 @@ func (h *handlers) activity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	all := serverEvents(h.d.GoAPI.GetAuditEvents(r.Context(), float64(feedLength)))
+	hidden := h.devicesOutside(r, scope)
 	events := make([]*goapi.Object, 0, len(all))
 	for _, event := range all {
-		if device := event.Get("device_id"); !goapi.Truthy(device) || scope.Has(event.Str("device_id")) {
+		if !hidden[event.Str("device_id")] {
 			events = append(events, event)
 		}
 	}
@@ -43,6 +46,21 @@ func (h *handlers) activity(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	kit.JSON(w, r, http.StatusOK, activityAnswer{Success: true, Events: events})
+}
+
+// devicesOutside is the set of ids of the devices, deleted ones included,
+// that are outside a limited scope; nil for a scope without a limit.
+func (h *handlers) devicesOutside(r *http.Request, scope *access.DeviceScope) map[string]bool {
+	if scope == nil || h.d.Backend == nil {
+		return nil
+	}
+	out := map[string]bool{}
+	for _, device := range h.d.Backend.GetAllDevices(r.Context(), goapi.DeviceFilters{IncludeDeleted: true}) {
+		if id := device.Str("id"); id != "" && !scope.Has(id) {
+			out[id] = true
+		}
+	}
+	return out
 }
 
 // or is JavaScript's a || b || ...: the first value that is truthy, else

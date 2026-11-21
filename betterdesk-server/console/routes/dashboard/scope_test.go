@@ -13,14 +13,15 @@ import (
 
 // TestFeedAndCountsKeepToTheScope: an account limited to some devices
 // gets the device counts of those, and no entry of the activity feed
-// about a device outside its scope; entries without a device stay. The
+// about a device outside its scope; entries without a device, or about
+// something that is no device (a setting), stay. The
 // viewer, whose scope has every device, gets all of them (BUGS RV64).
 func TestFeedAndCountsKeepToTheScope(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		api := routetest.NewAPI()
 		api.Fallback = func(c routetest.Call) routetest.Reply {
 			switch {
-			case c.Method == "GET" && c.Target == "/api/peers":
+			case c.Method == "GET" && (c.Target == "/api/peers" || c.Target == "/api/peers?include_deleted=true"):
 				return routetest.Reply{Status: 200, Body: `{"peers":[{"id":"A","hostname":"a","live_online":true},{"id":"C","hostname":"c","live_online":true,"banned":true,"note":"x"}]}`}
 			case c.Method == "GET" && strings.HasPrefix(c.Target, "/api/remote-targets"):
 				return routetest.Reply{Status: 200, Body: `{"targets":[]}`}
@@ -28,7 +29,8 @@ func TestFeedAndCountsKeepToTheScope(t *testing.T) {
 				return routetest.Reply{Status: 200, Body: `{"events":[` +
 					`{"action":"peer_banned","target":"C","details":{"reason":"secret reason for C"}},` +
 					`{"action":"peer_banned","target":"A","details":{"reason":"reason for A"}},` +
-					`{"action":"config_changed","details":{"message":"relay changed"}}]}`}
+					`{"action":"config_changed","details":{"message":"relay changed"}},` +
+					`{"action":"config_changed","target":"availability_history_enabled","details":{"message":"setting changed"}}]}`}
 			}
 			return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
 		}
@@ -44,7 +46,7 @@ func TestFeedAndCountsKeepToTheScope(t *testing.T) {
 		}
 		operator, viewer := w.As("operator"), w.As("viewer")
 		feed := operator.Do("GET", "/api/dashboard/activity", "")
-		if feed.Status != http.StatusOK || strings.Contains(feed.Body, "secret reason") || !strings.Contains(feed.Body, "reason for A") || !strings.Contains(feed.Body, "relay changed") {
+		if feed.Status != http.StatusOK || strings.Contains(feed.Body, "secret reason") || !strings.Contains(feed.Body, "reason for A") || !strings.Contains(feed.Body, "relay changed") || !strings.Contains(feed.Body, "setting changed") {
 			t.Errorf("the operator's feed: %d %s", feed.Status, feed.Body)
 		}
 		if got := viewer.Do("GET", "/api/dashboard/activity", ""); !strings.Contains(got.Body, "secret reason") || !strings.Contains(got.Body, "reason for A") {
