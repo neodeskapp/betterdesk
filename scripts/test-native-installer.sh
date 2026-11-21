@@ -281,15 +281,89 @@ FAKE_MIGRATE
 
     # the check for an outdated binary
     : > "$calls"
-    migrate_sqlite_to_postgresql > /dev/null 2>&1 || true
+    migrate_sqlite_to_postgresql < /dev/null > /dev/null 2>&1 || true
     grep -qx -- "-h" "$calls" || fail "the binary check did not ask for -h: $(cat "$calls")"
     if grep -q "/dev/null" "$calls"; then
         fail "the binary check still backs up /dev/null"
     fi
 )
 
+# RV81: the install's switch to PostgreSQL moves the whole SQLite install
+# with sqlite2pg, passes -overwrite only for a database it created itself
+# or after the user agreed, and points .env at PostgreSQL only after the
+# move succeeded; when it fails the install stays on its SQLite file.
+test_postgresql_switch() (
+    local temp_dir calls
+    temp_dir=$(mktemp -d)
+    trap 'rm -rf "$temp_dir"' EXIT
+    calls="$temp_dir/calls"
+    mkdir -p "$temp_dir/betterdesk-server/tools/migrate" "$temp_dir/rustdesk" "$temp_dir/console"
+    cat > "$temp_dir/betterdesk-server/tools/migrate/migrate-linux-amd64" <<FAKE_MIGRATE
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> "$calls"
+case "\${1:-}\${2:-}" in
+    -h) printf 'Usage of migrate:\n  -mode string\n  -overwrite\n' >&2; exit 0 ;;
+    -modesqlite2pg) exit "\$(cat "$temp_dir/exit")" ;;
+esac
+exit 0
+FAKE_MIGRATE
+    chmod +x "$temp_dir/betterdesk-server/tools/migrate/migrate-linux-amd64"
+
+    set --
+    # shellcheck disable=SC1091
+    source "$SCRIPT_ROOT/betterdesk.sh"
+    SCRIPT_DIR="$temp_dir"
+    RUSTDESK_PATH="$temp_dir/rustdesk"
+    CONSOLE_PATH="$temp_dir/console"
+    LOG_FILE="$temp_dir/log"
+    local src="$RUSTDESK_PATH/db_v2.sqlite3" env="$CONSOLE_PATH/.env"
+    local uri="postgres://u:p&q@h/db?sslmode=disable"
+    printf 'db' > "$src"
+
+    # run_switch EXIT CREATED AUTO INPUT: the switch as the install runs it,
+    # with the tool exiting EXIT and .env written for PostgreSQL by the
+    # console folder's setup.
+    run_switch() {
+        : > "$calls"
+        printf '%s' "$1" > "$temp_dir/exit"
+        printf 'SESSION_SECRET=kept\nDB_TYPE=postgres\nDATABASE_URL=%s\nDB_URL=%s\n' "$uri" "$uri" > "$env"
+        USE_POSTGRESQL=true POSTGRESQL_URI="$uri" POSTGRESQL_DB_CREATED="$2" AUTO_MODE="$3"
+        migrate_sqlite_to_postgresql <<< "$4" > /dev/null 2>&1
+    }
+    moves() { grep -E -- '-mode (sqlite2pg|nodejs2go)' "$calls" || true; }
+
+    # a database the install just created
+    run_switch 0 true true ""
+    [ "$(moves)" = "-mode sqlite2pg -src $src -dst $uri -overwrite" ] \
+        || fail "the switch into a database it created ran as: $(moves)"
+    grep -q -- "-mode backup -src $src" "$calls" || fail "the switch made no backup first: $(cat "$calls")"
+    [ "$USE_POSTGRESQL" = true ] || fail "after a move the install does not use PostgreSQL"
+    grep -qxF "DB_URL=$uri" "$env" && grep -qx "DB_TYPE=postgres" "$env" && grep -qxF "DATABASE_URL=$uri" "$env" \
+        || fail "after a move .env does not point at PostgreSQL: $(cat "$env")"
+    grep -qx "SESSION_SECRET=kept" "$env" || fail "the switch lost a line of .env"
+
+    # a database that was there: -overwrite only after a yes
+    run_switch 0 false true ""
+    [ "$(moves)" = "-mode sqlite2pg -src $src -dst $uri" ] \
+        || fail "the unattended switch into an existing database ran as: $(moves)"
+    run_switch 0 false false $'y\ny'
+    [ "$(moves)" = "-mode sqlite2pg -src $src -dst $uri -overwrite" ] \
+        || fail "the switch after an agreed replace ran as: $(moves)"
+    run_switch 0 false false $'y\nn'
+    [ "$(moves)" = "-mode sqlite2pg -src $src -dst $uri" ] \
+        || fail "the switch after a declined replace ran as: $(moves)"
+
+    # a failed move leaves the install on SQLite
+    run_switch 1 true true ""
+    [ "$USE_POSTGRESQL" = false ] && [ -z "$POSTGRESQL_URI" ] \
+        || fail "after a failed move the install still uses PostgreSQL ($USE_POSTGRESQL, $POSTGRESQL_URI)"
+    grep -qxF "DB_URL=$src" "$env" && grep -qx "DB_TYPE=sqlite" "$env" && grep -qx "DATABASE_URL=" "$env" \
+        || fail "after a failed move .env does not point at the SQLite file: $(cat "$env")"
+)
+
 test_bounded_go_commands
 test_dirty_native_clone
 test_native_update_channel
 test_migration_menus
+test_postgresql_switch
 printf 'PASS: native installer regression tests\n'

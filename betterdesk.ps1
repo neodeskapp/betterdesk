@@ -2471,60 +2471,61 @@ function Setup-PostgreSQLDatabase {
 }
 
 function Migrate-SQLiteToPostgreSQL {
-    Print-Step "Migrating existing SQLite data to PostgreSQL..."
-    
+    Print-Step "Moving the existing SQLite install to PostgreSQL..."
+
     $sqliteDb = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
-    
+
     if (-not (Test-Path $sqliteDb)) {
         Print-Info "No existing SQLite database found, skipping migration"
         return
     }
-    
-    # Find migration binary
-    $migrateBin = $null
-    $migratePaths = @(
-        (Join-Path $script:ScriptDir "betterdesk-server\tools\migrate\migrate.exe"),
-        (Join-Path $script:ScriptDir "tools\migrate\migrate.exe")
-    )
-    
-    foreach ($path in $migratePaths) {
-        if (Test-Path $path) {
-            $migrateBin = $path
-            break
-        }
-    }
-    
+
+    $migrateBin = Get-MigrateBin
     if (-not $migrateBin) {
-        Print-Warning "Migration binary not found, skipping automatic migration"
-        Print-Info "You can migrate manually using: M -> 3 (SQLite -> PostgreSQL)"
+        Print-Warning "Migration binary not found: the server keeps using $sqliteDb"
+        Print-Info "Move it later with: M -> 3 (SQLite -> PostgreSQL)"
+        Use-SQLiteInstall $sqliteDb
         return
     }
-    
-    # Check if SQLite has data
-    try {
-        $peerCount = & sqlite3 $sqliteDb "SELECT COUNT(*) FROM peer;" 2>$null
-    } catch {
-        $peerCount = 0
+
+    if (-not $script:AUTO_MODE -and -not (Confirm-Action "Move the existing SQLite install (every server and console table) to PostgreSQL?")) {
+        Print-Info "The SQLite data stays where it is; PostgreSQL starts empty"
+        return
     }
-    
-    if ($peerCount -gt 0) {
-        Print-Info "Found $peerCount devices in SQLite database"
-        
-        if ($script:AUTO_MODE -or (Confirm-Action "Migrate existing data to PostgreSQL?")) {
-            Print-Step "Creating backup before migration..."
-            & $migrateBin -mode backup -src $sqliteDb 2>&1 | Out-Null
-            
-            Print-Step "Running SQLite -> PostgreSQL migration..."
-            $result = & $migrateBin -mode nodejs2go -src $sqliteDb -dst $script:POSTGRESQL_URI 2>&1
-            if ($LASTEXITCODE -eq 0) {
-                Print-Success "Migration completed! $peerCount devices migrated."
-            } else {
-                Print-Warning "Migration had issues: $result"
-            }
-        }
+
+    # The installer does not create the database on Windows, so -overwrite
+    # only after the user agreed: otherwise the tool refuses a database with
+    # rows in it
+    $migrateArgs = @("-mode", "sqlite2pg", "-src", $sqliteDb, "-dst", $script:POSTGRESQL_URI)
+    if (-not $script:AUTO_MODE -and (Confirm-Action "If the PostgreSQL database already holds data, replace all of it?")) {
+        $migrateArgs += "-overwrite"
+    }
+
+    Print-Step "Creating backup before migration..."
+    & $migrateBin -mode backup -src $sqliteDb 2>&1 | Out-Null
+
+    Print-Step "Moving the SQLite install to PostgreSQL..."
+    & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
+    if ($LASTEXITCODE -eq 0) {
+        Set-ConsoleEnvValue -Key "DB_TYPE" -Value "postgres"
+        Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $script:POSTGRESQL_URI
+        Set-ConsoleEnvValue -Key "DB_URL" -Value $script:POSTGRESQL_URI
+        Print-Success "The install now runs on PostgreSQL"
     } else {
-        Print-Info "SQLite database is empty, no migration needed"
+        Print-Warning "The move to PostgreSQL failed (output above): the server keeps using $sqliteDb"
+        Use-SQLiteInstall $sqliteDb
     }
+}
+
+# Use-SQLiteInstall keeps the install on its SQLite file after the move to
+# PostgreSQL did not happen.
+function Use-SQLiteInstall {
+    param([string]$Path)
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ""
+    Set-ConsoleEnvValue -Key "DB_TYPE" -Value "sqlite"
+    Set-ConsoleEnvValue -Key "DATABASE_URL" -Value ""
+    Set-ConsoleEnvValue -Key "DB_URL" -Value $Path
 }
 
 function Set-ConsoleEnvValue {

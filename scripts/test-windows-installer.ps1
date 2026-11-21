@@ -210,10 +210,66 @@ function Test-MigrationMenusPassOverwrite {
     Remove-Item -Recurse -Force $dir
 }
 
+# RV81: the install's switch to PostgreSQL moves the whole SQLite install
+# with sqlite2pg, passes -overwrite only after the user agreed (the
+# installer does not create the database on Windows), and points .env at
+# PostgreSQL only after the move succeeded; when it fails the install stays
+# on its SQLite file.
+function Test-PostgreSQLSwitchMovesTheWholeInstall {
+    $dir = New-TestInstall
+    $script:migrateCalls = @()
+    $script:migrateExit = 0
+    function Get-MigrateBin { return 'fake-migrate' }
+    function fake-migrate {
+        $script:migrateCalls += ($args -join ' ')
+        $global:LASTEXITCODE = if ($args[1] -eq 'sqlite2pg') { $script:migrateExit } else { 0 }
+    }
+    function Read-Host { param($Prompt) if ($script:answers.Count -gt 0) { $script:answers.Dequeue() } else { '' } }
+    $src = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    $uri = 'postgres://u:p@h/db?sslmode=disable'
+    Set-Content -Path $src -Value 'db'
+    function Invoke-Switch([int]$Exit, [bool]$Auto, [string[]]$Answers) {
+        $script:migrateCalls = @()
+        $script:migrateExit = $Exit
+        $script:answers = New-Object System.Collections.Queue
+        foreach ($a in $Answers) { $script:answers.Enqueue($a) }
+        Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'DB_TYPE=postgres', "DATABASE_URL=$uri", "DB_URL=$uri")
+        $script:USE_POSTGRESQL = $true
+        $script:POSTGRESQL_URI = $uri
+        $script:AUTO_MODE = $Auto
+        Migrate-SQLiteToPostgreSQL *> $null
+        return @($script:migrateCalls | Where-Object { $_ -match '-mode (sqlite2pg|nodejs2go)' })
+    }
+
+    $runs = Invoke-Switch 0 $true @()
+    if ("$runs" -ne "-mode sqlite2pg -src $src -dst $uri") { Fail "the unattended switch ran as: $runs" }
+    if (-not ($script:migrateCalls -contains "-mode backup -src $src")) { Fail "the switch made no backup first: $($script:migrateCalls)" }
+    if (-not $script:USE_POSTGRESQL) { Fail 'after a move the install does not use PostgreSQL' }
+    if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'postgres' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne $uri -or (Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne $uri) {
+        Fail "after a move .env does not point at PostgreSQL: $(Get-Content $envFile)"
+    }
+    if ((Get-ConsoleEnvValue -Key 'SESSION_SECRET') -ne 'kept') { Fail 'the switch lost a line of .env' }
+
+    $runs = Invoke-Switch 0 $false @('y', 'y')
+    if ("$runs" -ne "-mode sqlite2pg -src $src -dst $uri -overwrite") { Fail "the switch after an agreed replace ran as: $runs" }
+    $runs = Invoke-Switch 0 $false @('y', 'n')
+    if ("$runs" -ne "-mode sqlite2pg -src $src -dst $uri") { Fail "the switch after a declined replace ran as: $runs" }
+
+    $runs = Invoke-Switch 1 $true @()
+    if ($script:USE_POSTGRESQL -or $script:POSTGRESQL_URI) { Fail "after a failed move the install still uses PostgreSQL ($($script:USE_POSTGRESQL), $($script:POSTGRESQL_URI))" }
+    if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'sqlite' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne $src -or (Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne '') {
+        Fail "after a failed move .env does not point at the SQLite file: $(Get-Content $envFile)"
+    }
+    $script:AUTO_MODE = $true
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
 Test-ConsoleHomeCopiesNoConsoleFiles
 Test-MigrationMenusPassOverwrite
+Test-PostgreSQLSwitchMovesTheWholeInstall
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

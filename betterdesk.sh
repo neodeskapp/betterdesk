@@ -280,6 +280,7 @@ GO_UPGRADE_RECORD=".go-upgrade.json"
 # Database configuration
 USE_POSTGRESQL="${USE_POSTGRESQL:-false}"  # true = PostgreSQL, false = SQLite
 POSTGRESQL_URI="${POSTGRESQL_URI:-}"       # postgres://user:pass@host:5432/dbname
+POSTGRESQL_DB_CREATED=false                # this run created the (empty) database
 POSTGRESQL_USER="${POSTGRESQL_USER:-betterdesk}"
 POSTGRESQL_PASS="${POSTGRESQL_PASS:-}"
 POSTGRESQL_DB="${POSTGRESQL_DB:-betterdesk}"
@@ -3543,9 +3544,12 @@ setup_postgresql_database() {
     }
     
     print_step "Creating PostgreSQL database '$POSTGRESQL_DB'..."
-    sudo -u postgres psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"$POSTGRESQL_DB\" OWNER \"$POSTGRESQL_USER\";" 2>/dev/null || {
+    POSTGRESQL_DB_CREATED=false
+    if sudo -u postgres psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"$POSTGRESQL_DB\" OWNER \"$POSTGRESQL_USER\";" 2>/dev/null; then
+        POSTGRESQL_DB_CREATED=true
+    else
         print_warning "Database might already exist"
-    }
+    fi
     
     if ! ensure_postgresql_local_hba_rules; then
         print_error "PostgreSQL authentication setup failed"
@@ -3656,8 +3660,9 @@ migrate_sqlite_to_postgresql() {
     fi
     
     if [ -z "$migrate_bin" ]; then
-        print_warning "Migration binary not found, skipping automatic migration"
-        print_info "You can migrate manually using: M -> 3 (SQLite → PostgreSQL)"
+        print_warning "Migration binary not found: the server keeps using $sqlite_db"
+        print_info "Move it later with: M -> 3 (SQLite → PostgreSQL)"
+        keep_sqlite_install "$sqlite_db"
         return 0
     fi
     
@@ -3665,32 +3670,60 @@ migrate_sqlite_to_postgresql() {
     
     # Verify binary supports -mode flag (in case of outdated binary)
     if ! "$migrate_bin" -h 2>&1 | grep -q -- "-mode"; then
-        print_warning "Migration binary is outdated (missing -mode flag)"
+        print_warning "Migration binary is outdated (missing -mode flag): the server keeps using $sqlite_db"
         print_info "Rebuild with: cd betterdesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
+        keep_sqlite_install "$sqlite_db"
         return 0
     fi
     
-    # Check if SQLite has data
-    local peer_count
-    peer_count=$(sqlite3 "$sqlite_db" "SELECT COUNT(*) FROM peer;" 2>/dev/null || echo "0")
-    
-    if [ "$peer_count" -gt 0 ]; then
-        print_info "Found $peer_count devices in SQLite database"
-        
-        if [ "$AUTO_MODE" = true ] || confirm "Migrate existing data to PostgreSQL?"; then
-            print_step "Creating backup before migration..."
-            "$migrate_bin" -mode backup -src "$sqlite_db" 2>&1 || true
-            
-            print_step "Running SQLite → PostgreSQL migration (nodejs2go mode)..."
-            if "$migrate_bin" -mode nodejs2go -src "$sqlite_db" -dst "$POSTGRESQL_URI" 2>&1; then
-                print_success "Migration completed! $peer_count devices migrated."
-            else
-                print_warning "Migration had issues, check output above"
-            fi
-        fi
-    else
-        print_info "SQLite database is empty, no migration needed"
+    if [ "$AUTO_MODE" != true ] && ! confirm "Move the existing SQLite install (every server and console table) to PostgreSQL?"; then
+        print_info "The SQLite data stays where it is; PostgreSQL starts empty"
+        return 0
     fi
+
+    # -overwrite only for a database this run created itself, or after the
+    # user agreed: otherwise the tool refuses a database with rows in it
+    local overwrite=""
+    if [ "$POSTGRESQL_DB_CREATED" = true ]; then
+        overwrite="-overwrite"
+    elif [ "$AUTO_MODE" != true ] && confirm "If the PostgreSQL database already holds data, replace all of it?"; then
+        overwrite="-overwrite"
+    fi
+
+    print_step "Creating backup before migration..."
+    "$migrate_bin" -mode backup -src "$sqlite_db" 2>&1 || true
+
+    print_step "Moving the SQLite install to PostgreSQL..."
+    if "$migrate_bin" -mode sqlite2pg -src "$sqlite_db" -dst "$POSTGRESQL_URI" ${overwrite:+"$overwrite"} 2>&1; then
+        use_database_in_env postgres "$POSTGRESQL_URI"
+        print_success "The install now runs on PostgreSQL"
+    else
+        print_warning "The move to PostgreSQL failed (output above): the server keeps using $sqlite_db"
+        keep_sqlite_install "$sqlite_db"
+    fi
+}
+
+# use_database_in_env postgres URI | sqlite PATH: points the console's .env
+# (DB_TYPE, DATABASE_URL, DB_URL) at the database the server is to use.
+use_database_in_env() {
+    local env_file="$CONSOLE_PATH/.env" key url=""
+    [ -f "$env_file" ] || return 0
+    [ "$1" = postgres ] && url="$2"
+    # The lines are written anew instead of edited with sed, so an address
+    # with & or | in it stays as it is
+    for key in DB_TYPE DATABASE_URL DB_URL; do
+        _remove_env_line "$env_file" "$key"
+    done
+    [ -z "$(tail -c1 "$env_file")" ] || echo >> "$env_file"
+    printf 'DB_TYPE=%s\nDATABASE_URL=%s\nDB_URL=%s\n' "$1" "$url" "$2" >> "$env_file"
+}
+
+# keep_sqlite_install PATH: the install stays on its SQLite file after the
+# move to PostgreSQL did not happen.
+keep_sqlite_install() {
+    USE_POSTGRESQL="false"
+    POSTGRESQL_URI=""
+    use_database_in_env sqlite "$1"
 }
 
 #===============================================================================
