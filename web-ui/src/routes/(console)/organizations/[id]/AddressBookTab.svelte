@@ -58,6 +58,8 @@
 		id: string;
 		alias: string;
 		tags: string;
+		/** The contact's fields the table does not show */
+		extra?: Record<string, unknown>;
 	}
 	interface Values {
 		enabled: boolean;
@@ -67,16 +69,31 @@
 	}
 
 	let seq = 0;
+	/** The book's fields besides peers and tags: kept so a save from the table writes them back */
+	let bookExtra: Record<string, unknown> | undefined;
 	const toRows = (book: Book): Row[] =>
-		book.peers.map((p) => ({ key: ++seq, id: p.id, alias: p.alias, tags: p.tags.join(', ') }));
+		book.peers.map((p) => ({
+			key: ++seq,
+			id: p.id,
+			alias: p.alias,
+			tags: p.tags.join(', '),
+			extra: p.extra
+		}));
 	const toBook = (v: Values): Book => ({
-		peers: v.peers.map((r) => ({ id: r.id.trim(), alias: r.alias.trim(), tags: splitTags(r.tags) })),
-		tags: splitTags(v.tags)
+		peers: v.peers.map((r) => ({
+			id: r.id.trim(),
+			alias: r.alias.trim(),
+			tags: splitTags(r.tags),
+			extra: r.extra
+		})),
+		tags: splitTags(v.tags),
+		extra: bookExtra
 	});
 
 	let phase = $state<'loading' | 'ok' | 'error'>('loading');
 	let loadError = $state('');
-	let passwords = $state.raw(new Set<string>());
+	/** Contacts with a saved password; null when they could not be read (they need org.manage_devices) */
+	let passwords = $state.raw<Set<string> | null>(new Set<string>());
 	let asJson = $state(false);
 
 	const form = createForm<Values>({
@@ -112,9 +129,10 @@
 		try {
 			const [ab, creds] = await Promise.all([
 				getAddressBook(orgId),
-				listPeerCredentials(orgId).catch(() => new Set<string>()) // optional on older servers
+				listPeerCredentials(orgId).catch(() => null) // not readable here: shown as unknown
 			]);
 			const book = parseBook(ab.data);
+			bookExtra = book.extra;
 			passwords = creds;
 			asJson = false;
 			form.reset({
@@ -190,7 +208,7 @@
 		}
 		try {
 			await setPeerCredential(orgId, id, password.trim());
-			passwords = new Set([...passwords, id]);
+			if (passwords) passwords = new Set([...passwords, id]);
 			toast.success(t('organizations.address_book_password_saved'));
 		} catch (err) {
 			toast.error(
@@ -213,7 +231,7 @@
 		if (!ok) return;
 		try {
 			await clearPeerCredential(orgId, id);
-			passwords = new Set([...passwords].filter((p) => p !== id));
+			if (passwords) passwords = new Set([...passwords].filter((p) => p !== id));
 			toast.success(t('organizations.address_book_password_cleared'));
 		} catch (err) {
 			toast.error(
@@ -237,6 +255,7 @@
 			form.setError('json', t(BOOK_ERROR_KEYS[checked.error]));
 			return;
 		}
+		bookExtra = checked.book.extra;
 		form.values.peers = toRows(checked.book);
 		form.values.tags = checked.book.tags.join(', ');
 		asJson = false;
@@ -283,11 +302,11 @@
 {#snippet aliasRead(row: Row)}{#if row.alias}{row.alias}{:else}<Empty />{/if}{/snippet}
 {#snippet tagsRead(row: Row)}{#if row.tags}<TagSet tags={splitTags(row.tags)} />{:else}<Empty
 		/>{/if}{/snippet}
-{#snippet passwordCell(row: Row)}<BooleanStatus
-		value={!!row.id.trim() && passwords.has(row.id.trim())}
-		on={t('organizations.address_book_password_set')}
-		off={t('organizations.address_book_password_unset')}
-	/>{/snippet}
+{#snippet passwordCell(row: Row)}{#if passwords}<BooleanStatus
+			value={!!row.id.trim() && passwords.has(row.id.trim())}
+			on={t('organizations.address_book_password_set')}
+			off={t('organizations.address_book_password_unset')}
+		/>{:else}<Empty />{/if}{/snippet}
 {#snippet rowMenu(row: Row)}<MenuButton
 		kebab
 		label={t('organizations.actions_for', { name: row.id || row.alias || String(rowNumber(row)) })}
@@ -295,7 +314,7 @@
 		<MenuItem icon={ICONS.password} onselect={() => void setPassword(row)}
 			>{t('organizations.address_book_set_password')}</MenuItem
 		>
-		{#if row.id.trim() && passwords.has(row.id.trim())}
+		{#if row.id.trim() && passwords?.has(row.id.trim())}
 			<MenuItem icon={ICONS.delete} onselect={() => void clearPassword(row)}
 				>{t('organizations.address_book_clear_password')}</MenuItem
 			>

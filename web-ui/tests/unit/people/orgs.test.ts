@@ -157,6 +157,26 @@ describe('shared address book', () => {
 		});
 	});
 
+	test('fields the table does not show come back unchanged when the table view saves', () => {
+		const stored = {
+			peers: [{ id: '1', alias: 'Desk', hash: 'abc', platform: 'Windows', tags: [] }],
+			tags: ['Office'],
+			tag_colors: { Office: 1 }
+		};
+		const book = parseBook(JSON.stringify(stored));
+		const edited = { ...book, peers: book.peers.map((p) => ({ ...p, alias: 'Front desk' })) };
+		expect(bookPayload(edited)).toEqual({
+			peers: [{ id: '1', alias: 'Front desk', hash: 'abc', platform: 'Windows' }],
+			tags: ['Office'],
+			tag_colors: { Office: 1 }
+		});
+		expect(JSON.parse(bookJson(book))).toEqual({
+			peers: [{ id: '1', alias: 'Desk', hash: 'abc', platform: 'Windows' }],
+			tags: ['Office'],
+			tag_colors: { Office: 1 }
+		});
+	});
+
 	test('the JSON editor refuses what the server would store wrongly', () => {
 		expect(checkBookJson('{oops')).toEqual({ error: 'invalid_json' });
 		expect(checkBookJson('[1,2]')).toEqual({ error: 'invalid_json' });

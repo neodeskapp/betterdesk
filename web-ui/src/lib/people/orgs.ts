@@ -106,11 +106,21 @@ export interface BookPeer {
 	id: string;
 	alias: string;
 	tags: string[];
+	/** Fields of the contact the table does not show, written back as they came */
+	extra?: Record<string, unknown>;
 }
 
 export interface Book {
 	peers: BookPeer[];
 	tags: string[];
+	/** Fields of the book besides peers and tags, written back as they came */
+	extra?: Record<string, unknown>;
+}
+
+/** The members of `obj` other than `known`; undefined when there are none */
+function others(obj: Record<string, unknown>, known: readonly string[]): Record<string, unknown> | undefined {
+	const rest = Object.fromEntries(Object.entries(obj).filter(([k]) => !known.includes(k)));
+	return Object.keys(rest).length ? rest : undefined;
 }
 
 const splitTags = (text: string) =>
@@ -131,28 +141,37 @@ export function parseBook(raw: unknown): Book {
 	const peers = Array.isArray(obj.peers)
 		? obj.peers.map((p) => {
 				const peer = (p && typeof p === 'object' ? p : {}) as Record<string, unknown>;
-				return {
+				const out: BookPeer = {
 					id: String(peer.id ?? '').trim(),
 					alias: String(peer.alias ?? '').trim(),
 					tags: Array.isArray(peer.tags) ? peer.tags.map(String) : []
 				};
+				const extra = others(peer, ['id', 'alias', 'tags']);
+				if (extra) out.extra = extra;
+				return out;
 			})
 		: [];
 	const tags = Array.isArray(obj.tags) ? obj.tags.map(String) : [];
-	return { peers, tags };
+	const extra = others(obj, ['peers', 'tags']);
+	return extra ? { peers, tags, extra } : { peers, tags };
 }
 
-/** What the server stores: peers without an ID are dropped, empty alias and tags left out */
-export function bookPayload(book: Book): { peers: Record<string, unknown>[]; tags: string[] } {
+/**
+ * What the server stores: peers without an ID are dropped, empty alias and
+ * tags left out, the fields the table does not show kept as they came
+ */
+export function bookPayload(
+	book: Book
+): Record<string, unknown> & { peers: Record<string, unknown>[]; tags: string[] } {
 	const peers = book.peers
 		.map((p) => {
-			const entry: Record<string, unknown> = { id: p.id.trim() };
+			const entry: Record<string, unknown> = { ...p.extra, id: p.id.trim() };
 			if (p.alias.trim()) entry.alias = p.alias.trim();
 			if (p.tags.length) entry.tags = p.tags;
 			return entry;
 		})
 		.filter((p) => p.id);
-	return { peers, tags: book.tags };
+	return { ...book.extra, peers, tags: book.tags };
 }
 
 export type BookError = 'invalid_json' | 'peers_array' | 'tags_array';
@@ -198,5 +217,5 @@ export function importDevices(
 		seen.add(id);
 		added++;
 	}
-	return { book: { peers, tags: book.tags }, added };
+	return { book: { ...book, peers }, added };
 }
