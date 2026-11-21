@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -276,15 +277,10 @@ func (w *World) browser(role string) *browser {
 
 func (w *World) send(b *browser, method, target string, body io.Reader, length int64, headers map[string]string) Answer {
 	w.T.Helper()
-	req := httptest.NewRequest(method, "http://console.test/", body)
-	req.RequestURI = target
-	rawPath, rawQuery, _ := strings.Cut(target, "?")
-	parsed, err := req.URL.Parse(target)
+	req, err := newRequest(method, target, body)
 	if err != nil {
 		w.T.Fatalf("request target %q: %v", target, err)
 	}
-	req.URL.Path, req.URL.RawPath, req.URL.RawQuery = parsed.Path, rawPath, rawQuery
-	req.RemoteAddr = "203.0.113.7:40000"
 	if body != nil {
 		req.ContentLength = length
 	}
@@ -309,6 +305,21 @@ func (w *World) send(b *browser, method, target string, body io.Reader, length i
 		b.cookies[c.Name] = c.Value
 	}
 	return Answer{Status: res.StatusCode, Header: res.Header, Body: rec.Body.String()}
+}
+
+// newRequest is the request a client sends with this target, as the
+// console gets it over a connection: the target is read as net/http reads
+// a request line, so dot segments and a "#" stay in the path the router
+// reads.
+func newRequest(method, target string, body io.Reader) (*http.Request, error) {
+	parsed, err := url.ParseRequestURI(target)
+	if err != nil {
+		return nil, err
+	}
+	req := httptest.NewRequest(method, "http://console.test/", body)
+	req.RequestURI, req.URL = target, parsed
+	req.RemoteAddr = "203.0.113.7:40000"
+	return req, nil
 }
 
 // Recording is a file a nodeoracle script wrote: rows to start from, and
