@@ -483,8 +483,46 @@ func TestServiceVectors(t *testing.T) {
 	}
 }
 
-// TestWriteVectors replays writes into the .env file: the file before,
-// the settings, and the file after with its mode.
+// TestRollbackPutsBackWhatTheSaveChecksRefuse: a .env file holds values
+// an older console took or someone wrote by hand, which a save refuses
+// today. A save over them and its rollback put the old values back
+// (BUGS.md RV95).
+func TestRollbackPutsBackWhatTheSaveChecksRefuse(t *testing.T) {
+	for _, old := range []string{
+		"BILLING_TIMEZONE=europe/berlin\n",
+		"BILLING_TIMEZONE=+01:00\n",
+		"BILLING_MAX_CLOCK_SKEW_MS=900000\n",
+		"NTP_SERVERS=ntp_1.example,pool.ntp.org\n",
+	} {
+		path := filepath.Join(t.TempDir(), ".env")
+		if err := os.WriteFile(path, []byte(old), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		s := newVectorService(t, true, path, http.NotFoundHandler(), false)
+		before, err := s.GetClockSettings()
+		if err != nil {
+			t.Fatalf("%q: read: %v", old, err)
+		}
+		if _, err := s.SaveClockSettings(context.Background(), goapi.NewObject("billing_timezone", "Europe/Paris")); err != nil {
+			t.Fatalf("%q: save: %v", old, err)
+		}
+		if err := s.Rollback(context.Background(), goapi.NewObject("type", "billing-clock", "settings", before.Object())); err != nil {
+			t.Errorf("%q: rollback: %v", old, err)
+			continue
+		}
+		if after, err := s.GetClockSettings(); err != nil || after != before {
+			t.Errorf("%q: after the rollback %+v (%v), before %+v", old, after, err, before)
+		}
+	}
+	// What cannot be read as settings at all still fails the rollback
+	s := newVectorService(t, true, filepath.Join(t.TempDir(), ".env"), http.NotFoundHandler(), false)
+	if err := s.Rollback(context.Background(), goapi.NewObject("type", "billing-clock", "settings", nil)); err == nil {
+		t.Error("a rollback without settings passed")
+	}
+}
+
+// TestWriteVectors replays the checked writes into the .env file: the
+// file before, the settings, and the file after with its mode.
 func TestWriteVectors(t *testing.T) {
 	var vectors serviceVectors
 	loadJSON(t, "service.json", &vectors)
@@ -505,7 +543,13 @@ func TestWriteVectors(t *testing.T) {
 			// The refused zone leaves the file as it was (CM2)
 			w.After, w.Mode = w.Before, nil
 		}
-		got, err := s.RestoreClockSettings(parsed)
+		got, err := s.ValidateSettings(parsed)
+		if err == nil {
+			err = s.writeEnv(got)
+		}
+		if err != nil {
+			got = Settings{}
+		}
 		w.Result.check(t, "write "+w.Raw, got, err)
 		after, readErr := os.ReadFile(path)
 		switch {

@@ -227,17 +227,13 @@ func (s *Service) GetRuntimeClockSettings(ctx context.Context) (Settings, error)
 	return s.NormalizeSettings(raw)
 }
 
-// writeEnv validates the settings and writes them into the .env file:
-// each key replaces the lines that set it, or goes to the end. A file
-// that is created gets mode 0600.
-func (s *Service) writeEnv(raw any) (Settings, error) {
-	settings, err := s.ValidateSettings(raw)
-	if err != nil {
-		return Settings{}, err
-	}
+// writeEnv writes settings into the .env file: each key replaces the
+// lines that set it, or goes to the end. A file that is created gets mode
+// 0600.
+func (s *Service) writeEnv(settings Settings) error {
 	content, err := s.readEnv()
 	if err != nil {
-		return Settings{}, err
+		return err
 	}
 	content = serverinfo.UpsertEnvKey(content, keyNTPServers, settings.NTPServers)
 	content = serverinfo.UpsertEnvKey(content, keyMaxSkewMS, numberText(settings.MaxSkewMS))
@@ -245,15 +241,25 @@ func (s *Service) writeEnv(raw any) (Settings, error) {
 	content = serverinfo.UpsertEnvKey(content, keyTrustOSNTP, boolToEnv(settings.TrustOSNTP))
 	content = serverinfo.UpsertEnvKey(content, keyBillingTimezone, settings.BillingTimezone)
 	if err := os.WriteFile(s.opts.EnvPath, []byte(content), 0o600); err != nil {
-		return Settings{}, openError(err, s.opts.EnvPath)
+		return openError(err, s.opts.EnvPath)
 	}
-	return settings, nil
+	return nil
 }
 
 // RestoreClockSettings writes settings back into the .env file, as a
-// rollback of the restart transaction does.
+// rollback of the restart transaction does. They are the settings the
+// file held before a save, so they go back as they were read, without the
+// checks of a save: a time zone, skew or server name an older console
+// took, or someone wrote by hand, is put back too.
 func (s *Service) RestoreClockSettings(raw any) (Settings, error) {
-	return s.writeEnv(raw)
+	settings, err := s.NormalizeSettings(raw)
+	if err == nil {
+		err = s.writeEnv(settings)
+	}
+	if err != nil {
+		return Settings{}, err
+	}
+	return settings, nil
 }
 
 // Rollback undoes a save for the restart transaction. The descriptor is
@@ -306,7 +312,7 @@ func (s *Service) SaveClockSettings(ctx context.Context, raw any) (SaveResult, e
 			}
 			return SaveResult{}, errors.New(text)
 		}
-		_, _ = s.writeEnv(settings.Object())
+		_ = s.writeEnv(settings)
 		saved := settings
 		if config := member(data, "config"); config != Undefined && goapi.Truthy(config) {
 			if saved, err = s.NormalizeSettings(config); err != nil {
@@ -320,7 +326,7 @@ func (s *Service) SaveClockSettings(ctx context.Context, raw any) (SaveResult, e
 		return SaveResult{Settings: saved, Status: status, DockerMode: true}, nil
 	}
 
-	if _, err := s.writeEnv(settings.Object()); err != nil {
+	if err := s.writeEnv(settings); err != nil {
 		return SaveResult{}, err
 	}
 	var serviceConfig any
