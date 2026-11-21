@@ -31,8 +31,30 @@ type handlers struct {
 	getenv    func(string) string
 }
 
-// Register adds the group's routes and the scheduled backup job.
-func Register(d *kit.Deps) {
+// Register adds the group's routes and the scheduled backup job, on a
+// backup service of their own that takes the server's database from
+// DB_PATH (NewBackups without the server's DSN).
+func Register(d *kit.Deps) { RegisterWith(d, NewBackups(d, "")) }
+
+// RegisterWith adds the group's routes and the scheduled backup job on
+// backups, the service NewBackups built.
+func RegisterWith(d *kit.Deps, backups *backup.Service) {
+	cfg := d.Config
+	scheduled := scheduledbackup.New(scheduledbackup.Options{
+		Store:   d.Store,
+		Backups: backups,
+		DataDir: cfg.DataDir,
+		AppDir:  cfg.ConsoleDir,
+	})
+	register(d, backups, scheduled)
+}
+
+// NewBackups builds the console's backup service from its services and
+// configuration. serverDB is the server's database DSN (its -db flag or
+// DB_URL), the file a full backup holds and a restore of the server's
+// database is left next to; empty takes DB_PATH. The services it reads
+// from d (Store, Branding, DeviceGroups, GoAPI, Avatars, Log) must be set.
+func NewBackups(d *kit.Deps, serverDB string) *backup.Service {
 	cfg := d.Config
 	var b backup.Branding
 	if d.Branding != nil {
@@ -50,7 +72,7 @@ func Register(d *kit.Deps) {
 	if d.Avatars != nil {
 		pictures = d.Avatars
 	}
-	backups := backup.New(backup.Options{
+	return backup.New(backup.Options{
 		Store:      d.Store,
 		Branding:   b,
 		Groups:     groups,
@@ -62,6 +84,7 @@ func Register(d *kit.Deps) {
 		PubKeyPath: cfg.PubKeyPath,
 		APIKeyPath: cfg.APIKeyPath,
 		DBPath:     cfg.DBPath,
+		ServerDB:   serverDB,
 		// the folder of the chat routes (chat.FilesDir)
 		ChatFilesDir: filepath.Join(cfg.ConsoleDir, "data", "chat-files"),
 		// the folder of the ticket routes (tickets.uploadsDir)
@@ -69,13 +92,6 @@ func Register(d *kit.Deps) {
 		AppVersion:     cfg.Version,
 		Limits:         archiveLimits(cfg.Getenv, d.Log.Child("SETTINGS").Warn),
 	})
-	scheduled := scheduledbackup.New(scheduledbackup.Options{
-		Store:   d.Store,
-		Backups: backups,
-		DataDir: cfg.DataDir,
-		AppDir:  cfg.ConsoleDir,
-	})
-	register(d, backups, scheduled)
 }
 
 // attachmentsDir is the folder of the ticket attachments, as the ticket

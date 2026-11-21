@@ -82,6 +82,12 @@ type Options struct {
 	// database, on SQLite the one open file copied once with VACUUM INTO.
 	// Ignored on PostgreSQL for the console's copy.
 	DBPath string
+	// ServerDB is the server's database DSN (its -db flag or DB_URL), the
+	// file the console's store has open on SQLite: a full backup holds it
+	// as the server's database, and a restore leaves the archive's file
+	// next to it for the start. Empty means DBPath. A PostgreSQL DSN, like
+	// a store on PostgreSQL, names no such file.
+	ServerDB string
 	// ChatFilesDir is the folder of the chat files
 	// (CONSOLE_DIR/data/chat-files) with their links in .links/.
 	ChatFilesDir string
@@ -127,13 +133,28 @@ func (s *Service) paths() paths {
 		goPrivKey:      filepath.Join(s.o.KeysPath, "id_ed25519"),
 		goPubKey:       s.o.PubKeyPath,
 		goAPIKey:       s.o.APIKeyPath,
-		goDB:           s.o.DBPath,
+		goDB:           s.serverDBFile(),
 		meshAgentCert:  filepath.Join(s.o.KeysPath, "mesh_agent_server.pem"),
 	}
-	if !s.o.Store.IsPostgres() {
-		p.consoleDB = s.o.DBPath
-	}
+	p.consoleDB = p.goDB
 	return p
+}
+
+// serverDBFile is the server's SQLite file: ServerDB, else DBPath; empty
+// when the server runs on PostgreSQL, which the console's store then
+// shares.
+func (s *Service) serverDBFile() string {
+	if s.o.Store.IsPostgres() {
+		return ""
+	}
+	if s.o.ServerDB == "" {
+		return s.o.DBPath
+	}
+	lower := strings.ToLower(s.o.ServerDB)
+	if strings.HasPrefix(lower, "postgres://") || strings.HasPrefix(lower, "postgresql://") {
+		return ""
+	}
+	return s.o.ServerDB
 }
 
 // dbType is config.dbType.
@@ -544,9 +565,11 @@ func (e *ErrInvalidArchive) Error() string {
 //  2. the uploads, below DATA_DIR/uploads,
 //  3. the secrets, each to its own path,
 //  4. the .env,
-//  5. the server's SQLite file, written next to DB_PATH as DB_PATH +
-//     RestoredSuffix, never over the open file: the next start puts it in
-//     place (SwapInRestoredDatabase).
+//  5. the server's SQLite file, when the server has one (serverDBFile):
+//     checked (SQLite's header, PRAGMA integrity_check) and written next
+//     to it as that path + RestoredSuffix, never over the open file: the
+//     next start puts it in place (SwapInRestoredDatabase). A file that
+//     fails the check is a warning and is not written.
 //
 // Parts 3 to 5 take effect at the next start. A file is written over the
 // old one in place; a new file gets the mode of its part.
@@ -629,7 +652,7 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 	}
 
 	if data, ok := files.Get("goserver/db_v2.sqlite3"); o.GoDB && ok && p.goDB != "" {
-		if err := writeFile(p.goDB+RestoredSuffix, data, 0o600); err != nil {
+		if err := stageServerDatabase(ctx, p.goDB+RestoredSuffix, data); err != nil {
 			res.Warnings = append(res.Warnings, "Go server DB restore failed: "+err.Error())
 		} else {
 			res.Restored = append(res.Restored, "goserver-db")
