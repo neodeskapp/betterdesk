@@ -142,7 +142,7 @@ func FuzzAddressBook(f *testing.F) {
 
 // FuzzAuditUploads sends upload bodies to the three audit routes: every
 // answer is JSON with a status the routes have, and a refusal is one of
-// their texts.
+// their texts. No device is registered, so nothing is taken (BUGS RV2).
 func FuzzAuditUploads(f *testing.F) {
 	for _, seed := range []string{
 		`{}`, `{"host_id":"h","conn_type":1}`, `{"host_id":5,"files":["a",{"name":"b","size":-1},null]}`,
@@ -162,9 +162,9 @@ func FuzzAuditUploads(f *testing.F) {
 				continue
 			}
 			switch w.Code {
-			case http.StatusOK:
-				if w.Body.String() != "{}" {
-					t.Fatalf("%s %q: 200 %s", path, body, w.Body)
+			case http.StatusNotFound:
+				if w.Body.String() != `{"error":"Device not found"}` {
+					t.Fatalf("%s %q: 404 %s", path, body, w.Body)
 				}
 			case http.StatusBadRequest, http.StatusInternalServerError:
 				if !refusals[w.Body.String()] && !strings.Contains(w.Body.String(), "Internal Server Error") {

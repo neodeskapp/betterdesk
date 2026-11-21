@@ -16,8 +16,9 @@ import (
 func TestFileAuditOnEitherShape(t *testing.T) {
 	storetest.EachOrigin(t, func(t *testing.T, db *store.DB, _ storetest.Origin) {
 		w := world(t, db, nil)
+		registerDevice(t, db, "900100001", "u-1")
 		for _, flag := range []string{"true", "false"} {
-			got := w.Do(replay.Request{Method: "POST", Path: "/api/audit/file", Body: replay.Text(`{"host_id":"900100001","path":"/tmp/x","is_file":` + flag + `}`)})
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/audit/file", Body: replay.Text(`{"host_id":"900100001","uuid":"u-1","path":"/tmp/x","is_file":` + flag + `}`)})
 			if got.Status != 200 || got.Body != `{}` {
 				t.Fatalf("is_file %s: %d %s", flag, got.Status, got.Body)
 			}

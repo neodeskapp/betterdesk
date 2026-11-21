@@ -591,6 +591,7 @@ func TestTheSystemInformationLimits(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := world(t, db, nil)
 		w.Exec("INSERT INTO peer (id) VALUES ('900300002')", nil)
+		registerDevice(t, db, "900300002", "u-2")
 		long := func(n int) string {
 			items := make([]string, n)
 			for i := range items {
@@ -609,14 +610,14 @@ func TestTheSystemInformationLimits(t *testing.T) {
 			}
 			return len(dl), len(el), strings.ReplaceAll(features, " ", "") // jsonb adds a space
 		}
-		body := `{"id":"900300002","hostname":"h","displays":` + long(5) + `,"encoding":` + long(6) + `,"features":{"a":"` + strings.Repeat("f", 5000) + `"}}`
+		body := `{"id":"900300002","uuid":"u-2","hostname":"h","displays":` + long(5) + `,"encoding":` + long(6) + `,"features":{"a":"` + strings.Repeat("f", 5000) + `"}}`
 		if got := w.Do(replay.Request{Method: "POST", Path: "/api/sysinfo", Body: replay.Text(body)}); got.Body != "SYSINFO_UPDATED" {
 			t.Fatalf("sysinfo: %d %s", got.Status, got.Body)
 		}
 		if d, e, f := stored(); d != 4 || e != 5 || f != "{}" {
 			t.Errorf("over the limits: %d displays, %d encodings, features %.40q", d, e, f)
 		}
-		body = `{"id":"900300002","hostname":"h","displays":["a","b","c","d","e"],"encoding":["a","b","c","d","e","f"],"features":{"a":1}}`
+		body = `{"id":"900300002","uuid":"u-2","hostname":"h","displays":["a","b","c","d","e"],"encoding":["a","b","c","d","e","f"],"features":{"a":1}}`
 		w.Do(replay.Request{Method: "POST", Path: "/api/sysinfo", Body: replay.Text(body)})
 		if d, e, f := stored(); d != 5 || e != 6 || f != `{"a":1}` {
 			t.Errorf("under the limits: %d displays, %d encodings, features %q", d, e, f)
@@ -632,6 +633,7 @@ func TestSysinfoVersionIsTheStoredHash(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := world(t, db, nil)
 		w.Exec("INSERT INTO peer (id) VALUES ('900300003')", nil)
+		registerDevice(t, db, "900300003", "u-3")
 		version := func(body string) string {
 			got := w.Do(replay.Request{Method: "POST", Path: "/api/sysinfo_ver", Body: replay.Text(body)})
 			if got.Status != http.StatusOK || !strings.HasPrefix(got.Header.Get("Content-Type"), "text/plain") {
@@ -640,7 +642,7 @@ func TestSysinfoVersionIsTheStoredHash(t *testing.T) {
 			return got.Body
 		}
 		upload := func(hostname string) {
-			if got := w.Do(replay.Request{Method: "POST", Path: "/api/sysinfo", Body: replay.Text(`{"id":"900300003","hostname":"` + hostname + `","os":"Linux"}`)}); got.Body != "SYSINFO_UPDATED" {
+			if got := w.Do(replay.Request{Method: "POST", Path: "/api/sysinfo", Body: replay.Text(`{"id":"900300003","uuid":"u-3","hostname":"` + hostname + `","os":"Linux"}`)}); got.Body != "SYSINFO_UPDATED" {
 				t.Fatalf("sysinfo: %d %s", got.Status, got.Body)
 			}
 		}
@@ -761,17 +763,18 @@ func TestConnectionRecordsNeedAuditView(t *testing.T) {
 func TestTheAuditTypes(t *testing.T) {
 	db := storetest.Migrated(t)
 	w := world(t, db, nil)
+	registerDevice(t, db, "h", "u-h")
 	for _, c := range []struct {
 		path, body string
 		ok         bool
 	}{
-		{"/api/audit/conn", `{"host_id":"h","conn_type":0}`, true},
-		{"/api/audit/conn", `{"host_id":"h","conn_type":4}`, true},
-		{"/api/audit/conn", `{"host_id":"h","conn_type":5}`, false},
-		{"/api/audit/conn", `{"host_id":"h","conn_type":-1}`, false},
-		{"/api/audit/alarm", `{"alarm_type":0}`, true},
-		{"/api/audit/alarm", `{"alarm_type":6}`, true},
-		{"/api/audit/alarm", `{"alarm_type":7}`, false},
+		{"/api/audit/conn", `{"host_id":"h","uuid":"u-h","conn_type":0}`, true},
+		{"/api/audit/conn", `{"host_id":"h","uuid":"u-h","conn_type":4}`, true},
+		{"/api/audit/conn", `{"host_id":"h","uuid":"u-h","conn_type":5}`, false},
+		{"/api/audit/conn", `{"host_id":"h","uuid":"u-h","conn_type":-1}`, false},
+		{"/api/audit/alarm", `{"alarm_type":0,"host_id":"h","uuid":"u-h"}`, true},
+		{"/api/audit/alarm", `{"alarm_type":6,"host_id":"h","uuid":"u-h"}`, true},
+		{"/api/audit/alarm", `{"alarm_type":7,"host_id":"h","uuid":"u-h"}`, false},
 	} {
 		got := w.Do(replay.Request{Method: "POST", Path: c.path, Body: replay.Text(c.body)})
 		if ok := got.Status == http.StatusOK && got.Body == "{}"; ok != c.ok {

@@ -7,7 +7,8 @@
    "cpu": 150,
    "disk": -3,
    "id": "900100031",
-   "memory": "50"
+   "memory": "50",
+   "uuid": "demo-uuid-900100031"
   },
   "notes": [
    "no CSRF token"

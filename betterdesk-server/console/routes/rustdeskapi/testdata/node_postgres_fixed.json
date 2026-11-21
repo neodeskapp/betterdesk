@@ -1,14 +1,575 @@
 {
- "396 POST /api/sysinfo_ver": {
+ "370 POST /api/heartbeat": {
   "answer": {
-   "answer": "2a502fd6ff03fbf0",
+   "answer": "{\"modified_at\":\"2026-11-21T13:32:02.564Z\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "371 POST /api/heartbeat": {
+  "answer": {
+   "answer": "{\"modified_at\":\"2026-11-21T13:32:02.565Z\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "372 POST /api/heartbeat": {
+  "answer": {
+   "answer": "{\"modified_at\":\"2026-11-21T13:32:02.565Z\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "374 POST /api/heartbeat": {
+  "answer": {
+   "answer": "{\"modified_at\":\"2026-11-21T13:32:02.566Z\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "379 POST /api/heartbeat": {
+  "answer": {
+   "answer": "{\"modified_at\":\"2026-11-21T13:32:02.567Z\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "380 POST /api/heartbeat": {
+  "answer": {
+   "answer": "{\"modified_at\":\"2026-11-21T13:32:02.567Z\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "381 POST /api/heartbeat": {
+  "answer": {
+   "answer": "{\"modified_at\":\"2026-11-21T13:32:02.567Z\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "385 POST /api/heartbeat": {
+  "answer": {
+   "answer": "{\"modified_at\":\"2026-11-21T13:32:02.568Z\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "390 POST /api/sysinfo": {
+  "answer": {
+   "answer": "ID_NOT_FOUND",
    "extra": {
     "calls": [],
     "type": "text/plain; charset=utf-8"
    },
    "status": 200
   },
-  "bug": "RD1"
+  "bug": "RV7"
+ },
+ "391 POST /api/sysinfo": {
+  "answer": {
+   "answer": "ID_NOT_FOUND",
+   "extra": {
+    "calls": [],
+    "type": "text/plain; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "392 POST /api/sysinfo": {
+  "answer": {
+   "answer": "ID_NOT_FOUND",
+   "extra": {
+    "calls": [],
+    "type": "text/plain; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "393 POST /api/sysinfo": {
+  "answer": {
+   "answer": "ID_NOT_FOUND",
+   "extra": {
+    "calls": [],
+    "type": "text/plain; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "394 POST /api/sysinfo": {
+  "answer": {
+   "answer": "ID_NOT_FOUND",
+   "extra": {
+    "calls": [],
+    "type": "text/plain; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "395 POST /api/sysinfo": {
+  "answer": {
+   "answer": "ID_NOT_FOUND",
+   "extra": {
+    "calls": [],
+    "type": "text/plain; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "399 POST /api/heartbeat": {
+  "answer": {
+   "answer": "{\"modified_at\":\"2026-11-21T13:32:02.577Z\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV7"
+ },
+ "404 POST /api/audit/conn": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "406 POST /api/audit/conn": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "407 POST /api/audit/conn": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "408 POST /api/audit/conn": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "409 POST /api/audit/conn": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "410 POST /api/audit/conn": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "411 POST /api/audit/conn": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "412 POST /api/audit/conn": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "417 POST /api/audit/file": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "418 POST /api/audit/file": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "419 POST /api/audit/file": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "420 POST /api/audit/file": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "421 POST /api/audit/file": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "422 POST /api/audit/alarm": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "425 POST /api/audit/alarm": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "426 POST /api/audit/alarm": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "427 POST /api/audit/alarm": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "428 POST /api/audit/alarm": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "429 POST /api/audit/alarm": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "430 POST /api/audit/alarm": {
+  "answer": {
+   "answer": "{\"error\":\"Device not found\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 404
+  },
+  "bug": "RV2"
+ },
+ "431 GET /api/audit/conn": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "432 GET /api/audit/conn?host_id=h1": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "433 GET /api/audit/conn?host_id=h1&limit=1&offset=1": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "434 GET /api/audit/conn?peer_id=p1&action=close": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "435 GET /api/audit/conn?host_id[]=h1": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "437 GET /api/audit/conn?limit=abc&offset=-5": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "438 GET /api/audit/conn?limit=500": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "440 GET /api/audit/conn?action=": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "441 GET /api/audit/conn?host_id=h1": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "443 GET /api/audit/file": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "444 GET /api/audit/file?host_id=f1": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "445 GET /api/audit/file?peer_id=p&limit=2": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "447 GET /api/audit/alarm": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "448 GET /api/audit/alarm?alarm_type=2": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "450 GET /api/audit/alarm?alarm_type=6&host_id=": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "451 GET /api/audit/alarm?alarm_type[]=1": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
+ },
+ "452 GET /api/audit/alarm?host_id=h&limit=1": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV2"
  },
  "453 GET /api/audit": {
   "answer": {
@@ -164,11 +725,47 @@
   },
   "bug": "RD3"
  },
+ "the alarm records": {
+  "answer": {
+   "rows": "[]"
+  },
+  "bug": "RV2"
+ },
  "the audit entries": {
   "answer": {
    "rows": "[{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: cl-1\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: cl-1\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":null,\"action\":\"api_login_banned_device\",\"details\":\"Device: hbban1, User: e2e_operator\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":null,\"action\":\"api_login_banned_device\",\"details\":\"Device: hbgo2, User: e2e_operator\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":5,\"action\":\"api_login_success\",\"details\":\"Client: hbgo1\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":null,\"action\":\"api_login_failed\",\"details\":\"User: e***r\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":null,\"action\":\"api_login_failed\",\"details\":\"User: n***e\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":7,\"action\":\"api_login_tfa_required\",\"details\":\"Client: cl-g\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":null,\"action\":\"api_login_failed\",\"details\":\"User: e***n\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":null,\"action\":\"api_login_failed\",\"details\":\"User: e***o\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: cl-1\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: unknown\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_login_success\",\"details\":\"Client: form-id\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":6,\"action\":\"api_logout\",\"details\":\"Client: seed-viewer\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":5,\"action\":\"api_logout\",\"details\":\"Client: x\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":7,\"action\":\"api_logout\",\"details\":\"Client: 5\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":8,\"action\":\"api_logout\",\"details\":\"Client: p\",\"ip_address\":\"203.0.113.7\"},{\"user_id\":1,\"action\":\"api_logout\",\"details\":\"Client: a\",\"ip_address\":\"203.0.113.7\"}]"
   },
   "bug": "RD7, AL1, RV1"
+ },
+ "the connection records": {
+  "answer": {
+   "rows": "[]"
+  },
+  "bug": "RV2"
+ },
+ "the devices online": {
+  "answer": {
+   "rows": "[{\"id\":\"hbban1\",\"status_online\":false,\"is_banned\":true,\"is_deleted\":false,\"uuid\":\"\",\"ip\":\"\",\"user\":\"\",\"banned_reason\":\"\",\"info\":\"{}\"},{\"id\":\"hbdel1\",\"status_online\":false,\"is_banned\":false,\"is_deleted\":true,\"uuid\":\"\",\"ip\":\"\",\"user\":\"\",\"banned_reason\":\"\",\"info\":\"{}\"},{\"id\":\"hbok1\",\"status_online\":false,\"is_banned\":false,\"is_deleted\":false,\"uuid\":\"\",\"ip\":\"\",\"user\":\"\",\"banned_reason\":\"\",\"info\":\"{}\"},{\"id\":\"hbok2\",\"status_online\":false,\"is_banned\":false,\"is_deleted\":false,\"uuid\":\"\",\"ip\":\"\",\"user\":\"\",\"banned_reason\":\"\",\"info\":\"{}\"}]"
+  },
+  "bug": "RV7"
+ },
+ "the file records": {
+  "answer": {
+   "rows": "[]"
+  },
+  "bug": "RV2"
+ },
+ "the metrics": {
+  "answer": {
+   "rows": "[]"
+  },
+  "bug": "RV7"
+ },
+ "the system information": {
+  "answer": {
+   "rows": "[]"
+  },
+  "bug": "RV7"
  },
  "the tokens": {
   "answer": {

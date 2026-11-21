@@ -22,7 +22,8 @@ import (
 
 // What a RustDesk client sends without signing in: heartbeats with load
 // figures and its system information. Both are taken only for a device
-// the server knows, and nothing is taken from a banned one.
+// the server knows, with the uuid it registered with (uuid.go), and
+// nothing is taken from a banned one.
 
 const (
 	maxIDLen       = 32
@@ -115,7 +116,8 @@ type heartbeatAnswer struct {
 // heartbeat answers POST /api/heartbeat. It stores the load figures (at
 // most metricsPerMinute rows a minute per device), marks the device online
 // and asks for system information (sysinfo: true) when it has none or none
-// from the last hour.
+// from the last hour. A heartbeat without the device's uuid, or with
+// another, is answered as one of an unknown device, banned or not.
 func (h *handlers) heartbeat(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	body := kit.Body(r)
@@ -124,6 +126,15 @@ func (h *handlers) heartbeat(w http.ResponseWriter, r *http.Request) {
 	}
 	id := clientDeviceID(body)
 	if id == "" || !isValidDeviceID(id) {
+		modified(false)
+		return
+	}
+	known, err := h.knownDevice(ctx, id, body)
+	if err != nil {
+		h.serverFailure(w, r, "[API:HEARTBEAT] Device lookup failed:", err)
+		return
+	}
+	if !known {
 		modified(false)
 		return
 	}
@@ -261,13 +272,24 @@ func parseCPU(raw string) (name string, cores, ghz float64) {
 
 // sysinfo answers POST /api/sysinfo in plain text: SYSINFO_UPDATED makes
 // the client switch to PRO mode, ID_NOT_FOUND makes it try again at once,
-// anything else (ERROR) after 120 seconds.
+// anything else (ERROR) after 120 seconds. Without the device's uuid, or
+// with another, the answer is that of an unknown device.
 func (h *handlers) sysinfo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	body := kit.Body(r)
 	id := clientDeviceID(body)
 	if id == "" || !isValidDeviceID(id) {
 		h.log.Info("[API:SYSINFO] Invalid device ID:", id)
+		plainText(w, r, "ID_NOT_FOUND")
+		return
+	}
+	known, err := h.knownDevice(ctx, id, body)
+	if err != nil {
+		h.serverFailure(w, r, "[API:SYSINFO] Device lookup failed:", err)
+		return
+	}
+	if !known {
+		h.log.Info(fmt.Sprintf("[API:SYSINFO] Device not found: %s (no registration with this uuid)", id))
 		plainText(w, r, "ID_NOT_FOUND")
 		return
 	}

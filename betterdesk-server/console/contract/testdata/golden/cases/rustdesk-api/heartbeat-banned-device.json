@@ -34,10 +34,16 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "modified_at",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "BANNED"
+     "modified_at": "<volatile>"
     }
    }
   },
@@ -67,10 +73,16 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "modified_at",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "BANNED"
+     "modified_at": "<volatile>"
     }
    }
   }

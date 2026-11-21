@@ -15,7 +15,9 @@ import (
 )
 
 // The client audit records: connections, file transfers and alarms that
-// RustDesk clients report, and the lists of them. Where the console runs
+// RustDesk clients report, and the lists of them. A record is taken only
+// from the device it names (host_id), with the uuid that device registered
+// with (uuid.go); any other is refused as one of an unknown device. Where the console runs
 // without its own client API port (API_ENABLED=false) the clients report
 // to the server's API, and the lists come from there (AUDIT_SOURCE_IS_GO);
 // the console's own tables answer when that call fails.
@@ -32,6 +34,27 @@ func reportedIP(r *http.Request, v any) string {
 		return sanitize(v, 64)
 	}
 	return sanitize(kit.ClientIP(r), 64)
+}
+
+// msgUnknownDevice refuses an audit record of a device the server does not
+// know with the uuid the record carries.
+const msgUnknownDevice = "Device not found"
+
+// fromKnownDevice checks that an audit record comes from the device id
+// names, with its uuid (uuid, else host_uuid), and answers 404 {"error":
+// "Device not found"} when not, or 500 when the lookup fails.
+func (h *handlers) fromKnownDevice(w http.ResponseWriter, r *http.Request, id, logPrefix string) bool {
+	known, err := h.knownDevice(r.Context(), id, kit.Body(r), "host_uuid")
+	if err != nil {
+		h.log.Error(logPrefix+" Error:", jsbind.Message(err))
+		fail(w, r, http.StatusInternalServerError, msgServerError)
+		return false
+	}
+	if !known {
+		fail(w, r, http.StatusNotFound, msgUnknownDevice)
+		return false
+	}
+	return true
 }
 
 // textOrEmpty is String(v) when v != null, else "".
@@ -74,6 +97,9 @@ func (h *handlers) reportConnection(w http.ResponseWriter, r *http.Request) {
 	peerID, err := textOrEmpty(member(body, "peer_id"))
 	if err != nil {
 		serverError(err)
+		return
+	}
+	if !h.fromKnownDevice(w, r, hostID, "[API:AUDIT/CONN]") {
 		return
 	}
 	err = h.store.exec(r.Context(), `
@@ -140,6 +166,9 @@ func (h *handlers) reportFile(w http.ResponseWriter, r *http.Request) {
 			files = append(files, goapi.NewObject("name", sanitize(name, maxPathLen), "size", size))
 		}
 	}
+	if !h.fromKnownDevice(w, r, host, "[API:AUDIT/FILE]") {
+		return
+	}
 	// is_file is a boolean in the console's own PostgreSQL table and an
 	// integer in the API server's and on SQLite: the flag is written as the
 	// table the store found takes it (DECISIONS D2)
@@ -201,6 +230,10 @@ func (h *handlers) reportAlarm(w http.ResponseWriter, r *http.Request) {
 	// JSON the PostgreSQL column takes
 	if utf16Len(detailsText) > maxDetailsLen {
 		detailsText = "{}"
+	}
+	host, _ := member(body, "host_id").(string)
+	if !h.fromKnownDevice(w, r, host, "[API:AUDIT/ALARM]") {
+		return
 	}
 	err := h.store.exec(r.Context(), `
                 INSERT INTO audit_alarms (alarm_type, alarm_name, host_id, peer_id, ip, details)

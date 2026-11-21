@@ -219,14 +219,17 @@ func TestStrategiesFollowTheScopeAndTheProRule(t *testing.T) {
 // most six rows of load figures a minute while each still marks the
 // device online (BUGS RV3).
 func TestClientReportsAreBounded(t *testing.T) {
-	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
 		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000"}})
 		ctx := context.Background()
 		long := strings.Repeat("y", 5000)
+		// The devices with the uuid they registered with (BUGS RV2, RV7)
+		mustExec(t, db, `INSERT INTO peers (id, uuid) VALUES ('big-object', 'u-1'), ('big-list', 'u-1'), ('small-object', 'u-1'), ('900300001', 'u-1')`)
 		for _, body := range []string{
-			`{"alarm_type":1,"host_id":"big-object","details":{"k":"` + long + `"}}`,
-			`{"alarm_type":1,"host_id":"big-list","details":["` + long + `"]}`,
-			`{"alarm_type":1,"host_id":"small-object","details":{"k":"v"}}`,
+			`{"alarm_type":1,"host_id":"big-object","uuid":"u-1","details":{"k":"` + long + `"}}`,
+			`{"alarm_type":1,"host_id":"big-list","uuid":"u-1","details":["` + long + `"]}`,
+			`{"alarm_type":1,"host_id":"small-object","uuid":"u-1","details":{"k":"v"}}`,
 		} {
 			if got := w.SignedOut().Do("POST", "/api/audit/alarm", body); got.Status != 200 {
 				t.Fatalf("alarm: %d %s", got.Status, got.Body)
@@ -240,7 +243,7 @@ func TestClientReportsAreBounded(t *testing.T) {
 		}
 
 		mustExec(t, db, `INSERT INTO peer (id, uuid, info) VALUES ('900300001', 'u-1', '{}')`)
-		sysinfo := `{"id":"900300001","hostname":"h","platform_additions":{"k":"` + long + `"}}`
+		sysinfo := `{"id":"900300001","uuid":"u-1","hostname":"h","platform_additions":{"k":"` + long + `"}}`
 		if got := w.SignedOut().Do("POST", "/api/sysinfo", sysinfo); got.Status != 200 || got.Body != "SYSINFO_UPDATED" {
 			t.Fatalf("sysinfo: %d %s", got.Status, got.Body)
 		}
@@ -250,7 +253,7 @@ func TestClientReportsAreBounded(t *testing.T) {
 		}
 
 		for i := 0; i < 8; i++ {
-			if got := w.SignedOut().Do("POST", "/api/heartbeat", `{"id":"900300001","cpu":10}`); got.Status != 200 {
+			if got := w.SignedOut().Do("POST", "/api/heartbeat", `{"id":"900300001","uuid":"u-1","cpu":10}`); got.Status != 200 {
 				t.Fatalf("heartbeat %d: %d %s", i, got.Status, got.Body)
 			}
 		}

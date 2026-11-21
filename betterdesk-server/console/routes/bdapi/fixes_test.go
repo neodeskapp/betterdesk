@@ -90,7 +90,17 @@ func TestOperatorDevicesFollowTheScope(t *testing.T) {
 func TestSessionHistoryIsNotForgedThroughTheClientAudit(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := routetest.New(t, routetest.Options{DB: db})
-		forged := w.SignedOut().Do("POST", "/api/audit/conn", `{"host_id":"e2e_operator","peer_id":"DEV9","action":"session_start","conn_type":1,"session_id":"forged-1"}`)
+		// A device that took the operator's name, with the uuid it registered
+		// with, which the client audit asks for (BUGS RV2)
+		for _, statement := range []string{
+			`CREATE TABLE IF NOT EXISTS peers (id TEXT PRIMARY KEY, uuid TEXT DEFAULT '', soft_deleted BOOLEAN DEFAULT FALSE)`,
+			`INSERT INTO peers (id, uuid) VALUES ('e2e_operator', 'u-forger')`,
+		} {
+			if _, err := db.Exec(context.Background(), statement); err != nil {
+				t.Fatal(err)
+			}
+		}
+		forged := w.SignedOut().Do("POST", "/api/audit/conn", `{"host_id":"e2e_operator","uuid":"u-forger","peer_id":"DEV9","action":"session_start","conn_type":1,"session_id":"forged-1"}`)
 		if forged.Status != 200 {
 			t.Fatalf("client audit record: %d %s", forged.Status, forged.Body)
 		}

@@ -3,6 +3,7 @@
 package contract_test
 
 import (
+	"encoding/base64"
 	"net/url"
 	"strings"
 
@@ -22,8 +23,10 @@ import (
 // token are recorded in routes/rustdeskapi/testdata/flow_<db>.json.
 //
 // Writes are left to two devices: 900100031 (a seeded device nobody else
-// uses) gets heartbeats and system information, and the audit uploads use
-// host ids no other group reads. Failed sign-ins run for one role only,
+// uses) gets heartbeats, system information and the audit uploads that
+// are taken, and the refused audit uploads use host ids no other group
+// reads. A client report is taken only with the uuid the device registered
+// with (demo-uuid-<id> for the seeded devices; BUGS RV2, RV7). Failed sign-ins run for one role only,
 // because every one of them counts against the address of the suite.
 func init() {
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
@@ -168,6 +171,19 @@ func init() {
 			Body:  map[string]any{"host_id": 12345, "host_uuid": 6, "peer_id": 7, "conn_type": "2", "peer_name": strings.Repeat("n", 300)},
 			Roles: some,
 		},
+		{
+			Name: "audit-conn-from-the-device", Method: "POST", Path: "/api/audit/conn",
+			Body: map[string]any{
+				"host_id": "900100031", "uuid": base64.StdEncoding.EncodeToString([]byte("demo-uuid-900100031")), "peer_id": "rdc-peer-1",
+				"action": "new", "conn_type": 1, "session_id": "s-31", "ip": "198.51.100.7",
+			},
+			Roles: some,
+		},
+		{
+			Name: "audit-conn-other-uuid", Method: "POST", Path: "/api/audit/conn",
+			Body:  map[string]any{"host_id": "900100031", "uuid": "demo-uuid-900100030", "conn_type": 1},
+			Roles: some,
+		},
 		{Name: "audit-conn-list", Path: "/api/audit/conn", Query: url.Values{"host_id": {"rdc-host-1"}}},
 		{Name: "audit-conn-list-paged", Path: "/api/audit/conn", Query: url.Values{"host_id": {"12345"}, "limit": {"1"}, "offset": {"1"}}, Roles: some},
 		{Name: "audit-conn-list-odd-numbers", Path: "/api/audit/conn", Query: url.Values{"peer_id": {"rdc-peer-1"}, "action": {"new"}, "limit": {"abc"}, "offset": {"-5"}}, Roles: some},
@@ -185,6 +201,11 @@ func init() {
 			Roles: some,
 		},
 		{Name: "audit-file-odd-values", Method: "POST", Path: "/api/audit/file", Body: map[string]any{"host_id": "rdc-host-2", "direction": "1", "is_file": 0, "num_files": "3", "files": "x"}, Roles: some},
+		{
+			Name: "audit-file-from-the-device", Method: "POST", Path: "/api/audit/file",
+			Body:  map[string]any{"host_id": "900100031", "host_uuid": "demo-uuid-900100031", "peer_id": "rdc-peer-2", "direction": 1, "path": "C:/data", "files": []any{"a.txt"}},
+			Roles: some,
+		},
 
 		// Audit uploads: alarms
 		{Name: "audit-alarm-bad-type", Method: "POST", Path: "/api/audit/alarm", Body: map[string]any{"alarm_type": 7}, Roles: some},
@@ -195,6 +216,11 @@ func init() {
 			Roles: some,
 		},
 		{Name: "audit-alarm-details-text", Method: "POST", Path: "/api/audit/alarm", Body: map[string]any{"alarm_type": 6, "host_id": "rdc-host-3", "details": "plain"}, Roles: some},
+		{
+			Name: "audit-alarm-from-the-device", Method: "POST", Path: "/api/audit/alarm",
+			Body:  map[string]any{"alarm_type": 2, "host_id": "900100031", "uuid": "demo-uuid-900100031", "details": map[string]any{"a": 1}},
+			Roles: some,
+		},
 
 		// Heartbeats: an unknown device, a banned one, a seeded one
 		{Name: "heartbeat-empty", Method: "POST", Path: "/api/heartbeat", Body: map[string]any{}, Roles: some},
@@ -203,10 +229,13 @@ func init() {
 		{Name: "heartbeat-unknown-device", Method: "POST", Path: "/api/heartbeat", Body: map[string]any{"id": "rdcontract-unknown", "cpu": 5}, Roles: some},
 		{Name: "heartbeat-long-id", Method: "POST", Path: "/api/heartbeat", Body: map[string]any{"id": strings.Repeat("a", 40)}, Roles: some},
 		{Name: "heartbeat-banned-device", Method: "POST", Path: "/api/heartbeat", Body: map[string]any{"id": "900100028", "cpu": 5}, Roles: some},
+		{Name: "heartbeat-banned-device-with-uuid", Method: "POST", Path: "/api/heartbeat", Body: map[string]any{"id": "900100028", "uuid": "demo-uuid-900100028", "cpu": 5}, Roles: some},
+		{Name: "heartbeat-without-uuid", Method: "POST", Path: "/api/heartbeat", Body: map[string]any{"id": "900100031", "cpu": 5}, Roles: some},
+		{Name: "heartbeat-other-uuid", Method: "POST", Path: "/api/heartbeat", Body: map[string]any{"id": "900100031", "uuid": "demo-uuid-900100030", "cpu": 5}, Roles: some},
 		{Name: "heartbeat-deleted-device", Method: "POST", Path: "/api/heartbeat", Body: map[string]any{"id": "900100030"}, Roles: some},
 		{
 			Name: "heartbeat", Method: "POST", Path: "/api/heartbeat", NoCSRF: true,
-			Body: map[string]any{"id": "900100031", "cpu": 150, "memory": "50", "disk": -3},
+			Body: map[string]any{"id": "900100031", "uuid": "demo-uuid-900100031", "cpu": 150, "memory": "50", "disk": -3},
 		},
 
 		// System information
@@ -214,10 +243,12 @@ func init() {
 		{Name: "sysinfo-unknown-device", Method: "POST", Path: "/api/sysinfo", Body: map[string]any{"id": "rdcontract-unknown", "hostname": "x"}, Roles: some},
 		{Name: "sysinfo-banned-device", Method: "POST", Path: "/api/sysinfo", Body: map[string]any{"uuid": "900100029"}, Roles: some},
 		{Name: "sysinfo-id-number", Method: "POST", Path: "/api/sysinfo", Body: map[string]any{"id": 900100031}, Roles: some},
+		{Name: "sysinfo-without-uuid", Method: "POST", Path: "/api/sysinfo", Body: map[string]any{"id": "900100031", "hostname": "x"}, Roles: some},
 		{
 			Name: "sysinfo", Method: "POST", Path: "/api/sysinfo",
 			Body: map[string]any{
-				"id": "900100031", "cpu": "Intel Core i7-12700K, 5.2GHz, 24/16 cores", "memory": "31.87GB",
+				"id": "900100031", "uuid": base64.StdEncoding.EncodeToString([]byte("demo-uuid-900100031")),
+				"cpu": "Intel Core i7-12700K, 5.2GHz, 24/16 cores", "memory": "31.87GB",
 				"hostname": "demo-noted-pc", "username": "demo.front", "os": "Windows 11 Pro 23H2", "version": "1.4.7",
 				"displays": []any{map[string]any{"w": 1920, "h": 1080}}, "encoding": []string{"vp9", "h264"},
 				"features": map[string]any{"privacy_mode": true}, "platform_additions": map[string]any{"is_installed": true},
