@@ -3,10 +3,14 @@ package devices_test
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -226,6 +230,43 @@ func TestPermissions(t *testing.T) {
 		}
 		if calls := api.Calls(); strings.Join(calls, "\n") != strings.Join(lookups, "\n") {
 			t.Errorf("%s %s as %s called the server %q behind the refusal, want only the scope check's %q", c.method, c.path, c.role, calls, lookups)
+		}
+	}
+}
+
+// TestScreenshotNeedsDeviceEdit asks for a device's screenshot as each
+// built-in role, past the panel access guard, which refuses every role
+// without device.edit for it: the route's own check refuses the roles
+// that see devices but may not change them, as the guard does (BUGS PA3,
+// analysis F13), and lets the others through to the agent, which is not
+// connected.
+func TestScreenshotNeedsDeviceEdit(t *testing.T) {
+	w, _ := world(t, storetest.Migrated(t), nil, nil)
+	d := w.Server.Deps()
+	for _, c := range []struct {
+		role, want string
+		status     int
+	}{
+		{"viewer", `{"success":false,"error":"Permission denied: device.edit"}`, http.StatusForbidden},
+		{"guest_issuer", `{"success":false,"error":"Permission denied: device.edit"}`, http.StatusForbidden},
+		{"server_admin", `{"success":false,"error":"Permission denied: device.edit"}`, http.StatusForbidden},
+		{"operator", `{"success":false,"error":"agent_offline"}`, http.StatusServiceUnavailable},
+		{"global_admin", `{"success":false,"error":"agent_offline"}`, http.StatusServiceUnavailable},
+		{"admin", `{"success":false,"error":"agent_offline"}`, http.StatusServiceUnavailable},
+	} {
+		r := kit.Begin(httptest.NewRequest("POST", "/api/devices/A/screenshot", strings.NewReader(`{}`)), httpx.TrustProxy{}, nil)
+		r.Header.Set("Content-Type", "application/json")
+		loaded := d.Access.Load(r.Context(), access.Session{UserID: routetest.RoleIDs[c.role], HasUser: true, Role: c.role})
+		if !loaded.HasPermission("device.view") {
+			t.Fatalf("%s lacks device.view", c.role)
+		}
+		kit.SetAccess(r, loaded)
+		got := httptest.NewRecorder()
+		if !w.Server.Router().Serve(got, r) {
+			t.Fatalf("no route answered POST /api/devices/A/screenshot")
+		}
+		if got.Code != c.status || got.Body.String() != c.want {
+			t.Errorf("screenshot as %s: %d %s, want %d %s", c.role, got.Code, got.Body.String(), c.status, c.want)
 		}
 	}
 }

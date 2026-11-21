@@ -110,7 +110,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/devices/{id}/files/mkdir", h.filesMkdir, d.RequireAuth, edit)
 	r.Get("/api/devices/{id}/clipboard", h.clipboard, d.RequireAuth, view)
 	r.Post("/api/devices/{id}/clipboard", h.setClipboard, d.RequireAuth, edit)
-	r.Post("/api/devices/{id}/screenshot", h.screenshot, d.RequireAuth, view)
+	r.Post("/api/devices/{id}/screenshot", h.screenshot, d.RequireAuth, edit)
 	r.Post("/api/devices/{id}/input/mouse", h.mouse, d.RequireAuth, edit)
 	r.Post("/api/devices/{id}/input/key", h.key, d.RequireAuth, edit)
 	r.Post("/api/devices/{id}/input/text", h.typeText, d.RequireAuth, edit)
