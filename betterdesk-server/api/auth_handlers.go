@@ -186,6 +186,36 @@ func (s *Server) requirePermission(perm string, handler http.HandlerFunc) http.H
 	}
 }
 
+// permitted answers whether the caller holds perm as requirePermission
+// decides it. When it does not, the refusal has been written.
+func (s *Server) permitted(w http.ResponseWriter, r *http.Request, perm string) bool {
+	ok := false
+	s.requirePermission(perm, func(http.ResponseWriter, *http.Request) { ok = true })(w, r)
+	return ok
+}
+
+// requireAnyPermission lets a caller in that holds at least one of perms,
+// as requirePermission decides each. A handler behind it asks the one it
+// needs once it knows which.
+func (s *Server) requireAnyPermission(perms []string, handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		role := getRoleFromCtx(r)
+		for _, perm := range perms {
+			granted, err := s.RoleHasPermission(role, perm)
+			if err != nil {
+				log.Printf("api: permission lookup failed for role %q permission %q: %v", role, perm, err)
+				writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "Permission service unavailable"})
+				return
+			}
+			if granted {
+				handler(w, r)
+				return
+			}
+		}
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Insufficient permissions"})
+	}
+}
+
 // requireOrgMembership wraps a handler to enforce that the authenticated user
 // belongs to the organization identified by the URL path parameter.
 // Global admins bypass the check. Org-scoped users must match their JWT org_id.

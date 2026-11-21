@@ -727,10 +727,12 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/mesh/recordings", s.requirePermission(auth.PermDeviceView, s.handleMeshRecordingsList))
 	mux.HandleFunc("GET /api/mesh/recordings/{id}", s.requirePermission(auth.PermDeviceConnect, s.handleMeshRecordingDownload))
 	mux.HandleFunc("GET /api/session/recordings", s.requirePermission(auth.PermDeviceView, s.handleSessionRecordingsList))
-	// A command runs on the device like one typed into the mesh terminal,
-	// so both exec routes ask the terminal's permission.
+	// A command runs on the device like one typed into its terminal, so the
+	// exec routes ask the terminal permission of the transport: the mesh
+	// route mesh.terminal, the unified route the one of the transport the
+	// device is connected over (handleUnifiedPeerExec).
 	mux.HandleFunc("POST /api/mesh/devices/{id}/exec", s.requirePermission(auth.PermMeshTerminal, s.scopedDevice(s.handleMeshExec)))
-	mux.HandleFunc("POST /api/peers/{id}/exec", s.requirePermission(auth.PermMeshTerminal, s.scopedDevice(s.handleUnifiedPeerExec)))
+	mux.HandleFunc("POST /api/peers/{id}/exec", s.requireAnyPermission([]string{auth.PermMeshTerminal, auth.PermCDAPTerminal}, s.scopedDevice(s.handleUnifiedPeerExec)))
 
 	if s.meshGw != nil {
 		s.meshGw.RegisterRoutes(mux)

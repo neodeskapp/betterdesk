@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/meshcentral"
 )
@@ -423,6 +424,9 @@ func (s *Server) handleUnifiedPeerExec(w http.ResponseWriter, r *http.Request) {
 	}
 	username := usernameFromRequest(r)
 	if s.meshGw != nil && s.meshGw.IsConnected(peerID) {
+		if !s.permitted(w, r, auth.PermMeshTerminal) {
+			return
+		}
 		if err := s.meshGw.SendRunCommand(peerID, username, body.Command, body.Shell); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
@@ -431,6 +435,9 @@ func (s *Server) handleUnifiedPeerExec(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.cdapGw != nil && s.cdapGw.IsConnected(peerID) {
+		if !s.permitted(w, r, auth.PermCDAPTerminal) {
+			return
+		}
 		err := s.cdapGw.SendCommandJSON(r.Context(), peerID, "exec-"+peerID, "shell", "run",
 			map[string]string{"command": body.Command}, username, "unified exec")
 		if err != nil {
