@@ -73,6 +73,13 @@ func TestMergeArrayInAnyOrder(t *testing.T) {
 		t.Errorf("the merged golden refuses its own answer: %q", diffStrings(diffs))
 	}
 
+	// An empty list stays an empty list, not null
+	empty := &recording{ID: "x", Volatile: marks, Answers: map[Role]Answer{"admin": jsonAnswer(200, `{"list": [], "n": 1}`)}}
+	emptyGolden, problems, _ := empty.merge(empty.build(), recordedAt)
+	if len(problems) > 0 || string(emptyGolden.Answers[0].Body.JSON) != `{"list":[],"n":1}` {
+		t.Errorf("empty list: %s, problems %q", emptyGolden.Answers[0].Body.JSON, problems)
+	}
+
 	other := &recording{ID: "x", Volatile: marks, Answers: map[Role]Answer{"admin": jsonAnswer(200, `{"list": ["a", "b", "d"], "n": 2}`)}}
 	_, problems, _ = other.merge(first.build(), recordedAt)
 	if len(problems) != 1 || !strings.Contains(problems[0], `only in the first recording: (in any order) "c"`) || !strings.Contains(problems[0], `only in the second recording: (in any order) "d"`) {

@@ -44,7 +44,7 @@
     "kind": "json",
     "json": {
      "data": {
-      "permissions": null,
+      "permissions": [],
       "role": "pro"
      },
      "success": true

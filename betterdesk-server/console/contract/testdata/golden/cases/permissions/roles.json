@@ -402,7 +402,7 @@
         "is_super_admin": false,
         "level": 0,
         "name": "pro",
-        "permissions": null
+        "permissions": []
        }
       ]
      },

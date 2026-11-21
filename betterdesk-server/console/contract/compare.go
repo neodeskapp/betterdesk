@@ -274,7 +274,8 @@ func compareAnyOrder(where string, want, got []any, diffs *[]Diff) {
 // sortedElements returns the elements of an array sorted by their JSON
 // text, the order a golden keeps an array in any order in.
 func sortedElements(array []any) []any {
-	out := append([]any(nil), array...)
+	out := make([]any, len(array))
+	copy(out, array)
 	sort.SliceStable(out, func(i, j int) bool {
 		return string(encodeJSON(out[i])) < string(encodeJSON(out[j]))
 	})
