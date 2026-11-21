@@ -2,8 +2,10 @@ package api
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"net"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -24,10 +26,30 @@ import (
 //
 // Anything that looks like HTTP reaches the HTTP server untouched; anything else
 // goes to the relay handler, which reads the normal relay framing.
+//
+// Each new connection is classified in its own goroutine, so a client that
+// connects and sends nothing holds up no one else; at most
+// sniffMaxClassifying connections wait for their first byte at once.
 type protocolSniffListener struct {
 	net.Listener
-	relay relayHandlerFunc
+	relay   relayHandlerFunc
+	results chan sniffResult
+	slots   chan struct{}
+	done    chan struct{}
+	closed  sync.Once
 }
+
+// sniffResult is what Accept hands the HTTP server: a connection that
+// looks like HTTP or TLS, or an error of the inner listener.
+type sniffResult struct {
+	conn net.Conn
+	err  error
+}
+
+const (
+	sniffMaxClassifying = 256
+	sniffFirstByteWait  = 5 * time.Second
+)
 
 // relayHandlerFunc consumes a connection that carries relay framing.
 type relayHandlerFunc func(net.Conn)
@@ -46,43 +68,92 @@ func (c *sniffConn) Read(p []byte) (int, error) { return c.reader.Read(p) }
 var RelayFallbackConnections atomic.Int64
 
 func newProtocolSniffListener(inner net.Listener, relay relayHandlerFunc) net.Listener {
-	return &protocolSniffListener{Listener: inner, relay: relay}
+	l := &protocolSniffListener{
+		Listener: inner,
+		relay:    relay,
+		results:  make(chan sniffResult),
+		slots:    make(chan struct{}, sniffMaxClassifying),
+		done:     make(chan struct{}),
+	}
+	go l.acceptLoop()
+	return l
 }
 
-// Accept accepts and classifies one connection. Relay connections are dispatched
-// to the relay handler and never returned to the HTTP server.
+// Accept returns the next connection that looks like HTTP or TLS. Relay
+// connections are dispatched to the relay handler and never returned.
 func (l *protocolSniffListener) Accept() (net.Conn, error) {
+	select {
+	case r := <-l.results:
+		return r.conn, r.err
+	case <-l.done:
+		return nil, net.ErrClosed
+	}
+}
+
+// Close closes the inner listener and ends Accept.
+func (l *protocolSniffListener) Close() error {
+	l.closed.Do(func() { close(l.done) })
+	return l.Listener.Close()
+}
+
+// acceptLoop takes the inner listener's connections and starts their
+// classification. Errors go to Accept, which the HTTP server retries on
+// temporary ones; the loop ends when the listener is closed.
+func (l *protocolSniffListener) acceptLoop() {
 	for {
 		conn, err := l.Listener.Accept()
 		if err != nil {
-			return nil, err
-		}
-
-		var first [1]byte
-		if err := conn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
-			conn.Close()
+			select {
+			case l.results <- sniffResult{err: err}:
+			case <-l.done:
+				return
+			}
+			if errors.Is(err, net.ErrClosed) {
+				return
+			}
 			continue
 		}
-		n, readErr := io.ReadFull(conn, first[:])
+		select {
+		case l.slots <- struct{}{}:
+		case <-l.done:
+			conn.Close()
+			return
+		}
+		go l.classify(conn)
+	}
+}
+
+// classify reads the first byte of conn and hands the connection to the
+// HTTP server or the relay handler.
+func (l *protocolSniffListener) classify(conn net.Conn) {
+	var first [1]byte
+	err := conn.SetReadDeadline(time.Now().Add(sniffFirstByteWait))
+	if err == nil {
+		_, err = io.ReadFull(conn, first[:])
 		// Whichever handler receives the connection owns its timeouts from here.
 		_ = conn.SetReadDeadline(time.Time{})
-		if readErr != nil || n == 0 {
-			conn.Close()
-			continue
-		}
-
-		replay := &sniffConn{Conn: conn, reader: io.MultiReader(bytes.NewReader(first[:n]), conn)}
-
-		if isHTTPFirstByte(first[0]) {
-			return replay, nil
-		}
-		if l.relay != nil {
-			RelayFallbackConnections.Add(1)
-			go l.relay(replay)
-			continue
-		}
-		conn.Close()
 	}
+	<-l.slots
+	if err != nil {
+		conn.Close()
+		return
+	}
+
+	replay := &sniffConn{Conn: conn, reader: io.MultiReader(bytes.NewReader(first[:]), conn)}
+	if isHTTPFirstByte(first[0]) {
+		select {
+		case l.results <- sniffResult{conn: replay}:
+		case <-l.done:
+			conn.Close()
+		}
+		return
+	}
+	if l.relay != nil {
+		RelayFallbackConnections.Add(1)
+		l.relay(replay)
+		return
+	}
+	conn.Close()
 }
 
 // isHTTPFirstByte reports whether b can start either an HTTP request line or a

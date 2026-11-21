@@ -179,3 +179,59 @@ func TestIsHTTPFirstByte(t *testing.T) {
 		}
 	}
 }
+
+// TestSniffListenerSilentConnectionsDoNotHoldUpOthers: connections that
+// send nothing are classified beside the others, so an HTTP request behind
+// them is accepted at once, not after their read timeout (RV177).
+func TestSniffListenerSilentConnectionsDoNotHoldUpOthers(t *testing.T) {
+	ln, _ := listenSniff(t)
+	t.Cleanup(func() { ln.Close() })
+	for i := 0; i < 2; i++ {
+		silent, err := net.Dial("tcp", ln.Addr().String())
+		if err != nil {
+			t.Fatalf("dial: %v", err)
+		}
+		t.Cleanup(func() { silent.Close() })
+	}
+	time.Sleep(100 * time.Millisecond)
+	accepted := acceptInBackground(ln)
+
+	client, err := net.Dial("tcp", ln.Addr().String())
+	if err != nil {
+		t.Fatalf("dial: %v", err)
+	}
+	t.Cleanup(func() { client.Close() })
+	if _, err := client.Write([]byte("GET /api/health HTTP/1.1\r\nHost: x\r\n\r\n")); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	select {
+	case conn := <-accepted:
+		if conn == nil {
+			t.Fatal("the HTTP connection was not accepted")
+		}
+		conn.Close()
+	case <-time.After(2 * time.Second):
+		t.Fatal("the HTTP connection waited behind the silent ones")
+	}
+}
+
+// TestSniffListenerCloseEndsAccept: closing the listener ends a waiting
+// Accept with an error.
+func TestSniffListenerCloseEndsAccept(t *testing.T) {
+	ln, _ := listenSniff(t)
+	done := make(chan error, 1)
+	go func() {
+		_, err := ln.Accept()
+		done <- err
+	}()
+	time.Sleep(50 * time.Millisecond)
+	ln.Close()
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("Accept after Close returned no error")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Accept did not return after Close")
+	}
+}
