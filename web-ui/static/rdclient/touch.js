@@ -24,6 +24,8 @@ class RDTouch {
         this._longPressTimer = null;
         this._longPressTriggered = false;
         this._directPressed = false;
+        /** @type {{x: number, y: number}|null} Last position on the screen of a direct drag */
+        this._dragPos = null;
         this._lastMoveTime = 0;
         this._moveThrottleMs = 16;
 
@@ -57,6 +59,11 @@ class RDTouch {
         c.removeEventListener('touchcancel', this._onTouchCancel);
         c.style.touchAction = '';
         clearTimeout(this._longPressTimer);
+        // A drag in progress lets go of the button on the device
+        if (this._directPressed && this._dragPos) {
+            this._sendButton(RDInput.MOUSE_TYPE_UP, RDInput.MOUSE_BUTTON_LEFT, this._dragPos.x, this._dragPos.y);
+        }
+        this._dragPos = null;
         this._activeTouches.clear();
         this._touchpadLast = null;
         this._touchpadStart = null;
@@ -193,6 +200,7 @@ class RDTouch {
             this._sendButton(RDInput.MOUSE_TYPE_DOWN, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);
             this._directPressed = true;
         }
+        this._dragPos = pos;
         this._sendMove(pos.x, pos.y);
     }
 
@@ -229,10 +237,12 @@ class RDTouch {
             const touch = e.changedTouches[i];
             this._activeTouches.delete(touch.identifier);
             if (e.touches.length === 0 && !longPressTriggered) {
-                const pos = this._posFromTouch(touch);
+                // A drag that ends outside the screen lets go where it last was on it
+                const pos = this._posFromTouch(touch) || (this._directPressed ? this._dragPos : null);
                 if (!pos) continue;
                 if (this._directPressed) {
                     this._sendButton(RDInput.MOUSE_TYPE_UP, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);
+                    this._dragPos = null;
                 } else {
                     this._sendButton(RDInput.MOUSE_TYPE_DOWN, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);
                     this._sendButton(RDInput.MOUSE_TYPE_UP, RDInput.MOUSE_BUTTON_LEFT, pos.x, pos.y);

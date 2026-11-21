@@ -26,6 +26,8 @@ class RDInput {
         this.pointerLocked = false;
         /** @type {Map<string, { key: string }>} Currently pressed keys (code → metadata) */
         this.pressedKeys = new Map();
+        /** @type {Map<number, { x: number, y: number }>} Mouse buttons held on the device (RustDesk button → last position) */
+        this._buttonsDown = new Map();
 
         /** @type {string} PeerInfo.platform for Map-mode scancode target */
         this.peerPlatform = '';
@@ -86,7 +88,8 @@ class RDInput {
         const c = this.canvas;
         c.addEventListener('mousemove', this._onMouseMove);
         c.addEventListener('mousedown', this._onMouseDown);
-        c.addEventListener('mouseup', this._onMouseUp);
+        // A button pressed on the screen may be let go anywhere: listen on the window
+        window.addEventListener('mouseup', this._onMouseUp);
         c.addEventListener('wheel', this._onWheel, { passive: false });
         c.addEventListener('contextmenu', this._onContextMenu);
 
@@ -108,11 +111,12 @@ class RDInput {
         if (!this.enabled) return;
 
         this._releaseAllKeys(false);
+        this._releaseAllButtons();
 
         const c = this.canvas;
         c.removeEventListener('mousemove', this._onMouseMove);
         c.removeEventListener('mousedown', this._onMouseDown);
-        c.removeEventListener('mouseup', this._onMouseUp);
+        window.removeEventListener('mouseup', this._onMouseUp);
         c.removeEventListener('wheel', this._onWheel);
         c.removeEventListener('contextmenu', this._onContextMenu);
 
@@ -204,6 +208,7 @@ class RDInput {
         }
 
         if (button) {
+            this._buttonsDown.set(button, { x: pos.x, y: pos.y });
             const mask = RDInput.MOUSE_TYPE_DOWN | (button << 3);
             this.sendMessage({
                 mouseEvent: {
@@ -216,12 +221,9 @@ class RDInput {
         }
     }
 
+    /** Release a button pressed on the screen, also outside it (the position is kept on the screen's edge) */
     _handleMouseUp(e) {
         if (!this.enabled) return;
-        e.preventDefault();
-
-        const pos = this._getRemotePosition(e);
-        if (!pos) return;
 
         let button = 0;
         switch (e.button) {
@@ -229,18 +231,29 @@ class RDInput {
         case 1: button = RDInput.MOUSE_BUTTON_MIDDLE; break;
         case 2: button = RDInput.MOUSE_BUTTON_RIGHT; break;
         }
+        if (!button || !this._buttonsDown.has(button)) return;
+        this._buttonsDown.delete(button);
+        if (e.target === this.canvas) e.preventDefault();
 
-        if (button) {
-            const mask = RDInput.MOUSE_TYPE_UP | (button << 3);
+        const pos = this._getClampedRemotePosition(e);
+        this.sendMessage({
+            mouseEvent: {
+                mask: RDInput.MOUSE_TYPE_UP | (button << 3),
+                x: pos.x,
+                y: pos.y,
+                modifiers: this._getMouseModifiers(e)
+            }
+        });
+    }
+
+    /** Send a release for every button still held on the device */
+    _releaseAllButtons() {
+        for (const [button, pos] of this._buttonsDown) {
             this.sendMessage({
-                mouseEvent: {
-                    mask: mask,
-                    x: pos.x,
-                    y: pos.y,
-                    modifiers: this._getMouseModifiers(e)
-                }
+                mouseEvent: { mask: RDInput.MOUSE_TYPE_UP | (button << 3), x: pos.x, y: pos.y, modifiers: [] }
             });
         }
+        this._buttonsDown.clear();
     }
 
     _handleWheel(e) {
@@ -351,6 +364,7 @@ class RDInput {
     _handleWindowBlur() {
         if (this.enabled) {
             this._releaseAllKeys(false);
+            this._releaseAllButtons();
         }
     }
 
@@ -475,6 +489,16 @@ class RDInput {
         }
 
         return pos;
+    }
+
+    /** The remote position of a pointer event, moved onto the screen's edge when it is outside */
+    _getClampedRemotePosition(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const pos = this.renderer.canvasToRemote(e.clientX - rect.left, e.clientY - rect.top);
+        return {
+            x: Math.max(0, Math.min(this.renderer.remoteWidth, pos.x)),
+            y: Math.max(0, Math.min(this.renderer.remoteHeight, pos.y))
+        };
     }
 
     _getMouseModifiers(e) {

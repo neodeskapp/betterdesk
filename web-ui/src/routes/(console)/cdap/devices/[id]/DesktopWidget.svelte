@@ -18,6 +18,7 @@
 		MOUSE,
 		hasVideoDecoder,
 		loadMseH264,
+		type KeyLike,
 		type Monitor,
 		type StreamState
 	} from '#lib/devices-area/cdap/desktop.ts';
@@ -127,8 +128,9 @@
 
 	/* ── Keys: everything goes to the device; Escape then Tab leaves ── */
 	let escArmed = false;
+	// Keys held down on the device, to release them when the screen loses focus (not drawn)
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- keys held down, not drawn
-	const keysDown = new Set<string>();
+	const keysDown = new Map<string, KeyLike>();
 
 	function onkeydown(e: KeyboardEvent) {
 		if (!session?.connected) return;
@@ -139,7 +141,8 @@
 		escArmed = e.key === 'Escape';
 		e.preventDefault();
 		if (e.repeat) return;
-		keysDown.add(e.code || e.key);
+		const { key, code, ctrlKey, altKey, shiftKey, metaKey } = e;
+		keysDown.set(code || key, { key, code, ctrlKey, altKey, shiftKey, metaKey });
 		session.key(e, true);
 	}
 
@@ -151,6 +154,31 @@
 		e.preventDefault();
 		session.key(e, false);
 	}
+
+	/** Focus left the screen (Alt+Tab, a click elsewhere): the device lets go of every key */
+	function releaseKeys() {
+		for (const k of keysDown.values()) session?.key(k, false);
+		keysDown.clear();
+		escArmed = false;
+	}
+
+	/* ── Mouse: a button pressed on the screen is released on the device wherever it is let go ── */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- buttons held down, not drawn
+	const buttonsDown = new Set<number>();
+
+	$effect(() => {
+		const up = (e: MouseEvent) => {
+			if (!buttonsDown.delete(e.button)) return;
+			session?.mouse(e, MOUSE.up);
+		};
+		const blur = () => releaseKeys();
+		window.addEventListener('mouseup', up);
+		window.addEventListener('blur', blur);
+		return () => {
+			window.removeEventListener('mouseup', up);
+			window.removeEventListener('blur', blur);
+		};
+	});
 
 	function onpaste(e: ClipboardEvent) {
 		if (!session?.connected) return;
@@ -234,6 +262,7 @@
 		{onkeydown}
 		{onkeyup}
 		{onpaste}
+		onblur={releaseKeys}
 		oncopy={(e) => e.preventDefault()}
 	>
 		<canvas
@@ -245,13 +274,12 @@
 			onmousedown={(e) => {
 				if (!session?.connected) return;
 				stage?.focus();
+				buttonsDown.add(e.button);
 				session.mouse(e, MOUSE.down);
 				e.preventDefault();
 			}}
 			onmouseup={(e) => {
-				if (!session?.connected) return;
-				session.mouse(e, MOUSE.up);
-				e.preventDefault();
+				if (session?.connected) e.preventDefault();
 			}}
 			onmousemove={(e) => session?.mouse(e, MOUSE.move)}
 			oncontextmenu={(e) => e.preventDefault()}
