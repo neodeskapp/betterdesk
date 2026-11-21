@@ -374,11 +374,15 @@ func main() {
 		log.Printf("  Username: %s", adminUser)
 		if adminPasswordGenerated {
 			dbDir := bootstrapCredentialsDir(cfg.DBPath, cfg.KeyFile)
-			credsFile, err := writeBootstrapAdminCredentials(dbDir, adminUser, adminPass)
+			credsFile, wrote, err := writeBootstrapAdminCredentials(dbDir, adminUser, adminPass)
 			if err != nil {
 				log.Fatalf("Failed to write credentials file: %v", err)
 			}
-			log.Printf("  Password: written to %s (mode 0600)", credsFile)
+			if wrote {
+				log.Printf("  Password: written to %s (mode 0600)", credsFile)
+			} else {
+				log.Printf("  Password: not written, %s holds another password; set one with the reset-password command", credsFile)
+			}
 		} else if adminPasswordFromFile {
 			log.Printf("  Password: loaded from existing bootstrap credentials file")
 		} else {
@@ -885,7 +889,11 @@ func bootstrapCredentialsDir(dbPath, keyFile string) string {
 	return filepath.Dir(dbPath)
 }
 
-func writeBootstrapAdminCredentials(dbDir, adminUser, adminPass string) (string, error) {
+// writeBootstrapAdminCredentials stores the first admin's generated password
+// in .admin_credentials. A file that already holds a password is never
+// changed; a file without a password line gets the credentials added at its
+// end. wrote reports whether the file now holds adminPass.
+func writeBootstrapAdminCredentials(dbDir, adminUser, adminPass string) (path string, wrote bool, err error) {
 	if dbDir == "" || dbDir == "." {
 		dbDir = "."
 	}
@@ -896,21 +904,33 @@ func writeBootstrapAdminCredentials(dbDir, adminUser, adminPass string) (string,
 	)
 	file, err := os.OpenFile(credsFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
-		if os.IsExist(err) {
-			return credsFile, nil
+		if !os.IsExist(err) {
+			return "", false, err
 		}
-		return "", err
+		if existing := readBootstrapAdminPassword(dbDir); existing != "" {
+			return credsFile, existing == adminPass, nil
+		}
+		file, err = os.OpenFile(credsFile, os.O_WRONLY|os.O_APPEND, 0600)
+		if err != nil {
+			return "", false, err
+		}
+		credsContent = "\n" + credsContent
+	} else {
+		// A new file that could not be written whole is removed.
+		defer func() {
+			if err != nil {
+				_ = os.Remove(credsFile)
+			}
+		}()
 	}
-	if _, err := file.WriteString(credsContent); err != nil {
+	if _, err = file.WriteString(credsContent); err != nil {
 		_ = file.Close()
-		_ = os.Remove(credsFile)
-		return "", err
+		return "", false, err
 	}
-	if err := file.Close(); err != nil {
-		_ = os.Remove(credsFile)
-		return "", err
+	if err = file.Close(); err != nil {
+		return "", false, err
 	}
-	return credsFile, nil
+	return credsFile, true, nil
 }
 
 func readBootstrapAdminPassword(dbDir string) string {

@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/config"
@@ -17,12 +18,15 @@ func TestWriteBootstrapAdminCredentialsDoesNotOverwriteExistingFile(t *testing.T
 		t.Fatal(err)
 	}
 
-	gotPath, err := writeBootstrapAdminCredentials(dir, "admin", "replacement-password")
+	gotPath, wrote, err := writeBootstrapAdminCredentials(dir, "admin", "replacement-password")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if gotPath != credentialsPath {
 		t.Fatalf("credentials path = %q, want %q", gotPath, credentialsPath)
+	}
+	if wrote {
+		t.Fatal("reported the replacement password as written")
 	}
 
 	got, err := os.ReadFile(credentialsPath)
@@ -31,6 +35,33 @@ func TestWriteBootstrapAdminCredentialsDoesNotOverwriteExistingFile(t *testing.T
 	}
 	if string(got) != string(original) {
 		t.Fatalf("existing credentials were overwritten: %q", got)
+	}
+}
+
+// TestBootstrapCredentialsFileWithoutPasswordGetsThePassword: a first
+// admin's generated password is written to an .admin_credentials that
+// exists without a password line, and the file's text is kept.
+func TestBootstrapCredentialsFileWithoutPasswordGetsThePassword(t *testing.T) {
+	dir := t.TempDir()
+	credentialsPath := filepath.Join(dir, ".admin_credentials")
+	original := "Admin Username: admin\n"
+	if err := os.WriteFile(credentialsPath, []byte(original), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	gotPath, wrote, err := writeBootstrapAdminCredentials(dir, "admin", "generated-password")
+	if err != nil || gotPath != credentialsPath || !wrote {
+		t.Fatalf("write = %q, wrote %v, %v", gotPath, wrote, err)
+	}
+	if got := readBootstrapAdminPassword(dir); got != "generated-password" {
+		t.Fatalf("password in the file = %q, want the generated one", got)
+	}
+	got, err := os.ReadFile(credentialsPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(string(got), original) {
+		t.Fatalf("file text not kept: %q", got)
 	}
 }
 
@@ -56,9 +87,9 @@ func TestFirstAdminOnPostgresWritesItsCredentials(t *testing.T) {
 	keyFile := filepath.Join(keys, "id_ed25519")
 	for _, dsn := range []string{"postgres://bd:made-up@db:5432/betterdesk?sslmode=disable", "POSTGRESQL://db/betterdesk"} {
 		dir := bootstrapCredentialsDir(dsn, keyFile)
-		path, err := writeBootstrapAdminCredentials(dir, "admin", "made-up-first-pass")
-		if err != nil || path != filepath.Join(keys, ".admin_credentials") {
-			t.Fatalf("credentials of %s: %q %v", dsn, path, err)
+		path, wrote, err := writeBootstrapAdminCredentials(dir, "admin", "made-up-first-pass")
+		if err != nil || !wrote || path != filepath.Join(keys, ".admin_credentials") {
+			t.Fatalf("credentials of %s: %q, wrote %v, %v", dsn, path, wrote, err)
 		}
 		if got := readBootstrapAdminPassword(dir); got != "made-up-first-pass" {
 			t.Errorf("password read back for %s: %q", dsn, got)
