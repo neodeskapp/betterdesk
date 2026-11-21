@@ -1,12 +1,18 @@
 /** Words for enrollment requests, shared by the page and its sheet */
 
 import { ApiError } from '#lib/api/client.ts';
-import { SOURCE_ENROLLMENT, type RequestRow, type RequestStatus } from '#lib/clients/registrations.ts';
+import {
+	SOURCE_ENROLLMENT,
+	isMeshRequest,
+	type RequestRow,
+	type RequestStatus
+} from '#lib/clients/registrations.ts';
 import { FormError } from '#lib/ui/form.svelte.ts';
 import { formatDate } from '#lib/i18n/format.ts';
 import { t } from '#lib/i18n/i18n.svelte.ts';
 
 export function sourceLabel(row: RequestRow): string {
+	if (isMeshRequest(row)) return t('devices.type_mesh_agent');
 	return row.source === SOURCE_ENROLLMENT
 		? t('registrations.source_rustdesk')
 		: t('registrations.source_lan');

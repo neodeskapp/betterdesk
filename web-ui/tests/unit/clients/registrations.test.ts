@@ -13,6 +13,7 @@ import {
 	fromHistory,
 	fromLan,
 	fromPending,
+	isMeshRequest,
 	mergeRows,
 	modeNotice,
 	oldest,
@@ -179,7 +180,15 @@ describe('counts', () => {
 		const rows = [pending('1', '2026-11-08T08:00:00Z'), pending('2', '2026-11-01T00:00:00Z'), lan()];
 		expect(oldest(rows)?.device_id).toBe('2');
 		expect(oldest([])).toBeNull();
-		expect(bySource(rows)).toEqual({ rustdesk: 2, lan: 1 });
+		expect(bySource(rows)).toEqual({ rustdesk: 2, mesh: 0, lan: 1 });
+	});
+
+	test('a mesh agent waiting in the Go server queue counts as a mesh agent, not a RustDesk client', () => {
+		const mesh = { ...pending('Mabc123'), platform: 'mesh' };
+		expect(isMeshRequest(mesh)).toBe(true);
+		expect(isMeshRequest(pending('1'))).toBe(false);
+		expect(isMeshRequest(lan({ platform: 'mesh' }))).toBe(false);
+		expect(bySource([pending('1'), mesh, lan()])).toEqual({ rustdesk: 1, mesh: 1, lan: 1 });
 	});
 });
 

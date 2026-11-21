@@ -10,7 +10,7 @@ import { parseDate } from '#lib/i18n/format.ts';
 
 /** The console's own queue: BetterDesk clients on the local network */
 export const SOURCE_LAN = 'registration';
-/** The Go server's queue: RustDesk clients */
+/** The Go server's queue: RustDesk clients and mesh agents */
 export const SOURCE_ENROLLMENT = 'enrollment';
 export type Source = typeof SOURCE_LAN | typeof SOURCE_ENROLLMENT;
 
@@ -198,14 +198,21 @@ export function oldest(rows: readonly RequestRow[]): RequestRow | null {
 	return best;
 }
 
-export function bySource(rows: readonly RequestRow[]): { rustdesk: number; lan: number } {
+/** A mesh agent waits in the Go server's queue with the platform "mesh" */
+export function isMeshRequest(row: RequestRow): boolean {
+	return row.source === SOURCE_ENROLLMENT && row.platform.toLowerCase() === 'mesh';
+}
+
+export function bySource(rows: readonly RequestRow[]): { rustdesk: number; mesh: number; lan: number } {
 	let rustdesk = 0;
+	let mesh = 0;
 	let lan = 0;
 	for (const r of rows) {
-		if (r.source === SOURCE_ENROLLMENT) rustdesk++;
+		if (isMeshRequest(r)) mesh++;
+		else if (r.source === SOURCE_ENROLLMENT) rustdesk++;
 		else lan++;
 	}
-	return { rustdesk, lan };
+	return { rustdesk, mesh, lan };
 }
 
 export type RowAction = 'approve' | 'reject' | 'open' | 'allow-again';

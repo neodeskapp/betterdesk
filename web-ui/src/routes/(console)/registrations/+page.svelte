@@ -31,7 +31,6 @@
 		listPendingEnrollments
 	} from '#lib/api/registrations.ts';
 	import {
-		SOURCE_ENROLLMENT,
 		bySource,
 		canDeleteRecord,
 		enrollmentMode,
@@ -199,7 +198,8 @@
 	const shown = $derived(visibleRows(rows, decided, filter, search));
 	const waiting = $derived(waitingRows(rows, decided));
 	const sources = $derived(bySource(waiting));
-	const waitingRustdesk = $derived(waiting.filter((r) => r.source === SOURCE_ENROLLMENT).length);
+	// The enrollment mode applies to RustDesk clients; mesh agents always wait for approval
+	const waitingRustdesk = $derived(sources.rustdesk);
 	const notice = $derived(modeNotice(mode, waitingRustdesk));
 
 	const countText = $derived.by(() => {
@@ -542,6 +542,9 @@
 								<Facts
 									items={[
 										{ label: t('registrations.source_rustdesk'), value: formatNumber(sources.rustdesk) },
+										...(sources.mesh
+											? [{ label: t('devices.type_mesh_agent'), value: formatNumber(sources.mesh) }]
+											: []),
 										{ label: t('registrations.source_lan'), value: formatNumber(sources.lan) }
 									]}
 								/>
