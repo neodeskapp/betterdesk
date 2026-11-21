@@ -41,10 +41,6 @@
    },
    "volatile": [
     {
-     "path": "branding.revision",
-     "pattern": "^[9aA+/_=-]{8}$"
-    },
-    {
      "path": "csrfToken",
      "pattern": "^[9aA+/_=-]{128}$"
     }
@@ -393,7 +389,7 @@
       "logoTextAccent": "",
       "logoType": "default",
       "logoUrl": "",
-      "revision": "<volatile>",
+      "revision": "e3b0c442",
       "showPoweredBy": true,
       "themeMode": "system"
      },
@@ -587,7 +583,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=9dfe464e37e0da87"
+      "stringsUrl": "/api/console/strings/ar?v=8200811c8861767f"
      },
      "nav": [
       {
@@ -887,10 +883,6 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "branding.revision",
-     "pattern": "^[9aA+/_=-]{8}$"
-    },
     {
      "path": "csrfToken",
      "pattern": "^[9aA+/_=-]{128}$"
@@ -1240,7 +1232,7 @@
       "logoTextAccent": "",
       "logoType": "default",
       "logoUrl": "",
-      "revision": "<volatile>",
+      "revision": "e3b0c442",
       "showPoweredBy": true,
       "themeMode": "system"
      },
@@ -1434,7 +1426,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=9dfe464e37e0da87"
+      "stringsUrl": "/api/console/strings/ar?v=8200811c8861767f"
      },
      "nav": [
       {

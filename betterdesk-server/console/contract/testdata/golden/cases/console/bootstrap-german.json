@@ -41,10 +41,6 @@
    },
    "volatile": [
     {
-     "path": "branding.revision",
-     "pattern": "^[9aA+/_=-]{8}$"
-    },
-    {
      "path": "csrfToken",
      "pattern": "^[9aA+/_=-]{128}$"
     }
@@ -393,7 +389,7 @@
       "logoTextAccent": "",
       "logoType": "default",
       "logoUrl": "",
-      "revision": "<volatile>",
+      "revision": "e3b0c442",
       "showPoweredBy": true,
       "themeMode": "system"
      },
@@ -587,7 +583,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=1f44ab837160e11b"
+      "stringsUrl": "/api/console/strings/de?v=271a7ca0963828cf"
      },
      "nav": [
       {
@@ -887,10 +883,6 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    {
-     "path": "branding.revision",
-     "pattern": "^[9aA+/_=-]{8}$"
-    },
     {
      "path": "csrfToken",
      "pattern": "^[9aA+/_=-]{128}$"
@@ -1240,7 +1232,7 @@
       "logoTextAccent": "",
       "logoType": "default",
       "logoUrl": "",
-      "revision": "<volatile>",
+      "revision": "e3b0c442",
       "showPoweredBy": true,
       "themeMode": "system"
      },
@@ -1434,7 +1426,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=1f44ab837160e11b"
+      "stringsUrl": "/api/console/strings/de?v=271a7ca0963828cf"
      },
      "nav": [
       {
@@ -1824,10 +1816,6 @@
    },
    "volatile": [
     {
-     "path": "branding.revision",
-     "pattern": "^[9aA+/_=-]{8}$"
-    },
-    {
      "path": "csrfToken",
      "pattern": "^[9aA+/_=-]{128}$"
     }
@@ -2176,7 +2164,7 @@
       "logoTextAccent": "",
       "logoType": "default",
       "logoUrl": "",
-      "revision": "<volatile>",
+      "revision": "e3b0c442",
       "showPoweredBy": true,
       "themeMode": "system"
      },
@@ -2370,7 +2358,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=1f44ab837160e11b"
+      "stringsUrl": "/api/console/strings/de?v=271a7ca0963828cf"
      },
      "nav": [
       {
@@ -2861,10 +2849,6 @@
    },
    "volatile": [
     {
-     "path": "branding.revision",
-     "pattern": "^[9aA+/_=-]{8}$"
-    },
-    {
      "path": "csrfToken",
      "pattern": "^[9aA+/_=-]{128}$"
     }
@@ -3213,7 +3197,7 @@
       "logoTextAccent": "",
       "logoType": "default",
       "logoUrl": "",
-      "revision": "<volatile>",
+      "revision": "e3b0c442",
       "showPoweredBy": true,
       "themeMode": "system"
      },
@@ -3407,7 +3391,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=1f44ab837160e11b"
+      "stringsUrl": "/api/console/strings/de?v=271a7ca0963828cf"
      },
      "nav": [
       {
