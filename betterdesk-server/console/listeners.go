@@ -113,7 +113,6 @@ func (s *Server) newClientAPI() {
 		APIOrigin:   origin,
 		API:         s.apiListener,
 		InsecureAPI: cfg.AllowSelfSignedCerts,
-		Node:        cfg.NodeUpstream,
 		TrustProxy:  cfg.TrustProxy,
 	})
 }

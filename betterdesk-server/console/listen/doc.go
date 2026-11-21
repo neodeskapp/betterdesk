@@ -25,9 +25,9 @@
 // headers, the 10 second request timeout) in front of either the server's
 // API (proxy mode, RUSTDESK_API_PROXY, the default) or the console's client
 // API routes behind a strict 64 KB JSON parser (local mode). The two
-// registration routes under /api/bd go to the Node console until they
-// move. Its http.Server reads headers and body within 10 seconds, keeps an
-// idle connection 5, and takes 16 KB of headers. PlainListener answers a
+// registration routes under /api/bd are the console's own in both modes.
+// Its http.Server reads headers and body within 10 seconds, keeps an idle
+// connection 5, and takes 16 KB of headers. PlainListener answers a
 // connection that times out before its first request with "408 Request
 // Timeout", as Node did.
 //

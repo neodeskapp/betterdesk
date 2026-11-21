@@ -55,9 +55,6 @@ type ClientAPIOptions struct {
 	// InsecureAPI accepts any certificate of an https APIOrigin
 	// (ALLOW_SELF_SIGNED_CERTS).
 	InsecureAPI bool
-	// Node is the Node console. Until the registration routes move, the
-	// port passes them there; nil answers them as any unknown path.
-	Node *url.URL
 	// TrustProxy decides the client's address, as TRUST_PROXY did there.
 	TrustProxy httpx.TrustProxy
 	// Now is the clock of the rate limiters. nil means time.Now.
@@ -77,13 +74,12 @@ type ClientAPIOptions struct {
 // one over 64 KB 413, any other body error 500. CONNECT is closed without
 // an answer, a request target with bytes above 0x7f gets 400.
 type ClientAPI struct {
-	handler      http.Handler
-	router       *kit.Router
-	forward      *apiForward
-	registration *nodeRegistration
-	proxy        bool
-	srv          *http.Server
-	addr         string
+	handler http.Handler
+	router  *kit.Router
+	forward *apiForward
+	proxy   bool
+	srv     *http.Server
+	addr    string
 }
 
 // NewClientAPI builds the port's handler and registers its routes.
@@ -100,9 +96,6 @@ func NewClientAPI(opts ClientAPIOptions) *ClientAPI {
 	for _, register := range opts.Shared {
 		register(&d)
 	}
-	if opts.Node != nil {
-		c.registration = newNodeRegistration(opts.Node, !opts.Proxy)
-	}
 	if opts.Proxy {
 		c.forward = newAPIForward(opts.APIOrigin, opts.InsecureAPI, opts.TrustProxy.ClientIP)
 		c.forward.api = opts.API
@@ -115,7 +108,7 @@ func NewClientAPI(opts ClientAPIOptions) *ClientAPI {
 		} else {
 			r = kit.Begin(r, trust, nil)
 		}
-		if c.router.Serve(w, r) || c.registration.serve(w, r) {
+		if c.router.Serve(w, r) {
 			return
 		}
 		if c.forward != nil {
@@ -125,7 +118,7 @@ func NewClientAPI(opts ClientAPIOptions) *ClientAPI {
 		notFound(w, r)
 	})
 	parsed := middleware.RouteJSON(middleware.BodyOptions{Limit: jsonLimit, OnError: jsonError})(routes)
-	inner := keepRawBody(parsed)
+	inner := parsed
 	if opts.Proxy {
 		// The forward passes the body on as it came; the port's own routes
 		// read it as JSON, as in local mode
@@ -259,7 +252,7 @@ func (c *ClientAPI) Addr() string {
 }
 
 // Stop closes the listener, gives open requests ten seconds and drops
-// the connections to the server's API and the Node console.
+// the connections to the server's API.
 func (c *ClientAPI) Stop() {
 	if c.srv != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -271,5 +264,4 @@ func (c *ClientAPI) Stop() {
 	if c.forward != nil {
 		c.forward.close()
 	}
-	c.registration.close()
 }

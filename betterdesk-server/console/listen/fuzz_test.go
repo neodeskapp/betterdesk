@@ -85,14 +85,42 @@ func (rec *recorder) take() []string {
 	return out
 }
 
-// fuzzPort is a client API port for the fuzz tests, with a clock that
-// moves a minute per request, so the rate limits never refuse.
-func fuzzPort(t testing.TB, proxy bool, api, node *recorder) (*ClientAPI, func()) {
+// registered stands in for the registration routes the port shares with
+// the console (registration.ClientAPI): it answers 200 and remembers what
+// it took.
+type registered struct {
+	mu   sync.Mutex
+	seen []string
+}
+
+func (g *registered) register(d *kit.Deps) {
+	answer := func(w http.ResponseWriter, r *http.Request) {
+		g.mu.Lock()
+		g.seen = append(g.seen, r.Method+" "+httpx.RawPath(r))
+		g.mu.Unlock()
+		w.WriteHeader(http.StatusOK)
+	}
+	r := d.At("/api/bd").Early
+	r.Post("/register-request", answer)
+	r.Get("/register-status", answer)
+}
+
+func (g *registered) take() []string {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	out := g.seen
+	g.seen = nil
+	return out
+}
+
+// fuzzPort is a client API port for the fuzz tests, with the registration
+// routes of reg and a clock that moves a minute per request, so the rate
+// limits never refuse.
+func fuzzPort(t testing.TB, proxy bool, api *recorder, reg *registered) (*ClientAPI, func()) {
 	var minutes atomic.Int64
 	apiURL, _ := url.Parse(api.URL)
-	nodeURL, _ := url.Parse(node.URL)
 	c := NewClientAPI(ClientAPIOptions{
-		Deps: &kit.Deps{}, Proxy: proxy, APIOrigin: apiURL, Node: nodeURL,
+		Deps: &kit.Deps{}, Proxy: proxy, APIOrigin: apiURL, Shared: []func(d *kit.Deps){reg.register},
 		Now: func() time.Time { return time.Unix(0, 0).Add(time.Duration(minutes.Load()) * time.Minute) },
 	})
 	return c, func() { minutes.Add(2) }
@@ -127,8 +155,8 @@ var allowedStatus = map[int]bool{200: true, 204: true, 400: true, 404: true, 405
 
 // FuzzClientAPIPathList: whatever the request target, the server's API
 // gets only listed paths with a method the list allows, as the client
-// wrote them, and the Node console only the two registration requests,
-// with their constant path.
+// wrote them, and never one of /api/bd/; the port's registration routes
+// get only the two listed registration requests.
 func FuzzClientAPIPathList(f *testing.F) {
 	for _, seed := range []string{
 		"GET /api/health", "POST /api/login", "GET /api/peer-key/abc", "GET /api/strategies/0123abcd-0123-4567-89ab-0123456789ab",
@@ -141,9 +169,9 @@ func FuzzClientAPIPathList(f *testing.F) {
 		f.Add(method, target, []byte("{}"))
 	}
 	api := newRecorder(f, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
-	node := newRecorder(f, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
-	proxyPort, tickProxy := fuzzPort(f, true, api, node)
-	localPort, tickLocal := fuzzPort(f, false, api, node)
+	reg := &registered{}
+	proxyPort, tickProxy := fuzzPort(f, true, api, reg)
+	localPort, tickLocal := fuzzPort(f, false, api, reg)
 	f.Fuzz(func(t *testing.T, method, target string, body []byte) {
 		raw := fmt.Appendf(nil, "%s %s HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n", method, target, len(body))
 		raw = append(raw, body...)
@@ -160,18 +188,22 @@ func FuzzClientAPIPathList(f *testing.F) {
 				t.Fatalf("%s %q: status %d", method, target, rec.Code)
 			}
 			p := httpx.RawPath(r)
+			// A "#" in the target is part of the path the route table reads,
+			// so no route of the port takes it, while the path list reads the
+			// path up to the "#": such a registration request goes on to the
+			// server's API
+			fragment := strings.Contains(r.RequestURI, "#")
 			for _, seen := range api.take() {
 				m, uri, _ := strings.Cut(seen, " ")
 				path, _, _ := strings.Cut(uri, "?")
-				if m != r.Method || path != p || !mayPass(m, path) || strings.HasPrefix(path, "/api/bd/") {
+				if m != r.Method || path != p || !mayPass(m, path) || (strings.HasPrefix(path, "/api/bd/") && !fragment) {
 					t.Fatalf("%s %q reached the API as %q", method, target, seen)
 				}
 			}
-			for _, seen := range node.take() {
-				m, uri, _ := strings.Cut(seen, " ")
-				path, _, _ := strings.Cut(uri, "?")
-				if registrationRoutes[path] != m || path != p {
-					t.Fatalf("%s %q reached the Node console as %q", method, target, seen)
+			for _, seen := range reg.take() {
+				m, path, _ := strings.Cut(seen, " ")
+				if m != r.Method || path != p || !mayPass(m, path) || !strings.HasPrefix(path, "/api/bd/") {
+					t.Fatalf("%s %q reached a registration route as %q", method, target, seen)
 				}
 			}
 		}
@@ -190,14 +222,13 @@ func validStrict(body []byte) bool {
 
 // FuzzJSONGate: in local mode a JSON body that does not parse gets 400
 // {"error":"Invalid JSON"}, one that parses goes on (here to the empty
-// 404, as no routes are registered), and nothing else comes out.
+// 404, as no route takes these paths), and nothing else comes out.
 func FuzzJSONGate(f *testing.F) {
 	for _, seed := range []string{`{"a":1}`, `[]`, ``, `null`, `1`, `"x"`, `{bad`, `{"a":1}x`, ` {} `, `{"a":"\ud800"}`, `[1,2`, "\xef\xbb\xbf{}"} {
 		f.Add([]byte(seed), uint8(0))
 	}
 	api := newRecorder(f, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
-	node := newRecorder(f, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
-	port, tick := fuzzPort(f, false, api, node)
+	port, tick := fuzzPort(f, false, api, &registered{})
 	types := []string{"application/json", "application/json; charset=utf-8", "application/json; charset=latin1", "text/plain; a=application/json", "application/json-patch+json"}
 	f.Fuzz(func(t *testing.T, body []byte, kind uint8) {
 		contentType := types[int(kind)%len(types)]

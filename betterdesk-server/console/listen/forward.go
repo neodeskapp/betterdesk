@@ -160,13 +160,6 @@ func (f *apiForward) serveInProcess(w http.ResponseWriter, r, out *http.Request,
 
 func (f *apiForward) close() { f.transport.CloseIdleConnections() }
 
-// firstForwarded is the first address of X-Forwarded-For as the client
-// sent it, trimmed.
-func firstForwarded(r *http.Request) string {
-	first, _, _ := strings.Cut(strings.Join(r.Header.Values("X-Forwarded-For"), ", "), ",")
-	return strings.TrimSpace(first)
-}
-
 // requestPath is the path of the request as the client wrote it. On the
 // client API port it is always one of the listed paths.
 func requestPath(r *http.Request) string {
@@ -200,132 +193,7 @@ func forwardQuery(r *http.Request) string {
 	return b.String()
 }
 
-// registrationRoutes are the two registration routes of the client API
-// port and their methods. The path list lets nothing else under /api/bd
-// through.
-var registrationRoutes = map[string]string{
-	"/api/bd/register-request": http.MethodPost,
-	"/api/bd/register-status":  http.MethodGet,
-}
-
-// nodeRegistration passes the two registration routes on to the Node
-// console, where they are mounted below /api/bd on the console port, until
-// they move to Go. Only these two exact requests go; the path sent is the
-// constant, never the client's, and the query goes as written.
-type nodeRegistration struct {
-	node      *url.URL
-	transport *http.Transport
-	// withBody says whether the body goes along. In proxy mode the old
-	// port read no JSON for these routes, so they never saw one (BUGS I1).
-	withBody bool
-}
-
-func newNodeRegistration(node *url.URL, withBody bool) *nodeRegistration {
-	return &nodeRegistration{node: node, withBody: withBody, transport: &http.Transport{
-		Proxy:                 nil,
-		MaxIdleConns:          16,
-		IdleConnTimeout:       30 * time.Second,
-		ResponseHeaderTimeout: apiTimeout,
-		DisableCompression:    true,
-	}}
-}
-
-// forwardedHeaders are the request headers the registration routes may
-// read; nothing else of the client's goes to the console port.
-var forwardedHeaders = []string{"Content-Type", "Content-Encoding", "User-Agent", "Accept", "If-None-Match", "If-Modified-Since"}
-
-// serve answers one of the two routes and reports true, or reports false
-// for any other request.
-func (n *nodeRegistration) serve(w http.ResponseWriter, r *http.Request) bool {
-	p := httpx.RawPath(r)
-	method, ok := registrationRoutes[p]
-	if !ok || r.Method != method || n == nil {
-		return false
-	}
-	target := *n.node
-	target.Path = strings.TrimSuffix(target.Path, "/") + p
-	target.RawPath = ""
-	target.RawQuery = forwardQuery(r)
-	out := &http.Request{
-		Method: r.Method, URL: &target, Proto: "HTTP/1.1", ProtoMajor: 1, ProtoMinor: 1,
-		Header: http.Header{}, Host: r.Host,
-	}
-	for _, name := range forwardedHeaders {
-		if values := r.Header.Values(name); len(values) > 0 {
-			out.Header[name] = values
-		}
-	}
-	if _, ok := out.Header["User-Agent"]; !ok {
-		out.Header["User-Agent"] = []string{""}
-	}
-	// The route records the first X-Forwarded-For address, else
-	// X-Real-IP, else the socket; the console behind trusts this hop
-	socket := httpx.SocketIP(r)
-	address := firstForwarded(r)
-	if address == "" {
-		address = strings.Join(r.Header.Values("X-Real-IP"), ", ")
-	}
-	if address == "" || address == socket {
-		out.Header.Set("X-Forwarded-For", socket)
-	} else {
-		out.Header.Set("X-Forwarded-For", address+", "+socket)
-	}
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-	out.Header.Set("X-Forwarded-Proto", scheme)
-	out.Header.Set("X-Forwarded-Host", r.Host)
-	if n.withBody && method == http.MethodPost {
-		body, _ := r.Context().Value(rawBodyKey{}).([]byte)
-		out.ContentLength = int64(len(body))
-		out.Body = io.NopCloser(bytes.NewReader(body))
-	} else if method == http.MethodPost {
-		out.Header.Set("Content-Type", "application/json")
-		out.ContentLength = 0
-		out.Body = http.NoBody
-	}
-	res, err := n.transport.RoundTrip(out.WithContext(r.Context()))
-	if err != nil {
-		logging.Logf("client-api", "ERROR: registration route %s %s: the Node console did not answer: %v", r.Method, p, err)
-		httpx.WriteJSON(w, r, http.StatusBadGateway, errorBody{"Bad Gateway"})
-		return true
-	}
-	defer res.Body.Close()
-	h := w.Header()
-	for _, name := range []string{"Content-Type", "ETag"} {
-		if value := res.Header.Get(name); value != "" {
-			h.Set(name, value)
-		}
-	}
-	body, _ := io.ReadAll(res.Body)
-	if res.StatusCode != http.StatusNoContent && res.StatusCode != http.StatusNotModified {
-		h.Set("Content-Length", fmt.Sprint(len(body)))
-	}
-	w.WriteHeader(res.StatusCode)
-	_, _ = w.Write(body)
-	return true
-}
-
-func (n *nodeRegistration) close() {
-	if n != nil {
-		n.transport.CloseIdleConnections()
-	}
-}
-
+// errorBody is the JSON error the port answers with.
 type errorBody struct {
 	Error string `json:"error"`
-}
-
-type rawBodyKey struct{}
-
-// keepRawBody keeps the body as it arrived for the registration forward,
-// before the JSON parser reads it: the Node console parses it again with
-// the same parser, so it gets the bytes, their type and their encoding.
-func keepRawBody(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
-		r.Body = io.NopCloser(bytes.NewReader(body))
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), rawBodyKey{}, body)))
-	})
 }
