@@ -96,18 +96,16 @@ func init() {
 			Send: []any{map[string]any{"type": "get_history", "conversation_id": "900100001"}}, Expect: 1})},
 		agentCase("agent-history", "agent", contract.Socket{Send: []any{map[string]any{"type": "get_history"}}, Expect: 1, Filter: only("history")}),
 
-		// What the relay leaves alone: binary, text that is not JSON, a
-		// frame over 8 KiB (the one at the limit is answered)
+		// What the relay leaves alone: binary, text that is not JSON (a
+		// frame at the 8 KiB limit is answered)
 		agentCase("agent-ignored", "agent", contract.Socket{Send: []any{
 			contract.SocketBinary(`{"type":"hello"}`), "not json", `{"type":"nothing"}`,
-			`{"type":"hello","pad":"` + strings.Repeat("x", 8192-24) + `"}`,
 		}}),
 		agentCase("agent-at-the-limit", "agent", contract.Socket{Send: []any{
 			`{"type":"hello","pad":"` + strings.Repeat("x", 8192-25) + `"}`,
 		}, Expect: 1, Filter: only("welcome")}),
 		contract.Case{Name: "operator-ignored", Path: room, Socket: sock("op", contract.Socket{Send: []any{
 			contract.SocketBinary(`{"type":"hello"}`), "not json",
-			`{"type":"hello","pad":"` + strings.Repeat("x", 8192-24) + `"}`,
 		}})},
 
 		// The panel: status first, then what the API server gives
@@ -135,5 +133,14 @@ func init() {
 		agentCase("agent-not-utf8", "agent2", contract.Socket{Send: []any{"\xc3\x28"}, WaitClose: true}),
 		contract.Case{Name: "operator-sees-agent-leave", Path: room, Socket: sock("op", contract.Socket{Expect: 2, Close: true})},
 		contract.Case{Name: "panel-sees-agent-leave", Path: panel, Socket: sock("panel", contract.Socket{Expect: 4, Close: true})},
+
+		// A frame over 8 KiB closes the socket with 1009. These come last:
+		// a new agent socket would replace the turn's agent
+		agentCase("agent-too-big", "a_big", contract.Socket{Send: []any{
+			`{"type":"hello","pad":"` + strings.Repeat("x", 8192-24) + `"}`,
+		}, WaitClose: true}),
+		contract.Case{Name: "operator-too-big", Path: room, Socket: sock("o_big", contract.Socket{Send: []any{
+			`{"type":"hello","pad":"` + strings.Repeat("x", 8192-24) + `"}`,
+		}, WaitClose: true})},
 	)
 }

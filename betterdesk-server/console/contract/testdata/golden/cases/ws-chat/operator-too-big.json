@@ -1,0 +1,83 @@
+{
+ "id": "ws-chat/operator-too-big",
+ "request": {
+  "method": "GET",
+  "path": "/ws/chat-operator/900100001",
+  "notes": [
+   "websocket o_big, own origin",
+   "websocket send text \"{\\\"type\\\":\\\"hello\\\",\\\"pad\\\":\\\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx... (8203 bytes)",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "server_admin"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  },
+  {
+   "roles": [
+    "viewer",
+    "operator",
+    "global_admin",
+    "super_admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1009,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "agent_connected": false,
+        "type": "status"
+       },
+       "order": "type agent_connected"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 101,
+   "volatile": [
+    "messages[#]"
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1009,
+      "reason": ""
+     },
+     "messages": [
+      {}
+     ]
+    }
+   }
+  }
+ ]
+}

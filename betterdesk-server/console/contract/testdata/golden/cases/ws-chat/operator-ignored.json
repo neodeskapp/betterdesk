@@ -6,8 +6,7 @@
   "notes": [
    "websocket op, own origin",
    "websocket send 16 binary bytes",
-   "websocket send text \"not json\"",
-   "websocket send text \"{\\\"type\\\":\\\"hello\\\",\\\"pad\\\":\\\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx... (8203 bytes)"
+   "websocket send text \"not json\""
   ]
  },
  "recordings": 2,

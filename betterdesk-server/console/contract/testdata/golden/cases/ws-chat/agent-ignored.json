@@ -8,8 +8,7 @@
    "websocket agent, no Origin",
    "websocket send 16 binary bytes",
    "websocket send text \"not json\"",
-   "websocket send text \"{\\\"type\\\":\\\"nothing\\\"}\"",
-   "websocket send text \"{\\\"type\\\":\\\"hello\\\",\\\"pad\\\":\\\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx... (8203 bytes)"
+   "websocket send text \"{\\\"type\\\":\\\"nothing\\\"}\""
   ]
  },
  "recordings": 2,
