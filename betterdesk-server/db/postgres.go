@@ -1760,7 +1760,7 @@ func (pg *PostgresDB) CreateUser(u *User) error {
 
 // scanUser scans a user row. PostgreSQL uses TIMESTAMPTZ for dates, which
 // the Node.js console stores as TEXT — we convert to string representation
-// where the interface expects strings.
+// where the interface expects strings: UTC without a zone, as on SQLite.
 func scanUser(row pgx.Row) (*User, error) {
 	u := &User{}
 	var createdAt *time.Time
@@ -1775,10 +1775,10 @@ func scanUser(row pgx.Row) (*User, error) {
 	}
 
 	if createdAt != nil {
-		u.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
+		u.CreatedAt = createdAt.UTC().Format("2006-01-02 15:04:05")
 	}
 	if lastLogin != nil {
-		u.LastLogin = lastLogin.Format("2006-01-02 15:04:05")
+		u.LastLogin = lastLogin.UTC().Format("2006-01-02 15:04:05")
 	}
 	if recoveryCodes != nil {
 		u.TOTPRecoveryCodes = *recoveryCodes
@@ -1977,7 +1977,8 @@ func (pg *PostgresDB) CreateAPIKey(k *APIKey) error {
 	return nil
 }
 
-// scanAPIKey scans an API key row.
+// scanAPIKey scans an API key row. The times are UTC text without a zone,
+// as SQLite stores them and the API server reads them.
 func scanAPIKey(row pgx.Row) (*APIKey, error) {
 	k := &APIKey{}
 	var createdAt *time.Time
@@ -1991,13 +1992,13 @@ func scanAPIKey(row pgx.Row) (*APIKey, error) {
 	}
 
 	if createdAt != nil {
-		k.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
+		k.CreatedAt = createdAt.UTC().Format("2006-01-02 15:04:05")
 	}
 	if expiresAt != nil {
-		k.ExpiresAt = expiresAt.Format("2006-01-02 15:04:05")
+		k.ExpiresAt = expiresAt.UTC().Format("2006-01-02 15:04:05")
 	}
 	if lastUsed != nil {
-		k.LastUsed = lastUsed.Format("2006-01-02 15:04:05")
+		k.LastUsed = lastUsed.UTC().Format("2006-01-02 15:04:05")
 	}
 
 	return k, nil
