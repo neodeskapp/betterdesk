@@ -173,7 +173,7 @@ func (s *SQLiteDB) GetActiveBillingContract(targetType, targetKey string) (*Bill
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	c, err := s.queryBillingContract(
-		`WHERE c.target_type = ? AND c.target_key = ? AND c.status = 'active' ORDER BY c.updated_at DESC LIMIT 1`,
+		`WHERE c.target_type = ? AND c.target_key = ? AND c.status IN ('active', 'suspended') ORDER BY c.updated_at DESC LIMIT 1`,
 		targetType, targetKey,
 	)
 	if err == sql.ErrNoRows {

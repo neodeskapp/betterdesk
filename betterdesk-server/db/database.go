@@ -838,6 +838,9 @@ type Database interface {
 
 	CreateBillingContract(c *BillingContract) error
 	GetBillingContract(id string) (*BillingContract, error)
+	// GetActiveBillingContract returns the contract in force for a target:
+	// an active or a suspended one (a suspended contract refuses
+	// connections, so it must not be skipped for a group or org contract).
 	GetActiveBillingContract(targetType, targetKey string) (*BillingContract, error)
 	ListBillingContracts(filter BillingContractFilter) ([]*BillingContract, error)
 	UpdateBillingContract(c *BillingContract) error

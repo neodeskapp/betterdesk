@@ -116,7 +116,7 @@ func (pg *PostgresDB) GetBillingOrgContract(id string) (*BillingOrgContract, err
 
 func (pg *PostgresDB) GetActiveBillingContract(targetType, targetKey string) (*BillingContract, error) {
 	c, err := pg.queryBillingContract(
-		`WHERE c.target_type = $1 AND c.target_key = $2 AND c.status = 'active' ORDER BY c.updated_at DESC LIMIT 1`,
+		`WHERE c.target_type = $1 AND c.target_key = $2 AND c.status IN ('active', 'suspended') ORDER BY c.updated_at DESC LIMIT 1`,
 		targetType, targetKey,
 	)
 	if err != nil && strings.Contains(err.Error(), "no rows") {

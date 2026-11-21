@@ -18,7 +18,8 @@ type PanelContext interface {
 	ListDeviceGroupGUIDsForPeer(peerID string) ([]string, error)
 }
 
-// ResolveContractForDevice picks the most specific active contract:
+// ResolveContractForDevice picks the most specific contract in force
+// (active or suspended, see db.Database.GetActiveBillingContract):
 // device (legacy) > device_group > org.
 // Folder contracts are ignored (packages attach only to groups).
 func ResolveContractForDevice(resolver ContractResolver, panel PanelContext, deviceID string) (*db.BillingContract, error) {
