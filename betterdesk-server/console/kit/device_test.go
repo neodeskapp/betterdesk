@@ -144,8 +144,8 @@ func touchedTokens(t *testing.T, db *store.DB) []int64 {
 // row's stored text is no token (RV128). Such rows are written only by an
 // older console, and the console hashes them at its next start.
 var unboundSteps = map[string]string{
-	"token token-only":                  "RV128",
-	"token hash-of-another":             "RV128",
+	"token token-only":                   "RV128",
+	"token hash-of-another":              "RV128",
 	"token hash-only by the stored text": "RV128",
 }
 
