@@ -114,6 +114,7 @@
     "kind": "json",
     "json": {
      "blocked": 0,
+     "by_policy": {},
      "file_events": 0,
      "logged": 0,
      "total": 0,
