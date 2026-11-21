@@ -158,3 +158,23 @@ func TestAgentNeedsTheMeshIDOfAGroup(t *testing.T) {
 		t.Errorf("stored message %.80q, want the small one", stored)
 	}
 }
+
+// TestKnownMeshWantsZerosAfterAShortID: a group's 32-byte mesh id matches
+// the 48 bytes an agent sends only when the rest are zeros (BUGS RV156).
+func TestKnownMeshWantsZerosAfterAShortID(t *testing.T) {
+	gw, _ := newTestGateway(t)
+	short := strings.Repeat("AB", 32)
+	if err := gw.SaveGroups([]MeshGroup{{ID: "default", Name: "Default", MeshID: short}}); err != nil {
+		t.Fatal(err)
+	}
+	raw := make([]byte, 48)
+	id, _ := hex.DecodeString(short)
+	copy(raw, id)
+	if !gw.knownMesh(raw) {
+		t.Fatal("the group's id followed by zeros was refused")
+	}
+	raw[40] = 1
+	if gw.knownMesh(raw) {
+		t.Fatal("the group's id followed by other bytes was taken")
+	}
+}

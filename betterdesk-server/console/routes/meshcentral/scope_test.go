@@ -31,7 +31,11 @@ func peers(w http.ResponseWriter, r *http.Request) {
 
 // scopedWorld is the group under a restricted device scope where the
 // operator (id 5) is granted dev-1 only.
-func scopedWorld(t *testing.T) *proxytest.World {
+func scopedWorld(t *testing.T) *proxytest.World { return scopedWorldOf(t, "restricted") }
+
+// scopedWorldOf is scopedWorld under a default device scope ("open" shows
+// the operator every device in no closed group).
+func scopedWorldOf(t *testing.T, scopeDefault string) *proxytest.World {
 	return proxytest.NewWorld(t, func(d *kit.Deps) {
 		ctx := context.Background()
 		if _, err := d.Store.Exec(ctx, "INSERT INTO users (id, username, password_hash, role) VALUES (5, 'e2e_operator', 'x', 'operator')"); err != nil {
@@ -40,7 +44,7 @@ func scopedWorld(t *testing.T) *proxytest.World {
 		if _, err := d.Store.Exec(ctx, "INSERT INTO user_peer_grants (user_id, peer_id) VALUES (5, 'dev-1')"); err != nil {
 			t.Fatal(err)
 		}
-		d.Access = access.New(d.Store, access.NewDBRoleSource(nil), access.Options{DeviceScopeDefault: "restricted"})
+		d.Access = access.New(d.Store, access.NewDBRoleSource(nil), access.Options{DeviceScopeDefault: scopeDefault})
 		d.DeviceGroups = devicegroups.New(devicegroups.Options{DB: d.Store, Access: d.Access})
 		d.Backend = goapi.NewBackend(goapi.New(http.HandlerFunc(peers)), devicegroups.DeviceStore{Groups: d.DeviceGroups})
 		meshcentral.Register(d)
@@ -156,6 +160,23 @@ func TestRecordingsKeepToTheScope(t *testing.T) {
 			t.Errorf("download %s as %s: %d %s, want the API server's answer", c.id, c.who.User.Role, rec.Code, rec.Body)
 		case !c.allowed && (rec.Code != 403 || rec.Body.String() != forbidden || len(calls) != 0):
 			t.Errorf("download %s as %s: %d %s with %d calls, want 403 and none", c.id, c.who.User.Role, rec.Code, rec.Body, len(calls))
+		}
+	}
+}
+
+// TestRecordingOfNoKnownDeviceIsForAdmins: under an open device scope an
+// operator sees the recordings of every known device, and still not one
+// whose device the device layer does not know (BUGS RV159).
+func TestRecordingOfNoKnownDeviceIsForAdmins(t *testing.T) {
+	w := scopedWorldOf(t, "open")
+	file := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"file":true}`}
+	operator := account(5, "operator")
+	if rec, calls := w.Do(proxytest.Request{Method: "GET", Path: "/api/mesh/recordings/dev-2_kvm_20261121-101010_abcd1234.mcrec", Session: operator}, file); rec.Code != 200 || len(calls) != 1 {
+		t.Fatalf("a recording of dev-2 under an open scope: %d %s", rec.Code, rec.Body)
+	}
+	for _, id := range []string{"gone-9_kvm_20261121-101010_abcd1234.mcrec", "odd.mcrec"} {
+		if rec, calls := w.Do(proxytest.Request{Method: "GET", Path: "/api/mesh/recordings/" + id, Session: operator}, file); rec.Code != 403 || len(calls) != 0 {
+			t.Errorf("%s under an open scope: %d %s with %d calls, want 403", id, rec.Code, rec.Body, len(calls))
 		}
 	}
 }
