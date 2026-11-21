@@ -27,13 +27,21 @@ var roleAccounts = []struct{ Username, Role string }{
 	{"e2e_pro", "pro"},
 }
 
-// deviceTokens are the device tokens: the file they go into, the device
-// they are bound to and the client UUID. Each has its own UUID, because
-// issuing a token revokes the account's tokens with the same UUID.
-var deviceTokens = []struct{ File, DeviceID, UUID string }{
-	{"device_token", "900100001", "bd-stack-device-token"},
-	{"device_token_other", "900100002", "bd-stack-device-token-other"},
+// deviceTokens are the device tokens: the file they go into and the
+// device they are issued for.
+var deviceTokens = []struct{ File, DeviceID string }{
+	{"device_token", "900100001"},
+	{"device_token_other", "900100002"},
 }
+
+// The operator token: an account token of the owner for the operator
+// routes of the device API, which refuse a device token. Its client UUID
+// is its own, because a sign-in revokes the account's tokens with the
+// same UUID.
+const (
+	operatorTokenFile = "operator_token"
+	operatorTokenUUID = "bd-stack-operator-token"
+)
 
 func runAccounts(ctx context.Context, args []string, getenv func(string) string, out io.Writer) error {
 	f, err := parseFlags(args, []string{"go-db", "now"}, []string{"device-tokens-only"})
@@ -84,7 +92,7 @@ func runAccounts(ctx context.Context, args []string, getenv func(string) string,
 	if owner == "" {
 		owner = "admin"
 	}
-	return issueDeviceTokens(ctx, svc, owner, filepath.Dir(passwordFile), out)
+	return issueTokens(ctx, svc, owner, filepath.Dir(passwordFile), out)
 }
 
 // makeAccounts creates the role accounts that are missing, with the row
@@ -111,12 +119,14 @@ func makeAccounts(ctx context.Context, db *database, svc *authn.Service, passwor
 	return nil
 }
 
-// issueDeviceTokens issues the device tokens of the owner's account, as
-// the console does when a desktop client signs in as an operator: 64 hex
-// characters, stored with their SHA-256, valid for API_TOKEN_EXPIRY_DAYS
-// (7) days. A token file that exists is kept. A token is written only to
-// its file (mode 0600), never printed.
-func issueDeviceTokens(ctx context.Context, svc *authn.Service, owner, dir string, out io.Writer) error {
+// issueTokens issues the tokens of the owner's account: the device
+// tokens, as the console issues them for a device it admitted
+// (IssueDeviceToken), and the operator token, as the console issues it when
+// a desktop client signs in as an operator (GenerateSignInToken). Each is
+// 64 hex characters, stored as its SHA-256 only and valid for
+// API_TOKEN_EXPIRY_DAYS (7) days. A token file that exists is kept. A
+// token is written only to its file (mode 0600), never printed.
+func issueTokens(ctx context.Context, svc *authn.Service, owner, dir string, out io.Writer) error {
 	account, err := svc.UserByUsername(ctx, owner)
 	if err != nil {
 		return err
@@ -126,21 +136,32 @@ func issueDeviceTokens(ctx context.Context, svc *authn.Service, owner, dir strin
 	}
 	ownerID := account.ID.V
 	for _, t := range deviceTokens {
-		file := filepath.Join(dir, t.File)
-		if _, err := os.Stat(file); err == nil {
-			continue
-		}
-		token, err := svc.GenerateAccessToken(ctx, ownerID, t.DeviceID, t.UUID, "")
-		if err != nil {
+		issue := func() (string, error) { return svc.IssueDeviceToken(ctx, ownerID, t.DeviceID, "") }
+		if err := writeToken(dir, t.File, issue, out, "the device token "+t.File+" for "+t.DeviceID); err != nil {
 			return err
 		}
-		if err := os.WriteFile(file, []byte(token), 0o600); err != nil {
-			return fmt.Errorf("write %s: %w", t.File, err)
-		}
-		if err := os.Chmod(file, 0o600); err != nil {
-			return fmt.Errorf("write %s: %w", t.File, err)
-		}
-		fmt.Fprintf(out, "created the device token %s for %s\n", t.File, t.DeviceID)
 	}
+	issue := func() (string, error) { return svc.GenerateSignInToken(ctx, ownerID, "", operatorTokenUUID, "") }
+	return writeToken(dir, operatorTokenFile, issue, out, "the operator token "+operatorTokenFile+" of "+owner)
+}
+
+// writeToken issues a token into the file name in dir unless the file
+// exists, and says so on out as what.
+func writeToken(dir, name string, issue func() (string, error), out io.Writer, what string) error {
+	file := filepath.Join(dir, name)
+	if _, err := os.Stat(file); err == nil {
+		return nil
+	}
+	token, err := issue()
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(file, []byte(token), 0o600); err != nil {
+		return fmt.Errorf("write %s: %w", name, err)
+	}
+	if err := os.Chmod(file, 0o600); err != nil {
+		return fmt.Errorf("write %s: %w", name, err)
+	}
+	fmt.Fprintf(out, "created %s\n", what)
 	return nil
 }

@@ -62,13 +62,15 @@
 // /app/data/dev-online-ids.json).
 //
 // accounts: one account per role (e2e_admin, e2e_super_admin, ...) with
-// the password in the given file, and two device tokens of the admin
-// account (DEFAULT_ADMIN_USERNAME, default admin) in files next to it:
-// device_token for 900100001 and device_token_other for 900100002, as the
-// console issues them when a desktop client signs in as an operator.
-// Accounts and token files that exist are left alone; a token is never
-// printed. With --device-tokens-only it makes the tokens only. --now sets
-// the time the tokens count from.
+// the password in the given file, and three tokens issued by the admin
+// account (DEFAULT_ADMIN_USERNAME, default admin) in files next to it: the
+// device tokens device_token for 900100001 and device_token_other for
+// 900100002, as the console issues them for a device it admitted, and
+// operator_token, the admin's own token for the operator routes of the
+// device API, as the console issues it when a desktop client signs in as
+// an operator. Accounts and token files that exist are left alone; a token
+// is never printed. With --device-tokens-only it makes the tokens only.
+// --now sets the time the tokens count from.
 package main
 
 import (

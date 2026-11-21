@@ -29,11 +29,17 @@ func TestAccountsMakesOneAccountPerRoleAndTheDeviceTokens(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		// A token of the admin with the stack's UUID from before: issuing the
-		// new one revokes it
-		if _, err := db.Exec(ctx, `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, ip_address)
-			VALUES ('old', 'old', 1, '900100001', 'bd-stack-device-token', '2099-01-01 00:00:00.000', '')`); err != nil {
-			t.Fatal(err)
+		// An earlier device token of 900100001 and an earlier operator token
+		// of the admin: the new tokens revoke them
+		for _, stmt := range []string{
+			`INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, ip_address, token_kind)
+				VALUES ('old-device', 'old-device', 1, '900100001', '', '2099-01-01 00:00:00.000', '', 'device')`,
+			`INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, ip_address, token_kind)
+				VALUES ('old-operator', 'old-operator', 1, '', 'bd-stack-operator-token', '2099-01-01 00:00:00.000', '', 'account')`,
+		} {
+			if _, err := db.Exec(ctx, stmt); err != nil {
+				t.Fatal(err)
+			}
 		}
 		dir := t.TempDir()
 		passwordFile := filepath.Join(dir, "e2e_password")
@@ -74,43 +80,74 @@ func TestAccountsMakesOneAccountPerRoleAndTheDeviceTokens(t *testing.T) {
 		}
 
 		hex64 := regexp.MustCompile(`^[0-9a-f]{64}$`)
-		for _, k := range deviceTokens {
-			data, err := os.ReadFile(filepath.Join(dir, k.File))
+		// row reads a token's row by its hash, the only form it is kept in
+		row := func(file, token string) (owner int64, client, uuid, kind string, at time.Time) {
+			t.Helper()
+			var expires store.Time
+			if err := store.SelectRow(ctx, db, `SELECT user_id, client_id, client_uuid, token_kind, expires_at FROM access_tokens WHERE token_hash = ?`,
+				authn.HashAccessToken(token)).Scan(&owner, &client, &uuid, &kind, &expires); err != nil {
+				t.Fatalf("%s: %v", file, err)
+			}
+			var plain int
+			if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM access_tokens WHERE token = ?`, token).Scan(&plain); err != nil || plain != 0 {
+				t.Errorf("%s: %d rows keep the token itself (%v)", file, plain, err)
+			}
+			at, _ = expires.Instant()
+			return owner, client, uuid, kind, at
+		}
+		read := func(file string) string {
+			t.Helper()
+			data, err := os.ReadFile(filepath.Join(dir, file))
 			if err != nil {
 				t.Fatal(err)
 			}
 			token := string(data)
 			if !hex64.MatchString(token) {
-				t.Fatalf("%s is not 64 hex characters", k.File)
+				t.Fatalf("%s is not 64 hex characters", file)
 			}
 			if strings.Contains(out.String(), token) {
-				t.Errorf("the token %s was printed", k.File)
+				t.Errorf("the token %s was printed", file)
 			}
-			if info, err := os.Stat(filepath.Join(dir, k.File)); err == nil && info.Mode().Perm()&0o077 != 0 && os.PathSeparator == '/' {
-				t.Errorf("%s has mode %v", k.File, info.Mode().Perm())
+			if info, err := os.Stat(filepath.Join(dir, file)); err == nil && info.Mode().Perm()&0o077 != 0 && os.PathSeparator == '/' {
+				t.Errorf("%s has mode %v", file, info.Mode().Perm())
 			}
-			found, err := svc.ValidateAccessToken(ctx, token)
-			if err != nil || found == nil {
-				t.Fatalf("%s does not validate: %v", k.File, err)
+			return token
+		}
+		week := time.UnixMilli(1795083630456).Add(7 * 24 * time.Hour)
+		for _, k := range deviceTokens {
+			token := read(k.File)
+			device, err := svc.RequireDeviceToken(ctx, "Bearer "+token)
+			if err != nil || device.DeviceID != k.DeviceID {
+				t.Errorf("%s is no device token of %s: %+v, %v", k.File, k.DeviceID, device, err)
 			}
-			var owner int64
-			var device, uuid string
-			var expires store.Time
-			if err := store.SelectRow(ctx, db, `SELECT user_id, client_id, client_uuid, expires_at FROM access_tokens WHERE token = ?`, token).
-				Scan(&owner, &device, &uuid, &expires); err != nil {
+			if user, err := svc.ValidateAccessToken(ctx, token); user != nil || err != nil {
+				t.Errorf("%s signs %+v in (%v)", k.File, user, err)
+			}
+			if owner, client, _, kind, at := row(k.File, token); owner != 1 || client != k.DeviceID || kind != authn.TokenKindDevice || !at.Equal(week) {
+				t.Errorf("%s: owner %d, device %s, kind %s, expires %v", k.File, owner, client, kind, at)
+			}
+		}
+		operator := read(operatorTokenFile)
+		if user, err := svc.ValidateAccessToken(ctx, operator); err != nil || user == nil || user.ID.V != 1 {
+			t.Errorf("the operator token signs in %+v (%v), want the admin", user, err)
+		}
+		if _, err := svc.RequireDeviceToken(ctx, "Bearer "+operator); err == nil {
+			t.Error("the operator token passes as a device token")
+		}
+		if owner, _, uuid, kind, at := row(operatorTokenFile, operator); owner != 1 || uuid != operatorTokenUUID || kind != authn.TokenKindAccount || !at.Equal(week) {
+			t.Errorf("operator token: owner %d, uuid %s, kind %s, expires %v", owner, uuid, kind, at)
+		}
+		if strings.Count(out.String(), "created the ") != len(deviceTokens)+1 {
+			t.Errorf("output:\n%s", out.String())
+		}
+		for _, old := range []string{"old-device", "old-operator"} {
+			var revoked store.Bool
+			if err := store.SelectRow(ctx, db, `SELECT revoked FROM access_tokens WHERE token_hash = ?`, old).Scan(&revoked); err != nil {
 				t.Fatal(err)
 			}
-			at, _ := expires.Instant()
-			if owner != 1 || device != k.DeviceID || uuid != k.UUID || !at.Equal(time.UnixMilli(1795083630456).Add(7*24*time.Hour)) {
-				t.Errorf("%s: owner %d, device %s, uuid %s, expires %v", k.File, owner, device, uuid, at)
+			if !revoked.True() {
+				t.Errorf("the earlier token %s was not revoked", old)
 			}
-		}
-		var revoked store.Bool
-		if err := store.SelectRow(ctx, db, `SELECT revoked FROM access_tokens WHERE token = 'old'`).Scan(&revoked); err != nil {
-			t.Fatal(err)
-		}
-		if !revoked.True() {
-			t.Error("the older token with the same UUID was not revoked")
 		}
 
 		// A second run keeps the files and makes nothing new

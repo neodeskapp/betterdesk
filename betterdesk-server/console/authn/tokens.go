@@ -56,18 +56,6 @@ func (s *Service) RevokeDeviceTokens(ctx context.Context, deviceID string) error
 	return revokeDeviceTokens(ctx, s.db, deviceID)
 }
 
-// GenerateAccessToken issues a device token the way cmd/devseed issues the
-// test stack's device tokens: it revokes the user's account tokens with the
-// same client UUID, then stores a device token bound to clientID with that
-// UUID. Nothing in the console calls it; cmd/devseed is to call
-// IssueDeviceToken instead, and then this goes.
-func (s *Service) GenerateAccessToken(ctx context.Context, userID int64, clientID, clientUUID, ip string) (string, error) {
-	if err := revokeUserClientTokens(ctx, s.db, userID, clientUUID); err != nil {
-		return "", err
-	}
-	return s.issue(ctx, TokenKindDevice, userID, clientID, clientUUID, ip)
-}
-
 // TokenExpiryDays is how many days a new access token lasts.
 func (s *Service) TokenExpiryDays() int { return int(s.tokenDays.Load()) }
 
