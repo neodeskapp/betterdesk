@@ -235,9 +235,9 @@ func TestAgainstAPIServer(t *testing.T) {
 		wantAt(t, "GetEnrollmentHistory after the approval", c.GetEnrollmentHistory(ctx, "approved"), `1`, "count")
 		wantAt(t, "GetPeer of the approved device", c.GetPeer(ctx, "PENDING01"), `"Desk"`, "display_name")
 
-		wantJSON(t, "RejectEnrollment", c.RejectEnrollment(ctx, "NOSUCH99", false), `{"success":true,"data":{"banned":false,"success":true}}`)
-		wantJSON(t, "ClearEnrollmentRejection", c.ClearEnrollmentRejection(ctx, "NOSUCH99"),
-			`{"success":true,"data":{"device_id":"NOSUCH99","peer_removed":false,"success":true,"unbanned":false}}`)
+		// An id that never waited for approval has nothing to reject or clear.
+		wantJSON(t, "RejectEnrollment of an id that is not pending", c.RejectEnrollment(ctx, "NOSUCH99", false), notFound404)
+		wantJSON(t, "ClearEnrollmentRejection of an id never rejected", c.ClearEnrollmentRejection(ctx, "NOSUCH99"), notFound404)
 		wantAt(t, "SetEnrollmentMode back", c.SetEnrollmentMode(ctx, "open"), `true`, "data", "success")
 	})
 
