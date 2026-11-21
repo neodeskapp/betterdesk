@@ -52,8 +52,9 @@ In scope:
 
 - The Go server (`betterdesk-server/`) including signal, relay, HTTP/WS API,
   CDAP gateway, BD-MGMT WebSocket, and the database adapters.
-- The Node.js web console (`web-nodejs/`) including the RustDesk-compatible
-  client API on port `21121`, the panel routes, and the WS push services.
+- The web console inside the Go server (`betterdesk-server/console/`) and its
+  web app (`web-ui/`), including the RustDesk-compatible client API on port
+  `21121`, the panel routes, and the WS push services.
 - The Tauri MGMT and Agent clients (`betterdesk-mgmt/`, `betterdesk-agent-client/`).
 - The native Go agent (`betterdesk-agent/`).
 - The CDAP SDKs and reference bridges (`sdks/`, `bridges/`).
