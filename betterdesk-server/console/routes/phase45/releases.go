@@ -59,13 +59,19 @@ type syncAnswer struct {
 const importTimeout = 30 * time.Minute
 
 // syncRelease answers POST /api/agent-releases/sync: it imports the newest
-// release from GitHub. Every failure is 502 with the reason.
+// release from GitHub. A release the cache holds already, or one whose
+// tag is not newer than the cache's, is 409 with the error's code and
+// tag; every other failure is 502 with the reason.
 func (h *handlers) syncRelease(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), importTimeout)
 	defer cancel()
 	imported, err := h.releases.ImportLatest(ctx)
 	if err != nil {
-		fail(w, r, http.StatusBadGateway, err.Error())
+		status := http.StatusBadGateway
+		if errors.Is(err, agentreleases.ErrAlreadyImported) || errors.Is(err, agentreleases.ErrNotNewer) {
+			status = http.StatusConflict
+		}
+		fail(w, r, status, err.Error())
 		return
 	}
 	_ = h.d.LogAction(r, "generic_agent_release_imported", "Imported generic Support Agent release "+imported.Tag)
