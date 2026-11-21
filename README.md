@@ -1,171 +1,182 @@
-# BetterDesk
+<p align="center">
+  <a href="https://betterde.sk">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/hero-dark.png">
+      <img src="docs/assets/readme/hero-light.png" alt="BetterDesk: your own remote desktop server. Self-hosted, and it works with the RustDesk client you already have." width="100%">
+    </picture>
+  </a>
+</p>
 
-<div align="center">
+<p align="center">
+  <a href="CHANGELOG.md"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/version.svg"><img alt="Version 3.5.268" src="docs/assets/badges/light/version.svg"></picture></a>
+  <a href="LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/license.svg"><img alt="License: AGPL-3.0" src="docs/assets/badges/light/license.svg"></picture></a>
+  <a href="betterdesk-server"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/go.svg"><img alt="Go 1.26" src="docs/assets/badges/light/go.svg"></picture></a>
+  <a href="web-ui"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/svelte.svg"><img alt="Svelte 5" src="docs/assets/badges/light/svelte.svg"></picture></a>
+  <br>
+  <a href="#install"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/docker.svg"><img alt="Docker: one container" src="docs/assets/badges/light/docker.svg"></picture></a>
+  <a href="#connect-a-rustdesk-client"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/rustdesk.svg"><img alt="RustDesk compatible" src="docs/assets/badges/light/rustdesk.svg"></picture></a>
+  <a href="https://betterde.sk"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/website.svg"><img alt="Website: betterde.sk" src="docs/assets/badges/light/website.svg"></picture></a>
+</p>
 
-<img src="betterdesk.png" alt="BetterDesk" width="280">
+BetterDesk is a remote desktop server you run yourself. It speaks the RustDesk
+protocol, so the normal RustDesk client connects to it, and it comes with a web
+console for the devices you look after. Your data stays on your server: the
+project sends no analytics, crash reports or usage data anywhere
+([PRIVACY.md](PRIVACY.md)).
 
-<br><br>
+This repository is a fork of [UNITRONIX/BetterDesk](https://github.com/UNITRONIX/BetterDesk).
+It replaces the Node.js console with one written in Svelte that the Go server
+serves itself, so a running install is a single program.
 
-![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
-![Go](https://img.shields.io/badge/Go-1.26+-00ADD8.svg)
-![Version](https://img.shields.io/badge/version-3.5.268-brightgreen.svg)
+## One binary on your server
 
-[![Sponsor](https://img.shields.io/badge/GitHub-Sponsor-181717?logo=github&logoColor=white&style=flat)](https://github.com/sponsors/UNITRONIX)
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%23FFDD00?logo=buy-me-a-coffee&logoColor=black&style=flat)](https://buymeacoffee.com/unitronix)
-[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white&style=flat)](https://discord.gg/MPp9hyyG97)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/server-dark.png">
+  <img src="docs/assets/readme/server-light.png" alt="One binary on your server. The install commands for Docker are in the Install section below." width="100%">
+</picture>
 
-**Self-hosted RustDesk-compatible server in Go** (one binary instead of hbbs + hbbr) **with the web console built in.**
+RustDesk's own server is two programs, hbbs and hbbr. BetterDesk does both jobs
+in one Go binary, and the same binary answers the client API and serves the web
+console. It stores its data in SQLite, or in PostgreSQL if you prefer.
 
-[Wiki](https://github.com/UNITRONIX/BetterDesk/wiki) · [Privacy](PRIVACY.md) · [Sponsors](SPONSORS.md) · [Changelog](CHANGELOG.md)
+## Works with the RustDesk client
 
-<br>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/client-dark.png">
+  <img src="docs/assets/readme/client-light.png" alt="The console's client setup panel: ID server, relay server, API server and key, each with a copy button." width="100%">
+</picture>
 
-### Honorary supporter
+There is no other client to install. A RustDesk client needs four values in its
+network settings: the ID server, the relay server, the API server and the key.
+The console's overview page shows all four with a copy button, and **Show QR**
+puts them in one code for a phone.
 
-<a href="https://insolve.pl">
-  <img src="docs/assets/insolve-logo.png" alt="INSOLVE — Honorary Supporter" width="200">
-</a>
+## Every device in one list
 
-[INSOLVE](https://insolve.pl) — see [SPONSORS.md](SPONSORS.md) for everyone who backs the project.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/console-dark.png">
+  <img src="docs/assets/readme/console-light.png" alt="The device list in the web console: folders and groups on the left, and a table of devices with ID, hostname, platform, last seen, status and tags." width="100%">
+</picture>
 
-</div>
+Search by ID, name, user or platform. Put devices in folders and groups, and
+give them your own tags. The console is translated into 26 languages and has a
+light and a dark theme.
 
----
+## Open a device and connect
 
-> **Alpha desktop apps:** Tauri MGMT / Agent clients are not for production. Use the **web console** and a normal **RustDesk** client. Details: [Alpha notice](https://github.com/UNITRONIX/BetterDesk/wiki/Alpha-Software-Notice).
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/device-dark.png">
+  <img src="docs/assets/readme/device-light.png" alt="A device opened in the console: identity, network and timestamps, with tabs for hardware, metrics, live data, tags and actions, and a Connect button." width="100%">
+</picture>
 
-Your data stays on **your** server. The project does not run vendor analytics — [PRIVACY.md](PRIVACY.md).
+Click a device to see what it is and what it is doing, then connect to it from
+there. Around that, the console has what a team needs to share a server:
 
-> **AI-assisted development:** BetterDesk is created and maintained with the assistance of artificial intelligence tools.
+- **Enrollment requests:** when approval is required, a new RustDesk client waits until someone approves it.
+- **Users and roles:** each person signs in with their own account, and their role decides what they can do.
+- **Sign-in:** two-factor sign-in, LDAP or Active Directory, and OIDC.
+- **Activity:** a log of what people do in the console.
 
----
+## Install
 
-## Quick start
+### Docker
+
+One container runs the server and the web console. It builds from this
+repository, so the first start takes a few minutes.
+
+```bash
+git clone https://github.com/trybetterdesk/BetterDesk.git
+cd BetterDesk
+docker compose -f docker-compose.single.yml up -d --build
+docker compose -f docker-compose.single.yml exec betterdesk betterdesk-show-admin-credentials
+```
+
+The last command prints the admin username and password. Sign in with them at
+`http://your-server:5000`, which is plain HTTP, not HTTPS. To update, run
+`git pull` and the `up -d --build` command again.
+
+For PostgreSQL instead of SQLite, see the comments at the top of
+[docker-compose.single.yml](docker-compose.single.yml).
 
 ### Linux
 
 ```bash
-git clone https://github.com/UNITRONIX/BetterDesk.git
+git clone https://github.com/trybetterdesk/BetterDesk.git
 cd BetterDesk
 sudo ./betterdesk.sh
 ```
 
-Choose **1** for a new install, or `sudo ./betterdesk.sh --auto`.
-
-### Docker
-
-One container with everything inside (server + relay + web console) — the recommended setup:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
-docker compose pull && docker compose up -d
-docker compose exec betterdesk betterdesk-show-admin-credentials
-```
-
-Open **http://your-server:5000** (plain HTTP, not HTTPS).
+Choose **1** in the menu for a new install, or run `sudo ./betterdesk.sh --auto`
+to skip the menu. The installer shows the admin username and password.
 
 ### Windows
 
-Run `betterdesk.ps1` as Administrator — see the [Installation wiki](https://github.com/UNITRONIX/BetterDesk/wiki/Installation).
+Run `betterdesk.ps1` in PowerShell as Administrator. Add `-Auto` to install
+with the default settings.
 
----
+## Connect a RustDesk client
+
+1. Install the [RustDesk client](https://rustdesk.com) on the device.
+2. In the console, open **Devices**, then **Overview**. Enter your server's
+   public address under **Client server address**.
+3. Copy the ID server, relay server, API server and key into the client's
+   network settings, in the ID/Relay server section. **Copy all** copies them
+   together, and **Show QR** is for phones.
+
+The device then shows up in the device list, or under **Enrollment requests**
+if you require approval.
+
+## Ports
+
+| Port | Used for |
+|------|----------|
+| 5000 | Web console |
+| 21115 | NAT type test |
+| 21116, TCP and UDP | ID server |
+| 21117 | Relay server |
+| 21118, 21119 | ID and relay server over WebSocket |
+| 21121 | API server for RustDesk clients |
+
+Open 21115 to 21119 and 21121 to the networks your devices connect from. Keep
+5000 behind a reverse proxy with TLS if the console is reachable from the
+internet ([TLS guide](docs/wiki/TLS-SSL.md)).
+
+## More of the console
+
+Demo data, in both themes.
+
+| | |
+|---|---|
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-overview-dark.png"><img src="docs/assets/readme/screen-overview-light.png" alt="Overview: what needs attention, device counts, trends and client setup"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-devices-dark.png"><img src="docs/assets/readme/screen-devices-light.png" alt="All devices: folders, groups and the device table"></picture> |
+| Overview | All devices |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-device-dark.png"><img src="docs/assets/readme/screen-device-light.png" alt="A device's details in a side panel next to the list"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-registrations-dark.png"><img src="docs/assets/readme/screen-registrations-light.png" alt="Enrollment requests with Approve and Reject for each device"></picture> |
+| Device details | Enrollment requests |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-settings-auth-dark.png"><img src="docs/assets/readme/screen-settings-auth-light.png" alt="Sign-in settings: password, two-factor sign-in, LDAP and OIDC"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-login-dark.png"><img src="docs/assets/readme/screen-login-light.png" alt="The sign-in page"></picture> |
+| Sign-in settings | Sign in |
 
 ## Documentation
 
-| Topic | Where |
+The guides are in [docs/wiki](docs/wiki/Home.md). Some of them were written for
+the Node.js console and still mention it.
+
+| Topic | Guides |
 |-------|--------|
-| Full guides | **[GitHub Wiki](https://github.com/UNITRONIX/BetterDesk/wiki)** |
-| Install / Docker / clients | [Installation](https://github.com/UNITRONIX/BetterDesk/wiki/Installation) · [Docker](https://github.com/UNITRONIX/BetterDesk/wiki/Docker) · [Client setup](https://github.com/UNITRONIX/BetterDesk/wiki/Client-Setup) |
-| Config, TLS, updates | [Configuration](https://github.com/UNITRONIX/BetterDesk/wiki/Configuration) · [TLS](https://github.com/UNITRONIX/BetterDesk/wiki/TLS-SSL) · [Panel updates](https://github.com/UNITRONIX/BetterDesk/wiki/Panel-Updates) |
-| Monitoring / WoL | [Monitoring](https://github.com/UNITRONIX/BetterDesk/wiki/Monitoring) · [Unattended & WoL](https://github.com/UNITRONIX/BetterDesk/wiki/Unattended-and-WoL) |
-| Help | [Troubleshooting](https://github.com/UNITRONIX/BetterDesk/wiki/Troubleshooting) · [FAQ](https://github.com/UNITRONIX/BetterDesk/wiki/FAQ) |
-| Privacy / license | [PRIVACY.md](PRIVACY.md) · [Licensing](https://github.com/UNITRONIX/BetterDesk/wiki/Licensing) |
-| Developers | [docs/](docs/) · [API](https://github.com/UNITRONIX/BetterDesk/wiki/API-Reference) · [CDAP](https://github.com/UNITRONIX/BetterDesk/wiki/CDAP) · [Contributing](docs/development/CONTRIBUTING.md) |
-
-Wiki source in-repo: [`docs/wiki/`](docs/wiki/) (sync with `scripts/sync-wiki.ps1` / `.sh`).
-
----
-
-## Web console preview
-
-The BetterDesk web console has a grouped sidebar (Devices / Support / People / Activity / Settings),
-a list-first device view with side panels and per-topic Settings with search.
-These preview images are from an earlier version of the console, in the dark theme in English with fictional device data:
-
-<table>
-  <tr>
-    <td><img src="screenshots/generated/login-dark.png" alt="BetterDesk web console login" width="100%"></td>
-    <td><img src="screenshots/generated/dashboard-dark.png" alt="BetterDesk web console dashboard" width="100%"></td>
-  </tr>
-  <tr>
-    <td align="center">Login</td>
-    <td align="center">Dashboard</td>
-  </tr>
-  <tr>
-    <td><img src="screenshots/generated/devices-list-dark.png" alt="BetterDesk devices list" width="100%"></td>
-    <td><img src="screenshots/generated/device-details-dark.png" alt="BetterDesk device details" width="100%"></td>
-  </tr>
-  <tr>
-    <td align="center">Devices</td>
-    <td align="center">Device details</td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="screenshots/generated/settings-updates-dark.png" alt="BetterDesk settings updates" width="100%"></td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center">Settings → Updates</td>
-  </tr>
-</table>
-
-See the [Web Console wiki page](https://github.com/UNITRONIX/BetterDesk/wiki/Web-Console) for the full visual tour and panel capabilities.
-
----
-
-## Ports (short)
-
-| Port | Role |
-|------|------|
-| 21116 TCP+UDP | Signal |
-| 21117 TCP | Relay |
-| 21121 | RustDesk Client API |
-| 21114 | Admin REST (usually localhost) |
-| 5000 | Web console |
-| 21122 | CDAP (optional) |
-
----
-
-## Contributing
-
-Diagnostics → [issue](https://github.com/UNITRONIX/BetterDesk/issues) → fork / PR. See [docs/development/CONTRIBUTING.md](docs/development/CONTRIBUTING.md).
-
----
+| Setting up | [Installation](docs/wiki/Installation.md), [Docker](docs/wiki/Docker.md), [Client setup](docs/wiki/Client-Setup.md) |
+| Running it | [Configuration](docs/wiki/Configuration.md), [TLS](docs/wiki/TLS-SSL.md), [Security](docs/wiki/Security.md), [Monitoring](docs/wiki/Monitoring.md) |
+| People | [User management](docs/wiki/User-Management.md), [LDAP and Active Directory](docs/wiki/LDAP-AD.md), [OIDC](docs/wiki/OIDC-SSO.md) |
+| Help | [Troubleshooting](docs/wiki/Troubleshooting.md), [FAQ](docs/wiki/FAQ.md) |
+| Developers | [docs/](docs/), [API reference](docs/wiki/API-Reference.md), [the console's frontend](web-ui/README.md), [contributing](docs/development/CONTRIBUTING.md) |
 
 ## Credits
 
-### Console redesign
+BetterDesk was created by [UNITRONIX](https://github.com/UNITRONIX), and most
+of the server in this repository is that project's work. If BetterDesk is
+useful to you, [SPONSORS.md](SPONSORS.md) lists how to support it and who
+already does.
 
-The web console's layout is modelled on the community redesign by
-**[Linus Rath (@rathlinus)](https://github.com/rathlinus)** — the grouped
-sidebar (Devices / Support / People / Activity / Settings), the list-first
-device view with side panels, per-topic Settings with search, and light/dark
-coverage across all 26 locales. The redesign was proposed in
-[issue #493](https://github.com/UNITRONIX/BetterDesk/issues/493)
-([PR #495](https://github.com/UNITRONIX/BetterDesk/pull/495)). The console is
-the Svelte app in [`web-ui/`](web-ui/), built into the `betterdesk-server` binary.
-
-Design credit is recorded in
-[docs/development/CONTRIBUTOR-ATTRIBUTIONS.md](docs/development/CONTRIBUTOR-ATTRIBUTIONS.md).
-
----
+BetterDesk is created and maintained with the assistance of AI tools.
 
 ## License
 
-[AGPL-3.0](LICENSE). Optional Commercial Grant for eligible sponsors — [docs/COMMERCIAL-GRANT.md](docs/COMMERCIAL-GRANT.md).
-
----
-
-## Support
-
-- [Discord](https://discord.gg/MPp9hyyG97)
-- [GitHub Issues](https://github.com/UNITRONIX/BetterDesk/issues)
-- [Discussions](https://github.com/UNITRONIX/BetterDesk/discussions)
+[AGPL-3.0](LICENSE). There is an optional Commercial Grant for eligible
+sponsors, described in [docs/COMMERCIAL-GRANT.md](docs/COMMERCIAL-GRANT.md).
