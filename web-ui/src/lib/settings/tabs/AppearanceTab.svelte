@@ -135,8 +135,10 @@
 	const form = createForm<BrandingValues>({
 		initial: saved,
 		submit: async (v) => {
+			const waited = uploads.size > 0;
 			await Promise.allSettled([...uploads]);
-			let next = v;
+			// An upload that ended meanwhile stored its background and put it in the form: save what the form has now
+			let next: BrandingValues = waited ? ($state.snapshot(form.values) as BrandingValues) : v;
 			if (pendingLogo) {
 				const url = await uploadLogo(pendingLogo);
 				next = { ...v, logoUrl: url };
