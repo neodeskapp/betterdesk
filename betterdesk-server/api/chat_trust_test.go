@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/db"
 )
 
 // TestChatSenderAndGroupDelete: a message posted over the network carries
@@ -61,5 +63,57 @@ func TestChatSenderAndGroupDelete(t *testing.T) {
 	}
 	if status, body := listenerCall(t, srv, http.MethodDelete, "/api/chat/groups/"+group.ID, "", operator); status != http.StatusOK {
 		t.Errorf("the creator deletes the group: %d %s, want 200", status, body)
+	}
+}
+
+// TestChatGroupUpdateAndReadMarksCheckTheID: a group update needs an
+// existing group and its creator or an admin, like the delete; a read mark
+// from a caller other than the console marks as the caller, needs an
+// existing group for a group conversation and a device in the caller's
+// scope for a device conversation.
+func TestChatGroupUpdateAndReadMarksCheckTheID(t *testing.T) {
+	srv := scopedFixture(t)
+	database := srv.db
+	viewer := map[string]string{"X-API-Key": testViewerKey}
+	operator := map[string]string{"X-API-Key": testOperatorKey}
+
+	status, body := listenerCall(t, srv, http.MethodPost, "/api/chat/groups", `{"name":"team","members":["PEERBBB2"]}`, operator)
+	var group struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal([]byte(body), &group); status != http.StatusOK || err != nil || group.ID == "" {
+		t.Fatalf("create group: %d %s", status, body)
+	}
+	update := `{"name":"renamed","members":["PEERBBB2"]}`
+	if status, body := listenerCall(t, srv, http.MethodPut, "/api/chat/groups/group:nosuch", update, operator); status != http.StatusNotFound {
+		t.Errorf("update an unknown group: %d %s, want 404", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodPut, "/api/chat/groups/"+group.ID, update, viewer); status != http.StatusForbidden {
+		t.Errorf("another account updates the group: %d %s, want 403", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodPut, "/api/chat/groups/"+group.ID, update, operator); status != http.StatusOK {
+		t.Errorf("the creator updates the group: %d %s, want 200", status, body)
+	}
+
+	for _, m := range []db.ChatMessage{
+		{ConversationID: "PEERBBB2", FromID: "operator:alice", Text: "one"},
+		{ConversationID: "PEERAAA1", FromID: "PEERAAA1", Text: "two"},
+	} {
+		if _, err := database.SaveChatMessage(&m); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// reader_id names the message's sender, which would mark nothing read.
+	if status, body := listenerCall(t, srv, http.MethodPost, "/api/chat/read", `{"conversation_id":"PEERBBB2","reader_id":"operator:alice"}`, operator); status != http.StatusOK {
+		t.Fatalf("mark read: %d %s", status, body)
+	}
+	if n, _ := database.GetUnreadCount("PEERBBB2"); n != 0 {
+		t.Errorf("unread of PEERBBB2 after the operator's read mark: %d, want 0 (marked as the operator)", n)
+	}
+	if status, body := listenerCall(t, srv, http.MethodPost, "/api/chat/read", `{"conversation_id":"PEERAAA1","reader_id":"x"}`, operator); status != http.StatusForbidden {
+		t.Errorf("mark read for a device outside the scope: %d %s, want 403", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodPost, "/api/chat/read", `{"conversation_id":"group:nosuch","reader_id":"x"}`, operator); status != http.StatusNotFound {
+		t.Errorf("mark read for an unknown group: %d %s, want 404", status, body)
 	}
 }

@@ -167,8 +167,24 @@ func (s *Server) handleChatMarkRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The console marks messages read for its signed-in operators and
+	// devices; any other caller marks them read as itself.
+	if !arrivedInternally(r) {
+		body.ReaderID = getUsernameFromCtx(r)
+	}
+
 	if body.ConversationID == "" || body.ReaderID == "" {
 		http.Error(w, `{"error":"conversation_id and reader_id required"}`, http.StatusBadRequest)
+		return
+	}
+	// A group conversation must be an existing group; a device's
+	// conversation must be a device in the caller's scope.
+	if strings.HasPrefix(body.ConversationID, chatGroupPrefix) {
+		if group, err := s.db.GetChatGroup(body.ConversationID); err != nil || group == nil {
+			http.Error(w, `{"error":"group not found"}`, http.StatusNotFound)
+			return
+		}
+	} else if !s.deviceInScope(w, r, body.ConversationID) {
 		return
 	}
 
@@ -356,7 +372,7 @@ func (s *Server) handleChatCreateGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	g := &db.ChatGroup{
-		ID:        "group:" + uuid.New().String()[:8],
+		ID:        chatGroupPrefix + uuid.New().String()[:8],
 		Name:      body.Name,
 		Members:   strings.Join(body.Members, ","),
 		CreatedBy: body.CreatedBy,
@@ -416,6 +432,16 @@ func (s *Server) handleChatUpdateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
+	// Like delete: only an existing group, by its creator or an admin.
+	group, err := s.db.GetChatGroup(groupID)
+	if err != nil || group == nil {
+		http.Error(w, `{"error":"group not found"}`, http.StatusNotFound)
+		return
+	}
+	if !auth.IsSuperAdminRole(getRoleFromCtx(r)) && group.CreatedBy != actorFromCtx(r) {
+		http.Error(w, `{"error":"only the group's creator or an admin may change it"}`, http.StatusForbidden)
+		return
+	}
 
 	g := &db.ChatGroup{
 		ID:      groupID,
@@ -465,6 +491,9 @@ func (s *Server) handleChatDeleteGroup(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"ok":true}`))
 }
+
+// chatGroupPrefix starts the id of every chat group.
+const chatGroupPrefix = "group:"
 
 // deviceColor generates a consistent HSL color from a device ID string.
 func deviceColor(id string) string {
