@@ -45,7 +45,6 @@ var fixedSteps = []fixedStep{
 	{"flow", "admin-strategy-status-unknown", "RD2"},
 	// The list reads a stored true as switched on.
 	{"node_postgres", "511 GET /api/strategies", "RD3"},
-	{"node_postgres", "519 GET /api/strategies", "RD3"},
 	{"node_postgres", "527 GET /api/strategies", "RD3"},
 	{"node_postgres", "668 GET /api/strategies", "RD3"},
 	{"flow_postgres", "admin-strategies", "RD3"},
@@ -75,6 +74,13 @@ var fixedSteps = []fixedStep{
 	{"node", "618 POST /api/device-group", "DGR5"},
 	{"node", "619 POST /api/device-group", "DGR5"},
 	{"node", "620 POST /api/device-group", "DGR5"},
+	// A token's account is asked for audit.view (pro has none), a pro
+	// account reads no strategies, and the folders and device groups list
+	// only the devices of the account's scope (guest_issuer does not see
+	// the devices of a group closed to it, nor an id that is no device).
+	{"node", "453 GET /api/audit", "RV4"},
+	{"node", "519 GET /api/strategies", "RV4"},
+	{"node", "524 GET /api/device-group", "RV4"},
 }
 
 // fixedStep is a step of the recordings of both databases ("node",

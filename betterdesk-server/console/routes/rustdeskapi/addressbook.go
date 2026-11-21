@@ -71,20 +71,52 @@ func (h *handlers) filterDevices(ctx context.Context, user *tokenUser, devices [
 	} else {
 		scoped = access.FilterByScope(devices, scope, deviceID)
 	}
+	return h.inAddressBooks(ctx, user, scoped)
+}
+
+// inAddressBooks keeps every device for an account that may browse the
+// inventory, and for any other only the devices of its address books.
+func (h *handlers) inAddressBooks(ctx context.Context, user *tokenUser, devices []*goapi.Object) []*goapi.Object {
 	if canBrowseDeviceInventory(user) {
-		return scoped
+		return devices
 	}
 	allowed := h.addressBookPeerIDs(ctx, user)
 	if len(allowed) == 0 {
 		return []*goapi.Object{}
 	}
 	out := []*goapi.Object{}
-	for _, d := range scoped {
+	for _, d := range devices {
 		if allowed[deviceID(d)] {
 			out = append(out, d)
 		}
 	}
 	return out
+}
+
+// deviceLimit is the set of device ids among devices that the account may
+// see through the client API, nil when it may see every device: its device
+// scope, and for an account that may not browse the inventory the devices
+// of its address books. Where filterDevices keeps every device when the
+// scope cannot be read, deviceLimit keeps none.
+func (h *handlers) deviceLimit(ctx context.Context, user *tokenUser, devices []*goapi.Object) map[string]bool {
+	scope, err := h.d.DeviceGroups.DeviceScopeForUser(ctx, user.sessionUser(), devices)
+	if err != nil {
+		h.peersLog.Warn(fmt.Sprintf("Failed to apply device group scope for %s:", user.Username), err.Error())
+		return map[string]bool{}
+	}
+	if scope.Unlimited() && canBrowseDeviceInventory(user) {
+		return nil
+	}
+	keep := map[string]bool{}
+	for _, d := range h.inAddressBooks(ctx, user, access.FilterByScope(devices, scope, deviceID)) {
+		keep[deviceID(d)] = true
+	}
+	return keep
+}
+
+// allowedDevice reports whether a device id is in a deviceLimit.
+func allowedDevice(limit map[string]bool, id string) bool {
+	return limit == nil || limit[id]
 }
 
 // deviceID is String(device.id).

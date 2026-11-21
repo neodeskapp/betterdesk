@@ -1254,5 +1254,24 @@ func (s *clientStore) assignmentSummary(ctx context.Context, strategyGUID string
 	return summary, rows.Err()
 }
 
+// assignedPeerIDs maps the keys of peer assignments (the guid
+// resolvePeerAssignmentKey gave the device, or its uuid or id) to the ids
+// of the devices. A key of no known device is left out.
+func (s *clientStore) assignedPeerIDs(ctx context.Context, keys []string) (map[string]string, error) {
+	out := map[string]string{}
+	for _, key := range keys {
+		var id string
+		err := s.db.QueryRow(ctx, `SELECT id FROM peers WHERE guid = ? OR uuid = ? OR id = ? LIMIT 1`, key, key, key).Scan(&id)
+		if errors.Is(err, sql.ErrNoRows) {
+			continue
+		}
+		if err != nil {
+			return nil, fmt.Errorf("find the device of assignment %q: %w", key, err)
+		}
+		out[key] = id
+	}
+	return out, nil
+}
+
 // col is a column of a row as JavaScript held it.
 func col(row *goapi.Object, key string) any { return plain(row.Get(key)) }

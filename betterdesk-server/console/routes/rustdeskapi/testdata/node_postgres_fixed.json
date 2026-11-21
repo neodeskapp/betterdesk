@@ -10,6 +10,17 @@
   },
   "bug": "RD1"
  },
+ "453 GET /api/audit": {
+  "answer": {
+   "answer": "{\"error\":\"Permission denied: audit.view\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 403
+  },
+  "bug": "RV4"
+ },
  "469 POST /api/login": {
   "answer": {
    "answer": "{\"type\":\"access_token\",\"access_token\":\"<64 hex>\",\"user\":{\"name\":\"e2e_viewer\",\"email\":\"\",\"note\":\"\",\"status\":1,\"grp\":\"\",\"is_admin\":false}}",
@@ -34,14 +45,25 @@
  },
  "519 GET /api/strategies": {
   "answer": {
-   "answer": "{\"data\":[{\"guid\":\"s-fixed-1\",\"name\":\"Alpha\",\"user_group_guid\":\"ug-fixed\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{\"a\":2,\"b\":1}},{\"guid\":\"s-fixed-2\",\"name\":\"Beta\",\"user_group_guid\":\"\",\"device_group_guid\":\"dg-manual\",\"enabled\":false,\"permissions\":{}}],\"total\":2}",
+   "answer": "{\"data\":[],\"total\":0}",
    "extra": {
     "calls": [],
     "type": "application/json; charset=utf-8"
    },
    "status": 200
   },
-  "bug": "RD3"
+  "bug": "RV4"
+ },
+ "524 GET /api/device-group": {
+  "answer": {
+   "answer": "{\"data\":[{\"guid\":\"<uuid>\",\"name\":\"Default\",\"team\":{\"peers\":[]},\"access_perm\":1,\"note\":\"Default device group\",\"created_at\":\"\",\"sort\":0},{\"guid\":\"dg-lab\",\"name\":\"Lab devices\",\"team\":{\"peers\":[{\"id\":\"900200001\"}]},\"access_perm\":1,\"note\":\"\",\"created_at\":\"\",\"sort\":1},{\"guid\":\"dg-manual\",\"name\":\"Manual\",\"team\":{\"peers\":[]},\"access_perm\":1,\"note\":\"m\",\"created_at\":\"\",\"sort\":2},{\"guid\":\"folder_2\",\"name\":\"Lab\",\"team\":{\"peers\":[]},\"access_perm\":1,\"note\":\"\",\"created_at\":\"\",\"sort\":3},{\"guid\":\"folder_1\",\"name\":\"Office\",\"team\":{\"peers\":[{\"id\":\"900200001\"}]},\"access_perm\":1,\"note\":\"\",\"created_at\":\"\",\"sort\":4}],\"total\":5,\"msg\":\"success\"}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "RV4"
  },
  "527 GET /api/strategies": {
   "answer": {

@@ -243,12 +243,19 @@ type rustdeskGroup struct {
 }
 
 // deviceGroups is getRustDeskDeviceGroups: the device groups open to the
-// account (not those that mirror folders) with their devices among the
-// visible ones, then the folders open to it with their assigned devices.
+// account (not those that mirror folders), then the folders open to it,
+// each with its devices among the ones the account may see.
 func (h *handlers) deviceGroups(ctx context.Context, user *tokenUser) []rustdeskGroup {
 	groups := []rustdeskGroup{}
 	accessUser := h.d.DeviceGroups.UserAccessContext(ctx, user.sessionUser())
-	devices := h.filterDevices(ctx, user, h.d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{}))
+	all := h.d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{})
+	limit := h.deviceLimit(ctx, user, all)
+	devices := make([]*goapi.Object, 0, len(all))
+	for _, d := range all {
+		if allowedDevice(limit, deviceID(d)) {
+			devices = append(devices, d)
+		}
+	}
 	assignments, err := h.store.folderAssignments(ctx)
 	if err != nil {
 		assignments = nil
@@ -263,9 +270,11 @@ func (h *handlers) deviceGroups(ctx context.Context, user *tokenUser) []rustdesk
 			if !devicegroups.GroupAllowedForUser(group, accessUser) {
 				continue
 			}
-			ids := h.d.DeviceGroups.GroupPeerIDList(ctx, group, devices)
-			if ids == nil {
-				ids = []string{}
+			ids := []string{}
+			for _, id := range h.d.DeviceGroups.GroupPeerIDList(ctx, group, devices) {
+				if allowedDevice(limit, id) {
+					ids = append(ids, id)
+				}
 			}
 			groups = append(groups, rustdeskGroup{guid: col(group, "guid"), name: col(group, "name"), note: or(col(group, "note"), ""), peerIDs: ids})
 		}
@@ -294,7 +303,7 @@ func (h *handlers) deviceGroups(ctx context.Context, user *tokenUser) []rustdesk
 		ids := []string{}
 		want := parseInt10(folderID)
 		for _, a := range assignments {
-			if parseInt10(a.folderID) == want {
+			if parseInt10(a.folderID) == want && allowedDevice(limit, a.deviceID) {
 				ids = append(ids, a.deviceID)
 			}
 		}
@@ -775,11 +784,17 @@ type devicesAnswer struct {
 }
 
 // devices answers GET /api/devices with a bearer token: one page of the
-// devices of the console's table with their guids. A page holds pageSize
-// devices (50 when it is not a number, at most 1000) and current counts
-// pages from 1; total counts the devices of every page.
+// devices of the console's table that the account may see, with their
+// guids; none for a pro account. A page holds pageSize devices (50 when it
+// is not a number, at most 1000) and current counts pages from 1; total
+// counts the devices of every page.
 func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	user := authUser(r)
+	if user.isPro() {
+		kit.JSON(w, r, http.StatusOK, devicesAnswer{Data: []deviceRef{}})
+		return
+	}
 	q := reqquery.Of(r)
 	id := sanitize(or(q.Get("id").JSON(), ""), 64)
 	size := 50.0
@@ -803,10 +818,14 @@ func (h *handlers) devices(w http.ResponseWriter, r *http.Request) {
 		kit.JSON(w, r, http.StatusOK, devicesAnswer{Data: []deviceRef{}})
 		return
 	}
+	limit := h.deviceLimit(ctx, user, h.d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{}))
 	rows := []deviceRef{}
 	for _, p := range peers {
 		ref := deviceRef{ID: plain(driverValue(p.id)), GUID: orDriver(plain(driverValue(p.uuid)), "")}
 		if id != "" && ref.ID != id {
+			continue
+		}
+		if !allowedDevice(limit, strOr(or(ref.ID, ""))) {
 			continue
 		}
 		rows = append(rows, ref)

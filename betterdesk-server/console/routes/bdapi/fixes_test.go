@@ -1,10 +1,18 @@
 package bdapi_test
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
 // The chat history is the conversation of the device the token is bound
@@ -29,4 +37,48 @@ func TestChatHistoryIsTheTokensDevice(t *testing.T) {
 	if got := w.SignedOut().Do("GET", "/api/bd/chat/history?device_id=DEV2", "", auth...); got.Status != 403 {
 		t.Errorf("another device in the query: %d %s", got.Status, got.Body)
 	}
+}
+
+// The operator's device list holds the devices of the account's scope:
+// with devices nobody was given hidden, the operator granted D1 sees D1
+// alone, the admin both (BUGS RV4).
+func TestOperatorDevicesFollowTheScope(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Config: func(cfg *config.Config) { cfg.DeviceScopeDefault = "restricted" }})
+		ctx := context.Background()
+		for _, q := range []string{
+			`INSERT INTO peer (id, uuid, info) VALUES ('D1', 'u-1', '{}'), ('D2', 'u-2', '{}')`,
+			`INSERT INTO user_peer_grants (user_id, peer_id) VALUES (5, 'D1')`,
+		} {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatalf("%s: %v", q, err)
+			}
+		}
+		for _, c := range []struct {
+			role string
+			user int64
+			want string
+		}{{"admin", 1, "D1,D2"}, {"operator", 5, "D1"}} {
+			token := "tok-operator-devices-" + c.role
+			sum := sha256.Sum256([]byte(token))
+			if _, err := db.Exec(ctx, `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at)
+				VALUES (?, ?, ?, '', '', '2999-01-01 00:00:00')`, token, hex.EncodeToString(sum[:]), c.user); err != nil {
+				t.Fatal(err)
+			}
+			got := w.SignedOut().Do("GET", "/api/bd/operator/devices", "", "Authorization", "Bearer "+token)
+			var answer struct {
+				Devices []struct {
+					ID string `json:"id"`
+				} `json:"devices"`
+			}
+			_ = json.Unmarshal([]byte(got.Body), &answer)
+			var ids []string
+			for _, d := range answer.Devices {
+				ids = append(ids, d.ID)
+			}
+			if found := strings.Join(ids, ","); got.Status != 200 || found != c.want {
+				t.Errorf("%s: %d %s, want the devices %q", c.role, got.Status, got.Body, c.want)
+			}
+		}
+	})
 }

@@ -733,8 +733,8 @@ func TestThePeerList(t *testing.T) {
 
 // Someone signed in to the console reads the client connection records
 // only with audit.view: a guest issuer and a role that lost it get 403, a
-// viewer and an admin the list. A client with a token reads them as
-// before.
+// viewer and an admin the list. A client with a token is asked for
+// audit.view of its account too (BUGS RV4).
 func TestConnectionRecordsNeedAuditView(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorldWithRoles(t, db, nil, replay.RoleOverrides{"operator": {"audit.view": false}})
@@ -751,7 +751,7 @@ func TestConnectionRecordsNeedAuditView(t *testing.T) {
 				t.Errorf("as %s: %d %s", role, got.Status, got.Body)
 			}
 		}
-		if got := w.Do(replay.Request{Path: "/api/audit/conn", Headers: bearer(issuerToken)}); got.Status != http.StatusOK || got.Body != list {
+		if got := w.Do(replay.Request{Path: "/api/audit/conn", Headers: bearer(issuerToken)}); got.Status != http.StatusForbidden || got.Body != `{"error":"Permission denied: audit.view"}` {
 			t.Errorf("a guest issuer's client with a token: %d %s", got.Status, got.Body)
 		}
 	})

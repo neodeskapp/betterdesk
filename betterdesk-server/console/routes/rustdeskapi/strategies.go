@@ -35,8 +35,29 @@ func switchedOn(s *goapi.Object) bool {
 	return enabled == float64(1) || enabled == true
 }
 
-// strategies answers GET /api/strategies with a bearer token.
+// mayReadStrategies reports whether the account of a token may read the
+// strategies: device.view with the overrides of its role, as the console's
+// strategy pages ask of a session. A pro account never may. false with
+// answered when the permissions cannot be read and the request was
+// answered with 500.
+func (h *handlers) mayReadStrategies(w http.ResponseWriter, r *http.Request, user *tokenUser) (allowed, answered bool) {
+	allowed, err := h.d.Access.RoleHasEffectivePermission(r.Context(), user.role(), "device.view")
+	if err != nil {
+		h.serverFailure(w, r, "Permission lookup failed:", err)
+		return false, true
+	}
+	return allowed, false
+}
+
+// strategies answers GET /api/strategies with a bearer token: every
+// strategy, or none for an account that may not read them.
 func (h *handlers) strategies(w http.ResponseWriter, r *http.Request) {
+	if allowed, answered := h.mayReadStrategies(w, r, authUser(r)); !allowed {
+		if !answered {
+			kit.JSON(w, r, http.StatusOK, listAnswer{Data: []any{}})
+		}
+		return
+	}
 	rows, err := h.store.allStrategies(r.Context())
 	if err != nil {
 		h.strategyLog.Error("Error:", err.Error())
@@ -141,7 +162,9 @@ func (h *handlers) deleteStrategy(w http.ResponseWriter, r *http.Request) {
 }
 
 // strategy answers GET /api/strategies/:guid with a bearer token: the
-// strategy with what it is assigned to.
+// strategy with what it is assigned to, of the devices only those the
+// account may see. For an account that may not read strategies no
+// strategy exists.
 func (h *handlers) strategy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	guid := pathGUID(r)
@@ -149,14 +172,22 @@ func (h *handlers) strategy(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Strategy guid is required")
 		return
 	}
+	user := authUser(r)
+	allowed, answered := h.mayReadStrategies(w, r, user)
+	if answered {
+		return
+	}
 	s, err := h.store.strategyByGUID(ctx, guid)
-	if err == nil && s == nil {
+	if err == nil && (s == nil || !allowed) {
 		fail(w, r, http.StatusNotFound, "Strategy not found")
 		return
 	}
 	var summary assignmentSummary
 	if err == nil {
 		summary, err = h.store.assignmentSummary(ctx, guid)
+	}
+	if err == nil {
+		summary, err = h.visibleAssignments(ctx, user, summary)
 	}
 	if err != nil {
 		h.strategyLog.Error("Get error:", jsbind.Message(err))
@@ -171,6 +202,27 @@ func (h *handlers) strategy(w http.ResponseWriter, r *http.Request) {
 		"peer_count", float64(summary.PeerCount), "user_count", float64(summary.UserCount), "device_group_count", float64(summary.DeviceGroupCount),
 		"peers", summary.Peers, "users", summary.Users, "groups", summary.Groups,
 	))
+}
+
+// visibleAssignments cuts the devices of an assignment summary to those
+// the account may see; peer_count counts what is left.
+func (h *handlers) visibleAssignments(ctx context.Context, user *tokenUser, summary assignmentSummary) (assignmentSummary, error) {
+	limit := h.deviceLimit(ctx, user, h.d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{}))
+	if limit == nil || len(summary.Peers) == 0 {
+		return summary, nil
+	}
+	ids, err := h.store.assignedPeerIDs(ctx, summary.Peers)
+	if err != nil {
+		return summary, err
+	}
+	kept := []string{}
+	for _, key := range summary.Peers {
+		if id, known := ids[key]; known && limit[id] {
+			kept = append(kept, key)
+		}
+	}
+	summary.Peers, summary.PeerCount = kept, len(kept)
+	return summary, nil
 }
 
 // iterationError is the TypeError of for...of over a value that is no

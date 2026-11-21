@@ -6,12 +6,14 @@ import (
 	"sort"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -122,16 +124,24 @@ type devicesAnswer struct {
 }
 
 // operatorDevices answers GET /api/bd/operator/devices: every device of
-// the console's table that is not deleted, after bringing it up to date
-// with the signal server's, by id. hostname and platform come from the
-// device's info where it has them; an info that is no JSON object leaves
-// the note as the hostname.
+// the console's table that is not deleted and is in the account's device
+// scope, after bringing it up to date with the signal server's, by id.
+// hostname and platform come from the device's info where it has them; an
+// info that is no JSON object leaves the note as the hostname.
 func (h *handlers) operatorDevices(w http.ResponseWriter, r *http.Request) {
-	peers, err := h.d.DeviceGroups.AllPeers(r.Context())
+	ctx := r.Context()
+	peers, err := h.d.DeviceGroups.AllPeers(ctx)
 	if err != nil {
 		h.serverError(w, r, "Operator devices error:", err, "Failed to fetch devices")
 		return
 	}
+	user := callerOf(r).user
+	scope, err := h.d.DeviceGroups.DeviceScopeForUser(ctx, &session.User{ID: user.ID.V, Username: user.Username, Role: user.Role.String}, peers)
+	if err != nil {
+		h.serverError(w, r, "Operator devices error:", err, "Failed to fetch devices")
+		return
+	}
+	peers = access.FilterByScope(peers, scope, peerID)
 	devices := make([]operatorDevice, 0, len(peers))
 	for _, p := range peers {
 		note := orValue(p.Get("note"), "")
@@ -154,6 +164,12 @@ func (h *handlers) operatorDevices(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	kit.JSON(w, r, http.StatusOK, devicesAnswer{Success: true, Devices: devices})
+}
+
+// peerID is the id of a device row as text.
+func peerID(p *goapi.Object) string {
+	id, _ := text(p.Get("id"))
+	return id
 }
 
 // peerInfo is `typeof p.info === 'string' ? JSON.parse(p.info) : (p.info

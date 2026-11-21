@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/http"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -292,9 +293,29 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request, l auditList, key
 	kit.JSON(w, r, http.StatusOK, auditListAnswer{Data: rows, Total: total})
 }
 
-// connections answers GET /api/audit/conn: with a bearer token, or for
-// someone signed in to the console whose role may read the audit log
-// (audit.view; the console's refusal otherwise).
+// mayReadAudit checks that the account of a token may read the audit
+// log: audit.view, with the overrides of its role, as the console asks of
+// a session. It answers 403 {"error":"Permission denied: audit.view"}
+// when not, and 500 when the permissions cannot be read.
+func (h *handlers) mayReadAudit(w http.ResponseWriter, r *http.Request, user *tokenUser) bool {
+	allowed, err := h.d.Access.RoleHasEffectivePermission(r.Context(), user.role(), auditView)
+	if err != nil {
+		h.serverFailure(w, r, "Permission lookup failed:", err)
+		return false
+	}
+	if !allowed {
+		fail(w, r, http.StatusForbidden, access.MsgPermissionDenied(auditView))
+		return false
+	}
+	return true
+}
+
+// auditView is the permission the audit lists ask for.
+const auditView = "audit.view"
+
+// connections answers GET /api/audit/conn: with a bearer token or for
+// someone signed in to the console, when the account's role may read the
+// audit log (audit.view; the console's refusal for a session).
 func (h *handlers) connections(w http.ResponseWriter, r *http.Request) {
 	if token := bearerToken(r); token != "" {
 		user, ok := h.validate(w, r, token)
@@ -303,6 +324,9 @@ func (h *handlers) connections(w http.ResponseWriter, r *http.Request) {
 		}
 		if user == nil {
 			fail(w, r, http.StatusUnauthorized, msgInvalidToken)
+			return
+		}
+		if !h.mayReadAudit(w, r, user) {
 			return
 		}
 	} else if kit.UserID(r) == 0 {
@@ -317,11 +341,17 @@ func (h *handlers) connections(w http.ResponseWriter, r *http.Request) {
 
 // files answers GET /api/audit/file.
 func (h *handlers) files(w http.ResponseWriter, r *http.Request) {
+	if !h.mayReadAudit(w, r, authUser(r)) {
+		return
+	}
 	h.list(w, r, auditList{table: "audit_files", fromAPI: h.d.GoAPI.GetClientAuditFiles}, []string{"host_id", "peer_id"}, false)
 }
 
 // alarms answers GET /api/audit/alarm.
 func (h *handlers) alarms(w http.ResponseWriter, r *http.Request) {
+	if !h.mayReadAudit(w, r, authUser(r)) {
+		return
+	}
 	h.list(w, r, auditList{table: "audit_alarms", fromAPI: h.d.GoAPI.GetClientAuditAlarms}, []string{"host_id"}, true)
 }
 
@@ -343,6 +373,9 @@ func (h *handlers) summary(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		fail(w, r, http.StatusUnauthorized, msgAuthRequired)
+		return
+	}
+	if !h.mayReadAudit(w, r, user) {
 		return
 	}
 	answer := func(s auditSummary) {
