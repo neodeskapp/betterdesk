@@ -950,8 +950,9 @@ func (pg *PostgresDB) UpsertPeer(p *Peer) error {
 
 	_, err := pg.pool.Exec(pg.ctx, `
 		INSERT INTO peers (id, uuid, pk, ip, "user", hostname, os, version,
-		                    status, nat_type, last_online, disabled, note, tags, heartbeat_seq)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		                    status, nat_type, last_online, disabled, note, tags, heartbeat_seq,
+		                    device_type, linked_peer_id, display_name)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		ON CONFLICT (id) DO UPDATE SET
 			uuid          = COALESCE(NULLIF(EXCLUDED.uuid, ''), peers.uuid),
 			pk            = COALESCE(EXCLUDED.pk, peers.pk),
@@ -966,12 +967,16 @@ func (pg *PostgresDB) UpsertPeer(p *Peer) error {
 			disabled      = EXCLUDED.disabled,
 			note          = COALESCE(NULLIF(EXCLUDED.note, ''), peers.note),
 			tags          = COALESCE(NULLIF(EXCLUDED.tags, ''), peers.tags),
-			heartbeat_seq = EXCLUDED.heartbeat_seq`,
+			heartbeat_seq = EXCLUDED.heartbeat_seq,
+			device_type   = COALESCE(NULLIF(EXCLUDED.device_type, ''), peers.device_type),
+			linked_peer_id = COALESCE(NULLIF(EXCLUDED.linked_peer_id, ''), peers.linked_peer_id),
+			display_name  = COALESCE(NULLIF(EXCLUDED.display_name, ''), peers.display_name)`,
 		/* SECURITY (GHSA-3v82-3gf8-fxx8): UpsertPeer MUST NOT silently clear
 		   soft_deleted/deleted_at on conflict. Restoration is now an explicit
 		   operation — see RestorePeer. */
 		p.ID, p.UUID, p.PK, p.IP, p.User, p.Hostname, p.OS, p.Version,
 		p.Status, p.NATType, lastOnline, p.Disabled, p.Note, p.Tags, p.HeartbeatSeq,
+		p.DeviceType, p.LinkedPeerID, p.DisplayName,
 	)
 	if err != nil {
 		return fmt.Errorf("db: UpsertPeer(%q): %w", p.ID, err)
