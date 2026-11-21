@@ -47,6 +47,7 @@
    "roles": [
     "guest_issuer",
     "viewer",
+    "operator",
     "server_admin"
    ],
    "status": 403,
@@ -73,14 +74,13 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Permission denied: device.connect",
+     "error": "Permission denied: mesh.terminal",
      "success": false
     }
    }
   },
   {
    "roles": [
-    "operator",
     "global_admin",
     "super_admin",
     "admin"
