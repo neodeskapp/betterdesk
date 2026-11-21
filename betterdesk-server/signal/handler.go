@@ -616,11 +616,9 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 			}, raddr)
 			log.Printf("[signal] Retained pending peer transport: %s from %s", id, raddr)
 		}
-		if s.auditLog != nil {
-			s.auditLog.Log(audit.ActionPeerRegistrationRejected, raddr.IP.String(), id, map[string]string{
-				"reason": "enrollment_policy",
-			})
-		}
+		s.auditRefusal(audit.ActionPeerRegistrationRejected, raddr.IP.String(), id, map[string]string{
+			"reason": "enrollment_policy",
+		})
 		return
 	}
 
@@ -633,11 +631,9 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 		}
 		log.Printf("[signal] Rejected banned peer registration: %s from %s", id, raddr.IP)
 		s.revokeBannedPeerAccess(id, nil)
-		if s.auditLog != nil {
-			s.auditLog.Log(audit.ActionPeerRegistrationRejected, raddr.IP.String(), id, map[string]string{
-				"reason": "banned",
-			})
-		}
+		s.auditRefusal(audit.ActionPeerRegistrationRejected, raddr.IP.String(), id, map[string]string{
+			"reason": "banned",
+		})
 		return
 	}
 
@@ -784,12 +780,10 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 	// takeover of a device the admin explicitly removed.
 	if softDeleted {
 		log.Printf("[signal] Rejected PK registration of deleted peer: %s from %s", id, clientHost)
-		if s.auditLog != nil {
-			s.auditLog.Log(audit.ActionPeerRegistrationRejected, clientHost, id, map[string]string{
-				"reason": "soft_deleted",
-				"stage":  "register_pk",
-			})
-		}
+		s.auditRefusal(audit.ActionPeerRegistrationRejected, clientHost, id, map[string]string{
+			"reason": "soft_deleted",
+			"stage":  "register_pk",
+		})
 		s.peers.Remove(id)
 		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 	}
@@ -974,13 +968,11 @@ func (s *Server) processIDChange(msg *pb.RegisterPk, addrStr string) *pb.Rendezv
 	noStoredIdentity := len(oldPeer.PK) == 0 && len(storedUUID) == 0
 	if !pkProven && !uuidProven && !noStoredIdentity {
 		log.Printf("[signal] Rejected ID change %s → %s: no matching PK or UUID", oldID, newID)
-		if s.auditLog != nil {
-			s.auditLog.Log(audit.ActionPeerRegistrationRejected, hostFromAddrString(addrStr), oldID, map[string]string{
-				"reason": "id_change_without_identity_proof",
-				"stage":  "id_change",
-				"new_id": newID,
-			})
-		}
+		s.auditRefusal(audit.ActionPeerRegistrationRejected, hostFromAddrString(addrStr), oldID, map[string]string{
+			"reason": "id_change_without_identity_proof",
+			"stage":  "id_change",
+			"new_id": newID,
+		})
 		return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 	}
 
@@ -1048,6 +1040,11 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 	connection := s.cfg.ConnectionSettings()
 	targetID := msg.Id
 	if targetID == "" {
+		return
+	}
+	if !isValidPeerID(targetID) {
+		log.Printf("[signal] PunchHoleRequest from %s for invalid target id %q", raddr, targetID)
+		s.sendUDP(s.punchHoleUnauthorizedResponse(), raddr)
 		return
 	}
 
@@ -1271,6 +1268,10 @@ func (s *Server) handlePunchHoleRequestTCPWithHint(msg *pb.PunchHoleRequest, rad
 	targetID := msg.Id
 	if targetID == "" {
 		return nil
+	}
+	if !isValidPeerID(targetID) {
+		log.Printf("[signal] PunchHoleRequest (TCP) from %s for invalid target id %q", raddr, targetID)
+		return s.punchHoleUnauthorizedResponse()
 	}
 
 	log.Printf("[signal] PunchHoleRequest (TCP) from %s for target %s", raddr, targetID)
@@ -1648,9 +1649,14 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		log.Printf("[signal] RequestRelay: client %s sent empty UUID, generated %s", raddr, relayUUIDShort(relayUUID))
 	}
 
-	log.Printf("[signal] RequestRelay from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
-
 	relayServer := s.sanitizeClientRelayAddress(msg.RelayServer)
+	if !isValidPeerID(targetID) {
+		log.Printf("[signal] RequestRelay from %s for invalid target id %q", raddr, targetID)
+		s.sendUDP(targetOfflineRelayResponse(relayServer), raddr)
+		return
+	}
+
+	log.Printf("[signal] RequestRelay from %s for target %s (uuid=%q, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
 
 	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), 0)
 	if !ok {
@@ -1776,7 +1782,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	}
 
 	// Confirm to initiator with SIGNED public key
-	log.Printf("[signal] RequestRelay (UDP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUIDShort(relayUUID), relayServer)
+	log.Printf("[signal] RequestRelay (UDP): returning RelayResponse to initiator %s (uuid=%q, relay=%q)", raddr, relayUUIDShort(relayUUID), relayServer)
 	resp := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
@@ -1818,9 +1824,13 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 		log.Printf("[signal] RequestRelay (TCP): client %s sent empty UUID, generated %s", raddr, relayUUIDShort(relayUUID))
 	}
 
-	log.Printf("[signal] RequestRelay (TCP) from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
-
 	relayServer := s.sanitizeClientRelayAddress(msg.RelayServer)
+	if !isValidPeerID(targetID) {
+		log.Printf("[signal] RequestRelay (TCP) from %s for invalid target id %q", raddr, targetID)
+		return targetOfflineRelayResponse(relayServer)
+	}
+
+	log.Printf("[signal] RequestRelay (TCP) from %s for target %s (uuid=%q, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
 
 	initiatorID, ok := s.requireAuthorizedInitiator(raddr, targetID, msg.GetToken(), 0)
 	if !ok {
@@ -1951,7 +1961,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	// The UUID divergence is handled where it actually matters: a target that
 	// answers with a different UUID is correlated through the pending entry
 	// stored above, so both sides still reach hbbr and pair.
-	log.Printf("[signal] RequestRelay (TCP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUIDShort(relayUUID), relayServer)
+	log.Printf("[signal] RequestRelay (TCP): returning RelayResponse to initiator %s (uuid=%q, relay=%q)", raddr, relayUUIDShort(relayUUID), relayServer)
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
@@ -2174,7 +2184,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	// Primary delivery: TCP punch map or WebSocket peer (#276).
 	forwardAddrStr := normalizeAddrKey(forwardAddr.String())
 	if s.forwardToInitiator(forwardAddrStr, initiatorResp) {
-		log.Printf("[signal] RelayResponse forwarded to %s (advertised=%s, uuid=%s, relay=%s, signedPk=%d bytes)",
+		log.Printf("[signal] RelayResponse forwarded to %s (advertised=%s, uuid=%q, relay=%s, signedPk=%d bytes)",
 			forwardAddrStr, initiatorAddr, rr.Uuid, relayServer, len(signedPk))
 		return
 	}
@@ -2183,7 +2193,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	// registered UDP addr. Never FindByIP on shared NAT (#399 misdelivery).
 	if forwardAddr != nil {
 		if s.sendUDP(initiatorResp, forwardAddr) {
-			log.Printf("[signal] RelayResponse forwarded to exact initiator %s via UDP (advertised=%s, uuid=%s, relay=%s, signedPk=%d bytes)",
+			log.Printf("[signal] RelayResponse forwarded to exact initiator %s via UDP (advertised=%s, uuid=%q, relay=%s, signedPk=%d bytes)",
 				forwardAddr, initiatorAddr, rr.Uuid, relayServer, len(signedPk))
 			return
 		}
@@ -2191,16 +2201,16 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	if entry := s.peers.Get(initiatorID); entry != nil && entry.UDPAddr != nil {
 		if s.peers.CountByIP(entry.UDPAddr.IP) > 1 &&
 			(forwardAddr == nil || entry.UDPAddr.Port != forwardAddr.Port || !entry.UDPAddr.IP.Equal(forwardAddr.IP)) {
-			log.Printf("[signal] RelayResponse: refusing ambiguous UDP delivery for initiator %s at shared IP %s (uuid=%s)", initiatorID, entry.UDPAddr.IP, rr.Uuid)
+			log.Printf("[signal] RelayResponse: refusing ambiguous UDP delivery for initiator %s at shared IP %s (uuid=%q)", initiatorID, entry.UDPAddr.IP, rr.Uuid)
 			return
 		}
 		if s.sendUDP(initiatorResp, entry.UDPAddr) {
-			log.Printf("[signal] RelayResponse forwarded to peer %s at %s via UDP (uuid=%s, relay=%s, signedPk=%d bytes)", entry.ID, entry.UDPAddr, rr.Uuid, relayServer, len(signedPk))
+			log.Printf("[signal] RelayResponse forwarded to peer %s at %s via UDP (uuid=%q, relay=%s, signedPk=%d bytes)", entry.ID, entry.UDPAddr, rr.Uuid, relayServer, len(signedPk))
 			return
 		}
 	}
 
-	log.Printf("[signal] RelayResponse: cannot deliver to %s (advertised=%s, no TCP conn, no safe peer match, uuid=%s)",
+	log.Printf("[signal] RelayResponse: cannot deliver to %s (advertised=%s, no TCP conn, no safe peer match, uuid=%q)",
 		forwardAddrStr, initiatorAddr, rr.Uuid)
 }
 
@@ -2484,6 +2494,19 @@ func (s *Server) relayUnauthorizedResponse(relayServer string) *pb.RendezvousMes
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
 				RefuseReason: refuseInitiatorNotAuthorized,
+				RelayServer:  relayServer,
+			},
+		},
+	}
+}
+
+// targetOfflineRelayResponse refuses a RequestRelay whose target cannot be
+// reached.
+func targetOfflineRelayResponse(relayServer string) *pb.RendezvousMessage {
+	return &pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_RelayResponse{
+			RelayResponse: &pb.RelayResponse{
+				RefuseReason: "Target offline",
 				RelayServer:  relayServer,
 			},
 		},
@@ -2878,12 +2901,16 @@ func (s *Server) logUnauthorizedInitiatorDetails(raddr *net.UDPAddr, initiatorID
 	if raddr != nil {
 		clientHost = raddr.IP.String()
 	}
-	log.Printf("[signal] Rejected outbound from %s (initiator=%q target=%q reason=%s)",
-		clientHost, initiatorID, targetID, reason)
+	details := map[string]string{"reason": reason}
+	record, suppressed := s.noteRefusal(audit.ActionConnectionDenied, clientHost, details)
+	if !record {
+		return
+	}
+	log.Printf("[signal] Rejected outbound from %s (initiator=%q target=%q reason=%s, %d more since the last)",
+		clientHost, initiatorID, targetID, reason, suppressed)
 	if s.auditLog == nil {
 		return
 	}
-	details := map[string]string{"reason": reason}
 	for key, value := range extra {
 		if value != "" {
 			details[key] = value
@@ -2895,7 +2922,7 @@ func (s *Server) logUnauthorizedInitiatorDetails(raddr *net.UDPAddr, initiatorID
 	if targetID != "" {
 		details["target_id"] = targetID
 	}
-	s.auditLog.Log(audit.ActionConnectionDenied, clientHost, targetID, details)
+	s.auditLog.Log(audit.ActionConnectionDenied, clientHost, targetID, withSuppressed(details, suppressed))
 }
 
 // logAuthorizedInitiator records the authorization decision without persisting
@@ -3291,11 +3318,9 @@ func mustParseCIDR(s string) *net.IPNet {
 func (s *Server) rejectIfPeerSoftDeleted(id, clientHost string) bool {
 	if softDeleted, _ := s.db.IsPeerSoftDeleted(id); softDeleted {
 		log.Printf("[signal] Rejected registration of deleted peer: %s from %s", id, clientHost)
-		if s.auditLog != nil {
-			s.auditLog.Log(audit.ActionPeerRegistrationRejected, clientHost, id, map[string]string{
-				"reason": "soft_deleted",
-			})
-		}
+		s.auditRefusal(audit.ActionPeerRegistrationRejected, clientHost, id, map[string]string{
+			"reason": "soft_deleted",
+		})
 		return true
 	}
 	return false

@@ -179,6 +179,10 @@ type Server struct {
 
 	// maxPendingEnrollments caps the managed-mode approval queue.
 	maxPendingEnrollments int
+
+	// refusals decides which refusals of unauthenticated requests are
+	// audited.
+	refusals *refusalCounter
 }
 
 // New creates a new signal server instance.
@@ -194,6 +198,7 @@ func New(cfg *config.Config, kp *crypto.KeyPair, database db.Database) *Server {
 		natConns:      newConnLimiter(maxNATConnsPerHost, maxNATConns),
 
 		maxPendingEnrollments: defaultMaxPendingEnrollments,
+		refusals:              newRefusalCounter(refusalAuditWindow, refusalAuditBudget),
 	}
 	if cfg != nil {
 		s.lanNet = parseLANMask(cfg.Mask)
@@ -744,25 +749,25 @@ func (s *Server) logAndCheckKeepAlive(msg *pb.RendezvousMessage, addrKey string,
 
 	switch {
 	case msg.GetPunchHoleRequest() != nil:
-		log.Printf("[signal] TCP msg from %s%s: PunchHoleRequest (target=%s)", addrKey, tag, msg.GetPunchHoleRequest().Id)
+		log.Printf("[signal] TCP msg from %s%s: PunchHoleRequest (target=%q)", addrKey, tag, msg.GetPunchHoleRequest().Id)
 		return true
 	case msg.GetRequestRelay() != nil:
-		log.Printf("[signal] TCP msg from %s%s: RequestRelay (target=%s, uuid=%s)", addrKey, tag, msg.GetRequestRelay().Id, msg.GetRequestRelay().Uuid)
+		log.Printf("[signal] TCP msg from %s%s: RequestRelay (target=%q, uuid=%q)", addrKey, tag, msg.GetRequestRelay().Id, msg.GetRequestRelay().Uuid)
 		return true
 	case msg.GetRegisterPk() != nil:
-		log.Printf("[signal] TCP msg from %s%s: RegisterPk (id=%s)", addrKey, tag, msg.GetRegisterPk().Id)
+		log.Printf("[signal] TCP msg from %s%s: RegisterPk (id=%q)", addrKey, tag, msg.GetRegisterPk().Id)
 		// Keep alive so bindTCPSessionPeer + a following PunchHole/RequestRelay
 		// on this connection can authorize without IP-only FindByIP (#302/#327).
 		return true
 	case msg.GetFetchLocalAddr() != nil:
 		log.Printf("[signal] TCP msg from %s%s: FetchLocalAddr", addrKey, tag)
 	case msg.GetLocalAddr() != nil:
-		log.Printf("[signal] TCP msg from %s%s: LocalAddr (id=%s)", addrKey, tag, msg.GetLocalAddr().Id)
+		log.Printf("[signal] TCP msg from %s%s: LocalAddr (id=%q)", addrKey, tag, msg.GetLocalAddr().Id)
 	case msg.GetRelayResponse() != nil:
-		log.Printf("[signal] TCP msg from %s%s: RelayResponse (uuid=%s, id=%s)", addrKey, tag, msg.GetRelayResponse().Uuid, msg.GetRelayResponse().GetId())
+		log.Printf("[signal] TCP msg from %s%s: RelayResponse (uuid=%q, id=%q)", addrKey, tag, msg.GetRelayResponse().Uuid, msg.GetRelayResponse().GetId())
 		return true
 	case msg.GetPunchHoleSent() != nil:
-		log.Printf("[signal] TCP msg from %s%s: PunchHoleSent (id=%s)", addrKey, tag, msg.GetPunchHoleSent().Id)
+		log.Printf("[signal] TCP msg from %s%s: PunchHoleSent (id=%q)", addrKey, tag, msg.GetPunchHoleSent().Id)
 		return true
 	case msg.GetPunchHoleResponse() != nil:
 		log.Printf("[signal] TCP msg from %s%s: PunchHoleResponse", addrKey, tag)
@@ -772,9 +777,9 @@ func (s *Server) logAndCheckKeepAlive(msg *pb.RendezvousMessage, addrKey string,
 		// don't log health checks
 	case msg.GetHttpProxyRequest() != nil:
 		req := msg.GetHttpProxyRequest()
-		log.Printf("[signal] TCP msg from %s%s: HttpProxyRequest (method=%s path=%s)", addrKey, tag, req.GetMethod(), req.GetPath())
+		log.Printf("[signal] TCP msg from %s%s: HttpProxyRequest (method=%q path=%q)", addrKey, tag, req.GetMethod(), req.GetPath())
 	case msg.GetIceCandidate() != nil:
-		log.Printf("[signal] TCP msg from %s%s: IceCandidate (target=%s)", addrKey, tag, msg.GetIceCandidate().GetId())
+		log.Printf("[signal] TCP msg from %s%s: IceCandidate (target=%q)", addrKey, tag, msg.GetIceCandidate().GetId())
 	case msg.GetPunchHoleRequest() != nil:
 		phr := msg.GetPunchHoleRequest()
 		if phr.GetWebrtcSdpOffer() != "" {

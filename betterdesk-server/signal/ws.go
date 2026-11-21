@@ -385,7 +385,7 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 
 		case msg.GetHttpProxyRequest() != nil:
 			req := msg.GetHttpProxyRequest()
-			log.Printf("[signal] WS HttpProxyRequest from %s (method=%s path=%s)", remoteAddr, req.GetMethod(), req.GetPath())
+			log.Printf("[signal] WS HttpProxyRequest from %s (method=%q path=%q)", remoteAddr, req.GetMethod(), req.GetPath())
 			wsc.WriteMessage(&pb.RendezvousMessage{
 				Union: &pb.RendezvousMessage_HttpProxyResponse{
 					HttpProxyResponse: &pb.HttpProxyResponse{

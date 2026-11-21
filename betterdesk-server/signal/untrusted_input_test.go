@@ -2,10 +2,12 @@ package signal
 
 import (
 	"bytes"
+	"fmt"
 	"net"
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/audit"
 	"github.com/unitronix/betterdesk-server/config"
 	cryptopkg "github.com/unitronix/betterdesk-server/crypto"
 	"github.com/unitronix/betterdesk-server/peer"
@@ -161,5 +163,78 @@ func TestRegisterPkRefusesOversizedKeyAndUUID(t *testing.T) {
 		if stored, _ := database.GetPeer(msg.Id); stored != nil {
 			t.Fatalf("%s was stored", msg.Id)
 		}
+	}
+}
+
+// A target id that no peer can have is answered as unknown before anything
+// is logged or audited: the id is client text and may hold a line break.
+func TestInvalidTargetIDIsRefusedBeforeAudit(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	logger := audit.NewLogger("")
+	srv.SetAuditLogger(logger)
+	forged := "VICTIM\n2026/11/21 [audit] peer_banned"
+
+	resp := srv.handlePunchHoleRequestTCP(&pb.PunchHoleRequest{Id: forged}, udpAddr("198.51.100.20", 5000))
+	if phr := resp.GetPunchHoleResponse(); phr == nil || phr.Failure != pb.PunchHoleResponse_ID_NOT_EXIST {
+		t.Fatalf("PunchHole for an invalid id: got %+v, want ID_NOT_EXIST", resp)
+	}
+	resp = srv.handleRequestRelayTCP(&pb.RequestRelay{Id: forged, Uuid: "u"}, udpAddr("198.51.100.20", 5000), peer.ConnTCP)
+	if rr := resp.GetRelayResponse(); rr == nil || rr.RefuseReason == "" {
+		t.Fatalf("RequestRelay for an invalid id: got %+v, want a refusal", resp)
+	}
+	if n := logger.Total(); n != 0 {
+		t.Fatalf("%d audit events for requests naming an invalid id", n)
+	}
+}
+
+// Refusals of unauthenticated requests are counted per address: a flood
+// writes one audit event, not one per packet, and does not push earlier
+// events out of the ring.
+func TestRefusalsAreAuditedOncePerAddress(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	logger := audit.NewLogger("")
+	srv.SetAuditLogger(logger)
+	putOnlinePeer(srv, "FLOODTGT1", "203.0.113.94", 52000, peer.ConnUDP)
+
+	for i := 0; i < 50; i++ {
+		srv.handlePunchHoleRequestTCP(&pb.PunchHoleRequest{Id: "FLOODTGT1"}, udpAddr("198.51.100.21", 5000+i))
+	}
+	if got := len(logger.RecentByAction(audit.ActionConnectionDenied, 100)); got != 1 {
+		t.Fatalf("50 refused requests from one address wrote %d audit events, want 1", got)
+	}
+	srv.handlePunchHoleRequestTCP(&pb.PunchHoleRequest{Id: "FLOODTGT1"}, udpAddr("198.51.100.22", 5000))
+	if got := len(logger.RecentByAction(audit.ActionConnectionDenied, 100)); got != 2 {
+		t.Fatalf("a refusal from another address: %d audit events, want 2", got)
+	}
+}
+
+func TestRefusalAuditWindowCarriesSuppressedCount(t *testing.T) {
+	c := newRefusalCounter(time.Minute, 100)
+	start := time.Unix(1000, 0)
+	if record, _ := c.note("198.51.100.23", start); !record {
+		t.Fatal("the first refusal from an address must be recorded")
+	}
+	for i := 0; i < 9; i++ {
+		if record, _ := c.note("198.51.100.23", start.Add(time.Second)); record {
+			t.Fatal("a refusal inside the window was recorded")
+		}
+	}
+	record, suppressed := c.note("198.51.100.23", start.Add(61*time.Second))
+	if !record || suppressed != 9 {
+		t.Fatalf("after the window: record=%v suppressed=%d, want true and 9", record, suppressed)
+	}
+}
+
+func TestRefusalAuditHasAGlobalBudget(t *testing.T) {
+	c := newRefusalCounter(time.Minute, 3)
+	now := time.Unix(2000, 0)
+	recorded := 0
+	for i := 0; i < 10; i++ {
+		if record, _ := c.note(fmt.Sprintf("198.51.100.%d", 100+i), now); record {
+			recorded++
+		}
+	}
+	if recorded != 3 {
+		t.Fatalf("refusals from 10 forged addresses wrote %d events in one window, want the budget of 3", recorded)
 	}
 }
