@@ -206,8 +206,9 @@ func (s *Server) metricsGuard(h http.HandlerFunc) http.HandlerFunc {
 			h(w, r)
 			return
 		}
-		// Fall back to standard auth middleware (JWT / API key).
-		s.authMiddleware(h).ServeHTTP(w, r)
+		// Fall back to standard auth middleware (JWT / API key), for a
+		// caller that holds metrics.view.
+		s.authMiddleware(s.requirePermission(auth.PermMetricsView, h)).ServeHTTP(w, r)
 	}
 }
 
@@ -409,7 +410,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("PUT /api/org/{id}/users/{uid}", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleUpdateOrgUser)))
 	mux.HandleFunc("DELETE /api/org/{id}/users/{uid}", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleDeleteOrgUser)))
 	mux.HandleFunc("POST /api/org/{id}/invite", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleCreateOrgInvitation)))
-	mux.HandleFunc("GET /api/org/{id}/invitations", s.requireOrgMembership("id", s.handleListOrgInvitations))
+	mux.HandleFunc("GET /api/org/{id}/invitations", s.requireOrgMembership("id", s.requireOrgManager("id", s.handleListOrgInvitations)))
 	mux.HandleFunc("POST /api/org/{id}/devices", s.requirePermission(auth.PermOrgManageDevices, s.requireOrgMembership("id", s.handleAssignOrgDevice)))
 	mux.HandleFunc("GET /api/org/{id}/devices", s.requireOrgMembership("id", s.handleListOrgDevices))
 	mux.HandleFunc("DELETE /api/org/{id}/devices/{did}", s.requirePermission(auth.PermOrgManageDevices, s.requireOrgMembership("id", s.handleUnassignOrgDevice)))
@@ -495,10 +496,10 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/user/group", s.handleClientUserGroup)
 	mux.HandleFunc("GET /api/user-groups", s.handleUserGroupsGet)
 	mux.HandleFunc("POST /api/user-groups", s.requirePanelAdmin(s.handleUserGroupsPost))
-	mux.HandleFunc("GET /api/strategies", s.handleStrategiesGet)
+	mux.HandleFunc("GET /api/strategies", s.requirePermission(auth.PermDeviceView, s.handleStrategiesGet))
 	mux.HandleFunc("POST /api/strategies", s.requirePanelAdmin(s.handleStrategiesPost))
 	mux.HandleFunc("POST /api/strategies/assign", s.requirePanelAdmin(s.handleStrategiesAssign))
-	mux.HandleFunc("GET /api/strategies/{guid}", s.handleStrategiesGetByGUID)
+	mux.HandleFunc("GET /api/strategies/{guid}", s.requirePermission(auth.PermDeviceView, s.handleStrategiesGetByGUID))
 	mux.HandleFunc("PUT /api/strategies/{guid}/status", s.requirePanelAdmin(s.handleStrategiesStatus))
 	mux.HandleFunc("DELETE /api/strategies/{guid}", s.requirePanelAdmin(s.handleStrategiesDelete))
 	mux.HandleFunc("GET /api/devices", s.requirePermission(auth.PermDeviceView, s.handleProDevicesList))
@@ -615,7 +616,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/auth/ldap/config", s.requirePermission(auth.PermServerConfig, s.handleGetLDAPConfig))
 	mux.HandleFunc("PUT /api/auth/ldap/config", s.requirePermission(auth.PermServerConfig, s.handleSaveLDAPConfig))
 	mux.HandleFunc("POST /api/auth/ldap/test", s.requirePermission(auth.PermServerConfig, s.handleTestLDAPConnection))
-	mux.HandleFunc("POST /api/auth/ldap/verify", s.handleLDAPVerifyCredentials)
+	mux.HandleFunc("POST /api/auth/ldap/verify", s.requireConsoleCaller(s.handleLDAPVerifyCredentials))
 
 	// OIDC/OAuth2 configuration (server.config permission)
 	mux.HandleFunc("GET /api/auth/oidc/config", s.requirePermission(auth.PermServerConfig, s.handleGetOIDCConfig))
@@ -647,13 +648,13 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("DELETE /api/pairing/codes/{id}", s.requireRole(auth.RoleOperator, s.handleDeletePairingCode))
 
 	// CDAP device management (requires CDAP gateway to be enabled)
-	mux.HandleFunc("GET /api/cdap/status", s.handleCDAPStatus)
-	mux.HandleFunc("GET /api/cdap/devices", s.handleCDAPListDevices)
-	mux.HandleFunc("GET /api/cdap/devices/{id}", s.scopedDevice(s.handleCDAPDeviceInfo))
-	mux.HandleFunc("GET /api/cdap/devices/{id}/manifest", s.scopedDevice(s.handleCDAPDeviceManifest))
-	mux.HandleFunc("GET /api/cdap/devices/{id}/state", s.scopedDevice(s.handleCDAPDeviceState))
+	mux.HandleFunc("GET /api/cdap/status", s.requirePermission(auth.PermCDAPView, s.handleCDAPStatus))
+	mux.HandleFunc("GET /api/cdap/devices", s.requirePermission(auth.PermCDAPView, s.handleCDAPListDevices))
+	mux.HandleFunc("GET /api/cdap/devices/{id}", s.requirePermission(auth.PermCDAPView, s.scopedDevice(s.handleCDAPDeviceInfo)))
+	mux.HandleFunc("GET /api/cdap/devices/{id}/manifest", s.requirePermission(auth.PermCDAPView, s.scopedDevice(s.handleCDAPDeviceManifest)))
+	mux.HandleFunc("GET /api/cdap/devices/{id}/state", s.requirePermission(auth.PermCDAPView, s.scopedDevice(s.handleCDAPDeviceState)))
 	mux.HandleFunc("POST /api/cdap/devices/{id}/command", s.requirePermission(auth.PermCDAPCommand, s.scopedDevice(s.handleCDAPSendCommand)))
-	mux.HandleFunc("GET /api/cdap/alerts", s.handleCDAPAlerts)
+	mux.HandleFunc("GET /api/cdap/alerts", s.requirePermission(auth.PermCDAPView, s.handleCDAPAlerts))
 
 	// CDAP auth delegation (admin only)
 	mux.HandleFunc("POST /api/cdap/delegate", s.requireRole(auth.RoleAdmin, s.handleCDAPDelegateCreate))
@@ -714,9 +715,9 @@ func (s *Server) routes() *http.ServeMux {
 	// BetterDesk desktop client management WebSocket (no API key — device auth)
 	mux.HandleFunc("GET /ws/bd-mgmt/{device_id}", s.handleBdMgmt)
 	// Management REST endpoints (admin/operator only)
-	mux.HandleFunc("GET /api/bd/mgmt/{device_id}/status", s.handleBdMgmtStatus)
+	mux.HandleFunc("GET /api/bd/mgmt/{device_id}/status", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtStatus))
 	mux.HandleFunc("POST /api/bd/mgmt/{device_id}/send", s.requireRole(auth.RoleOperator, s.handleBdMgmtSend))
-	mux.HandleFunc("GET /api/bd/mgmt/connected", s.handleBdMgmtConnected)
+	mux.HandleFunc("GET /api/bd/mgmt/connected", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtConnected))
 
 	// Prometheus metrics. Gated via H-03 — see handleMetrics for the actual
 	// IP-allowlist / auth check. We register a wrapper here that enforces the

@@ -197,6 +197,62 @@ func (s *Server) requireOrgMembership(paramName string, handler http.HandlerFunc
 	}
 }
 
+// callerOrgUser is the caller's organization user row in orgID: the row an
+// organization token was issued for, or the membership of a server account.
+// nil when the caller is no member.
+func (s *Server) callerOrgUser(r *http.Request, orgID string) *db.OrgUser {
+	username := getUsernameFromCtx(r)
+	if getOrgIDFromCtx(r) == orgID {
+		username = strings.TrimPrefix(username, orgTokenSubject(orgID, ""))
+	}
+	if username == "" {
+		return nil
+	}
+	u, err := s.db.GetOrgUserByUsername(orgID, username)
+	if err != nil {
+		return nil
+	}
+	return u
+}
+
+// requireOrgManager lets through super admins, global admins and members
+// whose organization role is owner or admin in the organization of the path
+// value paramName.
+func (s *Server) requireOrgManager(paramName string, handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		role := getRoleFromCtx(r)
+		if auth.IsSuperAdminRole(role) || role == auth.RoleGlobalAdmin {
+			handler(w, r)
+			return
+		}
+		if u := s.callerOrgUser(r, r.PathValue(paramName)); u != nil && (u.Role == db.OrgRoleOwner || u.Role == db.OrgRoleAdmin) {
+			handler(w, r)
+			return
+		}
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Only an owner or admin of this organization may do this"})
+	}
+}
+
+// requireConsoleCaller lets through only the console: a request that came
+// through InternalHandler or one that the panel trust statement
+// authenticated.
+func (s *Server) requireConsoleCaller(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if arrivedInternally(r) || s.viaPanelTrust(r) {
+			handler(w, r)
+			return
+		}
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Only the console may call this endpoint"})
+	}
+}
+
+// viaPanelTrust reports whether authenticateRequest took the request's
+// credential from the panel trust statement. It does whenever this holds,
+// and a statement that fails verification ends the request with 401.
+func (s *Server) viaPanelTrust(r *http.Request) bool {
+	return r.Header.Get(PanelTrustHeader) != "" && s.panelTrustEnabled() && s.panelTrustPeerAllowed(r)
+}
+
 // canReadDeviceOrg reports whether the caller may read data for a device that
 // belongs to orgID.
 //
