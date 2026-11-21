@@ -1,10 +1,12 @@
 package phase45
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/agentreleases"
@@ -51,10 +53,17 @@ type syncAnswer struct {
 	Manifest any    `json:"manifest"`
 }
 
+// importTimeout is how long a release import may take. It runs on its own
+// deadline, not the request's, so a browser or a proxy that gives up on
+// the request does not stop it.
+const importTimeout = 30 * time.Minute
+
 // syncRelease answers POST /api/agent-releases/sync: it imports the newest
 // release from GitHub. Every failure is 502 with the reason.
 func (h *handlers) syncRelease(w http.ResponseWriter, r *http.Request) {
-	imported, err := h.releases.ImportLatest(r.Context())
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), importTimeout)
+	defer cancel()
+	imported, err := h.releases.ImportLatest(ctx)
 	if err != nil {
 		fail(w, r, http.StatusBadGateway, err.Error())
 		return
