@@ -673,7 +673,9 @@ type Database interface {
 	GetTelemetrySnapshot(deviceID, kind string) (*TelemetrySnapshot, error)
 	QueueTelemetryCommand(command *TelemetryCommand) (int64, error)
 	GetPendingTelemetryCommands(deviceID string, limit int) ([]*TelemetryCommand, error)
-	CompleteTelemetryCommand(id int64, status, result string) error
+	// CompleteTelemetryCommand completes command id only when it is pending
+	// for deviceID.
+	CompleteTelemetryCommand(deviceID string, id int64, status, result string) error
 
 	// Per-device desktop connection mode (normal <-> incoming-only).
 	IssueConnectionMode(issue *ConnectionModeIssue) (*ConnectionModeCommand, bool, error)

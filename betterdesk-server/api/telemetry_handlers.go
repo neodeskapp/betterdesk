@@ -147,7 +147,7 @@ func (s *Server) saveClientTelemetry(deviceID string, raw json.RawMessage) {
 		default:
 			status = "error"
 		}
-		if err := s.db.CompleteTelemetryCommand(result.ID, status, resultJSON); err != nil {
+		if err := s.db.CompleteTelemetryCommand(deviceID, result.ID, status, resultJSON); err != nil {
 			s.auditLog.Log(audit.ActionTelemetryCommandResult, deviceID, fmt.Sprint(result.ID),
 				map[string]string{"error": err.Error()})
 		}

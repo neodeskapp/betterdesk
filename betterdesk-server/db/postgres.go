@@ -2501,13 +2501,14 @@ func (pg *PostgresDB) GetPendingTelemetryCommands(deviceID string, limit int) ([
 	return commands, rows.Err()
 }
 
-// CompleteTelemetryCommand stores the bounded result of a delivered command.
-func (pg *PostgresDB) CompleteTelemetryCommand(id int64, status, result string) error {
+// CompleteTelemetryCommand stores the bounded result of a delivered command
+// of deviceID.
+func (pg *PostgresDB) CompleteTelemetryCommand(deviceID string, id int64, status, result string) error {
 	_, err := pg.pool.Exec(pg.ctx, `
 		UPDATE device_telemetry_commands
 		SET status = $1, result = $2::jsonb, completed_at = NOW()
-		WHERE id = $3 AND status = 'pending'`,
-		status, result, id)
+		WHERE id = $3 AND device_id = $4 AND status = 'pending'`,
+		status, result, id, deviceID)
 	return err
 }
 

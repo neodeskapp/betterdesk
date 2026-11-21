@@ -2905,16 +2905,17 @@ func (s *SQLiteDB) GetPendingTelemetryCommands(deviceID string, limit int) ([]*T
 	return commands, rows.Err()
 }
 
-// CompleteTelemetryCommand stores the bounded result of a delivered command.
-func (s *SQLiteDB) CompleteTelemetryCommand(id int64, status, result string) error {
+// CompleteTelemetryCommand stores the bounded result of a delivered command
+// of deviceID.
+func (s *SQLiteDB) CompleteTelemetryCommand(deviceID string, id int64, status, result string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	_, err := s.db.Exec(`
 		UPDATE device_telemetry_commands
 		SET status = ?, result = ?, completed_at = datetime('now')
-		WHERE id = ? AND status = 'pending'`,
-		status, result, id)
+		WHERE id = ? AND device_id = ? AND status = 'pending'`,
+		status, result, id, deviceID)
 	return err
 }
 
