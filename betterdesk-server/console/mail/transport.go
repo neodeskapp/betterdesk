@@ -2,11 +2,15 @@ package mail
 
 import (
 	"context"
+	"errors"
 	"io"
+	"net"
+	"net/netip"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/mail/message"
 	"github.com/unitronix/betterdesk-server/console/mail/smtpwire"
+	"github.com/unitronix/betterdesk-server/console/ssrfguard"
 )
 
 // SMTP is the Transport of a running console: it builds the message
@@ -26,9 +30,51 @@ type SMTP struct {
 	Wire smtpwire.Options
 }
 
-// options joins the injected parts of Wire with the saved settings.
+// errRefusedRelay is the failure of a connection to an address no mail
+// relay has: link-local, where the cloud metadata services answer, or a
+// metadata service in another range.
+var errRefusedRelay = errors.New("SMTP host refused: link-local and cloud metadata addresses cannot be used")
+
+// refusedRelay reports whether a connection to the address is refused: the
+// ranges ssrfguard always blocks, except loopback and the unspecified
+// address, which reach this machine as a relay on localhost does. Private
+// addresses pass.
+func refusedRelay(address string) bool {
+	host, _, err := net.SplitHostPort(address)
+	if err != nil {
+		host = address
+	}
+	ip, err := netip.ParseAddr(host)
+	if err != nil {
+		return false
+	}
+	ip = ip.WithZone("").Unmap()
+	if ip.IsLoopback() || ip.IsUnspecified() || ip.Is4() && ip.As4()[0] == 0 {
+		return false
+	}
+	return ssrfguard.IsBlockedIP(ip.String(), ssrfguard.Options{AllowPrivate: true})
+}
+
+// guardedDial is dial for the addresses refusedRelay lets through, and
+// errRefusedRelay for the others. The check runs on the address that is
+// connected to, after the host's name was resolved.
+func guardedDial(dial func(ctx context.Context, network, address string) (net.Conn, error)) func(ctx context.Context, network, address string) (net.Conn, error) {
+	if dial == nil {
+		dial = (&net.Dialer{}).DialContext
+	}
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		if refusedRelay(address) {
+			return nil, errRefusedRelay
+		}
+		return dial(ctx, network, address)
+	}
+}
+
+// options joins the injected parts of Wire with the saved settings. The
+// connection goes through guardedDial.
 func (t *SMTP) options(settings Settings) smtpwire.Options {
 	opts := t.Wire
+	opts.Dial = guardedDial(opts.Dial)
 	opts.Host = settings.Host
 	opts.Port = settings.Port
 	opts.Secure = settings.Secure

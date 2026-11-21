@@ -13,6 +13,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/console/mail/smtpwire"
 )
 
 // Email is a message for SendEmail.
@@ -158,10 +159,16 @@ func (r TestResult) MarshalJSON() ([]byte, error) {
 
 func failedTest(message string) TestResult { return TestResult{Error: &message} }
 
+// noSMTPGreeting is the answer of a connection test whose server did not
+// greet as a mail server does: the line it sent goes to the log only, so
+// the test reads no other service's banner.
+const noSMTPGreeting = "Invalid greeting: the server did not answer as an SMTP server"
+
 // TestConnection connects to the mail server of the configuration in use
 // and signs in, without sending anything. Without a configuration the
 // answer is the error "No SMTP configuration", and for a stored
-// configuration that is invalid "Invalid SMTP configuration".
+// configuration that is invalid "Invalid SMTP configuration". A server
+// whose first lines are no SMTP replies is answered with noSMTPGreeting.
 //
 // A failed test is a TestResult; the error is always nil.
 func (s *Service) TestConnection(ctx context.Context) (TestResult, error) {
@@ -173,6 +180,11 @@ func (s *Service) TestConnection(ctx context.Context) (TestResult, error) {
 		return failedTest(t.refusal.Error()), nil
 	}
 	if err := s.opts.Transport.Verify(ctx, t.settings); err != nil {
+		var wire *smtpwire.Error
+		if errors.As(err, &wire) && wire.Code == "EPROTOCOL" && wire.Command == "CONN" && wire.Response != "" {
+			s.log.Warn("SMTP test: the server did not greet as an SMTP server:", wire.Message)
+			return failedTest(noSMTPGreeting), nil
+		}
 		return failedTest(err.Error()), nil
 	}
 	return TestResult{Success: true}, nil
