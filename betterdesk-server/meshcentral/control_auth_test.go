@@ -137,6 +137,78 @@ func TestControlSocketRefusesTokensTheAPIRefuses(t *testing.T) {
 	}
 }
 
+// TestControlSocketActsWithTheStoredAccount: the socket acts with the role
+// the account has now, not the role inside the token; a token issued
+// before the account's password changed and an organization token, whose
+// subject is no server account, open nothing (RV228).
+func TestControlSocketActsWithTheStoredAccount(t *testing.T) {
+	gw, url, jm := controlGateway(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// vera is a viewer: an admin claim must not give her a relay cookie
+	forged, _, err := dialControl(ctx, url, token(t, jm, "vera", auth.RoleAdmin))
+	if err != nil {
+		t.Fatalf("viewer with an admin claim: %v", err)
+	}
+	defer forged.CloseNow()
+	controlSend(t, ctx, forged, `{"action":"authcookie"}`)
+	controlSend(t, ctx, forged, `{"action":"ping"}`)
+	for {
+		_, data, err := forged.Read(ctx)
+		if err != nil {
+			t.Fatalf("viewer with an admin claim: %v", err)
+		}
+		if strings.Contains(string(data), `"authcookie"`) {
+			t.Errorf("a viewer's token with an admin claim got a relay cookie: %s", data)
+		}
+		if strings.Contains(string(data), `"pong"`) {
+			break
+		}
+	}
+
+	refused := func(what, tok string) {
+		t.Helper()
+		c, resp, err := dialControl(ctx, url, tok)
+		if err == nil {
+			c.CloseNow()
+			t.Errorf("%s: socket opened", what)
+			return
+		}
+		if resp == nil || resp.StatusCode != http.StatusUnauthorized {
+			t.Errorf("%s: got %v, want 401", what, resp)
+		}
+	}
+	org, err := jm.GenerateOrgToken("anna", auth.RoleAdmin, "org-1", time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	refused("organization token named like a server account", org)
+
+	old := token(t, jm, "anna", auth.RoleOperator)
+	if c, _, err := dialControl(ctx, url, old); err != nil {
+		t.Fatalf("operator token before the password change: %v", err)
+	} else {
+		c.CloseNow()
+	}
+	// The change has to come in a later second than the token
+	time.Sleep(time.Until(time.Unix(time.Now().Unix()+1, 0)))
+	anna, err := gw.db.GetUser("anna")
+	if err != nil || anna == nil {
+		t.Fatalf("anna: %v %v", anna, err)
+	}
+	anna.PasswordHash = "y"
+	if err := gw.db.UpdateUser(anna); err != nil {
+		t.Fatal(err)
+	}
+	refused("token issued before the password change", old)
+	if c, _, err := dialControl(ctx, url, token(t, jm, "anna", auth.RoleOperator)); err != nil {
+		t.Errorf("token issued after the password change: %v", err)
+	} else {
+		c.CloseNow()
+	}
+}
+
 func TestControlActionsAskThePermissionOfTheirRoute(t *testing.T) {
 	gw, url, jm := controlGateway(t)
 	agent := fakeAgent(t, gw, "Mpeer0001", "nodeA")
