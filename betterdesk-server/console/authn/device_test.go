@@ -209,6 +209,38 @@ func TestARenamedDeviceKeepsItsDeviceToken(t *testing.T) {
 	})
 }
 
+// TestABannedOrDeletedDeviceOpensNoSocketWithAnEnrollmentToken: an
+// enrollment token bound to a device the signal server holds as banned or
+// soft-deleted opens no device socket; the device opens one again with it
+// when the ban ends (BUGS RV233).
+func TestABannedOrDeletedDeviceOpensNoSocketWithAnEnrollmentToken(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
+		ctx := context.Background()
+		s, _, _ := testService(t, db, nil)
+		set := db.Pick("1", "TRUE")
+		mustExec(t, db, `INSERT INTO peers (id) VALUES ('enr-ok')`)
+		mustExec(t, db, `INSERT INTO peers (id, banned) VALUES ('enr-banned', `+set+`)`)
+		mustExec(t, db, `INSERT INTO peers (id, soft_deleted) VALUES ('enr-binned', `+set+`)`)
+		for _, device := range []string{"enr-ok", "enr-banned", "enr-binned"} {
+			mustExec(t, db, `INSERT INTO device_tokens (token_hash, peer_id, status, max_uses, use_count) VALUES (?, ?, 'active', 0, 0)`,
+				HashDeviceToken("enrollment-"+device), device)
+		}
+		check := func(device string, want bool) {
+			t.Helper()
+			if ok, err := s.VerifyDeviceWSAuth(ctx, device, "enrollment-"+device); ok != want || err != nil {
+				t.Errorf("device socket of %s with its enrollment token: %v, %v; want %v", device, ok, err, want)
+			}
+		}
+		check("enr-ok", true)
+		check("enr-banned", false)
+		check("enr-binned", false)
+
+		mustExec(t, db, `UPDATE peers SET banned = `+db.Pick("0", "FALSE")+` WHERE id = 'enr-banned'`)
+		check("enr-banned", true)
+	})
+}
+
 // Only a token the console issued for a device proves the device: an
 // account's sign-in token proves none, whatever client id it stored, and a
 // device token signs no account in. The revocations of an account's

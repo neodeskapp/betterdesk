@@ -14,8 +14,8 @@ import (
 // (IssueDeviceToken), or on the device sockets also an enrollment token of
 // the signal server. An account's sign-in token proves no device, whatever
 // client id it stored. The header X-Device-Id names a device and proves
-// nothing. A device token proves nothing while the signal server holds
-// its device as banned or soft-deleted, whoever banned or deleted it.
+// nothing. Neither token proves anything while the signal server holds
+// the device as banned or soft-deleted, whoever banned or deleted it.
 // Every delete and ban also revokes the device's tokens for good: the
 // signal server's own (package db, in the same transaction, whichever
 // port or command made it) and the console's (RevokeDeviceTokens), so a
@@ -254,8 +254,8 @@ func enrollmentExpiry(value store.Time, zone *time.Location) (time.Time, bool) {
 // VerifyDeviceWSAuth checks the token a device presents on one of the
 // device sockets. The device id and a token of 8 characters or more are
 // needed. The token passes as an enrollment token (VerifyEnrollmentToken)
-// or as a live device token bound to this device id, whose device the
-// signal server does not hold as banned or soft-deleted.
+// or as a live device token bound to this device id, either only while
+// the signal server does not hold the device as banned or soft-deleted.
 //
 // A failed enrollment lookup is returned as an error. A failed access
 // token or ban lookup counts as "no".
@@ -267,12 +267,11 @@ func (s *Service) VerifyDeviceWSAuth(ctx context.Context, deviceID, token string
 	if err != nil {
 		return false, err
 	}
-	if enrolled {
-		return true, nil
-	}
-	row, err := getAccessToken(ctx, s.db, token)
-	if err != nil || !row.IsDeviceToken() || !row.ClientID.Valid || row.ClientID.String != deviceID {
-		return false, nil
+	if !enrolled {
+		row, err := getAccessToken(ctx, s.db, token)
+		if err != nil || !row.IsDeviceToken() || !row.ClientID.Valid || row.ClientID.String != deviceID {
+			return false, nil
+		}
 	}
 	shutOut, err := deviceShutOut(ctx, s.db, deviceID)
 	return err == nil && !shutOut, nil
