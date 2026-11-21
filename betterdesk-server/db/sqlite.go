@@ -2286,18 +2286,6 @@ func (s *SQLiteDB) RenameUser(id int64, newUsername string) error {
 	if taken > 0 {
 		return ErrUsernameTaken
 	}
-	// The account's membership rows take the new name with it, so another
-	// member of one of its organizations must not have that name
-	if err := tx.QueryRow(`
-		SELECT COUNT(*) FROM org_users
-		WHERE username = ? AND COALESCE(server_user_id, 0) <> ?
-		  AND org_id IN (SELECT org_id FROM org_users WHERE server_user_id = ?)`,
-		newUsername, id, id).Scan(&taken); err != nil {
-		return fmt.Errorf("db: RenameUser organization collision check: %w", err)
-	}
-	if taken > 0 {
-		return ErrUsernameTaken
-	}
 
 	if _, err := tx.Exec(`UPDATE users SET username = ? WHERE id = ?`, newUsername, id); err != nil {
 		if isUniqueViolation(err) {
@@ -2320,6 +2308,8 @@ func (s *SQLiteDB) RenameUser(id int64, newUsername string) error {
 
 	// The account's own membership rows in organizations follow the rename;
 	// an organization's own account of the same name is another person's.
+	// A name another member of one of those organizations has breaks the
+	// unique (org_id, username) and refuses the rename.
 	if _, err := tx.Exec(`UPDATE org_users SET username = ? WHERE server_user_id = ?`, newUsername, id); err != nil {
 		if isUniqueViolation(err) {
 			return ErrUsernameTaken

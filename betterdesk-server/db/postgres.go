@@ -1927,18 +1927,6 @@ func (pg *PostgresDB) RenameUser(id int64, newUsername string) error {
 	if taken > 0 {
 		return ErrUsernameTaken
 	}
-	// The account's membership rows take the new name with it, so another
-	// member of one of its organizations must not have that name
-	if err := tx.QueryRow(pg.ctx, `
-		SELECT COUNT(*) FROM org_users
-		WHERE username = $1 AND server_user_id <> $2
-		  AND org_id IN (SELECT org_id FROM org_users WHERE server_user_id = $2)`,
-		newUsername, id).Scan(&taken); err != nil {
-		return fmt.Errorf("db: RenameUser organization collision check: %w", err)
-	}
-	if taken > 0 {
-		return ErrUsernameTaken
-	}
 
 	if _, err := tx.Exec(pg.ctx, `UPDATE users SET username = $1 WHERE id = $2`, newUsername, id); err != nil {
 		if isUniqueViolation(err) {
@@ -1959,7 +1947,9 @@ func (pg *PostgresDB) RenameUser(id int64, newUsername string) error {
 	}
 
 	// The account's own membership rows in organizations; an
-	// organization's own account of the same name is another person's
+	// organization's own account of the same name is another person's. A
+	// name another member of one of those organizations has breaks the
+	// unique (org_id, username) and refuses the rename.
 	if _, err := tx.Exec(pg.ctx,
 		`UPDATE org_users SET username = $1 WHERE server_user_id = $2`, newUsername, id); err != nil {
 		if isUniqueViolation(err) {
