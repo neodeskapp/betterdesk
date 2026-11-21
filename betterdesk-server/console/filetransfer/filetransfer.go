@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -57,6 +58,12 @@ const (
 	Retention = time.Hour
 	// SweepInterval is the time between two runs of the housekeeping.
 	SweepInterval = time.Minute
+	// MaxOpenTransfersPerDevice is how many transfers of one device may be
+	// pending or active at once.
+	MaxOpenTransfersPerDevice = 10
+	// MaxOpenTransfers is how many transfers may be pending or active at
+	// once in all.
+	MaxOpenTransfers = 200
 
 	defaultMimeType = "application/octet-stream"
 	// maxMimeType is the longest type a transfer keeps, in characters.
@@ -267,6 +274,16 @@ type Params struct {
 // an object with a member named toString.
 var ErrNotText = errors.New("Cannot convert object to primitive value")
 
+// ErrTooManyTransfers is the failure of a start beyond
+// MaxOpenTransfersPerDevice or MaxOpenTransfers: errors.Is finds it in
+// both refusals.
+var ErrTooManyTransfers = errors.New("Too many open file transfers")
+
+var (
+	errDeviceTransfers = fmt.Errorf("%w for this device (at most %d pending or active)", ErrTooManyTransfers, MaxOpenTransfersPerDevice)
+	errAllTransfers    = fmt.Errorf("%w (at most %d pending or active)", ErrTooManyTransfers, MaxOpenTransfers)
+)
+
 // errMimeType refuses a type that is no short text.
 var errMimeType = fmt.Errorf("mime_type must be text of at most %d characters", maxMimeType)
 
@@ -275,10 +292,12 @@ var errMimeType = fmt.Errorf("mime_type must be text of at most %d characters", 
 // Errors: "Invalid file size: <size>" for a size that is no number from 0
 // up, "File too large: <size> bytes (max 4294967296)" for a size above
 // MaxFileSize, errMimeType for a type that is no text of at most
-// maxMimeType characters, ErrNotText for a size, a file name, a direction or a
-// device that has no text, and the errors of package safepath. A refused
-// transfer is not stored. The safe file name is cut to maxFileName
-// bytes, so the transfer's file can be written.
+// maxMimeType characters, ErrNotText for a size, a file name, a direction
+// or a device that has no text, the errors of package safepath, and
+// ErrTooManyTransfers when the device already has
+// MaxOpenTransfersPerDevice pending or active transfers or the console
+// MaxOpenTransfers. A refused transfer is not stored. The safe file name
+// is cut to maxFileName bytes, so the transfer's file can be written.
 func (s *Service) CreateTransfer(p Params) (*Transfer, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -331,6 +350,9 @@ func (s *Service) create(p Params) (*Transfer, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := s.roomFor(parts[2]); err != nil {
+		return nil, err
+	}
 	chunks := math.Ceil(size / MaxChunkSize)
 	if chunks == 0 || math.IsNaN(chunks) {
 		chunks = 1
@@ -357,6 +379,29 @@ func (s *Service) create(p Params) (*Transfer, error) {
 	s.transfers[id] = record
 	s.opts.Logger.Info(fmt.Sprintf("[FileTransfer] Created transfer %s: %s %s (%s bytes) for %s", id, parts[0], safeName, parts[1], parts[2]))
 	return record, nil
+}
+
+// roomFor refuses a new transfer of the device (its id as text) when the
+// device has MaxOpenTransfersPerDevice pending or active transfers or the
+// console MaxOpenTransfers; s.mu is held.
+func (s *Service) roomFor(device string) error {
+	open, ofDevice := 0, 0
+	for _, t := range s.transfers {
+		if t.Status != StatusPending && t.Status != StatusActive {
+			continue
+		}
+		open++
+		if text, _ := jsText(t.DeviceID); text == device {
+			ofDevice++
+		}
+	}
+	switch {
+	case ofDevice >= MaxOpenTransfersPerDevice:
+		return errDeviceTransfers
+	case open >= MaxOpenTransfers:
+		return errAllTransfers
+	}
+	return nil
 }
 
 // GetTransfer is the record of a transfer, nil when there is none.
@@ -652,9 +697,27 @@ func (s *Service) GetCompletedFilePath(id string) string {
 // for no transfer ("Transfer not found"). Anything else, and every
 // failure, is {action: "error", error}.
 func (s *Service) HandleMessage(deviceID string, message any) *goapi.Object {
+	answer, _ := s.HandleMessageStatus(deviceID, message)
+	return answer
+}
+
+// HandleMessageStatus is HandleMessage with the HTTP status of the
+// answer: 429 (Too Many Requests) for an init refused because of
+// MaxOpenTransfersPerDevice or MaxOpenTransfers, 200 for every other
+// answer.
+func (s *Service) HandleMessageStatus(deviceID string, message any) (*goapi.Object, int) {
+	answer, err := s.handleMessage(deviceID, message)
+	if errors.Is(err, ErrTooManyTransfers) {
+		return answer, http.StatusTooManyRequests
+	}
+	return answer, http.StatusOK
+}
+
+// handleMessage answers the message; the error is that of a refused init.
+func (s *Service) handleMessage(deviceID string, message any) (*goapi.Object, error) {
 	fail := func(text string) *goapi.Object { return goapi.NewObject("action", "error", "error", text) }
 	if message == nil {
-		return fail("Cannot destructure property 'action' of 'message' as it is null.")
+		return fail("Cannot destructure property 'action' of 'message' as it is null."), nil
 	}
 	body, _ := message.(*goapi.Object)
 	action := body.Get("action")
@@ -672,39 +735,39 @@ func (s *Service) HandleMessage(deviceID string, message any) *goapi.Object {
 		})
 		s.mu.Unlock()
 		if err != nil {
-			return fail(err.Error())
+			return fail(err.Error()), err
 		}
-		return goapi.NewObject("action", "init_ack", "transfer_id", record.ID, "status", "ok")
+		return goapi.NewObject("action", "init_ack", "transfer_id", record.ID, "status", "ok"), nil
 	case "chunk":
 		progress, err := s.receiveFrom(deviceID, body.Get("transfer_id"), or(body.Get("chunk_index"), float64(0)), dataOf(body))
 		if err != nil {
-			return fail(err.Error())
+			return fail(err.Error()), nil
 		}
-		return goapi.NewObject(append([]any{"action", "chunk_ack"}, progress.fields()...)...)
+		return goapi.NewObject(append([]any{"action", "chunk_ack"}, progress.fields()...)...), nil
 	case "cancel":
 		if !s.cancelFrom(deviceID, body.Get("transfer_id")) {
-			return fail("Transfer not found")
+			return fail("Transfer not found"), nil
 		}
 		answer := goapi.NewObject("action", "cancel_ack")
 		if body.Has("transfer_id") {
 			answer.Set("transfer_id", body.Get("transfer_id"))
 		}
-		return answer
+		return answer, nil
 	case "browse":
 		answer := goapi.NewObject("action", "browse_forward", "deviceId", deviceID)
 		if body.Has("path") {
 			answer.Set("path", body.Get("path"))
 		}
-		return answer
+		return answer, nil
 	}
 	text := "undefined"
 	if body.Has("action") {
 		var ok bool
 		if text, ok = jsText(action); !ok {
-			return fail(ErrNotText.Error())
+			return fail(ErrNotText.Error()), nil
 		}
 	}
-	return fail("Unknown action: " + text)
+	return fail("Unknown action: " + text), nil
 }
 
 // dataOf is message.data, Undefined for a message that has none.

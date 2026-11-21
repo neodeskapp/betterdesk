@@ -5,8 +5,11 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -580,5 +583,97 @@ func TestATypeThatIsNoShortTextIsRefused(t *testing.T) {
 		if err != nil || record.MimeType != want {
 			t.Errorf("CreateTransfer with the type %.40v: %v, %v", mime, record, err)
 		}
+	}
+}
+
+// A device has at most MaxOpenTransfersPerDevice pending or active
+// transfers and the console MaxOpenTransfers; a start beyond them is
+// refused, by the people's call and by the device's init message, and not
+// stored. A transfer that is completed, cancelled or failed frees its
+// place (BUGS RV48, DECISIONS A100).
+func TestOpenTransfersAreCapped(t *testing.T) {
+	s, now := newService(t)
+	start := func(device string) error {
+		_, err := s.CreateTransfer(Params{Filename: "x.bin", DeviceID: device, Size: float64(4)})
+		return err
+	}
+	for i := 0; i < MaxOpenTransfersPerDevice; i++ {
+		if err := start("dev"); err != nil {
+			t.Fatalf("transfer %d of the device: %v", i+1, err)
+		}
+	}
+	perDevice := "Too many open file transfers for this device (at most 10 pending or active)"
+	if err := start("dev"); err == nil || err.Error() != perDevice || !errors.Is(err, ErrTooManyTransfers) {
+		t.Errorf("transfer 11 of the device: %v", err)
+	}
+	init := goapi.NewObject("action", "init", "filename", "x.bin", "size", float64(4))
+	answer, status := s.HandleMessageStatus("dev", init)
+	if raw, _ := json.Marshal(answer); string(raw) != `{"action":"error","error":"`+perDevice+`"}` || status != http.StatusTooManyRequests {
+		t.Errorf("init beyond the device's cap: %d %s", status, raw)
+	}
+	if err := start("other"); err != nil {
+		t.Errorf("another device's first transfer: %v", err)
+	}
+
+	// Finished transfers free their places: one completed, one cancelled,
+	// and the seven that waited too long failed by the sweep, while one
+	// that got a chunk stays active
+	list := s.ListTransfers(Filter{DeviceID: "dev"})
+	if len(list) != MaxOpenTransfersPerDevice {
+		t.Fatalf("%d transfers of the device stored", len(list))
+	}
+	if _, err := s.ReceiveChunk(list[0].ID, float64(0), "AAAAAA=="); err != nil {
+		t.Fatal(err)
+	}
+	s.CancelTransfer(list[1].ID)
+	*now = now.Add(TransferTimeout + time.Minute)
+	if _, err := s.ReceiveChunk(list[2].ID, float64(0), "AA=="); err != nil {
+		t.Fatal(err)
+	}
+	s.Sweep()
+	if got := s.GetTransfer(list[2].ID); got == nil || got.Status != StatusActive {
+		t.Fatalf("the transfer that got a chunk: %+v", got)
+	}
+	for i := 0; i < MaxOpenTransfersPerDevice-1; i++ {
+		answer, status := s.HandleMessageStatus("dev", init)
+		if answer.Get("action") != "init_ack" || status != http.StatusOK {
+			raw, _ := json.Marshal(answer)
+			t.Fatalf("init %d after transfers finished: %d %s", i+1, status, raw)
+		}
+	}
+	if err := start("dev"); err == nil || err.Error() != perDevice {
+		t.Errorf("a start beyond the cap after the freed places were taken: %v", err)
+	}
+
+	// The cap in all: other devices fill the console up to MaxOpenTransfers
+	open := 0
+	for _, record := range s.ListTransfers(Filter{}) {
+		if record.Status == StatusPending || record.Status == StatusActive {
+			open++
+		}
+	}
+	for i := 0; open < MaxOpenTransfers; i++ {
+		device := "fill" + strconv.Itoa(i/MaxOpenTransfersPerDevice)
+		if err := start(device); err != nil {
+			t.Fatalf("open transfer %d: %v", open+1, err)
+		}
+		open++
+	}
+	inAll := "Too many open file transfers (at most 200 pending or active)"
+	if err := start("fresh"); err == nil || err.Error() != inAll || !errors.Is(err, ErrTooManyTransfers) {
+		t.Errorf("transfer 201: %v", err)
+	}
+	answer, status = s.HandleMessageStatus("fresh2", init)
+	if raw, _ := json.Marshal(answer); string(raw) != `{"action":"error","error":"`+inAll+`"}` || status != http.StatusTooManyRequests {
+		t.Errorf("init beyond the cap in all: %d %s", status, raw)
+	}
+	if got := len(s.ListTransfers(Filter{DeviceID: "fresh"})) + len(s.ListTransfers(Filter{DeviceID: "fresh2"})); got != 0 {
+		t.Errorf("%d refused transfers stored", got)
+	}
+
+	// Other failures of an init keep status 200
+	_, status = s.HandleMessageStatus("dev", goapi.NewObject("action", "nope"))
+	if status != http.StatusOK {
+		t.Errorf("an unknown action: status %d", status)
 	}
 }
