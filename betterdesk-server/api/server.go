@@ -756,7 +756,7 @@ func (s *Server) routes() *http.ServeMux {
 		if len(ua) > 80 {
 			ua = ua[:80] + "…"
 		}
-		log.Printf("[api] 404 %s %s from %s ua=%q", r.Method, r.URL.Path, ip, ua)
+		log.Printf("[api] 404 %s %q from %s ua=%q", r.Method, r.URL.Path, ip, ua)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"error":"not found"}`))

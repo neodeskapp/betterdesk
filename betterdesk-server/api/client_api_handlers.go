@@ -186,9 +186,9 @@ func (s *Server) handleClientLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// DEBUG: Log incoming login request fields (excluding password)
-	log.Printf("[api] /api/login from %s: user=%q type=%q code=%q secret_len=%d id=%q uuid=%q",
-		clientIP, body.Username, body.Type, body.VerificationCode, len(body.Secret), body.ID, body.UUID)
+	// Log the request's fields, without the password and the second-factor code.
+	log.Printf("[api] /api/login from %s: user=%q type=%q code_sent=%t secret_len=%d id=%q uuid=%q",
+		clientIP, body.Username, body.Type, body.VerificationCode != "" || body.TfaCode != "", len(body.Secret), body.ID, body.UUID)
 
 	totpCode := body.VerificationCode
 	if totpCode == "" {

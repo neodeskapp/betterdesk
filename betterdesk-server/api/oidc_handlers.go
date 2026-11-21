@@ -356,7 +356,7 @@ func (s *Server) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	// Check for error from IdP
 	if errCode := r.URL.Query().Get("error"); errCode != "" {
 		errDesc := r.URL.Query().Get("error_description")
-		log.Printf("[OIDC] IdP returned error: %s — %s", errCode, errDesc)
+		log.Printf("[OIDC] IdP returned error: %q: %q", errCode, errDesc)
 		if pending := s.oidcProvider.PeekClientPending(stateParam); pending != nil {
 			s.oidcProvider.FailClientPending(stateParam)
 			writeClientOIDCResultPage(w, false, clientOIDCErrorMessage("oidc_denied"))

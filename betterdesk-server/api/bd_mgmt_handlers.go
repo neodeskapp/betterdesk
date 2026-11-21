@@ -381,10 +381,10 @@ func (s *bdMgmtSession) readLoop(srv *Server) {
 
 		case "status":
 			// Device status update — log and store
-			log.Printf("[bd-mgmt] Status from %s: %s", s.DeviceID, string(msg.Payload))
+			log.Printf("[bd-mgmt] Status from %s: %s", s.DeviceID, logExcerpt(msg.Payload))
 
 		default:
-			log.Printf("[bd-mgmt] Unknown message type from %s: %s", s.DeviceID, msg.Type)
+			log.Printf("[bd-mgmt] Unknown message type from %s: %q", s.DeviceID, msg.Type)
 		}
 	}
 }
@@ -462,4 +462,16 @@ func (s *Server) handleBdMgmtConnected(w http.ResponseWriter, r *http.Request) {
 		"devices": ids,
 		"count":   len(ids),
 	})
+}
+
+// maxLoggedPayload is how much of a device's message a log line shows.
+const maxLoggedPayload = 512
+
+// logExcerpt is a device message for a log line: quoted, so it cannot
+// start a line of its own, and cut to maxLoggedPayload bytes.
+func logExcerpt(payload []byte) string {
+	if len(payload) > maxLoggedPayload {
+		return fmt.Sprintf("%q... (%d bytes)", payload[:maxLoggedPayload], len(payload))
+	}
+	return fmt.Sprintf("%q", payload)
 }

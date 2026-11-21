@@ -1288,7 +1288,7 @@ func (s *Server) authenticateRequest(r *http.Request) (username, role, orgID str
 	if r.Header.Get(PanelTrustHeader) != "" && s.panelTrustEnabled() && s.panelTrustPeerAllowed(r) {
 		claim, err := s.verifyPanelTrust(r)
 		if err != nil {
-			log.Printf("[panel-trust] rejected %s %s: %v", r.Method, redactPathSegment(r.URL.Path), err)
+			log.Printf("[panel-trust] rejected %s %q: %v", r.Method, redactPathSegment(r.URL.Path), err)
 			return "", "", "", false
 		}
 		role := s.resolvePanelRole(claim)
@@ -1372,7 +1372,7 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 		path := r.URL.Path
 		if path != "/api/heartbeat" && path != "/api/sysinfo" && path != "/api/sysinfo_ver" &&
 			path != "/metrics" && path != "/api/health" {
-			log.Printf("[api] %s %s from %s", r.Method, redactPathSegment(path), s.remoteIP(r))
+			log.Printf("[api] %s %q from %s", r.Method, redactPathSegment(path), s.remoteIP(r))
 		}
 
 		// Limit request body size to 1 MB for all requests (S10)
