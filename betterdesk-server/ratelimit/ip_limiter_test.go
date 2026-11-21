@@ -1,6 +1,7 @@
 package ratelimit
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -184,5 +185,29 @@ func TestIPLimiterCountsAnIPv6NetworkAsOne(t *testing.T) {
 	}
 	if !l.Allow("198.51.100.2") {
 		t.Error("another IPv4 address was refused")
+	}
+}
+
+// The limiter keeps at most maxEntries addresses: a flood of new addresses
+// (forged UDP sources, IPv6 networks) cannot grow it between cleanups. An
+// address at its limit stays when others make room (RV126).
+func TestIPLimiterKeepsABoundedNumberOfAddresses(t *testing.T) {
+	l := NewIPLimiter(1, time.Minute, time.Hour)
+	defer l.Stop()
+	l.maxEntries = 10
+	l.Allow("203.0.113.1")
+	if l.Allow("203.0.113.1") {
+		t.Fatal("the second request of 203.0.113.1 was let through")
+	}
+	for i := 0; i < 1000; i++ {
+		if !l.Allow(fmt.Sprintf("198.51.%d.%d", i/256, i%256)) {
+			t.Fatalf("new address %d refused", i)
+		}
+	}
+	if tracked, _ := l.Stats(); tracked > 10 {
+		t.Errorf("%d addresses tracked, want at most 10", tracked)
+	}
+	if !l.IsBlocked("203.0.113.1") {
+		t.Error("the blocked address was dropped to make room")
 	}
 }

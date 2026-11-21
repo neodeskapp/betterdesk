@@ -18,7 +18,18 @@ type IPLimiter struct {
 	cleanup time.Duration // How often to clean stale entries
 	stopCh  chan struct{}
 	stopped bool
+	// maxEntries is the most addresses kept at once (see makeRoom).
+	maxEntries int
 }
+
+// defaultMaxEntries is how many addresses a limiter keeps at most. A flood
+// of new source addresses (forged UDP sources, IPv6 networks) would
+// otherwise grow the map without bound until the next cleanup.
+const defaultMaxEntries = 100_000
+
+// evictionTries is how many entries makeRoom looks at for a stale one
+// before it drops one that was never refused.
+const evictionTries = 16
 
 type ipEntry struct {
 	timestamps []time.Time
@@ -55,6 +66,8 @@ func NewIPLimiter(limit int, window, cleanup time.Duration) *IPLimiter {
 		window:  window,
 		cleanup: cleanup,
 		stopCh:  make(chan struct{}),
+
+		maxEntries: defaultMaxEntries,
 	}
 	go l.cleanupLoop()
 	return l
@@ -80,6 +93,7 @@ func (l *IPLimiter) Allow(ip string) bool {
 	key := limiterKey(ip)
 	entry, ok := l.entries[key]
 	if !ok {
+		l.makeRoom(cutoff)
 		entry = &ipEntry{}
 		l.entries[key] = entry
 	}
@@ -106,6 +120,38 @@ func (l *IPLimiter) Allow(ip string) bool {
 	entry.blocked = false
 	entry.timestamps = append(entry.timestamps, now)
 	return true
+}
+
+// makeRoom drops one entry when the limiter holds maxEntries: an address
+// without events in the window if one of the first it looks at has none,
+// else one that was never refused, else any. A refused address stays as
+// long as there is another to drop. Map order picks the entries at random.
+// The caller holds l.mu.
+func (l *IPLimiter) makeRoom(cutoff time.Time) {
+	if l.maxEntries <= 0 || len(l.entries) < l.maxEntries {
+		return
+	}
+	victim, tries := "", 0
+	for key, entry := range l.entries {
+		stale := true
+		for _, ts := range entry.timestamps {
+			if ts.After(cutoff) {
+				stale = false
+				break
+			}
+		}
+		if stale {
+			victim = key
+			break
+		}
+		if victim == "" || !entry.blocked {
+			victim = key
+		}
+		if tries++; tries >= evictionTries && !entry.blocked {
+			break
+		}
+	}
+	delete(l.entries, victim)
 }
 
 // IsBlocked returns true if the IP is currently rate-limited.
