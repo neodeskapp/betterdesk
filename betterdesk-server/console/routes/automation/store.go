@@ -259,7 +259,7 @@ type alertFilter struct {
 	DeviceID, Severity string
 	// Acknowledged is the flag to look for, undefined for both
 	Acknowledged jsbind.Value
-	// Limit is the number of rows, 0 for all
+	// Limit is the number of rows, from 1 to maxRows
 	Limit int
 }
 
@@ -277,10 +277,7 @@ func listAlerts(ctx context.Context, db *store.DB, filter alertFilter) ([]record
 	if !filter.Acknowledged.IsUndefined() {
 		q.add(" AND h.acknowledged = ?", filter.Acknowledged)
 	}
-	q.add(" ORDER BY h.triggered_at DESC")
-	if filter.Limit > 0 {
-		q.add(" LIMIT ?", jsbind.Number(float64(filter.Limit)))
-	}
+	q.add(" ORDER BY h.triggered_at DESC LIMIT ?", jsbind.Number(float64(filter.Limit)))
 	return q.rows(ctx, db, "list the alert history")
 }
 
@@ -323,27 +320,38 @@ func createCommand(ctx context.Context, db *store.DB, command newCommand) (*reco
 // "" does not filter.
 type commandFilter struct {
 	DeviceID, Status string
-	// Limit is the number of rows, 0 for all
+	// Limit is the number of rows, from 1 to maxRows
 	Limit int
 }
 
 // listCommands returns the commands, the one created last first, and of
-// commands created in the same second the one with the higher id.
+// commands created in the same second the one with the higher id. A
+// command's result is left out, which an agent can make as large as a
+// request body: has_result says whether it has one that is not empty.
 func listCommands(ctx context.Context, db *store.DB, filter commandFilter) ([]record, error) {
 	var q query
-	q.add("SELECT * FROM remote_commands WHERE 1=1")
+	q.add(`SELECT id, device_id, command_type, payload, status, created_by, created_at, executed_at, completed_at,
+		CASE WHEN result IS NULL OR result = '' THEN 0 ELSE 1 END AS has_result FROM remote_commands WHERE 1=1`)
 	if filter.DeviceID != "" {
 		q.add(" AND device_id = ?", jsbind.String(filter.DeviceID))
 	}
 	if filter.Status != "" {
 		q.add(" AND status = ?", jsbind.String(filter.Status))
 	}
-	q.add(" ORDER BY created_at DESC, id DESC")
-	if filter.Limit > 0 {
-		q.add(" LIMIT ?", jsbind.Number(float64(filter.Limit)))
+	q.add(" ORDER BY created_at DESC, id DESC LIMIT ?", jsbind.Number(float64(filter.Limit)))
+	commands, err := q.rows(ctx, db, "list remote commands")
+	for _, command := range commands {
+		last := len(command.values) - 1
+		command.values[last] = jsonFlag(command.number("has_result").ToNumber() == 1)
 	}
-	return q.rows(ctx, db, "list remote commands")
+	return commands, err
 }
+
+// jsonFlag is a column that goes out as true or false.
+type jsonFlag bool
+
+// MarshalJSON implements json.Marshaler.
+func (f jsonFlag) MarshalJSON() ([]byte, error) { return json.Marshal(bool(f)) }
 
 // commandByID returns the command with the id, nil when there is none.
 func commandByID(ctx context.Context, db *store.DB, id jsbind.Value) (*record, error) {

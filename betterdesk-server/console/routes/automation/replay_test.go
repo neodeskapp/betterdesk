@@ -3,6 +3,7 @@ package automation_test
 import (
 	"context"
 	"encoding/json"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -21,8 +22,10 @@ import (
 // only SQLite can hold, and at the end the rules, alerts and commands that
 // are left and the audit log.
 //
-// Four kinds of answers are not compared byte for byte:
+// Five kinds of answers are not compared byte for byte:
 //
+//   - A command list has has_result in place of each command's result
+//     (BUGS RV39); sameCommandList compares it with Node's that way.
 //   - The recording was made without the panel access guard, which sits
 //     in front of the routes in the console. It asks server.config, as
 //     the routes do (PA3 F8), and refuses every request of a role without
@@ -53,7 +56,7 @@ import (
 func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := newWorld(t, db)
-		guarded, elsewhere, slashes, undecoded, created := 0, 0, 0, 0, 0
+		guarded, elsewhere, slashes, undecoded, created, lists := 0, 0, 0, 0, 0, 0
 		defer panelFixes.Unused(t, db)
 		rec := replay.Load(t, db, "node")
 		if db.IsPostgres() {
@@ -61,6 +64,12 @@ func TestNodeAnswers(t *testing.T) {
 		}
 		w.Run(rec, panelFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
+			case step.Method == "GET" && step.Status == 200 && isCommandList(step.Path):
+				lists++
+				if got.Status != 200 || !sameCommandList(t, step.Answer, got.Body) {
+					t.Errorf("%s as %s: %d %s\nNode, with has_result for result: %s", step.Name, step.Role, got.Status, got.Body, step.Answer)
+				}
+				return true
 			case !db.IsPostgres() && step.Method == "POST" && step.Status == 201 && got.Status == 201:
 				created++
 				answersTheRow(t, w, step, got)
@@ -107,7 +116,47 @@ func TestNodeAnswers(t *testing.T) {
 		if created != want {
 			t.Errorf("%d new rules and commands were answered with the stored row, want %d", created, want)
 		}
+		if lists < 20 {
+			t.Errorf("%d command lists were compared without their results, want at least 20", lists)
+		}
 	})
+}
+
+// isCommandList reports whether a path is the command list of the panel
+// routes, in any letter case and with or without a slash at the end.
+func isCommandList(path string) bool {
+	path, _, _ = strings.Cut(path, "?")
+	return strings.EqualFold(strings.TrimSuffix(path, "/"), "/api/automation/commands")
+}
+
+// sameCommandList compares a command list of the Go console with Node's
+// (BUGS RV39): Node's commands carry their result, the Go console's say
+// with has_result whether there is one that is not empty. Otherwise the
+// two lists are the same.
+func sameCommandList(t *testing.T, node, goBody string) bool {
+	t.Helper()
+	read := func(body string) map[string]any {
+		var list map[string]any
+		decoder := json.NewDecoder(strings.NewReader(replay.Normalize(body)))
+		decoder.UseNumber()
+		if err := decoder.Decode(&list); err != nil {
+			t.Fatalf("a command list that is no JSON: %v: %s", err, body)
+		}
+		return list
+	}
+	want, got := read(node), read(goBody)
+	commands, _ := want["commands"].([]any)
+	for _, c := range commands {
+		command, _ := c.(map[string]any)
+		result, has := command["result"]
+		if !has {
+			return false
+		}
+		delete(command, "result")
+		text, isText := result.(string)
+		command["has_result"] = result != nil && (!isText || text != "")
+	}
+	return reflect.DeepEqual(want, got)
 }
 
 // createdOnSQLite is the number of rules and commands the recording on

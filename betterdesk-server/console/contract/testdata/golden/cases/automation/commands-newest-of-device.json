@@ -142,9 +142,9 @@
        "created_by": "<volatile>",
        "device_id": "900100001",
        "executed_at": null,
+       "has_result": false,
        "id": 0,
        "payload": "Get-Process",
-       "result": null,
        "status": "pending"
       }
      ],

@@ -85,13 +85,16 @@ func readFilters(w http.ResponseWriter, r *http.Request, filters ...filterInto) 
 const maxRows = 500
 
 // limitOf reads the limit of a list from the query. Without one, or with
-// an empty one, the list is not limited (n is 0). Otherwise it has to be
-// a whole number from 1, written in digits; a larger one than maxRows is
-// maxRows. ok is false for anything else.
+// an empty one, it is maxRows. Otherwise it has to be a whole number from
+// 1, written in digits; a larger one than maxRows is maxRows. ok is false
+// for anything else.
 func limitOf(r *http.Request) (n int, ok bool) {
 	text, ok := filterOf(r, "limit")
-	if !ok || text == "" {
-		return 0, ok
+	if !ok {
+		return 0, false
+	}
+	if text == "" {
+		return maxRows, true
 	}
 	if strings.Trim(text, "0123456789") != "" || strings.Trim(text, "0") == "" {
 		return 0, false

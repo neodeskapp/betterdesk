@@ -67,7 +67,8 @@ type commandList struct {
 }
 
 // commands answers GET commands?device_id=&status=&limit=: the commands,
-// the one created last first. Each filter is one text, and an empty one
+// the one created last first, each without its result (see listCommands).
+// Each filter is one text, and an empty one
 // does not filter; the limit is limitOf's. Anything else is refused with
 // 400.
 func (h *handlers) commands(w http.ResponseWriter, r *http.Request) {
