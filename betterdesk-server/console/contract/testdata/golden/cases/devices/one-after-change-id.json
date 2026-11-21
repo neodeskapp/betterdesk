@@ -155,7 +155,7 @@
        {
         "created_at": "<volatile>",
         "guid": "<volatile>",
-        "id": 20,
+        "id": 18,
         "name": "Contract restricted",
         "note": "",
         "source_type": "manual",
@@ -277,7 +277,7 @@
        {
         "created_at": "<volatile>",
         "guid": "<volatile>",
-        "id": 26,
+        "id": 24,
         "name": "Contract restricted",
         "note": "",
         "source_type": "manual",
@@ -399,7 +399,7 @@
        {
         "created_at": "<volatile>",
         "guid": "<volatile>",
-        "id": 30,
+        "id": 28,
         "name": "Contract restricted",
         "note": "",
         "source_type": "manual",
