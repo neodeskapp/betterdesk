@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -138,10 +139,25 @@ func (r *Relay) serveAgent(u *ws.Upgrade) {
 	}
 	defer conn.Wait()
 	c := r.newClient(u, conn, answers, deviceID, "")
+	c.name = r.deviceName(u.R.Context(), deviceID)
 	r.agentJoins(c)
 	c.run(r.agentFrame)
 	r.agentLeaves(c)
 	c.wait()
+}
+
+// deviceName is the host name of the device with the id, the id when
+// there is none.
+func (r *Relay) deviceName(ctx context.Context, id string) string {
+	if r.opts.Scope.Device == nil {
+		return id
+	}
+	if device := r.opts.Scope.Device(ctx, id); device != nil {
+		if name, _ := device.Get("hostname").(string); strings.TrimSpace(name) != "" {
+			return name
+		}
+	}
+	return id
 }
 
 // serveOperator is a console user's socket. Before the handshake: a
@@ -210,6 +226,9 @@ type client struct {
 	id string
 	// operator is the operator's name, "" for an agent
 	operator string
+	// name is an agent's name in its messages: its device's host name,
+	// else its id
+	name string
 	// user is the operator's account, nil for an agent
 	user *session.User
 	// api is the context of the socket's calls to the API server: it ends

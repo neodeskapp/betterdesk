@@ -2,6 +2,7 @@ package chat
 
 import (
 	"context"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
@@ -57,15 +58,38 @@ func (r *Relay) fileID(frame jsjson.Value) jsjson.Value {
 }
 
 // persist stores a message on the API server: the body persistMessage
-// made of it.
-func (c *client) persist(conversation, from, fromName, toID jsjson.Value, msgText string) {
+// made of it, handed to store (client.later, or a call in the running
+// task).
+func (c *client) persist(store func(func(context.Context)), conversation, from, fromName, toID jsjson.Value, msgText string) {
 	body := newObject().
 		val("conversation_id", or(conversation, or(from, text("operator")))).
 		val("from_id", or(from, text("unknown"))).
 		val("from_name", or(fromName, or(from, text("")))).
 		val("to_id", or(toID, text(""))).
 		str("text", msgText).json()
-	c.later(func(ctx context.Context) { saveMessage(ctx, c.relay.opts.API, body) })
+	store(func(ctx context.Context) { saveMessage(ctx, c.relay.opts.API, body) })
+}
+
+// asAgent runs do for a frame of the agent that names a conversation, when
+// the conversation is the agent's: at once for its device's conversation
+// (and, with operators, the operators' "operator" and "operator:<name>"),
+// as a call in order after the group check for any other. do gets where
+// its own calls to the API server go.
+func (r *Relay) asAgent(c *client, conversation jsjson.Value, operators bool, do func(store func(func(context.Context)))) {
+	asked, err := conversation.Text()
+	if err != nil {
+		return
+	}
+	if asked == c.id || operators && (asked == "operator" || strings.HasPrefix(asked, "operator:")) {
+		do(c.later)
+		return
+	}
+	c.later(func(ctx context.Context) {
+		if !r.agentIn(ctx, c, conversation) {
+			return
+		}
+		do(func(task func(context.Context)) { task(ctx) })
+	})
 }
 
 // agentFrame handles one message of a device's agent.
@@ -81,26 +105,31 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 
 	case "message":
 		msgID := r.nowMillis()
-		fromName := or(frame.Get("from_name"), id)
+		fromName := text(c.name)
 		conversation := or(frame.Get("conversation_id"), text("operator"))
 		msgText, err := messageText(frame.Get("text"))
 		if err != nil {
 			return errDrop
 		}
-		msg := newObject().str("type", "message").num("id", msgID).str("from", c.id).val("from_name", fromName).
-			val("conversation_id", conversation).str("text", msgText).val("timestamp", or(frame.Get("timestamp"), jsjson.OfNumber(r.nowMillis())))
-		out := msg.json()
-		r.mu.Lock()
-		rm := r.roomLocked(c.id)
-		rm.appendLocked(out)
-		rm.broadcastLocked(string(out), c.conn)
-		r.mu.Unlock()
-		r.toPanel(c.api, c.id, c.conn, rm, string(out))
-		c.persist(conversation, id, fromName, jsjson.Value{}, msgText)
+		timestamp := or(frame.Get("timestamp"), jsjson.OfNumber(r.nowMillis()))
+		r.asAgent(c, conversation, true, func(store func(func(context.Context))) {
+			msg := newObject().str("type", "message").num("id", msgID).str("from", c.id).val("from_name", fromName).
+				val("conversation_id", conversation).str("text", msgText).val("timestamp", timestamp)
+			out := msg.json()
+			r.mu.Lock()
+			rm := r.roomLocked(c.id)
+			rm.appendLocked(out)
+			rm.broadcastLocked(string(out), c.conn)
+			r.mu.Unlock()
+			r.toPanel(c.api, c.id, c.conn, rm, string(out))
+			c.persist(store, conversation, id, fromName, jsjson.Value{}, msgText)
+		})
 
 	case "typing":
-		r.toAgentRoom(c, newObject().str("type", "typing").str("from", c.id).
-			val("conversation_id", or(frame.Get("conversation_id"), text("operator"))))
+		conversation := or(frame.Get("conversation_id"), text("operator"))
+		r.asAgent(c, conversation, true, func(func(func(context.Context))) {
+			r.toAgentRoom(c, newObject().str("type", "typing").str("from", c.id).val("conversation_id", conversation))
+		})
 
 	case "get_contacts":
 		// An agent gets its own contacts only
@@ -133,7 +162,9 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 	case "mark_read":
 		if conversation := frame.Get("conversation_id"); conversation.Truthy() {
 			body := newObject().val("conversation_id", conversation).str("reader_id", c.id).json()
-			c.later(func(ctx context.Context) { markRead(ctx, r.opts.API, body) })
+			r.asAgent(c, conversation, false, func(store func(func(context.Context))) {
+				store(func(ctx context.Context) { markRead(ctx, r.opts.API, body) })
+			})
 		}
 
 	case "create_group":
@@ -153,30 +184,39 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 		}
 
 	case "key_exchange":
-		r.toAgentRoom(c, newObject().str("type", "key_exchange").str("from", c.id).val("public_key", frame.Get("public_key")).
-			val("conversation_id", or(frame.Get("conversation_id"), id)))
+		conversation := or(frame.Get("conversation_id"), id)
+		r.asAgent(c, conversation, true, func(func(func(context.Context))) {
+			r.toAgentRoom(c, newObject().str("type", "key_exchange").str("from", c.id).val("public_key", frame.Get("public_key")).
+				val("conversation_id", conversation))
+		})
 
 	case "read_receipt":
 		ids := listOr(frame.Get("message_ids"))
-		r.toAgentRoom(c, newObject().str("type", "read_receipt").str("from", c.id).raw("message_ids", ids).
-			val("conversation_id", or(frame.Get("conversation_id"), id)).num("timestamp", r.nowMillis()))
-		if conversation := frame.Get("conversation_id"); conversation.Truthy() {
-			body := newObject().val("conversation_id", conversation).str("reader_id", c.id).raw("message_ids", ids).json()
-			c.later(func(ctx context.Context) { markRead(ctx, r.opts.API, body) })
-		}
+		asked := frame.Get("conversation_id")
+		r.asAgent(c, or(asked, id), false, func(store func(func(context.Context))) {
+			r.toAgentRoom(c, newObject().str("type", "read_receipt").str("from", c.id).raw("message_ids", ids).
+				val("conversation_id", or(asked, id)).num("timestamp", r.nowMillis()))
+			if asked.Truthy() {
+				body := newObject().val("conversation_id", asked).str("reader_id", c.id).raw("message_ids", ids).json()
+				store(func(ctx context.Context) { markRead(ctx, r.opts.API, body) })
+			}
+		})
 
 	case "presence_update":
 		r.toAgentRoom(c, newObject().str("type", "presence").str("device_id", c.id).boolean("online", !isFalse(frame.Get("online"))).
 			val("status", or(frame.Get("status"), text("available"))).num("timestamp", r.nowMillis()))
 
 	case "file_share":
-		r.toAgentRoom(c, r.fileShare(frame, text(c.id), or(frame.Get("from_name"), id), or(frame.Get("conversation_id"), text("operator"))))
+		conversation := or(frame.Get("conversation_id"), text("operator"))
+		r.asAgent(c, conversation, true, func(func(func(context.Context))) {
+			r.toAgentRoom(c, r.fileShare(frame, text(c.id), text(c.name), conversation))
+		})
 	}
 	return nil
 }
 
 // agentIn reports whether a conversation is the agent's own: its device's,
-// or one of the groups it is a member of.
+// or one of the groups whose members name its id exactly.
 func (r *Relay) agentIn(ctx context.Context, c *client, conversation jsjson.Value) bool {
 	asked, err := conversation.Text()
 	if err != nil {
@@ -190,7 +230,26 @@ func (r *Relay) agentIn(ctx context.Context, c *client, conversation jsjson.Valu
 		return false
 	}
 	for _, group := range data.Get("groups").Items() {
-		if g := group.Get("id"); g.Kind() == jsjson.String && g.Str() == asked {
+		if g := group.Get("id"); g.Kind() == jsjson.String && g.Str() == asked && isMember(group.Get("members"), c.id) {
+			return true
+		}
+	}
+	return false
+}
+
+// isMember reports whether a group's members, a comma-separated text or a
+// list, name the id exactly.
+func isMember(members jsjson.Value, id string) bool {
+	if members.Kind() == jsjson.String {
+		for _, m := range strings.Split(members.Str(), ",") {
+			if strings.TrimSpace(m) == id {
+				return true
+			}
+		}
+		return false
+	}
+	for _, m := range members.Items() {
+		if m.Kind() == jsjson.String && m.Str() == id {
 			return true
 		}
 	}
@@ -312,7 +371,7 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 			r.toPanel(c.api, subject(conversation), c.conn, nil, out)
 		}
 		c.send(msg)
-		c.persist(conversation, text("operator"), name, conversation, msgText)
+		c.persist(c.later, conversation, text("operator"), name, conversation, msgText)
 
 	case "typing":
 		r.route(c, conversation, newObject().str("type", "typing").str("from", "operator").str("operator", c.operator).

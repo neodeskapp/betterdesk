@@ -3,6 +3,7 @@ package chat
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -181,7 +182,7 @@ func TestScopedOperator(t *testing.T) {
 // device and of the groups it is in, and its own contacts.
 func TestAgentReadsItsOwnConversations(t *testing.T) {
 	relay := startRelay(t, RelayOptions{})
-	relay.api.answer("GET /chat/groups/dev1", `{"groups":[{"id":"group:g1"}]}`)
+	relay.api.answer("GET /chat/groups/dev1", `{"groups":[{"id":"group:g1","members":"dev1,dev2"}]}`)
 	relay.api.answer("GET /chat/history/group%3Ag1?limit=100", `{"messages":[{"id":1}]}`)
 	relay.api.answer("GET /chat/history/dev2?limit=100", `{"messages":[{"id":2}]}`)
 	relay.api.answer("GET /chat/contacts/dev1", `{"contacts":[{"id":"dev2"}]}`)
@@ -312,12 +313,18 @@ type recordingAPI struct {
 	mu      sync.Mutex
 	answers map[string]string
 	calls   []string
+	// posts are the POST calls with their bodies
+	posts []string
 }
 
 func (a *recordingAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	call := r.Method + " " + strings.TrimPrefix(r.RequestURI, "/api")
+	body, _ := io.ReadAll(r.Body)
 	a.mu.Lock()
 	a.calls = append(a.calls, call)
+	if r.Method == http.MethodPost {
+		a.posts = append(a.posts, call+" "+string(body))
+	}
 	answer, ok := a.answers[call]
 	a.mu.Unlock()
 	w.Header().Set("Content-Type", "application/json")
@@ -334,6 +341,16 @@ func (a *recordingAPI) answer(call, body string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.answers[call] = body
+}
+
+// takenPosts returns the POST calls so far with their bodies and forgets
+// them.
+func (a *recordingAPI) takenPosts() []string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	posts := a.posts
+	a.posts = nil
+	return posts
 }
 
 // taken returns the calls so far and forgets them.

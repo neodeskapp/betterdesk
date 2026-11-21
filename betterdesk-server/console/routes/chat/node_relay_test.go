@@ -242,6 +242,18 @@ var fixes = []fix{
 		`{"socket":"p2","text":"{\"type\":\"contacts\",\"contacts\":[{\"id\":\"dev1\",\"name\":\"one\",\"online\":true},{\"id\":\"operator:admin\",\"name\":\"admin\",\"role\":\"operator\"}]}"},` +
 		`{"socket":"p2","text":"{\"type\":\"groups\",\"groups\":[]}"}]`},
 	{"SK8", "agent replaced and gone", 17, `[]`},
+	// An agent's messages carry its device's name (here its id, the replay
+	// has no device rows), and an agent writes only into its device's
+	// conversation, the operators' and its groups': anything else waits for
+	// the group lookup and goes nowhere
+	{"RV163", "agent session", 5, `[{"api":{"method":"POST","path":"/chat/messages","body":"{\"conversation_id\":\"operator\",\"from_id\":\"dev1\",\"from_name\":\"dev1\",\"to_id\":\"\",\"text\":\"no conversation\"}"}},` +
+		`{"socket":"op","text":"{\"type\":\"message\",\"id\":1700000002000,\"from\":\"dev1\",\"from_name\":\"dev1\",\"conversation_id\":\"operator\",\"text\":\"no conversation\",\"timestamp\":\"yesterday\"}"},` +
+		`{"socket":"panel","text":"{\"type\":\"message\",\"id\":1700000002000,\"from\":\"dev1\",\"from_name\":\"dev1\",\"conversation_id\":\"operator\",\"text\":\"no conversation\",\"timestamp\":\"yesterday\"}"}]`},
+	{"RV163", "agent session", 7, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
+	{"RV163", "agent session", 14, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
+	{"RV163", "agent session", 19, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
+	{"RV163", "agent session", 23, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
+	{"RV163", "agent session", 42, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
 }
 
 // fixedEvents is what a step of the recording looks like since the fixes:
