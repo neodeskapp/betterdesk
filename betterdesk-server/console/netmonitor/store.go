@@ -502,6 +502,23 @@ func InsertCheck(ctx context.Context, db *store.DB, data NewCheck) error {
 	return nil
 }
 
+// MaxChecksPerTarget is how many checks a target keeps: its newest ones.
+// At the default interval of a minute that is about a week of history.
+const MaxChecksPerTarget = 10000
+
+// PruneChecks removes the checks of a target before its newest keep ones.
+func PruneChecks(ctx context.Context, db *store.DB, targetID Param, keep int) error {
+	args, err := bindArgs(db, 3, []Param{targetID, targetID, Num(Number(keep - 1))})
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(ctx, "DELETE FROM network_checks WHERE target_id = ? AND id < (SELECT id FROM network_checks WHERE target_id = ? ORDER BY id DESC LIMIT 1 OFFSET ?)", args...)
+	if err != nil {
+		return fmt.Errorf("prune network checks: %w", err)
+	}
+	return nil
+}
+
 // HistoryFilter narrows CheckHistory; nil leaves a bound out.
 type HistoryFilter struct {
 	Limit, From, To *Param

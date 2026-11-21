@@ -66,3 +66,43 @@ func TestTargetsOfOneNameKeepTheirOrder(t *testing.T) {
 		}
 	})
 }
+
+// A target keeps its newest 10,000 checks: storing a check removes the
+// target's checks before them, and the checks of other targets stay (BUGS
+// RV49).
+func TestATargetKeepsItsNewestChecks(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		for _, row := range []string{
+			"INSERT INTO network_targets (id, name, host, port, check_type) VALUES (1, 'kept', '10.1.2.3', 80, 'tcp')",
+			"INSERT INTO network_targets (id, name, host, check_type) VALUES (2, 'other', '10.1.2.4', 'ping')",
+			"WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 10005) INSERT INTO network_checks (target_id, status) SELECT 1, 'down' FROM n",
+			"INSERT INTO network_checks (target_id, status) VALUES (2, 'up'), (2, 'up')",
+		} {
+			if _, err := db.Exec(ctx, row); err != nil {
+				t.Fatal(err)
+			}
+		}
+		count := func(target int) (n, oldest int64) {
+			t.Helper()
+			if err := db.QueryRow(ctx, "SELECT COUNT(*), MIN(id) FROM network_checks WHERE target_id = ?", target).Scan(&n, &oldest); err != nil {
+				t.Fatal(err)
+			}
+			return n, oldest
+		}
+		no := false
+		m := New(Options{Store: db, Resolver: &tableResolver{names: map[string][]string{}, errors: map[string]string{}}, Windows: &no, Dialer: stuckDialer{}})
+		target, err := GetTarget(ctx, db, Num(1))
+		if err != nil || target == nil {
+			t.Fatalf("target: %v", err)
+		}
+		target.TimeoutMs = store.Float{V: 1, Valid: true}
+		m.CheckTarget(ctx, target)
+		if n, oldest := count(1); n != 10000 || oldest != 7 {
+			t.Errorf("target 1 has %d checks from id %d, want the newest 10000 (from id 7)", n, oldest)
+		}
+		if n, _ := count(2); n != 2 {
+			t.Errorf("target 2 has %d checks, want its 2", n)
+		}
+	})
+}

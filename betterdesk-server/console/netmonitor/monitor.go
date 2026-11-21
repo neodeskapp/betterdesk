@@ -401,15 +401,18 @@ func (m *Monitor) CheckTarget(ctx context.Context, target *Target) CheckResult {
 	return CheckResult{TargetID: target.ID, Result: result, Status: status}
 }
 
-// save stores the result of a check and marks the target with it.
+// save stores the result of a check, marks the target with it and drops
+// the target's checks beyond its newest MaxChecksPerTarget.
 func (m *Monitor) save(ctx context.Context, id Param, status string, rtt, statusCode, errorMsg Param) error {
 	err := InsertCheck(ctx, m.db, NewCheck{TargetID: id, Status: Text(status), RTT: rtt, StatusCode: statusCode, ErrorMsg: errorMsg})
 	if err != nil {
 		return err
 	}
 	lastStatus, checkedAt := Text(status), Text(store.ISOTime(m.now()))
-	_, err = UpdateTarget(ctx, m.db, id, TargetChanges{LastStatus: &lastStatus, LastCheckAt: &checkedAt, LastRTT: &rtt})
-	return err
+	if _, err = UpdateTarget(ctx, m.db, id, TargetChanges{LastStatus: &lastStatus, LastCheckAt: &checkedAt, LastRTT: &rtt}); err != nil {
+		return err
+	}
+	return PruneChecks(ctx, m.db, id, MaxChecksPerTarget)
 }
 
 // IsDue reports whether a target's own interval has passed since its last
