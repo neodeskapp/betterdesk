@@ -260,3 +260,40 @@ func TestClientReportsAreBounded(t *testing.T) {
 		}
 	})
 }
+
+// The sign-in tells whether a device is banned only after the password:
+// a wrong password with a banned device's id is the plain refusal, counts
+// as a failed attempt and writes no entry about the device; the right
+// password is refused for the banned device (BUGS RV9).
+func TestSignInChecksTheBanAfterThePassword(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000", "LOGIN_RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
+		hash, err := w.Server.Deps().Authn.HashPassword(ctx, "Rv9-Test-1!x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		mustExec(t, db, `UPDATE users SET password_hash = ? WHERE id = 6`, hash)
+		mustExec(t, db, `INSERT INTO peer (id, uuid, info, is_banned) VALUES ('900400001', 'u', '{}', `+db.Pick("1", "TRUE")+`)`)
+
+		got := w.SignedOut().Do("POST", "/api/login", `{"username":"e2e_viewer","password":"wrong","id":"900400001"}`)
+		if got.Status != 401 || got.Body != `{"error":"Invalid credentials"}` {
+			t.Errorf("a wrong password: %d %s", got.Status, got.Body)
+		}
+		for _, row := range w.AuditRows() {
+			if strings.HasPrefix(row, "api_login_banned_device|") {
+				t.Errorf("audit entry before the password was checked: %s", row)
+			}
+		}
+		var failed int
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM login_attempts WHERE username = 'e2e_viewer' AND success = `+db.Pick("0", "FALSE")).Scan(&failed); err != nil || failed != 1 {
+			t.Errorf("%d failed attempts (%v), want 1", failed, err)
+		}
+
+		got = w.SignedOut().Do("POST", "/api/login", `{"username":"e2e_viewer","password":"Rv9-Test-1!x","id":"900400001"}`)
+		if got.Status != 403 || got.Body != `{"error":"Device is banned"}` {
+			t.Errorf("the right password: %d %s", got.Status, got.Body)
+		}
+	})
+}
+

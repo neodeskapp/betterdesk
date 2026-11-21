@@ -120,24 +120,6 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// A banned device may not sign in (the client id is the device id)
-	if device := sanitize(clientID, maxIDLen); device != "" && isValidDeviceID(device) {
-		row, err := h.store.peerByID(ctx, device)
-		if err != nil {
-			serverError(err)
-			return
-		}
-		if row != nil && row.banned {
-			h.log.Info("[API:LOGIN] Rejected login from banned device: " + device)
-			if err := h.audit(ctx, 0, "api_login_banned_device", fmt.Sprintf("Device: %s, User: %s", device, username), ip); err != nil {
-				serverError(err)
-				return
-			}
-			fail(w, r, http.StatusForbidden, "Device is banned")
-			return
-		}
-	}
-
 	outcome, err := h.d.Authn.Authenticate(authn.WithClientAddress(ctx, ip), username, password)
 	if err != nil {
 		serverError(err)
@@ -160,6 +142,15 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fail(w, r, http.StatusUnauthorized, "Invalid credentials")
+		return
+	}
+	// A banned device may not sign in (the client id is the device id).
+	// It is asked only after the password, so the answer tells no one
+	// without the password whether a device is banned.
+	if banned, err := h.refuseBannedDevice(w, r, clientID, username, ip); err != nil || banned {
+		if err != nil {
+			serverError(err)
+		}
 		return
 	}
 
@@ -205,6 +196,27 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		h.log.Warn(fmt.Sprintf("[API:LOGIN] TOTP bypass active for user '%s' (RUSTDESK_API_DISABLE_TOTP=true)", username))
 	}
 	kit.JSON(w, r, http.StatusOK, tokenAnswer{Type: "access_token", AccessToken: token, User: buildUserPayload(user.Username, user.Role.String)})
+}
+
+// refuseBannedDevice answers 403 "Device is banned" with an audit entry
+// when the client id names a banned device; banned reports whether it
+// answered. An error is the lookup's or the audit entry's, and nothing is
+// answered then.
+func (h *handlers) refuseBannedDevice(w http.ResponseWriter, r *http.Request, clientID, username, ip string) (banned bool, err error) {
+	device := sanitize(clientID, maxIDLen)
+	if device == "" || !isValidDeviceID(device) {
+		return false, nil
+	}
+	row, err := h.store.peerByID(r.Context(), device)
+	if err != nil || row == nil || !row.banned {
+		return false, err
+	}
+	h.log.Info("[API:LOGIN] Rejected login from banned device: " + device)
+	if err := h.audit(r.Context(), 0, "api_login_banned_device", fmt.Sprintf("Device: %s, User: %s", device, username), ip); err != nil {
+		return false, err
+	}
+	fail(w, r, http.StatusForbidden, "Device is banned")
+	return true, nil
 }
 
 // refuseBlocked answers a sign-in step the lockout refused: an audit
@@ -275,6 +287,12 @@ func (h *handlers) secondStep(w http.ResponseWriter, r *http.Request, ip string,
 	bodyID, _ := clientRef(body, "id")
 	bodyUUID, _ := clientRef(body, "uuid")
 	clientID, clientUUID := firstText(bodyID, pending.clientID), firstText(bodyUUID, pending.clientUUID)
+	if banned, err := h.refuseBannedDevice(w, r, clientID, pending.username, ip); err != nil || banned {
+		if err != nil {
+			serverError(err)
+		}
+		return
+	}
 	token, err := h.issueToken(ctx, pending.userID, clientID, clientUUID, true, ip)
 	if err == nil {
 		err = h.d.Authn.TouchLastLogin(ctx, pending.userID)
