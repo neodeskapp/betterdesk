@@ -2,10 +2,12 @@ package organizations_test
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -264,4 +266,57 @@ func TestReadingNeedsUserView(t *testing.T) {
 	want(t, "server_admin lists", w.As("server_admin").Do("GET", "/api/panel/org", ""), 200, `{"organizations":[]}`)
 	want(t, "an operator reads the stored passwords", w.As("operator").Do("GET", "/api/panel/org/o1/peer-credentials", ""), 200, `{"credentials":[]}`)
 	calls(t, "allowed reads", api, "GET /api/org", "GET /api/org/o1/peer-credentials")
+}
+
+// RV14: an account with a limited device scope puts into an organization,
+// and takes out of one, only a device it may see, and the list of an
+// organization's devices shows it only those. A is in a group closed to
+// the operator, B is open to all; an id no device has passes, as for the
+// device routes.
+func TestOrganizationDevicesFollowTheDeviceScope(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		api.Fallback = func(c routetest.Call) routetest.Reply {
+			switch {
+			case c.Target == "/api/peers" || c.Target == "/api/peers?include_deleted=true":
+				return routetest.Reply{Status: 200, Body: `{"peers":[{"id":"A","hostname":"a"},{"id":"B","hostname":"b"}]}`}
+			case c.Target == "/api/peers/A" || c.Target == "/api/peers/B":
+				id := strings.TrimPrefix(c.Target, "/api/peers/")
+				return routetest.Reply{Status: 200, Body: `{"id":"` + id + `"}`}
+			case strings.HasPrefix(c.Target, "/api/remote-targets"):
+				return routetest.Reply{Status: 200, Body: `{"targets":[]}`}
+			case c.Method == "POST" && c.Target == "/api/org/o1/devices":
+				return routetest.Reply{Status: 201, Body: `{"org_id":"o1"}`}
+			case c.Method == "DELETE" && strings.HasPrefix(c.Target, "/api/org/o1/devices/"):
+				return routetest.Reply{Status: 204}
+			case c.Target == "/api/org/o1/devices":
+				return routetest.Reply{Status: 200, Body: `{"devices":[{"org_id":"o1","device_id":"A","department":"lab"},{"org_id":"o1","device_id":"B"},{"org_id":"o1","device_id":"Z"}]}`}
+			}
+			return routetest.Reply{Status: 404, Body: `{"error":"not found"}`}
+		}
+		langs := func(cfg *config.Config) { cfg.LangDir = filepath.Join("..", "..", "static", "files", "lang") }
+		w := routetest.New(t, routetest.Options{DB: db, API: api, Config: langs})
+		exec(t, db, `INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-admin', 'Admin only', '', '', 'manual', '')`)
+		exec(t, db, `INSERT INTO device_group_user_access (device_group_id, user_id) SELECT id, 1 FROM device_groups WHERE guid = 'g-admin'`)
+		exec(t, db, `INSERT INTO device_group_members (device_group_id, peer_id) SELECT id, 'A' FROM device_groups WHERE guid = 'g-admin'`)
+		admin, operator := w.As("admin"), w.As("operator")
+		refused := `{"success":false,"error":"You don't have access to this device."}`
+
+		want(t, "put a closed device in", operator.Do("POST", "/api/panel/org/o1/devices", `{"device_id":"A","department":"rv"}`), 403, refused)
+		want(t, "take a closed device out", operator.Do("DELETE", "/api/panel/org/o1/devices/A", ""), 403, refused)
+		for _, call := range api.Calls() {
+			if strings.Contains(call, "/api/org/") {
+				t.Errorf("a refused change reached the API server: %s", call)
+			}
+		}
+		want(t, "put an open device in", operator.Do("POST", "/api/panel/org/o1/devices", `{"device_id":"B"}`), 201, `{"org_id":"o1"}`)
+		want(t, "put an unknown device in", operator.Do("POST", "/api/panel/org/o1/devices", `{"device_id":"Z"}`), 201, `{"org_id":"o1"}`)
+		if got := operator.Do("DELETE", "/api/panel/org/o1/devices/B", ""); got.Status != 204 {
+			t.Errorf("take an open device out: %d %s", got.Status, got.Body)
+		}
+		want(t, "the operator's list", operator.Do("GET", "/api/panel/org/o1/devices", ""), 200, `{"devices":[{"org_id":"o1","device_id":"B"}]}`)
+		want(t, "the admin's list", admin.Do("GET", "/api/panel/org/o1/devices", ""), 200,
+			`{"devices":[{"org_id":"o1","device_id":"A","department":"lab"},{"org_id":"o1","device_id":"B"},{"org_id":"o1","device_id":"Z"}]}`)
+		want(t, "the admin puts the closed device in", admin.Do("POST", "/api/panel/org/o1/devices", `{"device_id":"A"}`), 201, `{"org_id":"o1"}`)
+	})
 }

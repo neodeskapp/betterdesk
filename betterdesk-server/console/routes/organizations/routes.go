@@ -56,9 +56,9 @@ func Register(d *kit.Deps) {
 	r.Get("/api/panel/org/{id}/invitations", h.pass("GET", orgPath("/invitations"), false), auth, can("org.manage_users"))
 
 	// Devices
-	r.Post("/api/panel/org/{id}/devices", h.pass("POST", orgPath("/devices"), true), auth, can("org.manage_devices"))
-	r.Get("/api/panel/org/{id}/devices", h.pass("GET", orgPath("/devices"), false), auth, can("user.view"))
-	r.Delete("/api/panel/org/{id}/devices/{did}", h.pass("DELETE", orgItemPath("/devices/", "did", "deviceId"), false), auth, can("org.manage_devices"))
+	r.Post("/api/panel/org/{id}/devices", h.assignDevice, auth, can("org.manage_devices"))
+	r.Get("/api/panel/org/{id}/devices", h.listDevices, auth, can("user.view"))
+	r.Delete("/api/panel/org/{id}/devices/{did}", h.unassignDevice, auth, can("org.manage_devices"))
 
 	// Settings
 	r.Get("/api/panel/org/{id}/settings", h.pass("GET", orgPath("/settings"), false), auth, can("user.view"))
