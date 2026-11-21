@@ -71,13 +71,13 @@ func TestSectionAllowsAsksTheAccountsPolicy(t *testing.T) {
 }
 
 // TestSectionAccessOfReadsTheStoredPolicy: the adapter resolves the
-// account's policy as the guard does: an admin reaches write in
+// account's policy as the guard does: a server admin reaches write in
 // server-management until its own row lowers the section to read or none
-// (RV89).
+// (RV89). A row never lowers a super admin (A92).
 func TestSectionAccessOfReadsTheStoredPolicy(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
-		if _, err := db.Exec(ctx, `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`, "srv", "x", "admin"); err != nil {
+		if _, err := db.Exec(ctx, `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`, "srv", "x", "server_admin"); err != nil {
 			t.Fatal(err)
 		}
 		var id int64
@@ -86,7 +86,7 @@ func TestSectionAccessOfReadsTheStoredPolicy(t *testing.T) {
 		}
 		svc := access.New(db, access.NewDBRoleSource(nil), access.Options{})
 		lookup := ws.SectionAccessOf(svc)
-		user := access.PolicyUser{ID: id, Role: "admin"}
+		user := access.PolicyUser{ID: id, Role: "server_admin"}
 		check := func(level access.Level, want bool) {
 			t.Helper()
 			got, err := lookup(ctx, user, "server-management", level)
@@ -106,5 +106,19 @@ func TestSectionAccessOfReadsTheStoredPolicy(t *testing.T) {
 			check(access.LevelRead, c.read)
 			check(access.LevelWrite, c.write)
 		}
+		// The same row, stored as "none", for an admin account
+		if _, err := db.Exec(ctx, `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`, "root", "x", "admin"); err != nil {
+			t.Fatal(err)
+		}
+		if err := db.QueryRow(ctx, `SELECT id FROM users WHERE username = ?`, "root").Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		none := []any{map[string]any{"resource_key": "server-management", "access_level": "none"}}
+		if _, err := svc.SavePolicy(ctx, access.SubjectUser, strconv.FormatInt(id, 10), none, []any{}); err != nil {
+			t.Fatal(err)
+		}
+		user = access.PolicyUser{ID: id, Role: "admin"}
+		check(access.LevelRead, true)
+		check(access.LevelWrite, true)
 	})
 }

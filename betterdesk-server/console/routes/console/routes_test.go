@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -104,6 +105,8 @@ func exec(t *testing.T, db *store.DB, query string, args ...any) {
 // The navigation and the panel access of the bootstrap under an account
 // policy are what the Node console answered under the same policy
 // (testdata/bootstrap_with_policy.json, from its contract recording).
+// A super admin is the exception: Node lowered it by its rows, here the
+// rows change nothing in its bootstrap (A92).
 func TestBootstrapUnderAPolicyAsNodeAnswered(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "bootstrap_with_policy.json"))
 	if err != nil {
@@ -137,6 +140,27 @@ func TestBootstrapUnderAPolicyAsNodeAnswered(t *testing.T) {
 			// One session per account: a new sign-in as admin ends the last one
 			admin := w.As("admin")
 			id := routetest.RoleIDs[role]
+			type parts struct {
+				Access      json.RawMessage `json:"access"`
+				Nav         json.RawMessage `json:"nav"`
+				Permissions json.RawMessage `json:"permissions"`
+			}
+			if auth.IsSuperAdminRole(role) {
+				// What the account's bootstrap holds without a policy
+				// stands in for Node's answer
+				if role != "admin" {
+					t.Fatalf("the fixture's super admin %s needs its own sign-in here", role)
+				}
+				res := admin.Do("GET", "/api/console/bootstrap", "")
+				if res.Status != http.StatusOK {
+					t.Fatalf("bootstrap as %s: %d %s", role, res.Status, res.Body)
+				}
+				var before parts
+				if err := json.Unmarshal([]byte(res.Body), &before); err != nil {
+					t.Fatal(err)
+				}
+				want.Access, want.Nav, want.Permissions = before.Access, before.Nav, before.Permissions
+			}
 			if res := admin.Do("PUT", "/api/panel/access/users/"+itoa(id), string(body)); res.Status != http.StatusOK {
 				t.Fatalf("policy for %s: %d %s", role, res.Status, res.Body)
 			}
@@ -148,11 +172,7 @@ func TestBootstrapUnderAPolicyAsNodeAnswered(t *testing.T) {
 			if res.Status != http.StatusOK {
 				t.Fatalf("bootstrap as %s: %d %s", role, res.Status, res.Body)
 			}
-			var got struct {
-				Access      json.RawMessage `json:"access"`
-				Nav         json.RawMessage `json:"nav"`
-				Permissions json.RawMessage `json:"permissions"`
-			}
+			var got parts
 			if err := json.Unmarshal([]byte(res.Body), &got); err != nil {
 				t.Fatal(err)
 			}
