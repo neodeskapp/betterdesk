@@ -5,6 +5,7 @@
  */
 
 import type { InventoryRow } from '#lib/api/inventory.ts';
+import { parseDate } from '#lib/i18n/format.ts';
 import { platformId } from '#lib/util/display.ts';
 import type { Sentence } from './sentences.ts';
 
@@ -53,6 +54,15 @@ export function osFamily(os: string): OsFamily {
 }
 
 /** ID, host name, system or CPU contains the text (any case) */
+/**
+ * When the row was last updated: the report's collection time, else the
+ * time the device was last seen. SQLite's YYYY-MM-DD HH:MM:SS is UTC; ISO
+ * times with Z or an offset are read as they are.
+ */
+export function updatedAt(r: Pick<InventoryRow, 'collected_at' | 'last_seen'>): Date | null {
+	return parseDate(r.collected_at || r.last_seen);
+}
+
 export function matches(r: InventoryRow, query: string): boolean {
 	const q = query.trim().toLowerCase();
 	if (!q) return true;

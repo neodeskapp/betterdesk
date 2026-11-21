@@ -12,7 +12,8 @@ import {
 	osSummary,
 	osText,
 	percent,
-	rowName
+	rowName,
+	updatedAt
 } from '../../../src/lib/devices-area/inventory.ts';
 import { joinSentences } from '../../../src/lib/devices-area/sentences.ts';
 
@@ -53,6 +54,20 @@ describe('names and systems', () => {
 		expect(matches(r, 'i5')).toBe(true);
 		expect(matches(r, 'linux')).toBe(false);
 		expect(matches(r, '  ')).toBe(true);
+	});
+});
+
+describe('updated', () => {
+	test('the collection time, else the last time seen, in each form the server sends', () => {
+		const at = (o: Record<string, unknown>) => updatedAt(row(o))?.toISOString() ?? null;
+		expect(at({ last_seen: '2026-11-21 10:00:00' })).toBe('2026-11-21T10:00:00.000Z');
+		expect(at({ last_seen: '2026-11-21T10:00:00Z' })).toBe('2026-11-21T10:00:00.000Z');
+		expect(at({ last_seen: '2026-11-21T10:00:00.123456Z' })).toBe('2026-11-21T10:00:00.123Z');
+		expect(at({ last_seen: '2026-11-21T11:00:00+01:00' })).toBe('2026-11-21T10:00:00.000Z');
+		expect(at({ collected_at: '2026-11-21T09:00:00.000Z', last_seen: '2026-11-21 10:00:00' })).toBe(
+			'2026-11-21T09:00:00.000Z'
+		);
+		expect(at({})).toBeNull();
 	});
 });
 

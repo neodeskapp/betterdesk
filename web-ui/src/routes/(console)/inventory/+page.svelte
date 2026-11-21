@@ -22,6 +22,7 @@
 		osSummary,
 		osText,
 		rowName,
+		updatedAt,
 		type OsFamily
 	} from '#lib/devices-area/inventory.ts';
 	import { joinSentences } from '#lib/devices-area/sentences.ts';
@@ -166,10 +167,7 @@
 			class: 'col-updated',
 			label: t('inventory.col_updated'),
 			cell: updatedCell,
-			sortValue: (r) => {
-				const d = new Date(r.collected_at || (r.last_seen ? r.last_seen.replace(' ', 'T') + 'Z' : ''));
-				return Number.isNaN(d.getTime()) ? null : d;
-			}
+			sortValue: (r) => updatedAt(r)
 		}
 	]);
 
@@ -208,9 +206,7 @@
 {#snippet disksCell(r: InventoryRow)}{#if r.disk_count}{formatNumber(r.disk_count)}{:else}<Empty
 		/>{/if}{/snippet}
 
-{#snippet updatedCell(r: InventoryRow)}<Time
-		value={r.collected_at || (r.last_seen ? r.last_seen.replace(' ', 'T') + 'Z' : '')}
-	/>{/snippet}
+{#snippet updatedCell(r: InventoryRow)}<Time value={updatedAt(r)} />{/snippet}
 
 <div class="page page-wide inventory-page">
 	<div class="page-head">
