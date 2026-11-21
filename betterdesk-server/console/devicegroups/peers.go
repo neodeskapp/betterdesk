@@ -241,7 +241,8 @@ func (s *Service) cascadeRenames(ctx context.Context, query string) error {
 
 // CascadePeerIDChange carries a changed device id into the console's
 // tables: its row in peer, its system information and metrics, its
-// folder, its manual device groups, its access tokens and its audit rows. Each statement stands on
+// folder, its access tokens and its audit rows. The device's manual
+// device groups are moved by the API server's own cascade (package db). Each statement stands on
 // its own: one that fails is logged (unless the table or column is not
 // there) and the next one runs.
 func (s *Service) CascadePeerIDChange(ctx context.Context, oldID, newID string) {
@@ -256,7 +257,6 @@ func (s *Service) CascadePeerIDChange(ctx context.Context, oldID, newID string) 
 		`UPDATE peer_metrics SET peer_id = ? WHERE peer_id = ?`,
 		`UPDATE device_folder_assignments SET device_id = ? WHERE device_id = ?`,
 		`UPDATE device_folder_assignments SET peer_id = ? WHERE peer_id = ?`,
-		`UPDATE device_group_members SET peer_id = ? WHERE peer_id = ?`,
 		`UPDATE access_tokens SET client_id = ? WHERE client_id = ?`,
 		`UPDATE audit_connections SET peer_id = ? WHERE peer_id = ?`,
 		`UPDATE audit_files SET peer_id = ? WHERE peer_id = ?`,
