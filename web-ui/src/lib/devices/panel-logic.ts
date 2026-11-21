@@ -201,7 +201,7 @@ export function panelActions(d: PanelDevice, can: Can): PanelActions {
 	if (meshOnline(d)) {
 		if (can('mesh.terminal')) out.mesh.push('mesh-terminal');
 		if (can('mesh.files') && connect) out.mesh.push('mesh-files');
-		if (connect) out.mesh.push('mesh-run-command');
+		if (can('mesh.terminal')) out.mesh.push('mesh-run-command');
 		if (can('cdap.command')) out.mesh.push('mesh-link-peer');
 		if (connect) out.mesh.push('mesh-share', 'mesh-port-tcp', 'mesh-port-udp');
 		if (can('mesh.power'))

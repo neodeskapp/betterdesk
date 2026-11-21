@@ -89,7 +89,7 @@ func TestDeviceRoutesKeepToTheScope(t *testing.T) {
 		}
 	}
 	if reached < 5 {
-		t.Fatalf("the operator reached %d routes for dev-1, want at least desktop, share, tcp, udp and exec", reached)
+		t.Fatalf("the operator reached %d routes for dev-1, want at least desktop, share, tcp, udp and power", reached)
 	}
 }
 

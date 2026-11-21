@@ -114,6 +114,11 @@ func TestDeviceRoutesKeepToTheScope(t *testing.T) {
 					t.Errorf("%s: %d %s; want the permission's 403", what, rec.Code, rec.Body)
 				}
 			default:
+				// An operator's command reads the manifest first: it lacks
+				// cdap.terminal (TestATerminalCommandNeedsCDAPTerminal)
+				if route.path == "/command" && c.who.User.Role == "operator" && len(calls) == 2 && calls[0].URL == "/api/cdap/devices/"+c.device+"/manifest" {
+					calls = calls[1:]
+				}
 				if rec.Code != http.StatusOK || len(calls) != 1 || !strings.Contains(calls[0].URL, "/"+c.device) {
 					t.Errorf("%s: %d %s, calls %+v; want the API server's answer", what, rec.Code, rec.Body, calls)
 				}
@@ -154,5 +159,39 @@ func TestListsKeepToTheScope(t *testing.T) {
 		if rec.Code != http.StatusOK || rec.Body.String() != c.want || len(calls) != 1 {
 			t.Errorf("GET %s as %s: %d %s, %d calls; want 200 %s", c.path, c.who.User.Role, rec.Code, rec.Body, len(calls), c.want)
 		}
+	}
+}
+
+// TestATerminalCommandNeedsCDAPTerminal: a command to a terminal widget
+// of the device's manifest runs in a shell and needs cdap.terminal: an
+// operator (cdap.command alone) is refused after the manifest was read
+// and the command is not sent; its command to a toggle goes out; a global
+// admin, who has cdap.terminal, sends the shell command without the
+// manifest being read (BUGS RV159, A96).
+func TestATerminalCommandNeedsCDAPTerminal(t *testing.T) {
+	w := proxytest.NewWorld(t, withScope(t, map[int64][]string{5: {"dev-1"}}))
+	manifest := &proxytest.Answer{Status: 200, Type: "application/json",
+		Body: `{"device":{"name":"box"},"widgets":[{"id":"power","type":"toggle"},{"id":"shell","type":" Terminal "}]}`}
+	send := func(who *proxytest.Account, widget string) (int, string, []proxytest.Call) {
+		body := `{"widget_id":"` + widget + `","action":"execute","value":"id"}`
+		rec, calls := w.Do(proxytest.Request{Method: "POST", Path: "/api/cdap/devices/dev-1/command", Session: who, Type: "application/json", Body: &body}, manifest)
+		return rec.Code, rec.Body.String(), calls
+	}
+	urls := func(calls []proxytest.Call) string {
+		var out []string
+		for _, c := range calls {
+			out = append(out, c.Method+" "+c.URL)
+		}
+		return strings.Join(out, ", ")
+	}
+	operator, globalAdmin := account(5, "operator"), account(4, "global_admin")
+	if code, body, calls := send(operator, "shell"); code != 403 || body != `{"success":false,"error":"Permission denied: cdap.terminal"}` || urls(calls) != "GET /api/cdap/devices/dev-1/manifest" {
+		t.Errorf("the operator's shell command: %d %s after %s", code, body, urls(calls))
+	}
+	if code, body, calls := send(operator, "power"); code != 200 || urls(calls) != "GET /api/cdap/devices/dev-1/manifest, POST /api/cdap/devices/dev-1/command" {
+		t.Errorf("the operator's toggle command: %d %s after %s", code, body, urls(calls))
+	}
+	if code, body, calls := send(globalAdmin, "shell"); code != 200 || urls(calls) != "POST /api/cdap/devices/dev-1/command" {
+		t.Errorf("the global admin's shell command: %d %s after %s", code, body, urls(calls))
 	}
 }

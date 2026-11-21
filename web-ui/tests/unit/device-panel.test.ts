@@ -138,8 +138,9 @@ describe('permission gates per role', () => {
 			'mesh-power-reset',
 			'mesh-power-off'
 		]);
-		// operator has no mesh.terminal or mesh.files
+		// operator has no mesh.terminal or mesh.files, so no shell and no command either
 		expect(panelActions(online, canFor('operator')).mesh).not.toContain('mesh-terminal');
+		expect(panelActions(online, canFor('operator')).mesh).not.toContain('mesh-run-command');
 		expect(panelActions(offline, canFor('operator')).mesh).toEqual(['mesh-power-wake']);
 		expect(panelActions(offline, canFor('viewer')).mesh).toEqual([]);
 	});

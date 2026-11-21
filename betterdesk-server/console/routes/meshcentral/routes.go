@@ -50,5 +50,6 @@ func Register(d *kit.Deps) {
 	r.Get("/api/mesh/recordings", h.recordings("/mesh/recordings"), d.RequireAuth, view)
 	r.Get("/api/mesh/recordings/{id}", h.recording, d.RequireAuth, connect)
 	r.Get("/api/session/recordings", h.recordings("/session/recordings"), d.RequireAuth, view)
-	r.Post("/api/mesh/devices/{id}/exec", h.device("exec", true), d.RequireAuth, connect, scope)
+	// exec runs a shell command: the terminal's permission
+	r.Post("/api/mesh/devices/{id}/exec", h.device("exec", true), d.RequireAuth, d.RequirePermission("mesh.terminal"), scope)
 }

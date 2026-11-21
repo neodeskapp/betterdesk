@@ -173,7 +173,7 @@ describe('permission gates: nothing is asked or sent without the permission', ()
 		],
 		[
 			'runMeshCommand',
-			'device.connect',
+			'mesh.terminal',
 			() => act.runMeshCommand(dev({ device_type: 'mesh_agent', online: true })),
 			() => meshApi.meshExec
 		]

@@ -51,7 +51,7 @@
  * MeshAgent devices
  *   openMeshTerminal(d)          wide sheet with a shell (mesh.terminal)
  *   openMeshFiles(d)             file browser in the viewer (mesh.files and device.connect)
- *   runMeshCommand(d)            (device.connect)    linkMeshPeer(d) (cdap.command)
+ *   runMeshCommand(d)            (mesh.terminal)     linkMeshPeer(d) (cdap.command)
  *   meshShareLink(d)             view-only desktop link (device.connect)
  *   openPortRelay(d, udp)        TCP or UDP relay sheet (device.connect)
  *   meshPower(d, action)         wake, sleep, reset, off (mesh.power)
@@ -742,7 +742,8 @@ export function openMeshFiles(d: DeviceLike): boolean {
 }
 
 export async function runMeshCommand(d: DeviceLike): Promise<boolean> {
-	if (!meshOnline(d) || !can('device.connect')) return false;
+	// A command runs in a shell on the device: the terminal's permission
+	if (!meshOnline(d) || !can('mesh.terminal')) return false;
 	const done = await ask('mesh-command', {
 		device: d,
 		run: async (command, shell) => {
@@ -897,7 +898,7 @@ export function deviceMenu(d: DeviceLike, opts: { knownTags?: readonly string[] 
 			);
 		if (can('mesh.files') && canConnect)
 			mesh.push(item('mesh-files', tf('mesh.files', 'File browser'), ICONS.files, () => openMeshFiles(d)));
-		if (canConnect)
+		if (can('mesh.terminal'))
 			mesh.push(
 				item('mesh-run-command', tf('mesh.run_command', 'Run command'), ICONS.run, () => runMeshCommand(d))
 			);

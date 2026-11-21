@@ -212,7 +212,8 @@ func TestGuards(t *testing.T) {
 		{"GET", "/api/mesh/recordings", "device.view", "guest_issuer", "only:device.connect,chat.access", "GET /mesh/recordings"},
 		{"GET", "/api/mesh/recordings/r1", "device.connect", "operator", "viewer", "GET /mesh/recordings/r1"},
 		{"GET", "/api/session/recordings", "device.view", "guest_issuer", "only:device.connect,chat.access", "GET /session/recordings"},
-		{"POST", "/api/mesh/devices/d1/exec", "device.connect", "operator", "viewer", "POST /mesh/devices/d1/exec {}"},
+		// exec runs a shell command: the terminal's permission (BUGS RV159, A96)
+		{"POST", "/api/mesh/devices/d1/exec", "mesh.terminal", "global_admin", "operator", "POST /mesh/devices/d1/exec {}"},
 	}
 	for _, c := range cases {
 		name := c.method + " " + c.target

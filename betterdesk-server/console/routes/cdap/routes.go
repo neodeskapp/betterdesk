@@ -17,6 +17,7 @@ package cdap
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
@@ -172,7 +173,9 @@ func bodyValue(r *http.Request, key string) (value any, defined bool) {
 
 // command answers POST /api/cdap/devices/{id}/command with the body
 // {widget_id, action, value, reason}: it sends a command to a widget of a
-// connected device. A reason that is missing or empty goes out as "".
+// connected device. A reason that is missing or empty goes out as "". A
+// command to a terminal widget runs in a shell and needs cdap.terminal
+// besides cdap.command (terminalWidget).
 func (h *handlers) command(w http.ResponseWriter, r *http.Request) {
 	widget, _ := bodyValue(r, "widget_id")
 	action, _ := bodyValue(r, "action")
@@ -188,7 +191,53 @@ func (h *handlers) command(w http.ResponseWriter, r *http.Request) {
 	if reason, _ := bodyValue(r, "reason"); goapi.Truthy(reason) {
 		body.Set("reason", reason)
 	}
+	if !kit.HasPermission(r, "cdap.terminal") {
+		terminal, err := h.terminalWidget(r, widget)
+		if err != nil {
+			failed(w, r, err)
+			return
+		}
+		if terminal {
+			kit.Fail(w, r, http.StatusForbidden, "Permission denied: cdap.terminal")
+			return
+		}
+	}
 	h.relay(w, r, http.MethodPost, devicePath(r, "/command"), goapipath.Body(body))
+}
+
+// terminalWidget reports whether the widget of a command is a terminal of
+// the device's manifest, whose commands run in a shell on the device and
+// so need cdap.terminal. The manifest is asked of the API server. A device
+// without one (404) has no widget the API server would send a command to;
+// any other failed call is the error, so a command is not sent on a guess.
+func (h *handlers) terminalWidget(r *http.Request, widget any) (bool, error) {
+	id, isText := widget.(string)
+	if !isText {
+		return false, nil
+	}
+	resp, err := h.api.Request(r.Context(), http.MethodGet, devicePath(r, "/manifest"))
+	if e := goapi.AsError(err); e != nil && e.Status() == http.StatusNotFound {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	manifest, _ := resp.Data().(*goapi.Object)
+	if manifest == nil {
+		return false, nil
+	}
+	widgets, _ := manifest.Get("widgets").([]any)
+	for _, item := range widgets {
+		w, _ := item.(*goapi.Object)
+		if w == nil {
+			continue
+		}
+		if wid, _ := w.Get("id").(string); strings.TrimSpace(wid) == id {
+			kind, _ := w.Get("type").(string)
+			return strings.ToLower(strings.TrimSpace(kind)) == "terminal", nil
+		}
+	}
+	return false, nil
 }
 
 // toggled is the answer of the gateway switch.
