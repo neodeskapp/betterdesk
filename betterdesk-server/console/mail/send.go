@@ -164,6 +164,12 @@ func failedTest(message string) TestResult { return TestResult{Error: &message} 
 // the test reads no other service's banner.
 const noSMTPGreeting = "Invalid greeting: the server did not answer as an SMTP server"
 
+// smtpReply is the start of an SMTP reply line: a code from 200 to 599,
+// then the end of the line, a space or a hyphen. A server that greets
+// with one (421 busy, 554 no service) greeted as a mail server, and the
+// test shows its reply.
+var smtpReply = regexp.MustCompile(`^[2-5][0-9]{2}([ -]|$)`)
+
 // TestConnection connects to the mail server of the configuration in use
 // and signs in, without sending anything. Without a configuration the
 // answer is the error "No SMTP configuration", and for a stored
@@ -181,7 +187,7 @@ func (s *Service) TestConnection(ctx context.Context) (TestResult, error) {
 	}
 	if err := s.opts.Transport.Verify(ctx, t.settings); err != nil {
 		var wire *smtpwire.Error
-		if errors.As(err, &wire) && wire.Code == "EPROTOCOL" && wire.Command == "CONN" && wire.Response != "" {
+		if errors.As(err, &wire) && wire.Code == "EPROTOCOL" && wire.Command == "CONN" && wire.Response != "" && !smtpReply.MatchString(wire.Response) {
 			s.log.Warn("SMTP test: the server did not greet as an SMTP server:", wire.Message)
 			return failedTest(noSMTPGreeting), nil
 		}

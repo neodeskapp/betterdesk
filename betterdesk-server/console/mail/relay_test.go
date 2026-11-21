@@ -52,6 +52,51 @@ func TestTheConnectionTestReadsNoOtherBanner(t *testing.T) {
 	}
 }
 
+// TestAMailServerRefusingAtTheGreetingIsShown: a mail server that greets
+// with an SMTP reply other than 220 (busy, or no service for the console)
+// greeted as an SMTP server, so the test answers with its reply as before;
+// only a greeting that is no SMTP reply gets the fixed text (BUGS RV37,
+// A84).
+func TestAMailServerRefusingAtTheGreetingIsShown(t *testing.T) {
+	for greeting, want := range map[string]string{
+		"421 busy":                             "Invalid greeting. response=421 busy: 421 busy",
+		"554 5.7.1 no service for 10.0.0.9":    "Invalid greeting. response=554 5.7.1 no service for 10.0.0.9: 554 5.7.1 no service for 10.0.0.9",
+		"+OK POP3 server ready <1896.69@host>": noSMTPGreeting,
+		"* OK IMAP4rev1 ready":                 noSMTPGreeting,
+		"200":                                  "Invalid greeting. response=200: 200",
+		"2000 not a reply":                     noSMTPGreeting,
+		"100 no SMTP code":                     noSMTPGreeting,
+	} {
+		listener, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		go func() {
+			for {
+				conn, err := listener.Accept()
+				if err != nil {
+					return
+				}
+				_, _ = conn.Write([]byte(greeting + "\r\n"))
+				time.AfterFunc(2*time.Second, func() { _ = conn.Close() })
+			}
+		}()
+		port := listener.Addr().(*net.TCPAddr).Port
+		db := storetest.Migrated(t)
+		s := New(Options{DB: db, Transport: &SMTP{}, Logger: &logLines{}, Getenv: func(string) string { return "" }})
+		storeConfig(t, db, `{"host":"127.0.0.1","port":`+strconv.Itoa(port)+`}`)
+		result, err := s.TestConnection(context.Background())
+		if err != nil || result.Success || result.Error == nil || *result.Error != want {
+			got := "<none>"
+			if result.Error != nil {
+				got = *result.Error
+			}
+			t.Errorf("greeting %q: %v, %q, %v; want the error %q", greeting, result.Success, got, err, want)
+		}
+		listener.Close()
+	}
+}
+
 // TestNoRelayOnALinkLocalOrMetadataAddress: the SMTP transport connects
 // to no link-local address and none of the cloud metadata services, also
 // when they are written inside an IPv6 address; loopback, the unspecified
