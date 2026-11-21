@@ -279,3 +279,48 @@ func TestConfigHelpers(t *testing.T) {
 		t.Error("RelayTLSEnabled should be true")
 	}
 }
+
+// A client that sends nothing must not hold up the accept of the next one:
+// the wait for the first byte runs beside the accept loop.
+func TestDualModeListenerSilentConnectionsDoNotDelayAccept(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	dualLn := NewDualModeListener(ln, &tls.Config{})
+	defer dualLn.Close()
+
+	for i := 0; i < 5; i++ {
+		silent, err := net.Dial("tcp", ln.Addr().String())
+		if err != nil {
+			t.Fatalf("dial silent: %v", err)
+		}
+		defer silent.Close()
+	}
+	start := time.Now()
+	speaker, err := net.Dial("tcp", ln.Addr().String())
+	if err != nil {
+		t.Fatalf("dial speaker: %v", err)
+	}
+	defer speaker.Close()
+	speaker.Write([]byte("hello"))
+
+	for {
+		conn, err := dualLn.Accept()
+		if err != nil {
+			t.Fatalf("accept: %v", err)
+		}
+		defer conn.Close()
+		conn.SetReadDeadline(time.Now().Add(20 * time.Millisecond))
+		buf := make([]byte, 8)
+		if n, _ := conn.Read(buf); string(buf[:n]) == "hello" {
+			break
+		}
+		if time.Since(start) > 2*time.Second {
+			t.Fatal("the speaking client was never accepted")
+		}
+	}
+	if elapsed := time.Since(start); elapsed > 300*time.Millisecond {
+		t.Fatalf("the speaking client was accepted after %s, behind the silent ones", elapsed)
+	}
+}
