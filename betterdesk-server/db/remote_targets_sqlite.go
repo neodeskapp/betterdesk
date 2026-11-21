@@ -44,7 +44,7 @@ func (s *SQLiteDB) CreateRemoteTarget(target *RemoteTarget) error {
 		target.ID, target.OrgID, target.Name, target.Protocol, target.Platform,
 		target.Host, target.Port, target.Username, target.CredentialMode,
 		target.CredentialCiphertext, target.CredentialNonce, target.CredentialKeyID,
-		target.TLSMode, target.CertFingerprint, target.Enabled, target.LastTestAt,
+		target.TLSMode, target.CertFingerprint, target.Enabled, formatSQLiteTimePtr(target.LastTestAt),
 		target.LastTestStatus, target.LastTestError, target.CreatedBy,
 	)
 	return err
@@ -104,7 +104,7 @@ func (s *SQLiteDB) UpdateRemoteTarget(target *RemoteTarget) error {
 		target.OrgID, target.Name, target.Protocol, target.Platform, target.Host,
 		target.Port, target.Username, target.CredentialMode,
 		target.CredentialCiphertext, target.CredentialNonce, target.CredentialKeyID,
-		target.TLSMode, target.CertFingerprint, target.Enabled, target.LastTestAt,
+		target.TLSMode, target.CertFingerprint, target.Enabled, formatSQLiteTimePtr(target.LastTestAt),
 		target.LastTestStatus, target.LastTestError, target.ID,
 	)
 	return err
