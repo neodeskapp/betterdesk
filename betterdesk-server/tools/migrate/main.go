@@ -17,6 +17,9 @@
 //	./migrate -mode nodejs2go -src /opt/betterdesk/data/db_v2.sqlite3 -node-auth /opt/betterdesk/data/auth.sqlite3
 //	./migrate -mode nodejs2go -src db_v2.sqlite3 -node-auth auth.sqlite3 -dst postgres://user:pass@host/db
 //	./migrate -mode backup    -src db_v2.sqlite3
+//
+// An existing SQLite file at -dst is replaced only with -overwrite, and
+// never when it is one of the sources.
 package main
 
 import (
@@ -74,6 +77,7 @@ func main() {
 	dst := flag.String("dst", "", "Destination: SQLite file path or postgres:// DSN (default: auto)")
 	nodeAuth := flag.String("node-auth", "", "Path to Node.js auth.sqlite3 (nodejs2go mode)")
 	backupOnly := flag.Bool("backup-only", false, "Create backup only (legacy flag, same as -mode backup)")
+	overwrite := flag.Bool("overwrite", false, "Replace an existing SQLite file at -dst")
 	flag.Parse()
 
 	// Legacy compatibility: -src without -mode assumes rust2go
@@ -85,34 +89,37 @@ func main() {
 		}
 	}
 
+	var err error
 	switch *mode {
 	case "rust2go":
-		runRust2Go(*src, *dst)
+		err = runRust2Go(*src, *dst, *overwrite)
 	case "sqlite2pg":
-		runSQLite2PG(*src, *dst)
+		err = runSQLite2PG(*src, *dst)
 	case "pg2sqlite":
-		runPG2SQLite(*src, *dst)
+		err = runPG2SQLite(*src, *dst, *overwrite)
 	case "nodejs2go":
-		runNodeJS2Go(*src, *nodeAuth, *dst)
+		err = runNodeJS2Go(*src, *nodeAuth, *dst, *overwrite)
 	case "backup":
 		if *src == "" {
 			log.Fatal("Usage: migrate -mode backup -src <path>")
 		}
-		bp, err := createBackup(*src)
-		if err != nil {
-			log.Fatalf("Backup failed: %v", err)
+		var bp string
+		if bp, err = createBackup(*src); err == nil {
+			log.Printf("Backup created: %s", bp)
 		}
-		log.Printf("Backup created: %s", bp)
 	default:
 		printUsage()
 		os.Exit(1)
+	}
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
 func printUsage() {
 	fmt.Println("BetterDesk Database Migration Tool")
 	fmt.Println()
-	fmt.Println("Usage: migrate -mode <mode> -src <source> [-dst <dest>] [options]")
+	fmt.Println("Usage: migrate -mode <mode> -src <source> [-dst <dest>] [-overwrite] [options]")
 	fmt.Println()
 	fmt.Println("Modes:")
 	fmt.Println("  rust2go   - Migrate Rust hbbs-patch-v2 → BetterDesk Go schema")
@@ -120,6 +127,9 @@ func printUsage() {
 	fmt.Println("  pg2sqlite - Migrate PostgreSQL → BetterDesk Go SQLite")
 	fmt.Println("  nodejs2go - Migrate Node.js console → BetterDesk Go schema")
 	fmt.Println("  backup    - Create timestamped backup of a SQLite file")
+	fmt.Println()
+	fmt.Println("A SQLite destination is written to a temporary file and renamed at the end.")
+	fmt.Println("An existing file at -dst is replaced only with -overwrite; a source is never.")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  ./migrate -mode rust2go   -src /opt/rustdesk/db_v2.sqlite3")
@@ -137,40 +147,47 @@ func isPG(dsn string) bool {
 
 // ── Mode: rust2go ─────────────────────────────────────────────────────
 
-func runRust2Go(srcPath, dstPath string) {
+func runRust2Go(srcPath, dstPath string, overwrite bool) error {
 	if srcPath == "" {
-		log.Fatal("Usage: migrate -mode rust2go -src <rust-db-path> [-dst <dest>]")
+		return errors.New("usage: migrate -mode rust2go -src <rust-db-path> [-dst <dest>] [-overwrite]")
 	}
-	requireFile(srcPath)
+	if err := requireFile(srcPath); err != nil {
+		return err
+	}
+	if dstPath == "" {
+		dstPath = filepath.Join(filepath.Dir(srcPath), "betterdesk.sqlite3")
+	}
+	if !isPG(dstPath) {
+		if err := checkSQLiteDst(dstPath, overwrite, srcPath); err != nil {
+			return err
+		}
+	}
 	bp, err := createBackup(srcPath)
 	if err != nil {
-		log.Fatalf("Backup failed: %v", err)
+		return err
 	}
 	log.Printf("Backup created: %s", bp)
 
 	peers, err := readRustDB(srcPath)
 	if err != nil {
-		log.Fatalf("Failed to read source database: %v", err)
+		return fmt.Errorf("read source database: %w", err)
 	}
 	log.Printf("Read %d peers from Rust database", len(peers))
-
-	if dstPath == "" {
-		dstPath = filepath.Join(filepath.Dir(srcPath), "betterdesk.sqlite3")
-	}
 
 	if isPG(dstPath) {
 		count, err := writeRustPeersPG(dstPath, peers)
 		if err != nil {
-			log.Fatalf("Failed to write to PostgreSQL: %v", err)
+			return fmt.Errorf("write to PostgreSQL: %w", err)
 		}
 		log.Printf("Migration complete: %d peers → PostgreSQL", count)
-	} else {
-		count, err := writeRustPeersSQLite(dstPath, peers)
-		if err != nil {
-			log.Fatalf("Failed to write to SQLite: %v", err)
-		}
-		log.Printf("Migration complete: %d peers → %s", count, dstPath)
+		return nil
 	}
+	count, err := writeRustPeersSQLite(dstPath, overwrite, peers)
+	if err != nil {
+		return fmt.Errorf("write to SQLite: %w", err)
+	}
+	log.Printf("Migration complete: %d peers → %s", count, dstPath)
+	return nil
 }
 
 // readRustDB reads all peers from the old Rust hbbs-patch-v2 database.
@@ -246,21 +263,15 @@ func readRustDB(path string) ([]rustPeer, error) {
 	return peers, rows.Err()
 }
 
-// writeRustPeersSQLite writes Rust peers to a BetterDesk Go SQLite database.
-func writeRustPeersSQLite(path string, peers []rustPeer) (int, error) {
-	os.Remove(path)
-	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?_journal_mode=WAL&_busy_timeout=5000", path))
-	if err != nil {
-		return 0, fmt.Errorf("open destination: %w", err)
-	}
-	defer db.Close()
+// writeRustPeersSQLite writes Rust peers to a new BetterDesk Go SQLite
+// database at path.
+func writeRustPeersSQLite(path string, overwrite bool, peers []rustPeer) (int, error) {
+	return writeSQLiteFile(path, overwrite, func(db *sql.DB) (int, error) {
+		return copyRustPeers2SQLite(db, peers)
+	})
+}
 
-	for _, stmt := range sqliteSchemaStatements() {
-		if _, err := db.Exec(stmt); err != nil {
-			return 0, fmt.Errorf("migration: %w", err)
-		}
-	}
-
+func copyRustPeers2SQLite(db *sql.DB, peers []rustPeer) (int, error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return 0, err
@@ -355,37 +366,39 @@ func convertRustPeer(p rustPeer) (info peerInfo, uuid, status, user, lastOnline,
 
 // ── Mode: sqlite2pg ───────────────────────────────────────────────────
 
-func runSQLite2PG(srcPath, dstDSN string) {
+func runSQLite2PG(srcPath, dstDSN string) error {
 	if srcPath == "" || dstDSN == "" || !isPG(dstDSN) {
-		log.Fatal("Usage: migrate -mode sqlite2pg -src <sqlite-path> -dst <postgres://...>")
+		return errors.New("usage: migrate -mode sqlite2pg -src <sqlite-path> -dst <postgres://...>")
 	}
-	requireFile(srcPath)
+	if err := requireFile(srcPath); err != nil {
+		return err
+	}
 	bp, err := createBackup(srcPath)
 	if err != nil {
-		log.Fatalf("Backup failed: %v", err)
+		return err
 	}
 	log.Printf("Backup created: %s", bp)
 
 	srcDB, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=ro&_journal_mode=WAL", srcPath))
 	if err != nil {
-		log.Fatalf("Open source: %v", err)
+		return fmt.Errorf("open source: %w", err)
 	}
 	defer srcDB.Close()
 
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, dstDSN)
 	if err != nil {
-		log.Fatalf("Connect to PostgreSQL: %v", err)
+		return fmt.Errorf("connect to PostgreSQL: %w", err)
 	}
 	defer pool.Close()
 	if err := pool.Ping(ctx); err != nil {
-		log.Fatalf("PostgreSQL ping: %v", err)
+		return fmt.Errorf("ping PostgreSQL: %w", err)
 	}
 
 	log.Println("Creating PostgreSQL schema...")
 	for _, stmt := range pgSchemaStatements() {
 		if _, err := pool.Exec(ctx, stmt); err != nil {
-			log.Fatalf("Schema creation failed: %v", err)
+			return fmt.Errorf("create schema: %w", err)
 		}
 	}
 
@@ -399,7 +412,7 @@ func runSQLite2PG(srcPath, dstDSN string) {
 	if tableExists(srcDB, "peers") {
 		n, err := copyPeersSQLite2PG(ctx, srcDB, pool)
 		if err != nil {
-			log.Fatalf("Copy peers: %v", err)
+			return fmt.Errorf("copy peers: %w", err)
 		}
 		log.Printf("  peers: %d rows", n)
 		total += n
@@ -409,7 +422,7 @@ func runSQLite2PG(srcPath, dstDSN string) {
 	if tableExists(srcDB, "server_config") {
 		n, err := copyConfigSQLite2PG(ctx, srcDB, pool)
 		if err != nil {
-			log.Fatalf("Copy server_config: %v", err)
+			return fmt.Errorf("copy server_config: %w", err)
 		}
 		log.Printf("  server_config: %d rows", n)
 		total += n
@@ -419,7 +432,7 @@ func runSQLite2PG(srcPath, dstDSN string) {
 	if tableExists(srcDB, "id_change_history") {
 		n, err := copyIDHistorySQLite2PG(ctx, srcDB, pool)
 		if err != nil {
-			log.Fatalf("Copy id_change_history: %v", err)
+			return fmt.Errorf("copy id_change_history: %w", err)
 		}
 		log.Printf("  id_change_history: %d rows", n)
 		total += n
@@ -429,7 +442,7 @@ func runSQLite2PG(srcPath, dstDSN string) {
 	if tableExists(srcDB, "users") {
 		n, err := copyUsersSQLite2PG(ctx, srcDB, pool)
 		if err != nil {
-			log.Fatalf("Copy users: %v", err)
+			return fmt.Errorf("copy users: %w", err)
 		}
 		log.Printf("  users: %d rows", n)
 		total += n
@@ -439,13 +452,14 @@ func runSQLite2PG(srcPath, dstDSN string) {
 	if tableExists(srcDB, "api_keys") {
 		n, err := copyAPIKeysSQLite2PG(ctx, srcDB, pool)
 		if err != nil {
-			log.Fatalf("Copy api_keys: %v", err)
+			return fmt.Errorf("copy api_keys: %w", err)
 		}
 		log.Printf("  api_keys: %d rows", n)
 		total += n
 	}
 
 	log.Printf("Migration complete: %d total rows copied to PostgreSQL", total)
+	return nil
 }
 
 func copyPeersSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int, error) {
@@ -622,79 +636,50 @@ func copyAPIKeysSQLite2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (
 
 // ── Mode: pg2sqlite ───────────────────────────────────────────────────
 
-func runPG2SQLite(srcDSN, dstPath string) {
+func runPG2SQLite(srcDSN, dstPath string, overwrite bool) error {
 	if srcDSN == "" || !isPG(srcDSN) || dstPath == "" {
-		log.Fatal("Usage: migrate -mode pg2sqlite -src <postgres://...> -dst <sqlite-path>")
+		return errors.New("usage: migrate -mode pg2sqlite -src <postgres://...> -dst <sqlite-path> [-overwrite]")
+	}
+	if err := checkSQLiteDst(dstPath, overwrite); err != nil {
+		return err
 	}
 
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, srcDSN)
 	if err != nil {
-		log.Fatalf("Connect to PostgreSQL: %v", err)
+		return fmt.Errorf("connect to PostgreSQL: %w", err)
 	}
 	defer pool.Close()
 	if err := pool.Ping(ctx); err != nil {
-		log.Fatalf("PostgreSQL ping: %v", err)
+		return fmt.Errorf("ping PostgreSQL: %w", err)
 	}
 
-	// Create fresh SQLite
-	os.Remove(dstPath)
-	dstDB, err := sql.Open("sqlite", fmt.Sprintf("file:%s?_journal_mode=WAL&_busy_timeout=5000", dstPath))
-	if err != nil {
-		log.Fatalf("Open SQLite: %v", err)
-	}
-	defer dstDB.Close()
-
-	log.Println("Creating SQLite schema...")
-	for _, stmt := range sqliteSchemaStatements() {
-		if _, err := dstDB.Exec(stmt); err != nil {
-			log.Fatalf("Schema creation failed: %v", err)
+	total, err := writeSQLiteFile(dstPath, overwrite, func(dstDB *sql.DB) (int, error) {
+		var total int
+		for _, step := range []struct {
+			table string
+			copy  func(context.Context, *pgxpool.Pool, *sql.DB) (int, error)
+		}{
+			{"peers", copyPeersPG2SQLite},
+			{"server_config", copyConfigPG2SQLite},
+			{"id_change_history", copyIDHistoryPG2SQLite},
+			{"users", copyUsersPG2SQLite},
+			{"api_keys", copyAPIKeysPG2SQLite},
+		} {
+			n, err := step.copy(ctx, pool, dstDB)
+			if err != nil {
+				return total, fmt.Errorf("copy %s: %w", step.table, err)
+			}
+			log.Printf("  %s: %d rows", step.table, n)
+			total += n
 		}
-	}
-
-	var total int
-
-	// Copy peers
-	n, err := copyPeersPG2SQLite(ctx, pool, dstDB)
+		return total, nil
+	})
 	if err != nil {
-		log.Fatalf("Copy peers: %v", err)
+		return err
 	}
-	log.Printf("  peers: %d rows", n)
-	total += n
-
-	// Copy server_config
-	n, err = copyConfigPG2SQLite(ctx, pool, dstDB)
-	if err != nil {
-		log.Fatalf("Copy server_config: %v", err)
-	}
-	log.Printf("  server_config: %d rows", n)
-	total += n
-
-	// Copy id_change_history
-	n, err = copyIDHistoryPG2SQLite(ctx, pool, dstDB)
-	if err != nil {
-		log.Fatalf("Copy id_change_history: %v", err)
-	}
-	log.Printf("  id_change_history: %d rows", n)
-	total += n
-
-	// Copy users
-	n, err = copyUsersPG2SQLite(ctx, pool, dstDB)
-	if err != nil {
-		log.Fatalf("Copy users: %v", err)
-	}
-	log.Printf("  users: %d rows", n)
-	total += n
-
-	// Copy api_keys
-	n, err = copyAPIKeysPG2SQLite(ctx, pool, dstDB)
-	if err != nil {
-		log.Fatalf("Copy api_keys: %v", err)
-	}
-	log.Printf("  api_keys: %d rows", n)
-	total += n
-
 	log.Printf("Migration complete: %d total rows copied to %s", total, dstPath)
+	return nil
 }
 
 func copyPeersPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (int, error) {
@@ -893,60 +878,63 @@ func copyAPIKeysPG2SQLite(ctx context.Context, src *pgxpool.Pool, dst *sql.DB) (
 
 // ── Mode: nodejs2go ───────────────────────────────────────────────────
 
-func runNodeJS2Go(srcPeerPath, srcAuthPath, dstPath string) {
+func runNodeJS2Go(srcPeerPath, srcAuthPath, dstPath string, overwrite bool) error {
 	if srcPeerPath == "" {
-		log.Fatal("Usage: migrate -mode nodejs2go -src <peer-db> [-node-auth <auth-db>] [-dst <dest>]")
+		return errors.New("usage: migrate -mode nodejs2go -src <peer-db> [-node-auth <auth-db>] [-dst <dest>] [-overwrite]")
 	}
-	requireFile(srcPeerPath)
+	if err := requireFile(srcPeerPath); err != nil {
+		return err
+	}
+	if srcAuthPath != "" {
+		if err := requireFile(srcAuthPath); err != nil {
+			return err
+		}
+	}
+	if dstPath == "" {
+		dstPath = filepath.Join(filepath.Dir(srcPeerPath), "betterdesk.sqlite3")
+	}
+	if !isPG(dstPath) {
+		sources := []string{srcPeerPath}
+		if srcAuthPath != "" {
+			sources = append(sources, srcAuthPath)
+		}
+		if err := checkSQLiteDst(dstPath, overwrite, sources...); err != nil {
+			return err
+		}
+	}
 
 	bp, err := createBackup(srcPeerPath)
 	if err != nil {
-		log.Fatalf("Backup failed: %v", err)
+		return err
 	}
 	log.Printf("Peer DB backup: %s", bp)
-
 	if srcAuthPath != "" {
-		requireFile(srcAuthPath)
 		bp, err = createBackup(srcAuthPath)
 		if err != nil {
-			log.Fatalf("Backup failed: %v", err)
+			return err
 		}
 		log.Printf("Auth DB backup: %s", bp)
-	}
-
-	if dstPath == "" {
-		dstPath = filepath.Join(filepath.Dir(srcPeerPath), "betterdesk.sqlite3")
 	}
 
 	if isPG(dstPath) {
 		total, err := migrateNodeJS2PG(srcPeerPath, srcAuthPath, dstPath)
 		if err != nil {
-			log.Fatalf("Migration failed: %v", err)
+			return fmt.Errorf("migration failed: %w", err)
 		}
 		log.Printf("Migration complete: %d total rows → PostgreSQL", total)
-	} else {
-		total, err := migrateNodeJS2SQLite(srcPeerPath, srcAuthPath, dstPath)
-		if err != nil {
-			log.Fatalf("Migration failed: %v", err)
-		}
-		log.Printf("Migration complete: %d total rows → %s", total, dstPath)
+		return nil
 	}
+	total, err := writeSQLiteFile(dstPath, overwrite, func(dstDB *sql.DB) (int, error) {
+		return migrateNodeJS2SQLite(srcPeerPath, srcAuthPath, dstDB)
+	})
+	if err != nil {
+		return fmt.Errorf("migration failed: %w", err)
+	}
+	log.Printf("Migration complete: %d total rows → %s", total, dstPath)
+	return nil
 }
 
-func migrateNodeJS2SQLite(srcPeerPath, srcAuthPath, dstPath string) (int, error) {
-	os.Remove(dstPath)
-	dstDB, err := sql.Open("sqlite", fmt.Sprintf("file:%s?_journal_mode=WAL&_busy_timeout=5000", dstPath))
-	if err != nil {
-		return 0, err
-	}
-	defer dstDB.Close()
-
-	for _, stmt := range sqliteSchemaStatements() {
-		if _, err := dstDB.Exec(stmt); err != nil {
-			return 0, fmt.Errorf("schema: %w", err)
-		}
-	}
-
+func migrateNodeJS2SQLite(srcPeerPath, srcAuthPath string, dstDB *sql.DB) (int, error) {
 	total := 0
 
 	// Migrate Node.js peer table → Go peers table
@@ -1629,11 +1617,136 @@ func writeBackup(srcPath, backupPath string, perm os.FileMode) error {
 	return os.Chmod(backupPath, perm)
 }
 
-// requireFile verifies that a local file exists.
-func requireFile(path string) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		log.Fatalf("File not found: %s", path)
+// sqliteSidecars are the files SQLite keeps next to a database. Left next
+// to a new file of the same name, SQLite would apply them to it.
+var sqliteSidecars = []string{"-wal", "-shm", "-journal"}
+
+// checkSQLiteDst refuses a SQLite destination that is one of the sources,
+// under any spelling. Unless overwrite is set it also refuses one that
+// exists, or that has a -wal, -shm or -journal of an earlier database next
+// to it.
+func checkSQLiteDst(dstPath string, overwrite bool, srcPaths ...string) error {
+	dstInfo, err := os.Stat(dstPath)
+	if errors.Is(err, fs.ErrNotExist) {
+		if overwrite {
+			return nil
+		}
+		for _, suffix := range sqliteSidecars {
+			if _, err := os.Stat(dstPath + suffix); err == nil {
+				return fmt.Errorf("%s exists, from an earlier database: pass -overwrite to remove it", dstPath+suffix)
+			}
+		}
+		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("destination: %w", err)
+	}
+	for _, src := range srcPaths {
+		if srcInfo, err := os.Stat(src); err == nil && os.SameFile(srcInfo, dstInfo) {
+			return fmt.Errorf("-dst %s is the source %s: write to a new file", dstPath, src)
+		}
+	}
+	if !dstInfo.Mode().IsRegular() {
+		return fmt.Errorf("-dst %s is not a regular file", dstPath)
+	}
+	if !overwrite {
+		return fmt.Errorf("-dst %s exists: pass -overwrite to replace it", dstPath)
+	}
+	return nil
+}
+
+// writeSQLiteFile builds a new SQLite database for dstPath under a
+// temporary name in the same folder: the tool's schema, then fill. Only
+// when every step succeeded does it take dstPath's place, after the -wal,
+// -shm and -journal of the database there are removed. On a failure
+// dstPath is left as it was. A replaced file keeps its mode; a new one
+// gets 0600, as it holds password hashes.
+func writeSQLiteFile(dstPath string, overwrite bool, fill func(*sql.DB) (int, error)) (int, error) {
+	perm := os.FileMode(0o600)
+	if info, err := os.Stat(dstPath); err == nil {
+		perm = info.Mode().Perm()
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(dstPath), filepath.Base(dstPath)+".migrate-*")
+	if err != nil {
+		return 0, fmt.Errorf("create temporary file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	placed := false
+	defer func() {
+		if !placed {
+			_ = os.Remove(tmpPath)
+			_ = os.Remove(tmpPath + "-journal")
+		}
+	}()
+	if err := tmp.Close(); err != nil {
+		return 0, err
+	}
+
+	n, err := fillSQLite(tmpPath, fill)
+	if err != nil {
+		return n, err
+	}
+	if err := syncFile(tmpPath, perm); err != nil {
+		return n, err
+	}
+	if overwrite {
+		for _, suffix := range sqliteSidecars {
+			if err := os.Remove(dstPath + suffix); err != nil && !errors.Is(err, fs.ErrNotExist) {
+				return n, err
+			}
+		}
+	}
+	if err := os.Rename(tmpPath, dstPath); err != nil {
+		return n, err
+	}
+	placed = true
+	return n, nil
+}
+
+// fillSQLite creates the tool's schema in the SQLite file at path and runs
+// fill on it. The file stays in rollback-journal mode, so after Close it
+// is one file.
+func fillSQLite(path string, fill func(*sql.DB) (int, error)) (int, error) {
+	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?_pragma=busy_timeout(5000)", path))
+	if err != nil {
+		return 0, fmt.Errorf("open destination: %w", err)
+	}
+	n, err := func() (int, error) {
+		for _, stmt := range sqliteSchemaStatements() {
+			if _, err := db.Exec(stmt); err != nil {
+				return 0, fmt.Errorf("create schema: %w", err)
+			}
+		}
+		return fill(db)
+	}()
+	if cerr := db.Close(); err == nil && cerr != nil {
+		err = fmt.Errorf("close destination: %w", cerr)
+	}
+	return n, err
+}
+
+// syncFile gives the file at path mode perm and syncs it to disk.
+func syncFile(path string, perm os.FileMode) error {
+	f, err := os.OpenFile(path, os.O_RDWR, 0)
+	if err != nil {
+		return err
+	}
+	err = f.Chmod(perm)
+	if err == nil {
+		err = f.Sync()
+	}
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	return err
+}
+
+// requireFile verifies that a local file exists.
+func requireFile(path string) error {
+	if _, err := os.Stat(path); err != nil {
+		return fmt.Errorf("source: %w", err)
+	}
+	return nil
 }
 
 // detectSQLiteSchema returns the detected schema type of a SQLite database.
