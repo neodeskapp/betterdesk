@@ -112,8 +112,9 @@ func valueText(v any) string {
 // ---- catalog ----
 
 // catalog is everything the database knows about its tables, one entry per
-// table, column, index, constraint and sequence. Keys are
-// "<kind>:<table>.<name>".
+// table, column, index, constraint, sequence and trigger, and on PostgreSQL
+// one per function. Keys are "<kind>:<table>.<name>", "function:<name>"
+// for a function.
 type catalog map[string]string
 
 func entryTable(key string) string {
@@ -273,6 +274,9 @@ func readSQLiteCatalog(t *testing.T, db *store.DB) catalog {
 		parts := strings.Split(heads[id], "|")
 		c["fk:"+parts[0]+".("+strings.Join(f.from, ",")+")"] = fmt.Sprintf("references %s(%s) %s", parts[1], strings.Join(f.to, ","), parts[2])
 	}
+	for _, r := range queryStrings(t, db, `SELECT tbl_name, name, sql FROM sqlite_master WHERE type = 'trigger'`) {
+		c["trigger:"+r[0]+"."+r[1]] = r[2]
+	}
 	return c
 }
 
@@ -317,6 +321,21 @@ func readPostgresCatalog(t *testing.T, db *store.DB) catalog {
 		LEFT JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = d.refobjsubid
 		WHERE s.schemaname = current_schema()`) {
 		c["sequence:"+r[0]+"."+r[1]] = fmt.Sprintf("type=%s start=%s min=%s max=%s increment=%s cycle=%s owned by column %s", r[2], r[3], r[4], r[5], r[6], r[7], r[8])
+	}
+	for _, r := range queryStrings(t, db, `
+		SELECT c.relname, tg.tgname, pg_get_triggerdef(tg.oid)
+		FROM pg_trigger tg
+		JOIN pg_class c ON c.oid = tg.tgrelid
+		JOIN pg_namespace n ON n.oid = c.relnamespace
+		WHERE n.nspname = current_schema() AND NOT tg.tgisinternal`) {
+		c["trigger:"+r[0]+"."+r[1]] = strings.ReplaceAll(r[2], " ON "+schema+".", " ON ")
+	}
+	for _, r := range queryStrings(t, db, `
+		SELECT p.proname, pg_get_functiondef(p.oid)
+		FROM pg_proc p
+		JOIN pg_namespace n ON n.oid = p.pronamespace
+		WHERE n.nspname = current_schema()`) {
+		c["function:"+r[0]] = strings.ReplaceAll(r[1], schema+".", "")
 	}
 	return c
 }

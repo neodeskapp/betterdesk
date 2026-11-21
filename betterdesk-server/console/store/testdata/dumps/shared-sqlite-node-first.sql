@@ -2,6 +2,7 @@
 -- Worktree betterdesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
 -- sqlite3 <file> .schema  (SQLite 3 CLI of the dev image, statements in creation order, text as stored in sqlite_master)
 -- Do not edit: regenerate (see data.md, section "How the schema dumps were produced").
+-- users.credentials_changed_at and the trigger users_credentials_changed (with its function on PostgreSQL) added on 2026-11-21 in the text the signal server's Migrate creates since RV181, at the place a regenerated dump has them; the Node console's part is unchanged.
 
 CREATE TABLE peer (
                 id TEXT PRIMARY KEY,
@@ -344,7 +345,7 @@ CREATE TABLE users (
                 totp_secret TEXT DEFAULT NULL,
                 totp_enabled INTEGER DEFAULT 0,
                 totp_recovery_codes TEXT DEFAULT NULL
-            , first_name TEXT DEFAULT '', last_name TEXT DEFAULT '', email TEXT DEFAULT '', phone TEXT DEFAULT '', role_display TEXT DEFAULT '', avatar_url TEXT DEFAULT '', guid TEXT DEFAULT '', is_server_admin INTEGER DEFAULT 0);
+            , first_name TEXT DEFAULT '', last_name TEXT DEFAULT '', email TEXT DEFAULT '', phone TEXT DEFAULT '', role_display TEXT DEFAULT '', avatar_url TEXT DEFAULT '', guid TEXT DEFAULT '', is_server_admin INTEGER DEFAULT 0, credentials_changed_at INTEGER DEFAULT NULL);
 CREATE TABLE audit_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER,
@@ -1061,3 +1062,12 @@ CREATE INDEX idx_peers_banned ON peers(banned);
 CREATE INDEX idx_peers_soft_deleted ON peers(soft_deleted);
 CREATE INDEX idx_peers_linked_peer ON peers(linked_peer_id);
 CREATE INDEX idx_peer_metrics_peer_created ON peer_metrics(peer_id, created_at DESC);
+CREATE TRIGGER users_credentials_changed
+	AFTER UPDATE OF password_hash, totp_secret, totp_enabled ON users
+	FOR EACH ROW
+	WHEN OLD.password_hash IS NOT NEW.password_hash
+		OR OLD.totp_enabled IS NOT NEW.totp_enabled
+		OR (OLD.totp_secret IS NOT NEW.totp_secret AND COALESCE(NEW.totp_enabled, 0) NOT IN (0, '0', 'false', ''))
+	BEGIN
+		UPDATE users SET credentials_changed_at = CAST(strftime('%s', 'now') AS INTEGER) WHERE id = NEW.id;
+	END;

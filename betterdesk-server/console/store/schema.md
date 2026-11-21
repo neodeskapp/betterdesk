@@ -305,11 +305,20 @@ What `Migrate` adds to a database the signal server set up first:
   creates folders, the group member and access tables and `peer_sysinfo`).
 
 Checked in both start orders on both databases: the catalog (tables, columns
-with type, nullability and default, keys, constraints, indexes, sequences, on
-SQLite the stored statement text) equals the one in the dumps taken from a
-real Node console and signal server (`testdata/dumps/shared-*.sql`), with no
-difference besides `panel_sessions`. With the build tag `nodeschema` the
-comparison runs against the real Node console.
+with type, nullability and default, keys, constraints, indexes, sequences,
+triggers, on PostgreSQL functions, on SQLite the stored statement text)
+equals the one in the dumps taken from a real Node console and signal server
+(`testdata/dumps/shared-*.sql`), with no difference besides `panel_sessions`.
+With the build tag `nodeschema` the comparison runs against the real Node
+console.
+
+The signal server gives `users` the column `credentials_changed_at` and the
+trigger `users_credentials_changed` that stamps it when the password or the
+second factor changes (RV181): in its `CREATE TABLE` when it starts first, by
+`ALTER TABLE` when the console made the table. The dumps carry both in the
+text the signal server creates, added by hand on 2026-11-21 since the Node
+console no longer runs. `TestCredentialsChangedAtInEveryOrigin` checks the
+column and the trigger on every origin after both migrations.
 
 Known limits of the two shapes, not changed here (BUGS.md D5): the signal
 server cannot use an `address_books` table in the console's SQLite shape;
@@ -499,7 +508,7 @@ from JavaScript's by the hour that is skipped or repeated.
 | File | What it checks |
 |---|---|
 | `schema_test.go` | a fresh database equals the Node dump; a Node database is left alone; a second run changes nothing |
-| `shared_test.go` | both start orders with the signal server equal the shared dumps; both sides read and write users, device groups, strategies, address books and audit rows |
+| `shared_test.go` | both start orders with the signal server equal the shared dumps; both sides read and write users, device groups, strategies, address books and audit rows; every origin has `users.credentials_changed_at` and its trigger after both migrations |
 | `old_test.go` | the schemas of 3.0.0, 3.4.0 and 3.5.200 with rows upgrade to the current one |
 | `steps_test.go` | every column step, the token hashes, slugs, product types, default groups, two migrations at once, the PostgreSQL lock, the log lines, failing steps, this file's step tables |
 | `shape_test.go` | the shape of every variant: console first, signal server first, Node first, the four shared dumps, the signal server alone; what the Go drivers return |

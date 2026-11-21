@@ -2,6 +2,7 @@
 -- Worktree betterdesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
 -- pg_dump --schema-only --no-owner --no-privileges --no-comments  (PostgreSQL 16)
 -- Do not edit: regenerate (see data.md, section "How the schema dumps were produced").
+-- users.credentials_changed_at and the trigger users_credentials_changed (with its function on PostgreSQL) added on 2026-11-21 in the text the signal server's Migrate creates since RV181, at the place a regenerated dump has them; the Node console's part is unchanged.
 
 --
 -- PostgreSQL database dump
@@ -22,6 +23,25 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- Name: users_credentials_changed(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.users_credentials_changed() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+	BEGIN
+		IF NEW.password_hash IS DISTINCT FROM OLD.password_hash
+			OR NEW.totp_enabled IS DISTINCT FROM OLD.totp_enabled
+			OR (NEW.totp_secret IS DISTINCT FROM OLD.totp_secret
+				AND COALESCE(NEW.totp_enabled::text, '') NOT IN ('', '0', 'false', 'f')) THEN
+			NEW.credentials_changed_at := FLOOR(EXTRACT(EPOCH FROM NOW()))::bigint;
+		END IF;
+		RETURN NEW;
+	END
+	$$;
+
 
 SET default_tablespace = '';
 
@@ -2468,7 +2488,8 @@ CREATE TABLE public.users (
     phone text DEFAULT ''::text,
     role_display text DEFAULT ''::text,
     avatar_url text DEFAULT ''::text,
-    is_server_admin boolean DEFAULT false NOT NULL
+    is_server_admin boolean DEFAULT false NOT NULL,
+    credentials_changed_at bigint
 );
 
 
@@ -4415,6 +4436,13 @@ CREATE INDEX idx_token_lookup ON public.access_tokens USING btree (token) WHERE 
 --
 
 CREATE INDEX idx_user_peer_grants_user ON public.user_peer_grants USING btree (user_id);
+
+
+--
+-- Name: users users_credentials_changed; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER users_credentials_changed BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.users_credentials_changed();
 
 
 --

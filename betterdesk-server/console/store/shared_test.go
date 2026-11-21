@@ -1,7 +1,9 @@
 package store_test
 
 import (
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -56,6 +58,58 @@ func TestSharedDatabaseStartOrders(t *testing.T) {
 			})
 		})
 	}
+}
+
+// Whoever made the users table, the signal server's migration gives it
+// credentials_changed_at and the trigger that stamps it, and the console's
+// migration before or after it leaves both alone: a password or second
+// factor the console changes ends the account's API tokens (RV181).
+func TestCredentialsChangedAtInEveryOrigin(t *testing.T) {
+	storetest.EachOrigin(t, func(t *testing.T, db *store.DB, origin storetest.Origin) {
+		storetest.GoServerMigrate(t, db)
+		mustMigrate(t, db)
+		ctx := testContext(t)
+		shape, err := db.Inspect(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		col := shape.Table("users").Column("credentials_changed_at")
+		want := store.TypeInteger
+		if db.IsPostgres() {
+			want = store.TypeBigInt
+		}
+		if col.Type != want || col.NotNull {
+			t.Fatalf("users.credentials_changed_at = %+v, want a nullable %s", col, want)
+		}
+
+		mustExec(t, db, `INSERT INTO users (username, password_hash, role, auth_provider) VALUES (?, ?, ?, ?)`,
+			"cred-console", "hash-1", "operator", "local")
+		changedAt := func() string {
+			t.Helper()
+			return queryStrings(t, db, `SELECT credentials_changed_at FROM users WHERE username = ?`, "cred-console")[0][0]
+		}
+		stamped := func(what, stmt string, args ...any) {
+			t.Helper()
+			mustExec(t, db, `UPDATE users SET credentials_changed_at = NULL WHERE username = ?`, "cred-console")
+			before := time.Now().Unix()
+			mustExec(t, db, stmt, args...)
+			got, err := strconv.ParseInt(changedAt(), 10, 64)
+			if err != nil || got < before || got > time.Now().Unix() {
+				t.Errorf("%s: credentials changed at %q, want the time of the update", what, changedAt())
+			}
+		}
+
+		if got := changedAt(); got != "NULL" {
+			t.Errorf("new account: credentials changed at %s, want NULL", got)
+		}
+		mustExec(t, db, `UPDATE users SET role = ? WHERE username = ?`, "viewer", "cred-console")
+		if got := changedAt(); got != "NULL" {
+			t.Errorf("role change: credentials changed at %s, want NULL", got)
+		}
+		stamped("password change", `UPDATE users SET password_hash = ? WHERE username = ?`, "hash-2", "cred-console")
+		stamped("second factor on", `UPDATE users SET totp_secret = ?, totp_enabled = ? WHERE username = ?`,
+			"SECRET", store.BoolArg(shape.Table("users").Type("totp_enabled"), true), "cred-console")
+	})
 }
 
 // sharedTableOperations writes and reads a user, a device group, a
