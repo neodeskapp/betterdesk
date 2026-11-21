@@ -441,13 +441,7 @@ func main() {
 			return blocklist.LoadFromFile(cfg.BlocklistFile)
 		})
 	}
-	reloadHandler.OnReload(func() error {
-		log.Printf("[reload] Reloading configuration from environment")
-		cfg.LoadEnv()
-		applyPersistedTimeSyncConfig(cfg, database)
-		applyPersistedConnectionSettings(cfg, database)
-		return nil
-	})
+	reloadHandler.OnReload(func() error { return reloadEnvConfig(cfg, database) })
 
 	// Initialize admin TCP interface
 	adminSrv := admin.New(cfg, database, nil, Version) // peer map set per mode
@@ -739,6 +733,21 @@ func main() {
 	}
 	cancel()
 	log.Printf("Server stopped")
+}
+
+// reloadEnvConfig reads the environment again (SIGHUP, the admin command
+// reload) and then puts back what the panel stores over the environment's
+// defaults, as the start does.
+func reloadEnvConfig(cfg *config.Config, database db.Database) error {
+	log.Printf("[reload] Reloading configuration from environment")
+	cfg.LoadEnv()
+	_, err := applyEnrollmentMode(cfg, database)
+	applyPersistedTimeSyncConfig(cfg, database)
+	applyPersistedConnectionSettings(cfg, database)
+	if err != nil {
+		return fmt.Errorf("reconcile enrollment mode: %w", err)
+	}
+	return nil
 }
 
 func resolveEnrollmentMode(configuredMode, storedMode string, envOverride bool) (string, string) {

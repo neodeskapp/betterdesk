@@ -181,3 +181,30 @@ func TestApplyEnrollmentModeRestoresDatabaseWithoutOverride(t *testing.T) {
 		t.Fatalf("applyEnrollmentMode() source=%q mode=%q", source, cfg.EnrollmentMode)
 	}
 }
+
+// A reload reads the environment again; the entrypoint's default mode is
+// marked not explicit there, so the mode set in the panel must stay.
+func TestReloadKeepsPanelEnrollmentModeOverEnvironmentDefault(t *testing.T) {
+	database, err := db.OpenSQLite(filepath.Join(t.TempDir(), "enrollment.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	if err := database.Migrate(); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SetConfig("enrollment_mode", config.EnrollmentModeLocked); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("ENROLLMENT_MODE", config.EnrollmentModeManaged)
+	t.Setenv("ENROLLMENT_MODE_ENV_OVERRIDE", "N")
+
+	cfg := config.DefaultConfig()
+	cfg.EnrollmentMode = config.EnrollmentModeLocked
+	if err := reloadEnvConfig(cfg, database); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.EnrollmentMode != config.EnrollmentModeLocked {
+		t.Fatalf("enrollment mode after reload = %q, want the panel's %q", cfg.EnrollmentMode, config.EnrollmentModeLocked)
+	}
+}
