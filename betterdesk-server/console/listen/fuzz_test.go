@@ -222,9 +222,15 @@ func FuzzJSONGate(f *testing.F) {
 	for _, seed := range []string{`{"a":1}`, `[]`, ``, `null`, `1`, `"x"`, `{bad`, `{"a":1}x`, ` {} `, `{"a":"\ud800"}`, `[1,2`, "\xef\xbb\xbf{}"} {
 		f.Add([]byte(seed), uint8(0))
 	}
+	types := []string{"application/json", "application/json; charset=utf-8", "application/json; charset=latin1", "text/plain; a=application/json", "application/json-patch+json"}
+	// Every content type, so that the plain test run covers each
+	for kind := range types {
+		f.Add([]byte(`{"a":1}`), uint8(kind))
+		f.Add([]byte(`{bad`), uint8(kind))
+		f.Add(bytes.Repeat([]byte(" "), 5000), uint8(kind))
+	}
 	api := newRecorder(f, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
 	port, tick := fuzzPort(f, false, api, &registered{})
-	types := []string{"application/json", "application/json; charset=utf-8", "application/json; charset=latin1", "text/plain; a=application/json", "application/json-patch+json"}
 	f.Fuzz(func(t *testing.T, body []byte, kind uint8) {
 		contentType := types[int(kind)%len(types)]
 		for _, path := range []string{"/api/login", "/api/ab"} {
@@ -240,6 +246,12 @@ func FuzzJSONGate(f *testing.F) {
 				limit = 524288
 			}
 			switch {
+			case contentType == "text/plain; a=application/json" || contentType == "application/json-patch+json":
+				// The port takes the media type application/json only (M7),
+				// before it reads the body
+				if rec.Code != http.StatusUnsupportedMediaType || string(out) != `{"error":"Content-Type must be application/json"}` {
+					t.Fatalf("%s: %d %q", contentType, rec.Code, out)
+				}
 			case len(body) > limit:
 				if rec.Code != http.StatusRequestEntityTooLarge {
 					t.Fatalf("%d bytes on %s: %d", len(body), path, rec.Code)
@@ -247,11 +259,6 @@ func FuzzJSONGate(f *testing.F) {
 			case contentType == "application/json; charset=latin1":
 				if rec.Code != http.StatusInternalServerError || string(out) != `{"error":"Server error"}` {
 					t.Fatalf("latin1: %d %q", rec.Code, out)
-				}
-			case contentType == "text/plain; a=application/json" || contentType == "application/json-patch+json":
-				// Not a type the parser reads: the body goes on unread
-				if rec.Code != http.StatusNotFound {
-					t.Fatalf("%s: %d %q", contentType, rec.Code, out)
 				}
 			case bytes.HasPrefix(body, []byte("\xef\xbb\xbf")):
 				if rec.Code != http.StatusNotFound && rec.Code != http.StatusBadRequest {
