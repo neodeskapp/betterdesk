@@ -12,10 +12,7 @@
   <a href="LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/license.svg"><img alt="License: AGPL-3.0" src="docs/assets/badges/light/license.svg"></picture></a>
   <a href="betterdesk-server"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/go.svg"><img alt="Go 1.26" src="docs/assets/badges/light/go.svg"></picture></a>
   <a href="web-ui"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/svelte.svg"><img alt="Svelte 5" src="docs/assets/badges/light/svelte.svg"></picture></a>
-  <br>
-  <a href="#install"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/docker.svg"><img alt="Docker: one container" src="docs/assets/badges/light/docker.svg"></picture></a>
   <a href="#connect-a-rustdesk-client"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/rustdesk.svg"><img alt="RustDesk compatible" src="docs/assets/badges/light/rustdesk.svg"></picture></a>
-  <a href="https://betterde.sk"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/website.svg"><img alt="Website: betterde.sk" src="docs/assets/badges/light/website.svg"></picture></a>
 </p>
 
 BetterDesk is a remote desktop server you run yourself. It speaks the RustDesk
