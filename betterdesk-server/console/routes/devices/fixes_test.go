@@ -936,8 +936,8 @@ func TestAgentErrorsAreTheAgents(t *testing.T) {
 		t.Fatal(err)
 	}
 	sum := sha256.Sum256([]byte(agentToken))
-	if _, err := db.Exec(ctx, `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked)
-		VALUES (?, ?, 1, 'A1001', '', '2999-01-01 00:00:00', ?)`, agentToken, hex.EncodeToString(sum[:]), false); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked, token_kind)
+		VALUES (?, ?, 1, 'A1001', '', '2999-01-01 00:00:00', ?, 'device')`, agentToken, hex.EncodeToString(sum[:]), false); err != nil {
 		t.Fatal(err)
 	}
 	agent, err := fakeagent.Connect(w.Addr(), "A1001", agentToken)

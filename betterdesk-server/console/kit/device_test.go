@@ -136,6 +136,19 @@ func touchedTokens(t *testing.T, db *store.DB) []int64 {
 	return ids
 }
 
+// unboundSteps are the steps of the recordings that a bug fix of BUGS.md
+// changed on purpose into the refusal of a token that is bound to no
+// device, 401 {"error":"Invalid or unbound access token"}, with the bug.
+// A token is found by its hash only: a row without a hash, or with the
+// hash of another token, is not found by the token it holds, and a
+// row's stored text is no token (RV128). Such rows are written only by an
+// older console, and the console hashes them at its next start.
+var unboundSteps = map[string]string{
+	"token token-only":                  "RV128",
+	"token hash-of-another":             "RV128",
+	"token hash-only by the stored text": "RV128",
+}
+
 // refusedSteps are the steps of the recordings that a bug fix of BUGS.md
 // changed on purpose into the refusal of another device, 403 {"error":
 // "Device ID mismatch"}, with the bug. The names are the same in both
@@ -243,6 +256,14 @@ func TestDeviceGuardsAnswerAsNode(t *testing.T) {
 			if _, err := db.Exec(ctx, sql, statementArgs(params)...); err != nil {
 				t.Fatalf("seed %s: %v", sql, err)
 			}
+			// Node took every live token with a client id as that device's;
+			// the recording's tokens stand for device tokens (BUGS RV1). They
+			// are marked before the seed's trigger that refuses updates.
+			if strings.HasPrefix(sql, "INSERT INTO access_tokens") {
+				if _, err := db.Exec(ctx, "UPDATE access_tokens SET token_kind = 'device'"); err != nil {
+					t.Fatal(err)
+				}
+			}
 		}
 		h := deviceWorld(t, db)
 		requests, refused, thrown := 0, 0, 0
@@ -269,6 +290,16 @@ func TestDeviceGuardsAnswerAsNode(t *testing.T) {
 				refused++
 			}
 			status, answer, by := step.Status, step.Answer, "Node"
+			if bug, ok := unboundSteps[step.Name]; ok {
+				if status == 401 && answer == unbound {
+					t.Errorf("%s is listed for %s, but Node refused it as unbound too", step.Name, bug)
+				}
+				fixed[step.Name] = true
+				if rec.Code != 401 || rec.Body.String() != unbound {
+					t.Errorf("%s:\n got %d %s\n%4s 401 %s", step.Name, rec.Code, rec.Body.String(), bug, unbound)
+				}
+				continue
+			}
 			if bug, ok := refusedSteps[step.Name]; ok {
 				if status == 403 && answer == mismatch {
 					t.Errorf("%s is listed for %s, but Node refused it as another device too", step.Name, bug)
@@ -286,6 +317,11 @@ func TestDeviceGuardsAnswerAsNode(t *testing.T) {
 				}
 			}
 		}
+		for name := range unboundSteps {
+			if !fixed[name] {
+				t.Errorf("the listed step %q is not in the recording", name)
+			}
+		}
 		for name := range refusedSteps {
 			if !fixed[name] {
 				t.Errorf("the listed step %q is not in the recording", name)
@@ -297,7 +333,7 @@ func TestDeviceGuardsAnswerAsNode(t *testing.T) {
 	})
 }
 
-// addToken stores a token row the way the RustDesk sign-in does.
+// addToken stores a device token row the way IssueDeviceToken does.
 func addToken(t *testing.T, db *store.DB, token, client string, expires string, revoked bool) {
 	t.Helper()
 	ctx := context.Background()
@@ -311,7 +347,7 @@ func addToken(t *testing.T, db *store.DB, token, client string, expires string, 
 			flag = 1
 		}
 	}
-	if _, err := db.Exec(ctx, "INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, revoked) VALUES (?, ?, 7, ?, ?, ?)",
+	if _, err := db.Exec(ctx, "INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, revoked, token_kind) VALUES (?, ?, 7, ?, ?, ?, 'device')",
 		token, authn.HashAccessToken(token), client, expires, flag); err != nil {
 		t.Fatal(err)
 	}
@@ -371,6 +407,12 @@ func TestDeviceGuardsAnswer(t *testing.T) {
 		addToken(t, db, "token-revoked", "device-a", futureExpiry, true)
 		addToken(t, db, "token-unbound", "", futureExpiry, false)
 		addToken(t, db, "token-bad-id", "a b", futureExpiry, false)
+		// An account's sign-in token that stored device-a's id proves no
+		// device (BUGS RV1)
+		addToken(t, db, "token-of-an-account", "device-a", futureExpiry, false)
+		if _, err := db.Exec(context.Background(), "UPDATE access_tokens SET token_kind = 'account' WHERE token_hash = ?", authn.HashAccessToken("token-of-an-account")); err != nil {
+			t.Fatal(err)
+		}
 		h := deviceWorld(t, db)
 		cases := []deviceCase{
 			{name: "no header", path: "/api/probe/token", status: 401, answer: noBearer},
@@ -382,6 +424,8 @@ func TestDeviceGuardsAnswer(t *testing.T) {
 			{name: "revoked", path: "/api/probe/token", headers: []string{"Authorization", "Bearer token-revoked"}, status: 401, answer: unbound},
 			{name: "bound to no device", path: "/api/probe/token", headers: []string{"Authorization", "Bearer token-unbound"}, status: 401, answer: unbound},
 			{name: "bound to a bad id", path: "/api/probe/token", headers: []string{"Authorization", "Bearer token-bad-id"}, status: 401, answer: unbound},
+			{name: "an account's token", path: "/api/probe/token", headers: []string{"Authorization", "Bearer token-of-an-account"}, status: 401, answer: unbound},
+			{name: "an account's token naming its device", path: "/api/probe/match?device_id=device-a", headers: []string{"Authorization", "Bearer token-of-an-account"}, status: 401, answer: unbound},
 			{name: "good token", path: "/api/probe/token", headers: []string{"Authorization", bearerA}, status: 200, answer: answerA},
 			{name: "the first of two headers counts", path: "/api/probe/token", headers: []string{"Authorization", bearerA, "Authorization", "Bearer nope"}, status: 200, answer: answerA},
 

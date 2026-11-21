@@ -20,7 +20,7 @@ func TestIDsBeyondTheColumnAreNotFound(t *testing.T) {
 		if !db.IsPostgres() {
 			w.Exec("INSERT INTO alert_rules (id, name, condition_type) VALUES (9007199254740992, 'far', 'custom')", nil)
 		}
-		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00')",
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, token_kind) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00', 'device')",
 			[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
 		device := map[string]string{"Authorization": "Bearer tok-device-a"}
 		before := state(w)

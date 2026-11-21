@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -380,8 +381,31 @@ func Load(t *testing.T, db *store.DB, name string) Recording {
 	if rec.Dialect != db.Dialect().String() {
 		t.Fatalf("%s was recorded on %s", file, rec.Dialect)
 	}
+	if strings.HasPrefix(name, deviceRecording) {
+		for i, seed := range rec.Seed {
+			if strings.HasPrefix(seed.SQL, tokenSeed) && len(seed.Params) > 1 && seed.Params[1] == nil {
+				if token, ok := seed.Params[0].(string); ok {
+					rec.Seed[i].Params = slices.Clone(seed.Params)
+					rec.Seed[i].Params[1] = store.HashAccessToken(token)
+				}
+			}
+		}
+		rec.Seed = append(rec.Seed, Seed{SQL: "UPDATE access_tokens SET token_kind = 'device'"})
+	}
 	return rec
 }
+
+// deviceRecording starts the name of a recording of the device routes.
+// Node took every live token with a client id as that device's token, and
+// such a recording's tokens stand for device tokens: Load makes every
+// token its seed wrote a device token, which the console's device guards
+// take (BUGS RV1). A token the seed wrote without its hash, as an older
+// console wrote them, gets its hash, as the console's start gives it one:
+// the console finds tokens by their hash only (BUGS RV128).
+const deviceRecording = "node_device"
+
+// tokenSeed starts a seed statement that writes a token and its hash.
+const tokenSeed = "INSERT INTO access_tokens (token, token_hash,"
 
 // args are the parameters of a statement of a recording. JSON has one
 // kind of number, so a whole number is bound as an integer; the marks of

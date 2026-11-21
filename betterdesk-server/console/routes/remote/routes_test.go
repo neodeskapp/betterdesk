@@ -188,7 +188,7 @@ func newWorld(t *testing.T, db *store.DB, appVersion string, mockOn bool) *world
 		t.Fatal(err)
 	}
 	for _, row := range tokenRows {
-		if _, err := db.Exec(ctx, "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at) VALUES (?, ?, 900, ?, '', '2999-01-01 00:00:00')",
+		if _, err := db.Exec(ctx, "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, token_kind) VALUES (?, ?, 900, ?, '', '2999-01-01 00:00:00', 'device')",
 			row[0], authn.HashAccessToken(row[0]), row[1]); err != nil {
 			t.Fatal(err)
 		}

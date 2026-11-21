@@ -154,7 +154,7 @@ func TestNodeDeviceAnswers(t *testing.T) {
 // tokenDeviceA puts a live token bound to device-a into the database: the
 // token tok-device-a with its SHA-256.
 func tokenDeviceA(w *replay.World) {
-	w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00')",
+	w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, token_kind) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00', 'device')",
 		[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
 }
 

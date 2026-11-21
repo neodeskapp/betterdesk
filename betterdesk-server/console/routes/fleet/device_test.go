@@ -28,7 +28,7 @@ func withDevices(t *testing.T) func(d *kit.Deps) {
 			t.Fatal(err)
 		}
 		for _, row := range [][2]string{{"tok-device-a", "device-a"}, {"tok-device-b", "device-b"}, {"tok-numeric", "123"}, {"tok-unbound", ""}} {
-			if _, err := d.Store.Exec(ctx, "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at) VALUES (?, ?, 1, ?, '', '2999-01-01 00:00:00')",
+			if _, err := d.Store.Exec(ctx, "INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, token_kind) VALUES (?, ?, 1, ?, '', '2999-01-01 00:00:00', 'device')",
 				row[0], authn.HashAccessToken(row[0]), row[1]); err != nil {
 				t.Fatal(err)
 			}

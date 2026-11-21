@@ -85,7 +85,7 @@ const finishedReports = 6
 func deviceWorld(t *testing.T, db *store.DB) *replay.World {
 	t.Helper()
 	w := replay.NewWorld(t, db, nil)
-	w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00')",
+	w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, token_kind) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00', 'device')",
 		[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
 	w.Exec("INSERT INTO remote_commands (device_id, payload, created_by) VALUES ('device-a', 'whoami', 'e2e_admin')", nil)
 	return w
@@ -173,7 +173,7 @@ func TestDeviceRouteFailures(t *testing.T) {
 func TestAnotherDevicesCommandIsNotFound(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := deviceWorld(t, db)
-		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-b', '2999-01-01 00:00:00')",
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, token_kind) VALUES (?, ?, 5, 'device-b', '2999-01-01 00:00:00', 'device')",
 			[]any{"tok-device-b", "638c3bcb28bd43d785bdb2b9555c0d22e2eb931e3a0298384de110a801b52b46"})
 		deviceB := map[string]string{"Authorization": "Bearer tok-device-b"}
 		notFound := `{"error":"Command not found"}`

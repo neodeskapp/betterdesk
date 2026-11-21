@@ -59,7 +59,7 @@ func deviceWorld(t *testing.T, db *store.DB) *replay.World {
 				revoked = 1
 			}
 		}
-		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked) VALUES (?, ?, 5, ?, '', ?, ?)",
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, revoked, token_kind) VALUES (?, ?, 5, ?, '', ?, ?, 'device')",
 			[]any{row[0], authn.HashAccessToken(row[0].(string)), row[1], row[2], revoked})
 	}
 	return w

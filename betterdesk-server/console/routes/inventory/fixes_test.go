@@ -370,7 +370,7 @@ func TestUploadKeepsTheInfoTheReportDoesNotName(t *testing.T) {
 		storetest.GoServer(t, db)
 		w := replay.NewWorld(t, db, nil)
 		for i, device := range []string{"keep-1", "list-1", "text-1", "gone-1", "sig-1"} {
-			w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, ?, '2999-01-01 00:00:00')",
+			w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, token_kind) VALUES (?, ?, 5, ?, '2999-01-01 00:00:00', 'device')",
 				[]any{fmt.Sprintf("tok-%d", i), sha256Hex(fmt.Sprintf("tok-%d", i)), device})
 		}
 		deleted := db.Pick("1", "TRUE")

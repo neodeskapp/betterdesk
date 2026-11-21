@@ -22,7 +22,7 @@ func TestListsOfTheSameSecondKeepTheirOrder(t *testing.T) {
 			w.Exec("INSERT INTO alert_rules (id, name, condition_type, created_at) VALUES ("+id+", 'rule "+id+"', 'custom', '"+second+"')", nil)
 			w.Exec("INSERT INTO remote_commands (id, device_id, payload, created_by, created_at) VALUES ("+id+", 'device-a', 'whoami', 'e2e_admin', '"+second+"')", nil)
 		}
-		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00')",
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, token_kind) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00', 'device')",
 			[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
 		ids := regexp.MustCompile(`\{"id":(\d+)`)
 		order := func(body string) string {

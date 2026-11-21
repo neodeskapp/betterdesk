@@ -115,7 +115,7 @@ func withoutSpaceAround(headers map[string]string) (map[string]string, bool) {
 // tokenDeviceA puts a live token bound to device-a into the database: the
 // token tok-device-a with its SHA-256.
 func tokenDeviceA(w *replay.World) {
-	w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00')",
+	w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, token_kind) VALUES (?, ?, 5, 'device-a', '2999-01-01 00:00:00', 'device')",
 		[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
 }
 
@@ -251,7 +251,7 @@ func TestInventoryUsesTheDeviceGuards(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		tokenDeviceA(w)
-		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, 5, 'x', '2999-01-01 00:00:00')",
+		w.Exec("INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, token_kind) VALUES (?, ?, 5, 'x', '2999-01-01 00:00:00', 'device')",
 			[]any{"tok-short", "7c7b85d90f624dbe2f9196551fdac64191dc4a52460bd9b5d4b938db6b445b1f"})
 		short := map[string]string{"Authorization": "Bearer tok-short"}
 		unbound := `{"error":"Invalid or unbound access token"}`
