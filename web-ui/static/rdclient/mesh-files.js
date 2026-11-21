@@ -198,7 +198,15 @@
         }
 
         if (msg.action === 'uploaderror' || msg.action === 'downloaderror') {
-            this._emit('file_transfer_error', { id: msg.reqid, error: msg.action });
+            // The agent names the request; the list knows our own transfer ids only
+            for (var tid of this._transfers.keys()) {
+                var failed = this._transfers.get(tid);
+                if (failed && failed.reqid === msg.reqid) {
+                    this._transfers.delete(tid);
+                    this._emit('file_transfer_error', { id: tid, error: msg.action });
+                    return;
+                }
+            }
         }
     };
 

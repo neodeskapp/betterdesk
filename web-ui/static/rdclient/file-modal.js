@@ -1002,7 +1002,7 @@
             ? (meta.fileName + ' / ' + meta.currentFile)
             : meta.fileName;
 
-        return '<div class="' + rowClass.join(' ') + '" data-id="' + meta.id + '">' +
+        return '<div class="' + rowClass.join(' ') + '" data-id="' + escapeHtml(String(meta.id)) + '">' +
             '<span class="material-icons ft-transfer-icon">' + icon + '</span>' +
             '<div class="ft-transfer-info">' +
             '<div class="ft-transfer-name" title="' + escapeHtml(titleName) + '">' + escapeHtml(meta.fileName) +
