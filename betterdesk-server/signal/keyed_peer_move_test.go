@@ -215,3 +215,25 @@ func TestWSNoRegisterDeviceDoesNotBindPeer(t *testing.T) {
 		t.Fatalf("victim bound to the WebSocket: %s %v", entry.ConnType, entry.WSConn != nil)
 	}
 }
+
+// A row with only one identity field stored (an approval stores the uuid,
+// old rows hold only the pk) still needs both fields in the RegisterPk.
+func TestRegisterPkNeedsBothFieldsWhenOneIsStored(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+	if err := database.UpsertPeer(&db.Peer{ID: "UUIDONLY1", UUID: hex.EncodeToString(victimUUID), Status: "OFFLINE"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.UpsertPeer(&db.Peer{ID: "PKONLY001", PK: victimPK, Status: "OFFLINE"}); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := registerPkResult(srv.processRegisterPk(&pb.RegisterPk{Id: "UUIDONLY1", Uuid: victimUUID}, "198.51.100.26:5000")); got == pb.RegisterPkResponse_OK {
+		t.Fatal("RegisterPk with the stored uuid and no pk was accepted")
+	}
+	if got := registerPkResult(srv.processRegisterPk(&pb.RegisterPk{Id: "PKONLY001", Pk: victimPK}, "198.51.100.26:5001")); got == pb.RegisterPkResponse_OK {
+		t.Fatal("RegisterPk with the stored pk and no uuid was accepted")
+	}
+	if got := registerPkResult(srv.processRegisterPk(&pb.RegisterPk{Id: "PKONLY001", Uuid: victimUUID, Pk: victimPK}, "198.51.100.26:5002")); got != pb.RegisterPkResponse_OK {
+		t.Fatalf("RegisterPk with the stored pk and a uuid = %v, want OK", got)
+	}
+}
