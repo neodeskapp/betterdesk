@@ -756,7 +756,40 @@ func knownProxyMode(t *testing.T) map[string]func(t *testing.T, got []reply, clo
 			return compareReplies(withoutRemaining(want), withoutRemaining(got))
 		}
 	}
+	addRegisterLimit(t, known, local)
 	return known
+}
+
+// registerLimited are the registration requests of the recordings that add
+// a registration. They count against the limit of device registrations
+// (BUGS RV8), so they carry its headers, 20 a minute by default, where
+// Node's answer had those of the API limit.
+var registerLimited = []string{"registration request", "registration request ip from x-real-ip"}
+
+// addRegisterLimit makes the registerLimited exchanges known differences:
+// the answer of the recording with the register limit's headers, what
+// remains of the budget not compared.
+func addRegisterLimit(t *testing.T, known map[string]func(t *testing.T, got []reply, closed bool) string, recording oracleScenario) {
+	t.Helper()
+	for _, id := range registerLimited {
+		var want []reply
+		for _, e := range recording.Exchanges {
+			if e.ID == id {
+				raw, _ := base64.StdEncoding.DecodeString(e.Got)
+				want = withoutRemaining(parseReplies(raw, methodOf(e.Parts)))
+			}
+		}
+		if len(want) == 0 {
+			t.Fatalf("no answer to %q in the recording", id)
+		}
+		for i := range want {
+			want[i].header.Set("Ratelimit-Limit", "20")
+			want[i].header.Set("Ratelimit-Policy", "20;w=60")
+		}
+		known[id] = func(_ *testing.T, got []reply, _ bool) string {
+			return compareReplies(want, withoutRemaining(got))
+		}
+	}
 }
 
 func withoutRemaining(rs []reply) []reply {
@@ -829,7 +862,12 @@ func TestClientAPILocalModeAgainstNode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		res := g.replayExchanges(t, scenario, knownClientAPI)
+		known := map[string]func(t *testing.T, got []reply, closed bool) string{}
+		for id, check := range knownClientAPI {
+			known[id] = check
+		}
+		addRegisterLimit(t, known, scenario)
+		res := g.replayExchanges(t, scenario, known)
 		checkReplay(t, "legacy", res)
 		if res.same < 500 || res.routed < 100 {
 			t.Errorf("only %d answers compared and %d routed", res.same, res.routed)
