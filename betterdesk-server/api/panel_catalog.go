@@ -112,10 +112,10 @@ func (s *Server) handlePanelCatalog(w http.ResponseWriter, r *http.Request) {
 	permissions := append([]string(nil), auth.AllPermissions...)
 	sort.Strings(permissions)
 	writeJSON(w, http.StatusOK, map[string]any{
-		"sections":     panelSectionCatalog,
-		"groups":       panelSectionGroups,
-		"permissions":  permissions,
+		"sections":      panelSectionCatalog,
+		"groups":        panelSectionGroups,
+		"permissions":   permissions,
 		"role_defaults": roleDefaults(),
-		"source":       "go",
+		"source":        "go",
 	})
 }

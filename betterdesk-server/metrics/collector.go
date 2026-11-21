@@ -34,13 +34,13 @@ type Collector struct {
 	PeersTCP      atomic.Int64
 	PeersWS       atomic.Int64
 
-	RelayActiveSessions atomic.Int64
-	BlocklistCount      atomic.Int64
-	EventSubscribers    atomic.Int64
+	RelayActiveSessions  atomic.Int64
+	BlocklistCount       atomic.Int64
+	EventSubscribers     atomic.Int64
 	BillingPendingRelays atomic.Int64
-	Goroutines          atomic.Int64
-	MemAllocBytes       atomic.Int64
-	MemSysBytes         atomic.Int64
+	Goroutines           atomic.Int64
+	MemAllocBytes        atomic.Int64
+	MemSysBytes          atomic.Int64
 }
 
 // NewCollector creates a new metrics collector.

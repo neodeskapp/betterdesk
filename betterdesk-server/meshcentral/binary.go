@@ -10,15 +10,15 @@ import (
 const (
 	sha384Size = 48
 
-	cmdAuthRequest           = 1
-	cmdAuthVerify            = 2
-	cmdAuthInfo              = 3
-	cmdAuthConfirm           = 4
-	cmdServerID              = 5
-	cmdCoreModule            = 10
-	cmdCoreModuleHash        = 11
-	cmdCoreOk                = 16
-	cmdCompressedCoreModule  = 20
+	cmdAuthRequest          = 1
+	cmdAuthVerify           = 2
+	cmdAuthInfo             = 3
+	cmdAuthConfirm          = 4
+	cmdServerID             = 5
+	cmdCoreModule           = 10
+	cmdCoreModuleHash       = 11
+	cmdCoreOk               = 16
+	cmdCompressedCoreModule = 20
 
 	relayProtocolKVM      = 2
 	relayProtocolTerminal = 1

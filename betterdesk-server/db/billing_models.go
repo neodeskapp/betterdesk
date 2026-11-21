@@ -12,15 +12,15 @@ const (
 
 // BillingPackage is a reusable support-hours template.
 type BillingPackage struct {
-	ID               string    `json:"id"`
-	Name             string    `json:"name"`
-	Description      string    `json:"description,omitempty"`
-	IncludedMinutes  int       `json:"included_minutes"`
-	RoundingMinutes  int       `json:"rounding_minutes"` // per-package billable minute rounding
-	OverageRate      float64   `json:"overage_rate"`     // per hour when included pool exhausted
-	Currency         string    `json:"currency"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
+	ID              string    `json:"id"`
+	Name            string    `json:"name"`
+	Description     string    `json:"description,omitempty"`
+	IncludedMinutes int       `json:"included_minutes"`
+	RoundingMinutes int       `json:"rounding_minutes"` // per-package billable minute rounding
+	OverageRate     float64   `json:"overage_rate"`     // per hour when included pool exhausted
+	Currency        string    `json:"currency"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // BillingContract links a billing package to an org, group, folder, or device.
@@ -74,7 +74,7 @@ type BillingSession struct {
 	DeviceName           string     `json:"device_name,omitempty"`
 	RelayUUID            string     `json:"relay_uuid,omitempty"`
 	Transport            string     `json:"transport"`
-	Status               string     `json:"status"` // active, pending_report, closed
+	Status               string     `json:"status"`        // active, pending_report, closed
 	BillingPhase         string     `json:"billing_phase"` // included, overage
 	StartedAt            time.Time  `json:"started_at"`
 	EndedAt              *time.Time `json:"ended_at,omitempty"`

@@ -10,7 +10,7 @@ import (
 
 // Handler manages reload callbacks.
 type Handler struct {
-	mu       sync.Mutex
+	mu        sync.Mutex
 	callbacks []func() error
 }
 

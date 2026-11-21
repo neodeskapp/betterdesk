@@ -84,8 +84,8 @@ func TestBrandingGetDefaultsAndSave(t *testing.T) {
 		"accent_color":    "#112233",
 		"support_contact": "Desk",
 		"logo": map[string]string{
-			"mime":         "image/png",
-			"data_base64":  png1x1,
+			"mime":        "image/png",
+			"data_base64": png1x1,
 		},
 	}
 	raw, _ := json.Marshal(body)
