@@ -106,7 +106,18 @@ export function deleteStrategy(guid: string) {
 	return api(Ok, `/api/panel/strategies/${enc(guid)}`, { method: 'DELETE' });
 }
 
-/** Apply a rule to devices, users and device groups (at least one) */
-export function assignStrategy(guid: string, to: { peers: string[]; users: string[]; groups: string[] }) {
+export interface StrategyTargets {
+	peers: string[];
+	users: string[];
+	groups: string[];
+}
+
+/** Apply a rule to devices, users and device groups (at least one); targets it has stay */
+export function assignStrategy(guid: string, to: StrategyTargets) {
 	return api(Ok, `/api/panel/strategies/${enc(guid)}/assign`, { method: 'POST', body: to });
+}
+
+/** Take whatever rule is assigned off these devices, users and device groups (at least one) */
+export function unassignStrategy(from: StrategyTargets) {
+	return api(Ok, '/api/panel/strategies/unassign', { method: 'POST', body: from });
 }

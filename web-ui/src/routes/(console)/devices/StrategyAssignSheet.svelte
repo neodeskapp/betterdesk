@@ -1,11 +1,18 @@
 <!--
   Where an access rule applies: devices, users and device groups (a side
   sheet; the pick lists are long). A long device list has a filter above
-  it; ticked devices stay ticked while they are filtered out.
+  it; ticked devices stay ticked while they are filtered out. Saving puts
+  the rule on the newly ticked targets and takes it off the unticked ones.
 -->
 <script lang="ts">
 	import type { Device, DeviceGroup } from '#lib/api/devices.ts';
-	import { assignStrategy, getStrategy, type Strategy } from '#lib/api/strategies.ts';
+	import {
+		assignStrategy,
+		getStrategy,
+		unassignStrategy,
+		type Strategy,
+		type StrategyTargets
+	} from '#lib/api/strategies.ts';
 	import { listUsers, type UserRow } from '#lib/api/users.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
@@ -34,6 +41,8 @@
 	let status = $state('');
 	let tone = $state<'neutral' | 'error'>('neutral');
 	let busy = $state(false);
+	/** The targets the rule has on the server; null until they are loaded */
+	let stored = $state.raw<StrategyTargets | null>(null);
 
 	$effect(() => {
 		listUsers().then(
@@ -42,11 +51,15 @@
 		);
 		getStrategy(rule.guid).then(
 			(s) => {
+				stored = { peers: [...s.peer_ids], users: [...s.user_names], groups: [...s.group_guids] };
 				peers = [...s.peer_ids];
 				userNames = [...s.user_names];
 				groupGuids = [...s.group_guids];
 			},
-			() => undefined
+			(err: unknown) => {
+				status = err instanceof Error ? err.message : t('errors.server_error');
+				tone = 'error';
+			}
 		);
 	});
 
@@ -63,19 +76,41 @@
 		return on ? [...list.filter((k) => k !== key), key] : list.filter((k) => k !== key);
 	}
 
+	const minus = (a: string[], b: string[]) => a.filter((k) => !b.includes(k));
+	const anyTarget = (t: StrategyTargets) => t.peers.length + t.users.length + t.groups.length > 0;
+
 	async function submit(e: SubmitEvent) {
 		e.preventDefault();
-		if (busy) return;
-		if (!peers.length && !userNames.length && !groupGuids.length) {
-			status = tf('devices.strategy_assign_none_selected', 'Tick at least one device, user or device group.');
-			tone = 'error';
-			return;
-		}
+		// Without the stored targets there is nothing to compare the ticks with
+		if (busy || !stored) return;
 		busy = true;
 		status = tf('ui_form.saving', 'Saving…');
 		tone = 'neutral';
 		try {
-			await assignStrategy(rule.guid, { peers, users: userNames, groups: groupGuids });
+			const now = { peers, users: userNames, groups: groupGuids };
+			const added = {
+				peers: minus(now.peers, stored.peers),
+				users: minus(now.users, stored.users),
+				groups: minus(now.groups, stored.groups)
+			};
+			const removed = {
+				peers: minus(stored.peers, now.peers),
+				users: minus(stored.users, now.users),
+				groups: minus(stored.groups, now.groups)
+			};
+			// Each step that went through is the new stored state, so a retry after a failure repeats nothing
+			if (anyTarget(added)) {
+				await assignStrategy(rule.guid, added);
+				stored = {
+					peers: [...stored.peers, ...added.peers],
+					users: [...stored.users, ...added.users],
+					groups: [...stored.groups, ...added.groups]
+				};
+			}
+			if (anyTarget(removed)) {
+				await unassignStrategy(removed);
+				stored = { ...now };
+			}
 			toast.success(t('devices.strategy_assign_saved'));
 			onsaved();
 		} catch (err) {
@@ -102,6 +137,7 @@
 						<Checkbox
 							label={item.label}
 							checked={selected.includes(item.key)}
+							disabled={!stored}
 							onchange={(e) => {
 								set(toggle(selected, item.key, (e.currentTarget as HTMLInputElement).checked));
 								status = '';
@@ -180,7 +216,9 @@
 	</form>
 	{#snippet footer()}
 		<Button class="sheet-footer-start" onclick={onclose}>{t('actions.cancel')}</Button>
-		<Button variant="primary" type="submit" form="{uid}-form" {busy}>{t('actions.save')}</Button>
+		<Button variant="primary" type="submit" form="{uid}-form" {busy} disabled={!stored}
+			>{t('actions.save')}</Button
+		>
 	{/snippet}
 </Sheet>
 
