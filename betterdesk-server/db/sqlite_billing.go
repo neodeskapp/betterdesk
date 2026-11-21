@@ -192,6 +192,7 @@ const billingContractTargetNameSQL = `
 			WHEN 'org' THEN (SELECT name FROM organizations WHERE id = c.target_key LIMIT 1)
 			WHEN 'device' THEN (SELECT COALESCE(NULLIF(display_name, ''), hostname, c.target_key) FROM peers WHERE id = c.target_key LIMIT 1)
 			WHEN 'device_group' THEN (SELECT name FROM device_groups WHERE guid = c.target_key LIMIT 1)
+			WHEN 'folder' THEN (SELECT name FROM folders WHERE CAST(id AS TEXT) = c.target_key LIMIT 1)
 			ELSE c.target_key
 		END, c.target_key)`
 

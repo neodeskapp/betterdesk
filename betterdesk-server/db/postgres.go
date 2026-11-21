@@ -690,6 +690,14 @@ func (pg *PostgresDB) Migrate() error {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			PRIMARY KEY (device_group_id, user_group_id)
 		)`,
+		// Direct device grants, in the shape the console creates
+		`CREATE TABLE IF NOT EXISTS user_peer_grants (
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			peer_id TEXT NOT NULL,
+			granted_at TIMESTAMPTZ DEFAULT NOW(),
+			PRIMARY KEY (user_id, peer_id)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_user_peer_grants_user ON user_peer_grants (user_id)`,
 		`CREATE TABLE IF NOT EXISTS peer_sysinfo (
 			peer_id TEXT PRIMARY KEY,
 			hostname TEXT NOT NULL DEFAULT '',
@@ -927,10 +935,11 @@ func (pg *PostgresDB) GetPeersByIDs(ids []string) (map[string]*Peer, error) {
 	return out, nil
 }
 
-// GetPeerByUUID returns a peer by UUID, or nil if not found.
+// GetPeerByUUID returns the device with the uuid that is not deleted, or
+// nil if there is none.
 func (pg *PostgresDB) GetPeerByUUID(uuid string) (*Peer, error) {
 	row := pg.pool.QueryRow(pg.ctx,
-		`SELECT `+peerColumns+` FROM peers WHERE uuid = $1`, uuid)
+		`SELECT `+peerColumns+` FROM peers WHERE uuid = $1 AND (soft_deleted IS NULL OR soft_deleted = false)`, uuid)
 	p, err := scanPeer(row)
 	if err == pgx.ErrNoRows {
 		return nil, nil

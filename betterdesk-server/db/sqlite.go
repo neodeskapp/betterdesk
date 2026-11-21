@@ -1083,11 +1083,12 @@ func (s *SQLiteDB) GetPeersByIDs(ids []string) (map[string]*Peer, error) {
 	return out, nil
 }
 
-// GetPeerByUUID returns a peer by UUID, or nil if not found.
+// GetPeerByUUID returns the device with the uuid that is not deleted, or
+// nil if there is none.
 func (s *SQLiteDB) GetPeerByUUID(uuid string) (*Peer, error) {
 	s.mu.RLock()
 	var id string
-	err := s.db.QueryRow(`SELECT id FROM peers WHERE uuid = ?`, uuid).Scan(&id)
+	err := s.db.QueryRow(`SELECT id FROM peers WHERE uuid = ? AND (soft_deleted IS NULL OR soft_deleted = 0)`, uuid).Scan(&id)
 	s.mu.RUnlock()
 
 	if err == sql.ErrNoRows {
