@@ -1557,10 +1557,7 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry := s.peers.Get(id)
-	if entry != nil {
-		entry.Banned = false
-	}
+	s.peers.SetBanned(id, false)
 
 	// Also clear enrollment rejection lock so the device can re-queue (#351).
 	s.clearEnrollmentRejectionState(id)
