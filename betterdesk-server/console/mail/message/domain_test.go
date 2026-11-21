@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
+	"unicode/utf8"
 )
 
 // addressVector is one line of a file that testdata/nodeoracle/addresses.js
@@ -130,6 +132,41 @@ func TestNodeAddressVectors(t *testing.T) {
 		t.Fatalf("%d sweep blocks and %d addresses in testdata/addresses.json.gz, the file is incomplete", blocks, addresses)
 	}
 	t.Logf("%d addresses, %d sweep blocks of %d addresses", addresses, blocks, sweepBlockSize*len(sweepTemplates))
+}
+
+// A domain of more than 1024 characters comes back as it is, before the
+// IDNA mapping, which sorts combining marks in time by the square of their
+// number: a sender with such a domain is built at once (BUGS RV36). Up to
+// that length a domain is mapped and encoded as nodemailer did, also with
+// a label longer than the DNS allows.
+func TestALongDomainIsNotMapped(t *testing.T) {
+	tab := tables()
+	// IDNA maps U+FF41, the wide a, to "a"
+	const wide = "\uff41"
+	for domain, want := range map[string]string{
+		strings.Repeat(wide, 64) + ".example": strings.Repeat("a", 64) + ".example",
+		strings.Repeat(wide, 1020) + ".de":    strings.Repeat("a", 1020) + ".de",
+		strings.Repeat(wide, 1022) + ".de":    strings.Repeat(wide, 1022) + ".de",
+		strings.Repeat(wide+"b.", 340) + "de": strings.Repeat("ab.", 340) + "de",
+		strings.Repeat(wide+"b.", 341) + "de": strings.Repeat(wide+"b.", 341) + "de",
+	} {
+		if got := normalizeAddress(tab, "user@"+domain); got != "user@"+want {
+			t.Errorf("a domain of %d characters: %.80q..., want %.80q...", utf8.RuneCountInString(domain), got, "user@"+want)
+		}
+	}
+
+	// "a", then 150,000 times U+0301 and 150,000 times U+0316: sorting by
+	// insertion moves every mark of the second run past the whole first run
+	marks := "a" + strings.Repeat("\u0301", 150000) + strings.Repeat("\u0316", 150000) + ".example"
+	text := "alert"
+	start := time.Now()
+	m, err := Build(Mail{From: "alerts@" + marks, To: []string{"ops@example.com", "ops@" + marks}, Text: &text}, Options{})
+	if elapsed := time.Since(start); err != nil || elapsed > 5*time.Second {
+		t.Fatalf("a domain of 300,000 combining marks took %v (%v)", elapsed, err)
+	}
+	if m.EnvelopeFrom != "alerts@"+marks || len(m.EnvelopeTo) != 2 {
+		t.Fatalf("envelope from %d bytes, %d recipients", len(m.EnvelopeFrom), len(m.EnvelopeTo))
+	}
 }
 
 // TestExtraAddressVectors replays a second file of address vectors, named

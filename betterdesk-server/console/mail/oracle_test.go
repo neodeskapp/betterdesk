@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -380,6 +381,10 @@ func refusedForCause(request, message string) bool {
 		// BUGS EM9
 		from, isText := text("from")
 		return missing("from") || isText && jsbind.Trim(from) == ""
+	case "SMTP sender is too long":
+		// BUGS RV36
+		from, isText := text("from")
+		return isText && utf8.RuneCountInString(from) > maxFromLength
 	}
 	return false
 }
@@ -869,9 +874,12 @@ func (r *replay) run(i int, step oracleStep) {
 			if err := json.Unmarshal([]byte(refused), &reason); err != nil || step.Request == nil || !refusedForCause(*step.Request, reason.Error) {
 				t.Fatalf("step %d put %s: refused with %s", i, show(step.Request), refused)
 			}
-			if reason.Error == "SMTP sender is required" {
+			switch reason.Error {
+			case "SMTP sender is required":
 				r.counts["EM9: a save without a sender"]++
-			} else {
+			case "SMTP sender is too long":
+				r.counts["RV36: a sender of more than 998 characters"]++
+			default:
 				r.counts["EM5: a save with a member of the wrong type"]++
 			}
 			after, hasRow, err := getSetting(ctx, r.db, settingKey)

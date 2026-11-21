@@ -152,6 +152,13 @@ func FuzzSettingsBody(f *testing.F) {
 				}
 				return
 			}
+			if refused == "SMTP sender is too long" {
+				// BUGS RV36
+				if from := bodyValue(body, "from"); from.kind != kindString || utf8.RuneCountInString(from.str) <= maxFromLength {
+					t.Fatalf("%s: refused with %q", raw, refused)
+				}
+				return
+			}
 			if refused != "SMTP host is required" && refused != "SMTP sender is required" && !strings.HasPrefix(refused, "Invalid ") {
 				t.Fatalf("%s: refused with %q", raw, refused)
 			}
@@ -189,7 +196,7 @@ func FuzzSettingsBody(f *testing.F) {
 		if v := stored.member("tlsVerify"); !v.isUndefined() && v.kind != kindBool {
 			t.Fatalf("%s stores tlsVerify %s", raw, v.json())
 		}
-		if !stored.member("from").truthy() {
+		if !stored.member("from").truthy() || utf8.RuneCountInString(stored.member("from").str) > maxFromLength {
 			t.Fatalf("%s stores no sender: %q", raw, out)
 		}
 		// The password: a new one when the request brings one, else the

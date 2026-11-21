@@ -3,6 +3,7 @@ package message
 import (
 	"errors"
 	"strings"
+	"unicode/utf8"
 )
 
 // Limits of the DNS: a label has at most 63 characters and a name 253.
@@ -10,6 +11,12 @@ const (
 	maxDomainLength = 253
 	maxLabelLength  = 63
 )
+
+// maxMappedLength is the longest domain, in characters, that is mapped and
+// encoded. The URL host parser takes longer domains and labels than the
+// DNS does, and nodemailer encoded them; the limit keeps that for every
+// domain a mail could name and bounds the work for one.
+const maxMappedLength = 1024
 
 // errPunycode is the failure of the fallback codec. The caller keeps the
 // domain as it was written then.
@@ -19,11 +26,16 @@ var errPunycode = errors.New("punycode: invalid input")
 // the address: the ASCII form ("xn--..." labels), or with toUnicode the
 // Unicode form, which is used next to a local part that is not ASCII.
 //
-// A domain the URL host parser accepts comes back in its canonical form,
-// IP addresses included. Everything else goes through a plain Punycode
-// codec that maps and checks nothing, unless it is too long to be a domain;
-// that codec can fail.
+// A domain of more than maxMappedLength characters comes back as it is,
+// before anything maps it: the mapping sorts combining marks, and Punycode
+// encodes, in time by the square of the length. A domain the URL host
+// parser accepts comes back in its canonical form, IP addresses included.
+// Everything else goes through a plain Punycode codec that maps and checks
+// nothing, unless it is too long to be a domain; that codec can fail.
 func normalizeDomain(t *unicodeTables, domain string, toUnicode bool) (string, error) {
+	if utf8.RuneCountInString(domain) > maxMappedLength {
+		return domain, nil
+	}
 	if !hasURLUnsafe(domain) {
 		mapped := nodeDomainToASCII(t, domain)
 		if mapped != "" && toUnicode {

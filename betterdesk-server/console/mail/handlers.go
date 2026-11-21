@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -108,7 +109,8 @@ func bodyValue(body middleware.JSONObject, name string) value {
 // that has not is answered with 400 {"error":"..."}: "SMTP host is
 // required" for a host that is missing, blank or another empty value,
 // else "Invalid <member>"; then a save without a sender is answered "SMTP
-// sender is required", and a save that would keep the stored password for
+// sender is required" and one of more than 998 characters "SMTP sender is
+// too long", and a save that would keep the stored password for
 // another host, port or user is answered "SMTP password is required when
 // the host, port or user changes". What is stored:
 //
@@ -120,7 +122,7 @@ func bodyValue(body middleware.JSONObject, name string) value {
 //	pass         text; when missing, null, "" or "********", the
 //	             password stored so far when host, port and user are
 //	             the stored ones, else ""
-//	from         text that is not blank
+//	from         text that is not blank, of at most 998 characters
 //	alert_email  plain addresses separated by commas (PlainAddressList),
 //	             without the white space around them; "" when missing or
 //	             null
@@ -194,6 +196,9 @@ func nextConfig(body middleware.JSONObject, existing value) (config value, refus
 	if jsbind.Trim(texts["from"]) == "" {
 		return undefined, "SMTP sender is required"
 	}
+	if utf8.RuneCountInString(texts["from"]) > maxFromLength {
+		return undefined, "SMTP sender is too long"
+	}
 	// The password stays what it was unless the request brings a new one
 	// (the settings page sends the mask back, or nothing), but only for the
 	// server and the account it was given for: it is never sent to another
@@ -222,6 +227,10 @@ func nextConfig(body middleware.JSONObject, existing value) (config value, refus
 	}
 	return config, ""
 }
+
+// maxFromLength is the longest sender a save takes, in characters: the
+// longest line a mail header may have.
+const maxFromLength = 998
 
 // passwordRequired refuses a save that keeps the stored password while it
 // changes the host, the port or the user.
