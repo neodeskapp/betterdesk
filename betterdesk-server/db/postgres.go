@@ -1893,6 +1893,18 @@ func (pg *PostgresDB) RenameUser(id int64, newUsername string) error {
 	if taken > 0 {
 		return ErrUsernameTaken
 	}
+	// The account's membership rows take the new name with it, so another
+	// member of one of its organizations must not have that name
+	if err := tx.QueryRow(pg.ctx, `
+		SELECT COUNT(*) FROM org_users
+		WHERE username = $1 AND server_user_id <> $2
+		  AND org_id IN (SELECT org_id FROM org_users WHERE server_user_id = $2)`,
+		newUsername, id).Scan(&taken); err != nil {
+		return fmt.Errorf("db: RenameUser organization collision check: %w", err)
+	}
+	if taken > 0 {
+		return ErrUsernameTaken
+	}
 
 	if _, err := tx.Exec(pg.ctx, `UPDATE users SET username = $1 WHERE id = $2`, newUsername, id); err != nil {
 		if isUniqueViolation(err) {
@@ -1901,24 +1913,34 @@ func (pg *PostgresDB) RenameUser(id int64, newUsername string) error {
 		return fmt.Errorf("db: RenameUser users: %w", err)
 	}
 
+	// The statements below may fail (a console table that is not there);
+	// each runs in a savepoint, so a failure does not abort the transaction.
 	// Address books are keyed by (username, ab_type).
-	_, _ = tx.Exec(pg.ctx, `DELETE FROM address_books WHERE username = $1`, newUsername)
-	if _, err := tx.Exec(pg.ctx,
+	_ = pgExecInSavepoint(pg.ctx, tx, `DELETE FROM address_books WHERE username = $1`, newUsername)
+	if err := pgExecInSavepoint(pg.ctx, tx,
 		`UPDATE address_books SET username = $1 WHERE username = $2`, newUsername, oldUsername); err != nil {
 		if !isMissingTable(err) {
 			return fmt.Errorf("db: RenameUser address books: %w", err)
 		}
 	}
 
-	// Organisation membership and strategy assignments reference the name.
-	_, _ = tx.Exec(pg.ctx, `UPDATE org_users SET username = $1 WHERE username = $2`, newUsername, oldUsername)
-	_, _ = tx.Exec(pg.ctx,
+	// The account's own membership rows in organizations; an
+	// organization's own account of the same name is another person's
+	if _, err := tx.Exec(pg.ctx,
+		`UPDATE org_users SET username = $1 WHERE server_user_id = $2`, newUsername, id); err != nil {
+		if isUniqueViolation(err) {
+			return ErrUsernameTaken
+		}
+		return fmt.Errorf("db: RenameUser organizations: %w", err)
+	}
+	// Strategy assignments reference the name.
+	_ = pgExecInSavepoint(pg.ctx, tx,
 		`UPDATE strategy_assignments SET target_key = $1 WHERE target_key = $2 AND target_type = 'user'`,
 		newUsername, oldUsername)
 
 	// Stale lockout history must not lock the fresh name.
-	_, _ = tx.Exec(pg.ctx, `DELETE FROM account_lockouts WHERE username = $1`, newUsername)
-	if _, err := tx.Exec(pg.ctx,
+	_ = pgExecInSavepoint(pg.ctx, tx, `DELETE FROM account_lockouts WHERE username = $1`, newUsername)
+	if err := pgExecInSavepoint(pg.ctx, tx,
 		`UPDATE login_attempts SET username = $1 WHERE username = $2`, newUsername, oldUsername); err != nil {
 		if !isMissingTable(err) {
 			return fmt.Errorf("db: RenameUser attempts: %w", err)
@@ -1929,6 +1951,20 @@ func (pg *PostgresDB) RenameUser(id int64, newUsername string) error {
 		return fmt.Errorf("db: RenameUser commit: %w", err)
 	}
 	return nil
+}
+
+// pgExecInSavepoint runs one statement of a transaction in a savepoint: a
+// statement that fails is rolled back alone and the transaction goes on.
+func pgExecInSavepoint(ctx context.Context, tx pgx.Tx, query string, args ...any) error {
+	savepoint, err := tx.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	if _, err := savepoint.Exec(ctx, query, args...); err != nil {
+		_ = savepoint.Rollback(ctx)
+		return err
+	}
+	return savepoint.Commit(ctx)
 }
 
 func (pg *PostgresDB) DeleteUser(id int64) error {
