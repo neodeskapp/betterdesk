@@ -23,9 +23,10 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
-	"io"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -97,7 +98,10 @@ func main() {
 		if *src == "" {
 			log.Fatal("Usage: migrate -mode backup -src <path>")
 		}
-		bp := createBackup(*src)
+		bp, err := createBackup(*src)
+		if err != nil {
+			log.Fatalf("Backup failed: %v", err)
+		}
 		log.Printf("Backup created: %s", bp)
 	default:
 		printUsage()
@@ -138,7 +142,10 @@ func runRust2Go(srcPath, dstPath string) {
 		log.Fatal("Usage: migrate -mode rust2go -src <rust-db-path> [-dst <dest>]")
 	}
 	requireFile(srcPath)
-	bp := createBackup(srcPath)
+	bp, err := createBackup(srcPath)
+	if err != nil {
+		log.Fatalf("Backup failed: %v", err)
+	}
 	log.Printf("Backup created: %s", bp)
 
 	peers, err := readRustDB(srcPath)
@@ -353,7 +360,10 @@ func runSQLite2PG(srcPath, dstDSN string) {
 		log.Fatal("Usage: migrate -mode sqlite2pg -src <sqlite-path> -dst <postgres://...>")
 	}
 	requireFile(srcPath)
-	bp := createBackup(srcPath)
+	bp, err := createBackup(srcPath)
+	if err != nil {
+		log.Fatalf("Backup failed: %v", err)
+	}
 	log.Printf("Backup created: %s", bp)
 
 	srcDB, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=ro&_journal_mode=WAL", srcPath))
@@ -889,12 +899,18 @@ func runNodeJS2Go(srcPeerPath, srcAuthPath, dstPath string) {
 	}
 	requireFile(srcPeerPath)
 
-	bp := createBackup(srcPeerPath)
+	bp, err := createBackup(srcPeerPath)
+	if err != nil {
+		log.Fatalf("Backup failed: %v", err)
+	}
 	log.Printf("Peer DB backup: %s", bp)
 
 	if srcAuthPath != "" {
 		requireFile(srcAuthPath)
-		bp = createBackup(srcAuthPath)
+		bp, err = createBackup(srcAuthPath)
+		if err != nil {
+			log.Fatalf("Backup failed: %v", err)
+		}
 		log.Printf("Auth DB backup: %s", bp)
 	}
 
@@ -1539,46 +1555,78 @@ func sqliteSchemaStatements() []string {
 
 // ── Backup & Utilities ────────────────────────────────────────────────
 
-// createBackup copies a SQLite database file with a timestamp suffix.
-func createBackup(srcPath string) string {
-	ts := time.Now().Format("20060102_150405")
+// createBackup writes a backup of the SQLite database at srcPath next to it,
+// named with a timestamp. The backup is one self-contained file made with
+// VACUUM INTO, a consistent snapshot even while a server writes to the
+// source and its -wal. It holds password hashes and secrets, so it gets
+// the source's mode with everything beyond 0600 taken away. An existing
+// file of the same name is never overwritten, and when a step fails the
+// partial backup is removed.
+func createBackup(srcPath string) (string, error) {
+	info, err := os.Stat(srcPath)
+	if err != nil {
+		return "", fmt.Errorf("backup: %w", err)
+	}
+	if !info.Mode().IsRegular() {
+		return "", fmt.Errorf("backup: %s is not a regular file", srcPath)
+	}
 	ext := filepath.Ext(srcPath)
-	base := srcPath[:len(srcPath)-len(ext)]
-	backupPath := fmt.Sprintf("%s_backup_%s%s", base, ts, ext)
-
-	src, err := os.Open(srcPath)
-	if err != nil {
-		log.Fatalf("Cannot open source for backup: %v", err)
-	}
-	defer src.Close()
-
-	dst, err := os.Create(backupPath)
-	if err != nil {
-		log.Fatalf("Cannot create backup file: %v", err)
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, src); err != nil {
-		log.Fatalf("Backup copy failed: %v", err)
-	}
-
-	// Also copy -wal and -shm if they exist
-	for _, suffix := range []string{"-wal", "-shm"} {
-		walPath := srcPath + suffix
-		if _, err := os.Stat(walPath); err == nil {
-			walSrc, err := os.Open(walPath)
-			if err == nil {
-				walDst, err := os.Create(backupPath + suffix)
-				if err == nil {
-					io.Copy(walDst, walSrc)
-					walDst.Close()
-				}
-				walSrc.Close()
-			}
+	stem := fmt.Sprintf("%s_backup_%s", strings.TrimSuffix(srcPath, ext), time.Now().Format("20060102_150405"))
+	// A second backup in the same second gets a number after the time.
+	var f *os.File
+	var backupPath string
+	for i := 1; ; i++ {
+		backupPath = stem + ext
+		if i > 1 {
+			backupPath = fmt.Sprintf("%s_%d%s", stem, i, ext)
+		}
+		f, err = os.OpenFile(backupPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+		if !errors.Is(err, fs.ErrExist) || i == 100 {
+			break
 		}
 	}
+	if err != nil {
+		return "", fmt.Errorf("backup: create %s: %w", backupPath, err)
+	}
+	err = f.Close()
+	if err == nil {
+		err = writeBackup(srcPath, backupPath, info.Mode().Perm()&0o600)
+	}
+	if err != nil {
+		_ = os.Remove(backupPath)
+		return "", fmt.Errorf("backup to %s: %w", backupPath, err)
+	}
+	return backupPath, nil
+}
 
-	return backupPath
+// writeBackup fills the empty file at backupPath with a snapshot of the
+// database at srcPath and gives it mode perm.
+func writeBackup(srcPath, backupPath string, perm os.FileMode) error {
+	src, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=ro&_pragma=busy_timeout(5000)", srcPath))
+	if err != nil {
+		return err
+	}
+	_, err = src.Exec("VACUUM INTO ?", backupPath)
+	if cerr := src.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		return fmt.Errorf("vacuum into: %w", err)
+	}
+
+	// VACUUM INTO does not sync the file it wrote.
+	f, err := os.OpenFile(backupPath, os.O_RDWR, 0)
+	if err != nil {
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	return os.Chmod(backupPath, perm)
 }
 
 // requireFile verifies that a local file exists.
