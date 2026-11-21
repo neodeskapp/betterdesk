@@ -6855,7 +6855,8 @@
     "tier_names_hint": "Numele nivelurilor. Lăsați un câmp gol pentru a folosi numele din lista de mai sus.",
     "badge_effect": "Se aplică imediat pe pagina de autentificare.",
     "badge_save_failed": "Setările insignei nu s-au putut salva: {error}",
-    "tier_this_server": "Ultimul rezultat al acestui server"
+    "tier_this_server": "Ultimul rezultat al acestui server",
+    "stopped_earlier": "Testul de capacitate a fost oprit. Rezultatul afișat este de la testul anterior."
   },
   "commercialization": {
     "title": "Comercializare",

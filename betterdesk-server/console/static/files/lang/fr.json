@@ -6853,7 +6853,8 @@
     "tier_names_hint": "Noms des niveaux. Laissez un champ vide pour utiliser le nom de la liste ci-dessus.",
     "badge_effect": "S'applique tout de suite à la page de connexion.",
     "badge_save_failed": "Impossible d'enregistrer les réglages du badge : {error}",
-    "tier_this_server": "Dernier résultat de ce serveur"
+    "tier_this_server": "Dernier résultat de ce serveur",
+    "stopped_earlier": "Test de capacité arrêté. Le résultat affiché provient du test précédent."
   },
   "commercialization": {
     "title": "Kommerzialisierung",

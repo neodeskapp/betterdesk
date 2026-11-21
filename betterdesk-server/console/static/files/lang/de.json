@@ -6849,7 +6849,8 @@
     "tier_names_hint": "Namen der Stufen. Lassen Sie ein Feld leer, um den Namen aus der Liste oben zu verwenden.",
     "badge_effect": "Gilt sofort für die Anmeldeseite.",
     "badge_save_failed": "Abzeichen-Einstellungen konnten nicht gespeichert werden: {error}",
-    "tier_this_server": "Letztes Ergebnis dieses Servers"
+    "tier_this_server": "Letztes Ergebnis dieses Servers",
+    "stopped_earlier": "Kapazitätstest gestoppt. Das angezeigte Ergebnis stammt vom vorherigen Test."
   },
   "commercialization": {
     "title": "Kommerzialisierung",

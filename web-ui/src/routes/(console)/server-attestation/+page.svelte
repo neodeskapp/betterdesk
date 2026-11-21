@@ -24,7 +24,7 @@
 	import { poll } from '#lib/state/live.ts';
 	import { can, canWrite, session } from '#lib/state/session.svelte.ts';
 	import {
-		outcome,
+		endOfRun,
 		phaseText,
 		progressPercent,
 		reportFileName,
@@ -67,6 +67,8 @@
 
 	function follow() {
 		stopPoll?.();
+		// The result known when the run started: a stopped run stores none, so this one comes back
+		const before = result?.testedAt ?? null;
 		stopPoll = poll(
 			async () => {
 				const s = await getStatus();
@@ -77,13 +79,19 @@
 					stopPoll = null;
 					stopping = false;
 					const r = s.lastResult ?? s.progress?.result ?? null;
-					if (r) {
-						result = r;
-						const end = outcome(r);
-						if (end === 'stopped') toast.info(tf('server_attestation.stopped', 'Capacity test stopped.'));
-						else if (end === 'complete') toast.success(t('server_attestation.complete'));
-						else toast.warning(t('server_attestation.incomplete'));
-					}
+					const { end, fresh } = endOfRun(r, before);
+					if (r) result = r;
+					if (end === 'stopped')
+						toast.info(
+							r && !fresh
+								? tf(
+										'server_attestation.stopped_earlier',
+										'Capacity test stopped. The result shown is from the test before.'
+									)
+								: tf('server_attestation.stopped', 'Capacity test stopped.')
+						);
+					else if (end === 'complete') toast.success(t('server_attestation.complete'));
+					else toast.warning(t('server_attestation.incomplete'));
 				}
 			},
 			{ every: 2000 }

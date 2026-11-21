@@ -6855,7 +6855,8 @@
     "tier_names_hint": "Nivåernas namn. Lämna ett fält tomt för att använda namnet i listan ovan.",
     "badge_effect": "Gäller direkt på inloggningssidan.",
     "badge_save_failed": "Det gick inte att spara märkesinställningarna: {error}",
-    "tier_this_server": "Serverns senaste resultat"
+    "tier_this_server": "Serverns senaste resultat",
+    "stopped_earlier": "Kapacitetstestet stoppades. Resultatet som visas är från testet innan."
   },
   "commercialization": {
     "title": "Kommersialisering",

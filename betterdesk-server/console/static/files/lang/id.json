@@ -6855,7 +6855,8 @@
     "tier_names_hint": "Nama tingkat. Biarkan kolom kosong untuk memakai nama di daftar atas.",
     "badge_effect": "Langsung berlaku di halaman masuk.",
     "badge_save_failed": "Tidak dapat menyimpan pengaturan lencana: {error}",
-    "tier_this_server": "Hasil terakhir server ini"
+    "tier_this_server": "Hasil terakhir server ini",
+    "stopped_earlier": "Uji kapasitas dihentikan. Hasil yang ditampilkan berasal dari uji sebelumnya."
   },
   "commercialization": {
     "title": "Komersialisasi",

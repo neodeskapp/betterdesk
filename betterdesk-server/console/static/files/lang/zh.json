@@ -6849,7 +6849,8 @@
     "tier_names_hint": "等级名称。字段留空即使用上方列表中的名称。",
     "badge_effect": "立即应用到登录页面。",
     "badge_save_failed": "无法保存徽章设置：{error}",
-    "tier_this_server": "此服务器的上次结果"
+    "tier_this_server": "此服务器的上次结果",
+    "stopped_earlier": "容量测试已停止。显示的结果来自上一次测试。"
   },
   "commercialization": {
     "title": "商业化",

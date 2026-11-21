@@ -6849,7 +6849,8 @@
     "tier_names_hint": "Nomes dos níveis. Deixe um campo vazio para usar o nome da lista acima.",
     "badge_effect": "Aplica-se de imediato à página de início de sessão.",
     "badge_save_failed": "Não foi possível guardar as definições do distintivo: {error}",
-    "tier_this_server": "Último resultado deste servidor"
+    "tier_this_server": "Último resultado deste servidor",
+    "stopped_earlier": "Teste de capacidade interrompido. O resultado exibido é do teste anterior."
   },
   "commercialization": {
     "title": "Comercialização",

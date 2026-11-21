@@ -6849,7 +6849,8 @@
     "tier_names_hint": "ランク名。空欄のままにすると上の一覧の名前を使います。",
     "badge_effect": "サインインページにすぐ反映されます。",
     "badge_save_failed": "バッジの設定を保存できませんでした: {error}",
-    "tier_this_server": "このサーバーの前回の結果"
+    "tier_this_server": "このサーバーの前回の結果",
+    "stopped_earlier": "キャパシティテストを停止しました。表示されている結果は前回のテストのものです。"
   },
   "commercialization": {
     "title": "商用化",

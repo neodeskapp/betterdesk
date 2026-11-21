@@ -6849,7 +6849,8 @@
     "tier_names_hint": "Namen van de niveaus. Laat een veld leeg om de naam uit de lijst hierboven te gebruiken.",
     "badge_effect": "Geldt direct voor de aanmeldpagina.",
     "badge_save_failed": "Kan de badge-instellingen niet opslaan: {error}",
-    "tier_this_server": "Laatste resultaat van deze server"
+    "tier_this_server": "Laatste resultaat van deze server",
+    "stopped_earlier": "Capaciteitstest gestopt. Het getoonde resultaat is van de vorige test."
   },
   "commercialization": {
     "title": "Commercialisatie",

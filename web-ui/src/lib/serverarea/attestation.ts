@@ -50,6 +50,20 @@ export function outcome(r: Pick<Result, 'aborted' | 'valid'>): 'stopped' | 'comp
 	return r.valid ? 'complete' : 'incomplete';
 }
 
+/**
+ * How a run the page followed ended. `before` is the testedAt of the
+ * result known when it started: a stopped run stores no result, so the
+ * status then carries that earlier one again (fresh false) and the run
+ * counts as stopped, also when another tab pressed Stop.
+ */
+export function endOfRun(
+	r: Pick<Result, 'testedAt' | 'aborted' | 'valid'> | null,
+	before: string | null
+): { end: 'stopped' | 'complete' | 'incomplete'; fresh: boolean } {
+	if (!r || (r.testedAt ?? null) === before) return { end: 'stopped', fresh: false };
+	return { end: outcome(r), fresh: true };
+}
+
 /** A tier's name: the admin's own name for it, else the translated one */
 export function tierName(
 	tier: string | null | undefined,

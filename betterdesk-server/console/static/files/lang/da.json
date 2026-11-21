@@ -6855,7 +6855,8 @@
     "tier_names_hint": "Navne på niveauer. Lad et felt være tomt for at bruge navnet i listen ovenfor.",
     "badge_effect": "Gælder straks på login-siden.",
     "badge_save_failed": "Kunne ikke gemme mærkeindstillingerne: {error}",
-    "tier_this_server": "Denne servers seneste resultat"
+    "tier_this_server": "Denne servers seneste resultat",
+    "stopped_earlier": "Kapacitetstesten blev stoppet. Det viste resultat er fra testen før."
   },
   "commercialization": {
     "title": "Kommercialisering",

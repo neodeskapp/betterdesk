@@ -6849,7 +6849,8 @@
     "tier_names_hint": "Nazwy poziomów. Zostaw pole puste, aby użyć nazwy z listy powyżej.",
     "badge_effect": "Działa od razu na stronie logowania.",
     "badge_save_failed": "Nie udało się zapisać ustawień odznaki: {error}",
-    "tier_this_server": "Ostatni wynik tego serwera"
+    "tier_this_server": "Ostatni wynik tego serwera",
+    "stopped_earlier": "Test pojemności zatrzymany. Wyświetlany wynik pochodzi z poprzedniego testu."
   },
   "commercialization": {
     "title": "Komercjalizacja",

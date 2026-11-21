@@ -6853,7 +6853,8 @@
     "tier_names_hint": "等級名稱。欄位留空即使用上方清單中的名稱。",
     "badge_effect": "立即套用到登入頁面。",
     "badge_save_failed": "無法儲存徽章設定：{error}",
-    "tier_this_server": "此伺服器的上次結果"
+    "tier_this_server": "此伺服器的上次結果",
+    "stopped_earlier": "容量測試已停止。顯示的結果來自上一次測試。"
   },
   "commercialization": {
     "title": "商業化",

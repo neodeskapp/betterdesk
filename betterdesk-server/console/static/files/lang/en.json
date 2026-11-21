@@ -6922,7 +6922,8 @@
         "tier_names_hint": "Tier names. Leave a field empty to use the name in the list above.",
         "badge_effect": "Applies to the sign-in page right away.",
         "badge_save_failed": "Could not save the badge settings: {error}",
-        "tier_this_server": "This server's last result"
+        "tier_this_server": "This server's last result",
+        "stopped_earlier": "Capacity test stopped. The result shown is from the test before."
     },
     "commercialization": {
         "title": "Commercialization",

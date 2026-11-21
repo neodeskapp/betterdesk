@@ -6855,7 +6855,8 @@
     "tier_names_hint": "A szintek nevei. Hagyjon üresen egy mezőt a fenti lista nevének használatához.",
     "badge_effect": "A bejelentkezési oldalon azonnal érvényes.",
     "badge_save_failed": "Nem sikerült menteni a jelvénybeállításokat: {error}",
-    "tier_this_server": "A szerver legutóbbi eredménye"
+    "tier_this_server": "A szerver legutóbbi eredménye",
+    "stopped_earlier": "A kapacitásteszt leállt. A látható eredmény az előző tesztből származik."
   },
   "commercialization": {
     "title": "Kereskedelmi modul",

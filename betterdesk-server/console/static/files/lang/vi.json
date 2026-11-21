@@ -6855,7 +6855,8 @@
     "tier_names_hint": "Tên các hạng. Để trống một ô để dùng tên trong danh sách ở trên.",
     "badge_effect": "Áp dụng ngay cho trang đăng nhập.",
     "badge_save_failed": "Không lưu được cài đặt huy hiệu: {error}",
-    "tier_this_server": "Kết quả gần nhất của máy chủ này"
+    "tier_this_server": "Kết quả gần nhất của máy chủ này",
+    "stopped_earlier": "Đã dừng kiểm tra dung lượng. Kết quả hiển thị là của lần kiểm tra trước."
   },
   "commercialization": {
     "title": "Thương mại hóa",

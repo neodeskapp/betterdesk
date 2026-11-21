@@ -6855,7 +6855,8 @@
     "tier_names_hint": "Tasojen nimet. Jätä kenttä tyhjäksi käyttääksesi yllä olevan luettelon nimeä.",
     "badge_effect": "Tulee voimaan kirjautumissivulla heti.",
     "badge_save_failed": "Merkin asetuksia ei voitu tallentaa: {error}",
-    "tier_this_server": "Tämän palvelimen viimeisin tulos"
+    "tier_this_server": "Tämän palvelimen viimeisin tulos",
+    "stopped_earlier": "Kapasiteettitesti pysäytettiin. Näytetty tulos on edellisestä testistä."
   },
   "commercialization": {
     "title": "Kaupallistaminen",

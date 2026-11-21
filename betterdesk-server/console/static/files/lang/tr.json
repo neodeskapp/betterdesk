@@ -6855,7 +6855,8 @@
     "tier_names_hint": "Seviye adları. Yukarıdaki listedeki adı kullanmak için alanı boş bırakın.",
     "badge_effect": "Oturum açma sayfasına hemen uygulanır.",
     "badge_save_failed": "Rozet ayarları kaydedilemedi: {error}",
-    "tier_this_server": "Bu sunucunun son sonucu"
+    "tier_this_server": "Bu sunucunun son sonucu",
+    "stopped_earlier": "Kapasite testi durduruldu. Gösterilen sonuç önceki testten."
   },
   "commercialization": {
     "title": "Ticarileştirme",

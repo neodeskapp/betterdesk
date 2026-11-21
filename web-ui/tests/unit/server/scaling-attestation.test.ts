@@ -16,6 +16,7 @@ import {
 	totals
 } from '../../../src/lib/serverarea/scaling.ts';
 import {
+	endOfRun,
 	outcome,
 	phaseText,
 	progressPercent,
@@ -173,6 +174,16 @@ describe('capacity test', () => {
 			fallback: 'Working'
 		});
 	});
+	test('the end of a run: an earlier result after Stop, or no new result, is no finished test', () => {
+		const earlier = { testedAt: '2026-11-20T10:00:00Z', aborted: false, valid: true };
+		const fresh = { testedAt: '2026-11-21T10:00:00Z', aborted: false, valid: true };
+		expect(endOfRun(earlier, earlier.testedAt)).toEqual({ end: 'stopped', fresh: false });
+		expect(endOfRun(null, null)).toEqual({ end: 'stopped', fresh: false });
+		expect(endOfRun(fresh, earlier.testedAt)).toEqual({ end: 'complete', fresh: true });
+		expect(endOfRun({ ...fresh, valid: false }, null)).toEqual({ end: 'incomplete', fresh: true });
+		expect(endOfRun({ ...fresh, aborted: true }, null)).toEqual({ end: 'stopped', fresh: true });
+	});
+
 	test('how a run ended', () => {
 		expect(outcome({ aborted: true, valid: true })).toBe('stopped');
 		expect(outcome({ aborted: false, valid: true })).toBe('complete');

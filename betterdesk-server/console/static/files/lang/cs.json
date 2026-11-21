@@ -6849,7 +6849,8 @@
     "tier_names_hint": "Názvy úrovní. Prázdné pole použije název ze seznamu výše.",
     "badge_effect": "Na přihlašovací stránce platí hned.",
     "badge_save_failed": "Nastavení odznaku se nepodařilo uložit: {error}",
-    "tier_this_server": "Poslední výsledek tohoto serveru"
+    "tier_this_server": "Poslední výsledek tohoto serveru",
+    "stopped_earlier": "Test kapacity byl zastaven. Zobrazený výsledek pochází z předchozího testu."
   },
   "commercialization": {
     "title": "Komerce",

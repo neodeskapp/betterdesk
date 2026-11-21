@@ -6849,7 +6849,8 @@
     "tier_names_hint": "등급 이름. 비워 두면 위 목록의 이름을 사용합니다.",
     "badge_effect": "로그인 페이지에 바로 적용됩니다.",
     "badge_save_failed": "배지 설정을 저장하지 못했습니다: {error}",
-    "tier_this_server": "이 서버의 마지막 결과"
+    "tier_this_server": "이 서버의 마지막 결과",
+    "stopped_earlier": "용량 테스트가 중지되었습니다. 표시된 결과는 이전 테스트의 결과입니다."
   },
   "commercialization": {
     "title": "상용화",
