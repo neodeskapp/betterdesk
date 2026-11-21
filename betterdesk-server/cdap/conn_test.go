@@ -241,6 +241,7 @@ func TestRegisterKeepsToTheDevicesOfThePrincipal(t *testing.T) {
 		if m := c.register("evil-name"); m.Type != "error" {
 			t.Errorf("%s: register answered %s %s, want an error", what, m.Type, m.Payload)
 		}
+		c.conn.CloseNow()
 		w.settle(t, 0)
 	}
 	refused("a device someone else enrolled", "apikey-other-0123456789abcdef", "900100001")
