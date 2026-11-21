@@ -838,6 +838,14 @@ const peerColumns = `id, uuid, pk, ip, "user", hostname, os, version,
 	soft_deleted, deleted_at, note, tags, heartbeat_seq,
 	device_type, linked_peer_id, display_name`
 
+// peerColumnsP is peerColumns of the peers table under the alias p, for
+// joins with tables that have columns of the same names (org_devices.tags).
+const peerColumnsP = `p.id, p.uuid, p.pk, p.ip, p."user", p.hostname, p.os, p.version,
+	p.status, p.nat_type, p.last_online, p.created_at,
+	p.disabled, p.banned, p.ban_reason, p.banned_at,
+	p.soft_deleted, p.deleted_at, p.note, p.tags, p.heartbeat_seq,
+	p.device_type, p.linked_peer_id, p.display_name`
+
 // scanPeer scans a row into a Peer struct using nullable types.
 func scanPeer(row pgx.Row) (*Peer, error) {
 	p := &Peer{}
@@ -2824,7 +2832,7 @@ func (pg *PostgresDB) HasRolePermission(role, permission string) (bool, error) {
 }
 
 func (pg *PostgresDB) ListPeersForOrg(orgID string, includeDeleted bool) ([]*Peer, error) {
-	query := `SELECT ` + peerColumns + ` FROM peers p
+	query := `SELECT ` + peerColumnsP + ` FROM peers p
 		INNER JOIN org_devices od ON p.id = od.device_id
 		WHERE od.org_id = $1`
 	if !includeDeleted {
@@ -2860,7 +2868,7 @@ func (pg *PostgresDB) ListPeersForOrgPaginated(orgID string, includeDeleted bool
 		return nil, 0, fmt.Errorf("db: ListPeersForOrgPaginated count: %w", err)
 	}
 
-	query := `SELECT ` + peerColumns + where + ` ORDER BY p.last_online DESC NULLS LAST`
+	query := `SELECT ` + peerColumnsP + where + ` ORDER BY p.last_online DESC NULLS LAST`
 	if limit > 0 {
 		query += fmt.Sprintf(` LIMIT %d OFFSET %d`, limit, offset)
 	}
