@@ -87,12 +87,16 @@ func RegisterWith(d *kit.Deps, o Options) {
 	}
 	h := newHandlers(d.Log.Child("SYSTEM"), d.Store, o)
 	r := d.Router
-	r.Get("/api/system/info", h.info, d.RequireAuth, d.RequirePermission("metrics.view"))
-	r.Get("/api/logs/recent", h.logs, d.Limits.API.Middleware, d.RequireAuth, d.RequirePermission("metrics.view"))
-	r.Get("/api/database/stats", h.databaseStats, d.Limits.API.Middleware, d.RequireAuth, d.RequirePermission("metrics.view"))
-	r.Get("/api/docker/containers", h.containers, d.RequireAuth, d.RequirePermission("metrics.view"))
-	r.Post("/api/system/exec", h.exec, d.RequireAuth, d.RequirePermission("server.config"))
-	r.Get("/api/speed-test", h.speedTest, d.RequireAuth, d.RequirePermission("metrics.view"))
+	// The host's process list, its logs, the table counts and the
+	// containers show what other services run with: server.config. The
+	// disks and the console's own process stay with metrics.view
+	metrics, config := d.RequirePermission("metrics.view"), d.RequirePermission("server.config")
+	r.Get("/api/system/info", h.info, d.RequireAuth, metrics)
+	r.Get("/api/logs/recent", h.logs, d.Limits.API.Middleware, d.RequireAuth, config)
+	r.Get("/api/database/stats", h.databaseStats, d.Limits.API.Middleware, d.RequireAuth, config)
+	r.Get("/api/docker/containers", h.containers, d.RequireAuth, config)
+	r.Post("/api/system/exec", h.exec, d.RequireAuth, config)
+	r.Get("/api/speed-test", h.speedTest, d.RequireAuth, metrics)
 }
 
 func newHandlers(log *kit.Logger, db *store.DB, o Options) *handlers {

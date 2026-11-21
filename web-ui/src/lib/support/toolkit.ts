@@ -53,11 +53,11 @@ export const TOOLS: readonly ToolDef[] = [
 	{ id: 'jwt', group: 'crypto', posts: true },
 	{ id: 'base64', group: 'encoding', posts: true },
 	{ id: 'urlencode', group: 'encoding', posts: true },
-	{ id: 'processes', group: 'system', requires: 'metrics.view' },
+	{ id: 'processes', group: 'system', requires: 'server.config' },
 	{ id: 'disk', group: 'system', requires: 'metrics.view' },
-	{ id: 'db', group: 'system', requires: 'metrics.view' },
-	{ id: 'docker', group: 'system', requires: 'metrics.view' },
-	{ id: 'logs', group: 'system', requires: 'metrics.view' }
+	{ id: 'db', group: 'system', requires: 'server.config' },
+	{ id: 'docker', group: 'system', requires: 'server.config' },
+	{ id: 'logs', group: 'system', requires: 'server.config' }
 ];
 
 /** The tools the account may use; with writes refused (its section at read) none that post */

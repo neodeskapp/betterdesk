@@ -56,16 +56,23 @@ type systemInfo struct {
 }
 
 // info answers GET /api/system/info: the processes that use the most CPU,
-// the disks, and the console's own process under the key "node".
+// the disks, and the console's own process under the key "node". The
+// processes, whose command lines show what other services run with, are
+// for an account with server.config; the list is empty for the others.
 func (h *handlers) info(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	result := systemInfo{Processes: []process{}, Disks: []disk{}}
+	processes := kit.HasPermission(r, "server.config")
 	switch {
 	case h.linux:
-		result.Processes = parsePS(h.run(ctx, psCommand, shortTimeout), h.o.TotalMemory())
+		if processes {
+			result.Processes = parsePS(h.run(ctx, psCommand, shortTimeout), h.o.TotalMemory())
+		}
 		result.Disks = parseDF(h.run(ctx, dfCommand, shortTimeout))
 	case h.win:
-		result.Processes = parseGetProcess(h.run(ctx, processCommand, longTimeout))
+		if processes {
+			result.Processes = parseGetProcess(h.run(ctx, processCommand, longTimeout))
+		}
 		result.Disks = parseWMIC(h.run(ctx, diskCommand, longTimeout))
 	}
 	result.Node = h.o.Process()

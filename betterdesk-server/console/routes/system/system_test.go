@@ -93,7 +93,11 @@ func TestGuards(t *testing.T) {
 	// guest_issuer may not see metrics, a viewer may not run commands
 	guest, viewer := s.signIn("guest_issuer"), s.signIn("viewer")
 	for _, path := range reads {
-		if rec := s.call(guest, "GET", path, ""); rec.Code != 403 || rec.Body.String() != `{"success":false,"error":"Permission denied: metrics.view"}` {
+		want := `{"success":false,"error":"Permission denied: metrics.view"}`
+		if hostDetails[path] {
+			want = `{"success":false,"error":"Permission denied: server.config"}`
+		}
+		if rec := s.call(guest, "GET", path, ""); rec.Code != 403 || rec.Body.String() != want {
 			t.Errorf("%s as guest_issuer: %d %s", path, rec.Code, rec.Body.String())
 		}
 	}
@@ -105,6 +109,44 @@ func TestGuards(t *testing.T) {
 	}
 	if rec := s.call(viewer, "GET", "/api/speed-test?size=1", ""); rec.Code != 200 {
 		t.Errorf("speed test as viewer: %d", rec.Code)
+	}
+}
+
+// hostDetails are the reads that show what other services of the host
+// run with, for server.config alone (BUGS RV47).
+var hostDetails = map[string]bool{"/api/logs/recent": true, "/api/database/stats": true, "/api/docker/containers": true}
+
+// TestHostDetailsNeedServerConfig: a viewer and an operator, who have
+// metrics.view, get the disks and the console's own process but no process
+// list, and no logs, table counts or containers; the process list is not
+// even read for them. A server admin gets all of it (BUGS RV47, A81).
+func TestHostDetailsNeedServerConfig(t *testing.T) {
+	sh := &shell{outputs: map[string]string{psCommand: psOutput, dfCommand: dfOutput}}
+	s := linuxSite(t, sh, nil)
+	for _, role := range []string{"viewer", "operator", "global_admin"} {
+		cookie := s.signIn(role)
+		for path := range hostDetails {
+			if rec := s.call(cookie, "GET", path, ""); rec.Code != 403 || rec.Body.String() != `{"success":false,"error":"Permission denied: server.config"}` {
+				t.Errorf("%s as %s: %d %s", path, role, rec.Code, rec.Body.String())
+			}
+		}
+		rec := s.call(cookie, "GET", "/api/system/info", "")
+		if rec.Code != 200 || !strings.HasPrefix(rec.Body.String(), `{"processes":[],"disks":[{"mount":"/",`) {
+			t.Errorf("info as %s: %d %s", role, rec.Code, rec.Body.String())
+		}
+	}
+	if strings.Join(sh.ran, "|") != strings.Repeat("5s "+dfCommand+"|", 2)+"5s "+dfCommand {
+		t.Errorf("commands for the roles without server.config: %q", sh.ran)
+	}
+	sh.ran = nil
+	admin := s.signIn("server_admin")
+	if rec := s.call(admin, "GET", "/api/system/info", ""); rec.Code != 200 || !strings.Contains(rec.Body.String(), `{"name":"/usr/bin/node /app/server.js --flag"`) {
+		t.Errorf("info as server_admin: %d %s", rec.Code, rec.Body.String())
+	}
+	for path := range hostDetails {
+		if rec := s.call(admin, "GET", path, ""); rec.Code != 200 {
+			t.Errorf("%s as server_admin: %d %s", path, rec.Code, rec.Body.String())
+		}
 	}
 }
 
@@ -130,7 +172,7 @@ three fields only
 func TestInfoOnLinux(t *testing.T) {
 	sh := &shell{outputs: map[string]string{psCommand: psOutput, dfCommand: dfOutput}}
 	s := linuxSite(t, sh, nil)
-	rec := s.call(s.signIn("viewer"), "GET", "/api/system/info", "")
+	rec := s.call(s.signIn("server_admin"), "GET", "/api/system/info", "")
 	want := `{"processes":[` +
 		`{"name":"/usr/bin/node /app/server.js --flag","cpu":12.5,"mem":245.76},` +
 		`{"name":"nginx: worker process","cpu":0,"mem":40.96},` +
@@ -148,7 +190,7 @@ func TestInfoOnLinux(t *testing.T) {
 	if strings.Join(sh.ran, "\n") != "5s "+psCommand+"\n5s "+dfCommand {
 		t.Errorf("commands: %q", sh.ran)
 	}
-	if rec := s.call(s.signIn("viewer"), "HEAD", "/api/system/info", ""); rec.Code != 200 || rec.Body.Len() != 0 {
+	if rec := s.call(s.signIn("server_admin"), "HEAD", "/api/system/info", ""); rec.Code != 200 || rec.Body.Len() != 0 {
 		t.Errorf("HEAD: %d with %d bytes", rec.Code, rec.Body.Len())
 	}
 }
@@ -156,7 +198,7 @@ func TestInfoOnLinux(t *testing.T) {
 func TestInfoWithoutTheCommands(t *testing.T) {
 	sh := &shell{}
 	s := linuxSite(t, sh, nil)
-	rec := s.call(s.signIn("viewer"), "GET", "/api/system/info", "")
+	rec := s.call(s.signIn("server_admin"), "GET", "/api/system/info", "")
 	if want := `{"processes":[],"disks":[],"node":{"pid":4711,"uptime":90,"heapUsed":12,"heapTotal":20,"rss":64}}`; rec.Code != 200 || rec.Body.String() != want {
 		t.Errorf("got %d %s", rec.Code, rec.Body.String())
 	}
@@ -168,7 +210,7 @@ func TestInfoOnWindowsAndElsewhere(t *testing.T) {
 		diskCommand:    "\r\nNode,DeviceID,FreeSpace,Size\r\nPC,C:,1000,5000\r\nPC,D:,,\r\nPC,,5,5\r\n",
 	}}
 	s := newSite(t, Options{Run: sh.run, Platform: "win32", OpenFile: opener(noFiles), Process: fixedProcess})
-	rec := s.call(s.signIn("viewer"), "GET", "/api/system/info", "")
+	rec := s.call(s.signIn("server_admin"), "GET", "/api/system/info", "")
 	want := `{"processes":[{"name":"chrome","cpu":120.5,"mem":512.3},{"name":"System","cpu":0,"mem":0.1}],` +
 		`"disks":[{"mount":"C:","name":"C:","total":5000,"used":4000,"free":1000}],` +
 		`"node":{"pid":4711,"uptime":90,"heapUsed":12,"heapTotal":20,"rss":64}}`
@@ -181,7 +223,7 @@ func TestInfoOnWindowsAndElsewhere(t *testing.T) {
 
 	other := &shell{}
 	s = newSite(t, Options{Run: other.run, Platform: "darwin", OpenFile: opener(noFiles), Process: fixedProcess})
-	rec = s.call(s.signIn("viewer"), "GET", "/api/system/info", "")
+	rec = s.call(s.signIn("server_admin"), "GET", "/api/system/info", "")
 	if !strings.HasPrefix(rec.Body.String(), `{"processes":[],"disks":[],"node":`) || len(other.ran) != 0 {
 		t.Errorf("another system: %s, commands %q", rec.Body.String(), other.ran)
 	}
@@ -202,10 +244,10 @@ func TestLogs(t *testing.T) {
 		server5: "one\n\ntwo",
 	}}
 	s := linuxSite(t, sh, nil)
-	viewer := s.signIn("viewer")
+	admin := s.signIn("server_admin")
 	get := func(query string) string {
 		t.Helper()
-		rec := s.call(viewer, "GET", "/api/logs/recent"+query, "")
+		rec := s.call(admin, "GET", "/api/logs/recent"+query, "")
 		if rec.Code != 200 {
 			t.Errorf("%s: %d", query, rec.Code)
 		}
@@ -258,7 +300,7 @@ func TestLogsFromFiles(t *testing.T) {
 	}
 	sh := &shell{}
 	s := linuxSite(t, sh, read)
-	viewer := s.signIn("viewer")
+	admin := s.signIn("server_admin")
 	for query, want := range map[string]string{
 		"?source=go":          `{"source":"go","lines":["a","b","c","d"]}`,
 		"?source=go&limit=3":  `{"source":"go","lines":["c","d"]}`,
@@ -267,28 +309,28 @@ func TestLogsFromFiles(t *testing.T) {
 		"?limit=2":            `{"source":"console","lines":["y","z"]}`,
 		"?source=other":       `{"source":"other","lines":["x","y","z"]}`,
 	} {
-		if rec := s.call(viewer, "GET", "/api/logs/recent"+query, ""); rec.Code != 200 || rec.Body.String() != want {
+		if rec := s.call(admin, "GET", "/api/logs/recent"+query, ""); rec.Code != 200 || rec.Body.String() != want {
 			t.Errorf("%s: %d %s, want %s", query, rec.Code, rec.Body.String(), want)
 		}
 	}
 	opened = nil
-	s.call(viewer, "GET", "/api/logs/recent?source=go", "")
+	s.call(admin, "GET", "/api/logs/recent?source=go", "")
 	if strings.Join(opened, " ") != "/opt/rustdesk/betterdesk-server.log /opt/betterdesk/server.log" {
 		t.Errorf("files tried: %q", opened)
 	}
 
 	// A file that is there and cannot be read fails the request
 	denied := linuxSite(t, &shell{}, func(string) ([]byte, error) { return nil, fs.ErrPermission })
-	if rec := denied.call(denied.signIn("viewer"), "GET", "/api/logs/recent", ""); rec.Code != 500 || rec.Body.String() != `{"error":"Failed to read logs"}` {
+	if rec := denied.call(denied.signIn("server_admin"), "GET", "/api/logs/recent", ""); rec.Code != 500 || rec.Body.String() != `{"error":"Failed to read logs"}` {
 		t.Errorf("unreadable file: %d %s", rec.Code, rec.Body.String())
 	}
-	if rec := denied.call(denied.signIn("viewer"), "GET", "/api/logs/recent?limit[toString]=1", ""); rec.Code != 500 || rec.Body.String() != `{"error":"Failed to read logs"}` {
+	if rec := denied.call(denied.signIn("server_admin"), "GET", "/api/logs/recent?limit[toString]=1", ""); rec.Code != 500 || rec.Body.String() != `{"error":"Failed to read logs"}` {
 		t.Errorf("a limit that is no text: %d %s", rec.Code, rec.Body.String())
 	}
 	// Nothing anywhere, and no journal on other systems
 	other := &shell{}
 	elsewhere := newSite(t, Options{Run: other.run, Platform: "win32", OpenFile: opener(noFiles), Process: fixedProcess})
-	if rec := elsewhere.call(elsewhere.signIn("viewer"), "GET", "/api/logs/recent?source=go", ""); rec.Body.String() != `{"source":"go","lines":[]}` || len(other.ran) != 0 {
+	if rec := elsewhere.call(elsewhere.signIn("server_admin"), "GET", "/api/logs/recent?source=go", ""); rec.Body.String() != `{"source":"go","lines":[]}` || len(other.ran) != 0 {
 		t.Errorf("windows: %s, commands %q", rec.Body.String(), other.ran)
 	}
 }
@@ -323,11 +365,11 @@ func TestLogsReadOnlyTheEndOfALargeFile(t *testing.T) {
 		return countingFile{bytes.NewReader([]byte(content.String())), &read}, nil
 	}
 	s := newSite(t, Options{Run: (&shell{}).run, Platform: "linux", TotalMemory: func() uint64 { return 8 << 30 }, OpenFile: open, Process: fixedProcess})
-	viewer := s.signIn("viewer")
+	admin := s.signIn("server_admin")
 	// The line end at the end of the file counts as a line, as it did
 	for limit, first := range map[string]int{"3": 199998, "200": 199801, "": 199951} {
 		read = 0
-		rec := s.call(viewer, "GET", "/api/logs/recent?source=go&limit="+limit, "")
+		rec := s.call(admin, "GET", "/api/logs/recent?source=go&limit="+limit, "")
 		var got struct{ Lines []string }
 		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil || rec.Code != 200 {
 			t.Fatalf("limit %q: %d %s", limit, rec.Code, rec.Body.String())
@@ -345,7 +387,7 @@ func TestLogsReadOnlyTheEndOfALargeFile(t *testing.T) {
 	content.Reset()
 	content.WriteString(strings.Repeat("x", 9<<20) + "\na\nb\n")
 	read = 0
-	if rec := s.call(viewer, "GET", "/api/logs/recent?source=go", ""); rec.Body.String() != `{"source":"go","lines":["a","b"]}` || read > 9<<20 {
+	if rec := s.call(admin, "GET", "/api/logs/recent?source=go", ""); rec.Body.String() != `{"source":"go","lines":["a","b"]}` || read > 9<<20 {
 		t.Errorf("a long line: %d bytes read, %.80s", read, rec.Body.String())
 	}
 }
@@ -464,8 +506,8 @@ func TestCollectStats(t *testing.T) {
 func TestContainers(t *testing.T) {
 	sh := &shell{outputs: map[string]string{dockerCommand: "web|nginx:1.27|running|Up 3 hours|0.0.0.0:80->80/tcp, 443/tcp\n\nold|alpine|exited|Exited (0) 2 days ago|\nbare\na|b|c|d|e|f\n"}}
 	s := linuxSite(t, sh, nil)
-	viewer := s.signIn("viewer")
-	rec := s.call(viewer, "GET", "/api/docker/containers", "")
+	admin := s.signIn("server_admin")
+	rec := s.call(admin, "GET", "/api/docker/containers", "")
 	want := `{"containers":[{"name":"web","image":"nginx:1.27","state":"running","status":"Up 3 hours","ports":"0.0.0.0:80->80/tcp, 443/tcp"},` +
 		`{"name":"old","image":"alpine","state":"exited","status":"Exited (0) 2 days ago","ports":""},` +
 		`{"name":"bare","image":"","state":"","status":"","ports":""},{"name":"a","image":"b","state":"c","status":"d","ports":"e"}],"available":true}`
@@ -477,7 +519,7 @@ func TestContainers(t *testing.T) {
 	}
 	for name, sh := range map[string]*shell{"no docker": {}, "docker prints nothing": {outputs: map[string]string{dockerCommand: " \n"}}} {
 		s := linuxSite(t, sh, nil)
-		if rec := s.call(s.signIn("viewer"), "GET", "/api/docker/containers", ""); rec.Code != 200 || rec.Body.String() != `{"containers":[],"available":false}` {
+		if rec := s.call(s.signIn("server_admin"), "GET", "/api/docker/containers", ""); rec.Code != 200 || rec.Body.String() != `{"containers":[],"available":false}` {
 			t.Errorf("%s: %d %s", name, rec.Code, rec.Body.String())
 		}
 	}

@@ -4,8 +4,9 @@
  *   where `success` is the check's answer, not the call's
  * - /api/toolkit/* (signed in; Wake-on-LAN device.connect): { success, data },
  *   and a remote failure (TLS error, send error) is 200 { success: false, error }
- * - /api/system/info, /api/database/stats, /api/docker/containers,
- *   /api/logs/recent, /api/speed-test (metrics.view)
+ * - /api/system/info (metrics.view; the process list only with server.config),
+ *   /api/speed-test (metrics.view), /api/database/stats,
+ *   /api/docker/containers, /api/logs/recent (server.config)
  */
 
 import * as v from 'valibot';

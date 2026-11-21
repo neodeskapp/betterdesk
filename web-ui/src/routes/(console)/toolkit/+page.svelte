@@ -3,9 +3,9 @@
   (Network, Crypto, Encoding, Server). The group is in the URL hash
   (#network, #crypto, #encoding, #system) and written back when it
   changes. Each tool is a disclosure with a short form and its result.
-  Tools the role may not run are left out (their APIs need device.connect
-  or metrics.view), then groups with nothing left; with no tool at all,
-  one sentence.
+  Tools the role may not run are left out (their APIs need device.connect,
+  metrics.view or server.config), then groups with nothing left; with no
+  tool at all, one sentence.
 -->
 <script lang="ts">
 	import { onMount, tick } from 'svelte';

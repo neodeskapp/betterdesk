@@ -22,13 +22,13 @@ const grants =
 		p.includes(perm);
 
 describe('tools per role', () => {
-	test('a viewer (metrics.view, no device.connect) keeps SSL, DNS records, crypto, encoding and the server group', () => {
+	test('a viewer (metrics.view, no device.connect) keeps SSL, DNS records, crypto, encoding and the disks', () => {
 		const tools = visibleTools(grants('metrics.view')).map((t) => t.id);
 		expect(tools).not.toContain('ping');
 		expect(tools).not.toContain('wol');
-		expect(tools).toEqual(
-			expect.arrayContaining(['ssl', 'whois', 'speed', 'hash', 'base64', 'processes', 'logs'])
-		);
+		expect(tools).toEqual(expect.arrayContaining(['ssl', 'whois', 'speed', 'hash', 'base64', 'disk']));
+		// The process list, table counts, containers and logs ask server.config
+		for (const id of ['processes', 'db', 'docker', 'logs']) expect(tools).not.toContain(id);
 		expect(visibleGroups(visibleTools(grants('metrics.view')))).toEqual([
 			'network',
 			'crypto',
@@ -45,7 +45,9 @@ describe('tools per role', () => {
 	});
 
 	test('with Toolkit at read (writes refused) only the tools that read stay', () => {
-		const tools = visibleTools(grants('device.connect', 'metrics.view'), false).map((t) => t.id);
+		const tools = visibleTools(grants('device.connect', 'metrics.view', 'server.config'), false).map(
+			(t) => t.id
+		);
 		expect(tools).toEqual(['speed', 'processes', 'disk', 'db', 'docker', 'logs']);
 	});
 
