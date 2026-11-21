@@ -4,6 +4,7 @@
 package ratelimit
 
 import (
+	"net/netip"
 	"sync"
 	"time"
 )
@@ -23,6 +24,22 @@ type ipEntry struct {
 	timestamps []time.Time
 	blocked    bool      // Temporarily blocked (too many attempts)
 	blockedAt  time.Time // When the block was applied
+}
+
+// limiterKey is the key an address counts under. An IPv6 address counts
+// as its /64 network: one host commonly has a whole /64, and a new address
+// for every request would otherwise never be limited. IPv4, also written
+// as IPv6, and text that is no address stay as they are.
+func limiterKey(ip string) string {
+	addr, err := netip.ParseAddr(ip)
+	if err != nil || !addr.Is6() || addr.Is4In6() {
+		return ip
+	}
+	network, err := addr.WithZone("").Prefix(64)
+	if err != nil {
+		return ip
+	}
+	return network.String()
 }
 
 // NewIPLimiter creates a new IP rate limiter.
@@ -45,6 +62,7 @@ func NewIPLimiter(limit int, window, cleanup time.Duration) *IPLimiter {
 
 // Allow checks if an event from the given IP should be allowed.
 // Returns true if the IP is within the rate limit, false if blocked.
+// An IPv6 address counts as its /64, here and in the other methods.
 //
 // A limit of 0 (or negative) disables rate limiting entirely; every call
 // returns true. This is useful for deployments behind a single corporate
@@ -59,10 +77,11 @@ func (l *IPLimiter) Allow(ip string) bool {
 	now := time.Now()
 	cutoff := now.Add(-l.window)
 
-	entry, ok := l.entries[ip]
+	key := limiterKey(ip)
+	entry, ok := l.entries[key]
 	if !ok {
 		entry = &ipEntry{}
-		l.entries[ip] = entry
+		l.entries[key] = entry
 	}
 
 	// Remove expired timestamps
@@ -94,7 +113,7 @@ func (l *IPLimiter) IsBlocked(ip string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	entry, ok := l.entries[ip]
+	entry, ok := l.entries[limiterKey(ip)]
 	if !ok {
 		return false
 	}
@@ -117,7 +136,7 @@ func (l *IPLimiter) IsBlocked(ip string) bool {
 func (l *IPLimiter) Reset(ip string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	delete(l.entries, ip)
+	delete(l.entries, limiterKey(ip))
 }
 
 // Count returns the number of events in the current window for an IP.
@@ -125,7 +144,7 @@ func (l *IPLimiter) Count(ip string) int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	entry, ok := l.entries[ip]
+	entry, ok := l.entries[limiterKey(ip)]
 	if !ok {
 		return 0
 	}

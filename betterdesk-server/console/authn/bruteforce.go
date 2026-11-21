@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net/netip"
 	"regexp"
 	"time"
 
@@ -54,7 +55,8 @@ func (b BruteForce) MarshalJSON() ([]byte, error) {
 // window, after its last successful sign-in from there, lock the account
 // for this address for Settings.LockoutMinutes after the last of them.
 // Failures from other addresses never keep the owner out; they count
-// against those addresses, and against the limit of each address.
+// against those addresses, and against the limit of each address. An IPv6
+// address counts as its /64 (attemptAddress).
 func (s *Service) CheckBruteForce(ctx context.Context, username, ip string) (BruteForce, error) {
 	var name any
 	if username != "" {
@@ -71,6 +73,7 @@ func (s *Service) CheckBruteForce(ctx context.Context, username, ip string) (Bru
 // number finds the attempts written for it. nil skips the account's
 // lockout, as a NULL finds none.
 func (s *Service) CheckBruteForceFor(ctx context.Context, name any, ip string) (BruteForce, error) {
+	ip = attemptAddress(ip)
 	if name != nil {
 		answer, err := s.addressLockout(ctx, name, ip)
 		if err != nil || answer.Blocked {
@@ -162,7 +165,24 @@ func (s *Service) RecordAttempt(ctx context.Context, username, ip string, succes
 // console's database driver made of it (see CheckBruteForceFor). A nil
 // name fails like the NULL it stands for.
 func (s *Service) RecordAttemptFor(ctx context.Context, name any, ip string, success bool) error {
-	return recordLoginAttempt(ctx, s.db, name, ip, success)
+	return recordLoginAttempt(ctx, s.db, name, attemptAddress(ip), success)
+}
+
+// attemptAddress is the address a sign-in attempt counts for. An IPv6
+// address counts as its /64 network, written "2001:db8:1:2::/64": one host
+// commonly has a whole /64, and a new address for every attempt would
+// otherwise never block. IPv4, also written as IPv6, and text that is no
+// address stay as they are.
+func attemptAddress(ip string) string {
+	addr, err := netip.ParseAddr(ip)
+	if err != nil || !addr.Is6() || addr.Is4In6() {
+		return ip
+	}
+	network, err := addr.WithZone("").Prefix(64)
+	if err != nil {
+		return ip
+	}
+	return network.String()
 }
 
 // CleanupHousekeeping deletes access tokens that are expired or revoked

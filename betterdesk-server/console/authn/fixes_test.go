@@ -36,6 +36,7 @@ var scenarioFixes = []scenarioFix{
 	{"AL4", maskNamesInSignInLogs},
 	{"AN6", logTheWrittenCredentialsPath},
 	{"RV117", stopAtOtherSpellings},
+	{"RV118", ipv6AttemptsCountPerNetwork},
 }
 
 // fixScenario applies every fix to sc and counts the ones that changed it.
@@ -406,6 +407,24 @@ func stopAtOtherSpellings(sc *scenarioVector) bool {
 		return true
 	}
 	return false
+}
+
+// ipv6AttemptsCountPerNetwork: a sign-in attempt from an IPv6 address is
+// written and counted for its /64 (RV118); Node wrote the address. The
+// recorded rows of login_attempts get the /64 of such an address;
+// TestLockoutCountsAnIPv6NetworkAsOneAddress holds the counting.
+func ipv6AttemptsCountPerNetwork(sc *scenarioVector) bool {
+	changed := false
+	for _, row := range sc.Tables["login_attempts"] {
+		ip, ok := row["ip_address"].(string)
+		if !ok {
+			continue
+		}
+		if network := attemptAddress(ip); network != ip {
+			row["ip_address"], changed = network, true
+		}
+	}
+	return changed
 }
 
 // stopAtAccountLockouts: failed sign-ins lock an account for the address

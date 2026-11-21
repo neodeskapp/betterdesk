@@ -154,3 +154,35 @@ func BenchmarkIPLimiterAllow(b *testing.B) {
 		}
 	})
 }
+
+// An IPv6 address counts as its /64: one host commonly has a whole /64,
+// and a new address for every request would never be limited (RV118).
+func TestIPLimiterCountsAnIPv6NetworkAsOne(t *testing.T) {
+	l := NewIPLimiter(3, time.Minute, time.Hour)
+	defer l.Stop()
+	for i, ip := range []string{"2001:db8:1:1::1", "2001:db8:1:1::2", "2001:DB8:1:1:ffff:0:0:3"} {
+		if !l.Allow(ip) {
+			t.Fatalf("request %d from %s refused", i+1, ip)
+		}
+	}
+	if l.Allow("2001:db8:1:1::4") {
+		t.Error("a fourth address of the same /64 was let through")
+	}
+	if !l.IsBlocked("2001:db8:1:1::99") || l.Count("2001:db8:1:1::99") != 3 {
+		t.Errorf("the /64 is not blocked: count %d", l.Count("2001:db8:1:1::99"))
+	}
+	if !l.Allow("2001:db8:1:2::1") {
+		t.Error("another /64 was refused")
+	}
+	l.Reset("2001:db8:1:1::5")
+	if !l.Allow("2001:db8:1:1::1") {
+		t.Error("Reset of an address in the /64 did not reset it")
+	}
+	// IPv4 addresses count one by one
+	for i := 0; i < 3; i++ {
+		l.Allow("198.51.100.1")
+	}
+	if !l.Allow("198.51.100.2") {
+		t.Error("another IPv4 address was refused")
+	}
+}
