@@ -115,21 +115,39 @@ func sanitizePDFText(s string) string {
 	return strings.TrimSpace(s)
 }
 
-// simpleTextPDF builds a minimal valid PDF 1.4 document with Helvetica text.
+// Text layout of simpleTextPDF: lines from the top of a US Letter page down
+// to its bottom margin, 14 points apart.
+const (
+	pdfTextTop    = 770
+	pdfTextBottom = 40
+	pdfLeading    = 14
+	pdfPageLines  = (pdfTextTop-pdfTextBottom)/pdfLeading + 1
+)
+
+// simpleTextPDF builds a minimal valid PDF 1.4 document with Helvetica text,
+// with as many pages as the lines need.
 func simpleTextPDF(lines []string) []byte {
-	var content strings.Builder
-	content.WriteString("BT\n/F1 10 Tf\n")
-	y := 770
-	for _, line := range lines {
-		if y < 40 {
-			break
+	var pages []string
+	for start := 0; start == 0 || start < len(lines); start += pdfPageLines {
+		end := min(start+pdfPageLines, len(lines))
+		var content strings.Builder
+		content.WriteString("BT\n/F1 10 Tf\n")
+		y := pdfTextTop
+		for _, line := range lines[start:end] {
+			content.WriteString(fmt.Sprintf("1 0 0 1 40 %d Tm (%s) Tj\n", y, escapePDFString(line)))
+			y -= pdfLeading
 		}
-		escaped := escapePDFString(line)
-		content.WriteString(fmt.Sprintf("1 0 0 1 40 %d Tm (%s) Tj\n", y, escaped))
-		y -= 14
+		content.WriteString("ET\n")
+		pages = append(pages, content.String())
 	}
-	content.WriteString("ET\n")
-	stream := content.String()
+
+	// Objects: 1 catalog, 2 page tree, 3 font, then a page and its content
+	// stream for each page.
+	pageObj := func(i int) int { return 4 + 2*i }
+	kids := make([]string, len(pages))
+	for i := range pages {
+		kids[i] = fmt.Sprintf("%d 0 R", pageObj(i))
+	}
 
 	var buf bytes.Buffer
 	w := func(s string) { buf.WriteString(s) }
@@ -138,13 +156,16 @@ func simpleTextPDF(lines []string) []byte {
 	offs = append(offs, buf.Len())
 	w("1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n")
 	offs = append(offs, buf.Len())
-	w("2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n")
+	w(fmt.Sprintf("2 0 obj<< /Type /Pages /Kids [%s] /Count %d >>endobj\n", strings.Join(kids, " "), len(pages)))
 	offs = append(offs, buf.Len())
-	w("3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>endobj\n")
-	offs = append(offs, buf.Len())
-	w(fmt.Sprintf("4 0 obj<< /Length %d >>stream\n%s\nendstream\nendobj\n", len(stream), stream))
-	offs = append(offs, buf.Len())
-	w("5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n")
+	w("3 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n")
+	for i, stream := range pages {
+		offs = append(offs, buf.Len())
+		w(fmt.Sprintf("%d 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents %d 0 R >>endobj\n",
+			pageObj(i), pageObj(i)+1))
+		offs = append(offs, buf.Len())
+		w(fmt.Sprintf("%d 0 obj<< /Length %d >>stream\n%s\nendstream\nendobj\n", pageObj(i)+1, len(stream), stream))
+	}
 	xref := buf.Len()
 	w("xref\n")
 	w(fmt.Sprintf("0 %d\n", len(offs)))
@@ -152,20 +173,23 @@ func simpleTextPDF(lines []string) []byte {
 	for i := 1; i < len(offs); i++ {
 		w(fmt.Sprintf("%010d 00000 n \n", offs[i]))
 	}
-	w("trailer<< /Size 6 /Root 1 0 R >>\n")
+	w(fmt.Sprintf("trailer<< /Size %d /Root 1 0 R >>\n", len(offs)))
 	w(fmt.Sprintf("startxref\n%d\n%%EOF\n", xref))
 	return buf.Bytes()
 }
 
+// escapePDFString cuts s to 200 characters and escapes it for a PDF literal
+// string. Cutting first keeps every escape whole.
 func escapePDFString(s string) string {
-	s = strings.ReplaceAll(s, `\`, `\\`)
-	s = strings.ReplaceAll(s, `(`, `\(`)
-	s = strings.ReplaceAll(s, `)`, `\)`)
 	r := []rune(s)
 	if len(r) > 200 {
 		r = r[:200]
 	}
-	return string(r)
+	s = string(r)
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `(`, `\(`)
+	s = strings.ReplaceAll(s, `)`, `\)`)
+	return s
 }
 
 // BuildReportExportRows joins reports with session billing data.

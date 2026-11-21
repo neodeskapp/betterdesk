@@ -2,6 +2,7 @@ package billing
 
 import (
 	"encoding/csv"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -81,5 +82,64 @@ func TestEscapePDFString(t *testing.T) {
 	got := escapePDFString(`test (parens) and \ backslash`)
 	if got == "" {
 		t.Fatal("empty")
+	}
+}
+
+func TestReportsPDFHoldsEveryReport(t *testing.T) {
+	var rows []ReportExportRow
+	for i := 1; i <= 30; i++ {
+		rows = append(rows, ReportExportRow{
+			SessionID: fmt.Sprintf("session-%02d", i), DeviceID: "dev", Summary: "Fixed it",
+			CreatedAt: time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
+		})
+	}
+	pdf := string(WriteReportsPDF(rows, "Work reports"))
+	for _, r := range rows {
+		if !strings.Contains(pdf, "Session: "+r.SessionID+")") {
+			t.Fatalf("%s is missing from the PDF", r.SessionID)
+		}
+	}
+	pages := strings.Count(pdf, "/Type /Page ")
+	if pages < 2 || !strings.Contains(pdf, fmt.Sprintf("/Count %d", pages)) {
+		t.Fatalf("%d page objects, page tree: %q", pages, pdf[:200])
+	}
+	if !strings.Contains(pdf, fmt.Sprintf("/Size %d", 4+2*pages)) {
+		t.Fatalf("trailer does not count the %d pages' objects", pages)
+	}
+}
+
+// unescapePDFString reverses escapePDFString and reports whether s is a
+// complete literal string body: no bracket without its backslash, no lone
+// backslash at the end.
+func unescapePDFString(s string) (string, bool) {
+	var out strings.Builder
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case '(', ')':
+			return "", false
+		case '\\':
+			if i+1 == len(s) {
+				return "", false
+			}
+			i++
+		}
+		out.WriteByte(s[i])
+	}
+	return out.String(), true
+}
+
+func TestEscapePDFStringCutsBeforeEscaping(t *testing.T) {
+	for _, line := range []string{
+		strings.Repeat("a", 199) + `\b`,
+		strings.Repeat("a", 199) + "(b",
+		strings.Repeat(`)`, 250),
+	} {
+		got, ok := unescapePDFString(escapePDFString(line))
+		if !ok {
+			t.Fatalf("escapePDFString(%q...) is not a complete literal string", line[195:])
+		}
+		if want := line[:200]; got != want {
+			t.Fatalf("line kept as %q..., want its first 200 characters", got[190:])
+		}
 	}
 }
