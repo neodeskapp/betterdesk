@@ -223,7 +223,8 @@ func Send(ctx context.Context, opts Options, env Envelope, message []byte) (*Inf
 
 // Verify connects and logs in, then says QUIT. It reports success as soon as
 // QUIT is written; the connection is closed in the background when the
-// server answers, closes or stays silent for the socket timeout.
+// server answers or closes, when ctx ends, or after the socket timeout or
+// five seconds, whichever is shorter, counted from QUIT.
 func Verify(ctx context.Context, opts Options) error {
 	c := newClient(ctx, opts)
 	c.run(c.quit)

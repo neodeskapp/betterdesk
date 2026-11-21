@@ -64,6 +64,9 @@ type client struct {
 	connectionDeadline time.Time
 	phaseDeadline      time.Time
 	phaseText          string
+	// quitDeadline ends the wait for the reply to QUIT. Nothing the server
+	// sends moves it.
+	quitDeadline time.Time
 	// lastActivity is when bytes were last read or written (Unix nanos)
 	lastActivity atomic.Int64
 	// writeErr is a failed write waiting to be reported
@@ -195,12 +198,18 @@ func (c *client) run(afterLogin func()) {
 	c.startPhase(c.remainingSetupTime(), "Greeting never received")
 	c.expect(c.onGreeting)
 	c.pump(false)
-	stop()
-	if !c.closing {
-		// QUIT is out and the call has its result. The connection stays
-		// until the server answers, closes or the socket timeout passes.
-		go c.pump(true)
+	if c.closing {
+		stop()
+		return
 	}
+	// QUIT is out and the call has its result. The connection stays until
+	// the server answers or closes, until the context ends, or until the
+	// wait after QUIT is over, whatever the server sends meanwhile.
+	c.quitDeadline = time.Now().Add(min(c.socketTimeout, closeTimeout))
+	go func() {
+		defer stop()
+		c.pump(true)
+	}()
 }
 
 // connect opens the TCP connection and, for implicit TLS, runs the
@@ -290,6 +299,9 @@ func (c *client) read() {
 	if !c.phaseDeadline.IsZero() && c.phaseDeadline.Before(deadline) {
 		deadline = c.phaseDeadline
 	}
+	if !c.quitDeadline.IsZero() && c.quitDeadline.Before(deadline) {
+		deadline = c.quitDeadline
+	}
 	c.mu.Lock()
 	if c.cancelled {
 		c.mu.Unlock()
@@ -330,11 +342,13 @@ func (c *client) read() {
 }
 
 // onDeadline runs when a read ran into its deadline: a phase took too long,
-// the connection was silent for the socket timeout, or the message writer
-// asked for attention.
+// the wait after QUIT is over, the connection was silent for the socket
+// timeout, or the message writer asked for attention.
 func (c *client) onDeadline() {
 	now := time.Now()
 	switch {
+	case !c.quitDeadline.IsZero() && !now.Before(c.quitDeadline):
+		c.close()
 	case !c.phaseDeadline.IsZero() && !now.Before(c.phaseDeadline):
 		c.onError(newError(c.phaseText, "ETIMEDOUT", "", "CONN"))
 	case now.Sub(time.Unix(0, c.lastActivity.Load())) >= c.socketTimeout:

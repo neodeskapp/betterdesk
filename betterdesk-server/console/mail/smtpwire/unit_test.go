@@ -692,7 +692,7 @@ func TestContext(t *testing.T) {
 
 // TestVerifyWaitsForQuitReply checks that Verify returns once QUIT is
 // written, and that the connection then stays open until the server has
-// answered, whatever happens to the caller's context.
+// answered, while the caller's context lives.
 func TestVerifyWaitsForQuitReply(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -744,8 +744,8 @@ func TestVerifyWaitsForQuitReply(t *testing.T) {
 		t.Errorf("Verify took %v, it waited for the reply to QUIT", took)
 	}
 	<-quitSeen
-	cancel()
 	res := <-results
+	cancel()
 	if res.err != nil {
 		t.Fatal(res.err)
 	}
@@ -755,6 +755,91 @@ func TestVerifyWaitsForQuitReply(t *testing.T) {
 	if !res.closedAfter {
 		t.Error("the connection was not closed after the reply to QUIT")
 	}
+}
+
+// After QUIT the server does not decide how long the connection stays
+// (BUGS RV38): bytes that are no reply do not extend the wait, which ends
+// after the socket timeout counted from QUIT (five seconds at most), and
+// the end of the caller's context ends it at once.
+func TestTheWaitAfterQuitEnds(t *testing.T) {
+	// quitServer answers the greeting and EHLO, then sends an empty line
+	// every 100ms and never answers QUIT. It reports how long after QUIT
+	// the client closed the connection.
+	quitServer := func(t *testing.T, quitSeen chan<- struct{}) (Options, <-chan time.Duration) {
+		t.Helper()
+		listener, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { listener.Close() })
+		closed := make(chan time.Duration, 1)
+		go func() {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			defer conn.Close()
+			reader := bufio.NewReader(conn)
+			_, _ = conn.Write([]byte("220 hi\r\n"))
+			if _, err := reader.ReadString('\n'); err != nil {
+				return
+			}
+			_, _ = conn.Write([]byte("250 ok\r\n"))
+			if line, err := reader.ReadString('\n'); err != nil || line != "QUIT\r\n" {
+				return
+			}
+			quit := time.Now()
+			close(quitSeen)
+			eof := make(chan struct{})
+			go func() {
+				_, _ = io.Copy(io.Discard, reader)
+				close(eof)
+			}()
+			ticker := time.NewTicker(100 * time.Millisecond)
+			defer ticker.Stop()
+			giveUp := time.After(15 * time.Second)
+			for {
+				select {
+				case <-eof:
+					closed <- time.Since(quit)
+					return
+				case <-ticker.C:
+					_, _ = conn.Write([]byte("\r\n"))
+				case <-giveUp:
+					closed <- -1
+					return
+				}
+			}
+		}()
+		host, port, _ := net.SplitHostPort(listener.Addr().String())
+		return Options{Host: host, Port: mustAtoi(t, port), Hostname: testHostname}, closed
+	}
+
+	t.Run("the server sends empty lines after QUIT", func(t *testing.T) {
+		quitSeen := make(chan struct{})
+		opts, closed := quitServer(t, quitSeen)
+		opts.SocketTimeout = time.Second
+		if err := Verify(context.Background(), opts); err != nil {
+			t.Fatal(err)
+		}
+		if took := <-closed; took < 0 || took > 4*time.Second {
+			t.Fatalf("the connection was closed %v after QUIT (-1: not at all), want about 1s", took)
+		}
+	})
+	t.Run("the context ends after Verify returned", func(t *testing.T) {
+		quitSeen := make(chan struct{})
+		opts, closed := quitServer(t, quitSeen)
+		ctx, cancel := context.WithCancel(context.Background())
+		if err := Verify(ctx, opts); err != nil {
+			t.Fatal(err)
+		}
+		<-quitSeen
+		time.Sleep(300 * time.Millisecond)
+		cancel()
+		if took := <-closed; took < 250*time.Millisecond || took > 2*time.Second {
+			t.Fatalf("the connection was closed %v after QUIT (-1: not at all), want soon after the context ended at 300ms", took)
+		}
+	})
 }
 
 // bodyServer accepts one connection, takes the envelope and then does what
