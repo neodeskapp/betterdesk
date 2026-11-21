@@ -82,7 +82,6 @@
   {
    "roles": [
     "global_admin",
-    "server_admin",
     "super_admin",
     "admin"
    ],
@@ -133,6 +132,76 @@
      "update": {
       "auto_update": false,
       "channel": "beta"
+     }
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "connection": {
+      "idle_lock_timeout": 10,
+      "max_session_duration": 240,
+      "mode": "attended",
+      "wallpaper": "hide_during_session"
+     },
+     "features": {
+      "allow_audio": false,
+      "allow_clipboard": true,
+      "allow_file_transfer": true,
+      "allow_recording": true
+     },
+     "network": {
+      "allowed_relay_servers": [
+       "relay.example.invalid"
+      ],
+      "block_direct_p2p": false,
+      "ip_allowlist": [
+       "10.0.1.0/24",
+       "10.0.2.0/24"
+      ]
+     },
+     "security": {
+      "allowed_operators": [
+       "admin",
+       "demo_operator"
+      ],
+      "password_max_age_days": 90,
+      "password_min_length": 14,
+      "password_require_special": true,
+      "require_2fa": true
+     },
+     "update": {
+      "auto_update": true,
+      "channel": "stable"
      }
     }
    }
