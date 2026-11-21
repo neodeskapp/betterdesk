@@ -241,13 +241,13 @@ class RDFileConnection {
         this._sendPeerMessage(msgObj);
     }
 
+    /**
+     * One relay socket message per peer message: the console frames it for
+     * the device itself (/ws/relay?transport=message), as for the desktop session
+     */
     _sendPeerMessage(msgObj) {
         if (!this.proto.loaded || this._state !== 'ready') return;
-        let data = this.proto.serializeMessage(msgObj);
-        if (this.crypto.enabled) {
-            data = this.crypto.processOutgoing(data);
-        }
-        this.conn.sendRelay(this.proto.frameBytes(data));
+        this._sendPeerMessageRaw(msgObj);
     }
 
     disconnect() {

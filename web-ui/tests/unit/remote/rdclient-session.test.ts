@@ -106,6 +106,13 @@ function device(proto: Proto, o: { id?: string; relaySigner?: SignKeys; idSigner
 			const nonce = new Uint8Array(24);
 			nonce[0] = ++seq;
 			return nacl.secretbox(proto.serializeMessage(msg), nonce, key) as Uint8Array;
+		},
+		/** Decrypt the client's n-th encrypted frame (the relay delivers it as it was sent) */
+		open(frame: Uint8Array, n: number) {
+			const nonce = new Uint8Array(24);
+			nonce[0] = n;
+			const plain = nacl.secretbox.open(frame, nonce, key) as Uint8Array | null;
+			return plain && proto.decodeMessage(plain);
 		}
 	};
 }
@@ -261,6 +268,23 @@ describe('device identity and encryption (file transfer session)', () => {
 		expect(isLogin(t.proto, t.sent[1]!)).toBe(false);
 		t.f._handleRelayMessage(d.sealed({ loginResponse: { peerInfo: {} } }));
 		await expect(t.login).resolves.toBeUndefined();
+		expect(d.open(t.sent[1]!, 1)?.loginRequest).toBeTruthy();
+	});
+
+	test('file actions after the login go out as one encrypted message each, with no length header of their own', async () => {
+		const d = device((await client()).proto);
+		const t = await fileConn(d.serverPubKey);
+		t.f._peerSignedPk = d.relayPk;
+		t.f._handleRelayMessage(d.signedIdFrame);
+		d.takeKey(t.sent[0]!);
+		t.f._handleRelayMessage(d.sealed(HASH));
+		await vi.waitFor(() => expect(t.sent).toHaveLength(2));
+		t.f._handleRelayMessage(d.sealed({ loginResponse: { peerInfo: {} } }));
+		await t.login;
+		t.f._setState('ready');
+		t.f.sendMessage({ fileAction: { readDir: { path: '/home', includeHidden: false } } });
+		expect(t.sent).toHaveLength(3);
+		expect(d.open(t.sent[2]!, 2)?.fileAction?.readDir?.path).toBe('/home');
 	});
 
 	test.each([
