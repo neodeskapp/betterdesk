@@ -2,6 +2,7 @@ package reqquery
 
 import (
 	"net/http"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -195,10 +196,14 @@ type gap struct{}
 // missing marks a place of a list that has no element.
 var missing = gap{}
 
-// node is a list or an object while a query is put together.
+// node is a list or an object while a query is put together. A list
+// keeps its elements by index and its length as JavaScript counts it, so
+// a gap costs nothing: a[999]=x holds one element of a list of length
+// 1000.
 type node struct {
 	list     bool
-	items    []any // a list's elements; missing marks a gap
+	at       map[int]any // a list's elements by index; a gap has no entry
+	length   int         // a list's length: one past its highest index
 	obj      *object
 	overflow bool // a list that outgrew the limit and became an object
 	max      float64
@@ -206,14 +211,52 @@ type node struct {
 	cmax     float64
 }
 
-func listOf(items ...any) *node { return &node{list: true, items: items} }
+func listOf(items ...any) *node {
+	n := &node{list: true, at: map[int]any{}}
+	for _, v := range items {
+		n.push(v)
+	}
+	return n
+}
+
+// put sets a list's element at index i; missing leaves a gap there.
+func (n *node) put(i int, v any) {
+	if v == missing {
+		delete(n.at, i)
+	} else {
+		n.at[i] = v
+	}
+	n.length = max(n.length, i+1)
+}
+
+// push adds an element at the end of a list.
+func (n *node) push(v any) { n.put(n.length, v) }
+
+// item is a list's element at index i, missing for a gap.
+func (n *node) item(i int) any {
+	if v, ok := n.at[i]; ok {
+		return v
+	}
+	return missing
+}
+
+// indexes are the indexes of a list's elements, ascending.
+func (n *node) indexes() []int {
+	out := make([]int, 0, len(n.at))
+	for i := range n.at {
+		out = append(out, i)
+	}
+	slices.Sort(out)
+	return out
+}
 
 func objectNode() *node { return &node{obj: newObject()} }
 
 func (n *node) has(key string) bool {
 	if n.list {
 		i, ok := listIndex(key)
-		return ok && i < len(n.items) && n.items[i] != missing
+		_, has := n.at[i]
+		return ok && has
 	}
 	_, ok := n.obj.get(key)
 	return ok
@@ -221,8 +264,8 @@ func (n *node) has(key string) bool {
 
 func (n *node) get(key string) any {
 	if n.list {
-		if i, ok := listIndex(key); ok && i < len(n.items) {
-			return n.items[i]
+		if i, ok := listIndex(key); ok {
+			return n.item(i)
 		}
 		return missing
 	}
@@ -241,10 +284,7 @@ func (n *node) set(key string, v any) {
 	if !ok {
 		return
 	}
-	for len(n.items) <= i {
-		n.items = append(n.items, missing)
-	}
-	n.items[i] = v
+	n.put(i, v)
 }
 
 func (n *node) keys() []string {
@@ -252,23 +292,13 @@ func (n *node) keys() []string {
 		return n.obj.keys()
 	}
 	var out []string
-	for i, v := range n.items {
-		if v != missing {
-			out = append(out, strconv.Itoa(i))
-		}
+	for _, i := range n.indexes() {
+		out = append(out, strconv.Itoa(i))
 	}
 	return out
 }
 
-func (n *node) count() int {
-	c := 0
-	for _, v := range n.items {
-		if v != missing {
-			c++
-		}
-	}
-	return c
-}
+func (n *node) count() int { return len(n.at) }
 
 func listIndex(key string) (int, bool) {
 	if !isArrayIndex(key) || len(key) > 7 {
@@ -315,10 +345,8 @@ func canonicalInt(key string) (float64, bool) {
 
 func toObjectNode(list *node) *node {
 	out := objectNode()
-	for i, v := range list.items {
-		if v != missing {
-			out.obj.set(strconv.Itoa(i), v)
-		}
+	for _, i := range list.indexes() {
+		out.obj.set(strconv.Itoa(i), list.at[i])
 	}
 	return out
 }
@@ -338,9 +366,12 @@ func concat(parts ...any) *node {
 	out := listOf()
 	for _, p := range parts {
 		if n, ok := p.(*node); ok && n.list {
-			out.items = append(out.items, n.items...)
+			for i, v := range n.at {
+				out.at[out.length+i] = v
+			}
+			out.length += n.length
 		} else {
-			out.items = append(out.items, p)
+			out.push(p)
 		}
 	}
 	return out
@@ -351,7 +382,10 @@ func combine(a, b any) any {
 	if n, ok := a.(*node); ok && n.overflow {
 		values := []any{b}
 		if bn, ok := b.(*node); ok && bn.list {
-			values = bn.items
+			values = make([]any, bn.length)
+			for i := range values {
+				values[i] = bn.item(i)
+			}
 		}
 		index := n.max
 		for _, v := range values {
@@ -362,8 +396,8 @@ func combine(a, b any) any {
 		return n
 	}
 	result := concat(a, b)
-	if len(result.items) > arrayLimit {
-		return markOverflow(toObjectNode(result), float64(len(result.items)-1))
+	if result.length > arrayLimit {
+		return markOverflow(toObjectNode(result), float64(result.length-1))
 	}
 	return result
 }
@@ -557,7 +591,7 @@ func merge(target, source any) any {
 	if !sourceIsNode {
 		switch {
 		case targetIsNode && tgt.list:
-			next := len(tgt.items)
+			next := tgt.length
 			if tgt.count() >= arrayLimit {
 				return markOverflow(toObjectNode(concat(tgt, source)), float64(next))
 			}
@@ -593,8 +627,8 @@ func merge(target, source any) any {
 			return markOverflow(result, src.max+1)
 		}
 		combined := concat(listOf(target), source)
-		if len(combined.items) > arrayLimit {
-			return markOverflow(toObjectNode(combined), float64(len(combined.items)-1))
+		if combined.length > arrayLimit {
+			return markOverflow(toObjectNode(combined), float64(combined.length-1))
 		}
 		return combined
 	}
@@ -602,29 +636,27 @@ func merge(target, source any) any {
 	if tgt.list && !src.list {
 		mergeTarget = toObjectNode(tgt)
 		if tgt.conflict {
-			markConflict(mergeTarget, float64(len(tgt.items)-1))
+			markConflict(mergeTarget, float64(tgt.length-1))
 		}
 	}
 	if tgt.list && src.list {
-		for i, item := range src.items {
-			if item == missing {
-				continue
-			}
+		for _, i := range src.indexes() {
+			item := src.at[i]
 			key := strconv.Itoa(i)
 			if tgt.has(key) {
-				_, a := tgt.items[i].(*node)
+				_, a := tgt.at[i].(*node)
 				_, b := item.(*node)
 				if a && b {
-					tgt.items[i] = merge(tgt.items[i], item)
+					tgt.at[i] = merge(tgt.at[i], item)
 				} else {
-					tgt.items = append(tgt.items, item)
+					tgt.push(item)
 				}
 			} else {
 				tgt.set(key, item)
 			}
 		}
 		if tgt.count() > arrayLimit {
-			return markOverflow(toObjectNode(tgt), float64(len(tgt.items)-1))
+			return markOverflow(toObjectNode(tgt), float64(tgt.length-1))
 		}
 		return tgt
 	}
@@ -689,11 +721,9 @@ func plain(v any) any {
 		return v
 	}
 	if n.list {
-		out := []any{}
-		for _, item := range n.items {
-			if item != missing {
-				out = append(out, plain(item))
-			}
+		out := make([]any, 0, len(n.at))
+		for _, i := range n.indexes() {
+			out = append(out, plain(n.at[i]))
 		}
 		return out
 	}

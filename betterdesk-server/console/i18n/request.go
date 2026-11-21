@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -388,7 +389,8 @@ const (
 // qsNode is a list or an object while the query is put together.
 type qsNode struct {
 	list     bool
-	items    []any // a list's elements; undefined marks a gap
+	at       map[int]any // a list's elements by index; a gap has no entry
+	length   int         // a list's length: one past its highest index
 	obj      *Object
 	overflow bool // a list that outgrew the limit and became an object
 	max      float64
@@ -396,14 +398,52 @@ type qsNode struct {
 	cmax     float64
 }
 
-func qsList(items ...any) *qsNode { return &qsNode{list: true, items: items} }
+func qsList(items ...any) *qsNode {
+	n := &qsNode{list: true, at: map[int]any{}}
+	for _, v := range items {
+		n.push(v)
+	}
+	return n
+}
+
+// put sets a list's element at index i; undefined leaves a gap there.
+func (n *qsNode) put(i int, v any) {
+	if v == undefined {
+		delete(n.at, i)
+	} else {
+		n.at[i] = v
+	}
+	n.length = max(n.length, i+1)
+}
+
+// push adds an element at the end of a list.
+func (n *qsNode) push(v any) { n.put(n.length, v) }
+
+// item is a list's element at index i, undefined for a gap.
+func (n *qsNode) item(i int) any {
+	if v, ok := n.at[i]; ok {
+		return v
+	}
+	return undefined
+}
+
+// indexes are the indexes of a list's elements, ascending.
+func (n *qsNode) indexes() []int {
+	out := make([]int, 0, len(n.at))
+	for i := range n.at {
+		out = append(out, i)
+	}
+	slices.Sort(out)
+	return out
+}
 
 func qsObject() *qsNode { return &qsNode{obj: NewObject()} }
 
 func (n *qsNode) has(key string) bool {
 	if n.list {
 		i, ok := listIndex(key)
-		return ok && i < len(n.items) && n.items[i] != undefined
+		_, has := n.at[i]
+		return ok && has
 	}
 	_, ok := n.obj.Get(key)
 	return ok
@@ -411,8 +451,8 @@ func (n *qsNode) has(key string) bool {
 
 func (n *qsNode) get(key string) any {
 	if n.list {
-		if i, ok := listIndex(key); ok && i < len(n.items) {
-			return n.items[i]
+		if i, ok := listIndex(key); ok {
+			return n.item(i)
 		}
 		return undefined
 	}
@@ -431,10 +471,7 @@ func (n *qsNode) set(key string, v any) {
 	if !ok {
 		return
 	}
-	for len(n.items) <= i {
-		n.items = append(n.items, undefined)
-	}
-	n.items[i] = v
+	n.put(i, v)
 }
 
 func (n *qsNode) keys() []string {
@@ -442,23 +479,13 @@ func (n *qsNode) keys() []string {
 		return append([]string(nil), n.obj.Keys()...)
 	}
 	var out []string
-	for i, v := range n.items {
-		if v != undefined {
-			out = append(out, strconv.Itoa(i))
-		}
+	for _, i := range n.indexes() {
+		out = append(out, strconv.Itoa(i))
 	}
 	return out
 }
 
-func (n *qsNode) count() int {
-	c := 0
-	for _, v := range n.items {
-		if v != undefined {
-			c++
-		}
-	}
-	return c
-}
+func (n *qsNode) count() int { return len(n.at) }
 
 func listIndex(key string) (int, bool) {
 	if !isArrayIndex(key) || len(key) > 7 {
@@ -489,10 +516,8 @@ func canonicalInt(key string) (float64, bool) {
 
 func qsToObject(list *qsNode) *qsNode {
 	out := qsObject()
-	for i, v := range list.items {
-		if v != undefined {
-			out.obj.Set(strconv.Itoa(i), v)
-		}
+	for _, i := range list.indexes() {
+		out.obj.Set(strconv.Itoa(i), list.at[i])
 	}
 	return out
 }
@@ -512,9 +537,12 @@ func qsConcat(parts ...any) *qsNode {
 	out := qsList()
 	for _, p := range parts {
 		if n, ok := p.(*qsNode); ok && n.list {
-			out.items = append(out.items, n.items...)
+			for i, v := range n.at {
+				out.at[out.length+i] = v
+			}
+			out.length += n.length
 		} else {
-			out.items = append(out.items, p)
+			out.push(p)
 		}
 	}
 	return out
@@ -524,7 +552,10 @@ func qsCombine(a, b any) any {
 	if n, ok := a.(*qsNode); ok && n.overflow {
 		values := []any{b}
 		if bn, ok := b.(*qsNode); ok && bn.list {
-			values = bn.items
+			values = make([]any, bn.length)
+			for i := range values {
+				values[i] = bn.item(i)
+			}
 		}
 		index := n.max
 		for _, v := range values {
@@ -535,8 +566,8 @@ func qsCombine(a, b any) any {
 		return n
 	}
 	result := qsConcat(a, b)
-	if len(result.items) > qsArrayLimit {
-		return qsOverflow(qsToObject(result), float64(len(result.items)-1))
+	if result.length > qsArrayLimit {
+		return qsOverflow(qsToObject(result), float64(result.length-1))
 	}
 	return result
 }
@@ -643,7 +674,7 @@ func qsMerge(target, source any) any {
 	if !sourceIsNode {
 		switch {
 		case targetIsNode && tgt.list:
-			next := len(tgt.items)
+			next := tgt.length
 			if tgt.count() >= qsArrayLimit {
 				return qsOverflow(qsToObject(qsConcat(tgt, source)), float64(next))
 			}
@@ -679,8 +710,8 @@ func qsMerge(target, source any) any {
 			return qsOverflow(result, src.max+1)
 		}
 		combined := qsConcat(qsList(target), source)
-		if len(combined.items) > qsArrayLimit {
-			return qsOverflow(qsToObject(combined), float64(len(combined.items)-1))
+		if combined.length > qsArrayLimit {
+			return qsOverflow(qsToObject(combined), float64(combined.length-1))
 		}
 		return combined
 	}
@@ -688,29 +719,27 @@ func qsMerge(target, source any) any {
 	if tgt.list && !src.list {
 		mergeTarget = qsToObject(tgt)
 		if tgt.conflict {
-			qsConflict(mergeTarget, float64(len(tgt.items)-1))
+			qsConflict(mergeTarget, float64(tgt.length-1))
 		}
 	}
 	if tgt.list && src.list {
-		for i, item := range src.items {
-			if item == undefined {
-				continue
-			}
+		for _, i := range src.indexes() {
+			item := src.at[i]
 			key := strconv.Itoa(i)
 			if tgt.has(key) {
-				_, a := tgt.items[i].(*qsNode)
+				_, a := tgt.at[i].(*qsNode)
 				_, b := item.(*qsNode)
 				if a && b {
-					tgt.items[i] = qsMerge(tgt.items[i], item)
+					tgt.at[i] = qsMerge(tgt.at[i], item)
 				} else {
-					tgt.items = append(tgt.items, item)
+					tgt.push(item)
 				}
 			} else {
 				tgt.set(key, item)
 			}
 		}
 		if tgt.count() > qsArrayLimit {
-			return qsOverflow(qsToObject(tgt), float64(len(tgt.items)-1))
+			return qsOverflow(qsToObject(tgt), float64(tgt.length-1))
 		}
 		return tgt
 	}
@@ -767,11 +796,9 @@ func qsValue(v any) any {
 		return v
 	}
 	if n.list {
-		out := []any{}
-		for _, item := range n.items {
-			if item != undefined {
-				out = append(out, qsValue(item))
-			}
+		out := make([]any, 0, len(n.at))
+		for _, i := range n.indexes() {
+			out = append(out, qsValue(n.at[i]))
 		}
 		return out
 	}

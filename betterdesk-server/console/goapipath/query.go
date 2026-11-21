@@ -3,6 +3,7 @@ package goapipath
 import (
 	"errors"
 	"net/http"
+	"slices"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -39,8 +40,13 @@ const (
 type queryNode struct {
 	kind queryKind
 	text string
-	// items are the elements of a list; nil is a hole.
-	items []*queryNode
+	// at holds a list's elements by index while the query is put
+	// together, and length is the list's length as JavaScript counts it:
+	// a hole has no entry, so a[999]=x holds one element. compact turns
+	// them into items, the elements without the holes.
+	at     map[int]*queryNode
+	length int
+	items  []*queryNode
 	// keys are an object's keys in the order they were set.
 	keys    []string
 	members map[string]*queryNode
@@ -56,7 +62,36 @@ type queryNode struct {
 
 func textNode(s string) *queryNode { return &queryNode{kind: queryString, text: s} }
 
-func listNode(items ...*queryNode) *queryNode { return &queryNode{kind: queryArray, items: items} }
+func listNode(items ...*queryNode) *queryNode {
+	n := &queryNode{kind: queryArray, at: map[int]*queryNode{}}
+	for _, item := range items {
+		n.push(item)
+	}
+	return n
+}
+
+// put sets a list's element at index i; nil leaves a hole there.
+func (n *queryNode) put(i int, item *queryNode) {
+	if item == nil {
+		delete(n.at, i)
+	} else {
+		n.at[i] = item
+	}
+	n.length = max(n.length, i+1)
+}
+
+// push adds an element at the end of a list.
+func (n *queryNode) push(item *queryNode) { n.put(n.length, item) }
+
+// indexes are the indexes of a list's elements, ascending.
+func (n *queryNode) indexes() []int {
+	out := make([]int, 0, len(n.at))
+	for i := range n.at {
+		out = append(out, i)
+	}
+	slices.Sort(out)
+	return out
+}
 
 func objectNode() *queryNode { return &queryNode{kind: queryObject, members: map[string]*queryNode{}} }
 
@@ -127,12 +162,10 @@ func integerKey(key string) (float64, bool) {
 
 // arrayToObject turns a list into an object with its indexes as keys.
 // Holes are left out.
-func arrayToObject(items []*queryNode) *queryNode {
+func arrayToObject(list *queryNode) *queryNode {
 	obj := objectNode()
-	for i, item := range items {
-		if item != nil {
-			obj.set(NumberText(float64(i)), item)
-		}
+	for _, i := range list.indexes() {
+		obj.set(NumberText(float64(i)), list.at[i])
 	}
 	return obj
 }
@@ -147,27 +180,19 @@ func markConflict(n *queryNode, index float64) *queryNode {
 	return n
 }
 
-// countElements counts the elements of a list without its holes.
-func countElements(items []*queryNode) int {
-	count := 0
-	for _, item := range items {
-		if item != nil {
-			count++
-		}
-	}
-	return count
-}
-
 // concat is [].concat(parts...): a list is spread one level, anything
 // else is one element.
-func concat(parts ...*queryNode) []*queryNode {
-	var out []*queryNode
+func concat(parts ...*queryNode) *queryNode {
+	out := listNode()
 	for _, part := range parts {
 		if part.isList() {
-			out = append(out, part.items...)
+			for i, item := range part.at {
+				out.at[out.length+i] = item
+			}
+			out.length += part.length
 			continue
 		}
-		out = append(out, part)
+		out.push(part)
 	}
 	return out
 }
@@ -178,7 +203,10 @@ func combine(a, b *queryNode) *queryNode {
 	if a != nil && a.overflow {
 		values := []*queryNode{b}
 		if b.isList() {
-			values = b.items
+			values = make([]*queryNode, b.length)
+			for i := range values {
+				values[i] = b.at[i]
+			}
 		}
 		index := a.maxIndex
 		for _, value := range values {
@@ -189,10 +217,10 @@ func combine(a, b *queryNode) *queryNode {
 		return a
 	}
 	result := concat(a, b)
-	if len(result) > queryArrayLimit {
-		return markOverflow(arrayToObject(result), float64(len(result)-1))
+	if result.length > queryArrayLimit {
+		return markOverflow(arrayToObject(result), float64(result.length-1))
 	}
-	return listNode(result...)
+	return result
 }
 
 // maxNumericIndex is the highest whole-number key of an object, and
@@ -216,11 +244,11 @@ func merge(target, source *queryNode) *queryNode {
 	if !source.isContainer() {
 		switch {
 		case target.isList():
-			next := len(target.items)
-			if countElements(target.items) >= queryArrayLimit {
-				return markOverflow(arrayToObject(append(append([]*queryNode(nil), target.items...), source)), float64(next))
+			next := target.length
+			if len(target.at) >= queryArrayLimit {
+				return markOverflow(arrayToObject(concat(target, source)), float64(next))
 			}
-			target.items = append(target.items, source)
+			target.push(source)
 		case target.isContainer():
 			switch {
 			case target.overflow:
@@ -248,42 +276,37 @@ func merge(target, source *queryNode) *queryNode {
 			return markOverflow(result, source.maxIndex+1)
 		}
 		combined := concat(listNode(target), source)
-		if len(combined) > queryArrayLimit {
-			return markOverflow(arrayToObject(combined), float64(len(combined)-1))
+		if combined.length > queryArrayLimit {
+			return markOverflow(arrayToObject(combined), float64(combined.length-1))
 		}
-		return listNode(combined...)
+		return combined
 	}
 
 	if target.isList() && source.isList() {
-		for i, item := range source.items {
-			if item == nil {
-				continue
-			}
-			switch {
-			case i < len(target.items) && target.items[i] != nil:
-				if target.items[i].isContainer() && item.isContainer() {
-					target.items[i] = merge(target.items[i], item)
+		for _, i := range source.indexes() {
+			item := source.at[i]
+			switch existing := target.at[i]; {
+			case existing != nil:
+				if existing.isContainer() && item.isContainer() {
+					target.at[i] = merge(existing, item)
 				} else {
-					target.items = append(target.items, item)
+					target.push(item)
 				}
 			default:
-				for len(target.items) <= i {
-					target.items = append(target.items, nil)
-				}
-				target.items[i] = item
+				target.put(i, item)
 			}
 		}
-		if countElements(target.items) > queryArrayLimit {
-			return markOverflow(arrayToObject(target.items), float64(len(target.items)-1))
+		if len(target.at) > queryArrayLimit {
+			return markOverflow(arrayToObject(target), float64(target.length-1))
 		}
 		return target
 	}
 
 	acc := target
 	if target.isList() {
-		acc = arrayToObject(target.items)
+		acc = arrayToObject(target)
 		if target.conflict {
-			markConflict(acc, float64(len(target.items)-1))
+			markConflict(acc, float64(target.length-1))
 		}
 	}
 	for _, key := range sourceKeys(source) {
@@ -316,10 +339,8 @@ func sourceKeys(source *queryNode) []string {
 		return source.orderedKeys()
 	}
 	var keys []string
-	for i, item := range source.items {
-		if item != nil {
-			keys = append(keys, NumberText(float64(i)))
-		}
+	for _, i := range source.indexes() {
+		keys = append(keys, NumberText(float64(i)))
 	}
 	return keys
 }
@@ -329,7 +350,7 @@ func sourceValue(source *queryNode, key string) *queryNode {
 		return source.members[key]
 	}
 	index, _ := arrayIndexKey(key)
-	return source.items[index]
+	return source.at[int(index)]
 }
 
 // splitKey is splitKeyIntoSegments: "a[b][c]" is a, [b], [c]. Groups
@@ -397,9 +418,8 @@ func parseObject(chain []string, value *queryNode) *queryNode {
 			validIndex := whole && root != clean && index >= 0
 			switch {
 			case validIndex && index < queryArrayLimit:
-				items := make([]*queryNode, int(index)+1)
-				items[int(index)] = leaf
-				obj = listNode(items...)
+				obj = listNode()
+				obj.put(int(index), leaf)
 			case validIndex:
 				obj.set(clean, leaf)
 				markOverflow(obj, index)
@@ -504,20 +524,18 @@ func parseQuery(raw string) *queryNode {
 	return root
 }
 
-// compact removes the holes from every list below n.
+// compact turns every list below n into its elements without the holes.
 func compact(n *queryNode) {
 	if n == nil {
 		return
 	}
 	switch n.kind {
 	case queryArray:
-		kept := n.items[:0]
-		for _, item := range n.items {
-			if item != nil {
-				kept = append(kept, item)
-			}
+		n.items = make([]*queryNode, 0, len(n.at))
+		for _, i := range n.indexes() {
+			n.items = append(n.items, n.at[i])
 		}
-		n.items = kept
+		n.at = nil
 		for _, item := range n.items {
 			compact(item)
 		}
