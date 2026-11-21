@@ -99,3 +99,72 @@ func TestRemoteTargetTunnelHoldsConnectUntilArgs(t *testing.T) {
 		t.Fatal("guacd got no connect")
 	}
 }
+
+// TestRemoteTargetTunnelOutlivesTheHandshake: once guacd says ready, the
+// dial deadline no longer applies, so a session runs past it while frames
+// flow (RV176).
+func TestRemoteTargetTunnelOutlivesTheHandshake(t *testing.T) {
+	gateway, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer gateway.Close()
+	go func() {
+		conn, err := gateway.Accept()
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		reader := bufio.NewReader(conn)
+		if _, err := reader.ReadString(';'); err != nil { // select
+			return
+		}
+		_, _ = conn.Write(encodeGuacInstruction(guacInstruction{opcode: "args", args: []string{"VERSION_1_5_0", "hostname", "port"}}))
+		if _, err := reader.ReadString(';'); err != nil { // connect
+			return
+		}
+		_, _ = conn.Write(encodeGuacInstruction(guacInstruction{opcode: "ready", args: []string{"$id"}}))
+		for range 26 {
+			time.Sleep(500 * time.Millisecond)
+			if _, err := conn.Write(encodeGuacInstruction(guacInstruction{opcode: "sync", args: []string{"1"}})); err != nil {
+				return
+			}
+		}
+	}()
+
+	srv, database := newInternalServer(t, nil)
+	srv.cfg.GuacdAddress = gateway.Addr().String()
+	if err := database.CreateRemoteTarget(&db.RemoteTarget{
+		ID: "rt-1", Name: "box", Protocol: "vnc", Host: "10.9.9.9", Port: 5900,
+		CredentialMode: "prompt", TLSMode: "disabled", Enabled: true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tunnel/{id}", srv.handleRemoteTargetTunnel)
+	web := httptest.NewServer(mux)
+	defer web.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	ws, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(web.URL, "http")+"/tunnel/rt-1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ws.CloseNow()
+	for _, in := range []guacInstruction{{opcode: "select", args: []string{"vnc"}}, {opcode: "connect", args: []string{"VERSION_1_5_0", "h", "p"}}} {
+		if err := ws.Write(ctx, websocket.MessageText, encodeGuacInstruction(in)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	start := time.Now()
+	for {
+		_, data, err := ws.Read(ctx)
+		if err != nil {
+			t.Fatalf("the tunnel ended after %s: %v", time.Since(start).Round(time.Second), err)
+		}
+		if strings.Contains(string(data), "sync") && time.Since(start) > remoteTargetDialTimeout+2*time.Second {
+			return
+		}
+	}
+}

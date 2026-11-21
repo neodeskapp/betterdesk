@@ -20,6 +20,9 @@ import (
 
 const (
 	remoteTargetDialTimeout = 10 * time.Second
+	// remoteTargetIdleTimeout ends a session whose gateway sends nothing for
+	// this long; guacd sends a keep-alive every few seconds.
+	remoteTargetIdleTimeout = 60 * time.Second
 	remoteTargetMaxMessage  = 16 << 20
 )
 
@@ -69,6 +72,8 @@ func (s *Server) handleRemoteTargetTunnel(w http.ResponseWriter, r *http.Request
 		return
 	}
 	defer guacd.Close()
+	// The handshake must finish within the dial timeout. Once guacd says
+	// ready, each read and write gets the idle timeout instead.
 	_ = guacd.SetDeadline(time.Now().Add(remoteTargetDialTimeout))
 
 	ctx, cancel := context.WithCancel(r.Context())
@@ -152,6 +157,7 @@ func (s *Server) remoteTargetBrowserToGuacd(ctx context.Context, ws *websocket.C
 				}
 				instruction.args = rewriteRemoteTargetConnect(instruction.args, names, target, password)
 			}
+			_ = guacd.SetWriteDeadline(time.Now().Add(remoteTargetIdleTimeout))
 			if _, err := guacd.Write(encodeGuacInstruction(instruction)); err != nil {
 				return err
 			}
@@ -162,14 +168,22 @@ func (s *Server) remoteTargetBrowserToGuacd(ctx context.Context, ws *websocket.C
 func (s *Server) remoteTargetGuacdToBrowser(ctx context.Context, guacd net.Conn, ws *websocket.Conn, args *guacdArgs) error {
 	buf := make([]byte, 64*1024)
 	parser := &guacInstructionParser{}
+	connected := false
 	for {
+		// After the handshake a read waits at most the idle timeout.
+		if connected {
+			_ = guacd.SetReadDeadline(time.Now().Add(remoteTargetIdleTimeout))
+		}
 		n, err := guacd.Read(buf)
 		if n > 0 {
 			data := append([]byte(nil), buf[:n]...)
 			if instructions, parseErr := parser.Feed(data); parseErr == nil {
 				for _, instruction := range instructions {
-					if instruction.opcode == "args" {
+					switch instruction.opcode {
+					case "args":
 						args.set(instruction.args)
+					case "ready":
+						connected = true
 					}
 				}
 			}
