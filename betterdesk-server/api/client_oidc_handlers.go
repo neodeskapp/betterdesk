@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"io"
 	"log"
 	"net/http"
 
@@ -16,6 +17,10 @@ import (
 	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/db"
 )
+
+// maxClientOIDCBody caps the body of POST /api/oidc/auth: a device id, a
+// uuid and three short device fields.
+const maxClientOIDCBody = 4096
 
 // handleClientOIDCAuth starts OIDC for the stock RustDesk desktop client.
 // POST /api/oidc/auth
@@ -35,8 +40,14 @@ func (s *Server) handleClientOIDCAuth(w http.ResponseWriter, r *http.Request) {
 			Type string `json:"type"`
 		} `json:"deviceInfo"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(io.LimitReader(r.Body, maxClientOIDCBody)).Decode(&body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
+		return
+	}
+	// Each start keeps these fields in a pending entry until it expires.
+	if len(body.ID) > 64 || len(body.UUID) > 128 || len(body.DeviceInfo.Name) > 128 ||
+		len(body.DeviceInfo.OS) > 64 || len(body.DeviceInfo.Type) > 32 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Field too long"})
 		return
 	}
 

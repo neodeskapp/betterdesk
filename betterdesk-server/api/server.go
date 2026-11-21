@@ -105,6 +105,9 @@ type Server struct {
 	// Short-code pairing: redeem is public and guessable, so it gets its own budget
 	// separate from enrollment (a paired device must not consume the enrollment budget).
 	pairingLimiter *ratelimit.IPLimiter
+	// The single sign-on start routes are public and each call keeps a
+	// pending entry for minutes.
+	oidcStartLimiter *ratelimit.IPLimiter
 	keyPair           *crypto.KeyPair // Ed25519 keypair for signing
 	telemetryPrivate  [32]byte        // X25519 private key for telemetry envelopes
 	telemetryPublic   [32]byte        // X25519 public key for telemetry envelopes
@@ -156,6 +159,8 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		// 10/min per IP: a person redeems once; a script brute-forcing 30 bits would
 		// need ~10^7 minutes at this rate.
 		pairingLimiter: ratelimit.NewIPLimiter(10, 1*time.Minute, 5*time.Minute),
+		// 20/min per IP: a person starts a sign-in a few times at most.
+		oidcStartLimiter: ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),
 		clientTFASessions: newTFASessionStore(),
 		secureClientKeys:  make(map[string][32]byte),
 		panelNonces:       newPanelNonceCache(),
@@ -179,6 +184,20 @@ func (s *Server) rateLimitPublic(lim *ratelimit.IPLimiter, h http.HandlerFunc) h
 			}
 		}
 		h(w, r)
+	}
+}
+
+// rateLimitOutside is rateLimitPublic for requests from the listener. The
+// console's in-process calls all come from one loopback address, so they
+// skip the limiter instead of sharing one budget for every console user.
+func (s *Server) rateLimitOutside(lim *ratelimit.IPLimiter, h http.HandlerFunc) http.HandlerFunc {
+	limited := s.rateLimitPublic(lim, h)
+	return func(w http.ResponseWriter, r *http.Request) {
+		if arrivedInternally(r) {
+			h(w, r)
+			return
+		}
+		limited(w, r)
 	}
 }
 
@@ -458,7 +477,7 @@ func (s *Server) routes() *http.ServeMux {
 	// fall back to signal_port - 2 (21114).
 	mux.HandleFunc("POST /api/login", s.handleClientLogin)
 	mux.HandleFunc("GET /api/login-options", s.handleClientLoginOptions)
-	mux.HandleFunc("POST /api/oidc/auth", s.handleClientOIDCAuth)
+	mux.HandleFunc("POST /api/oidc/auth", s.rateLimitOutside(s.oidcStartLimiter, s.handleClientOIDCAuth))
 	mux.HandleFunc("GET /api/oidc/auth-query", s.handleClientOIDCAuthQuery)
 	mux.HandleFunc("GET /api/oidc/callback", s.handleOIDCCallback) // alias; same IdP Redirect URL family
 	mux.HandleFunc("POST /api/logout", s.handleClientLogout)
@@ -624,7 +643,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/auth/oidc/test", s.requirePermission(auth.PermServerConfig, s.handleTestOIDCDiscovery))
 	// OIDC public endpoints (no auth — used by login page and IdP callback)
 	mux.HandleFunc("GET /api/auth/oidc/status", s.handleOIDCLoginStatus)
-	mux.HandleFunc("GET /api/auth/oidc/authorize", s.handleOIDCAuthorize)
+	mux.HandleFunc("GET /api/auth/oidc/authorize", s.rateLimitOutside(s.oidcStartLimiter, s.handleOIDCAuthorize))
 	mux.HandleFunc("GET /api/auth/oidc/callback", s.handleOIDCCallback)
 	mux.HandleFunc("GET /api/auth/oidc/session", s.handleOIDCSessionRedirect)
 	mux.HandleFunc("POST /api/auth/oidc/exchange", s.handleOIDCExchange)

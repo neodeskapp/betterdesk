@@ -324,8 +324,9 @@ func (s *Server) handleOIDCAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Only accept relative paths to prevent open-redirect via the IdP round-trip.
+	// The return address waits in the pending state until the IdP answers.
 	returnURL := r.URL.Query().Get("return_url")
-	if !auth.IsRelativeReturnURL(returnURL) {
+	if len(returnURL) > 2048 || !auth.IsRelativeReturnURL(returnURL) {
 		returnURL = "/"
 	}
 
