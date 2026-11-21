@@ -47,7 +47,7 @@ Wiki mirrors for common topics: [API](https://github.com/UNITRONIX/BetterDesk/wi
 
 Branching, update flow, installer contracts: **[important/README.md](important/README.md)**.
 
-Dated audits, roadmaps, and one-off plans are **historical** — see [archive/](archive/) when present, or treat root-level `AUDIT_*` / `*_ROADMAP_*` / `*_PLAN_*` files as non-user docs (do not link them from the wiki Home).
+Dated audits, roadmaps and one-off plans are not user docs. Do not link them from the wiki Home.
 
 ---
 
