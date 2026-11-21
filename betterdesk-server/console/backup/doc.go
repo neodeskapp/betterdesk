@@ -20,6 +20,12 @@
 // the .env and the server's SQLite file. Parts after a failed one still
 // run; the result lists what was restored, skipped and what failed.
 //
+// Every restore of accounts (the dump, the settings snapshot, the
+// server's SQLite file at the next start) ends the sign-in tokens of the
+// accounts whose password or second factor it replaced, and of accounts
+// that were not there before, through users.credentials_changed_at
+// (tokentimes.go).
+//
 // # The settings snapshot
 //
 // The older format, one JSON file: settings, branding, accounts, folders,

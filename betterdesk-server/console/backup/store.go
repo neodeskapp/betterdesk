@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
@@ -154,8 +155,9 @@ func setSetting(ctx context.Context, db *store.DB, key string, value any) error 
 // restoreUsers is restoreUsers of the adapters: in one transaction every
 // account is deleted (which deletes what hangs on accounts with ON DELETE
 // CASCADE) and the backup's accounts are written with the columns the
-// table has.
-func restoreUsers(ctx context.Context, db *store.DB, users []any) error {
+// table has. The same transaction sets the accounts' sign-in token times
+// (endReplacedCredentials) when the table has credentials_changed_at.
+func restoreUsers(ctx context.Context, db *store.DB, users []any, now func() time.Time) error {
 	return db.InTx(ctx, func(tx *store.Tx) error {
 		var names []string
 		var err error
@@ -171,6 +173,12 @@ func restoreUsers(ctx context.Context, db *store.DB, users []any) error {
 		cols := map[string]bool{}
 		for _, n := range names {
 			cols[n] = true
+		}
+		var before map[string]credential
+		if cols[credentialsChangedColumn] {
+			if before, err = readCredentials(ctx, tx.Query, true); err != nil {
+				return err
+			}
 		}
 		if _, err := tx.Exec(ctx, `DELETE FROM users`); err != nil {
 			return err
@@ -212,7 +220,10 @@ func restoreUsers(ctx context.Context, db *store.DB, users []any) error {
 				return err
 			}
 		}
-		return nil
+		if before == nil {
+			return nil
+		}
+		return endReplacedCredentials(ctx, tx.Query, tx.Exec, before, now().Unix())
 	})
 }
 

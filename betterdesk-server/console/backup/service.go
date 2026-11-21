@@ -669,7 +669,7 @@ func (s *Service) importDump(ctx context.Context, raw []byte, res *RestoreResult
 	if err != nil {
 		return err
 	}
-	r, err := ImportAllTables(ctx, s.o.Store, dump)
+	r, err := importAllTables(ctx, s.o.Store, dump, s.o.Now)
 	if err != nil {
 		return err
 	}

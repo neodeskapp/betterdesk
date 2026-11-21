@@ -592,8 +592,10 @@ func TestPostgresTimesKeepTheirMicroseconds(t *testing.T) {
 	}
 	ctx := context.Background()
 	src := newInstall(t, "postgres")
-	mustExec(t, src.db, `INSERT INTO users (id, username, password_hash, role, created_at) VALUES (50, 'a', 'h', 'admin', '2026-11-10 01:05:50.694123+00')`)
-	mustExec(t, src.db, `INSERT INTO users (id, username, password_hash, role, created_at) VALUES (51, 'b', 'h', 'admin', '2026-11-10 01:05:50.694+00')`)
+	// credentials_changed_at as the restore at that time sets it (RV181)
+	restoredAt := time.Unix(1795000000, 0)
+	mustExec(t, src.db, `INSERT INTO users (id, username, password_hash, role, created_at, credentials_changed_at) VALUES (50, 'a', 'h', 'admin', '2026-11-10 01:05:50.694123+00', 1795000000)`)
+	mustExec(t, src.db, `INSERT INTO users (id, username, password_hash, role, created_at, credentials_changed_at) VALUES (51, 'b', 'h', 'admin', '2026-11-10 01:05:50.694+00', 1795000000)`)
 	archive, _, err := src.service(t, "x").CreateFullBackup(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -609,7 +611,9 @@ func TestPostgresTimesKeepTheirMicroseconds(t *testing.T) {
 		}
 	}
 	dst := newInstall(t, "postgres")
-	if res, err := dst.service(t, "x").RestoreFullBackup(ctx, archive, RestoreOptions{Database: true}); err != nil {
+	svc := dst.service(t, "x")
+	svc.o.Now = func() time.Time { return restoredAt }
+	if res, err := svc.RestoreFullBackup(ctx, archive, RestoreOptions{Database: true}); err != nil {
 		t.Fatalf("restore: %+v %v", res, err)
 	}
 	if got, want := snapshot(t, dst.db)["users"], snapshot(t, src.db)["users"]; strings.Join(got, "\n") != strings.Join(want, "\n") {

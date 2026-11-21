@@ -868,11 +868,30 @@ func resultOfGo(t *testing.T, dialect, result string) string {
 	return branding.Stringify(o)
 }
 
+// fixtureRestoreTime is the clock of the restores of the Node archives.
+var fixtureRestoreTime = time.Unix(1795000000, 0)
+
 // fixtureTables are the rows Go restores from the Node archives otherwise
 // than Node's own restore did, on purpose, by dialect and table.
 var fixtureTables = map[string]map[string][]string{
-	// BK8: Node's restore refused dlp_policies
-	"postgres": {"dlp_policies": {`(1,p1,"","",log,"",t,"[{""a"": 1}]","2026-11-10 01:05:50.93+00","2026-11-18 14:58:46.584+00")`}},
+	"sqlite": {
+		// RV181: the server's users.credentials_changed_at, after last_login,
+		// holds the time of the restore for every account the database did
+		// not have, so that no sign-in token from before the restore works
+		"users": {
+			`50|'seed_admin'|'$2b$10$abcdefghijklmnopqrstuv'|'admin'|'local'|'JBSWY3DPEHPK3PXP'|1|'["AAAA-BBBB","CCCC-DDDD"]'|'2026-11-10 01:05:50'|''|1795000000|0|''|NULL|''|''|'säd😀@example.org'|''|''|''`,
+			`51|'second'|'pbkdf2-sha256$600000$s$h'|'viewer'|'local'|''|0|NULL|'2026-11-18 14:58:36'|''|1795000000|0|''|NULL|''|''|''|''|''|''`,
+		},
+	},
+	"postgres": {
+		// BK8: Node's restore refused dlp_policies
+		"dlp_policies": {`(1,p1,"","",log,"",t,"[{""a"": 1}]","2026-11-10 01:05:50.93+00","2026-11-18 14:58:46.584+00")`},
+		// RV181, as on SQLite
+		"users": {
+			`(50,seed_admin,$2b$10$abcdefghijklmnopqrstuv,admin,local,JBSWY3DPEHPK3PXP,t,"[""AAAA-BBBB"",""CCCC-DDDD""]","2026-11-10 01:05:50.694+00",,1795000000,f,"",,"","",säd😀@example.org,"","","")`,
+			`(51,second,pbkdf2-sha256$600000$s$h,viewer,local,"",f,,"2026-11-18 14:58:46.491+00",,1795000000,f,"",,"","","","","","")`,
+		},
+	},
 }
 
 // Archives the Node console made, restored by Go: the database must hold
@@ -897,7 +916,9 @@ func TestNodeArchiveFixtures(t *testing.T) {
 				t.Fatal(err)
 			}
 			dst := newInstall(t, dialect)
-			r, err := dst.service(t, "0.0.0").RestoreFullBackup(context.Background(), archive, allParts)
+			svc := dst.service(t, "0.0.0")
+			svc.o.Now = func() time.Time { return fixtureRestoreTime }
+			r, err := svc.RestoreFullBackup(context.Background(), archive, allParts)
 			if err != nil {
 				t.Fatal(err)
 			}

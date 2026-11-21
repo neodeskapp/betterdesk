@@ -209,7 +209,8 @@ type SnapshotOptions struct {
 //     bring none;
 //   - branding: through the branding service, which cleans the values;
 //   - users (only when asked, and only a non-empty list): every account is
-//     replaced (restoreUsers), and the list of who has a picture is
+//     replaced (restoreUsers), the sign-in tokens of the accounts whose
+//     credentials it replaced end, and the list of who has a picture is
 //     dropped;
 //   - folders: those whose name is not taken yet are added;
 //   - groups: user groups, device groups and rules whose guid is not taken
@@ -255,7 +256,7 @@ func (s *Service) RestoreBackup(ctx context.Context, data any, o SnapshotOptions
 	}
 
 	if users, isList := prop(cons, "users").([]any); o.Users && isList && len(users) > 0 {
-		if err := restoreUsers(ctx, db, users); err != nil {
+		if err := restoreUsers(ctx, db, users, s.o.Now); err != nil {
 			res.Warnings = append(res.Warnings, "Users restore failed: "+driverMessage(err))
 		} else {
 			res.Restored = append(res.Restored, "users")

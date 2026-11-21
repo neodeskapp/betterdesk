@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"modernc.org/sqlite"
 
@@ -34,9 +35,17 @@ type ImportResult struct {
 // in a transaction of its own and rows are written with INSERT OR REPLACE.
 // PostgreSQL: see replacePostgresTables.
 //
+// The users table gets the sign-in token times of the accounts it replaced
+// (endReplacedCredentials, with the time of the restore from now) in the
+// same transaction as its rows; on PostgreSQL right before the commit.
+//
 // An error is returned when the run stops before the end; on SQLite the
 // tables up to that point are replaced, on PostgreSQL none is.
 func ImportAllTables(ctx context.Context, db *store.DB, dump any) (ImportResult, error) {
+	return importAllTables(ctx, db, dump, time.Now)
+}
+
+func importAllTables(ctx context.Context, db *store.DB, dump any, now func() time.Time) (ImportResult, error) {
 	res := ImportResult{Restored: []string{}, Skipped: []string{}, Warnings: []string{}}
 	var tables any = branding.NewObject()
 	if truthy(dump) {
@@ -73,7 +82,7 @@ func ImportAllTables(ctx context.Context, db *store.DB, dump any) (ImportResult,
 	}
 
 	if db.IsPostgres() {
-		if err := replacePostgresTables(ctx, db, jobs); err != nil {
+		if err := replacePostgresTables(ctx, db, jobs, now); err != nil {
 			return res, err
 		}
 	} else {
@@ -83,10 +92,16 @@ func ImportAllTables(ctx context.Context, db *store.DB, dump any) (ImportResult,
 		defer func() { _, _ = db.Exec(context.WithoutCancel(ctx), `PRAGMA foreign_keys = ON`) }()
 		for _, j := range jobs {
 			j.err = db.InTx(ctx, func(tx *store.Tx) error {
+				if err := j.readCredentials(ctx, tx); err != nil {
+					return err
+				}
 				if _, err := tx.Exec(ctx, `DELETE FROM `+quoteIdent(j.name)); err != nil {
 					return err
 				}
-				return writeRows(ctx, tx, j)
+				if err := writeRows(ctx, tx, j); err != nil {
+					return err
+				}
+				return j.endReplacedCredentials(ctx, tx, now)
 			})
 		}
 	}
@@ -107,6 +122,35 @@ type tableJob struct {
 	cols map[string]string
 	rows []any
 	err  error
+	// credentials are the accounts before the restore, for the users
+	// table with credentials_changed_at
+	credentials map[string]credential
+}
+
+// tracksCredentials is true for the users table with
+// credentials_changed_at.
+func (j *tableJob) tracksCredentials() bool {
+	_, has := j.cols[credentialsChangedColumn]
+	return j.name == "users" && has
+}
+
+// readCredentials keeps the accounts' credentials before the table is
+// emptied.
+func (j *tableJob) readCredentials(ctx context.Context, tx *store.Tx) error {
+	if !j.tracksCredentials() {
+		return nil
+	}
+	before, err := readCredentials(ctx, tx.Query, true)
+	j.credentials = before
+	return err
+}
+
+// endReplacedCredentials sets the token times of the restored accounts.
+func (j *tableJob) endReplacedCredentials(ctx context.Context, tx *store.Tx, now func() time.Time) error {
+	if j.credentials == nil {
+		return nil
+	}
+	return endReplacedCredentials(ctx, tx.Query, tx.Exec, j.credentials, now().Unix())
 }
 
 type entry struct {
@@ -243,8 +287,10 @@ func writeRows(ctx context.Context, tx *store.Tx, j *tableJob) error {
 // rows fail gets its rows from before back (kept in a temporary table).
 // With its rows, every sequence of a serial column of the table is moved
 // to the column's largest value, so the next row gets a free id; a table
-// whose sequence cannot be moved counts as failed.
-func replacePostgresTables(ctx context.Context, db *store.DB, jobs []*tableJob) error {
+// whose sequence cannot be moved counts as failed. The token times of the
+// restored accounts are set last, so that the time of the restore is the
+// time of the commit; when that fails, nothing is replaced.
+func replacePostgresTables(ctx context.Context, db *store.DB, jobs []*tableJob, now func() time.Time) error {
 	order, err := parentsFirst(ctx, db, jobs)
 	if err != nil {
 		return err
@@ -262,6 +308,9 @@ func replacePostgresTables(ctx context.Context, db *store.DB, jobs []*tableJob) 
 		for i := len(order) - 1; i >= 0; i-- {
 			j := order[i]
 			j.err = inSavepoint(ctx, tx, func() error {
+				if err := j.readCredentials(ctx, tx); err != nil {
+					return err
+				}
 				if _, err := tx.Exec(ctx, `CREATE TEMP TABLE `+kept(i)+` ON COMMIT DROP AS SELECT * FROM `+quoteIdent(j.name)); err != nil {
 					return err
 				}
@@ -284,6 +333,14 @@ func replacePostgresTables(ctx context.Context, db *store.DB, jobs []*tableJob) 
 					_, err := tx.Exec(ctx, `INSERT INTO `+quoteIdent(j.name)+` SELECT * FROM `+kept(i))
 					return err
 				})
+			}
+		}
+		for _, j := range order {
+			if j.err != nil {
+				continue
+			}
+			if err := j.endReplacedCredentials(ctx, tx, now); err != nil {
+				return err
 			}
 		}
 		return nil
