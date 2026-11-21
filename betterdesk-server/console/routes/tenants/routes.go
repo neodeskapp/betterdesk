@@ -22,6 +22,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -90,11 +91,13 @@ const (
 )
 
 // pathID reads the id in a part of the path: the digits of a positive
-// 32-bit number as the client wrote them, without escapes. ok is false
-// for anything else.
+// 32-bit number as the client wrote them, without escapes. It reads the
+// path as sent, as the route table does: Go's escaped path is written anew
+// from the decoded path when another part holds a byte Go escapes, and
+// then holds the id decoded. ok is false for anything else.
 func pathID(r *http.Request, name string, part int) (id jsbind.Value, ok bool) {
 	value := r.PathValue(name)
-	parts := strings.Split(strings.TrimSuffix(r.URL.EscapedPath(), "/"), "/")
+	parts := strings.Split(strings.TrimSuffix(httpx.RawPath(r), "/"), "/")
 	if part >= len(parts) || parts[part] != value || value == "" || len(value) > 10 {
 		return jsbind.Undefined, false
 	}

@@ -186,3 +186,29 @@ func TestOnlineComesFromTheAPI(t *testing.T) {
 		}
 	})
 }
+
+// A tenant id written with an escape (%31 for 1) names no tenant, also
+// when a later part of the path holds a byte Go escapes anew (a quote):
+// the id is read from the path as the client sent it, as the route table
+// reads it, not from Go's escaped path, which then holds the id decoded.
+func TestEscapedTenantIDNamesNoTenant(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db)
+		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tenants", Body: replay.Text(`{"name":"One"}`)}); got.Status != 201 {
+			t.Fatalf("create: %d %s", got.Status, got.Body)
+		}
+		w.Exec(`INSERT INTO tenant_devices (tenant_id, device_id) VALUES (1, 'D"1')`, nil)
+		remove := func(tenant string) replay.Answer {
+			return w.Do(replay.Request{Role: "admin", Method: "DELETE", Path: "/api/tenants/" + tenant + `/devices/D"1`})
+		}
+		if got := remove("%31"); got.Status != 404 || got.Body != `{"error":"Assignment not found"}` {
+			t.Errorf("DELETE with the tenant id %%31: %d %s, want 404", got.Status, got.Body)
+		}
+		if rows := w.Rows("SELECT device_id FROM tenant_devices", nil); rows != `[{"device_id":"D\"1"}]` {
+			t.Fatalf("the tenant's devices after the escaped id: %s", rows)
+		}
+		if got := remove("1"); got.Status != 200 || got.Body != `{"ok":true}` {
+			t.Errorf("DELETE with the tenant id 1: %d %s, want 200", got.Status, got.Body)
+		}
+	})
+}
