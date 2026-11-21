@@ -466,6 +466,42 @@ func TestRefusedChangesWriteNothing(t *testing.T) {
 	})
 }
 
+// A new password needs 8 characters, as the web form asks, also when it
+// rates better than weak: creating, changing and resetting refuse a
+// shorter one and write nothing (RV204).
+func TestNewPasswordsNeedEightCharacters(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
+		ctx := context.Background()
+		state := func() string {
+			t.Helper()
+			var s string
+			if err := db.QueryRow(ctx, `SELECT password_hash || ' ' || (SELECT COUNT(*) FROM users) FROM users WHERE id = 5`).Scan(&s); err != nil {
+				t.Fatal(err)
+			}
+			return s
+		}
+		// The test console's language files lack the text, so the answer
+		// names its key (users.password_too_short in en.json)
+		const tooShort = `{"success":false,"error":"users.password_too_short"}`
+		admin := w.As("admin")
+		for i, c := range []struct{ method, path, body string }{
+			{"POST", "/api/users", `{"username":"short_pw","password":"aB3!"}`},
+			{"POST", "/api/users", `{"username":"short_pw","password":"Ab1!xyz"}`},
+			{"PATCH", "/api/users/5", `{"password":"aB3!"}`},
+			{"POST", "/api/users/5/reset-password", `{"newPassword":"aB3!"}`},
+		} {
+			before := state()
+			got := admin.Do(c.method, c.path, c.body, "X-Forwarded-For", "10.6.0."+strconv.Itoa(i+1))
+			expect(t, c.body, got, 400, tooShort)
+			if after := state(); after != before {
+				t.Errorf("%s %s: the refused request wrote %q, was %q", c.method, c.body, after, before)
+			}
+		}
+		expect(t, "eight", admin.Do("POST", "/api/users/5/reset-password", `{"newPassword":"Ab1!xyzw"}`, "X-Forwarded-For", "10.6.0.9"), 200, "")
+	})
+}
+
 // The answer to a new account lists the user groups it became a member
 // of, not the guids as they were sent, and an email of null is "" (BUGS
 // US7).

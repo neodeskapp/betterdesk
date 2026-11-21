@@ -116,15 +116,21 @@ type PasswordStrength struct {
 	Feedback []string `json:"feedback"`
 	// Strength is "weak" up to 2 points, "medium" up to 4, else "strong".
 	Strength string `json:"strength"`
+	// length is the password's length in UTF-16 units.
+	length int
 }
+
+// TooShort reports whether the password is shorter than MinPasswordLength,
+// which no new password may be, whatever its strength.
+func (p PasswordStrength) TooShort() bool { return p.length < MinPasswordLength }
 
 // ValidatePasswordStrength rates a password. Letters and digits are the
 // ASCII ones; every other character counts as a special character. The
 // length is counted in UTF-16 units.
 func ValidatePasswordStrength(password string) PasswordStrength {
 	password = toWellFormed(password)
-	result := PasswordStrength{Feedback: []string{}}
 	length := utf16Len(password)
+	result := PasswordStrength{Feedback: []string{}, length: length}
 	var lower, upper, digit, other bool
 	for i := 0; i < len(password); i++ {
 		switch c := password[i]; {
@@ -187,9 +193,9 @@ const (
 	ErrInvalidTOTPCode  Refusal = "Invalid verification code"
 )
 
-// minNewPasswordLength is the shortest password ChangePassword takes, in
-// UTF-16 units.
-const minNewPasswordLength = 8
+// MinPasswordLength is the shortest new password, in UTF-16 units, as the
+// web app's forms ask for it.
+const MinPasswordLength = 8
 
 // ChangePassword replaces the password of an account after checking the
 // current one. The new password must have 8 UTF-16 units or more; nothing
@@ -210,7 +216,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID int64, currentPassw
 	if !valid {
 		return ErrWrongPassword
 	}
-	if utf16Len(toWellFormed(newPassword)) < minNewPasswordLength {
+	if utf16Len(toWellFormed(newPassword)) < MinPasswordLength {
 		return ErrPasswordTooShort
 	}
 	hash, err := s.HashPassword(ctx, newPassword)

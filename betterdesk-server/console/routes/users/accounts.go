@@ -304,6 +304,9 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if rating.Strength == "weak" {
 		return nil, weakPassword(rating)
 	}
+	if password.IsString() && rating.TooShort() {
+		return nil, sayKey(r, http.StatusBadRequest, "users.password_too_short")
+	}
 	assigned := "viewer"
 	if validRole(role) {
 		assigned = role.Str()
@@ -468,6 +471,9 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		}
 		if rating.Strength == "weak" {
 			return nil, weakPassword(rating)
+		}
+		if password.IsString() && rating.TooShort() {
+			return nil, sayKey(r, http.StatusBadRequest, "users.password_too_short")
 		}
 		if hash, err = h.hash(ctx, password); err != nil {
 			return nil, err
@@ -700,6 +706,10 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	if rating.Strength == "weak" {
 		sent(w, r, weakPassword(rating))
+		return
+	}
+	if password.IsString() && rating.TooShort() {
+		failKey(w, r, http.StatusBadRequest, "users.password_too_short")
 		return
 	}
 	hash, err := h.hash(ctx, password)
