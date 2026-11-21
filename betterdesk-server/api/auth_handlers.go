@@ -1205,6 +1205,24 @@ func (s *Server) orgTokenPrincipal(claims *auth.Claims) (username, role string, 
 	return orgTokenSubject(claims.OrgID, claims.Sub), orgTokenRole, true
 }
 
+// serverTokenPrincipal resolves a server sign-in token to the account it
+// names as the account is now: a renamed or deleted account's token stops
+// working, and the role is the stored one, not the claim. A device token
+// keeps its device role, which authMiddleware refuses.
+func (s *Server) serverTokenPrincipal(claims *auth.Claims) (username, role string, ok bool) {
+	if auth.IsDeviceRole(claims.Role) {
+		return claims.Sub, claims.Role, true
+	}
+	if s.db == nil {
+		return "", "", false
+	}
+	user, err := s.db.GetUser(claims.Sub)
+	if err != nil || user == nil || !auth.ValidRole(user.Role) {
+		return "", "", false
+	}
+	return user.Username, user.Role, true
+}
+
 // authenticateRequest extracts and validates credentials from a request.
 // Returns (username, role, orgID, ok); orgID is set only for an
 // organization token.
@@ -1244,7 +1262,8 @@ func (s *Server) authenticateRequest(r *http.Request) (username, role, orgID str
 					username, role, ok := s.orgTokenPrincipal(claims)
 					return username, role, claims.OrgID, ok
 				}
-				return claims.Sub, claims.Role, "", true
+				username, role, ok := s.serverTokenPrincipal(claims)
+				return username, role, "", ok
 			}
 		}
 	}
