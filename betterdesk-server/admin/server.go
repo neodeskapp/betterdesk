@@ -354,9 +354,7 @@ func (s *Server) cmdBan(conn net.Conn, args []string) {
 		fmt.Fprintf(conn, "Error: %v\r\n", err)
 		return
 	}
-	if entry := s.peers.Get(id); entry != nil {
-		entry.Banned = true
-	}
+	s.peers.SetBanned(id, true)
 	fmt.Fprintf(conn, "Peer %s banned\r\n", id)
 }
 
@@ -371,9 +369,7 @@ func (s *Server) cmdUnban(conn net.Conn, args []string) {
 		fmt.Fprintf(conn, "Error: %v\r\n", err)
 		return
 	}
-	if entry := s.peers.Get(id); entry != nil {
-		entry.Banned = false
-	}
+	s.peers.SetBanned(id, false)
 	fmt.Fprintf(conn, "Peer %s unbanned\r\n", id)
 }
 

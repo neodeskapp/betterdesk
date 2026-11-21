@@ -237,3 +237,40 @@ func TestAdminStopClosesOpenConnections(t *testing.T) {
 		return
 	}
 }
+
+// ban and unban write the live peer under the map's lock: run with -race,
+// this fails when they write through the entry while the map is read.
+func TestBanWritesThePeerUnderTheMapLock(t *testing.T) {
+	srv, port := setupTestAdmin(t)
+	if err := srv.db.UpsertPeer(&db.Peer{ID: "LOCKBAN1", Status: "ONLINE"}); err != nil {
+		t.Fatal(err)
+	}
+	srv.peers.Put(&peer.Entry{ID: "LOCKBAN1", LastReg: time.Now()})
+	conn := connectAdmin(t, port)
+
+	done := make(chan struct{})
+	read := make(chan struct{})
+	go func() {
+		defer close(read)
+		for {
+			select {
+			case <-done:
+				return
+			default:
+				srv.peers.GetStats(config.DegradedThreshold, config.CriticalThreshold)
+			}
+		}
+	}()
+	sendCommand(conn, "ban LOCKBAN1")
+	sendCommand(conn, "unban LOCKBAN1")
+	resp := sendCommand(conn, "ban LOCKBAN1")
+	close(done)
+	<-read
+
+	if !strings.Contains(resp, "banned") {
+		t.Fatalf("ban answered %q", resp)
+	}
+	if snap, ok := srv.peers.GetSnapshot("LOCKBAN1", config.DegradedThreshold, config.CriticalThreshold); !ok || !snap.Banned {
+		t.Fatalf("live peer after ban: %+v", snap)
+	}
+}

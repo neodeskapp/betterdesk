@@ -622,9 +622,8 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 		s.sendUDP(resp, raddr)
 
 		// Debounce database status updates — only sync every 60s per peer (P1)
-		if time.Since(existing.LastDBSync) > 60*time.Second {
+		if s.peers.DBSyncDue(id, 60*time.Second) {
 			s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String(), "signal")
-			existing.LastDBSync = time.Now()
 		}
 		return
 	}
@@ -858,11 +857,7 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 	// The identity stored for the id, live or persisted. After a restart
 	// peer.Map is empty; the persisted identity still binds the id. Empty
 	// stored fields remain enrollable for legacy rows and first enrollment.
-	entry := s.peers.Get(id)
-	var storedUUID, storedPK []byte
-	if entry != nil {
-		storedUUID, storedPK = entry.UUID, entry.PK
-	}
+	storedUUID, storedPK, _ := s.peers.Keys(id)
 	if existingPeer != nil {
 		if len(storedUUID) == 0 && existingPeer.UUID != "" {
 			storedUUID = peerUUIDFromDB(existingPeer.UUID)
@@ -892,38 +887,25 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 		}
 	}
 
-	if entry == nil {
-		entry = &peer.Entry{
-			ID:      id,
-			LastReg: time.Now(),
-		}
-		s.peers.Put(entry)
-	}
-	entry.UUID, entry.PK = storedUUID, storedPK
+	uuidBytes, pk := storedUUID, storedPK
 	if len(msg.Uuid) > 0 {
-		entry.UUID = normalizePeerUUIDBytes(msg.Uuid)
+		uuidBytes = normalizePeerUUIDBytes(msg.Uuid)
 	}
 	if len(msg.Pk) > 0 {
-		entry.PK = append([]byte(nil), msg.Pk...)
+		pk = append([]byte(nil), msg.Pk...)
 	}
-	entry.LastReg = time.Now()
 	// Bind exact ip:port so FindByAddr can authorize TCP/WS-only RegisterPk
 	// (viewer-only outbound when the OS service is not sending UDP heartbeats, #327).
 	// Prefer same-TCP-session bind (tcpSessionPeerID) when RegisterPk keep-alive
 	// leaves the connection open for a following PunchHole.
-	if addrStr != "" {
-		entry.IP = addrStr
-		if entry.UDPAddr == nil && entry.ConnType != peer.ConnWS {
-			entry.ConnType = peer.ConnTCP
-		}
-	}
+	s.peers.RecordRegisterPk(id, uuidBytes, pk, addrStr)
 	s.bindTCPSessionPeer(addrStr, id)
 
 	// Persist to database
 	dbPeer := &db.Peer{
 		ID:     id,
-		UUID:   fmt.Sprintf("%x", entry.UUID),
-		PK:     entry.PK,
+		UUID:   fmt.Sprintf("%x", uuidBytes),
+		PK:     pk,
 		Status: "ONLINE",
 	}
 	if err := s.db.UpsertPeer(dbPeer); err != nil {
@@ -1045,12 +1027,12 @@ func (s *Server) processIDChange(msg *pb.RegisterPk, addrStr string) *pb.Rendezv
 	}
 
 	// Move the in-memory identity without closing its persistent registration.
-	oldEntry, moved := s.peers.Rename(oldID, newID)
-	if moved {
-		oldEntry.PK = effectivePK
+	if _, moved := s.peers.Rename(oldID, newID); moved {
+		var newUUID []byte
 		if len(msg.Uuid) > 0 {
-			oldEntry.UUID = normalizePeerUUIDBytes(msg.Uuid)
+			newUUID = normalizePeerUUIDBytes(msg.Uuid)
 		}
+		s.peers.SetKeys(newID, newUUID, effectivePK)
 	}
 
 	log.Printf("[signal] ID changed: %s → %s", oldID, newID)

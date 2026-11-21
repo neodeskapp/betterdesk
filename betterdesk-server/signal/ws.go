@@ -215,11 +215,7 @@ func bindPeerWSConn(s *Server, peerID string, wsc *codec.WSConn) {
 	if peerID == "" {
 		return
 	}
-	entry := s.peers.Get(peerID)
-	if entry != nil {
-		entry.ConnType = peer.ConnWS
-		entry.WSConn = wsc
-	}
+	s.peers.BindWS(peerID, wsc)
 }
 
 func isLoopbackOrigin(origin string) bool {
@@ -562,15 +558,13 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) (
 		}
 
 		// Update heartbeat (WS has no real UDP addr)
-		existing.LastReg = time.Now()
-		existing.Serial = msg.Serial
-		existing.ConnType = peer.ConnWS
-		existing.IP = remoteAddr
-
-		requestPk := len(existing.PK) == 0
+		hasPK, ok := s.peers.WSHeartbeat(id, msg.Serial, remoteAddr)
+		if !ok {
+			return nil, false
+		}
 		s.db.UpdatePeerStatus(id, "ONLINE", remoteAddr, "signal")
 
-		return registerPeerResponse(requestPk), true
+		return registerPeerResponse(!hasPK), true
 	}
 
 	if s.rejectIfPeerSoftDeleted(id, clientHost) {
@@ -626,11 +620,11 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) (
 
 // sendToWSPeer sends a protobuf message to a peer connected via WebSocket.
 func (s *Server) sendToWSPeer(id string, msg *pb.RendezvousMessage) error {
-	entry := s.peers.Get(id)
-	if entry == nil || entry.ConnType != peer.ConnWS || entry.WSConn == nil {
+	route, found := s.peers.Route(id)
+	if !found || route.ConnType != peer.ConnWS || route.WSConn == nil {
 		return fmt.Errorf("peer %s not connected via WS", id)
 	}
-	wsc, ok := entry.WSConn.(*codec.WSConn)
+	wsc, ok := route.WSConn.(*codec.WSConn)
 	if !ok {
 		return fmt.Errorf("peer %s has invalid WS connection", id)
 	}
@@ -642,8 +636,8 @@ func (s *Server) sendToWSPeer(id string, msg *pb.RendezvousMessage) error {
 // sent UDP even when ConnType was stamped TCP by RegisterPk (#382). Returns
 // true if a transport accepted the message.
 func (s *Server) sendToPeer(id string, msg *pb.RendezvousMessage) bool {
-	entry := s.peers.Get(id)
-	if entry == nil {
+	entry, found := s.peers.Route(id)
+	if !found {
 		log.Printf("[signal] sendToPeer: peer %s not in map", id)
 		return false
 	}

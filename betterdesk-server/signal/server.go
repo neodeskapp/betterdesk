@@ -907,23 +907,20 @@ func (s *Server) forwardToWSInitiator(initiatorAddr string, msg *pb.RendezvousMe
 	if ip == nil {
 		return false
 	}
-	if s.peers.CountWSByIP(ip) != 1 {
+	peerID, conn, found := s.peers.OnlyWSPeerAt(ip)
+	if !found {
 		return false
 	}
-	entry := s.peers.FindWSByIP(ip)
-	if entry == nil || entry.WSConn == nil {
-		return false
-	}
-	wsc, ok := entry.WSConn.(*codec.WSConn)
+	wsc, ok := conn.(*codec.WSConn)
 	if !ok {
 		return false
 	}
 	if err := wsc.WriteMessage(msg); err != nil {
 		if isNormalClose(err) || strings.Contains(err.Error(), "use of closed network connection") {
-			entry.WSConn = nil
+			s.peers.UnbindWS(peerID, conn)
 			return false
 		}
-		log.Printf("[signal] WS forward write to peer %s (addr=%s): %v", entry.ID, initiatorAddr, err)
+		log.Printf("[signal] WS forward write to peer %s (addr=%s): %v", peerID, initiatorAddr, err)
 		return false
 	}
 	return true

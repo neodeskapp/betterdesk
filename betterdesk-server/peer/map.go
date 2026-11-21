@@ -353,6 +353,163 @@ func (m *Map) MoveToUDP(id string, addr *net.UDPAddr) bool {
 	return true
 }
 
+// Keys returns copies of a peer's uuid and public key.
+func (m *Map) Keys(id string) (uuid, pk []byte, ok bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return nil, nil, false
+	}
+	return append([]byte(nil), e.UUID...), append([]byte(nil), e.PK...), true
+}
+
+// SetKeys stores a peer's public key, and its uuid unless uuid is empty.
+func (m *Map) SetKeys(id string, uuid, pk []byte) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return false
+	}
+	setKeys(e, uuid, pk)
+	return true
+}
+
+func setKeys(e *Entry, uuid, pk []byte) {
+	if len(uuid) > 0 {
+		e.UUID = append([]byte(nil), uuid...)
+	}
+	e.PK = append([]byte(nil), pk...)
+}
+
+// RecordRegisterPk stores the keys of an accepted RegisterPk and binds the
+// peer to addr, the ip:port it was sent from, adding the peer when it is not
+// in the map. A peer without a UDP address that is not on WebSocket becomes
+// a TCP peer.
+func (m *Map) RecordRegisterPk(id string, uuid, pk []byte, addr string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	now := time.Now()
+	e, ok := m.entries[id]
+	if !ok {
+		e = &Entry{ID: id}
+		m.entries[id] = e
+		m.totalRegistrations.Add(1)
+	}
+	setKeys(e, uuid, pk)
+	e.LastReg = now
+	if addr != "" {
+		e.IP = addr
+		if e.UDPAddr == nil && e.ConnType != ConnWS {
+			e.ConnType = ConnTCP
+		}
+	}
+}
+
+// WSHeartbeat records a heartbeat of a WebSocket peer from addr. hasPK
+// reports whether the peer's public key is known.
+func (m *Map) WSHeartbeat(id string, serial int32, addr string) (hasPK, ok bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return false, false
+	}
+	e.LastReg = time.Now()
+	e.Serial = serial
+	e.ConnType = ConnWS
+	e.IP = addr
+	return len(e.PK) > 0, true
+}
+
+// BindWS makes conn the WebSocket the peer is reached on.
+func (m *Map) BindWS(id string, conn interface{}) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return false
+	}
+	e.ConnType = ConnWS
+	e.WSConn = conn
+	return true
+}
+
+// Route is how a peer is reached, copied under the map's lock.
+type Route struct {
+	ConnType ConnType
+	UDPAddr  *net.UDPAddr
+	TCPConn  net.Conn
+	WSConn   interface{}
+}
+
+// Route returns how the peer is reached.
+func (m *Map) Route(id string) (Route, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return Route{}, false
+	}
+	return Route{ConnType: e.ConnType, UDPAddr: e.UDPAddr, TCPConn: e.TCPConn, WSConn: e.WSConn}, true
+}
+
+// OnlyWSPeerAt returns the id and WebSocket of the one WebSocket peer at ip.
+// ok is false when there is none or more than one.
+func (m *Map) OnlyWSPeerAt(ip net.IP) (id string, conn interface{}, ok bool) {
+	if ip == nil {
+		return "", nil, false
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, e := range m.entries {
+		if e.ConnType != ConnWS || e.WSConn == nil || !peerEntryMatchesIP(e, ip) {
+			continue
+		}
+		if ok {
+			return "", nil, false
+		}
+		id, conn, ok = e.ID, e.WSConn, true
+	}
+	return id, conn, ok
+}
+
+// UnbindWS forgets conn as the peer's WebSocket, after it was closed. A
+// peer bound to another connection since keeps it.
+func (m *Map) UnbindWS(id string, conn interface{}) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if e, ok := m.entries[id]; ok && e.WSConn == conn {
+		e.WSConn = nil
+	}
+}
+
+// SetBanned marks a live peer banned or not.
+func (m *Map) SetBanned(id string, banned bool) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok {
+		return false
+	}
+	e.Banned = banned
+	return true
+}
+
+// DBSyncDue reports whether the peer's status was last written to the
+// database more than every ago, and when it was, counts it as written now.
+func (m *Map) DBSyncDue(id string, every time.Duration) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok || time.Since(e.LastDBSync) <= every {
+		return false
+	}
+	e.LastDBSync = time.Now()
+	return true
+}
+
 // TouchHeartbeat refreshes the heartbeat timestamp without changing address or serial.
 // It is used by transports where protocol-level keepalive frames prove the peer is alive.
 func (m *Map) TouchHeartbeat(id string) bool {
