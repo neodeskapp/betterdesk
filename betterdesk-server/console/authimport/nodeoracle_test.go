@@ -78,8 +78,8 @@ func TestOldConsoleReadsTheSameAfterTheImport(t *testing.T) {
 	after := readback(t, filepath.Join(afterDir, "db_v2.sqlite3"), filepath.Join(afterDir, "auth.db"))
 
 	// What the rules decide differently: the server's own accounts are
-	// there too; an account in both files keeps the server's name, role
-	// and guid; the server's address book stays where both had one; and a
+	// there too; an account in both files keeps the server's name and
+	// guid; the server's address book stays where both had one; and a
 	// book read from the server's table (keyed by name) carries the name.
 	users := dig(after, "users")
 	for _, name := range []string{"zed", "frank"} {
@@ -92,8 +92,6 @@ func TestOldConsoleReadsTheSameAfterTheImport(t *testing.T) {
 		user, key string
 		before    any
 	}{
-		{"admin", "role", "admin"},
-		{"dave", "role", "admin"},
 		{"bob", "guid", ""},
 		{"dave", "guid", "guid-dave"},
 		{"bob", "personalBook", map[string]any{"ab_type": "personal", "data": `{"peers":[]}`}},

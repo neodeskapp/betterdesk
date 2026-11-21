@@ -65,17 +65,22 @@ func id(v any) int64 {
 }
 
 // The columns the console owns on an account row. When an account is in
-// both files they come from auth.db: the console is where profiles,
-// languages, two-factor sign-in and passwords are set (D5).
-var consoleUserColumns = []string{"first_name", "last_name", "email", "phone", "role_display", "avatar_url",
+// both files they come from auth.db: the console is where people signed
+// in, so its role and sign-in provider, profiles, languages, two-factor
+// sign-in and passwords are the ones that held (D5, A87).
+var consoleUserColumns = []string{"role", "auth_provider", "first_name", "last_name", "email", "phone", "role_display", "avatar_url",
 	"preferred_language", "totp_secret", "totp_enabled", "totp_recovery_codes", "password_hash"}
 
-// users merges the accounts. One in both files (by name, else by name in
-// lower case when that finds exactly one) keeps the main file's row and
-// id, its role and sign-in provider; it takes the console's columns
-// above, the later last sign-in and the earlier creation time, and the
-// console's guid when the main row has none. One only in auth.db is added
-// with its id, or a new one when the main file uses that id.
+// users merges the accounts. An account of auth.db is the main file's
+// account of the same name; else, when it is the only account of auth.db
+// with that name in lower case and the main file has exactly one such
+// account that no exact name took, that one. The console's names are
+// case-sensitive, so two accounts it told apart never meet in one row.
+// A matched account keeps the main file's row, id and name; it takes the
+// console's columns above, the later last sign-in and the earlier
+// creation time, and the console's guid when the main row has none. One
+// only in auth.db is added with its id, or a new one when the main file
+// uses that id.
 func (c *conn) users(ctx context.Context) error {
 	legacyCols, err := c.columns(ctx, "legacy", "users")
 	if err != nil {
@@ -103,20 +108,28 @@ func (c *conn) users(ctx context.Context) error {
 		byName[text(u["username"])] = id(u["id"])
 		byNormal[normalName(text(u["username"]))] = append(byNormal[normalName(text(u["username"]))], id(u["id"]))
 	}
-	claimed := map[int64]bool{}
-	match := func(name string) (int64, bool) {
-		if mid, ok := byName[name]; ok && !claimed[mid] {
-			return mid, true
-		}
-		if ids := byNormal[normalName(name)]; len(ids) == 1 && !claimed[ids[0]] {
-			return ids[0], true
-		}
-		return 0, false
-	}
+	legacyNormal := map[string]int{}
 	for _, u := range legacy {
+		legacyNormal[normalName(text(u["username"]))]++
+	}
+	// Exact names first, so a name in another case never takes the row of
+	// an account that has the exact name
+	claimed := map[int64]bool{}
+	matched := make([]int64, len(legacy))
+	for i, u := range legacy {
+		if mid, ok := byName[text(u["username"])]; ok {
+			matched[i], claimed[mid] = mid, true
+		}
+	}
+	for i, u := range legacy {
+		normal := normalName(text(u["username"]))
+		if ids := byNormal[normal]; matched[i] == 0 && legacyNormal[normal] == 1 && len(ids) == 1 && !claimed[ids[0]] {
+			matched[i], claimed[ids[0]] = ids[0], true
+		}
+	}
+	for i, u := range legacy {
 		old := id(u["id"])
-		if mid, ok := match(text(u["username"])); ok {
-			claimed[mid] = true
+		if mid := matched[i]; mid != 0 {
 			if err := c.mergeUser(ctx, mid, u, inMain); err != nil {
 				return fmt.Errorf("merge account %d: %w", old, err)
 			}
@@ -147,7 +160,6 @@ func (c *conn) users(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		claimed[mid] = true
 		c.report.UserIDs[old] = mid
 		c.report.UsersAdded++
 	}

@@ -133,7 +133,7 @@ func options(authPath string) authimport.Options {
 
 // TestImportMergesASplitInstall imports a split install and checks every
 // rule: accounts matched by name keep the server's row and id with the
-// console's profile, two-factor settings and password; accounts only in
+// console's role, profile, two-factor settings and password; accounts only in
 // auth.db keep their id unless it is taken; rows follow the new ids;
 // rows of a deleted account are left out; groups replace the migration's
 // "Default" seed; what both files have keeps the server's row; sessions
@@ -163,9 +163,9 @@ func TestImportMergesASplitInstall(t *testing.T) {
 
 	checks := []struct{ name, q, want string }{
 		{"accounts", `SELECT id, username, role, password_hash, totp_enabled, COALESCE(totp_secret, 'NULL'), COALESCE(email, ''), COALESCE(preferred_language, 'NULL'), guid, created_at, last_login FROM users ORDER BY id`,
-			"1|admin|super_admin|$2b$10$adminhashfromtheconsole.........................|0|NULL||NULL|guid-admin-console|2024-01-01 00:00:00|2026-11-01 10:00:00; " +
+			"1|admin|admin|$2b$10$adminhashfromtheconsole.........................|0|NULL||NULL|guid-admin-console|2024-01-01 00:00:00|2026-11-01 10:00:00; " +
 				"2|bob|viewer|$2b$10$bobhash.........................................|0|NULL|bob@example.com|en|guid-bob-go|2024-03-01 00:00:00|; " +
-				"3|dave|operator|$2b$10$davehash........................................|0|NULL||NULL|guid-dave-go|2024-04-01 00:00:00|2026-10-01 00:00:00; " +
+				"3|dave|admin|$2b$10$davehash........................................|0|NULL||NULL|guid-dave-go|2024-04-01 00:00:00|2026-10-01 00:00:00; " +
 				"4|zed|viewer|pbkdf2-sha256$600000$go$zed|0|||NULL||%s|; " +
 				"6|frank|viewer|pbkdf2-sha256$600000$go$frank|0|||NULL||%s|; " +
 				"7|alice|operator|$2b$10$alicehash.......................................|1|JBSWY3DPEHPK3PXP|alice@example.com|de|guid-alice-console|2024-02-01 00:00:00|2026-11-02 10:00:00; " +
@@ -341,5 +341,76 @@ func TestImportOnlyWhenNeeded(t *testing.T) {
 	env := map[string]string{"AUTH_DB_PATH": "/x/a.db", "SQLITE_AUTH_DB_MODE": "legacy"}
 	if got := authimport.FromEnv(func(k string) string { return env[k] }, "/data"); got.AuthDBPath != "/x/a.db" || got.Mode != "legacy" {
 		t.Errorf("FromEnv = %+v", got)
+	}
+}
+
+// changeAuthDB runs statements on auth.db before the import.
+func changeAuthDB(t *testing.T, authPath string, statements ...string) {
+	t.Helper()
+	handle, err := sql.Open("sqlite", "file:"+authPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer handle.Close()
+	for _, s := range statements {
+		if _, err := handle.Exec(s); err != nil {
+			t.Fatalf("%s: %v", s, err)
+		}
+	}
+}
+
+// TestAnAccountInBothFilesTakesTheConsolesRoleAndProvider: the panel
+// signed people in with the role and provider in auth.db, so an account in
+// both files takes them from there, whichever way they differ: the
+// server's super_admin "admin" is the console's admin, "dave" whom the
+// console made an admin is one, "bob" whom the console demoted from admin
+// to viewer stays a viewer and signs in through LDAP as the console said
+// (BUGS RV127, DECISIONS A87).
+func TestAnAccountInBothFilesTakesTheConsolesRoleAndProvider(t *testing.T) {
+	sdb, _, authPath := splitInstall(t, func(exec func(string, ...any)) {
+		serverSide(exec)
+		exec(`UPDATE users SET role = 'admin', auth_provider = 'oidc' WHERE username = 'bob'`)
+	})
+	changeAuthDB(t, authPath, `UPDATE users SET auth_provider = 'ldap' WHERE username = 'bob'`)
+	if _, err := authimport.Run(context.Background(), sdb, options(authPath)); err != nil {
+		t.Fatal(err)
+	}
+	want := "1|admin|admin|local; 2|bob|viewer|ldap; 3|dave|admin|local; 4|zed|viewer|local; 6|frank|viewer|local; 7|alice|operator|local; 8|eve|viewer|local"
+	if got := query(t, sdb, `SELECT id, username, role, auth_provider FROM users ORDER BY id`); got != want {
+		t.Errorf("accounts after the import:\n got %s\nwant %s", got, want)
+	}
+}
+
+// TestNamesInAnotherCaseMatchOnlyWhenThereIsNoOtherAccountOfThatName: the
+// console told "ZED" and "zed" apart (its names are case-sensitive), so
+// neither is matched to the server's "zed" by its name in lower case: the
+// console's "zed" is the server's "zed" by its exact name and "ZED" is
+// added as an account of its own, whatever their order in auth.db. Of
+// "FRANK" and "Frank" neither has the exact name of the server's "frank",
+// and nothing tells which of them the server's row stands for, so both are
+// added and "frank" stays as it was. "Dave", the only account of that name
+// in either case on both sides, is still the server's "dave".
+func TestNamesInAnotherCaseMatchOnlyWhenThereIsNoOtherAccountOfThatName(t *testing.T) {
+	sdb, _, authPath := splitInstall(t, serverSide)
+	changeAuthDB(t, authPath,
+		`INSERT INTO users (id, username, password_hash, role) VALUES (10, 'ZED', '$2b$10$upperzed', 'operator'), (11, 'zed', '$2b$10$lowerzed', 'viewer'),
+			(12, 'FRANK', '$2b$10$upperfrank', 'admin'), (13, 'Frank', '$2b$10$titlefrank', 'operator')`)
+	report, err := authimport.Run(context.Background(), sdb, options(authPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := report.UserIDs[5]; got != 3 {
+		t.Errorf("Dave went to account %d, want dave (3)", got)
+	}
+	if got := report.UserIDs[11]; got != 4 {
+		t.Errorf("zed went to account %d, want the server's zed (4)", got)
+	}
+	want := "4|zed|viewer|$2b$10$lowerzed; 10|ZED|operator|$2b$10$upperzed"
+	if got := query(t, sdb, `SELECT id, username, role, password_hash FROM users WHERE lower(username) = 'zed' ORDER BY id`); got != want {
+		t.Errorf("the zed accounts after the import:\n got %s\nwant %s", got, want)
+	}
+	want = "6|frank|viewer|pbkdf2-sha256$600000$go$frank; 12|FRANK|admin|$2b$10$upperfrank; 13|Frank|operator|$2b$10$titlefrank"
+	if got := query(t, sdb, `SELECT id, username, role, password_hash FROM users WHERE lower(username) = 'frank' ORDER BY id`); got != want {
+		t.Errorf("the frank accounts after the import:\n got %s\nwant %s", got, want)
 	}
 }
