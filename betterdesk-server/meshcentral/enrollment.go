@@ -39,8 +39,8 @@ func (g *Gateway) SetEnrollmentQueue(q EnrollmentQueue) {
 
 // admitAgent decides whether an agent with the mesh id of a group comes
 // in. An agent whose device the server has (enrolled before, or approved
-// from the pending registrations) comes in unless the device is banned or
-// was enrolled with another node id. A new agent is put into the pending
+// from the pending registrations) comes in unless the device is banned,
+// disabled or was enrolled with another node id. A new agent is put into the pending
 // registrations and refused until it is approved; a rejected or deleted
 // one is refused.
 func (g *Gateway) admitAgent(ac *AgentConn) error {
@@ -52,6 +52,10 @@ func (g *Gateway) admitAgent(ac *AgentConn) error {
 	if p != nil {
 		if p.Banned {
 			return fmt.Errorf("mesh agent %s is banned", peerID)
+		}
+		if p.Disabled {
+			// Coming in would also write the device as enabled again
+			return fmt.Errorf("mesh agent %s is disabled", peerID)
 		}
 		node, err := g.db.GetConfig("mesh_node_id_" + peerID)
 		if err != nil {
