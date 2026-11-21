@@ -1,9 +1,11 @@
 package settingsbackup
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/backup"
 	"github.com/unitronix/betterdesk-server/console/branding"
@@ -75,6 +77,9 @@ func store10(snapshot *goapi.Object) string {
 	return created[:10]
 }
 
+// restoreTimeout bounds a restore once its upload is in.
+const restoreTimeout = 30 * time.Minute
+
 // restore answers POST /api/settings/restore: a multipart upload with the
 // file in "backup" and the parts to restore as text fields. A gzip file
 // is a full backup (restoreDatabase and restoreUploads default to on,
@@ -100,7 +105,14 @@ func (h *handlers) restore(w http.ResponseWriter, r *http.Request) {
 		s, ok := upload.Fields.Get(name).Str()
 		return ok && s == "true"
 	}
-	ctx := r.Context()
+	// The restore runs to its end when the browser goes away (a closed
+	// tab, a proxy's read timeout), with a deadline of its own: cut between
+	// two parts, or between two tables on SQLite, it would leave a mix of
+	// the archive and the old data. The audit entry is written on the same
+	// context.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), restoreTimeout)
+	defer cancel()
+	r = r.WithContext(ctx)
 
 	if len(buf) > 2 && buf[0] == 0x1f && buf[1] == 0x8b {
 		result, err := h.backups.RestoreFullBackup(ctx, buf, backup.RestoreOptions{

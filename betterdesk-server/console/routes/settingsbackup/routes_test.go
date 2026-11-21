@@ -9,6 +9,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -300,6 +301,82 @@ func TestRestoreAnswersWhenTheAuditFails(t *testing.T) {
 			if res := admin.Do("GET", "/api/settings/backup"+q, ""); res.Status != 500 {
 				t.Errorf("download%s without an audit entry: %d %s", q, res.Status, shown(res))
 			}
+		}
+	})
+}
+
+// cancelAtEnd is a request body that cancels the request's context once
+// its last byte was read: the browser goes away while the restore runs.
+type cancelAtEnd struct {
+	r      *strings.Reader
+	cancel context.CancelFunc
+}
+
+func (c *cancelAtEnd) Read(p []byte) (int, error) {
+	n, err := c.r.Read(p)
+	if c.r.Len() == 0 {
+		c.cancel()
+	}
+	return n, err
+}
+
+// RV16: a restore runs to its end when the browser goes away after the
+// upload: every table of the archive comes back, and the audit entry is
+// written.
+func TestRestoreOutlivesTheRequest(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db, nil)
+		ctx := context.Background()
+		if _, err := db.Exec(ctx, `INSERT INTO folders (name) VALUES ('in the backup')`); err != nil {
+			t.Fatal(err)
+		}
+		archive := []byte(w.As("admin").Do("GET", "/api/settings/backup", "").Body)
+		if _, err := db.Exec(ctx, `UPDATE folders SET name = 'changed'`); err != nil {
+			t.Fatal(err)
+		}
+
+		serve := func(req *http.Request) *httptest.ResponseRecorder {
+			rec := httptest.NewRecorder()
+			w.Server.ServeHTTP(rec, req)
+			return rec
+		}
+		signin := serve(httptest.NewRequest("GET", "/__test/signin/admin", nil))
+		var cookies []string
+		for _, c := range signin.Result().Cookies() {
+			cookies = append(cookies, c.Name+"="+c.Value)
+		}
+		cookie := strings.Join(cookies, "; ")
+		tokenReq := httptest.NewRequest("GET", "/__test/token", nil)
+		tokenReq.Header.Set("Cookie", cookie)
+		var token struct{ Token string }
+		if err := json.Unmarshal(serve(tokenReq).Body.Bytes(), &token); err != nil || token.Token == "" {
+			t.Fatalf("token: %v", err)
+		}
+
+		body, ct := multipartBody(t, "backup", "b.tar.gz", archive, nil)
+		reqCtx, cancel := context.WithCancel(ctx)
+		defer cancel()
+		req := httptest.NewRequest("POST", "/api/settings/restore", nil).WithContext(reqCtx)
+		req.Body = io.NopCloser(&cancelAtEnd{r: strings.NewReader(body), cancel: cancel})
+		req.ContentLength = int64(len(body))
+		req.Header.Set("Content-Type", ct)
+		req.Header.Set("Cookie", cookie)
+		req.Header.Set("X-CSRF-Token", token.Token)
+		res := serve(req)
+		if reqCtx.Err() == nil {
+			t.Fatal("the request's context was not cancelled")
+		}
+		if res.Code != 200 || !strings.HasPrefix(res.Body.String(), `{"success":true,"data":{"type":"full","restored":["database (`) ||
+			!strings.Contains(res.Body.String(), `"warnings":[]`) {
+			t.Errorf("restore: %d %s", res.Code, res.Body.String())
+		}
+		var name string
+		if err := db.QueryRow(ctx, `SELECT name FROM folders`).Scan(&name); err != nil || name != "in the backup" {
+			t.Errorf("folder after the restore: %q %v", name, err)
+		}
+		rows := w.AuditRows()
+		if last := rows[len(rows)-1]; !strings.HasPrefix(last, "backup_restored|Full restore | Restored: database (") {
+			t.Errorf("audit %q", rows)
 		}
 	})
 }
