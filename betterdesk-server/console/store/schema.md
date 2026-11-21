@@ -221,6 +221,14 @@ and does not have the column. Existing rows get the column's default.
 | `add branding_config.updated_at` | `TEXT` without default, rows filled with `datetime('now')`, see below | no step | after settings, tolerated | | 687-693 |
 | `add device_groups.source_type` | `TEXT DEFAULT 'manual'` | same | after branding_config, tolerated | after the users columns up to `guid` | 709-717, 4978-4985 |
 | `add device_groups.tag_filter` | `TEXT DEFAULT ''` | same | tolerated | | 709-717, 4978-4985 |
+| `add access_tokens.token_kind` | `TEXT NOT NULL DEFAULT 'account'` | same | last step | last step | not in Node (BUGS RV1) |
+
+`access_tokens.token_kind` is `device` for a token the console issued for a
+device and `account` for the token of an account's sign-in; only a device
+token proves a device (BUGS RV1). The tokens that are there when the column
+comes were all made by sign-ins, and the default makes each an account's
+token. So does it for the rows of anything that writes the table without
+naming the kind, a rolled-back Node console among them.
 
 `settings.updated_at` and `branding_config.updated_at` on SQLite: SQLite does
 not add a column whose default is an expression to a table that has rows
@@ -338,6 +346,7 @@ PostgreSQL; `users.totp_secret` is `NOT NULL` in Go's PostgreSQL shape.
   `dlp_policies` columns on SQLite, `settings.updated_at` on PostgreSQL).
   Migrate logs a warning for them.
 - Node logged only some added columns. Migrate logs every change.
+- `access_tokens.token_kind` is not in Node (BUGS RV1).
 - SQLite: the second `CREATE TABLE IF NOT EXISTS branding_profiles` (697) is
   left out. It could never do anything.
 

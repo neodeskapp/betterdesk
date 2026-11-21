@@ -118,7 +118,7 @@ func TestMigrateAddsEachMissingColumn(t *testing.T) {
 				requireColumnDefault(t, db, table, col)
 			})
 		}
-		if wantSteps := map[store.Dialect]int{store.SQLite: 37, store.Postgres: 29}[db.Dialect()]; added != wantSteps {
+		if wantSteps := map[store.Dialect]int{store.SQLite: 38, store.Postgres: 30}[db.Dialect()]; added != wantSteps {
 			t.Errorf("%d column steps on %s, want %d", added, db.Dialect(), wantSteps)
 		}
 	})
@@ -248,6 +248,33 @@ func TestMigrateHashesAccessTokens(t *testing.T) {
 					t.Errorf("idx_access_tokens_hash = %q, want the partial unique index", index)
 				}
 			})
+		}
+	})
+}
+
+// The tokens that are there when access_tokens.token_kind comes were made
+// by sign-ins, also those that store a device id as their client: each is
+// an account's token afterwards, and no device token (BUGS RV1). Running
+// Migrate again changes no kind.
+func TestMigrateMakesEarlierTokensAccountTokens(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		mustMigrate(t, db)
+		dropColumn(t, db, "access_tokens", "token_kind")
+		user := insertUser(t, db, "token-owner")
+		insert := `INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at) VALUES (?, ?, ?, ?, '2030-01-01 00:00:00')`
+		mustExec(t, db, insert, "bound-to-a-device", store.HashAccessToken("bound-to-a-device"), user, "900100001")
+		mustExec(t, db, insert, "bound-to-nothing", store.HashAccessToken("bound-to-nothing"), user, "")
+		for run := 1; run <= 2; run++ {
+			mustMigrate(t, db)
+			for _, r := range queryStrings(t, db, `SELECT token, token_kind FROM access_tokens`) {
+				if r[1] != "account" {
+					t.Errorf("run %d: token %s is of the kind %s, want account", run, r[0], r[1])
+				}
+			}
+		}
+		mustExec(t, db, `INSERT INTO access_tokens (token, user_id, expires_at) VALUES ('written-without-a-kind', ?, '2030-01-01 00:00:00')`, user)
+		if got := queryStrings(t, db, `SELECT token_kind FROM access_tokens WHERE token = 'written-without-a-kind'`); len(got) != 1 || got[0][0] != "account" {
+			t.Errorf("a row written without a kind is %v, want account", got)
 		}
 	})
 }

@@ -41,8 +41,9 @@ func TestSharedDatabaseStartOrders(t *testing.T) {
 				}
 				storetest.ApplyDump(t, reference, readTestdata(t, "dumps/shared-"+db.Dialect().String()+"-"+order.dump+".sql"))
 				// On PostgreSQL alert_rules.condition_value is double
-				// precision (BUGS AE4)
-				want := readCatalog(t, reference).without(sessionTable).wideConditionValue()
+				// precision (BUGS AE4); access_tokens has token_kind (BUGS
+				// RV1)
+				want := readCatalog(t, reference).without(sessionTable).wideConditionValue().withTokenKind(db.IsPostgres())
 				if n := len(want.tables()); n != 87 {
 					t.Fatalf("the shared dump has %d tables besides %s, want 87", n, sessionTable)
 				}

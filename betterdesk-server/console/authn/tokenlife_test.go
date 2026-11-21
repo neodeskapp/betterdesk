@@ -27,7 +27,7 @@ func TestTokenLifetimeFollowsTheSetting(t *testing.T) {
 			if got := s.TokenExpiryDays(); got != c.days {
 				t.Errorf("after %q: %d days, want %d", c.set, got, c.days)
 			}
-			token, err := s.GenerateAccessToken(ctx, id, "", "uuid-"+c.set, "")
+			token, err := s.GenerateSignInToken(ctx, id, "", "uuid-"+c.set, "")
 			if err != nil {
 				t.Fatal(err)
 			}

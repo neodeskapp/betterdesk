@@ -10,9 +10,11 @@ import (
 )
 
 // Checks for requests and sockets that come from devices. A device proves
-// itself with a token: an access token bound to its id, or on the device
-// sockets also an enrollment token of the signal server. The header
-// X-Device-Id names a device and proves nothing.
+// itself with a token: a device token the console issued for it
+// (IssueDeviceToken), or on the device sockets also an enrollment token of
+// the signal server. An account's sign-in token proves no device, whatever
+// client id it stored. The header X-Device-Id names a device and proves
+// nothing.
 
 // deviceIDPattern is the form of a device id a token can be bound to.
 var deviceIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{3,64}$`)
@@ -55,12 +57,13 @@ type DeviceAuth struct {
 }
 
 // RequireDeviceToken checks the Authorization header of a device request.
-// It needs a Bearer access token that is live and bound to a device id,
+// It needs a Bearer device token that is live and bound to a device id,
 // and notes the use on the token. It refuses with a *DeviceAuthError:
 //
 //	401 "Bearer access token required"     no Bearer token
 //	401 "Invalid or expired access token"  the lookup failed
-//	401 "Invalid or unbound access token"  no such token, or not bound to a device id
+//	401 "Invalid or unbound access token"  no such token, an account's
+//	                                       token, or not bound to a device id
 func (s *Service) RequireDeviceToken(ctx context.Context, authorization string) (*DeviceAuth, error) {
 	token, ok := ExtractBearerToken(authorization)
 	if !ok {
@@ -70,7 +73,7 @@ func (s *Service) RequireDeviceToken(ctx context.Context, authorization string) 
 	if err != nil {
 		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or expired access token"}
 	}
-	if row == nil || row.ClientID.String == "" || !IsDeviceID(row.ClientID.String) {
+	if !row.IsDeviceToken() || row.ClientID.String == "" || !IsDeviceID(row.ClientID.String) {
 		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or unbound access token"}
 	}
 	// The token is good; a failure to note its use changes nothing.
@@ -237,7 +240,7 @@ func enrollmentExpiry(value store.Time, zone *time.Location) (time.Time, bool) {
 // VerifyDeviceWSAuth checks the token a device presents on one of the
 // device sockets. The device id and a token of 8 characters or more are
 // needed. The token passes as an enrollment token (VerifyEnrollmentToken)
-// or as a live access token bound to this device id.
+// or as a live device token bound to this device id.
 //
 // A failed enrollment lookup is returned as an error. A failed access
 // token lookup counts as "no".
@@ -257,7 +260,7 @@ func (s *Service) VerifyDeviceWSAuth(ctx context.Context, deviceID, token string
 		if err != nil {
 			return false, nil
 		}
-		if row != nil && row.ClientID.Valid && row.ClientID.String == deviceID {
+		if row.IsDeviceToken() && row.ClientID.Valid && row.ClientID.String == deviceID {
 			return true, nil
 		}
 	}

@@ -331,3 +331,51 @@ func TestSignInTakesOnlyADeviceIDAsClientID(t *testing.T) {
 		}
 	})
 }
+
+// A client's sign-in gives an account's token, whatever id the client
+// names: it signs the client in, and the device routes refuse it for the
+// device it names. A token the console issued for the device passes them
+// and signs no account in (BUGS RV1).
+func TestASignInTokenProvesNoDevice(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000", "LOGIN_RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
+		authn := w.Server.Deps().Authn
+		hash, err := authn.HashPassword(ctx, "Rv1-Test-2!x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		mustExec(t, db, `UPDATE users SET password_hash = ? WHERE id = 6`, hash)
+		got := w.SignedOut().Do("POST", "/api/login", `{"username":"e2e_viewer","password":"Rv1-Test-2!x","id":"900100001","uuid":"u-rv1"}`)
+		var signedIn struct {
+			Token string `json:"access_token"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &signedIn); err != nil || got.Status != 200 || signedIn.Token == "" {
+			t.Fatalf("sign-in: %d %s", got.Status, got.Body)
+		}
+		account := []string{"Authorization", "Bearer " + signedIn.Token}
+		device, err := authn.IssueDeviceToken(ctx, 6, "900100001", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		bound := []string{"Authorization", "Bearer " + device}
+		agent := w.SignedOut()
+
+		if got := agent.Do("GET", "/api/currentUser", "", account...); got.Status != 200 {
+			t.Errorf("current user with the sign-in's token: %d %s", got.Status, got.Body)
+		}
+		for _, target := range []string{"/api/bd/heartbeat", "/api/bd/remote-agent-token", "/api/bd/help-request"} {
+			got := agent.Do("POST", target, `{"device_id":"900100001"}`, account...)
+			if got.Status != 401 || got.Body != `{"error":"Invalid or unbound access token"}` {
+				t.Errorf("%s with the sign-in's token: %d %s", target, got.Status, got.Body)
+			}
+		}
+
+		if got := agent.Do("GET", "/api/currentUser", "", bound...); got.Status != 401 || got.Body != `{"error":"Invalid or expired token"}` {
+			t.Errorf("current user with the device token: %d %s", got.Status, got.Body)
+		}
+		if got := agent.Do("POST", "/api/bd/heartbeat", `{"device_id":"900100001"}`, bound...); got.Status == 401 || got.Status == 403 {
+			t.Errorf("heartbeat with the device token: %d %s", got.Status, got.Body)
+		}
+	})
+}

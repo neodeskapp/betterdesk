@@ -31,10 +31,13 @@
 // # Tokens
 //
 // The RustDesk client API signs in with access tokens
-// (GenerateAccessToken, ValidateAccessToken). Devices prove themselves
-// with an access token bound to their id (RequireDeviceToken) or, on the
-// device sockets, with an enrollment token of the signal server
-// (VerifyDeviceWSAuth).
+// (GenerateSignInToken, IssueAccessToken, ValidateAccessToken). Devices
+// prove themselves with a device token the console issued for them
+// (IssueDeviceToken, checked by RequireDeviceToken) or, on the device
+// sockets, also with an enrollment token of the signal server
+// (VerifyDeviceWSAuth). The two kinds never stand in for each other: an
+// account's token proves no device, and a device token is no account's
+// sign-in.
 //
 // # The first account
 //

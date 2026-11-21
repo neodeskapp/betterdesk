@@ -39,6 +39,7 @@ var scenarioFixes = []scenarioFix{
 	{"RV118", ipv6AttemptsCountPerNetwork},
 	{"RV122", codesWorkOnce},
 	{"RV123", noPasswordsTheSignInRefuses},
+	{"RV1", signInTokensProveNoDevice},
 }
 
 // fixScenario applies every fix to sc and counts the ones that changed it.
@@ -510,4 +511,71 @@ func stopAtAccountLockouts(sc *scenarioVector) bool {
 		return true
 	}
 	return false
+}
+
+// signInTokensProveNoDevice: no token of the recordings proves a device
+// (RV1). Each was made by a sign-in (generateAccessToken) or written into
+// access_tokens by the seed, the way an older console wrote its sign-ins,
+// and is an account's token, whatever client id it stored. Node's device
+// checks took such a token as the device's token; the console's refuse it
+// as a token bound to no device. The enrollment tokens of the signal
+// server still open the device sockets.
+func signInTokensProveNoDevice(sc *scenarioVector) bool {
+	changed := false
+	var seeded strings.Builder
+	for _, statement := range append(append([]dialectSQL{}, sc.Seed.SQL...), sc.Seed.After...) {
+		if strings.Contains(statement.SQLite, "access_tokens") {
+			seeded.WriteString(statement.SQLite)
+		}
+	}
+	accountToken, refused, used := map[string]bool{}, map[string]bool{}, map[string]bool{}
+	isAccountToken := func(token string) bool {
+		return accountToken[token] || seeded.Len() > 0 &&
+			(strings.Contains(seeded.String(), "'"+token+"'") || strings.Contains(seeded.String(), "'"+HashAccessToken(token)+"'"))
+	}
+	for i := range sc.Steps {
+		step := &sc.Steps[i]
+		switch step.Fn {
+		case "generateAccessToken":
+			var token string
+			if json.Unmarshal(step.Result, &token) == nil {
+				accountToken[token] = true
+			}
+		case "requireDeviceToken":
+			var header string
+			var passed struct{ Next bool }
+			if len(step.Args) == 0 || json.Unmarshal(step.Args[0], &header) != nil || json.Unmarshal(step.Result, &passed) != nil || !passed.Next {
+				continue
+			}
+			if token, ok := ExtractBearerToken(header); ok && isAccountToken(token) {
+				step.Result, changed = json.RawMessage(`{"status":401,"body":{"error":"Invalid or unbound access token"}}`), true
+				refused[token] = true
+			}
+		case "validateAccessToken":
+			var token string
+			if len(step.Args) > 0 && json.Unmarshal(step.Args[0], &token) == nil && string(step.Result) != "null" {
+				used[token] = true
+			}
+		case "verifyDeviceWsAuth":
+			var token string
+			if len(step.Args) < 2 || json.Unmarshal(step.Args[1], &token) != nil || string(step.Result) != "true" {
+				continue
+			}
+			if isAccountToken(token) {
+				step.Result, changed = json.RawMessage("false"), true
+			}
+		}
+	}
+	// A refused device request notes no use on the token
+	for token := range refused {
+		if used[token] {
+			continue
+		}
+		for _, row := range sc.Tables["access_tokens"] {
+			if row["token"] == token || row["token_hash"] == HashAccessToken(token) {
+				row["last_used"] = nil
+			}
+		}
+	}
+	return changed
 }

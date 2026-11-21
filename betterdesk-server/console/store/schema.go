@@ -246,6 +246,7 @@ func sqliteSteps() []step {
 	)...)
 	s = append(s, seedDefaultGroup("user_groups", "Default user group"), seedDefaultGroup("device_groups", "Default device group"))
 	s = append(s, accessTokenHashes())
+	s = append(s, accessTokenKind())
 	return s
 }
 
@@ -330,7 +331,19 @@ func postgresSteps() []step {
 	s = append(s, createTable("user_avatars"))
 	s = append(s, addColumns(lenient, "settings", "updated_at", "TIMESTAMPTZ DEFAULT NOW()")...)
 	s = append(s, widenConditionValue())
+	s = append(s, accessTokenKind())
 	return s
+}
+
+// accessTokenKind adds access_tokens.token_kind: "device" for a token the
+// console issued for a device, "account" for the token of an account's
+// sign-in. Only a device token proves a device. Every row that is there
+// when the column comes was made by a sign-in (no console issued device
+// tokens before the column), so the default gives each "account"; so does
+// it to the rows of anything that writes the table without naming the
+// kind.
+func accessTokenKind() step {
+	return addColumn(strict, "access_tokens", "token_kind", "TEXT NOT NULL DEFAULT 'account'")
 }
 
 // widenConditionValue makes alert_rules.condition_value double precision

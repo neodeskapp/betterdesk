@@ -22,15 +22,44 @@ func HashAccessToken(token string) string {
 	return store.HashAccessToken(toWellFormed(token))
 }
 
-// GenerateAccessToken issues a token for the user and the client. It first
-// revokes the user's tokens with the same client UUID (the client id plays
-// no part in that; an empty UUID revokes the tokens that have none). The
-// token lasts TokenExpiryDays days.
-func (s *Service) GenerateAccessToken(ctx context.Context, userID int64, clientID, clientUUID, ip string) (string, error) {
+// GenerateSignInToken issues an account's token for a sign-in of a client.
+// It first revokes the user's tokens with the same client UUID (the client
+// id plays no part in that; an empty UUID revokes the tokens that have
+// none). The token lasts TokenExpiryDays days. It is an account's token
+// whatever client id it stores: it never proves a device.
+func (s *Service) GenerateSignInToken(ctx context.Context, userID int64, clientID, clientUUID, ip string) (string, error) {
 	if err := revokeUserClientTokens(ctx, s.db, userID, clientUUID); err != nil {
 		return "", err
 	}
 	return s.IssueAccessToken(ctx, userID, clientID, clientUUID, ip)
+}
+
+// IssueDeviceToken issues a device token: a token the console gives a
+// device it admitted, bound to its id, which the device guards
+// (RequireDeviceToken, VerifyDeviceWSAuth) accept. It revokes the device
+// tokens the device had. userID is the account on whose behalf the token
+// is issued; the token never counts as that account's sign-in. The token
+// lasts TokenExpiryDays days.
+func (s *Service) IssueDeviceToken(ctx context.Context, userID int64, deviceID, ip string) (string, error) {
+	if !IsDeviceID(deviceID) {
+		return "", fmt.Errorf("device token: %q is no device id", deviceID)
+	}
+	if err := revokeDeviceTokens(ctx, s.db, deviceID); err != nil {
+		return "", err
+	}
+	return s.issue(ctx, TokenKindDevice, userID, deviceID, "", ip)
+}
+
+// GenerateAccessToken issues a device token the way cmd/devseed issues the
+// test stack's device tokens: it revokes the user's account tokens with the
+// same client UUID, then stores a device token bound to clientID with that
+// UUID. Nothing in the console calls it; cmd/devseed is to call
+// IssueDeviceToken instead, and then this goes.
+func (s *Service) GenerateAccessToken(ctx context.Context, userID int64, clientID, clientUUID, ip string) (string, error) {
+	if err := revokeUserClientTokens(ctx, s.db, userID, clientUUID); err != nil {
+		return "", err
+	}
+	return s.issue(ctx, TokenKindDevice, userID, clientID, clientUUID, ip)
 }
 
 // TokenExpiryDays is how many days a new access token lasts.
@@ -43,16 +72,21 @@ func (s *Service) SetTokenExpiryDays(text string) {
 	s.tokenDays.Store(int64(intOr(text, 7)))
 }
 
-// IssueAccessToken issues a token and revokes none. It is for a sign-in
-// whose request names no client UUID at all: nothing is revoked, and the
-// token is stored with an empty UUID.
+// IssueAccessToken issues an account's token for a sign-in and revokes
+// none. It is for a sign-in whose request names no client UUID at all:
+// nothing is revoked, and the token is stored with an empty UUID.
 func (s *Service) IssueAccessToken(ctx context.Context, userID int64, clientID, clientUUID, ip string) (string, error) {
+	return s.issue(ctx, TokenKindAccount, userID, clientID, clientUUID, ip)
+}
+
+// issue stores a new token of the kind and returns it.
+func (s *Service) issue(ctx context.Context, kind string, userID int64, clientID, clientUUID, ip string) (string, error) {
 	token, err := s.randomHex(32)
 	if err != nil {
 		return "", fmt.Errorf("access token: %w", err)
 	}
 	expires := s.now().Add(time.Duration(s.tokenDays.Load()) * 24 * time.Hour)
-	if err := createAccessToken(ctx, s.db, token, userID, clientID, clientUUID, s.expiryText(expires), ip); err != nil {
+	if err := createAccessToken(ctx, s.db, kind, token, userID, clientID, clientUUID, s.expiryText(expires), ip); err != nil {
 		return "", err
 	}
 	return token, nil
@@ -69,13 +103,14 @@ type TokenUser struct {
 
 // ValidateAccessToken returns the account a token belongs to and notes the
 // use on the token. It is nil for a token that is not 64 characters long,
-// unknown, revoked or expired, and for a token whose account is gone.
+// unknown, revoked or expired, for a device token, which is no account's
+// sign-in, and for a token whose account is gone.
 func (s *Service) ValidateAccessToken(ctx context.Context, token string) (*TokenUser, error) {
 	if utf16Len(toWellFormed(token)) != accessTokenLength {
 		return nil, nil
 	}
 	record, err := getAccessToken(ctx, s.db, token)
-	if err != nil || record == nil {
+	if err != nil || record == nil || record.IsDeviceToken() {
 		return nil, err
 	}
 	user, err := getUserByID(ctx, s.db, record.UserID.V)

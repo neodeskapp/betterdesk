@@ -199,6 +199,12 @@ func (p *replayer) run() {
 			t.Fatalf("seed %s: %v", seed.SQL, err)
 		}
 	}
+	// Node took every live token with a client id as that device's token.
+	// The recording's tokens stand for device tokens but for the operator's,
+	// which stands for the desktop client's operator sign-in (BUGS RV1).
+	if _, err := p.db.Exec(ctx, `UPDATE access_tokens SET token_kind = 'device' WHERE token <> 'tok-operator-0123456789'`); err != nil {
+		t.Fatalf("mark the device tokens: %v", err)
+	}
 	failed := 0
 	report := func(format string, a ...any) {
 		failed++

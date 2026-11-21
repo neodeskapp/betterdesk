@@ -886,7 +886,7 @@ func (r *scenarioRun) call(step *stepVector) (any, error) {
 	case "isTotpEnabled":
 		return s.IsTOTPEnabled(ctx, argInt(t, args[0]))
 	case "generateAccessToken":
-		return s.GenerateAccessToken(ctx, argInt(t, args[0]), argString(t, args[1]), argString(t, args[2]), argString(t, args[3]))
+		return s.GenerateSignInToken(ctx, argInt(t, args[0]), argString(t, args[1]), argString(t, args[2]), argString(t, args[3]))
 	case "validateAccessToken":
 		user, err := s.ValidateAccessToken(ctx, argString(t, args[0]))
 		if user == nil {

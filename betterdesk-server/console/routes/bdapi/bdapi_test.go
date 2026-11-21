@@ -23,13 +23,13 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// deviceToken adds a live access token of the admin account bound to a
-// device and returns it.
+// deviceToken adds a live device token bound to a device, issued by the
+// admin account, and returns it.
 func deviceToken(t *testing.T, w *routetest.World, token, device string) string {
 	t.Helper()
 	sum := sha256.Sum256([]byte(token))
-	if _, err := w.DB.Exec(context.Background(), `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at)
-		VALUES (?, ?, 1, ?, '', '2999-01-01 00:00:00')`, token, hex.EncodeToString(sum[:]), device); err != nil {
+	if _, err := w.DB.Exec(context.Background(), `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, token_kind)
+		VALUES (?, ?, 1, ?, '', '2999-01-01 00:00:00', 'device')`, token, hex.EncodeToString(sum[:]), device); err != nil {
 		t.Fatal(err)
 	}
 	return token

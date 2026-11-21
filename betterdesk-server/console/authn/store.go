@@ -218,15 +218,33 @@ type AccessToken struct {
 	LastUsed   store.Time        `json:"last_used"`
 	IPAddress  nullText          `json:"ip_address"`
 	Revoked    store.Bool        `json:"revoked"`
+	// Kind is TokenKindDevice for a token the console issued for a device,
+	// TokenKindAccount for one an account's sign-in made.
+	Kind nullText `json:"token_kind"`
+}
+
+// The kinds of access tokens (access_tokens.token_kind). A row written by
+// anything that does not name the kind, an older console among them, is an
+// account's token: the column's default.
+const (
+	TokenKindAccount = "account"
+	TokenKindDevice  = "device"
+)
+
+// IsDeviceToken reports whether the console issued the token for a device.
+// Only such a token proves a device; an account's sign-in never makes one,
+// whatever client id it stored.
+func (t *AccessToken) IsDeviceToken() bool {
+	return t != nil && t.Kind.String == TokenKindDevice
 }
 
 const accessTokenColumns = `id, token, token_hash, user_id, client_id, client_uuid, created_at, expires_at,
-	last_used, ip_address, revoked`
+	last_used, ip_address, revoked, token_kind`
 
-func createAccessToken(ctx context.Context, q store.Querier, token string, userID int64, clientID, clientUUID, expiresAt, ip string) error {
-	_, err := q.Exec(ctx, `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, ip_address)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		token, HashAccessToken(token), userID, clientID, clientUUID, expiresAt, ip)
+func createAccessToken(ctx context.Context, q store.Querier, kind, token string, userID int64, clientID, clientUUID, expiresAt, ip string) error {
+	_, err := q.Exec(ctx, `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, ip_address, token_kind)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		token, HashAccessToken(token), userID, clientID, clientUUID, expiresAt, ip, kind)
 	if err != nil {
 		return fmt.Errorf("store an access token: %w", err)
 	}
@@ -246,7 +264,7 @@ func getAccessToken(ctx context.Context, q store.Querier, token string) (*Access
 		err := store.SelectRow(ctx, q,
 			`SELECT `+accessTokenColumns+` FROM access_tokens WHERE `+lookup.column+` = ? AND `+live, lookup.value).
 			Scan(&t.ID, &t.Token, &t.TokenHash, &t.UserID, &t.ClientID, &t.ClientUUID, &t.CreatedAt, &t.ExpiresAt,
-				&t.LastUsed, &t.IPAddress, &t.Revoked)
+				&t.LastUsed, &t.IPAddress, &t.Revoked, &t.Kind)
 		if errors.Is(err, sql.ErrNoRows) {
 			continue
 		}
@@ -266,21 +284,36 @@ func touchAccessToken(ctx context.Context, q store.Querier, token string) error 
 	return nil
 }
 
+// The revocations of an account's tokens (a new sign-in of the client, a
+// sign-out, a new password) leave the device tokens alone: their user is
+// only the account that had them issued.
+
 func revokeUserClientTokens(ctx context.Context, q store.Querier, userID int64, clientUUID string) error {
 	query := q.Pick(
-		`UPDATE access_tokens SET revoked = 1 WHERE user_id = ? AND client_uuid = ?`,
-		`UPDATE access_tokens SET revoked = TRUE WHERE user_id = ? AND client_uuid = ?`)
-	if _, err := q.Exec(ctx, query, userID, clientUUID); err != nil {
+		`UPDATE access_tokens SET revoked = 1 WHERE user_id = ? AND client_uuid = ? AND token_kind <> ?`,
+		`UPDATE access_tokens SET revoked = TRUE WHERE user_id = ? AND client_uuid = ? AND token_kind <> ?`)
+	if _, err := q.Exec(ctx, query, userID, clientUUID, TokenKindDevice); err != nil {
 		return fmt.Errorf("revoke the tokens of user %d for one client: %w", userID, err)
+	}
+	return nil
+}
+
+// revokeDeviceTokens revokes the device tokens issued for the device.
+func revokeDeviceTokens(ctx context.Context, q store.Querier, deviceID string) error {
+	query := q.Pick(
+		`UPDATE access_tokens SET revoked = 1 WHERE token_kind = ? AND client_id = ?`,
+		`UPDATE access_tokens SET revoked = TRUE WHERE token_kind = ? AND client_id = ?`)
+	if _, err := q.Exec(ctx, query, TokenKindDevice, deviceID); err != nil {
+		return fmt.Errorf("revoke the device tokens of %s: %w", deviceID, err)
 	}
 	return nil
 }
 
 func revokeAllUserTokens(ctx context.Context, q store.Querier, userID int64) error {
 	query := q.Pick(
-		`UPDATE access_tokens SET revoked = 1 WHERE user_id = ?`,
-		`UPDATE access_tokens SET revoked = TRUE WHERE user_id = ?`)
-	if _, err := q.Exec(ctx, query, userID); err != nil {
+		`UPDATE access_tokens SET revoked = 1 WHERE user_id = ? AND token_kind <> ?`,
+		`UPDATE access_tokens SET revoked = TRUE WHERE user_id = ? AND token_kind <> ?`)
+	if _, err := q.Exec(ctx, query, userID, TokenKindDevice); err != nil {
 		return fmt.Errorf("revoke the tokens of user %d: %w", userID, err)
 	}
 	return nil

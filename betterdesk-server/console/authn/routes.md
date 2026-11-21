@@ -215,7 +215,7 @@ No second factor and no `pro` check on this path (kept defect S11).
    `s.RecordAttempt(false)`, 401; a role other than `admin` or `operator`:
    `s.RecordAttempt(false)`, 403.
 4. `s.RecordAttempt(true)`,
-   `s.GenerateAccessToken(ctx, user.ID.V, String(device_id || "").substring(0, 32), "", ip)`,
+   `s.GenerateSignInToken(ctx, user.ID.V, String(device_id || "").substring(0, 32), "", ip)`,
    `s.TouchLastLogin`, audit `operator_login`, `{access_token, user:{name, role}}`.
 
 ### The RustDesk client API (`routes/rustdesk-api.routes.js`, console port and client port)
@@ -237,7 +237,7 @@ No second factor and no `pro` check on this path (kept defect S11).
   attempt. With `TOTPRequired` and without the bypass setting the pending
   state goes to process memory; with the bypass, and without a second
   factor: `s.RecordAttempt(true)`,
-  `s.GenerateAccessToken(ctx, user.ID.V, clientId, clientUuid, ip)`,
+  `s.GenerateSignInToken(ctx, user.ID.V, clientId, clientUuid, ip)`,
   `s.TouchLastLogin`.
   `clientId` and `clientUuid` come from the body as they are: see
   "Missing client id and UUID" below.
@@ -245,12 +245,18 @@ No second factor and no `pro` check on this path (kept defect S11).
   `s.VerifyTOTPCode(ctx, session.userId, code)` whose result Node did not
   await, so every code passed (BUGS S5, kept: the route treats the check
   as passed and does not look at the answer; an error of the call reached
-  nobody). Then `s.RecordAttempt(true)`, `s.GenerateAccessToken`,
+  nobody). Then `s.RecordAttempt(true)`, `s.GenerateSignInToken`,
   `s.TouchLastLogin`.
 - `POST /api/logout` (1543-1566): `s.ValidateAccessToken`, then
   `s.RevokeClientTokens(ctx, user.ID.V, clientId, clientUuid)`.
 
 ### Device routes (`middleware/deviceAuth.js`)
+
+Every sign-in above gives an account's token, which proves no device
+whatever client id it stores (BUGS RV1). A device proves itself with a
+device token, `s.IssueDeviceToken(ctx, userID, deviceID, ip)`, which the
+console issues for a device it admitted; such a token signs no account in
+(`s.ValidateAccessToken` gives nil for it).
 
 `requireDeviceToken`: `device, err := s.RequireDeviceToken(ctx, httpx.Latin1(authorization))`.
 A `*authn.DeviceAuthError` is the answer `Status` with `{error: Text}`.
@@ -289,9 +295,10 @@ group with `authn.ExtractBearerToken`, `s.LookupAccessToken` and
 
 `bd-api.routes.js` has two more checks of its own (180-238), built from the
 same three calls and `s.UserByID`: `requireDeviceAuth` (any live token;
-`401 {error:"Missing or invalid Bearer access token"}`) and
-`identifyDevice` for `POST /api/bd/register` (a token bound to a device
-id, else the header `X-Device-Id` when `authn.IsDeviceID`). Both use the
+`401 {error:"Missing or invalid Bearer access token"}`; the operator
+routes behind it refuse a device token) and `identifyDevice` for `POST
+/api/bd/register` (a device token bound to a device id, else the header
+`X-Device-Id` when `authn.IsDeviceID`). Both use the
 route's loose Bearer parsing (starts with `Bearer `, rest trimmed).
 
 ### Device sockets
@@ -343,7 +350,7 @@ and its neighbours on both databases:
   ("Too few parameter values were provided", the route's 500), PostgreSQL
   stores its text form.
 
-`s.GenerateAccessToken` takes text. An empty UUID revokes the user's
+`s.GenerateSignInToken` takes text. An empty UUID revokes the user's
 tokens that have an empty UUID, which is what Node did for `""` (the
 operator sign-in). For a request without `uuid`, or with `null`, call
 `s.IssueAccessToken(ctx, userID, clientID, "", ip)`: it stores the token

@@ -21,8 +21,9 @@ import (
 // record of the operator's remote sessions.
 
 // operatorLogin answers POST /api/bd/operator/login {username, password,
-// device_id}: an access token bound to the device id, for the desktop
-// client in operator mode. Only an account with the role admin or
+// device_id}: an account's access token that stores the device id, for the
+// desktop client in operator mode. It is no device token: the device
+// routes refuse it. Only an account with the role admin or
 // operator and without a second factor gets one: the desktop client has
 // no step that asks for the second factor (DECISIONS A37). The sign-in
 // lockout counts here as at every sign-in.
@@ -90,7 +91,7 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 		device = ""
 	}
 	userID := user.ID.V
-	token, err := h.d.Authn.GenerateAccessToken(ctx, userID, device, "", ip)
+	token, err := h.d.Authn.GenerateSignInToken(ctx, userID, device, "", ip)
 	if err == nil {
 		err = h.d.Authn.TouchLastLogin(ctx, userID)
 	}

@@ -84,9 +84,10 @@ func TestTokenLengthRules(t *testing.T) {
 		ctx := context.Background()
 		s, _, _ := testService(t, db, nil)
 		id := addUser(t, s, "alice", "pw", "operator", "local")
-		insert := `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at) VALUES (?, NULL, ?, ?, 'u', ` +
-			db.Pick("datetime('now', '+1 day')", "NOW() + INTERVAL '1 day'") + `)`
-		// Rows from before the hash column, with tokens of other lengths.
+		insert := `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, token_kind) VALUES (?, NULL, ?, ?, 'u', ` +
+			db.Pick("datetime('now', '+1 day')", "NOW() + INTERVAL '1 day'") + `, 'device')`
+		// Device tokens from before the hash column, with tokens of other
+		// lengths.
 		mustExec(t, db, insert, "legacy-token-of-another-length", id, "device-a")
 		mustExec(t, db, insert, "short12", id, "device-a")
 
@@ -117,9 +118,9 @@ func TestRevokeWithoutClientRevokesAll(t *testing.T) {
 		s, _, _ := testService(t, db, nil)
 		id := addUser(t, s, "alice", "pw", "operator", "local")
 		other := addUser(t, s, "bob", "pw", "operator", "local")
-		first, _ := s.GenerateAccessToken(ctx, id, "client-a", "uuid-a", "")
-		second, _ := s.GenerateAccessToken(ctx, id, "client-b", "uuid-b", "")
-		foreign, _ := s.GenerateAccessToken(ctx, other, "client-a", "uuid-a", "")
+		first, _ := s.GenerateSignInToken(ctx, id, "client-a", "uuid-a", "")
+		second, _ := s.GenerateSignInToken(ctx, id, "client-b", "uuid-b", "")
+		foreign, _ := s.GenerateSignInToken(ctx, other, "client-a", "uuid-a", "")
 
 		live := func(token string) bool {
 			t.Helper()
@@ -137,7 +138,7 @@ func TestRevokeWithoutClientRevokesAll(t *testing.T) {
 			t.Errorf("after revoking one client: first %v, second %v, the other user's %v", live(first), live(second), live(foreign))
 		}
 		// Without a client id: all of the user's tokens, whatever the UUID.
-		third, _ := s.GenerateAccessToken(ctx, id, "client-c", "uuid-c", "")
+		third, _ := s.GenerateSignInToken(ctx, id, "client-c", "uuid-c", "")
 		if err := s.RevokeClientTokens(ctx, id, "", "uuid-c"); err != nil {
 			t.Fatal(err)
 		}

@@ -51,8 +51,8 @@ type connectAnswer struct {
 
 // connect answers POST /api/bd/connect {target_id, initiator_id,
 // public_key}: a relay session from the token's device to the target. The
-// token must be bound to a device, and initiator_id, when given, must be
-// that device. The target must be a device the console knows that is not
+// token must be a device token, and initiator_id, when given, must be that
+// device. The target must be a device the console knows that is not
 // banned. A target whose socket is open is told at once; the answer says
 // whether it was.
 //
@@ -67,7 +67,7 @@ func (h *handlers) connect(w http.ResponseWriter, r *http.Request) {
 	}
 	token := callerOf(r).token
 	source := ""
-	if token != nil {
+	if token.IsDeviceToken() {
 		source = token.ClientID.String
 	}
 	if source == "" {

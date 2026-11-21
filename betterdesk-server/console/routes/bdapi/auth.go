@@ -42,7 +42,7 @@ func withCaller(r *http.Request, c *caller) *http.Request {
 }
 
 // requireDeviceAuth lets a request through with any live access token,
-// whoever it belongs to, and notes its use. A session does not count: the
+// an account's or a device's, whoever it belongs to, and notes its use. A session does not count: the
 // browser takes a token from POST /api/auth/access-token first. A lookup
 // that fails is a refusal.
 //
@@ -76,12 +76,13 @@ func (h *handlers) requireDeviceAuth(next http.Handler) http.Handler {
 }
 
 // requireOperatorRole lets the accounts with the role admin or operator
-// through, behind requireDeviceAuth.
+// through, behind requireDeviceAuth. A device token is no account's
+// sign-in, whichever account it was issued by.
 //
 //	403 {"error":"Insufficient permissions"}
 func requireOperatorRole(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !isOperator(callerOf(r).user) {
+		if c := callerOf(r); c.token.IsDeviceToken() || !isOperator(c.user) {
 			fail(w, r, http.StatusForbidden, "Insufficient permissions")
 			return
 		}
@@ -94,9 +95,9 @@ func isOperator(user *authn.Account) bool {
 }
 
 // identifyDevice names the device of a registration, the one route a
-// device may call before it has a token: a live token bound to a
+// device may call before it has a token: a live device token bound to a
 // well-formed device id, else the header X-Device-Id when it is one. The
-// header proves nothing. A token's use is noted; when that or the lookup
+// header proves nothing, and an account's token names no device. A token's use is noted; when that or the lookup
 // fails the header still counts.
 //
 //	401 {"error":"Missing device identification"}
@@ -106,7 +107,7 @@ func (h *handlers) identifyDevice(next http.Handler) http.Handler {
 		if token, ok := bearerToken(r); ok {
 			row, err := h.d.Authn.LookupAccessToken(r.Context(), token)
 			if err == nil && row != nil {
-				if bound := row.ClientID.String; deviceIDPattern(bound) {
+				if bound := row.ClientID.String; row.IsDeviceToken() && deviceIDPattern(bound) {
 					c.deviceID = bound
 				}
 				c.token = row

@@ -137,3 +137,71 @@ func TestOperatorLoginTakesOnlyADeviceID(t *testing.T) {
 		}
 	})
 }
+
+// Only a token the console issued for a device proves that device. The
+// operator sign-in stores the device id it names, and its token keeps
+// working on the operator routes, but the device routes refuse it, it
+// names no device at the registration and starts no relay session. A
+// device token passes them and is no operator's sign-in (BUGS RV1).
+func TestOnlyADeviceTokenProvesADevice(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000", "LOGIN_RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
+		authn := w.Server.Deps().Authn
+		hash, err := authn.HashPassword(ctx, "Rv1-Op-2!x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.Exec(ctx, `UPDATE users SET password_hash = ? WHERE id = 5`, hash); err != nil {
+			t.Fatal(err)
+		}
+		got := w.SignedOut().Do("POST", "/api/bd/operator/login", `{"username":"e2e_operator","password":"Rv1-Op-2!x","device_id":"900100001"}`)
+		var signedIn struct {
+			Token string `json:"access_token"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &signedIn); err != nil || got.Status != 200 || signedIn.Token == "" {
+			t.Fatalf("operator sign-in: %d %s", got.Status, got.Body)
+		}
+		operator := []string{"Authorization", "Bearer " + signedIn.Token}
+		device, err := authn.IssueDeviceToken(ctx, 5, "900100001", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		bound := []string{"Authorization", "Bearer " + device}
+		agent := w.SignedOut()
+
+		for _, c := range []struct {
+			name, method, target, body string
+			auth                       []string
+			status                     int
+			answer                     string
+		}{
+			{"heartbeat with the operator's token", "POST", "/api/bd/heartbeat", `{"device_id":"900100001"}`, operator,
+				401, `{"error":"Invalid or unbound access token"}`},
+			{"chat with the operator's token", "POST", "/api/bd/chat/send", `{"device_id":"900100001","message":"hi"}`, operator,
+				401, `{"error":"Invalid or unbound access token"}`},
+			{"relay session with the operator's token", "POST", "/api/bd/connect", `{"target_id":"900100002"}`, operator,
+				403, `{"error":"A device-bound access token is required"}`},
+			{"registration with the operator's token", "POST", "/api/bd/register", `{}`, operator,
+				401, `{"error":"Missing device identification"}`},
+			{"operator devices with the device token", "GET", "/api/bd/operator/devices", "", bound,
+				403, `{"error":"Insufficient permissions"}`},
+			{"relay session with the device token", "POST", "/api/bd/connect", `{"target_id":"900100002"}`, bound,
+				404, `{"error":"Target device not found"}`},
+		} {
+			got := agent.Do(c.method, c.target, c.body, c.auth...)
+			if got.Status != c.status || got.Body != c.answer {
+				t.Errorf("%s: %d %s, want %d %s", c.name, got.Status, got.Body, c.status, c.answer)
+			}
+		}
+		if got := agent.Do("GET", "/api/bd/operator/devices", "", operator...); got.Status != 200 {
+			t.Errorf("operator devices with the operator's token: %d %s", got.Status, got.Body)
+		}
+		if got := agent.Do("POST", "/api/bd/heartbeat", `{"device_id":"900100001"}`, bound...); got.Status == 401 || got.Status == 403 {
+			t.Errorf("heartbeat with the device token: %d %s", got.Status, got.Body)
+		}
+		if got := agent.Do("POST", "/api/bd/register", `{"device_id":"900100002"}`, bound...); got.Status != 403 || got.Body != `{"error":"device_id mismatch"}` {
+			t.Errorf("registration of another device with the device token: %d %s", got.Status, got.Body)
+		}
+	})
+}

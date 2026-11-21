@@ -41,7 +41,8 @@ func TestMigrateWidensConditionValue(t *testing.T) {
 
 	for run := 1; run <= 2; run++ {
 		logged := captureLog(t, func() { mustMigrate(t, db) })
-		if wantLog := map[int]string{1: "[DB] Migration: widened alert_rules.condition_value to double precision\n", 2: ""}[run]; !strings.HasSuffix(logged, wantLog) || run == 2 && logged != "" {
+		// The first run also adds access_tokens.token_kind (BUGS RV1)
+		if wantLog := map[int]string{1: "[DB] Migration: widened alert_rules.condition_value to double precision\n", 2: ""}[run]; !strings.Contains(logged, wantLog) || run == 2 && logged != "" {
 			t.Errorf("run %d logged %q, want %q", run, logged, wantLog)
 		}
 		if got := conditionValueType(t, db); got != "double precision" {

@@ -196,6 +196,32 @@ func (c catalog) wideConditionValue() catalog {
 	return out
 }
 
+// withTokenKind is the catalog of a database as the Go console leaves it:
+// access_tokens has the column token_kind, which Node did not have (BUGS
+// RV1). On SQLite the column stands in the table's statement text where
+// ALTER TABLE puts it, after the last column.
+func (c catalog) withTokenKind(postgres bool) catalog {
+	out := catalog{}
+	columns := 0
+	for k, v := range c {
+		if strings.HasPrefix(k, "column:access_tokens.") {
+			columns++
+		}
+		out[k] = v
+	}
+	if columns == 0 {
+		return out
+	}
+	if postgres {
+		out["column:access_tokens.token_kind"] = fmt.Sprintf(`#%d type=text notnull=true default='account'::text identity="" generated=""`, columns)
+		return out
+	}
+	out["column:access_tokens.token_kind"] = fmt.Sprintf("#%d type=TEXT notnull=1 default='account' pk=0", columns)
+	out["table:access_tokens"] = strings.Replace(c["table:access_tokens"], "revoked INTEGER DEFAULT 0,",
+		"revoked INTEGER DEFAULT 0, token_kind TEXT NOT NULL DEFAULT 'account',", 1)
+	return out
+}
+
 // diffCatalogs lists what got has differently from want.
 func diffCatalogs(want, got catalog) []string {
 	var out []string

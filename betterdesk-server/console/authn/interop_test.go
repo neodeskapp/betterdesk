@@ -465,7 +465,7 @@ func TestInteropSharedDatabase(t *testing.T) {
 			id := addUser("token-user", hash, "operator")
 			s.now = time.Now
 
-			goToken, err := s.GenerateAccessToken(ctx, id, "device-go", "uuid-go", "198.51.100.1")
+			goToken, err := s.GenerateSignInToken(ctx, id, "device-go", "uuid-go", "198.51.100.1")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -477,10 +477,14 @@ func TestInteropSharedDatabase(t *testing.T) {
 			if raw, _ := json.Marshal(fromGo); fromNode != string(raw) {
 				t.Errorf("token user: Node answers %s, Go answers %s", fromNode, raw)
 			}
+			// Node takes any token with a client id as that device's; Go
+			// takes only a device token (BUGS RV1).
 			if got := node.value(time.Time{}, "requireDeviceToken", "Bearer "+goToken); got != `{"next":true,"deviceId":"device-go"}` {
 				t.Errorf("Node's device check of Go's token: %s", got)
 			}
-			socketCheck("device-go", goToken, true)
+			if _, err := s.RequireDeviceToken(ctx, "Bearer "+goToken); err == nil {
+				t.Error("Go's device check takes Go's sign-in token")
+			}
 
 			var nodeToken string
 			if err := json.Unmarshal([]byte(node.value(time.Time{}, "generateAccessToken", id, "device-node", "uuid-node", "198.51.100.2")), &nodeToken); err != nil {
@@ -489,11 +493,15 @@ func TestInteropSharedDatabase(t *testing.T) {
 			if user, err := s.ValidateAccessToken(ctx, nodeToken); err != nil || user == nil || user.ClientID.String != "device-node" {
 				t.Errorf("Go refuses Node's token: %+v, %v", user, err)
 			}
-			if device, err := s.RequireDeviceToken(ctx, "Bearer "+nodeToken); err != nil || device.DeviceID != "device-node" {
-				t.Errorf("Go's device check of Node's token: %+v, %v", device, err)
+			if device, err := s.RequireDeviceToken(ctx, "Bearer "+nodeToken); err == nil {
+				t.Errorf("Go's device check takes Node's sign-in token: %+v", device)
 			}
-			socketCheck("device-node", nodeToken, true)
 			socketCheck("device-other", nodeToken, false)
+			deviceToken, err := s.IssueDeviceToken(ctx, id, "device-go", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			socketCheck("device-go", deviceToken, true)
 
 			if err := s.RevokeClientTokens(ctx, id, "device-go", "uuid-go"); err != nil {
 				t.Fatal(err)
@@ -510,7 +518,7 @@ func TestInteropSharedDatabase(t *testing.T) {
 
 			// A token issued eight days ago has run out for both.
 			s.now = func() time.Time { return time.Now().Add(-8 * 24 * time.Hour) }
-			old, err := s.GenerateAccessToken(ctx, id, "device-old", "uuid-old", "")
+			old, err := s.GenerateSignInToken(ctx, id, "device-old", "uuid-old", "")
 			s.now = time.Now
 			if err != nil {
 				t.Fatal(err)
