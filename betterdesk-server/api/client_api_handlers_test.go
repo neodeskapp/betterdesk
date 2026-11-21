@@ -504,6 +504,7 @@ type mockPanelACLStore struct {
 	members           map[int64][]string
 	peerGrants        map[int64][]string
 	userGroups        map[int64][]string
+	folderUsers       map[int64][]string
 }
 
 func (m *mockPanelACLStore) GetUserIDByUsername(username string) (int64, error) {
@@ -535,7 +536,7 @@ func (m *mockPanelACLStore) ListPeerSysinfo() (map[string]db.ConsolePeerSysinfo,
 	return map[string]db.ConsolePeerSysinfo{}, nil
 }
 func (m *mockPanelACLStore) FolderGroupAccess(folderID int64) ([]string, []string, error) {
-	return nil, nil, nil
+	return m.folderUsers[folderID], nil, nil
 }
 func (m *mockPanelACLStore) DeviceScopeDefaultRestricted() bool { return m.restrictedDefault }
 

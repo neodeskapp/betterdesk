@@ -200,6 +200,9 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "group not found"})
 			return
 		}
+		if !s.panelGroupOpenTo(w, r, body.GUID) {
+			return
+		}
 		if body.Note == nil {
 			note = existing.Note
 		}
@@ -282,6 +285,9 @@ func (s *Server) handlePanelDeviceGroupsDelete(w http.ResponseWriter, r *http.Re
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group not found"})
 		return
 	}
+	if !s.panelGroupOpenTo(w, r, guid) {
+		return
+	}
 	if err := s.db.DeleteDeviceGroup(guid); err != nil {
 		writeInternalError(w, err, "DeleteDeviceGroup")
 		return
@@ -326,6 +332,9 @@ func (s *Server) handlePanelDeviceGroupPeersPut(w http.ResponseWriter, r *http.R
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group not found"})
 		return
 	}
+	if !s.panelGroupOpenTo(w, r, guid) {
+		return
+	}
 	if err := store.SetDeviceGroupPeers(guid, body.Peers); err != nil {
 		writeInternalError(w, err, "SetDeviceGroupPeers")
 		return
@@ -361,6 +370,11 @@ func (s *Server) handlePanelDeviceManualGroup(w http.ResponseWriter, r *http.Req
 		return
 	}
 	guid := strings.TrimSpace(body.GUID)
+	for _, g := range append([]string{guid}, body.Groups...) {
+		if g = strings.TrimSpace(g); g != "" && !s.panelGroupOpenTo(w, r, g) {
+			return
+		}
+	}
 	err := store.SetDeviceManualGroup(peerID, body.Groups, guid)
 	if errors.Is(err, db.ErrDeviceGroupNotFound) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group not found"})
@@ -407,6 +421,9 @@ func (s *Server) handlePanelDeviceGroupACLPut(w http.ResponseWriter, r *http.Req
 		return
 	} else if existing == nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group not found"})
+		return
+	}
+	if !s.panelGroupOpenTo(w, r, guid) {
 		return
 	}
 	if err := store.SetDeviceGroupACL(guid, &body); err != nil {
@@ -494,6 +511,9 @@ func (s *Server) handlePanelFoldersUpdate(w http.ResponseWriter, r *http.Request
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 		return
 	}
+	if !s.panelFolderOpenTo(w, r, id) {
+		return
+	}
 	if err := store.UpdatePanelFolder(id, &body); err != nil {
 		writeInternalError(w, err, "UpdatePanelFolder")
 		return
@@ -509,6 +529,9 @@ func (s *Server) handlePanelFoldersDelete(w http.ResponseWriter, r *http.Request
 	}
 	id, ok := parsePanelID(w, r.PathValue("id"))
 	if !ok {
+		return
+	}
+	if !s.panelFolderOpenTo(w, r, id) {
 		return
 	}
 	if err := store.DeletePanelFolder(id); err != nil {
@@ -534,6 +557,9 @@ func (s *Server) handlePanelDeviceFolder(w http.ResponseWriter, r *http.Request)
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON"})
+		return
+	}
+	if body.FolderID > 0 && !s.panelFolderOpenTo(w, r, body.FolderID) {
 		return
 	}
 	if err := store.SetDevicePanelFolder(peerID, body.FolderID); err != nil {
@@ -594,6 +620,56 @@ func (s *Server) handlePanelUserGrantsPut(w http.ResponseWriter, r *http.Request
 
 // ── helpers ───────────────────────────────────────────────────────────
 
+// panelGroupOpenTo reports whether the caller may change the device group:
+// a group whose access list keeps the caller out (panelGroupAllowedForUser)
+// is refused with 403, so no one opens, empties or deletes a group closed
+// to them. A group the panel store does not list has no access list.
+func (s *Server) panelGroupOpenTo(w http.ResponseWriter, r *http.Request, guid string) bool {
+	if s.panelStore == nil {
+		return true
+	}
+	groups, err := s.panelStore.ListPanelDeviceGroups()
+	if err != nil {
+		writeInternalError(w, err, "ListPanelDeviceGroups")
+		return false
+	}
+	for _, g := range groups {
+		if g.GUID != guid {
+			continue
+		}
+		user, role := s.panelCaller(r)
+		if !panelGroupAllowedForUser(g, user, role, s.consoleUserGroupGUIDs(user.ID)) {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "This device group is not open to you"})
+			return false
+		}
+	}
+	return true
+}
+
+// panelFolderOpenTo is panelGroupOpenTo for a folder and its access list.
+func (s *Server) panelFolderOpenTo(w http.ResponseWriter, r *http.Request, folderID int64) bool {
+	if s.panelStore == nil {
+		return true
+	}
+	allowedUsers, allowedGroups, err := s.panelStore.FolderGroupAccess(folderID)
+	if err != nil {
+		writeInternalError(w, err, "FolderGroupAccess")
+		return false
+	}
+	user, role := s.panelCaller(r)
+	if !panelAccessAllowed(user, role, s.consoleUserGroupGUIDs(user.ID), allowedUsers, allowedGroups) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "This folder is not open to you"})
+		return false
+	}
+	return true
+}
+
+// panelCaller is the caller as the device group access lists name it.
+func (s *Server) panelCaller(r *http.Request) (*db.User, string) {
+	username, role := getUsernameFromCtx(r), getRoleFromCtx(r)
+	return s.rustDeskUserForGroups(r, username, role), role
+}
+
 func parsePanelID(w http.ResponseWriter, raw string) (int64, bool) {
 	raw = strings.TrimSpace(raw)
 	id, err := strconv.ParseInt(raw, 10, 64)
@@ -632,9 +708,9 @@ func (s *Server) registerPanelGroupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /api/panel/folders/{id}",
 		s.requirePermission(auth.PermDeviceEdit, s.handlePanelFoldersDelete))
 	mux.HandleFunc("PUT /api/panel/devices/{id}/folder",
-		s.requirePermission(auth.PermDeviceEdit, s.handlePanelDeviceFolder))
+		s.requirePermission(auth.PermDeviceEdit, s.scopedDevice(s.handlePanelDeviceFolder)))
 	mux.HandleFunc("PUT /api/panel/devices/{id}/device-group",
-		s.requirePermission(auth.PermDeviceEdit, s.handlePanelDeviceManualGroup))
+		s.requirePermission(auth.PermDeviceEdit, s.scopedDevice(s.handlePanelDeviceManualGroup)))
 
 	mux.HandleFunc("GET /api/panel/users/{id}/grants",
 		s.requirePermission(auth.PermUserView, s.handlePanelUserGrantsGet))
