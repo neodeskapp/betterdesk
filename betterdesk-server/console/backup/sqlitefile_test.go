@@ -363,4 +363,3 @@ func TestRestoreFollowsTheServersDatabase(t *testing.T) {
 		}
 	})
 }
-
