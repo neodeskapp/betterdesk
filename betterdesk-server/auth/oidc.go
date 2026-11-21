@@ -14,6 +14,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -124,6 +125,10 @@ type oidcAuthCode struct {
 	Role      string
 	ReturnURL string // already validated as a relative path
 	Picture   string // sanitized "picture" claim, "" when none
+	// State is the OAuth state of the sign-in. The console compares it
+	// with the state its cookie holds, to give the session only to the
+	// browser that started the sign-in.
+	State     string
 	CreatedAt time.Time
 }
 
@@ -563,12 +568,18 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 	}
 
 	// Extract claims from ID token (JWT payload, no signature verification —
-	// we trust the TLS connection to the IdP's token endpoint)
+	// we trust the TLS connection to the IdP's token endpoint). Its nonce,
+	// issuer and audience must be the ones of this sign-in.
 	claims := make(map[string]interface{})
 	if tokenResp.IDToken != "" {
-		if parsed, err := parseJWTPayload(tokenResp.IDToken); err == nil {
-			claims = parsed
+		parsed, err := parseJWTPayload(tokenResp.IDToken)
+		if err != nil {
+			return nil, fmt.Errorf("parse ID token: %w", err)
 		}
+		if err := p.checkIDTokenClaims(parsed, stateEntry.Nonce, cfg); err != nil {
+			return nil, err
+		}
+		claims = parsed
 	}
 
 	// Fetch userinfo for additional claims
@@ -641,6 +652,57 @@ func (p *OIDCProvider) ExchangeCode(ctx context.Context, code, state string) (*O
 	result.State = oauthState
 
 	return result, nil
+}
+
+// checkIDTokenClaims compares the ID token's nonce with the one sent at the
+// start of the sign-in, its audience with the client ID, and its issuer
+// with the provider's (the discovery document's, else the configured
+// issuer URL; not compared when there is neither). A trailing slash does
+// not count, and "{tenantid}" in the issuer, as Azure AD's multi-tenant
+// endpoints name it, stands for the token's "tid".
+func (p *OIDCProvider) checkIDTokenClaims(claims map[string]interface{}, nonce string, cfg OIDCConfig) error {
+	if got, _ := claims["nonce"].(string); nonce == "" || subtle.ConstantTimeCompare([]byte(got), []byte(nonce)) != 1 {
+		return fmt.Errorf("ID token nonce does not match")
+	}
+	if !audienceHas(claims["aud"], cfg.ClientID) {
+		return fmt.Errorf("ID token audience does not name the client")
+	}
+	p.mu.RLock()
+	issuer := cfg.IssuerURL
+	if p.discovery != nil && p.discovery.Issuer != "" {
+		issuer = p.discovery.Issuer
+	}
+	p.mu.RUnlock()
+	if issuer == "" {
+		return nil
+	}
+	got, _ := claims["iss"].(string)
+	if tid, _ := claims["tid"].(string); tid != "" {
+		issuer = strings.ReplaceAll(issuer, "{tenantid}", tid)
+	}
+	if got == "" || strings.TrimRight(got, "/") != strings.TrimRight(issuer, "/") {
+		return fmt.Errorf("ID token issuer %q is not %q", got, issuer)
+	}
+	return nil
+}
+
+// audienceHas reports whether an "aud" claim, a text or a list of texts,
+// names the client.
+func audienceHas(aud interface{}, clientID string) bool {
+	if clientID == "" {
+		return false
+	}
+	switch v := aud.(type) {
+	case string:
+		return v == clientID
+	case []interface{}:
+		for _, item := range v {
+			if s, ok := item.(string); ok && s == clientID {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // GetReturnURL retrieves the return URL stored with a state parameter.
@@ -920,6 +982,12 @@ func IsRelativeReturnURL(u string) bool {
 // POST to /api/auth/oidc/exchange. Codes expire after 60 seconds.
 // picture is the user's "picture" claim; it is sanitized again here.
 func (p *OIDCProvider) StoreAuthCode(token, username, role, returnURL, picture string) (string, error) {
+	return p.StoreAuthCodeForState(token, username, role, returnURL, picture, "")
+}
+
+// StoreAuthCodeForState is StoreAuthCode for the sign-in of an OAuth
+// state, which the exchange then names.
+func (p *OIDCProvider) StoreAuthCodeForState(token, username, role, returnURL, picture, state string) (string, error) {
 	code, err := generateRandomString(32)
 	if err != nil {
 		return "", err
@@ -931,6 +999,7 @@ func (p *OIDCProvider) StoreAuthCode(token, username, role, returnURL, picture s
 		Role:      role,
 		ReturnURL: returnURL,
 		Picture:   SanitizeOIDCPicture(picture),
+		State:     state,
 		CreatedAt: time.Now(),
 	}
 	p.mu.Unlock()

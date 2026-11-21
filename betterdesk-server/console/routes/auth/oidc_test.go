@@ -84,6 +84,13 @@ func (w *world) provider(user string) *provider {
 	return p
 }
 
+// holdsCode gives the agent the cookie that ties a single sign-on to the
+// browser, as the callback sets it for the one-time code.
+func (a *agent) holdsCode(code string) *agent {
+	a.cookies["bd.oidc"] = code
+	return a
+}
+
 // pngPicture is a PNG of one pixel as the data URL a provider can send as
 // "picture".
 const pngPicture = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC"
@@ -231,7 +238,7 @@ func TestSingleSignOnRolesAndWaysBack(t *testing.T) {
 	}
 	equal(t, "ways back the signal server was given", asked, []string{"return_url=%2F", "return_url=%2F"})
 	w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t4","username":"known","return_url":"https://evil.example/"}`)
-	if res := w.agent().get("/api/auth/oidc/session?code=x"); res.status != http.StatusFound || res.header.Get("Location") != "/" {
+	if res := w.agent().holdsCode("x").get("/api/auth/oidc/session?code=x"); res.status != http.StatusFound || res.header.Get("Location") != "/" {
 		t.Errorf("an unsafe way back from the signal server: %d %q", res.status, res.header.Get("Location"))
 	}
 }
@@ -249,7 +256,7 @@ func TestSingleSignOnLeavesOtherAccountsAlone(t *testing.T) {
 			row  string
 		}{{"admin", local, "admin|local"}, {"carol", directory, "operator|ldap"}} {
 			w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t","username":"`+tc.name+`","role":"viewer"}`)
-			a := w.agent()
+			a := w.agent().holdsCode("c")
 			res := a.get("/api/auth/oidc/session?code=c")
 			if res.status != http.StatusFound || res.header.Get("Location") != "/login?error=username_collision" {
 				t.Errorf("%s: %d %q", tc.name, res.status, res.header.Get("Location"))
@@ -285,14 +292,14 @@ func TestSingleSignOnRefusals(t *testing.T) {
 		t.Errorf("the signal server was asked without a code: %+v", calls)
 	}
 	// The signal server does not know the code, or answers without a token or a name
-	invalid("unknown code", a.get("/api/auth/oidc/session?code=nope"))
+	invalid("unknown code", a.holdsCode("nope").get("/api/auth/oidc/session?code=nope"))
 	if calls := w.api.seen("POST /api/auth/oidc/exchange"); len(calls) != 1 || calls[0].Body != `{"code":"nope"}` {
 		t.Errorf("exchange call: %+v", calls)
 	}
 	w.api.json("POST /api/auth/oidc/exchange", 200, `{"username":"x","role":"admin"}`)
-	invalid("no token", a.get("/api/auth/oidc/session?code=c"))
+	invalid("no token", a.holdsCode("c").get("/api/auth/oidc/session?code=c"))
 	w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t","username":""}`)
-	invalid("no user name", a.get("/api/auth/oidc/session?code=c"))
+	invalid("no user name", a.holdsCode("c").get("/api/auth/oidc/session?code=c"))
 	if n := w.int(`SELECT COUNT(*) FROM users`); n != 0 {
 		t.Errorf("%d accounts after refused sign-ons", n)
 	}
@@ -310,14 +317,105 @@ func TestSingleSignOnRefusals(t *testing.T) {
 	if got := b.get(session); got.header.Get("Location") != "/" {
 		t.Fatalf("first use of the code: %d %q", got.status, got.header.Get("Location"))
 	}
-	invalid("second use of the code", w.agent().get(session))
+	invalid("second use of the code", w.agent().holdsCode(strings.TrimPrefix(session, "/api/auth/oidc/session?code=")).get(session))
 
 	// When the account cannot be made the sign-on fails
 	w.exec(`DROP TABLE users`)
 	w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t","username":"nobody"}`)
-	if res := w.agent().get("/api/auth/oidc/session?code=c"); res.status != http.StatusFound || res.header.Get("Location") != "/login?error=oidc_error" {
+	if res := w.agent().holdsCode("c").get("/api/auth/oidc/session?code=c"); res.status != http.StatusFound || res.header.Get("Location") != "/login?error=oidc_error" {
 		t.Errorf("without a users table: %d %q", res.status, res.header.Get("Location"))
 	}
+}
+
+// oidcCookieLine is the Set-Cookie line that ties a single sign-on to the
+// browser.
+func oidcCookieLine(value string) string {
+	return "bd.oidc=" + value + "; Max-Age=600; Path=/api; HttpOnly; SameSite=Lax"
+}
+
+// A single sign-on counts only in the browser that started it: authorize
+// gives the browser a short-lived cookie with the state, the callback
+// passes a sign-in on only to that browser and swaps the cookie for the
+// one-time code, and the session route wants the cookie (RV120).
+func TestSingleSignOnNeedsTheBrowserThatStartedIt(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		w.provider(`"token":"t","username":"mallory","role":"admin"`)
+		attacker, victim := w.agent(), w.agent()
+		res := attacker.get("/api/auth/oidc/authorize")
+		location, _ := url.Parse(res.header.Get("Location"))
+		state := location.Query().Get("state")
+		if got := res.cookie("bd.oidc"); got != oidcCookieLine(state) {
+			t.Errorf("the cookie of authorize: %q", got)
+		}
+		// The attacker's callback address opened in another browser
+		res = victim.get("/api/auth/oidc/callback?code=from-the-provider&state=" + state)
+		if res.status != http.StatusFound || res.header.Get("Location") != "/login?error=oidc_invalid" {
+			t.Errorf("callback in another browser: %d %q", res.status, res.header.Get("Location"))
+		}
+		// A cookie of another state does not do either
+		res = attacker.get("/api/auth/oidc/authorize")
+		location, _ = url.Parse(res.header.Get("Location"))
+		state = location.Query().Get("state")
+		victim.cookies["bd.oidc"] = "state-of-another-sign-in"
+		if res = victim.get("/api/auth/oidc/callback?code=p&state=" + state); res.header.Get("Location") != "/login?error=oidc_invalid" {
+			t.Errorf("callback with the cookie of another state: %d %q", res.status, res.header.Get("Location"))
+		}
+		delete(victim.cookies, "bd.oidc")
+		// The attacker passes the callback and sends the session address on
+		res = attacker.get("/api/auth/oidc/authorize")
+		location, _ = url.Parse(res.header.Get("Location"))
+		res = attacker.get("/api/auth/oidc/callback?code=p&state=" + location.Query().Get("state"))
+		session := res.header.Get("Location")
+		code := strings.TrimPrefix(session, "/api/auth/oidc/session?code=")
+		if res.status != http.StatusFound || code == session || res.cookie("bd.oidc") != oidcCookieLine(code) {
+			t.Fatalf("callback in the attacker's browser: %d %q %q", res.status, session, res.cookies())
+		}
+		exchanges := len(w.api.seen("POST /api/auth/oidc/exchange"))
+		res = victim.get(session)
+		if res.status != http.StatusFound || res.header.Get("Location") != "/login?error=oidc_invalid" {
+			t.Errorf("session address in another browser: %d %q", res.status, res.header.Get("Location"))
+		}
+		if n := len(w.api.seen("POST /api/auth/oidc/exchange")); n != exchanges {
+			t.Errorf("the code was exchanged for a browser without the cookie")
+		}
+		want(t, "the victim", victim.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
+		if n := w.int(`SELECT COUNT(*) FROM panel_sessions WHERE user_id IS NOT NULL`); n != 0 {
+			t.Errorf("%d signed-in sessions", n)
+		}
+		// In the browser that started it the sign-in goes through, and the cookie is used up
+		res = attacker.get(session)
+		if res.status != http.StatusFound || res.header.Get("Location") != "/" {
+			t.Errorf("session in the right browser: %d %q", res.status, res.header.Get("Location"))
+		}
+		if got := res.cookie("bd.oidc"); got != "bd.oidc=; Path=/api; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax" {
+			t.Errorf("the session route left the cookie: %q", got)
+		}
+
+		// A Redirect URL on the signal server's port: the console sees no
+		// callback, and the exchange names the state the browser holds
+		w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t","username":"mallory","state":"state-x"}`)
+		direct := w.agent()
+		direct.cookies["bd.oidc"] = "state-x"
+		if res := direct.get("/api/auth/oidc/session?code=c"); res.header.Get("Location") != "/" {
+			t.Errorf("the state of the exchange: %d %q", res.status, res.header.Get("Location"))
+		}
+		other := w.agent()
+		other.cookies["bd.oidc"] = "state-y"
+		if res := other.get("/api/auth/oidc/session?code=c"); res.header.Get("Location") != "/login?error=oidc_invalid" {
+			t.Errorf("another state than the exchange's: %d %q", res.status, res.header.Get("Location"))
+		}
+		want(t, "another state", other.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
+
+		// The desktop client's sign-in started at the signal server: its
+		// result page goes to the browser without a cookie
+		w.api.on("GET /api/auth/oidc/callback", func(rw http.ResponseWriter, _ *http.Request, _ string) {
+			rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_, _ = rw.Write([]byte("<p>Sign-in successful</p>"))
+		})
+		if res := w.agent().get("/api/auth/oidc/callback?code=p&state=client-poll"); res.status != http.StatusOK || res.body != "<p>Sign-in successful</p>" {
+			t.Errorf("the client's result page: %d %q", res.status, res.body)
+		}
+	})
 }
 
 func TestOIDCAuthorize(t *testing.T) {
@@ -457,7 +555,7 @@ func TestSingleSignOnWhenTheAccountCannotBeWritten(t *testing.T) {
 	// The role of the session is the provider's, also when the stored one
 	// could not be brought in line
 	w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t","username":"known","role":"global_admin"}`)
-	a := w.agent()
+	a := w.agent().holdsCode("c")
 	if res := a.get("/api/auth/oidc/session?code=c"); res.status != http.StatusFound || res.header.Get("Location") != "/" {
 		t.Fatalf("sign-on: %d %q", res.status, res.header.Get("Location"))
 	}
@@ -470,7 +568,7 @@ func TestSingleSignOnWhenTheAccountCannotBeWritten(t *testing.T) {
 	}
 	// An account without a role, and a provider that names none: a viewer
 	w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t","username":"blank"}`)
-	b := w.agent()
+	b := w.agent().holdsCode("c")
 	b.get("/api/auth/oidc/session?code=c")
 	if s := w.stored(b); !strings.Contains(s, fmt.Sprintf(`"user":{"id":%d,"username":"blank","role":"viewer",`, blank)) {
 		t.Errorf("stored session of an account without a role: %s", s)
@@ -479,7 +577,7 @@ func TestSingleSignOnWhenTheAccountCannotBeWritten(t *testing.T) {
 	// A user whose account cannot be made gets no session
 	w.exec(`CREATE TRIGGER no_new_accounts BEFORE INSERT ON users BEGIN SELECT RAISE(ABORT, 'no new accounts'); END`)
 	w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t","username":"stranger","role":"admin"}`)
-	c := w.agent()
+	c := w.agent().holdsCode("c")
 	if res := c.get("/api/auth/oidc/session?code=c"); res.status != http.StatusFound || res.header.Get("Location") != "/login?error=oidc_error" {
 		t.Errorf("sign-on without an account: %d %q", res.status, res.header.Get("Location"))
 	}
@@ -493,7 +591,7 @@ func TestSingleSignOnProfilePicture(t *testing.T) {
 		signOn := func(picture string) (answer, int64) {
 			t.Helper()
 			w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"jwt","username":"alice","role":"operator","return_url":"/devices"`+picture+`}`)
-			res := w.agent().get("/api/auth/oidc/session?code=one-time")
+			res := w.agent().holdsCode("one-time").get("/api/auth/oidc/session?code=one-time")
 			if res.status != http.StatusFound || res.header.Get("Location") != "/devices" {
 				t.Fatalf("sign-on with picture %q: %d %q", picture, res.status, res.header.Get("Location"))
 			}

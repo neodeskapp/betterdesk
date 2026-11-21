@@ -1,12 +1,14 @@
 package auth
 
 import (
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf16"
 	"unicode/utf8"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/unitronix/betterdesk-server/console/session/cookie"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -67,6 +70,42 @@ func queryDecode(s string) string {
 	return decoded
 }
 
+// The cookie that ties a single sign-on to the browser that started it. It
+// holds the state from authorize on, and the one-time code once the
+// callback came through this console. It lives as long as the signal
+// server keeps a state.
+const (
+	oidcCookie    = "bd.oidc"
+	oidcCookieAge = 10 * time.Minute
+	// oidcSessionPath is where the signal server sends the browser after
+	// the callback of a console sign-in.
+	oidcSessionPath = "/api/auth/oidc/session"
+)
+
+func (h *handlers) setOIDCCookie(w http.ResponseWriter, r *http.Request, value string) {
+	cookie.Set(w, oidcCookie, value, cookie.Attributes{MaxAge: oidcCookieAge, Path: "/api", HTTPOnly: true, Secure: h.sessions.SecureCookie(r), SameSite: "lax"})
+}
+
+func (h *handlers) clearOIDCCookie(w http.ResponseWriter, r *http.Request) {
+	cookie.Clear(w, oidcCookie, cookie.Attributes{Path: "/api", HTTPOnly: true, Secure: h.sessions.SecureCookie(r), SameSite: "lax"})
+}
+
+// sameText compares two values of the cookie in constant time; an empty
+// one fits nothing.
+func sameText(a, b string) bool {
+	return a != "" && b != "" && subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
+}
+
+// sessionCode is the one-time code of a Location that sends the browser to
+// the session route, "" for any other Location.
+func sessionCode(location string) string {
+	u, err := url.Parse(location)
+	if err != nil || u.Path != oidcSessionPath {
+		return ""
+	}
+	return u.Query().Get("code")
+}
+
 type oidcOff struct {
 	Enabled bool `json:"enabled"`
 }
@@ -111,7 +150,8 @@ func spread(v any) *goapi.Object {
 // oidcAuthorize answers GET /api/auth/oidc/authorize?return_url=<path>:
 // it sends the browser to the identity provider. The address comes from
 // the signal server, which also remembers the way back; the browser never
-// sees the signal server's own address.
+// sees the signal server's own address. The browser gets the address's
+// state in its cookie.
 func (h *handlers) oidcAuthorize(w http.ResponseWriter, r *http.Request) {
 	returnTo := "/"
 	if requested, ok := queryText(r, "return_url"); ok {
@@ -125,6 +165,13 @@ func (h *handlers) oidcAuthorize(w http.ResponseWriter, r *http.Request) {
 		kit.Redirect(w, r, oidcFailed)
 		return
 	}
+	provider, err := url.Parse(target)
+	if err != nil || provider.Query().Get("state") == "" {
+		h.log.Warn("[OIDC] The identity provider's address has no state")
+		kit.Redirect(w, r, oidcFailed)
+		return
+	}
+	h.setOIDCCookie(w, r, provider.Query().Get("state"))
 	kit.Redirect(w, r, target)
 }
 
@@ -159,8 +206,23 @@ func exchangeText(v any) string {
 // /api/oidc/callback, where the identity provider sends the browser back
 // to: the signal server gets the query and its answer goes to the browser
 // with status, Content-Type, Location and Cache-Control.
+//
+// An answer that leads to a console session goes only to the browser whose
+// cookie holds the callback's state, and the cookie then holds the
+// one-time code; any other browser goes back to the sign-in page. Other
+// answers, such as the desktop client's result page, go to any browser.
 func (h *handlers) oidcCallback(w http.ResponseWriter, r *http.Request) {
 	answer := h.d.GoAPI.ProxyOIDCCallback(r.Context(), callbackQuery(r))
+	if code := sessionCode(answer.Location); code != "" {
+		held, _ := cookie.Get(r, oidcCookie)
+		state, _ := queryText(r, "state")
+		if !sameText(held, state) {
+			h.log.Warn("[OIDC] Callback of a sign-in this browser did not start")
+			kit.Redirect(w, r, oidcInvalid)
+			return
+		}
+		h.setOIDCCookie(w, r, code)
+	}
 	header := w.Header()
 	if answer.Location != "" {
 		header.Set("Location", answer.Location)
@@ -178,7 +240,10 @@ func (h *handlers) oidcCallback(w http.ResponseWriter, r *http.Request) {
 
 // oidcSession answers GET /api/auth/oidc/session?code=<code>, the last hop
 // of a single sign-on. The code is good once and for a minute; the signal
-// server exchanges it for the user it signed in. That user gets a local
+// server exchanges it for the user it signed in. The browser's cookie must
+// hold the code, or the state the exchange names (when the identity
+// provider sent the browser to the signal server's own port); a browser
+// without it goes back to the sign-in page and the code stays unused. That user gets a local
 // account if it has none, and a console session. A name that belongs to a
 // local or directory account goes back to the sign-in page with
 // username_collision. A pro account gets 403 with the text of the password
@@ -191,10 +256,22 @@ func (h *handlers) oidcSession(w http.ResponseWriter, r *http.Request) {
 		kit.Redirect(w, r, oidcInvalid)
 		return
 	}
+	held, _ := cookie.Get(r, oidcCookie)
+	if held == "" {
+		h.log.Warn("[OIDC] Session code in a browser that started no sign-in")
+		kit.Redirect(w, r, oidcInvalid)
+		return
+	}
+	h.clearOIDCCookie(w, r)
 	exchange := h.d.GoAPI.ExchangeOIDCCode(r.Context(), code)
 	data := exchange.Object("data")
 	if !exchange.Bool("success") || !data.Bool("token") || !data.Bool("username") {
 		h.log.Warn("[OIDC] Exchange rejected by Go server")
+		kit.Redirect(w, r, oidcInvalid)
+		return
+	}
+	if state, _ := data.Get("state").(string); !sameText(held, code) && !sameText(held, state) {
+		h.log.Warn("[OIDC] Session code of a sign-in this browser did not start")
 		kit.Redirect(w, r, oidcInvalid)
 		return
 	}

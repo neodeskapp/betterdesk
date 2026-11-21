@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -52,12 +51,11 @@ func TestSanitizeOIDCPicture(t *testing.T) {
 func TestExchangeCodeReadsPictureClaim(t *testing.T) {
 	run := func(t *testing.T, idTokenPicture string, userinfo map[string]interface{}) *OIDCResult {
 		t.Helper()
-		payload := map[string]interface{}{"preferred_username": "pic-user"}
+		payload := map[string]interface{}{"preferred_username": "pic-user", "aud": "client"}
 		if idTokenPicture != "" {
 			payload["picture"] = idTokenPicture
 		}
-		payloadJSON, _ := json.Marshal(payload)
-		idToken := "eyJhbGciOiJSUzI1NiJ9." + base64.RawURLEncoding.EncodeToString(payloadJSON) + ".sig"
+		var idToken string
 
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch r.URL.Path {
@@ -84,10 +82,11 @@ func TestExchangeCodeReadsPictureClaim(t *testing.T) {
 			UserinfoURL:      srv.URL + "/userinfo",
 			Scopes:           "openid profile",
 		})
-		_, state, err := p.BuildAuthURL("/")
+		authURL, state, err := p.BuildAuthURL("/")
 		if err != nil {
 			t.Fatalf("BuildAuthURL: %v", err)
 		}
+		idToken = testIDToken(t, authURL, payload)
 		result, err := p.ExchangeCode(context.Background(), "code", state)
 		if err != nil {
 			t.Fatalf("ExchangeCode: %v", err)

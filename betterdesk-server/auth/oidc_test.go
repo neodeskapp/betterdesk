@@ -1,4 +1,4 @@
-﻿package auth
+package auth
 
 import (
 	"context"
@@ -514,12 +514,7 @@ func TestBuildOIDCSessionURL(t *testing.T) {
 }
 
 func TestExchangeCodePreservesReturnURL(t *testing.T) {
-	payload := map[string]interface{}{
-		"preferred_username": "sso-user",
-	}
-	payloadJSON, _ := json.Marshal(payload)
-	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
-	idToken := "eyJhbGciOiJSUzI1NiJ9." + payloadB64 + ".fakesignature"
+	var idToken string
 
 	tokenSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost || r.URL.Path != "/token" {
@@ -544,10 +539,11 @@ func TestExchangeCodePreservesReturnURL(t *testing.T) {
 	}
 	p := newTestOIDCProvider(t, cfg)
 
-	_, state, err := p.BuildAuthURL("/dashboard")
+	authURL, state, err := p.BuildAuthURL("/dashboard")
 	if err != nil {
 		t.Fatalf("BuildAuthURL error: %v", err)
 	}
+	idToken = testIDToken(t, authURL, map[string]interface{}{"preferred_username": "sso-user", "aud": "client"})
 
 	result, err := p.ExchangeCode(context.Background(), "code123", state)
 	if err != nil {
@@ -636,12 +632,7 @@ func TestClientPendingRejectsMismatchDevice(t *testing.T) {
 }
 
 func TestExchangeCodePreservesClientFlow(t *testing.T) {
-	payload := map[string]interface{}{
-		"preferred_username": "cli-user",
-	}
-	payloadJSON, _ := json.Marshal(payload)
-	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
-	idToken := "eyJhbGciOiJSUzI1NiJ9." + payloadB64 + ".fakesignature"
+	var idToken string
 
 	tokenSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost || r.URL.Path != "/token" {
@@ -663,10 +654,11 @@ func TestExchangeCodePreservesClientFlow(t *testing.T) {
 		ClaimUsername:    "preferred_username",
 	})
 
-	_, code, err := p.BuildClientAuthURL("d1", "u1", ClientDeviceInfo{Name: "n"})
+	authURL, code, err := p.BuildClientAuthURL("d1", "u1", ClientDeviceInfo{Name: "n"})
 	if err != nil {
 		t.Fatal(err)
 	}
+	idToken = testIDToken(t, authURL, map[string]interface{}{"preferred_username": "cli-user", "aud": "client"})
 
 	result, err := p.ExchangeCode(context.Background(), "authcode", code)
 	if err != nil {
@@ -682,4 +674,3 @@ func TestExchangeCodePreservesClientFlow(t *testing.T) {
 		t.Fatalf("Username = %q", result.Username)
 	}
 }
-
