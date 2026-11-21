@@ -43,7 +43,7 @@
 
 - name: "component: web-console"
   color: "f1e05a"
-  description: "Node.js web console"
+  description: "Web console (betterdesk-server/console, web-ui)"
 
 - name: "component: docker"
   color: "0db7ed"

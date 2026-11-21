@@ -30,7 +30,7 @@
 ## Console translations
 
 - [ ] No user-visible strings changed.
-- [ ] All new or changed keys exist in every `web-nodejs/lang/*.json` locale with proper translations.
+- [ ] All new or changed keys exist in every `betterdesk-server/console/static/files/lang/*.json` locale with proper translations.
 
 ## Attribution
 

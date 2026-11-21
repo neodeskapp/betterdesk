@@ -10,8 +10,8 @@
  *
  * The icon names come from web-ui/scripts/icon-names.mjs, which scans the
  * console (web-ui/src and the remote viewer's scripts in web-ui/static) and
- * the icons the server sends it (web-nodejs, such as the navigation in
- * lib/consoleNav.js). Its header says which ways of writing a name it reads.
+ * the icons the server sends it (the navigation in
+ * betterdesk-server/console/access/nav.go). Its header says which ways of writing a name it reads.
  * web-ui/tests/unit/icons.test.ts checks the font against the same scan.
  *
  * Writes into web-ui/static/fonts/:

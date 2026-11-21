@@ -46,7 +46,7 @@ We take the security of BetterDesk seriously. If you discover a security vulnera
 The following components are in scope:
 
 - **BetterDesk Go Server** (`betterdesk-server/`) — signal, relay, API, database
-- **Node.js Web Console** (`web-nodejs/`) — Express.js app, routes, middleware
+- **Web Console** (`betterdesk-server/console/`, `web-ui/`): routes, middleware, the Svelte app
 - **Desktop Client** (`betterdesk-client/`) — Tauri app, Rust backend, TypeScript frontend
 - **CDAP Agent** (`betterdesk-agent/`) — Go agent binary
 - **Installer Scripts** (`betterdesk.sh`, `betterdesk.ps1`, `betterdesk-docker.sh`)
