@@ -39,14 +39,27 @@ type Options struct {
 	// server's before the engine reads it (syncGoPeers in getAllPeers and
 	// getPeerStats). Default: the table is read as it is.
 	SyncPeers func(context.Context)
+	// MaxActivityRange is the longest time an activity report covers: a
+	// range that starts earlier, or has no start, starts this long before
+	// its end, or before now without an end. Default
+	// DefaultMaxActivityRange.
+	MaxActivityRange time.Duration
 }
+
+// DefaultMaxActivityRange is the longest time an activity report covers
+// unless Options say otherwise.
+const DefaultMaxActivityRange = 366 * 24 * time.Hour
 
 // Engine makes reports.
 type Engine struct {
-	db    *store.DB
-	now   func() time.Time
-	clock clock
-	sync  func(context.Context)
+	db *store.DB
+	// query runs the statements that read rows: db, or in a test a
+	// database that notes them.
+	query       store.Querier
+	now         func() time.Time
+	clock       clock
+	sync        func(context.Context)
+	maxActivity time.Duration
 }
 
 // New returns an engine.
@@ -63,7 +76,13 @@ func New(opts Options) *Engine {
 	if opts.SyncPeers == nil {
 		opts.SyncPeers = func(context.Context) {}
 	}
-	return &Engine{db: opts.DB, now: opts.Now, clock: clock{loc: opts.Location, zoneName: opts.ZoneName}, sync: opts.SyncPeers}
+	if opts.MaxActivityRange <= 0 {
+		opts.MaxActivityRange = DefaultMaxActivityRange
+	}
+	return &Engine{
+		db: opts.DB, query: opts.DB, now: opts.Now, clock: clock{loc: opts.Location, zoneName: opts.ZoneName},
+		sync: opts.SyncPeers, maxActivity: opts.MaxActivityRange,
+	}
 }
 
 // Filters are the time range of a report as the request gave it, and the
@@ -272,41 +291,51 @@ type appUsage struct {
 	totalSecs, sessions, devices float64
 }
 
-// activity is generateActivityReport.
+// activityFrom is the start of an activity report's range (see bound),
+// moved up to the longest range before its end (Options.MaxActivityRange).
+func (e *Engine) activityFrom(from, to string) string {
+	end := e.now()
+	if t, ok := store.ParseTime(to); to != "" && ok {
+		end = t
+	}
+	earliest := end.Add(-e.maxActivity)
+	if t, ok := store.ParseTime(from); from != "" && ok && !t.Before(earliest) {
+		return from
+	}
+	return store.ISOTime(earliest)
+}
+
+// activity is generateActivityReport over at most the longest range. The
+// database counts and sums the reports per device and the time per app.
 func (e *Engine) activity(ctx context.Context, f Filters) (*goapi.Object, error) {
-	summaries, err := e.allActivitySummaries(ctx, f.from, f.to, f.Scope)
+	from := e.activityFrom(f.from, f.to)
+	perDevice, odd, err := e.activityPerDevice(ctx, from, f.to, f.Scope)
 	if err != nil {
 		return nil, err
 	}
-	var active, idle float64
+	var reports, active, idle float64
 	var devices []any
-	seen := map[any]bool{}
-	for _, s := range summaries {
-		v, found := prop(s, "total_active_secs")
-		active += e.numberOrZero(v, found)
-		v, found = prop(s, "idle_seconds")
-		idle += e.numberOrZero(v, found)
-		if id := s.Get("device_id"); Truthy(id) {
-			// a Set: equal texts and numbers are one entry, every
-			// buffer is its own
-			key := id
-			if b, isBuffer := id.(Buffer); isBuffer {
-				key = &b
-			}
-			if !seen[key] {
-				seen[key] = true
-				devices = append(devices, id)
-			}
+	for _, d := range perDevice {
+		v, found := prop(d, "reports")
+		reports += e.numberOrZero(v, found)
+		if id := d.Get("device_id"); Truthy(id) {
+			devices = append(devices, id)
 		}
 	}
+	for _, d := range append(perDevice, odd...) {
+		v, found := prop(d, "active")
+		active += e.numberOrZero(v, found)
+		v, found = prop(d, "idle")
+		idle += e.numberOrZero(v, found)
+	}
 
+	appsOf, err := e.appsPerDevice(ctx, from, f.to, f.Scope)
+	if err != nil {
+		appsOf = nil
+	}
 	usage := goapi.NewObject()
 	for _, id := range devices {
-		apps, err := e.topApps(ctx, id, f.from, f.to)
-		if err != nil {
-			apps = nil
-		}
-		for _, app := range apps {
+		for _, app := range appsOf[e.clock.String(id)] {
 			name := or(app.Get("app_name"), true, "Unknown")
 			key := e.clock.String(name)
 			entry, _ := usage.Get(key).(*appUsage)
@@ -339,7 +368,7 @@ func (e *Engine) activity(ctx context.Context, f Filters) (*goapi.Object, error)
 	}
 	return goapi.NewObject(
 		"devices_with_activity", float64(len(devices)),
-		"daily_reports", float64(len(summaries)),
+		"daily_reports", reports,
 		"total_active_secs", active,
 		"total_idle_secs", idle,
 		"top_applications", top,
@@ -427,18 +456,23 @@ func (e *Engine) tickets(ctx context.Context, _ Filters) (*goapi.Object, error) 
 	if err != nil {
 		stats = goapi.NewObject("total", 0.0, "open", 0.0, "closed", 0.0, "in_progress", 0.0)
 	}
-	tickets, err := e.allTickets(ctx)
-	if err != nil {
-		tickets = nil
-	}
 	categories, priorities := newTally(), newTally()
-	for _, t := range tickets {
-		categories.add(e.clock.String(or(t.Get("category"), true, "uncategorized")))
-		priorities.add(e.clock.String(or(t.Get("priority"), true, "normal")))
+	var total float64
+	if byCategory, err := e.ticketsBy(ctx, "category"); err == nil {
+		for _, group := range byCategory {
+			n := e.clock.Number(group.Get("n"))
+			categories.addN(e.clock.String(or(group.Get("name"), true, "uncategorized")), n)
+			total += n
+		}
+	}
+	if byPriority, err := e.ticketsBy(ctx, "priority"); err == nil {
+		for _, group := range byPriority {
+			priorities.addN(e.clock.String(or(group.Get("name"), true, "normal")), e.clock.Number(group.Get("n")))
+		}
 	}
 	return goapi.NewObject(
 		"stats", stats,
-		"total_tickets", float64(len(tickets)),
+		"total_tickets", total,
 		"category_distribution", categories.counts,
 		"priority_distribution", priorities.counts,
 	), nil
@@ -520,9 +554,6 @@ func (e *Engine) alerts(ctx context.Context, f Filters) (*goapi.Object, error) {
 	history, err := e.alertHistory(ctx, f.Scope)
 	if err != nil {
 		history = nil
-	}
-	if len(history) > 200 {
-		history = history[:200]
 	}
 	perRule := newTally()
 	for _, h := range history {

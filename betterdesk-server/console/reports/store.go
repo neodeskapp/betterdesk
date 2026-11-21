@@ -22,7 +22,7 @@ import (
 // copy.
 
 func (e *Engine) rows(ctx context.Context, query string, args ...any) ([]*goapi.Object, error) {
-	return SelectRows(ctx, e.db, e.clock.loc, query, args...)
+	return SelectRows(ctx, e.query, e.clock.loc, query, args...)
 }
 
 // inScope is the condition that keeps the rows whose column names a
@@ -162,12 +162,11 @@ func (e *Engine) count(ctx context.Context, query string, args ...any) (float64,
 	return n, nil
 }
 
-// rangeArgs binds the leading values the way the old drivers bound them,
-// and the bounds of a time range (see bound) that are set; it returns the
-// conditions to add.
-func (e *Engine) rangeArgs(from, to string, fromCondition, toCondition string, leading ...jsbind.Value) (string, []any, error) {
+// rangeArgs binds the bounds of a time range (see bound) that are set the
+// way the old drivers bound them; it returns the conditions to add.
+func (e *Engine) rangeArgs(from, to string, fromCondition, toCondition string) (string, []any, error) {
 	conditions := ""
-	values := leading
+	var values []jsbind.Value
 	if from != "" {
 		conditions += fromCondition
 		values = append(values, jsbind.String(from))
@@ -183,60 +182,88 @@ func (e *Engine) rangeArgs(from, to string, fromCondition, toCondition string, l
 	return conditions, args, nil
 }
 
-// bindValue is a value read from a row, as a statement parameter.
-func bindValue(v any) jsbind.Value {
-	switch t := v.(type) {
-	case nil:
-		return jsbind.Null
-	case bool:
-		return jsbind.Bool(t)
-	case float64:
-		return jsbind.Number(t)
-	case string:
-		return jsbind.String(t)
-	}
-	return jsbind.String(fmt.Sprint(v))
-}
-
-// allActivitySummaries is getAllActivitySummaries({from, to}): every
-// summary of the range and the scope, newest received first.
-func (e *Engine) allActivitySummaries(ctx context.Context, from, to string, scope *access.DeviceScope) ([]*goapi.Object, error) {
+// summaryConditions are the conditions on the activity summaries s of a
+// range (see bound) and a scope, and their arguments.
+func (e *Engine) summaryConditions(from, to string, scope *access.DeviceScope) (string, []any, error) {
 	conditions, args, err := e.rangeArgs(from, to, " AND s.reported_at >= ?", " AND s.reported_at <= ?")
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 	inScope, args := e.andInScope(scope, "s.device_id", args)
-	conditions += inScope
-	query := `SELECT s.*, (
-                SELECT COUNT(*) FROM activity_sessions a
-                WHERE a.device_id = s.device_id
-                  AND a.started_at >= s.reported_at
-            ) as detail_count
-            FROM activity_summaries s WHERE 1=1` + conditions + " ORDER BY s.received_at DESC"
-	rows, err := e.rows(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("read the activity summaries: %w", err)
-	}
-	return rows, nil
+	return conditions + inScope, args, nil
 }
 
-// topApps is getTopApps(deviceId, {from, to}): the time per app of one
-// device. SQLite groups by app, PostgreSQL by app and category.
-func (e *Engine) topApps(ctx context.Context, deviceID any, from, to string) ([]*goapi.Object, error) {
-	conditions, args, err := e.rangeArgs(from, to, " AND started_at >= ?", " AND ended_at <= ?", bindValue(deviceID))
+// activityPerDevice counts and sums the activity summaries of the range
+// and the scope per device: {device_id, reports, active, idle}, the device
+// whose newest summary was received last first, as the old console met
+// them in getAllActivitySummaries({from, to}).
+//
+// SQLite stores what an agent sent, also a text in a column of numbers.
+// The sums there take the numbers alone, and odd holds the summaries with
+// another value in total_active_secs or idle_seconds as {active, idle},
+// each the odd value or null, for the caller to add as JavaScript reads
+// them (Number('0x10') is 16).
+func (e *Engine) activityPerDevice(ctx context.Context, from, to string, scope *access.DeviceScope) (perDevice, odd []*goapi.Object, err error) {
+	conditions, args, err := e.summaryConditions(from, to, scope)
+	if err != nil {
+		return nil, nil, err
+	}
+	sum := func(column string) string { return "SUM(s." + column + ")" }
+	if !e.db.IsPostgres() {
+		sum = func(column string) string {
+			return "SUM(CASE WHEN typeof(s." + column + ") IN ('integer', 'real') THEN s." + column + " END)"
+		}
+	}
+	perDevice, err = e.rows(ctx, `SELECT s.device_id, COUNT(*) AS reports, `+
+		sum("total_active_secs")+` AS active, `+sum("idle_seconds")+` AS idle
+            FROM activity_summaries s WHERE 1=1`+conditions+`
+            GROUP BY s.device_id ORDER BY MAX(s.received_at) DESC, MIN(s.id)`, args...)
+	if err != nil {
+		return nil, nil, fmt.Errorf("count the activity summaries: %w", err)
+	}
+	if e.db.IsPostgres() {
+		return perDevice, nil, nil
+	}
+	odd, err = e.rows(ctx, `SELECT
+                CASE WHEN typeof(s.total_active_secs) IN ('text', 'blob') THEN s.total_active_secs END AS active,
+                CASE WHEN typeof(s.idle_seconds) IN ('text', 'blob') THEN s.idle_seconds END AS idle
+            FROM activity_summaries s WHERE 1=1`+conditions+`
+              AND (typeof(s.total_active_secs) IN ('text', 'blob') OR typeof(s.idle_seconds) IN ('text', 'blob'))`, args...)
+	if err != nil {
+		return nil, nil, fmt.Errorf("read the odd activity summaries: %w", err)
+	}
+	return perDevice, odd, nil
+}
+
+// appsPerDevice is getTopApps(deviceId, {from, to}) of every device with
+// a summary in the range and the scope, in one statement: the time per app
+// of each device, by the device's id as text, most time first. SQLite
+// groups by app, PostgreSQL by app and category.
+func (e *Engine) appsPerDevice(ctx context.Context, from, to string, scope *access.DeviceScope) (map[string][]*goapi.Object, error) {
+	devices, args, err := e.summaryConditions(from, to, scope)
 	if err != nil {
 		return nil, err
 	}
-	query := `SELECT app_name, category,
-                SUM(duration_secs) as total_secs,
-                COUNT(*) as session_count
-            FROM activity_sessions WHERE device_id = ?` + conditions +
-		e.db.Pick(" GROUP BY app_name ORDER BY total_secs DESC", " GROUP BY app_name, category ORDER BY total_secs DESC")
-	rows, err := e.rows(ctx, query, args...)
+	conditions, rangeArgs, err := e.rangeArgs(from, to, " AND a.started_at >= ?", " AND a.ended_at <= ?")
 	if err != nil {
-		return nil, fmt.Errorf("read the apps of a device: %w", err)
+		return nil, err
 	}
-	return rows, nil
+	rows, err := e.rows(ctx, `SELECT a.device_id, a.app_name, a.category,
+                SUM(a.duration_secs) as total_secs,
+                COUNT(*) as session_count
+            FROM activity_sessions a
+            WHERE a.device_id IN (SELECT s.device_id FROM activity_summaries s WHERE 1=1`+devices+`)`+conditions+
+		e.db.Pick(" GROUP BY a.device_id, a.app_name", " GROUP BY a.device_id, a.app_name, a.category")+
+		" ORDER BY a.device_id, total_secs DESC", append(args, rangeArgs...)...)
+	if err != nil {
+		return nil, fmt.Errorf("read the apps of the devices: %w", err)
+	}
+	out := map[string][]*goapi.Object{}
+	for _, row := range rows {
+		id := e.clock.String(row.Get("device_id"))
+		out[id] = append(out[id], row)
+	}
+	return out, nil
 }
 
 // dlpEventStats is getDlpEventStats() over the events of the scope. On
@@ -336,11 +363,14 @@ func (e *Engine) ticketStats(ctx context.Context) (*goapi.Object, error) {
 	return stats, nil
 }
 
-// allTickets is getAllTickets() without filters, newest first.
-func (e *Engine) allTickets(ctx context.Context) ([]*goapi.Object, error) {
-	rows, err := e.rows(ctx, "SELECT * FROM tickets WHERE 1=1 ORDER BY created_at DESC")
+// ticketsBy counts the tickets by the values of a column: {name, n}, the
+// value of the newest ticket first, as the old console met them in
+// getAllTickets().
+func (e *Engine) ticketsBy(ctx context.Context, column string) ([]*goapi.Object, error) {
+	rows, err := e.rows(ctx, "SELECT "+column+" AS name, COUNT(*) AS n FROM tickets GROUP BY "+column+
+		" ORDER BY MAX(created_at) DESC, MIN(id)")
 	if err != nil {
-		return nil, fmt.Errorf("read the tickets: %w", err)
+		return nil, fmt.Errorf("count the tickets by %s: %w", column, err)
 	}
 	return rows, nil
 }
@@ -355,7 +385,7 @@ type inventory struct {
 // not parse is left out; the software is not read.
 func (e *Engine) allInventories(ctx context.Context, scope *access.DeviceScope) ([]inventory, error) {
 	condition, args := e.andInScope(scope, "device_id", nil)
-	rows, err := e.rows(ctx, "SELECT * FROM device_inventory WHERE 1=1"+condition+" ORDER BY received_at DESC", args...)
+	rows, err := e.rows(ctx, "SELECT hardware FROM device_inventory WHERE 1=1"+condition+" ORDER BY received_at DESC", args...)
 	if err != nil {
 		return nil, fmt.Errorf("read the inventory: %w", err)
 	}
@@ -390,9 +420,9 @@ func (e *Engine) alertRules(ctx context.Context) ([]*goapi.Object, error) {
 	return rows, nil
 }
 
-// alertHistory is getAlertHistory() without filters: every alert with its
-// rule's name, newest first. A scope keeps the alerts of its devices and
-// those that name no device.
+// alertHistory is getAlertHistory() without filters: the 200 newest
+// alerts with their rule's name. A scope keeps the alerts of its devices
+// and those that name no device.
 func (e *Engine) alertHistory(ctx context.Context, scope *access.DeviceScope) ([]*goapi.Object, error) {
 	condition, arg, scoped := e.inScope(scope, "h.device_id")
 	var args []any
@@ -400,7 +430,7 @@ func (e *Engine) alertHistory(ctx context.Context, scope *access.DeviceScope) ([
 		condition = " AND (h.device_id IS NULL OR " + condition + ")"
 		args = append(args, arg)
 	}
-	rows, err := e.rows(ctx, "SELECT h.*, r.name as rule_name FROM alert_history h LEFT JOIN alert_rules r ON h.rule_id = r.id WHERE 1=1"+condition+" ORDER BY h.triggered_at DESC", args...)
+	rows, err := e.rows(ctx, "SELECT h.*, r.name as rule_name FROM alert_history h LEFT JOIN alert_rules r ON h.rule_id = r.id WHERE 1=1"+condition+" ORDER BY h.triggered_at DESC LIMIT 200", args...)
 	if err != nil {
 		return nil, fmt.Errorf("read the alert history: %w", err)
 	}

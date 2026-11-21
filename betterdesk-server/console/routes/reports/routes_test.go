@@ -196,24 +196,27 @@ func TestTypeMustBeTheNameOfAReport(t *testing.T) {
 
 // TestActivityRangeMustBeTimes: from and to are read as times (BUGS.md
 // RP5). A date alone as to covers that whole day, an offset counts, and
-// anything that is no date or time is 400 in every route. The filters of
-// a report are from and to; device_id and limit, which no report reads,
-// are left out.
+// anything that is no date or time is 400 in every route. A from and a to
+// that are not true set no bound, so the report covers the year before
+// now (RV96). The filters of a report are from and to; device_id and
+// limit, which no report reads, are left out.
 func TestActivityRangeMustBeTimes(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := routetest.New(t, routetest.Options{DB: db})
+		recent := time.Now().UTC().Add(-24 * time.Hour)
 		if _, err := db.Exec(context.Background(), `INSERT INTO activity_summaries (device_id, total_active_secs, idle_seconds, reported_at, received_at)
-			VALUES ('A', 100, 0, '2019-11-30T10:00:00.000Z', '2019-11-30 10:00:00'), ('B', 50, 0, '2019-12-01T10:00:00.000Z', '2019-12-01 10:00:00')`); err != nil {
+			VALUES ('A', 100, 0, '2019-11-30T10:00:00.000Z', '2019-11-30 10:00:00'), ('B', 50, 0, '2019-12-01T10:00:00.000Z', '2019-12-01 10:00:00'),
+			('C', 7, 0, ?, ?)`, recent.Format("2006-01-02T15:04:05.000Z"), recent.Format(time.DateTime)); err != nil {
 			t.Fatal(err)
 		}
 		admin := w.As("admin")
 		for body, want := range map[string]string{
 			`{"type":"activity","from":"2019-11-30","to":"2019-11-30"}`:                                        `"daily_reports":1,"total_active_secs":100,`,
 			`{"type":"activity","to":"2019-11-30T23:59:59.999Z"}`:                                              `"daily_reports":1,"total_active_secs":100,`,
-			`{"type":"activity","from":"2019-11-30T11:00:00+01:00"}`:                                           `"daily_reports":2,"total_active_secs":150,`,
-			`{"type":"activity","from":"2019-11-30T11:00:01+01:00"}`:                                           `"daily_reports":1,"total_active_secs":50,`,
+			`{"type":"activity","from":"2019-11-30T11:00:00+01:00","to":"2019-12-31"}`:                         `"daily_reports":2,"total_active_secs":150,`,
+			`{"type":"activity","from":"2019-11-30T11:00:01+01:00","to":"2019-12-31"}`:                         `"daily_reports":1,"total_active_secs":50,`,
 			`{"type":"activity","from":"2019-12-01 10:00:00","to":"2019-12-01"}`:                               `"daily_reports":1,"total_active_secs":50,`,
-			`{"type":"activity","from":0,"to":""}`:                                                             `"daily_reports":2,"total_active_secs":150,`,
+			`{"type":"activity","from":0,"to":""}`:                                                             `"daily_reports":1,"total_active_secs":7,`,
 			`{"type":"tickets","from":"2019-11-01","to":"2019-11-30T23:59:59.999Z","device_id":"x","limit":5}`: `"filters":{"from":"2019-11-01","to":"2019-11-30T23:59:59.999Z"},`,
 			`{"type":"devices","device_id":{"a":1},"limit":[1]}`:                                               `"filters":{},`,
 		} {
@@ -361,6 +364,7 @@ func TestReportsKeepToTheDeviceScope(t *testing.T) {
 		api.On("GET /api/peers", 200, `[{"id":"a"},{"id":"b"},{"id":"c"}]`)
 		w := routetest.New(t, routetest.Options{DB: db, API: api})
 		ctx := context.Background()
+		day := time.Now().UTC().Add(-48 * time.Hour).Format(time.DateOnly)
 		for _, statement := range []string{
 			"INSERT INTO device_groups (id, guid, name) VALUES (90, 'closed', 'Closed')",
 			"INSERT INTO device_group_members (device_group_id, peer_id) VALUES (90, 'a'), (90, 'c')",
@@ -373,14 +377,15 @@ func TestReportsKeepToTheDeviceScope(t *testing.T) {
 				('a', 'usb', 'block', '{"file":"alpha.txt"}', '2019-11-01 10:00:00'),
 				('b', 'file', 'log', '{"file":"beta.txt"}', '2019-11-01 11:00:00'),
 				('c', 'usb', 'block', '{"file":"gamma.txt"}', '2019-11-01 12:00:00')`,
-			`INSERT INTO activity_summaries (device_id, total_active_secs, idle_seconds, reported_at, received_at) VALUES
-				('a', 100, 1, '2019-11-01T00:00:00.000Z', '2019-11-01 00:00:00'),
-				('b', 200, 2, '2019-11-01T00:00:00.000Z', '2019-11-01 00:00:00'),
-				('c', 400, 4, '2019-11-01T00:00:00.000Z', '2019-11-01 00:00:00')`,
-			`INSERT INTO activity_sessions (device_id, app_name, category, started_at, ended_at, duration_secs) VALUES
-				('a', 'AlphaApp', 'x', '2019-11-01T01:00:00.000Z', '2019-11-01T02:00:00.000Z', 30),
-				('b', 'BetaApp', 'y', '2019-11-01T01:00:00.000Z', '2019-11-01T02:00:00.000Z', 20),
-				('c', 'GammaApp', 'z', '2019-11-01T01:00:00.000Z', '2019-11-01T02:00:00.000Z', 10)`,
+			// the activity of two days ago, within the year a report covers
+			strings.ReplaceAll(`INSERT INTO activity_summaries (device_id, total_active_secs, idle_seconds, reported_at, received_at) VALUES
+				('a', 100, 1, 'DAYT00:00:00.000Z', 'DAY 00:00:00'),
+				('b', 200, 2, 'DAYT00:00:00.000Z', 'DAY 00:00:00'),
+				('c', 400, 4, 'DAYT00:00:00.000Z', 'DAY 00:00:00')`, "DAY", day),
+			strings.ReplaceAll(`INSERT INTO activity_sessions (device_id, app_name, category, started_at, ended_at, duration_secs) VALUES
+				('a', 'AlphaApp', 'x', 'DAYT01:00:00.000Z', 'DAYT02:00:00.000Z', 30),
+				('b', 'BetaApp', 'y', 'DAYT01:00:00.000Z', 'DAYT02:00:00.000Z', 20),
+				('c', 'GammaApp', 'z', 'DAYT01:00:00.000Z', 'DAYT02:00:00.000Z', 10)`, "DAY", day),
 			`INSERT INTO device_inventory (device_id, hardware, software) VALUES
 				('a', '{"os_name":"Windows 11"}', '{}'), ('b', '{"os_name":"Ubuntu"}', '{}'), ('c', '{"os_name":"macOS 15"}', '{}')`,
 			"INSERT INTO alert_rules (id, name, condition_type) VALUES (1, 'Offline', 'offline')",

@@ -253,9 +253,12 @@ type tally struct {
 
 func newTally() *tally { return &tally{counts: goapi.NewObject()} }
 
-func (t *tally) add(name string) {
-	n, _ := t.counts.Get(name).(float64)
-	t.counts.Set(name, n+1)
+func (t *tally) add(name string) { t.addN(name, 1) }
+
+// addN counts name n times.
+func (t *tally) addN(name string, n float64) {
+	had, _ := t.counts.Get(name).(float64)
+	t.counts.Set(name, had+n)
 }
 
 // fromDriver turns a value the Go driver read into the value the old

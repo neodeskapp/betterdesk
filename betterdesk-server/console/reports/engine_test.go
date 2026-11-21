@@ -2,6 +2,7 @@ package reports
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -439,7 +440,8 @@ func TestNamesEveryObjectHasCount(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		e := New(Options{DB: db})
+		// the activity lies within the year before the report
+		e := New(Options{DB: db, Now: func() time.Time { return time.Date(2019, 11, 10, 0, 0, 0, 0, time.UTC) }})
 		for typ, want := range map[string]string{
 			"devices": `"platform_distribution":{"constructor":2,"__proto__":1}`,
 			"tickets": `"category_distribution":{"__proto__":1,"toString":1},"priority_distribution":{"valueOf":1,"low":1}`,
@@ -528,6 +530,99 @@ func TestOneUnreadableRowLeavesTheOthers(t *testing.T) {
 		}
 	})
 }
+
+// statements is the database of an engine that notes the statements that
+// read rows.
+type statements struct {
+	store.Querier
+	queries []string
+}
+
+func (s *statements) Query(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	s.queries = append(s.queries, query)
+	return s.Querier.Query(ctx, query, args...)
+}
+
+// TestReportsReadBoundedRows: the activity report covers at most the 366
+// days before its end (now without one), reads the totals and the apps
+// of every device in a few statements whatever the number of devices, the
+// ticket report counts in the database, the inventory report reads the
+// hardware alone and the alert report the 200 newest alerts (BUGS.md
+// RV96).
+func TestReportsReadBoundedRows(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		var summaries, sessions, alerts []string
+		for i := 0; i < 30; i++ {
+			id := fmt.Sprintf("'D%02d'", i)
+			summaries = append(summaries, "("+id+", 10, 1, '2026-11-01T00:00:00.000Z', '2026-11-01 00:00:00')")
+			sessions = append(sessions, "("+id+", 'App', 'work', '2026-11-01T01:00:00.000Z', '2026-11-01T02:00:00.000Z', 5)")
+		}
+		for i := 0; i < 250; i++ {
+			alerts = append(alerts, fmt.Sprintf("(1, 'D00', 'alert %d', '2026-11-01 %02d:%02d:00')", i, i/60, i%60))
+		}
+		for _, q := range []string{
+			"INSERT INTO activity_summaries (device_id, total_active_secs, idle_seconds, reported_at, received_at) VALUES " + strings.Join(summaries, ", ") +
+				", ('OLD', 1000, 100, '2024-01-01T00:00:00.000Z', '2024-01-01 00:00:00')",
+			"INSERT INTO activity_sessions (device_id, app_name, category, started_at, ended_at, duration_secs) VALUES " + strings.Join(sessions, ", ") +
+				", ('OLD', 'Old app', 'work', '2024-01-01T01:00:00.000Z', '2024-01-01T02:00:00.000Z', 500)",
+			`INSERT INTO tickets (title, created_by, category, priority, created_at) VALUES
+				('a', 'x', 'network', 'high', '2026-11-03 10:00:00'), ('b', 'x', NULL, 'low', '2026-11-02 10:00:00'),
+				('c', 'x', 'network', '', '2026-11-01 10:00:00')`,
+			`INSERT INTO device_inventory (device_id, hardware, software) VALUES ('D00', '{"os_name":"Linux"}', '{"apps":"` + strings.Repeat("x", 1000) + `"}')`,
+			"INSERT INTO alert_rules (id, name, condition_type) VALUES (1, 'Offline', 'offline')",
+			"INSERT INTO alert_history (rule_id, device_id, message, triggered_at) VALUES " + strings.Join(alerts, ", "),
+		} {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatal(err)
+			}
+		}
+		now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
+		e := New(Options{DB: db, Now: func() time.Time { return now }, Location: time.UTC})
+		read := &statements{Querier: db}
+		e.query = read
+		recent := `"devices_with_activity":30,"daily_reports":30,"total_active_secs":300,"total_idle_secs":30,` +
+			`"top_applications":[{"name":"App","category":"work","total_secs":150,"sessions":30,"devices":30}]`
+		for _, c := range []struct {
+			typ      string
+			from, to jsbind.Value
+			want     string
+		}{
+			{"activity", jsbind.Undefined, jsbind.Undefined, recent},
+			{"activity", jsbind.String("2020-01-01"), jsbind.Undefined, recent},
+			{"activity", jsbind.String("2020-01-01"), jsbind.String("2026-11-05"), recent},
+			{"activity", jsbind.Undefined, jsbind.String("2024-06-01"), `"devices_with_activity":1,"daily_reports":1,"total_active_secs":1000,"total_idle_secs":100,` +
+				`"top_applications":[{"name":"Old app","category":"work","total_secs":500,"sessions":1,"devices":1}]`},
+			{"tickets", jsbind.Undefined, jsbind.Undefined, `"total_tickets":3,"category_distribution":{"network":2,"uncategorized":1},"priority_distribution":{"high":1,"low":1,"normal":1}`},
+			{"inventory", jsbind.Undefined, jsbind.Undefined, `"total_inventoried":1,"os_distribution":{"Linux":1}`},
+			{"alerts", jsbind.Undefined, jsbind.Undefined, `"total_rules":1,"active_rules":1,"total_alerts":200,"alerts_per_rule":{"1":200},"recent_alerts":[{"id":250,`},
+		} {
+			read.queries = nil
+			report, err := e.Generate(ctx, jsbind.String(c.typ), Filters{From: c.from, To: c.to})
+			if err != nil {
+				t.Fatalf("%s from %s to %s: %v", c.typ, c.from.JSON(), c.to.JSON(), err)
+			}
+			if got, _ := report.MarshalJSON(); !strings.Contains(string(got), c.want) {
+				t.Errorf("%s from %s to %s: %s\nwant %s", c.typ, c.from.JSON(), c.to.JSON(), got, c.want)
+			}
+			if c.typ == "activity" && len(read.queries) > 3 {
+				t.Errorf("the activity report ran %d statements for 30 devices", len(read.queries))
+			}
+			for _, q := range read.queries {
+				if wide.MatchString(q) {
+					t.Errorf("the %s report reads whole rows: %s", c.typ, q)
+				}
+				if strings.Contains(q, "alert_history") && !strings.Contains(q, "LIMIT 200") {
+					t.Errorf("the alert report reads every alert: %s", q)
+				}
+			}
+		}
+	})
+}
+
+// wide finds a statement that reads every column of the tickets or the
+// inventories.
+var wide = regexp.MustCompile(`(?is)SELECT\s+\*\s+FROM\s+(tickets|device_inventory)\b`)
 
 // jsDate is a time as JavaScript's Date.toString writes it, with the name
 // of its zone in brackets.
@@ -694,7 +789,9 @@ func replayRecording(t *testing.T, db *store.DB, file string, used map[string]bo
 	if err != nil {
 		t.Fatal(err)
 	}
-	e := New(Options{DB: db, Now: func() time.Time { return now }, Location: loc, ZoneName: zoneNames})
+	// The activity of the recordings lies years before their time: the
+	// longest range covers it, as the old console had none (RV96)
+	e := New(Options{DB: db, Now: func() time.Time { return now }, Location: loc, ZoneName: zoneNames, MaxActivityRange: 50 * 366 * 24 * time.Hour})
 	ctx := context.Background()
 
 	if got, _ := json.Marshal(ListTypes()); string(got) != rec.Types {
