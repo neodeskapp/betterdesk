@@ -11,7 +11,9 @@ import type { Tone } from '#lib/util/display.ts';
 export const TABS = ['rules', 'alerts', 'commands'] as const;
 export type AutomationTab = (typeof TABS)[number];
 
-export function tabFrom(param: string | null): AutomationTab {
+/** The tab of ?tab=; commands only when the account may send them (device.connect besides server.config) */
+export function tabFrom(param: string | null, commands = true): AutomationTab {
+	if (param === 'commands' && !commands) return 'rules';
 	return (TABS as readonly string[]).includes(param ?? '') ? (param as AutomationTab) : 'rules';
 }
 

@@ -355,11 +355,22 @@ func TestPermissions(t *testing.T) {
 		}
 
 		// With the permission every route answers, in either spelling: an
-		// operator who was given it, and a server admin
+		// operator who was given it, and a server admin; the commands also
+		// need device.connect, which the server admin has not (BUGS RV32)
 		for i, route := range one {
+			commands := strings.HasPrefix(route.path, "/commands")
+			if commands {
+				const denied = `{"success":false,"error":"Permission denied: device.connect"}`
+				if got := w.Do(request("server_admin", "/api/automation", i)); got.Status != 403 || got.Body != denied {
+					t.Errorf("%s %s as server_admin: %d %s, want 403 %s", route.method, route.path, got.Status, got.Body, denied)
+				}
+			}
 			role, mount := "operator", "/api/automation"
 			if i%2 == 1 {
 				role, mount = "server_admin", "/API/Automation"
+				if commands {
+					role = "operator"
+				}
 			}
 			want := 200
 			if route.method == "POST" && !strings.HasSuffix(route.path, "/ack") {

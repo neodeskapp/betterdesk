@@ -104,8 +104,19 @@ describe('alerts and automation page', () => {
 		}
 	);
 
-	test('the command list names a result by has_result (the list carries no result text)', async () => {
+	test('a server admin (no device.connect) gets no commands tab, also with ?tab=commands', async () => {
 		signIn('server_admin', ['server.config', 'device.view', 'audit.view']);
+		pageState.url = new URL('http://localhost/app/automation?tab=commands');
+		render(Page);
+		expect(await screen.findByRole('tab', { name: 'automation.rules' })).toBeVisible();
+		expect(screen.queryByRole('tab', { name: 'automation.commands' })).toBeNull();
+		await vi.waitFor(() => expect(requests).toContain('/api/automation/rules'));
+		expect(requests).not.toContain('/api/automation/commands');
+		pageState.url = new URL('http://localhost/app/automation');
+	});
+
+	test('the command list names a result by has_result (the list carries no result text)', async () => {
+		signIn('super_admin', ['server.config', 'device.view', 'device.connect', 'audit.view']);
 		pageState.url = new URL('http://localhost/app/automation?tab=commands');
 		render(Page);
 		expect(await screen.findByRole('button', { name: 'automation.view_result' })).toBeVisible();

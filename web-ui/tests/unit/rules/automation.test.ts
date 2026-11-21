@@ -35,6 +35,9 @@ describe('tabs in the URL', () => {
 		expect(tabFrom('nope')).toBe('rules');
 		expect(tabFrom('alerts')).toBe('alerts');
 		expect(tabFrom('commands')).toBe('commands');
+		// Without device.connect there is no commands tab
+		expect(tabFrom('commands', false)).toBe('rules');
+		expect(tabFrom('alerts', false)).toBe('alerts');
 	});
 
 	test('rules drops the parameter, the others set it, other parameters stay', () => {

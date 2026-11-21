@@ -1153,3 +1153,12 @@ var _ = panelFixes.Add("AE3", map[string]replay.Fix{
 	`admin PATCH /api/automation/rules/2 {"cooldown_secs":0}`:    {Status: 200, Answer: `{"success":true}`, After: nodeRuleUpdate},
 	`admin PATCH /api/automation/rules/2 {"cooldown_secs":null}`: {Status: 200, Answer: `{"success":true}`, After: nodeRuleUpdate},
 })
+
+// RV32: the commands need device.connect besides server.config, which a
+// server admin has not.
+var _ = panelFixes.Add("RV32", map[string]replay.Fix{
+	`server_admin GET /api/automation/commands `:                                {Status: 403, Answer: `{"success":false,"error":"Permission denied: device.connect"}`},
+	`server_admin GET /api/automation/commands/1 `:                              {Status: 403, Answer: `{"success":false,"error":"Permission denied: device.connect"}`},
+	`server_admin GET /api/automation/commands/999 `:                            {Status: 403, Answer: `{"success":false,"error":"Permission denied: device.connect"}`},
+	`server_admin POST /api/automation/commands {"device_id":"","payload":"x"}`: {Status: 403, Answer: `{"success":false,"error":"Permission denied: device.connect"}`},
+})

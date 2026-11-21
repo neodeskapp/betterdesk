@@ -3,9 +3,22 @@ package automation
 import (
 	"net/http"
 
+	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 )
+
+// deviceScope is the device scope of the request's account, nil when it
+// sees every device: whether there is a limit is decided first, and only
+// for an account that has one is the scope read over every device of the
+// device layer, deleted ones included, which knows their folders and tags.
+func (h *handlers) deviceScope(r *http.Request) (*access.DeviceScope, error) {
+	ctx := r.Context()
+	return h.d.DeviceGroups.LimitedScope(ctx, kit.User(r), func() []*goapi.Object {
+		return h.d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{IncludeDeleted: true})
+	})
+}
 
 type commandSent struct {
 	Success bool    `json:"success"`
@@ -16,9 +29,9 @@ type commandSent struct {
 // command_type?} and the command as it is stored: the command waits for
 // the device's agent to fetch it.
 //
-// The device has to be the id, as text, of a device the API server knows,
-// the payload a text that is not blank and the type, when given, one of
-// five.
+// The device has to be the id, as text, of a device the API server knows
+// and the account's device scope holds (403 otherwise), the payload a
+// text that is not blank and the type, when given, one of five.
 func (h *handlers) sendCommand(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	device := jsbind.Of(body.Get("device_id"))
@@ -45,6 +58,15 @@ func (h *handlers) sendCommand(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "Unknown device")
 		return
 	}
+	scope, err := h.deviceScope(r)
+	if err != nil {
+		h.serverError(w, r, "Command create error", err)
+		return
+	}
+	if !scope.Has(device.Str()) {
+		fail(w, r, http.StatusForbidden, "Device is outside your device scope")
+		return
+	}
 
 	command, err := createCommand(r.Context(), h.db, newCommand{
 		DeviceID:    device,
@@ -66,11 +88,11 @@ type commandList struct {
 	Total    int      `json:"total"`
 }
 
-// commands answers GET commands?device_id=&status=&limit=: the commands,
-// the one created last first, each without its result (see listCommands).
-// Each filter is one text, and an empty one
-// does not filter; the limit is limitOf's. Anything else is refused with
-// 400.
+// commands answers GET commands?device_id=&status=&limit=: the commands
+// of the devices in the account's device scope, the one created last
+// first, each without its result (see listCommands). Each filter is one
+// text, and an empty one does not filter; the limit is limitOf's.
+// Anything else is refused with 400.
 func (h *handlers) commands(w http.ResponseWriter, r *http.Request) {
 	var filter commandFilter
 	if !readFilters(w, r, filterInto{"device_id", &filter.DeviceID}, filterInto{"status", &filter.Status}) {
@@ -82,6 +104,15 @@ func (h *handlers) commands(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	filter.Limit = limit
+	scope, err := h.deviceScope(r)
+	if err != nil {
+		h.serverError(w, r, "Commands list error", err)
+		return
+	}
+	if !scope.Unlimited() {
+		filter.Devices = scope.IDs()
+		filter.Limited = true
+	}
 	commands, err := listCommands(r.Context(), h.db, filter)
 	if err != nil {
 		h.serverError(w, r, "Commands list error", err)
@@ -90,7 +121,8 @@ func (h *handlers) commands(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, commandList{Commands: commands, Total: len(commands)})
 }
 
-// command answers GET commands/{id}: the command with its result.
+// command answers GET commands/{id}: the command with its result. A
+// command for a device outside the account's device scope is not found.
 func (h *handlers) command(w http.ResponseWriter, r *http.Request) {
 	id, ok := idOf(r)
 	if !ok {
@@ -101,6 +133,16 @@ func (h *handlers) command(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.serverError(w, r, "Command get error", err)
 		return
+	}
+	if command != nil {
+		scope, err := h.deviceScope(r)
+		if err != nil {
+			h.serverError(w, r, "Command get error", err)
+			return
+		}
+		if !scope.Has(command.text("device_id")) {
+			command = nil
+		}
 	}
 	if command == nil {
 		fail(w, r, http.StatusNotFound, "Command not found")

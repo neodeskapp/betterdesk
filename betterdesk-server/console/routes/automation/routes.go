@@ -3,8 +3,10 @@
 //
 //   - The routes people manage alerts and remote commands with: alert
 //     rules, the alert history, the commands sent to devices, and the SMTP
-//     settings. All of them need the permission server.config, and all of
-//     them step aside at /api/bd for the routes of other groups there.
+//     settings. All of them need the permission server.config, the
+//     commands also device.connect and a device in the account's device
+//     scope (commands.go), and all of them step aside at /api/bd for the
+//     routes of other groups there.
 //   - The routes of the device agent, behind the device token guard
 //     (device.go): it fetches its pending commands (GET commands, registered
 //     at /api/bd only, because at /api/automation the people's list of
@@ -52,7 +54,7 @@ func Register(d *kit.Deps) {
 	// id is the pattern :id(\d+) of the old routes. It goes first, because
 	// a pattern decides before any check of a route runs.
 	notOnDeviceMount, id := kit.Middleware(devicemount.Not), kit.Digits("id")
-	canConfigure := d.RequirePermission("server.config")
+	canConfigure, canConnect := d.RequirePermission("server.config"), d.RequirePermission("device.connect")
 
 	r.Get("/rules", h.rules, notOnDeviceMount, d.RequireAuth, canConfigure)
 	r.Post("/rules", h.createRule, notOnDeviceMount, d.RequireAuth, canConfigure)
@@ -63,9 +65,9 @@ func Register(d *kit.Deps) {
 	r.Get("/alerts", h.alerts, notOnDeviceMount, d.RequireAuth, canConfigure)
 	r.Post("/alerts/{id}/ack", h.acknowledge, id, notOnDeviceMount, d.RequireAuth, canConfigure)
 
-	r.Post("/commands", h.sendCommand, notOnDeviceMount, d.RequireAuth, canConfigure)
-	r.Get("/commands", h.commands, notOnDeviceMount, d.RequireAuth, canConfigure)
-	r.Get("/commands/{id}", h.command, id, notOnDeviceMount, d.RequireAuth, canConfigure)
+	r.Post("/commands", h.sendCommand, notOnDeviceMount, d.RequireAuth, canConfigure, canConnect)
+	r.Get("/commands", h.commands, notOnDeviceMount, d.RequireAuth, canConfigure, canConnect)
+	r.Get("/commands/{id}", h.command, id, notOnDeviceMount, d.RequireAuth, canConfigure, canConnect)
 
 	// At /api/automation the people's list of the same path answers every
 	// request first, so the device route is registered at /api/bd only

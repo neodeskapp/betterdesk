@@ -320,6 +320,10 @@ func createCommand(ctx context.Context, db *store.DB, command newCommand) (*reco
 // "" does not filter.
 type commandFilter struct {
 	DeviceID, Status string
+	// Limited keeps the list to the commands of Devices, the device scope
+	// of an account that has a limit
+	Limited bool
+	Devices []string
 	// Limit is the number of rows, from 1 to maxRows
 	Limit int
 }
@@ -337,6 +341,13 @@ func listCommands(ctx context.Context, db *store.DB, filter commandFilter) ([]re
 	}
 	if filter.Status != "" {
 		q.add(" AND status = ?", jsbind.String(filter.Status))
+	}
+	if filter.Limited {
+		q.add(" AND device_id IN (''")
+		for _, id := range filter.Devices {
+			q.add(", ?", jsbind.String(id))
+		}
+		q.add(")")
 	}
 	q.add(" ORDER BY created_at DESC, id DESC LIMIT ?", jsbind.Number(float64(filter.Limit)))
 	commands, err := q.rows(ctx, db, "list remote commands")

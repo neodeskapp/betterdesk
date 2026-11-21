@@ -5,8 +5,9 @@
   the result). Each tab loads its list when it opens.
 
   Who: server.config, for the page route and every call (command payloads
-  and results come from scripts run on devices). Other roles get the 403
-  text and the page asks the server for nothing.
+  and results come from scripts run on devices); the commands tab also
+  needs device.connect. Other roles get the 403 text and the page asks the
+  server for nothing.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -64,16 +65,18 @@
 	$effect(() => setPageTitle(t('nav.automation')));
 
 	const allowed = $derived(can('server.config'));
+	/** Remote commands also need device.connect: a server admin keeps rules and alerts only */
+	const canCommand = $derived(allowed && can('device.connect'));
 	/** Rules, acknowledging alerts and sending commands need Automation at write */
 	const canEdit = $derived(canWrite('server.config'));
 	const message = (err: unknown) => (err instanceof Error ? err.message : '');
 
 	/* ── Tabs, kept in ?tab= ── */
 
-	let tab = $state<AutomationTab>(untrack(() => tabFrom(page.url.searchParams.get('tab'))));
+	let tab = $state<AutomationTab>(untrack(() => tabFrom(page.url.searchParams.get('tab'), canCommand)));
 
 	function selectTab(id: string) {
-		tab = tabFrom(id);
+		tab = tabFrom(id, canCommand);
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- this page's own URL with ?tab=
 		replaceState(urlForTab(new URL(location.href), tab), page.state);
 	}
@@ -341,7 +344,7 @@
 	const tabs = $derived([
 		{ id: 'rules', label: t('automation.rules') },
 		{ id: 'alerts', label: t('automation.alerts') },
-		{ id: 'commands', label: t('automation.commands') }
+		...(canCommand ? [{ id: 'commands', label: t('automation.commands') }] : [])
 	]);
 </script>
 
