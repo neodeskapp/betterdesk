@@ -1179,7 +1179,7 @@ func (s *Server) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
 		Role:      body.Role,
 	}
 	if body.ExpiresIn > 0 {
-		exp := time.Now().Add(time.Duration(body.ExpiresIn) * 24 * time.Hour).Format("2006-01-02 15:04:05")
+		exp := time.Now().UTC().Add(time.Duration(body.ExpiresIn) * 24 * time.Hour).Format("2006-01-02 15:04:05")
 		key.ExpiresAt = exp
 	}
 
