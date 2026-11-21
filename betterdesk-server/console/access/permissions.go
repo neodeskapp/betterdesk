@@ -36,6 +36,15 @@ func newPermissionSet(permissions []string) PermissionSet {
 // super_admin and the older admin.
 func IsSuperAdminRole(role string) bool { return auth.IsSuperAdminRole(role) }
 
+// MayChangeAccount reports whether the signed-in account callerID with the
+// role callerRole may change an account, its access policy included: its
+// own, or one whose role the caller could give. The super admin roles may
+// change every account, global_admin operator, viewer, pro and guest_issuer
+// accounts, every other role only its own.
+func MayChangeAccount(callerID int64, callerRole string, target PolicyUser) bool {
+	return callerID != 0 && callerID == target.ID || auth.CanAssignRole(callerRole, target.Role)
+}
+
 // IsAdminRole reports whether the role is one of the four admin roles the
 // older role checks let through: super_admin, admin, global_admin and
 // server_admin.

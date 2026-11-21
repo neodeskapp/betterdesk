@@ -158,12 +158,31 @@ func submitted(r *http.Request) (sections, features any, err error) {
 	return body["sections"], body["features"], nil
 }
 
+// errNotYours refuses a save for an account the caller may not change,
+// with the users routes' answer.
+var errNotYours = &access.StatusError{Status: http.StatusForbidden, Message: "Cannot assign a role higher than your own"}
+
+// mayChange reports whether the caller may change the account
+// (access.MayChangeAccount).
+func mayChange(r *http.Request, target access.PolicyUser) bool {
+	role := ""
+	if user := kit.User(r); user != nil {
+		role = user.Role
+	}
+	return access.MayChangeAccount(kit.UserID(r), role, target)
+}
+
 // saveUser answers PUT /api/panel/access/users/{id} with the body
-// {sections, features}: it replaces the account's stored rows. The answer
-// holds the rows as they were stored and the new effective policy.
+// {sections, features}: it replaces the account's stored rows, for an
+// account the caller may change. The answer holds the rows as they were
+// stored and the new effective policy.
 func (h *handlers) saveUser(w http.ResponseWriter, r *http.Request) {
 	user, ok := h.findUser(w, r)
 	if !ok {
+		return
+	}
+	if !mayChange(r, *user) {
+		h.fail(w, r, errNotYours)
 		return
 	}
 	subject := jsreq.String(float64(user.ID))
@@ -232,11 +251,23 @@ func (h *handlers) group(w http.ResponseWriter, r *http.Request) {
 }
 
 // saveGroup answers PUT /api/panel/access/groups/{guid} with the body
-// {sections, features}: it replaces the user group's stored rows.
+// {sections, features}: it replaces the user group's stored rows, when the
+// caller may change every member of the group.
 func (h *handlers) saveGroup(w http.ResponseWriter, r *http.Request) {
 	group, ok := h.findGroup(w, r)
 	if !ok {
 		return
+	}
+	members, err := h.d.Access.UserGroupMembers(r.Context(), group.ID)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	for _, member := range members {
+		if !mayChange(r, member) {
+			h.fail(w, r, errNotYours)
+			return
+		}
 	}
 	guid := r.PathValue("guid")
 	sections, features, err := submitted(r)

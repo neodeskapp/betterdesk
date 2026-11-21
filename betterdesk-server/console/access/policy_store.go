@@ -189,6 +189,34 @@ func (s *Service) UserGroupByGUID(ctx context.Context, guid string) (*UserGroup,
 	return &g, nil
 }
 
+// UserGroupMembers returns the id and role of every account in the user
+// group.
+func (s *Service) UserGroupMembers(ctx context.Context, groupID int64) ([]PolicyUser, error) {
+	rows, err := s.db.Query(ctx, `
+		SELECT u.id, u.role FROM users u
+		INNER JOIN user_group_members ugm ON ugm.user_id = u.id
+		WHERE ugm.user_group_id = ?
+		ORDER BY u.id`, groupID)
+	if err != nil {
+		return nil, fmt.Errorf("load members of user group %d: %w", groupID, err)
+	}
+	defer rows.Close()
+	var out []PolicyUser
+	for rows.Next() {
+		var user PolicyUser
+		var role sql.NullString
+		if err := rows.Scan(&user.ID, &role); err != nil {
+			return nil, fmt.Errorf("read member of user group %d: %w", groupID, err)
+		}
+		user.Role = role.String
+		out = append(out, user)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("load members of user group %d: %w", groupID, err)
+	}
+	return out, nil
+}
+
 // PolicyUserByID returns the id and role of an account for ResolveForUser,
 // or nil when there is no such account. An account without a stored role
 // has "".

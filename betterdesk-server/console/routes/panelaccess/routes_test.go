@@ -274,6 +274,52 @@ func TestGroupPolicy(t *testing.T) {
 	})
 }
 
+// RV13: a policy is saved only for an account the caller may change, the
+// rule of the users routes: its own, or one whose role it could give. A
+// user group's policy counts for each member.
+func TestPolicySaveOnlyForAnAccountTheCallerMayChange(t *testing.T) {
+	eachDB(t, func(t *testing.T, w *routetest.World) {
+		exec(t, w.DB, "INSERT INTO user_groups (guid, name) VALUES ('admins', 'Admins'), ('team', 'Team'), ('empty', 'Empty')")
+		exec(t, w.DB, "INSERT INTO user_group_members (user_group_id, user_id) SELECT id, 5 FROM user_groups WHERE guid IN ('admins', 'team')")
+		exec(t, w.DB, "INSERT INTO user_group_members (user_group_id, user_id) SELECT id, 2 FROM user_groups WHERE guid = 'admins'")
+		const lower = `{"sections":[{"resource_key":"devices","access_level":"none"}],"features":[{"feature_key":"remote_control","enabled":false}]}`
+		refused := `{"success":false,"error":"Cannot assign a role higher than your own"}`
+		global := w.As("global_admin")
+		for _, id := range []string{"1", "2", "3"} {
+			if got := global.Do("PUT", "/api/panel/access/users/"+id, lower); got.Status != 403 || got.Body != refused {
+				t.Errorf("global_admin saves for account %s: %d %s", id, got.Status, got.Body)
+			}
+		}
+		if got := global.Do("PUT", "/api/panel/access/groups/admins", lower); got.Status != 403 || got.Body != refused {
+			t.Errorf("global_admin saves for a group with a super admin in it: %d %s", got.Status, got.Body)
+		}
+		var stored int
+		if err := w.DB.QueryRow(context.Background(), "SELECT COUNT(*) FROM panel_access_policies").Scan(&stored); err != nil || stored != 0 {
+			t.Errorf("rows stored by refused saves: %d %v", stored, err)
+		}
+		if rows := w.AuditRows(); len(rows) != 0 {
+			t.Errorf("audit log after refused saves: %q", rows)
+		}
+		for _, id := range []string{"4", "5", "7"} {
+			if got := global.Do("PUT", "/api/panel/access/users/"+id, lower); got.Status != 200 {
+				t.Errorf("global_admin saves for account %s: %d %s", id, got.Status, got.Body)
+			}
+		}
+		for _, guid := range []string{"team", "empty"} {
+			if got := global.Do("PUT", "/api/panel/access/groups/"+guid, lower); got.Status != 200 {
+				t.Errorf("global_admin saves for group %s: %d %s", guid, got.Status, got.Body)
+			}
+		}
+		admin := w.As("admin")
+		if got := admin.Do("PUT", "/api/panel/access/users/2", lower); got.Status != 200 {
+			t.Errorf("admin saves for the super admin: %d %s", got.Status, got.Body)
+		}
+		if got := admin.Do("PUT", "/api/panel/access/groups/admins", lower); got.Status != 200 {
+			t.Errorf("admin saves for the group with a super admin: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
 // TH11: a save whose body is no object, or whose sections or features are
 // there and no list, is refused with 400 and keeps the stored rows, for an
 // account and for a user group.
