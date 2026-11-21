@@ -408,8 +408,9 @@ func TestClientAPIPort(t *testing.T) {
 }
 
 // The device groups of an approval: an account with a limited device scope
-// (operator, given enrollment.approve) changes nothing for a device it may
-// not see, and only the manual groups it may see for one it may; a guid
+// (operator, given enrollment.approve) is refused for a device it may not
+// see (BUGS RV6), and changes only the manual groups it may see for one it
+// may; a guid
 // of the wrong form counts as not named, a guid named twice once, and a
 // folder of id 0 is no folder.
 func TestApprovalDeviceGroups(t *testing.T) {
@@ -466,7 +467,9 @@ func TestApprovalDeviceGroups(t *testing.T) {
 				t.Fatalf("%s: %d %s", target, got.Status, got.Body)
 			}
 		}
-		approve(operator, "/api/bd/api/registrations/1/approve", `{"group_guids":["dg-open"]}`)
+		if got := operator.Do(http.MethodPut, "/api/bd/api/registrations/1/approve", `{"group_guids":["dg-open"]}`); got.Status != http.StatusForbidden {
+			t.Fatalf("a device the operator may not see: %d %s", got.Status, got.Body)
+		}
 		if got := members(); got != "dg-closed:DEV-HID dg-closed:DEV-SEE dg-mine:DEV-SEE odd guid:DEV-ADM" {
 			t.Fatalf("a device the operator may not see: %s", got)
 		}

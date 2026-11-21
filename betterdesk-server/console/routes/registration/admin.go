@@ -186,6 +186,15 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 		failure(w, r, http.StatusBadRequest, "Invalid tags")
 		return
 	}
+	allowed, err := h.mayApproveFor(r, reg.Get("device_id"))
+	if err != nil {
+		h.serverError(w, r, "Approve registration error:", err)
+		return
+	}
+	if !allowed {
+		failure(w, r, http.StatusForbidden, kit.T(r, "errors.forbidden", nil))
+		return
+	}
 	cfg, err := h.serverConfig(r)
 	if err != nil {
 		h.serverError(w, r, "Approve registration error:", err)
@@ -228,6 +237,23 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 	))
 	h.audit(r, "registration_approved", "Approved registration for device "+jsreq.String(reg.Get("device_id"))+" ("+jsreq.String(reg.Get("hostname"))+")")
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "data", nullable(updated)))
+}
+
+// mayApproveFor reports whether the approver may approve a registration
+// for the device id: always for a device the API server does not know (a
+// new machine), and for a device it knows only when the device is in the
+// approver's device scope. An approval puts that device into a folder and
+// device groups and gives it a name and tags, so an approver must not
+// reach a device outside its scope this way.
+func (h *handlers) mayApproveFor(r *http.Request, deviceID any) (bool, error) {
+	if !goapi.Truthy(deviceID) {
+		return true, nil
+	}
+	device := h.d.Backend.GetDeviceByID(r.Context(), jsreq.String(deviceID), false)
+	if device == nil {
+		return true, nil
+	}
+	return h.d.DeviceGroups.UserCanAccessDevice(r.Context(), kit.User(r), device)
 }
 
 // nullable is a row for JSON: null when there is none.

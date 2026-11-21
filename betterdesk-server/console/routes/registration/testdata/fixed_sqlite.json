@@ -1392,6 +1392,54 @@
   ]
  },
  {
+  "step": "485 PUT /api/registrations/1/approve",
+  "bugs": [
+   "RV6"
+  ],
+  "status": 200,
+  "answer": "{\"success\":true,\"data\":{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-21 04:15:32\",\"rejected_reason\":\"\",\"access_token\":\"32d68284f567e314a24dd4b2eb8f4a639f7f51d4bb0def62d4832dcb6d912c20\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2026-11-21 04:15:32\"}}",
+  "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/DEV1",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/peers/DEV1",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/peers",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/remote-targets?org_id=\u0026include_disabled=false",
+    "body": ""
+   },
+   {
+    "method": "GET",
+    "url": "/api/peers/DEV1",
+    "body": ""
+   },
+   {
+    "method": "PATCH",
+    "url": "/api/peers/DEV1",
+    "body": "{\"note\":\"Kiosk\",\"display_name\":\"Kiosk\"}"
+   },
+   {
+    "method": "PUT",
+    "url": "/api/peers/DEV1/tags",
+    "body": "{\"tags\":[\"a\",\"b\",\"a\"]}"
+   }
+  ],
+  "events": [
+   "{\"type\":\"registration_changed\",\"registration\":{\"source\":\"lan\",\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"status\":\"approved\"},\"timestamp\":1795234532234}"
+  ]
+ },
+ {
   "step": "486 registrations",
   "bugs": [
    "RG2",
@@ -1421,11 +1469,17 @@
  {
   "step": "495 PUT /api/registrations/2/approve",
   "bugs": [
-   "RG2"
+   "RG2",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":2,\"device_id\":\"DEV2\",\"hostname\":\"Laptop 100%_off\",\"platform\":\"Linux\",\"version\":\"1.1\",\"ip_address\":\"10.0.0.2\",\"public_key\":\"key-2\",\"uuid\":\"uuid-2\",\"status\":\"approved\",\"approved_by\":\"e2e_global_admin\",\"approved_at\":\"2026-11-19 00:15:39\",\"rejected_reason\":\"\",\"access_token\":\"6258e3250a37807323a9b66131b158b6072c1d7bb8fb58482e2b78eca445eae2\",\"console_url\":\"http://example.test:5000\",\"server_address\":\"example.test:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2001-01-01 00:02:00\",\"updated_at\":\"2026-11-19 00:15:39\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/DEV2",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/DEV2",
@@ -1439,11 +1493,17 @@
  {
   "step": "498 PUT /api/registrations/5/approve",
   "bugs": [
-   "RG5"
+   "RG5",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":5,\"device_id\":\"DEV5\",\"hostname\":\"École-PC\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"192.168.1.5\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:37:17\",\"rejected_reason\":\"\",\"access_token\":\"a69b360477e08ecd7ad1fe298c2178a075f52e03597ba76af85c64a85e6da97c\",\"console_url\":\"http://[::1]:5000\",\"server_address\":\"[::1]:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2001-01-01 00:05:00\",\"updated_at\":\"2026-11-19 01:37:17\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/DEV5",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/DEV5",
@@ -1493,11 +1553,17 @@
  {
   "step": "501 list body PUT /api/registrations/{a}/approve",
   "bugs": [
-   "RG4"
+   "RG4",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":31,\"device_id\":\"APPR0\",\"hostname\":\"approve-0\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:03\",\"rejected_reason\":\"\",\"access_token\":\"a182c3f54322b06dc5a37e4eb83132f3d7f46744446944de2509c51b868ca1c2\",\"console_url\":\"http://localhost:5000\",\"server_address\":\"localhost:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:03\",\"updated_at\":\"2026-11-19 01:19:03\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/APPR0",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/APPR0",
@@ -1522,11 +1588,17 @@
  {
   "step": "503 folder 0 PUT /api/registrations/{a}/approve",
   "bugs": [
-   "RG4"
+   "RG4",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":32,\"device_id\":\"APPR1\",\"hostname\":\"approve-1\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:03\",\"rejected_reason\":\"\",\"access_token\":\"9c12b811df3fca725aa8617127c8ac018c1c5956b1610b71acfbec78c7d2dea8\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:03\",\"updated_at\":\"2026-11-19 01:19:03\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/APPR1",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/APPR1",
@@ -1551,11 +1623,17 @@
  {
   "step": "505 folder -1 PUT /api/registrations/{a}/approve",
   "bugs": [
-   "RG4"
+   "RG4",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":33,\"device_id\":\"APPR2\",\"hostname\":\"approve-2\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:03\",\"rejected_reason\":\"\",\"access_token\":\"6678a32c8c4555c78c4b3a56da03f0b7d3b01c636b02c288e2b0f41856f64546\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:03\",\"updated_at\":\"2026-11-19 01:19:03\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/APPR2",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/APPR2",
@@ -1580,11 +1658,17 @@
  {
   "step": "507 folder 1e21 PUT /api/registrations/{a}/approve",
   "bugs": [
-   "RG4"
+   "RG4",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":34,\"device_id\":\"APPR3\",\"hostname\":\"approve-3\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:04\",\"rejected_reason\":\"\",\"access_token\":\"8d9fd57a9443d1df2e80c8f540c3fad4415231beb59bd2eed61099e516a2e797\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:04\",\"updated_at\":\"2026-11-19 01:19:04\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/APPR3",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/APPR3",
@@ -1609,11 +1693,17 @@
  {
   "step": "509 folder that does not exist PUT /api/registrations/{a}/approve",
   "bugs": [
-   "RG4"
+   "RG4",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":35,\"device_id\":\"APPR4\",\"hostname\":\"approve-4\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:04\",\"rejected_reason\":\"\",\"access_token\":\"dccd3f589b93bbaa250c1162b53e749f4b0dee119acd204bb57c63b8c6ab0c20\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:04\",\"updated_at\":\"2026-11-19 01:19:04\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/APPR4",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/APPR4",
@@ -1638,11 +1728,17 @@
  {
   "step": "511 101 groups PUT /api/registrations/{a}/approve",
   "bugs": [
-   "RG4"
+   "RG4",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":36,\"device_id\":\"APPR5\",\"hostname\":\"approve-5\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:05\",\"rejected_reason\":\"\",\"access_token\":\"beef0bf2f8e3e84fcd47ba8b758977d69660c4259a1556dfedebe2c0263355c2\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:05\",\"updated_at\":\"2026-11-19 01:19:05\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/APPR5",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/APPR5",
@@ -1667,11 +1763,17 @@
  {
   "step": "513 100 groups PUT /api/registrations/{a}/approve",
   "bugs": [
-   "RG4"
+   "RG4",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":37,\"device_id\":\"APPR6\",\"hostname\":\"approve-6\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:05\",\"rejected_reason\":\"\",\"access_token\":\"059a06770fc2467fb53b3d8fc7c83e0a35e2de5143baa263501cc1dc1be5a83a\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:05\",\"updated_at\":\"2026-11-19 01:19:05\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/APPR6",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/APPR6",
@@ -1701,11 +1803,17 @@
  {
   "step": "515 group without text PUT /api/registrations/{a}/approve",
   "bugs": [
-   "RG4"
+   "RG4",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":38,\"device_id\":\"APPR7\",\"hostname\":\"approve-7\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:05\",\"rejected_reason\":\"\",\"access_token\":\"3ec2d70964dc6b13b24ff4736862e8702bce5b83ada49a5991a8f65fbf454ef5\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:05\",\"updated_at\":\"2026-11-19 01:19:05\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/APPR7",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/APPR7",
@@ -1768,11 +1876,17 @@
  {
   "step": "521 blank PUT /api/registrations/{a}/approve",
   "bugs": [
-   "RG4"
+   "RG4",
+   "RV6"
   ],
   "status": 200,
   "answer": "{\"success\":true,\"data\":{\"id\":41,\"device_id\":\"APPR10\",\"hostname\":\"approve-10\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:06\",\"rejected_reason\":\"\",\"access_token\":\"b1c06304d839afe0e749d958ae30bf270d8c4ded490dd6e91fd56d0b4776a500\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:06\",\"updated_at\":\"2026-11-19 01:19:06\"}}",
   "calls": [
+   {
+    "method": "GET",
+    "url": "/api/peers/APPR10",
+    "body": ""
+   },
    {
     "method": "GET",
     "url": "/api/peers/APPR10",
