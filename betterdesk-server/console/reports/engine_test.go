@@ -607,6 +607,30 @@ func TestCSVQuotesCarriageReturnsAndWritesISOTimes(t *testing.T) {
 	}
 }
 
+// TestCSVKeepsFormulasAsText: a text that starts with a character a
+// spreadsheet reads as the start of a formula gets a single quote in
+// front, as the billing exports do; numbers keep their sign (BUGS.md
+// RV92).
+func TestCSVKeepsFormulasAsText(t *testing.T) {
+	e := New(Options{})
+	rows := []any{
+		goapi.NewObject("name", `=HYPERLINK("http://evil.example/x","open")`, "n", -2.0),
+		goapi.NewObject("name", "+1", "n", 3.0),
+		goapi.NewObject("name", "@SUM(1+1)", "n", "-2+3"),
+		goapi.NewObject("name", "\tcmd", "n", "\r=1"),
+		goapi.NewObject("name", "plain = text", "n", "a-b"),
+	}
+	want := "name,n\n" +
+		`"'=HYPERLINK(""http://evil.example/x"",""open"")",-2` + "\n" +
+		"'+1,3\n" +
+		"'@SUM(1+1),'-2+3\n" +
+		"'\tcmd,\"'\r=1\"\n" +
+		"plain = text,a-b"
+	if got := e.ToCSV(rows); got != want {
+		t.Errorf("csv:\n got %q\nwant %q", got, want)
+	}
+}
+
 // TestNodeReports makes every report the Node engine made
 // (testdata/engine_*.json, written by testdata/nodeoracle/engine.js) on
 // the same rows and compares the JSON and the CSV of every part, byte for

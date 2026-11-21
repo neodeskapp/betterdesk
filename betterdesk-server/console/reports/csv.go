@@ -14,8 +14,9 @@ import (
 // line end after the last and no byte order mark. A list or an object is
 // written as JSON, a time as the ISO text the JSON answers carry, any
 // other value as its JavaScript text; null and missing values are empty.
-// A value with a comma, a quote, "\n" or "\r" is quoted with its quotes
-// doubled. No rows give the empty text.
+// A text that a spreadsheet would read as a formula starts with a single
+// quote (formulaAsText). A value with a comma, a quote, "\n" or "\r" is
+// quoted with its quotes doubled. No rows give the empty text.
 func (e *Engine) ToCSV(rows []any) string {
 	if len(rows) == 0 {
 		return ""
@@ -59,11 +60,24 @@ func (e *Engine) csvCell(v any, found bool) string {
 		s = string(Stringify(t))
 	case Date:
 		s = store.ISOTime(t.T)
+	case string:
+		s = formulaAsText(t)
 	default:
 		s = e.clock.String(v)
 	}
 	if strings.ContainsAny(s, ",\"\n\r") {
 		return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
+	}
+	return s
+}
+
+// formulaAsText makes a text safe to open in a spreadsheet, as the billing
+// exports do: a text that starts with a character a spreadsheet reads as
+// the start of a formula gets a single quote in front, so it shows as
+// text. Numbers are not texts and keep their sign.
+func formulaAsText(s string) string {
+	if s != "" && strings.ContainsRune("=+-@\t\r", rune(s[0])) {
+		return "'" + s
 	}
 	return s
 }
