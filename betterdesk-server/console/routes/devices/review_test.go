@@ -2,11 +2,13 @@ package devices_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -120,4 +122,118 @@ func TestGroupWritesKeepTheScope(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestStrategyRoutesKeepTheScope: an account whose device scope is
+// limited reads a rule's assignments without the devices outside its
+// scope, other accounts and device groups closed to it; it may not
+// change or delete a rule that has such an assignment, nor bind a rule
+// to a closed device group. Each refusal is 403 and writes nothing, here
+// or on the API server. The admin sees and changes every rule (BUGS
+// RV63).
+func TestStrategyRoutesKeepTheScope(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, api := world(t, db, nil, nil)
+		ctx := context.Background()
+		for _, q := range []string{
+			`CREATE TABLE IF NOT EXISTS peers (id TEXT PRIMARY KEY, uuid TEXT DEFAULT '', guid TEXT DEFAULT '')`,
+			`INSERT INTO peers (id, uuid, guid) VALUES ('A', '', 'guid-a'), ('C', '', 'guid-c')`,
+			`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-open', 'Open', '', '', 'manual', '')`,
+			`UPDATE users SET guid = 'guid-operator' WHERE username = 'e2e_operator'`,
+			`UPDATE users SET guid = 'guid-viewer' WHERE username = 'e2e_viewer'`,
+		} {
+			if _, err := db.Exec(ctx, q); err != nil {
+				t.Fatalf("%s: %v", q, err)
+			}
+		}
+		admin, operator := w.As("admin"), w.As("operator")
+		create := func(a *routetest.Agent, body string) string {
+			t.Helper()
+			created := a.Do("POST", "/api/panel/strategies", body)
+			m := strategyGUIDField.FindStringSubmatch(created.Body)
+			if created.Status != http.StatusOK || m == nil {
+				t.Fatalf("create %s: %d %s", body, created.Status, created.Body)
+			}
+			return "/api/panel/strategies/" + m[1]
+		}
+		mixed := create(admin, `{"name":"Mixed"}`)
+		if got := admin.Do("POST", mixed+"/assign", `{"peers":["A","C"],"users":["e2e_operator","e2e_viewer"],"groups":["g-open","g-viewer"]}`); got.Status != http.StatusOK {
+			t.Fatalf("assign as admin: %d %s", got.Status, got.Body)
+		}
+		mine := create(admin, `{"name":"Mine"}`)
+		state := func() string {
+			t.Helper()
+			var rules, assignments int
+			if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM strategies`).Scan(&rules); err != nil {
+				t.Fatal(err)
+			}
+			if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM strategy_assignments`).Scan(&assignments); err != nil {
+				t.Fatal(err)
+			}
+			var groups []string
+			rows, err := db.Query(ctx, `SELECT name || '=' || COALESCE(device_group_guid, '') FROM strategies ORDER BY name`)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var s string
+				if err := rows.Scan(&s); err != nil {
+					t.Fatal(err)
+				}
+				groups = append(groups, s)
+			}
+			return fmt.Sprintf("%d rules, %d assignments, %s", rules, assignments, strings.Join(groups, " "))
+		}
+
+		got := operator.Do("GET", mixed, "")
+		for _, want := range []string{`"peer_count":1`, `"user_count":1`, `"device_group_count":1`, `"peers":["guid-a"]`, `"users":["guid-operator"]`, `"groups":["g-open"]`, `"peer_ids":["A"]`, `"user_names":["e2e_operator"]`, `"group_guids":["g-open"]`} {
+			if got.Status != http.StatusOK || !strings.Contains(got.Body, want) {
+				t.Errorf("the mixed rule as operator: %d %s, want %s", got.Status, got.Body, want)
+			}
+		}
+		if got := admin.Do("GET", mixed, ""); !strings.Contains(got.Body, `"peer_ids":["A","C"]`) || !strings.Contains(got.Body, `"group_guids":["g-open","g-viewer"]`) || !strings.Contains(got.Body, `"user_names":["e2e_operator","e2e_viewer"]`) {
+			t.Errorf("the mixed rule as admin: %d %s", got.Status, got.Body)
+		}
+
+		before := state()
+		forbidden := `{"success":false,"error":"You don't have access to this device."}`
+		for _, c := range []struct{ method, path, body string }{
+			{"PATCH", mixed, `{"name":"Mixed","enabled":false}`},
+			{"DELETE", mixed, ``},
+			{"POST", "/api/panel/strategies", `{"name":"Closed","device_group_guid":"g-viewer"}`},
+			{"PATCH", mine, `{"device_group_guid":"g-viewer"}`},
+		} {
+			api.Calls()
+			if got := operator.Do(c.method, c.path, c.body); got.Status != http.StatusForbidden || got.Body != forbidden {
+				t.Errorf("%s %s %s as operator: %d %s, want 403 %s", c.method, c.path, c.body, got.Status, got.Body, forbidden)
+			}
+			for _, call := range api.Calls() {
+				if !strings.HasPrefix(call, "GET ") {
+					t.Errorf("%s %s %s as operator reached the server: %s", c.method, c.path, c.body, call)
+				}
+			}
+			if got := state(); got != before {
+				t.Fatalf("%s %s %s as operator wrote: %s, want %s", c.method, c.path, c.body, got, before)
+			}
+		}
+
+		// What stays in the operator's scope goes through
+		if got := operator.Do("GET", mine, ""); got.Status != http.StatusOK || !strings.Contains(got.Body, `"name":"Mine"`) || !strings.Contains(got.Body, `"peer_count":0`) {
+			t.Errorf("the operator's own rule: %d %s", got.Status, got.Body)
+		}
+		create(operator, `{"name":"Open","device_group_guid":"g-open"}`)
+		if got := operator.Do("PATCH", mine, `{"name":"Mine too","device_group_guid":"g-open"}`); got.Status != http.StatusOK {
+			t.Errorf("a change of a rule in scope as operator: %d %s", got.Status, got.Body)
+		}
+		if got := operator.Do("DELETE", mine, ""); got.Status != http.StatusOK {
+			t.Errorf("delete of a rule in scope as operator: %d %s", got.Status, got.Body)
+		}
+		if got := admin.Do("PATCH", mixed, `{"device_group_guid":"g-viewer"}`); got.Status != http.StatusOK {
+			t.Errorf("a change of the mixed rule as admin: %d %s", got.Status, got.Body)
+		}
+		if got := admin.Do("DELETE", mixed, ""); got.Status != http.StatusOK {
+			t.Errorf("delete of the mixed rule as admin: %d %s", got.Status, got.Body)
+		}
+	})
 }

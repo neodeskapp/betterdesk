@@ -325,6 +325,17 @@ func assignmentSummary(ctx context.Context, db *store.DB, strategyGUID string) (
 	), nil
 }
 
+// lookupText is the text of the first row of a query with one column, ""
+// when there is no row or its value is null.
+func lookupText(ctx context.Context, db *store.DB, query string, args ...any) (string, error) {
+	var text sql.NullString
+	err := db.QueryRow(ctx, query, args...).Scan(&text)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	return text.String, err
+}
+
 // assignmentDisplayRefs is the summary with the ids of the devices and the
 // names of the accounts behind the guids. On SQLite a failed device
 // lookup ends the device list quietly; on PostgreSQL it fails the call.

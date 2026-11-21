@@ -131,9 +131,14 @@ func serializeStrategy(row *goapi.Object) *goapi.Object {
 	)
 }
 
-// strategyFailure answers the catch of the create and update routes: 400
-// with the text of a validation failure, else 500.
+// strategyFailure answers the catch of the create and update routes: 403
+// for a rule outside the account's scope, 400 with the text of a
+// validation failure, else 500.
 func (h *handlers) strategyFailure(w http.ResponseWriter, r *http.Request, what string, err error) {
+	if errors.Is(err, errOutOfScope) {
+		fail(w, r, http.StatusForbidden, "errors.forbidden")
+		return
+	}
 	var bad badRequest
 	if errors.As(err, &bad) {
 		h.log.Error(what, err)
@@ -177,9 +182,13 @@ type strategyAnswer struct {
 	Strategy *goapi.Object `json:"strategy"`
 }
 
-// createStrategy answers POST /api/panel/strategies.
+// createStrategy answers POST /api/panel/strategies. An account whose
+// device scope is limited binds a rule only to a device group open to it.
 func (h *handlers) createStrategy(w http.ResponseWriter, r *http.Request) {
 	payload, err := normalizeStrategyPayload(plainBody(r))
+	if err == nil {
+		err = h.ruleGroupInScope(r, payload.DeviceGroupGUID)
+	}
 	var created *goapi.Object
 	if err == nil {
 		created, err = createStrategy(r.Context(), h.d.Store, payload)
@@ -209,6 +218,9 @@ func nameOf(row *goapi.Object) (string, error) {
 // updateStrategy answers PATCH /api/panel/strategies/{guid}: the body's
 // fields over the stored rule. A field the body leaves out keeps its
 // value; the stored switch is read as a boolean first (1 or 0 on SQLite).
+// An account whose device scope is limited changes only a rule whose
+// assignments and device group it may all see, and binds it only to a
+// device group open to it.
 func (h *handlers) updateStrategy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	guid, ok := strategyGUID(w, r)
@@ -231,7 +243,14 @@ func (h *handlers) updateStrategy(w http.ResponseWriter, r *http.Request) {
 	for _, key := range body.Keys() {
 		merged.Set(key, body.Get(key))
 	}
-	payload, err := normalizeStrategyPayload(merged)
+	err = h.ruleInScope(r, guid, existing)
+	var payload strategyPayload
+	if err == nil {
+		payload, err = normalizeStrategyPayload(merged)
+	}
+	if err == nil {
+		err = h.ruleGroupInScope(r, payload.DeviceGroupGUID)
+	}
 	var updated *goapi.Object
 	if err == nil {
 		updated, err = updateStrategy(ctx, h.d.Store, guid, payload)
@@ -251,7 +270,8 @@ func (h *handlers) updateStrategy(w http.ResponseWriter, r *http.Request) {
 }
 
 // strategy answers GET /api/panel/strategies/{guid}: the rule, from the
-// server when the console has none, with its assignments.
+// server when the console has none, with its assignments. An account
+// whose device scope is limited gets only the assignments it may see.
 func (h *handlers) strategy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	guid, ok := strategyGUID(w, r)
@@ -274,6 +294,13 @@ func (h *handlers) strategy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	refs, err := assignmentDisplayRefs(ctx, h.d.Store, guid)
+	var scope *ruleScope
+	if err == nil {
+		scope, err = h.ruleScopeOf(r)
+	}
+	if err == nil {
+		refs, _, err = h.visibleRefs(ctx, scope, refs)
+	}
 	if err != nil {
 		h.serverError(w, r, "Get strategy detail error:", err)
 		return
@@ -583,7 +610,9 @@ func (h *handlers) unassignStrategy(w http.ResponseWriter, r *http.Request) {
 }
 
 // deleteStrategy answers DELETE /api/panel/strategies/{guid}: the rule and
-// its assignments go, and so does the server's copy.
+// its assignments go, and so does the server's copy. An account whose
+// device scope is limited deletes only a rule whose assignments and
+// device group it may all see.
 func (h *handlers) deleteStrategy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	guid, ok := strategyGUID(w, r)
@@ -597,6 +626,10 @@ func (h *handlers) deleteStrategy(w http.ResponseWriter, r *http.Request) {
 	}
 	if existing == nil {
 		fail(w, r, http.StatusNotFound, "devices.strategy_not_found")
+		return
+	}
+	if err := h.ruleInScope(r, guid, existing); err != nil {
+		h.strategyFailure(w, r, "Delete strategy error:", err)
 		return
 	}
 	if err := deleteStrategy(ctx, h.d.Store, guid); err != nil {
@@ -616,6 +649,157 @@ func (h *handlers) deleteStrategy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	answer(w, r, http.StatusOK, done{Success: true})
+}
+
+// ruleScope is what an account whose device scope is limited may see of a
+// rule: the devices of its scope, its own account and the device groups
+// open to it.
+type ruleScope struct {
+	devices  *access.DeviceScope
+	username string
+	user     *access.ScopeUser
+}
+
+// ruleScopeOf is the account's ruleScope, nil for an account that sees
+// every device.
+func (h *handlers) ruleScopeOf(r *http.Request) (*ruleScope, error) {
+	ctx := r.Context()
+	user := kit.User(r)
+	if user == nil || access.IsAdminRole(user.Role) {
+		return nil, nil
+	}
+	devices, err := h.groups.LimitedScope(ctx, user, func() []*goapi.Object {
+		return h.backend.GetAllDevices(ctx, goapi.DeviceFilters{})
+	})
+	if err != nil || devices == nil {
+		return nil, err
+	}
+	return &ruleScope{devices: devices, username: user.Username, user: h.groups.UserAccessContext(ctx, user)}, nil
+}
+
+// groupOpen reports whether the device group with the guid is open to the
+// account; "" and a guid no group has are.
+func (h *handlers) ruleGroupOpen(ctx context.Context, s *ruleScope, guid string) (bool, error) {
+	if s == nil || guid == "" {
+		return true, nil
+	}
+	group, err := h.groups.DeviceGroupByGUID(ctx, guid)
+	if err != nil || group == nil {
+		return err == nil, err
+	}
+	return access.GroupAllowedForUser(devicegroups.ScopeGroup(group), s.user), nil
+}
+
+// ruleGroupInScope returns errOutOfScope when the device group a rule is
+// bound to is closed to an account whose device scope is limited.
+func (h *handlers) ruleGroupInScope(r *http.Request, guid string) error {
+	scope, err := h.ruleScopeOf(r)
+	if err != nil {
+		return err
+	}
+	open, err := h.ruleGroupOpen(r.Context(), scope, guid)
+	if err == nil && !open {
+		err = errOutOfScope
+	}
+	return err
+}
+
+// ruleInScope returns errOutOfScope when an account whose device scope is
+// limited may not see all of the stored rule: its device group, or an
+// assignment to a device, an account or a device group.
+func (h *handlers) ruleInScope(r *http.Request, guid string, rule *goapi.Object) error {
+	ctx := r.Context()
+	scope, err := h.ruleScopeOf(r)
+	if err != nil || scope == nil {
+		return err
+	}
+	group, err := textOr(rule.Get("device_group_guid"), "")
+	if err != nil {
+		return err
+	}
+	open, err := h.ruleGroupOpen(ctx, scope, jsTrim(group))
+	if err != nil {
+		return err
+	}
+	if !open {
+		return errOutOfScope
+	}
+	refs, err := assignmentDisplayRefs(ctx, h.d.Store, guid)
+	if err != nil {
+		return err
+	}
+	if _, hidden, err := h.visibleRefs(ctx, scope, refs); err != nil || hidden {
+		if err == nil {
+			err = errOutOfScope
+		}
+		return err
+	}
+	return nil
+}
+
+// visibleRefs leaves out of a rule's assignments (assignmentDisplayRefs)
+// the devices outside the scope, the accounts other than the caller's own
+// and the device groups closed to it, and counts what is left; hidden
+// reports whether anything was left out. A nil scope keeps everything.
+func (h *handlers) visibleRefs(ctx context.Context, s *ruleScope, refs *goapi.Object) (out *goapi.Object, hidden bool, err error) {
+	if s == nil {
+		return refs, false, nil
+	}
+	db := h.d.Store
+	keep := func(list string, visible func(key string) (bool, error)) ([]any, error) {
+		kept := []any{}
+		items, _ := refs.Get(list).([]any)
+		for _, item := range items {
+			key, _ := item.(string)
+			ok, err := visible(key)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				kept = append(kept, item)
+			} else {
+				hidden = true
+			}
+		}
+		return kept, nil
+	}
+	peers, err := keep("peers", func(guid string) (bool, error) {
+		id, err := lookupText(ctx, db, `SELECT id FROM peers WHERE guid = ? LIMIT 1`, guid)
+		return err == nil && id != "" && s.devices.Has(id), err
+	})
+	if err != nil {
+		return nil, false, fmt.Errorf("check the devices of a rule: %w", err)
+	}
+	users, err := keep("users", func(guid string) (bool, error) {
+		name, err := lookupText(ctx, db, `SELECT username FROM users WHERE guid = ? LIMIT 1`, guid)
+		return err == nil && name != "" && name == s.username, err
+	})
+	if err != nil {
+		return nil, false, fmt.Errorf("check the accounts of a rule: %w", err)
+	}
+	groups, err := keep("groups", func(guid string) (bool, error) { return h.ruleGroupOpen(ctx, s, guid) })
+	if err != nil {
+		return nil, false, err
+	}
+	out = refs.Clone()
+	out.Set("peer_count", float64(len(peers))).Set("user_count", float64(len(users))).Set("device_group_count", float64(len(groups)))
+	out.Set("peers", peers).Set("users", users).Set("groups", groups).Set("group_guids", groups)
+	ids, _ := refs.Get("peer_ids").([]any)
+	shownIDs := []any{}
+	for _, id := range ids {
+		if text, _ := id.(string); s.devices.Has(text) {
+			shownIDs = append(shownIDs, id)
+		}
+	}
+	names, _ := refs.Get("user_names").([]any)
+	shownNames := []any{}
+	for _, name := range names {
+		if name == s.username {
+			shownNames = append(shownNames, name)
+		}
+	}
+	out.Set("peer_ids", shownIDs).Set("user_names", shownNames)
+	return out, hidden, nil
 }
 
 // jsreqText is String(v || ”) for a value of the server.
