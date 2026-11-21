@@ -22,9 +22,22 @@ const unreachable = "Go server unreachable"
 // gets 500 "Go server unreachable"; a call refused before it was sent with
 // a message that starts with "Invalid " gets 400 with that message.
 func (h *handlers) pass(w http.ResponseWriter, r *http.Request, method, path string, opts ...goapi.CallOption) {
+	h.passKept(w, r, nil, method, path, opts...)
+}
+
+// passKept is pass with keep applied to an answer before it goes out; an
+// error of keep is a failed scope check.
+func (h *handlers) passKept(w http.ResponseWriter, r *http.Request, keep func(*http.Request, any) error, method, path string, opts ...goapi.CallOption) {
 	resp, err := h.api.Request(r.Context(), method, path, opts...)
 	if err == nil {
-		kit.JSON(w, r, resp.Status, resp.Data())
+		data := resp.Data()
+		if keep != nil {
+			if err := keep(r, data); err != nil {
+				h.scopeFailed(w, r, err)
+				return
+			}
+		}
+		kit.JSON(w, r, resp.Status, data)
 		return
 	}
 	failed := goapi.AsError(err)
@@ -161,11 +174,29 @@ func (h *handlers) validateShare(w http.ResponseWriter, r *http.Request) {
 	h.pass(w, r, http.MethodGet, withSearch("/mesh/share/validate", search))
 }
 
-// recording answers GET /api/mesh/recordings/{id}; "." and ".." are 400.
+// recordings answers a recording list of the API server with the
+// recordings the account may see.
+func (h *handlers) recordings(path string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.passKept(w, r, h.keepRecordings, http.MethodGet, path)
+	}
+}
+
+// recording answers GET /api/mesh/recordings/{id}; "." and ".." are 400,
+// and a recording the account may not see 403.
 func (h *handlers) recording(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if isDotSegment(id) {
 		kit.JSON(w, r, http.StatusBadRequest, apiFailure{Error: "Invalid recording id"})
+		return
+	}
+	seen, err := h.maySeeRecording(r, id)
+	if err != nil {
+		h.scopeFailed(w, r, err)
+		return
+	}
+	if !seen {
+		kit.Fail(w, r, http.StatusForbidden, kit.T(r, "errors.forbidden", nil))
 		return
 	}
 	h.pass(w, r, http.MethodGet, "/mesh/recordings/"+goapi.EncodeURIComponent(id))
