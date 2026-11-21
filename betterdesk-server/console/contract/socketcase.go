@@ -30,7 +30,8 @@ import (
 //	{"protocol": "...",                       the subprotocol, when one was chosen
 //	 "messages": [{"json": <value>, "order": "type a b{c}"},   a text message that is JSON
 //	              {"text": "..."},             other text
-//	              {"binary": {"length": 3, "sha256": "..."}}],
+//	              {"binary": {"length": 3, "sha256": "..."}},
+//	              {"frames": [{"11": {"3": 2, "4": "..."}}]}],   binary, with Frames
 //	 "closed": {"code": 4403, "reason": "Invalid token"}}   once the console closed it
 //
 // "order" lists the keys of every object of a JSON message in the order
@@ -65,6 +66,11 @@ type Socket struct {
 	WaitClose bool
 	// Close closes the socket from the suite's side (1000) after the step.
 	Close bool
+	// Frames writes a binary message as the protobuf messages in it, in
+	// the frames of RustDesk's BytesCodec, field by field (decodeFrames),
+	// so a case can mark one field volatile instead of the whole message.
+	// A binary message that is not such frames stays length and hash.
+	Frames bool
 }
 
 // SocketBinary is a binary message in Socket.Send.
@@ -129,6 +135,9 @@ func (sk *Socket) notes() []string {
 	}
 	if sk.Close {
 		out = append(out, "websocket closed by the suite")
+	}
+	if sk.Frames {
+		out = append(out, "websocket binary messages read as protobuf frames")
 	}
 	return out
 }
@@ -309,7 +318,7 @@ func (s *Suite) socketAnswer(ts *turnSocket, sk *Socket, tn *turn, protocol stri
 		collect()
 	}
 	ts.closeShown = closed
-	body := socketBody(protocol, kept, closed, code, reason)
+	body := socketBody(protocol, kept, closed, code, reason, sk.Frames)
 	answer := NewAnswer(http.StatusSwitchingProtocols, http.Header{"Content-Type": {"application/json"}}, body, false, n)
 	delete(answer.Headers, "content-type")
 	answer.raw = &rawAnswer{status: http.StatusSwitchingProtocols, header: http.Header{"Content-Type": {"application/json"}}, body: body}
@@ -336,8 +345,9 @@ func (sk *Socket) keeps(m socketMessage) bool {
 	return true
 }
 
-// socketBody is the JSON body of a socket step's answer.
-func socketBody(protocol string, messages []socketMessage, closed bool, code int, reason string) []byte {
+// socketBody is the JSON body of a socket step's answer. frames writes
+// binary messages as their protobuf frames when they are such.
+func socketBody(protocol string, messages []socketMessage, closed bool, code int, reason string, frames bool) []byte {
 	var b bytes.Buffer
 	b.WriteByte('{')
 	if protocol != "" {
@@ -350,7 +360,15 @@ func socketBody(protocol string, messages []socketMessage, closed bool, code int
 		if i > 0 {
 			b.WriteByte(',')
 		}
+		decoded, isFrames := []any(nil), false
+		if m.binary && frames {
+			decoded, isFrames = decodeFrames(m.data)
+		}
 		switch {
+		case isFrames:
+			b.WriteString(`{"frames":`)
+			b.Write(encodeJSON(decoded))
+			b.WriteByte('}')
 		case m.binary:
 			sum := sha256.Sum256(m.data)
 			fmt.Fprintf(&b, `{"binary":{"length":%d,"sha256":"%s"}}`, len(m.data), hex.EncodeToString(sum[:]))

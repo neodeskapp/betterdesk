@@ -62,7 +62,17 @@ func init() {
 		{Name: "health-check-key", Path: path, Socket: sock("h", contract.Socket{Expect: 1})},
 		{Name: "health-check", Path: path, Socket: sock("h", contract.Socket{Send: []any{contract.SocketBinary(rmFrame(rmHealthCheck("contract")))}, WaitClose: true})},
 		{Name: "punch-unknown-device-key", Path: path, Socket: sock("p", contract.Socket{Expect: 1})},
-		{Name: "punch-unknown-device", Path: path, Socket: sock("p", contract.Socket{Send: []any{contract.SocketBinary(rmFrame(rmPunchHole("900199999")))}, Expect: 1, Wait: 10e9, Close: true})},
+		// The answer, punch_hole_response (11) with failure (3) OFFLINE,
+		// carries in relay_server (4) the relay address the signal server
+		// detects for its machine (its public address, or its own when it
+		// finds none), so that field is free and the rest is compared
+		{
+			Name: "punch-unknown-device", Path: path,
+			Socket: sock("p", contract.Socket{
+				Send: []any{contract.SocketBinary(rmFrame(rmPunchHole("900199999")))}, Expect: 1, Wait: 10e9, Close: true, Frames: true,
+			}),
+			Volatile: []string{`~messages[0].frames[0]["11"]["4"]`},
+		},
 		{Name: "not-a-frame-key", Path: path, Socket: sock("x", contract.Socket{Expect: 1}), Roles: admin},
 		{Name: "not-a-frame", Path: path, Socket: sock("x", contract.Socket{Send: []any{"not a frame"}, Close: true}), Roles: admin},
 

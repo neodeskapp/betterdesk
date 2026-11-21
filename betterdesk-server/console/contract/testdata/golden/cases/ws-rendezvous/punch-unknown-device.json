@@ -7,7 +7,8 @@
    "websocket p, own origin",
    "websocket send 14 binary bytes",
    "websocket expect 1 messages",
-   "websocket closed by the suite"
+   "websocket closed by the suite",
+   "websocket binary messages read as protobuf frames"
   ]
  },
  "recordings": 2,
@@ -18,6 +19,9 @@
     "pro"
    ],
    "status": 401,
+   "volatile": [
+    "messages[0].frames[0][\"11\"][\"4\"]"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -32,6 +36,9 @@
     "server_admin"
    ],
    "status": 403,
+   "volatile": [
+    "messages[0].frames[0][\"11\"][\"4\"]"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -47,6 +54,9 @@
     "admin"
    ],
    "status": 101,
+   "volatile": [
+    "messages[0].frames[0][\"11\"][\"4\"]"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -56,10 +66,14 @@
      },
      "messages": [
       {
-       "binary": {
-        "length": 26,
-        "sha256": "3cca40086c24fca47b6f0cb95d638a6f0aa55785e7f1ab53002a1a316f586e08"
-       }
+       "frames": [
+        {
+         "11": {
+          "3": 2,
+          "4": "<volatile>"
+         }
+        }
+       ]
       }
      ]
     }

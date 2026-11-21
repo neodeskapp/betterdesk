@@ -305,6 +305,20 @@ refused or has closed answers `{"socket": "not open"}` with the status of
 its opening step. `Capture` and `CaptureSecret` read the body like any JSON
 answer (`"messages[0].json.token"`).
 
+A binary message is length and hash, so one byte that belongs to the
+machine makes the whole message differ. `Frames: true` writes the binary
+messages of a step as the protobuf messages in them, in the frames of
+RustDesk's BytesCodec (the signal server's messages on `/ws/rendezvous`),
+field by field without the `.proto` files: `{"frames": [{"11": {"3": 2,
+"4": "203.0.113.7:21117"}}]}`. A field is a number, a string when it is
+printable text, a message when it reads as one, else `"hex:..."`; a field
+that comes more than once is an array. Every byte is still compared, and
+a case can free the one field that differs:
+`Volatile: []string{`~messages[0].frames[0]["11"]["4"]`}` (the relay
+address in the answer to a punch hole, which the signal server detects
+for its machine). A binary message that is not such frames stays length
+and hash.
+
 The client is part of the suite (`socket.go`, standard library only). The
 upgrade of a socket case goes outside the suite's HTTP client, so its
 answer has none of the default request headers but `User-Agent`.
