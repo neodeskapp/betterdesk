@@ -549,15 +549,21 @@ func (s *Service) installFromGitHub(ctx context.Context, repo, tag string) (*goa
 	if !truthy(state.Get("termsAccepted")) {
 		return nil, termsNotAccepted()
 	}
+	// The repository becomes part of the API address the token goes to:
+	// it has to be owner/name and on the allow list, as in embedded mode.
+	var requested any
+	if jsTrim(repo) != "" {
+		requested = repo
+	}
+	targetRepo, err := s.NormalizeRepo(requested)
+	if err != nil {
+		return nil, err
+	}
 	if _, err := s.writeModuleState(goapi.NewObject("status", "downloading", "error", nil)); err != nil {
 		return nil, err
 	}
 	tmpDir := ""
 	result, err := func() (*goapi.Object, error) {
-		targetRepo := jsTrim(repo)
-		if repo == "" || targetRepo == "" {
-			targetRepo = s.ClientRepo()
-		}
 		releaseTag := jsTrim(tag)
 		release, err := s.resolveRelease(ctx, targetRepo, releaseTag)
 		if err != nil {
