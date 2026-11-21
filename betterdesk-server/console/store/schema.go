@@ -246,7 +246,7 @@ func sqliteSteps() []step {
 	)...)
 	s = append(s, seedDefaultGroup("user_groups", "Default user group"), seedDefaultGroup("device_groups", "Default device group"))
 	s = append(s, accessTokenHashes())
-	s = append(s, accessTokenKind())
+	s = append(s, accessTokenKind(), accessTokensAsHashes())
 	return s
 }
 
@@ -331,7 +331,7 @@ func postgresSteps() []step {
 	s = append(s, createTable("user_avatars"))
 	s = append(s, addColumns(lenient, "settings", "updated_at", "TIMESTAMPTZ DEFAULT NOW()")...)
 	s = append(s, widenConditionValue())
-	s = append(s, accessTokenKind())
+	s = append(s, accessTokenKind(), accessTokensAsHashes())
 	return s
 }
 
@@ -344,6 +344,50 @@ func postgresSteps() []step {
 // kind.
 func accessTokenKind() step {
 	return addColumn(strict, "access_tokens", "token_kind", "TEXT NOT NULL DEFAULT 'account'")
+}
+
+// accessTokensAsHashes keeps every access token as its hash only (BUGS
+// RV128): a row whose token column holds the token itself gets the hash of
+// that token and StoredAccessToken(hash) in place of the token. The console
+// writes rows that way; the rows it finds otherwise come from before, or
+// from an older console after a rollback, and are rewritten at the next
+// start. A row without a token stays as it is.
+func accessTokensAsHashes() step {
+	return step{
+		name: "keep access tokens as their hash",
+		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+			type tokenRow struct {
+				id    int64
+				token string
+			}
+			rows, err := tx.Query(ctx, `SELECT id, token FROM access_tokens WHERE token <> '' AND token NOT LIKE ?`, storedTokenPrefix+"%")
+			if err != nil {
+				return err
+			}
+			var plain []tokenRow
+			for rows.Next() {
+				var r tokenRow
+				if err := rows.Scan(&r.id, &r.token); err != nil {
+					rows.Close()
+					return err
+				}
+				plain = append(plain, r)
+			}
+			if err := errors.Join(rows.Err(), rows.Close()); err != nil {
+				return err
+			}
+			for _, r := range plain {
+				hash := HashAccessToken(r.token)
+				if _, err := tx.Exec(ctx, `UPDATE access_tokens SET token_hash = ?, token = ? WHERE id = ?`, hash, StoredAccessToken(hash), r.id); err != nil {
+					return err
+				}
+			}
+			if len(plain) > 0 {
+				logging.Logf(logComponent, "Migration: kept %d access tokens as their hash only", len(plain))
+			}
+			return nil
+		},
+	}
 }
 
 // widenConditionValue makes alert_rules.condition_value double precision
@@ -641,6 +685,16 @@ func HashAccessToken(token string) string {
 	sum := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(sum[:])
 }
+
+// storedTokenPrefix starts what access_tokens.token holds in place of a
+// token.
+const storedTokenPrefix = "sha256 "
+
+// StoredAccessToken is what access_tokens.token holds for the token with
+// this hash: the token is kept as its hash only. The column takes no NULL
+// and no value twice, so it holds "sha256 " and the hash; the space keeps
+// it from ever being a token, which holds no white space.
+func StoredAccessToken(hash string) string { return storedTokenPrefix + hash }
 
 // accessTokenHashIndex is written with the line break and indent the Node
 // console's statement had, because SQLite stores the text.

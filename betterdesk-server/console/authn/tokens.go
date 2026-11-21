@@ -9,8 +9,8 @@ import (
 )
 
 // Access tokens of the RustDesk client API: 32 random bytes as 64
-// lower-case hex characters. A row keeps the token itself and its
-// SHA-256.
+// lower-case hex characters. A row keeps only the token's SHA-256, by
+// which every lookup finds it.
 
 // accessTokenLength is the length a presented token must have, in UTF-16
 // units.
@@ -146,9 +146,9 @@ func (s *Service) RevokeClientUUIDTokens(ctx context.Context, userID int64, clie
 	return revokeUserClientTokens(ctx, s.db, userID, clientUUID)
 }
 
-// LookupAccessToken returns the row of a live access token, or nil: first
-// by the token's hash, then by the token itself for rows from before the
-// hash column. The device routes that check tokens themselves use it.
+// LookupAccessToken returns the row of a live access token, found by the
+// token's hash, or nil. The device routes that check tokens themselves use
+// it.
 func (s *Service) LookupAccessToken(ctx context.Context, token string) (*AccessToken, error) {
 	return getAccessToken(ctx, s.db, token)
 }

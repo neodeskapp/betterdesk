@@ -210,8 +210,10 @@ func insertUser(t *testing.T, db *store.DB, name string) int64 {
 }
 
 // Tokens stored before the hash column existed get their hash: when the
-// column is missing and when it is there but empty. A hash that is there
-// stays, and so does a token without text.
+// column is missing and when it is there but empty. Every token is then
+// kept as its hash only (BUGS RV128): the token column holds "sha256 " and
+// the hash of the token, also where the row had another hash. A token
+// without text stays as it is.
 func TestMigrateHashesAccessTokens(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		mustMigrate(t, db)
@@ -225,21 +227,21 @@ func TestMigrateHashesAccessTokens(t *testing.T) {
 				mustExec(t, db, insert, "token-2", "", user, expires)
 				mustExec(t, db, insert, "token-3", "already-hashed", user, expires)
 				mustExec(t, db, insert, "", nil, user, expires)
-				want := map[string]string{"abc": sha256OfABC, "token-2": store.HashAccessToken("token-2"), "token-3": "already-hashed", "": "NULL"}
 				if missingColumn {
 					dropColumn(t, db, "access_tokens", "token_hash")
-					want["token-3"] = store.HashAccessToken("token-3")
 				}
+				kept := func(hash string) string { return "sha256 " + hash + " | " + hash }
+				want := []string{kept(sha256OfABC), kept(store.HashAccessToken("token-2")), kept(store.HashAccessToken("token-3")), " | NULL"}
 
 				for run := 1; run <= 2; run++ {
 					mustMigrate(t, db)
-					rows := queryStrings(t, db, `SELECT token, token_hash FROM access_tokens`)
-					if len(rows) != 4 {
-						t.Fatalf("run %d: %d tokens, want 4", run, len(rows))
+					rows := queryStrings(t, db, `SELECT token, COALESCE(token_hash, 'NULL') FROM access_tokens ORDER BY id`)
+					if len(rows) != len(want) {
+						t.Fatalf("run %d: %d tokens, want %d", run, len(rows), len(want))
 					}
-					for _, r := range rows {
-						if r[1] != want[r[0]] {
-							t.Errorf("run %d: hash of token %q = %s, want %s", run, r[0], r[1], want[r[0]])
+					for i, r := range rows {
+						if got := strings.Join(r, " | "); got != want[i] {
+							t.Errorf("run %d: token %d is %s, want %s", run, i+1, got, want[i])
 						}
 					}
 				}

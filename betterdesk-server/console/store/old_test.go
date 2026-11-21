@@ -1,6 +1,8 @@
 package store_test
 
 import (
+	"slices"
+	"sort"
 	"strings"
 	"testing"
 
@@ -50,6 +52,10 @@ func TestMigrateOldInstalls(t *testing.T) {
 
 				mustMigrate(t, db)
 
+				// Each access token is kept as its hash only (BUGS RV128)
+				if rows, ok := rowsBefore["access_tokens"]; ok {
+					rowsBefore["access_tokens"] = keptAsHashes(rows, oldColumns["access_tokens"])
+				}
 				rowsAfter := snapshot{}
 				for _, table := range oldTables {
 					rowsAfter[table] = readRows(t, db, table, oldColumns[table])
@@ -91,4 +97,24 @@ func TestMigrateOldInstalls(t *testing.T) {
 			})
 		})
 	}
+}
+
+// keptAsHashes is how rows of access_tokens read after Migrate, given as
+// readRows gave them with these columns: the token column holds "sha256 "
+// and the hash of the token, and token_hash, where the table has it, the
+// hash (BUGS RV128).
+func keptAsHashes(rows, columns []string) []string {
+	token, hash := slices.Index(columns, "token"), slices.Index(columns, "token_hash")
+	out := make([]string, 0, len(rows))
+	for _, row := range rows {
+		values := strings.Split(row, " | ")
+		sum := store.HashAccessToken(values[token])
+		values[token] = store.StoredAccessToken(sum)
+		if hash >= 0 {
+			values[hash] = sum
+		}
+		out = append(out, strings.Join(values, " | "))
+	}
+	sort.Strings(out)
+	return out
 }

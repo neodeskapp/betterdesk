@@ -22,7 +22,8 @@ look in JSON as it did from Node.
 - It adds the columns later versions added, in the order and with the
   definition Node used.
 - It runs the data fixes that came with those columns: token hashes, bundle
-  slugs, bundle product types, and the two default groups.
+  slugs, bundle product types, and the two default groups. It keeps every
+  access token as its hash only (BUGS RV128).
 - It only adds, with two exceptions on PostgreSQL. No column or table is
   dropped or renamed, and no table is rebuilt. `agent_bundles.product_type`
   gets `SET NOT NULL` and `SET DEFAULT`, see below, and
@@ -250,6 +251,7 @@ release created both tables with the column, so this concerns 2.x files only.
 | `seed user_groups` | Inserts the group `Default` (note `Default user group`, random guid) | the table has no row | after the device_groups columns | after user_peer_grants | 720-726, 4942-4946 |
 | `seed device_groups` | Inserts the group `Default` (note `Default device group`, random guid) | the table has no row | after `seed user_groups` | after `seed user_groups` | 727-733, 4947-4951 |
 | `widen alert_rules.condition_value` | Changes the column to `double precision`, then sets every limit to the shortest number that names its four bytes, the value Node and the Go console read (0.1, where the cast alone gives 0.10000000149011612); NaN and the infinities stay. Logs `Migration: widened alert_rules.condition_value to double precision`. Not in Node (BUGS AE4); a Node console started on the wider column reads the same limits | the column is `real` | no step | last step | |
+| `keep access tokens as their hash` | Every row whose `token` holds the token itself gets `token_hash` = the SHA-256 of that token and `token` = `sha256 ` and that hash, so a copy of the database holds no token. Logs `Migration: kept N access tokens as their hash only`. Not in Node (BUGS RV128): the console writes its rows that way, and a Node console after a rollback still finds them by the hash | `token` is not empty and does not start with `sha256 `; runs at every start | last step | last step | |
 
 The slug rules are those of `web-nodejs/services/agentBundleService.js`
 (`slugifyName`, `allocateUniqueSlug`); `SlugifyBundleName` and
@@ -347,6 +349,8 @@ PostgreSQL; `users.totp_secret` is `NOT NULL` in Go's PostgreSQL shape.
   Migrate logs a warning for them.
 - Node logged only some added columns. Migrate logs every change.
 - `access_tokens.token_kind` is not in Node (BUGS RV1).
+- Access tokens are kept as their hash only: Migrate rewrites `token` of
+  every row that holds the token itself (BUGS RV128).
 - SQLite: the second `CREATE TABLE IF NOT EXISTS branding_profiles` (697) is
   left out. It could never do anything.
 

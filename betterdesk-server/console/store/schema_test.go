@@ -47,8 +47,9 @@ func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 // Migrate on a database the Node console created, with rows in every
 // table, changes neither the schema nor a single row, and reports nothing
 // done, but for widening alert_rules.condition_value on PostgreSQL (BUGS
-// AE4) and adding access_tokens.token_kind, "account" in every row (BUGS
-// RV1). Running it again changes nothing.
+// AE4), adding access_tokens.token_kind, "account" in every row (BUGS
+// RV1), and keeping each access token as its hash only (BUGS RV128).
+// Running it again changes nothing.
 func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		storetest.NodeSchema(t, db)
@@ -70,14 +71,18 @@ func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 		}
 		rowsAfter["access_tokens"] = nil
 		for _, row := range rowsBefore["access_tokens"] {
-			rowsAfter["access_tokens"] = append(rowsAfter["access_tokens"], row+" | account")
+			// id | token | token_hash | ...
+			columns := strings.Split(row, " | ")
+			hash := store.HashAccessToken(columns[1])
+			columns[1], columns[2] = store.StoredAccessToken(hash), hash
+			rowsAfter["access_tokens"] = append(rowsAfter["access_tokens"], strings.Join(columns, " | ")+" | account")
 		}
 		sort.Strings(rowsAfter["access_tokens"])
 
 		for run := 1; run <= 2; run++ {
 			out := captureLog(t, func() { mustMigrate(t, db) })
 			if run == 1 {
-				want := []string{"[DB] Migration: added access_tokens.token_kind"}
+				want := []string{"[DB] Migration: added access_tokens.token_kind", "[DB] Migration: kept 2 access tokens as their hash only"}
 				if db.IsPostgres() {
 					want = append([]string{"[DB] Migration: widened alert_rules.condition_value to double precision"}, want...)
 				}
@@ -107,6 +112,8 @@ func TestMigrateTwiceChangesNothing(t *testing.T) {
 		mustMigrate(t, db)
 		tables := readCatalog(t, db).tables()
 		fillTables(t, db, tables, 2)
+		// The console writes a token as its hash only (BUGS RV128)
+		mustExec(t, db, `UPDATE access_tokens SET token = 'sha256 ' || token_hash`)
 		catalogBefore := readCatalog(t, db)
 		rowsBefore := readSnapshot(t, db, tables)
 

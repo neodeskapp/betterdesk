@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/store"
@@ -84,12 +85,12 @@ func TestTokenLengthRules(t *testing.T) {
 		ctx := context.Background()
 		s, _, _ := testService(t, db, nil)
 		id := addUser(t, s, "alice", "pw", "operator", "local")
-		insert := `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, token_kind) VALUES (?, NULL, ?, ?, 'u', ` +
+		insert := `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, token_kind) VALUES (?, ?, ?, ?, 'u', ` +
 			db.Pick("datetime('now', '+1 day')", "NOW() + INTERVAL '1 day'") + `, 'device')`
-		// Device tokens from before the hash column, with tokens of other
-		// lengths.
-		mustExec(t, db, insert, "legacy-token-of-another-length", id, "device-a")
-		mustExec(t, db, insert, "short12", id, "device-a")
+		// Device tokens of other lengths.
+		for _, token := range []string{"legacy-token-of-another-length", "short12"} {
+			mustExec(t, db, insert, store.StoredAccessToken(HashAccessToken(token)), HashAccessToken(token), id, "device-a")
+		}
 
 		if row, err := s.LookupAccessToken(ctx, "legacy-token-of-another-length"); err != nil || row == nil {
 			t.Fatalf("the row is not found at all: %v, %v", row, err)
@@ -144,6 +145,59 @@ func TestRevokeWithoutClientRevokesAll(t *testing.T) {
 		}
 		if live(second) || live(third) || !live(foreign) {
 			t.Errorf("after revoking without a client id: second %v, third %v, the other user's %v", live(second), live(third), live(foreign))
+		}
+	})
+}
+
+// Access tokens are kept as their hash only: the token column holds
+// "sha256 " and the hash, never the token, and every lookup goes by the
+// hash. A row that holds a token without its hash finds nothing, and
+// neither does what a row holds in place of a token (BUGS RV128).
+func TestTokensAreKeptAsTheirHashOnly(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
+		ctx := context.Background()
+		s, _, _ := testService(t, db, nil)
+		id := addUser(t, s, "alice", "pw", "operator", "local")
+		signIn, err := s.GenerateSignInToken(ctx, id, "client-a", "uuid-a", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		device, err := s.IssueDeviceToken(ctx, id, "900100001", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for name, token := range map[string]string{"sign-in": signIn, "device": device} {
+			var stored, hash string
+			if err := db.QueryRow(ctx, `SELECT token, token_hash FROM access_tokens WHERE token_hash = ?`, HashAccessToken(token)).Scan(&stored, &hash); err != nil {
+				t.Fatalf("the %s token's row: %v", name, err)
+			}
+			if stored != "sha256 "+HashAccessToken(token) || strings.Contains(stored, token) {
+				t.Errorf("the %s token's row holds %q", name, stored)
+			}
+			if row, err := s.LookupAccessToken(ctx, stored); row != nil || err != nil {
+				t.Errorf("what the %s token's row holds finds %+v (%v)", name, row, err)
+			}
+		}
+		if user, err := s.ValidateAccessToken(ctx, signIn); user == nil || err != nil {
+			t.Errorf("the sign-in token: %v", err)
+		}
+		if got, err := s.RequireDeviceToken(ctx, "Bearer "+device); err != nil || got.DeviceID != "900100001" {
+			t.Errorf("the device token: %+v, %v", got, err)
+		}
+		var used store.Time
+		if err := store.SelectRow(ctx, db, `SELECT last_used FROM access_tokens WHERE token_hash = ?`, HashAccessToken(device)).Scan(&used); err != nil || used.IsNull() {
+			t.Errorf("the use of the device token was not noted: %v", err)
+		}
+
+		plain := strings.Repeat("ab", 32)
+		mustExec(t, db, `INSERT INTO access_tokens (token, user_id, client_id, expires_at, token_kind) VALUES (?, ?, '900100002', `+
+			db.Pick("datetime('now', '+1 day')", "NOW() + INTERVAL '1 day'")+`, 'device')`, plain, id)
+		if row, err := s.LookupAccessToken(ctx, plain); row != nil || err != nil {
+			t.Errorf("a token kept as it is without a hash finds %+v (%v)", row, err)
+		}
+		if ok, err := s.VerifyDeviceWSAuth(ctx, "900100002", plain); ok || err != nil {
+			t.Errorf("the device socket takes a token kept as it is: %v, %v", ok, err)
 		}
 	})
 }

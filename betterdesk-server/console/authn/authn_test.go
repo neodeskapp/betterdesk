@@ -293,7 +293,7 @@ func TestDeviceRequestChecks(t *testing.T) {
 			t.Fatalf("a bound token: %+v, %v", device, err)
 		}
 		var used store.Time
-		if err := store.SelectRow(ctx, db, `SELECT last_used FROM access_tokens WHERE token = ?`, bound).Scan(&used); err != nil || used.IsNull() {
+		if err := store.SelectRow(ctx, db, `SELECT last_used FROM access_tokens WHERE token_hash = ?`, HashAccessToken(bound)).Scan(&used); err != nil || used.IsNull() {
 			t.Errorf("the use of the token was not noted: %v, %v", used, err)
 		}
 

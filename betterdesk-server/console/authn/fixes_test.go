@@ -40,6 +40,7 @@ var scenarioFixes = []scenarioFix{
 	{"RV122", codesWorkOnce},
 	{"RV123", noPasswordsTheSignInRefuses},
 	{"RV1", signInTokensProveNoDevice},
+	{"RV128", tokensKeptAsTheirHash},
 }
 
 // fixScenario applies every fix to sc and counts the ones that changed it.
@@ -575,6 +576,57 @@ func signInTokensProveNoDevice(sc *scenarioVector) bool {
 			if row["token"] == token || row["token_hash"] == HashAccessToken(token) {
 				row["last_used"] = nil
 			}
+		}
+	}
+	return changed
+}
+
+// seededTokenSQL is the text of the scenario's seed statements that write
+// access_tokens.
+func seededTokenSQL(sc *scenarioVector) string {
+	var seeded strings.Builder
+	for _, statement := range append(append([]dialectSQL{}, sc.Seed.SQL...), sc.Seed.After...) {
+		if strings.Contains(statement.SQLite, "access_tokens") {
+			seeded.WriteString(statement.SQLite)
+		}
+	}
+	return seeded.String()
+}
+
+// tokensKeptAsTheirHash: the console keeps an access token as its hash only
+// and looks it up by the hash alone (RV128). A token the seed wrote as it
+// is, without its hash (a row from before the hash column, which the
+// console hashes when it starts), is found by no lookup: it signs no one
+// in, and no use is noted on its row. The rows the console writes hold
+// "sha256 " and the hash in place of the token.
+func tokensKeptAsTheirHash(sc *scenarioVector) bool {
+	changed := false
+	seeded := seededTokenSQL(sc)
+	unhashed := func(token string) bool {
+		return seeded != "" && strings.Contains(seeded, "'"+token+"'") && !strings.Contains(seeded, "'"+HashAccessToken(token)+"'")
+	}
+	unfound := map[string]bool{}
+	for i := range sc.Steps {
+		step := &sc.Steps[i]
+		var token string
+		if step.Fn != "validateAccessToken" || len(step.Args) == 0 || json.Unmarshal(step.Args[0], &token) != nil || !unhashed(token) {
+			continue
+		}
+		unfound[token] = true
+		if string(step.Result) != "null" {
+			step.Result, changed = json.RawMessage("null"), true
+		}
+	}
+	for _, row := range sc.Tables["access_tokens"] {
+		token, _ := row["token"].(string)
+		hash, _ := row["token_hash"].(string)
+		switch {
+		case unfound[token]:
+			if row["last_used"] != nil {
+				row["last_used"], changed = nil, true
+			}
+		case token != "" && hash != "" && !strings.Contains(seeded, "'"+token+"'"):
+			row["token"], changed = "sha256 "+hash, true
 		}
 	}
 	return changed

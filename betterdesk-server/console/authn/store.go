@@ -207,7 +207,9 @@ func useRecoveryCode(ctx context.Context, q store.Querier, id int64, old, left s
 
 // AccessToken is a row of access_tokens.
 type AccessToken struct {
-	ID         store.Int64String `json:"id"`
+	ID store.Int64String `json:"id"`
+	// Token is what the row holds in place of the token
+	// (store.StoredAccessToken of the hash), never the token itself.
 	Token      string            `json:"token"`
 	TokenHash  nullText          `json:"token_hash"`
 	UserID     store.Int64String `json:"user_id"`
@@ -241,44 +243,40 @@ func (t *AccessToken) IsDeviceToken() bool {
 const accessTokenColumns = `id, token, token_hash, user_id, client_id, client_uuid, created_at, expires_at,
 	last_used, ip_address, revoked, token_kind`
 
+// createAccessToken stores a token as its hash only: the token column holds
+// store.StoredAccessToken of the hash, never the token.
 func createAccessToken(ctx context.Context, q store.Querier, kind, token string, userID int64, clientID, clientUUID, expiresAt, ip string) error {
+	hash := HashAccessToken(token)
 	_, err := q.Exec(ctx, `INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, ip_address, token_kind)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		token, HashAccessToken(token), userID, clientID, clientUUID, expiresAt, ip, kind)
+		store.StoredAccessToken(hash), hash, userID, clientID, clientUUID, expiresAt, ip, kind)
 	if err != nil {
 		return fmt.Errorf("store an access token: %w", err)
 	}
 	return nil
 }
 
-// getAccessToken looks a token up, first by its hash, then by the token
-// itself for rows from before the hash column. Revoked and expired rows do
+// getAccessToken looks a token up by its hash. Revoked and expired rows do
 // not count. It returns nil when there is none.
 func getAccessToken(ctx context.Context, q store.Querier, token string) (*AccessToken, error) {
 	live := q.Pick(`revoked = 0 AND expires_at > datetime('now')`, `NOT revoked AND expires_at > NOW()`)
-	for _, lookup := range []struct{ column, value string }{
-		{"token_hash", HashAccessToken(token)},
-		{"token", token},
-	} {
-		var t AccessToken
-		err := store.SelectRow(ctx, q,
-			`SELECT `+accessTokenColumns+` FROM access_tokens WHERE `+lookup.column+` = ? AND `+live, lookup.value).
-			Scan(&t.ID, &t.Token, &t.TokenHash, &t.UserID, &t.ClientID, &t.ClientUUID, &t.CreatedAt, &t.ExpiresAt,
-				&t.LastUsed, &t.IPAddress, &t.Revoked, &t.Kind)
-		if errors.Is(err, sql.ErrNoRows) {
-			continue
-		}
-		if err != nil {
-			return nil, fmt.Errorf("look up an access token: %w", err)
-		}
-		return &t, nil
+	var t AccessToken
+	err := store.SelectRow(ctx, q,
+		`SELECT `+accessTokenColumns+` FROM access_tokens WHERE token_hash = ? AND `+live, HashAccessToken(token)).
+		Scan(&t.ID, &t.Token, &t.TokenHash, &t.UserID, &t.ClientID, &t.ClientUUID, &t.CreatedAt, &t.ExpiresAt,
+			&t.LastUsed, &t.IPAddress, &t.Revoked, &t.Kind)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
 	}
-	return nil, nil
+	if err != nil {
+		return nil, fmt.Errorf("look up an access token: %w", err)
+	}
+	return &t, nil
 }
 
 func touchAccessToken(ctx context.Context, q store.Querier, token string) error {
-	query := `UPDATE access_tokens SET last_used = ` + store.NowSQL(q.Dialect()) + ` WHERE token_hash = ? OR token = ?`
-	if _, err := q.Exec(ctx, query, HashAccessToken(token), token); err != nil {
+	query := `UPDATE access_tokens SET last_used = ` + store.NowSQL(q.Dialect()) + ` WHERE token_hash = ?`
+	if _, err := q.Exec(ctx, query, HashAccessToken(token)); err != nil {
 		return fmt.Errorf("note the use of an access token: %w", err)
 	}
 	return nil

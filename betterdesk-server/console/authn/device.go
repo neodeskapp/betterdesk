@@ -255,14 +255,9 @@ func (s *Service) VerifyDeviceWSAuth(ctx context.Context, deviceID, token string
 	if enrolled {
 		return true, nil
 	}
-	for _, candidate := range []string{token, HashAccessToken(token)} {
-		row, err := getAccessToken(ctx, s.db, candidate)
-		if err != nil {
-			return false, nil
-		}
-		if row.IsDeviceToken() && row.ClientID.Valid && row.ClientID.String == deviceID {
-			return true, nil
-		}
+	row, err := getAccessToken(ctx, s.db, token)
+	if err != nil {
+		return false, nil
 	}
-	return false, nil
+	return row.IsDeviceToken() && row.ClientID.Valid && row.ClientID.String == deviceID, nil
 }
