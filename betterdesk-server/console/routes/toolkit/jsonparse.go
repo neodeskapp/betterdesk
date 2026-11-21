@@ -32,7 +32,31 @@ type jsonParser struct {
 	src []uint16
 	pos int
 	err *parseError
+	// depth is the number of lists and objects the parser is inside
+	depth int
 }
+
+// maxDepth is the deepest nesting of lists and objects the parser takes,
+// the depth the console holds a request's own JSON to. Deeper input fails
+// with V8's message for a stack that ran out, instead of growing the
+// stack with every level.
+const maxDepth = 10000
+
+// enter goes one level deeper and reports false, with the error set, when
+// that is deeper than maxDepth. Every enter that reports true is followed
+// by a leave.
+func (p *jsonParser) enter() bool {
+	if p.depth == maxDepth {
+		if p.err == nil {
+			p.err = &parseError{"Maximum call stack size exceeded"}
+		}
+		return false
+	}
+	p.depth++
+	return true
+}
+
+func (p *jsonParser) leave() { p.depth-- }
 
 func (p *jsonParser) skipSpace() {
 	for p.pos < len(p.src) {
@@ -300,6 +324,10 @@ func (p *jsonParser) parseString() any {
 }
 
 func (p *jsonParser) parseArray() any {
+	if !p.enter() {
+		return nil
+	}
+	defer p.leave()
 	p.pos++
 	out := []any{}
 	p.skipSpace()
@@ -328,6 +356,10 @@ func (p *jsonParser) parseArray() any {
 }
 
 func (p *jsonParser) parseObject() any {
+	if !p.enter() {
+		return nil
+	}
+	defer p.leave()
 	p.pos++
 	out := newObject()
 	p.skipSpace()

@@ -741,3 +741,29 @@ func FuzzTextTools(f *testing.F) {
 		_, _ = toNumber(value)
 	})
 }
+
+// The token decoder's parser stops at 10,000 levels of nesting, the depth
+// the body's own JSON is held to, and the route answers such a token with
+// the 400 of a part that is no JSON before the nesting takes the
+// console's memory (BUGS RV41).
+func TestJWTDecodeLimitsTheNesting(t *testing.T) {
+	arrays := func(n int) string { return strings.Repeat("[", n) + strings.Repeat("]", n) }
+	objects := func(n int) string { return strings.Repeat(`{"a":[`, n/2) + "1" + strings.Repeat("]}", n/2) }
+	for _, text := range []string{arrays(10000), objects(10000)} {
+		if _, err := parseJSON(text); err != nil {
+			t.Errorf("parseJSON of 10000 levels (%s): %v", clip(text), err)
+		}
+	}
+	for _, text := range []string{arrays(10001), objects(10002), strings.Repeat("[", 1500000)} {
+		if _, err := parseJSON(text); err == nil || err.Error() != "Maximum call stack size exceeded" {
+			t.Errorf("parseJSON of more than 10000 levels (%s): %v", clip(text), err)
+		}
+	}
+	s := newSite(t, Options{Network: unreachable(t), Now: func() time.Time { return oracleNow }})
+	operator := s.signIn("operator")
+	token := strings.Repeat("W1tb", 100000) + ".e30"
+	want := `{"success":false,"error":"Failed to decode JWT: Maximum call stack size exceeded"}`
+	if status, answer := s.post(operator, "/api/toolkit/jwt-decode", `{"token":"`+token+`"}`); status != 400 || answer != want {
+		t.Errorf("a token of 300000 brackets: %d %s, want 400 %s", status, answer, want)
+	}
+}
