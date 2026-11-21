@@ -37,6 +37,7 @@ var scenarioFixes = []scenarioFix{
 	{"AN6", logTheWrittenCredentialsPath},
 	{"RV117", stopAtOtherSpellings},
 	{"RV118", ipv6AttemptsCountPerNetwork},
+	{"RV122", codesWorkOnce},
 }
 
 // fixScenario applies every fix to sc and counts the ones that changed it.
@@ -423,6 +424,29 @@ func ipv6AttemptsCountPerNetwork(sc *scenarioVector) bool {
 		if network := attemptAddress(ip); network != ip {
 			row["ip_address"], changed = network, true
 		}
+	}
+	return changed
+}
+
+// codesWorkOnce: a code of the second factor signs an account in once
+// (RV122); Node took the same code again within its 30 seconds. A
+// recorded success of verifyTotpCode at a step (of a fixed time) whose
+// code already signed the account in becomes false; TestTOTPCodeWorksOnce
+// holds the rule.
+func codesWorkOnce(sc *scenarioVector) bool {
+	changed := false
+	used := map[string]int64{}
+	for i := range sc.Steps {
+		step := &sc.Steps[i]
+		if step.Fn != "verifyTotpCode" || step.At.Abs == nil || len(step.Args) == 0 || string(step.Result) != "true" {
+			continue
+		}
+		user, at := string(step.Args[0]), totpStep(time.UnixMilli(*step.At.Abs))
+		if last, ok := used[user]; ok && last >= at {
+			step.Result, changed = json.RawMessage("false"), true
+			continue
+		}
+		used[user] = at
 	}
 	return changed
 }

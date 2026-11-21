@@ -189,11 +189,18 @@ func disableTOTP(ctx context.Context, db *store.DB, id int64) error {
 	return nil
 }
 
-func useRecoveryCode(ctx context.Context, q store.Querier, id int64, codesJSON string) error {
-	if _, err := q.Exec(ctx, `UPDATE users SET totp_recovery_codes = ? WHERE id = ?`, codesJSON, id); err != nil {
-		return fmt.Errorf("store the recovery codes of user %d: %w", id, err)
+// useRecoveryCode replaces the recovery codes read as old with left. It is
+// false when the stored list is no longer old.
+func useRecoveryCode(ctx context.Context, q store.Querier, id int64, old, left string) (bool, error) {
+	result, err := q.Exec(ctx, `UPDATE users SET totp_recovery_codes = ? WHERE id = ? AND totp_recovery_codes = ?`, left, id, old)
+	if err != nil {
+		return false, fmt.Errorf("store the recovery codes of user %d: %w", id, err)
 	}
-	return nil
+	n, err := result.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("store the recovery codes of user %d: %w", id, err)
+	}
+	return n == 1, nil
 }
 
 // ---- Access tokens ----

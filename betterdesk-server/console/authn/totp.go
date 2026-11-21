@@ -200,7 +200,8 @@ func (s *Service) VerifyAndEnableTOTP(ctx context.Context, userID int64, token s
 }
 
 // VerifyTOTPCode checks the second factor of a sign-in. It is false for an
-// account without two-factor sign-in.
+// account without two-factor sign-in, and for a code of a step whose code
+// already signed the account in: a code works once.
 func (s *Service) VerifyTOTPCode(ctx context.Context, userID int64, token string) (bool, error) {
 	user, err := getUserByID(ctx, s.db, userID)
 	if err != nil {
@@ -209,7 +210,38 @@ func (s *Service) VerifyTOTPCode(ctx context.Context, userID int64, token string
 	if user == nil || !user.TOTPEnabled.True() || user.TOTPSecret.String == "" {
 		return false, nil
 	}
-	return totpVerify(token, user.TOTPSecret.String, s.now())
+	now := s.now()
+	valid, err := totpVerify(token, user.TOTPSecret.String, now)
+	if err != nil || !valid {
+		return false, err
+	}
+	return s.useTOTPStep(userID, totpStep(now)), nil
+}
+
+// totpStep is the number of the 30-second step that contains at.
+func totpStep(at time.Time) int64 {
+	return int64(math.Max(0, math.Floor(float64(at.UnixMilli())/totpStepMillis)))
+}
+
+// useTOTPStep notes that a code of step signed the account in. It is false
+// when a code of that step or a later one already did. Steps older than
+// the one before step are forgotten: their codes are no longer accepted.
+func (s *Service) useTOTPStep(userID, step int64) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if last, ok := s.totpSteps[userID]; ok && last >= step {
+		return false
+	}
+	if s.totpSteps == nil {
+		s.totpSteps = map[int64]int64{}
+	}
+	for id, last := range s.totpSteps {
+		if last < step-1 {
+			delete(s.totpSteps, id)
+		}
+	}
+	s.totpSteps[userID] = step
+	return true
 }
 
 // VerifyRecoveryCode checks a recovery code in place of the second factor
@@ -234,10 +266,9 @@ func (s *Service) VerifyRecoveryCode(ctx context.Context, userID int64, code str
 	if err != nil || !matched {
 		return false, err
 	}
-	if err := useRecoveryCode(ctx, s.db, userID, left); err != nil {
-		return false, err
-	}
-	return true, nil
+	// Only the request that changes the list it read uses the code: of two
+	// with the same code at the same time, the second finds the list changed
+	return useRecoveryCode(ctx, s.db, userID, user.TOTPRecoveryCodes.String, left)
 }
 
 // DisableTOTP turns two-factor sign-in off and deletes the secret and the

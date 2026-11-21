@@ -52,7 +52,10 @@ func TestPasswordStepOfATwoFactorAccount(t *testing.T) {
 		if rows := w.audit(); len(rows) != 0 {
 			t.Errorf("the password step wrote audit entries: %v", rows)
 		}
-		equal(t, "attempts", w.attempts(), []string{"alice|127.0.0.1|1"})
+		// The success is noted once the code is right (RV122)
+		if rows := w.attempts(); len(rows) != 0 {
+			t.Errorf("the password step noted an attempt: %v", rows)
+		}
 	})
 }
 
@@ -109,6 +112,64 @@ func TestSecondFactor(t *testing.T) {
 			fmt.Sprintf("totp_failed|Method: recovery|127.0.0.1|%d", alice),
 			fmt.Sprintf("login|User logged in (2FA: totp (local)); ip=127.0.0.1; ua=auth-test/1|127.0.0.1|%d", alice),
 		})
+	})
+}
+
+// A wrong code is a failed attempt of the account at the address, and the
+// password step of an account with a second factor counts as a success only
+// once the code is right: with the password, codes cannot be guessed past
+// the account's lockout (RV122, AR4).
+func TestWrongCodesCountAgainstTheAccount(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		w.addUser(user{name: "alice", totpEnabled: true, totpSecret: totpSecret})
+		a := w.agent()
+		wrong := fmt.Sprintf(`{"code":%q}`, wrongCode(t, totpSecret))
+		for round := 0; round < 2; round++ {
+			if res := a.post("/api/auth/login", login("alice", password)); res.status != http.StatusOK {
+				t.Fatalf("password step %d: %d %s", round+1, res.status, res.body)
+			}
+			for i := 0; i < 5; i++ {
+				want(t, "wrong code", a.post("/api/auth/totp/verify", wrong), http.StatusUnauthorized, invalidCode)
+			}
+		}
+		attempts := w.attempts()
+		if len(attempts) != 10 {
+			t.Fatalf("attempts after two password steps and ten wrong codes: %v", attempts)
+		}
+		for _, row := range attempts {
+			if row != "alice|127.0.0.1|0" {
+				t.Errorf("attempt %q, want only failures", row)
+			}
+		}
+		// The account is locked at the address: no new password step, and no
+		// code of a wait that is still open
+		res := a.post("/api/auth/login", login("alice", password))
+		if res.status != http.StatusTooManyRequests {
+			t.Errorf("password step after ten wrong codes: %d %s", res.status, res.body)
+		}
+		b := w.agent()
+		w.exec(`DELETE FROM login_attempts`)
+		b.post("/api/auth/login", login("alice", password))
+		for i := 0; i < 10; i++ {
+			w.exec(`INSERT INTO login_attempts (username, ip_address, success) VALUES ('alice', '127.0.0.1', ` + w.db.Pick("0", "FALSE") + `)`)
+		}
+		res = b.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q}`, currentCode(t, totpSecret)))
+		if res.status != http.StatusTooManyRequests {
+			t.Errorf("the right code while locked: %d %s", res.status, res.body)
+		}
+		want(t, "the wait ended", b.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q}`, currentCode(t, totpSecret))), http.StatusBadRequest, noPendingSignIn)
+
+		// A finished sign-in is the success
+		w.exec(`DELETE FROM login_attempts`)
+		c := w.agent()
+		c.post("/api/auth/login", login("alice", password))
+		if got := w.attempts(); len(got) != 0 {
+			t.Errorf("attempts after the password step: %v", got)
+		}
+		if res := c.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q}`, currentCode(t, totpSecret))); res.status != http.StatusOK {
+			t.Fatalf("right code: %d %s", res.status, res.body)
+		}
+		equal(t, "attempts after the code", w.attempts(), []string{"alice|127.0.0.1|1"})
 	})
 }
 

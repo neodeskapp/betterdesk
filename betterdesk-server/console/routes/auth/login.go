@@ -248,8 +248,13 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.recordAttempt(r, name, true)
 	user := outcome.User
+	// The sign-in of an account with a second factor counts as a success
+	// only once the code is right (finishSecondFactor): until then the
+	// failed attempts before it, and wrong codes, keep counting
+	if !user.TOTPRequired {
+		h.recordAttempt(r, name, true)
+	}
 
 	if user.TOTPRequired {
 		// The pending account goes into a new session: a session id that
@@ -366,6 +371,19 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 	userID := jsonInt(rawID)
 	who := pendingAccount(rawUser)
 
+	// Wrong codes are failed attempts of the account at the address: its
+	// lockout there ends the waiting sign-in
+	lockout, err := h.authn.CheckBruteForce(r.Context(), who.username, kit.ClientIP(r))
+	if err != nil {
+		h.serverError(w, r, "TOTP verify error:", err)
+		return
+	}
+	if lockout.Blocked {
+		endPending(sess)
+		h.refuseLockedOut(w, r, lockout, h.sessions.ClientMeta(r, ""))
+		return
+	}
+
 	// A session that carries a partial token of the signal server lets the
 	// signal server check the code. No sign-in stores one.
 	var token json.RawMessage
@@ -394,7 +412,7 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 			kit.Fail(w, r, http.StatusTooManyRequests, kit.T(r, "auth.totp_rate_limited", nil))
 			return
 		case answer.Bool("rejected"):
-			countWrongCode(sess)
+			h.wrongCode(r, sess, who)
 			if err := h.audit(r, userID, "totp_failed", "Go server rejected TOTP"); err != nil {
 				h.serverError(w, r, "TOTP verify error:", err)
 				return
@@ -408,7 +426,6 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	verified, method := false, "totp"
-	var err error
 	switch {
 	case recoveryCode.Truthy():
 		method = "recovery"
@@ -424,7 +441,7 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !verified {
-		countWrongCode(sess)
+		h.wrongCode(r, sess, who)
 		if err := h.audit(r, userID, "totp_failed", "Method: "+method); err != nil {
 			h.serverError(w, r, "TOTP verify error:", err)
 			return
@@ -515,6 +532,7 @@ func (h *handlers) finishSecondFactor(w http.ResponseWriter, r *http.Request, wh
 		h.sessionFailure(w, r, "TOTP session regeneration error:", err)
 		return
 	}
+	h.recordAttempt(r, who.username, true)
 	h.clearGuestCookie(w, r)
 
 	err = h.authn.TouchLastLogin(r.Context(), who.id)
@@ -541,6 +559,13 @@ func (h *handlers) pendingInTime(sess *session.Session) bool {
 		return false
 	}
 	return h.now().UnixMilli()-since <= secondFactorWindow.Milliseconds()
+}
+
+// wrongCode notes a refused code of the waiting sign-in: in the session
+// (countWrongCode) and as a failed attempt of the account at the address.
+func (h *handlers) wrongCode(r *http.Request, sess *session.Session, who account) {
+	countWrongCode(sess)
+	h.recordAttempt(r, who.username, false)
 }
 
 // countWrongCode notes a refused code of the waiting sign-in. The

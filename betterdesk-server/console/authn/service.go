@@ -250,6 +250,9 @@ type Service struct {
 	mu sync.Mutex
 	// forceUsed is set once ForcePasswordUpdate has had its one effect.
 	forceUsed bool
+	// totpSteps holds per account the step of the last code that signed
+	// it in (useTOTPStep).
+	totpSteps map[int64]int64
 }
 
 // New returns a service. DB and GoAPI are required.
