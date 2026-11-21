@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -558,5 +559,67 @@ func FuzzStoredListAndBody(f *testing.F) {
 			}
 		}
 		validateRule(body)
+	})
+}
+
+// Writes to the lists at the same time, at both addresses of the group,
+// lose no entry: each one reads the list, changes it and stores it back
+// while the others wait (BUGS RV50).
+func TestWritesAtTheSameTimeKeepEveryEntry(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		s := newSite(t, db, Options{})
+		admin := s.signIn("admin")
+		const n = 24
+		var wg sync.WaitGroup
+		for i := 0; i < n; i++ {
+			mount := ""
+			if i%2 == 1 {
+				mount = "/api/bd"
+			}
+			wg.Add(2)
+			go func() {
+				defer wg.Done()
+				if status, answer := s.send(admin, "POST", mount+relays, fmt.Sprintf(`{"name":"r%d","address":"relay%d.example.com:21117"}`, i, i)); status != 201 {
+					t.Errorf("relay %d: %d %s", i, status, answer)
+				}
+			}()
+			go func() {
+				defer wg.Done()
+				if status, answer := s.send(admin, "POST", mount+rules, fmt.Sprintf(`{"name":"rule %d","match_type":"tag","match_value":"t%d"}`, i, i)); status != 201 {
+					t.Errorf("rule %d: %d %s", i, status, answer)
+				}
+			}()
+		}
+		wg.Wait()
+		for key, path := range map[string]string{keyRelays: relays, keyRules: rules} {
+			var list []any
+			if err := json.Unmarshal([]byte(stored(t, db, key)), &list); err != nil || len(list) != n {
+				t.Errorf("%s holds %d entries after %d creates at once (%v)", path, len(list), n, err)
+			}
+		}
+	})
+}
+
+// A rule's target_relay and fallback are at most 80 characters, as its name
+// (BUGS RV50).
+func TestRuleTargetAndFallbackAreShort(t *testing.T) {
+	each(t, func(t *testing.T, s *site, db *store.DB) {
+		admin := s.signIn("admin")
+		long := strings.Repeat("x", 81)
+		for body, problem := range map[string]string{
+			`{"name":"x","match_type":"tag","match_value":"v","target_relay":"` + long + `"}`: "target_relay must be at most 80 characters",
+			`{"name":"x","match_type":"tag","match_value":"v","fallback":"` + long + `"}`:     "fallback must be at most 80 characters",
+		} {
+			if status, answer := s.send(admin, "POST", rules, body); status != 400 || answer != `{"error":"`+problem+`"}` {
+				t.Errorf("POST %s: %d %s, want 400 %s", clip(body), status, answer, problem)
+			}
+		}
+		fits := strings.Repeat("é", 80)
+		if status, answer := s.send(admin, "POST", rules, `{"name":"x","match_type":"tag","match_value":"v","target_relay":"`+fits+`","fallback":"`+fits+`"}`); status != 201 {
+			t.Errorf("80 characters each: %d %s", status, answer)
+		}
+		if stored(t, db, keyRules) == "" {
+			t.Error("no rule stored")
+		}
 	})
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/unitronix/betterdesk-server/console/store"
 )
@@ -40,6 +41,14 @@ func setSetting(ctx context.Context, db *store.DB, key, value string) error {
 	}
 	return nil
 }
+
+// listWrites lets one write of the lists at a time through. A write reads
+// the whole list, changes it and stores it back, so two at once would
+// store two lists and the second would replace the first. The group is
+// registered at two mounts with handlers of their own, and both write the
+// same rows: the lock is the package's. The console is the one process
+// that writes these rows.
+var listWrites sync.Mutex
 
 // load reads a stored list. A row that is missing or empty is an empty
 // list; a value that is no JSON array, or a failed read, is an error, so

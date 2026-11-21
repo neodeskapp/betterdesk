@@ -25,6 +25,12 @@ func validateRule(body middleware.JSONObject) string {
 	if n, ok := parseInt(body.Get("priority")); ok && (n < 0 || n > 1000) {
 		return "priority out of range"
 	}
+	if utf16Len(text(body.Get("target_relay"), "")) > 80 {
+		return "target_relay must be at most 80 characters"
+	}
+	if utf16Len(text(body.Get("fallback"), "")) > 80 {
+		return "fallback must be at most 80 characters"
+	}
 	return ""
 }
 
@@ -75,6 +81,8 @@ func (h *handlers) createRule(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
+	listWrites.Lock()
+	defer listWrites.Unlock()
 	rules, err := h.load(r.Context(), keyRules)
 	if err == nil && len(rules) >= maxRules {
 		fail(w, r, http.StatusBadRequest, "too many rules (max 200)")
@@ -103,6 +111,8 @@ func (h *handlers) updateRule(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
+	listWrites.Lock()
+	defer listWrites.Unlock()
 	rules, err := h.load(r.Context(), keyRules)
 	i := -1
 	if err == nil {

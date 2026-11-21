@@ -156,6 +156,8 @@ func (h *handlers) createRelay(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
+	listWrites.Lock()
+	defer listWrites.Unlock()
 	relays, err := h.load(r.Context(), keyRelays)
 	if err == nil && addressTaken(relays, text(body.Get("address"), ""), -1) {
 		fail(w, r, http.StatusConflict, "a relay with this address already exists")
@@ -189,6 +191,8 @@ func (h *handlers) updateRelay(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, problem)
 		return
 	}
+	listWrites.Lock()
+	defer listWrites.Unlock()
 	relays, err := h.load(r.Context(), keyRelays)
 	i := -1
 	if err == nil {
@@ -222,6 +226,8 @@ func (h *handlers) updateRelay(w http.ResponseWriter, r *http.Request) {
 // remove answers a DELETE for an entry of a stored list: {"ok":true}, or
 // 404 when no entry has the id.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request, key, id, failure string) {
+	listWrites.Lock()
+	defer listWrites.Unlock()
 	items, err := h.load(r.Context(), key)
 	if err == nil && find(items, id) < 0 {
 		// Every entry with the id goes, and without one nothing is stored
