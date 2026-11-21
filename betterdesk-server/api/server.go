@@ -47,6 +47,30 @@ var peerIDRegexp = regexp.MustCompile(`^[A-Za-z0-9_-]{6,16}$`)
 // Prevents arbitrary key injection into the server_config table.
 var configKeyRegexp = regexp.MustCompile(`^[A-Za-z0-9_.\-]{1,64}$`)
 
+// configKeyIsSecret reports whether a server_config key holds a secret or a
+// credential: the token signing secret, private keys, passwords, device
+// keys and second-factor secrets, pairing codes and share links. The
+// generic config routes neither answer nor write such a key; the routes
+// that own them do.
+func configKeyIsSecret(key string) bool {
+	k := strings.ToLower(key)
+	switch k {
+	case "jwt_secret", "api_key", telemetryPrivateKeyConfig:
+		return true
+	}
+	for _, prefix := range []string{"device_totp_secret_", bdMgmtPublicKeyConfigPref, pairingCodePrefix, "mesh_share_"} {
+		if strings.HasPrefix(k, prefix) {
+			return true
+		}
+	}
+	for _, part := range []string{"password", "secret", "private"} {
+		if strings.Contains(k, part) {
+			return true
+		}
+	}
+	return false
+}
+
 // ldapAuthProvider is implemented by *auth.LDAPProvider and test mocks.
 type ldapAuthProvider interface {
 	IsEnabled() bool
@@ -1656,6 +1680,10 @@ func (s *Server) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	if configKeyIsSecret(key) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "This key holds a secret and is not served here"})
+		return
+	}
 
 	val, err := s.db.GetConfig(key)
 	if err != nil {
@@ -1675,6 +1703,10 @@ func (s *Server) handleSetConfig(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	if configKeyIsSecret(key) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "This key holds a secret and is not served here"})
+		return
+	}
 
 	var body struct {
 		Value string `json:"value"`
@@ -1689,7 +1721,7 @@ func (s *Server) handleSetConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionConfigChanged, s.remoteIP(r), key, map[string]string{"value": body.Value})
+		s.auditLog.Log(audit.ActionConfigChanged, s.remoteIP(r), key, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "key": key})

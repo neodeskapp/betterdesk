@@ -1086,6 +1086,12 @@ func (s *Server) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid role"})
 		return
 	}
+	// A key acts with its role, so it takes only a role the caller could
+	// give an account.
+	if !auth.CanAssignRole(getRoleFromCtx(r), body.Role) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot create a key with this role"})
+		return
+	}
 
 	// Generate a random 32-byte (64 hex char) API key
 	plainKey, err := auth.GenerateRandomString(32)
