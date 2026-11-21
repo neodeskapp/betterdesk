@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
@@ -25,6 +26,9 @@ type handlers struct {
 	now     func() time.Time
 	// dial opens the connection of a port probe.
 	dial func(ctx context.Context, network, address string) (net.Conn, error)
+	// scope is the device scope of the account of a request, nil when it
+	// sees every device
+	scope func(r *http.Request) (*access.DeviceScope, error)
 }
 
 // Register adds the group's routes.
@@ -46,6 +50,21 @@ func newHandlers(d *kit.Deps) *handlers {
 		started: time.Now(),
 		now:     time.Now,
 		dial:    dialer.DialContext,
+		scope:   scopeOf(d),
+	}
+}
+
+// scopeOf is the device scope of the account of a request, nil when it
+// sees every device or when the console has no device groups.
+func scopeOf(d *kit.Deps) func(r *http.Request) (*access.DeviceScope, error) {
+	return func(r *http.Request) (*access.DeviceScope, error) {
+		if d.DeviceGroups == nil || d.Backend == nil {
+			return nil, nil
+		}
+		ctx := r.Context()
+		return d.DeviceGroups.LimitedScope(ctx, kit.User(r), func() []*goapi.Object {
+			return d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{})
+		})
 	}
 }
 
@@ -73,9 +92,18 @@ type statsData struct {
 }
 
 // stats answers GET /api/stats: the device counts, the server's health,
-// the name of the backend and whether the server has a public key.
+// the name of the backend and whether the server has a public key. An
+// account limited to some devices gets the counts of those.
 func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
-	devices, err := h.backend.GetStats(r.Context())
+	scope, err := h.scope(r)
+	var devices any
+	switch {
+	case err != nil:
+	case scope != nil:
+		devices = scopedCounts(h.d.GoAPI.GetAllPeers(r.Context(), false), scope)
+	default:
+		devices, err = h.backend.GetStats(r.Context())
+	}
 	if err != nil {
 		h.log.Error("Stats error:", err)
 		serverError(w, r)

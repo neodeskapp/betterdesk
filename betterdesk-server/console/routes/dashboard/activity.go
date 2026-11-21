@@ -16,10 +16,24 @@ type activityAnswer struct {
 }
 
 // activity answers GET /api/dashboard/activity: the ten newest entries of
-// the server's audit log, and when it has none, of the console's own.
+// the server's audit log, and when it has none, of the console's own. An
+// account limited to some devices gets none of the server's entries about
+// a device outside its scope.
 func (h *handlers) activity(w http.ResponseWriter, r *http.Request) {
-	events := serverEvents(h.d.GoAPI.GetAuditEvents(r.Context(), float64(feedLength)))
-	if len(events) == 0 {
+	scope, err := h.scope(r)
+	if err != nil {
+		h.log.Error("Activity feed: device scope error:", err)
+		serverError(w, r)
+		return
+	}
+	all := serverEvents(h.d.GoAPI.GetAuditEvents(r.Context(), float64(feedLength)))
+	events := make([]*goapi.Object, 0, len(all))
+	for _, event := range all {
+		if device := event.Get("device_id"); !goapi.Truthy(device) || scope.Has(event.Str("device_id")) {
+			events = append(events, event)
+		}
+	}
+	if len(all) == 0 {
 		rows, err := recentAuditRows(r.Context(), h.d.Store, feedLength)
 		if err != nil {
 			h.log.Warn("Activity feed: the console's audit log could not be read:", err)

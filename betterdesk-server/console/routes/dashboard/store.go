@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
@@ -47,6 +48,28 @@ func (c deviceCounts) GetStats(ctx context.Context) (any, error) {
 		"banned", float64(banned),
 		"offline", float64(total-online),
 	), nil
+}
+
+// scopedCounts counts the devices of the server's list that are in the
+// scope, in the form of the server's counts.
+func scopedCounts(peers []*goapi.Object, scope *access.DeviceScope) *goapi.Object {
+	var total, online, banned, withNotes float64
+	for _, p := range peers {
+		if p == nil || !scope.Has(p.Str("id")) {
+			continue
+		}
+		total++
+		if p.Bool("online") {
+			online++
+		}
+		if p.Bool("banned") {
+			banned++
+		}
+		if p.Bool("note") {
+			withNotes++
+		}
+	}
+	return goapi.NewObject("total", total, "online", online, "offline", total-online, "banned", banned, "withNotes", withNotes)
 }
 
 // auditRow is an entry of the console's audit log as the activity feed
