@@ -123,6 +123,14 @@ func (h *handlers) saveDeviceGroup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if ok, err := h.groupSaveInScope(r, payload); err != nil || !ok {
+		if err != nil {
+			h.serverError(w, r, "Save device group error:", err)
+			return
+		}
+		fail(w, r, http.StatusForbidden, "errors.forbidden")
+		return
+	}
 	if h.writesToGo() {
 		saved, err := h.saveGroupToGo(r, groupPayload(groupFields{
 			guid: payload.GUID, name: payload.Name, note: payload.Note, teamID: payload.TeamID,
@@ -181,6 +189,65 @@ func (h *handlers) saveDeviceGroup(w http.ResponseWriter, r *http.Request) {
 	answer(w, r, http.StatusOK, withData{Success: true, Data: group})
 }
 
+// groupOpen reports whether the group's access list lets the account see
+// it. The roles that see every device see every group.
+func (h *handlers) groupOpen(r *http.Request, group *goapi.Object) bool {
+	return access.GroupAllowedForUser(devicegroups.ScopeGroup(group), h.groups.UserAccessContext(r.Context(), kit.User(r)))
+}
+
+// groupSaveInScope reports whether the account may save the group of the
+// payload. A stored group must be open to the account. An account whose
+// device scope is limited changes no access list (a new group has none)
+// and makes no tag group: it neither turns a group into one nor changes
+// the tag of one, since either would widen its own scope. An account
+// without a limit saves any group that is open to it.
+func (h *handlers) groupSaveInScope(r *http.Request, p devicegroups.GroupPayload) (bool, error) {
+	ctx := r.Context()
+	var stored *goapi.Object
+	if p.GUID != "" {
+		var err error
+		if stored, err = h.groups.DeviceGroupByGUID(ctx, p.GUID); err != nil {
+			return false, err
+		}
+		if stored != nil && !h.groupOpen(r, stored) {
+			return false, nil
+		}
+	}
+	scope, err := h.groups.DeviceScopeForUser(ctx, kit.User(r), nil)
+	if err != nil || scope == nil {
+		return err == nil, err
+	}
+	var was access.DeviceGroup
+	if stored != nil {
+		was = devicegroups.ScopeGroup(stored)
+	}
+	if !sameEntries(p.AllowedUsers, was.AllowedUsers) || !sameEntries(p.AllowedGroups, was.AllowedGroups) {
+		return false, nil
+	}
+	if p.SourceType == "tag" && (was.SourceType != "tag" || p.TagFilter != was.TagFilter) {
+		return false, nil
+	}
+	return true, nil
+}
+
+// sameEntries reports whether two lists hold the same entries, in any
+// order.
+func sameEntries(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	in := make(map[string]bool, len(b))
+	for _, s := range b {
+		in[s] = true
+	}
+	for _, s := range a {
+		if !in[s] {
+			return false
+		}
+	}
+	return true
+}
+
 // tooLong is the refusal of an access list with more entries than
 // devicegroups.MaxAccessListEntries.
 func tooLong(list string) string {
@@ -225,6 +292,10 @@ func (h *handlers) deleteDeviceGroup(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, folder := devicegroups.FolderIDFromGroupGUID(guid); folder {
 		fail(w, r, http.StatusBadRequest, "devices.folder_group_readonly")
+		return
+	}
+	if !h.groupOpen(r, group) {
+		fail(w, r, http.StatusForbidden, "errors.forbidden")
 		return
 	}
 	deleted := false

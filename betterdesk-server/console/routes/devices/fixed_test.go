@@ -73,17 +73,21 @@ var fixedSteps = []fixedStep{
 	{"node", `135 PUT /api/devices/A1001/tags {"tags":[" a ","",5,null,"b","  ","` + strings.Repeat("c", 60) + `","` + strings.Repeat("d😀", 30) + `"]} as admin`, "DGR2"},
 	// A group whose name is a list and whose note is a number is refused,
 	// where Node saved it as "a,b" with the note "5". The groups made
-	// after it get other ids, and the lists leave it out.
+	// after it get other ids, and the lists leave it out. The operator,
+	// whose scope is limited, may not make a group with an access list
+	// (RV59): the lists and the writes of the device's groups after it
+	// leave "By operator" out.
 	{"node", `210 POST /api/device-groups {"name":["a","b"],"note":5,"team_id":null,"allowed_users":"e2e_viewer, e2e_operator ,x","allowed_groups":[{"guid":"ug-ops"},"ug-ops","missing"]} as admin`, "DGR5"},
-	{"node", `214 POST /api/device-groups {"name":"By operator","allowed_users":["e2e_operator"]} as operator`, "DGR5"},
-	{"node", "215 GET /api/device-groups as admin", "DGR5, UM33"},
-	{"node", "220 GET /api/devices/A1001/groups as admin", "DGR5, UM33"},
+	{"node", `214 POST /api/device-groups {"name":"By operator","allowed_users":["e2e_operator"]} as operator`, "DGR5, RV59"},
+	{"node", "215 GET /api/device-groups as admin", "DGR5, UM33, RV59"},
+	{"node", "220 GET /api/devices/A1001/groups as admin", "DGR5, UM33, RV59"},
 	{"node", "221 GET /api/devices/A1001/groups as operator", "DGR5, UM33"},
-	{"node", "223 GET /api/devices/C1003/groups as admin", "DGR5, UM33"},
-	{"node", "237 GET /api/devices/A1001/groups as admin", "DGR5"},
-	{"node", "356 GET /api/devices/C1003/groups as viewer", "DGR5"},
-	// The audit log after the steps of DE5, DE6, DGR2, DGR5 and UM33
-	{"node", "459 audit", "DE5, DE6, DGR2, DGR5, UM33"},
+	{"node", "223 GET /api/devices/C1003/groups as admin", "DGR5, UM33, RV59"},
+	{"node", "237 GET /api/devices/A1001/groups as admin", "DGR5, RV59"},
+	{"node", "356 GET /api/devices/C1003/groups as viewer", "DGR5, RV59"},
+	// The audit log after the steps of DE5, DE6, DGR2, DGR5, UM33 and
+	// RV59
+	{"node", "459 audit", "DE5, DE6, DGR2, DGR5, UM33, RV59"},
 	// The scope check does not take bulk-delete for a device id: no lookup
 	// of a device of that name, and the made-up server's bulk-delete device
 	// outside the operator's scope no longer refuses the bulk delete before
@@ -117,11 +121,11 @@ var fixedSteps = []fixedStep{
 	{"node", `167 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
 	{"node", `168 PUT /api/devices/B1002/groups {"groupGuids":[]} as admin`, "UM33"},
 	{"node", "169 members after the panel writes", "UM33"},
-	{"node", "222 GET /api/devices/A1001/groups as viewer", "UM33"},
-	{"node", `230 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-ops","no-such","g-lab"]} as admin`, "UM33"},
-	{"node", `231 PUT /api/devices/A1001/groups {"groupGuids":[null,5]} as admin`, "UM33"},
-	{"node", `233 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-viewer"]} as operator`, "UM33"},
-	{"node", `236 PUT /api/devices/A1001/groups {"groupGuids":["g-open"]} as admin`, "UM33"},
+	{"node", "222 GET /api/devices/A1001/groups as viewer", "UM33, RV59"},
+	{"node", `230 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-ops","no-such","g-lab"]} as admin`, "UM33, RV59"},
+	{"node", `231 PUT /api/devices/A1001/groups {"groupGuids":[null,5]} as admin`, "UM33, RV59"},
+	{"node", `233 PUT /api/devices/A1001/groups {"groupGuids":["g-ops","g-viewer"]} as operator`, "UM33, RV59"},
+	{"node", `236 PUT /api/devices/A1001/groups {"groupGuids":["g-open"]} as admin`, "UM33, RV59"},
 	// folder_5 is open to e2e_viewer alone, so the operator, whose scope
 	// it limits, puts no device into folder 5. A1001 then stays in the
 	// operator's scope, and the next step answers Node's 404 for folder
