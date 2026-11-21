@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
@@ -90,6 +91,9 @@ func newOracleWorld(t *testing.T, noPty bool) *oracleWorld {
 			allowed := map[string]bool{"admin": true, "server_admin": true, "super_admin": true, "operator-with-override": true}
 			return allowed[role] && permission == "server.config", nil
 		},
+		// the oracle had no panel access policy: every account reaches
+		// every section
+		SectionAccess: func(context.Context, access.PolicyUser, string, access.Level) (bool, error) { return true, nil },
 	})
 	w.svc = New(Options{
 		GOOS: "linux",

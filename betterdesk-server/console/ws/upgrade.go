@@ -8,6 +8,7 @@ import (
 
 	"github.com/coder/websocket"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/logging"
 )
@@ -73,6 +74,17 @@ func (u *Upgrade) RoleHasPermission(role, permission string) (bool, error) {
 		return false, nil
 	}
 	return u.reg.opts.Permission(u.R.Context(), role, permission)
+}
+
+// SectionAllows is the panel access guard on a socket: whether the policy
+// of the account signed in with sn reaches level in the panel section
+// (Options.SectionAccess). Nobody signed in reaches nothing; err is a
+// failed lookup.
+func (u *Upgrade) SectionAllows(sn Session, section string, level access.Level) (bool, error) {
+	if sn == nil || !sn.SignedIn() || sn.UserID() == 0 || u.reg.opts.SectionAccess == nil {
+		return false, nil
+	}
+	return u.reg.opts.SectionAccess(u.R.Context(), access.PolicyUser{ID: sn.UserID(), Role: sn.Role()}, section, level)
 }
 
 // storedSession is a session of the session store; the zero value has

@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/logging"
@@ -24,6 +25,11 @@ const TerminalPath = "/ws/server-management/terminal"
 // terminalPermission is what an account needs for the terminal: the same
 // as for the page and its routes.
 const terminalPermission = "server.config"
+
+// terminalSection is the panel section of the terminal: the account's
+// policy must give it write there, as the guard asks for the routes that
+// change the server.
+const terminalSection = "server-management"
 
 // TerminalOptions configure the terminal. A zero field is the real thing.
 type TerminalOptions struct {
@@ -141,8 +147,10 @@ func (s *Service) Register(reg *ws.Registry) {
 // the Origin ("403 Forbidden"), a session with a user ("401
 // Unauthorized"), the permission server.config of the session's role with
 // the role overrides ("403 Forbidden", also when the lookup fails), then
-// the handshake. The session and the permission are looked at again every
-// SessionCheck while the socket is open.
+// write in the section server-management of the account's panel access
+// policy ("403 Forbidden", also when the lookup fails), then the
+// handshake. The session, the permission and the policy are looked at
+// again every SessionCheck while the socket is open.
 func (s *Service) serveTerminal(u *ws.Upgrade) {
 	if !u.CheckOrigin("server-management-terminal") {
 		return
@@ -160,6 +168,11 @@ func (s *Service) serveTerminal(u *ws.Upgrade) {
 	allowed, err := u.RoleHasPermission(role, terminalPermission)
 	if err != nil || !allowed {
 		logging.Logf("console", "WARN: [srv-term] 403 upgrade rejected (user=%s role=%s)", username, role)
+		u.Refuse(http.StatusForbidden)
+		return
+	}
+	if open, err := u.SectionAllows(sess, terminalSection, access.LevelWrite); err != nil || !open {
+		logging.Logf("console", "WARN: [srv-term] 403 upgrade rejected by the panel access policy (user=%s role=%s)", username, role)
 		u.Refuse(http.StatusForbidden)
 		return
 	}
@@ -233,9 +246,10 @@ func (t *terminal) run(u *ws.Upgrade, role, username string) {
 }
 
 // watchSession closes the socket when its session has ended, belongs to
-// another user, or its role no longer has server.config with the role
-// overrides (a failed lookup counts as no, as at the upgrade), and
-// returns when the socket has ended.
+// another user, its role no longer has server.config with the role
+// overrides, or the account's policy no longer gives write in
+// server-management (a failed lookup counts as no, as at the upgrade),
+// and returns when the socket has ended.
 func (t *terminal) watchSession(u *ws.Upgrade) {
 	tick := time.NewTicker(t.s.opts.Terminal.SessionCheck)
 	defer tick.Stop()
@@ -255,7 +269,7 @@ func (t *terminal) watchSession(u *ws.Upgrade) {
 }
 
 // stillAllowed reads the socket's session again and looks up the
-// permission of its role.
+// permission of its role and the account's policy.
 func (t *terminal) stillAllowed(u *ws.Upgrade) bool {
 	ctx, cancel := context.WithTimeout(t.conn.Context(), 5*time.Second)
 	defer cancel()
@@ -265,8 +279,11 @@ func (t *terminal) stillAllowed(u *ws.Upgrade) bool {
 	if !sess.SignedIn() || sess.UserID() != t.userID {
 		return false
 	}
-	allowed, err := check.RoleHasPermission(sess.Role(), terminalPermission)
-	return err == nil && allowed
+	if allowed, err := check.RoleHasPermission(sess.Role(), terminalPermission); err != nil || !allowed {
+		return false
+	}
+	open, err := check.SectionAllows(sess, terminalSection, access.LevelWrite)
+	return err == nil && open
 }
 
 func (t *terminal) audit(action, details string) {

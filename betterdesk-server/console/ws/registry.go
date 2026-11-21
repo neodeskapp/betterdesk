@@ -32,6 +32,11 @@ type Options struct {
 	// setting gives it (httpx.TrustProxy.ClientIP, req.ip). nil: the
 	// connection's address.
 	ClientIP func(r *http.Request) string
+	// SectionAccess is the panel access guard of the routes for sockets:
+	// whether the account's effective panel access policy reaches level in
+	// section (see SectionAccessOf). err is a failed lookup. nil: no
+	// account reaches any level, so a socket that asks refuses everyone.
+	SectionAccess func(ctx context.Context, user access.PolicyUser, section string, level access.Level) (bool, error)
 }
 
 // Session is what a socket's checks read from the session.
@@ -68,6 +73,19 @@ func SessionOf(m *session.Manager) func(r *http.Request) Session {
 // PermissionOf adapts the permission service.
 func PermissionOf(a *access.Service) func(ctx context.Context, role, permission string) (bool, error) {
 	return a.RoleHasEffectivePermission
+}
+
+// SectionAccessOf adapts the permission service: it resolves the
+// account's policy as the guard does for a request (ResolveForUser) and
+// compares its level in the section (AccessAllows).
+func SectionAccessOf(a *access.Service) func(ctx context.Context, user access.PolicyUser, section string, level access.Level) (bool, error) {
+	return func(ctx context.Context, user access.PolicyUser, section string, level access.Level) (bool, error) {
+		policy, err := a.ResolveForUser(ctx, user)
+		if err != nil {
+			return false, fmt.Errorf("resolve panel access policy: %w", err)
+		}
+		return access.AccessAllows(policy, section, level), nil
+	}
 }
 
 // Registry holds the console's sockets: one handler per path. The front

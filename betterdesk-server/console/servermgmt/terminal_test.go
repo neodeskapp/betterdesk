@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/session"
 	"github.com/unitronix/betterdesk-server/console/ws"
@@ -73,6 +74,11 @@ type termWorld struct {
 	// revoked takes server.config from admin, as a role override does;
 	// lookupFails makes every lookup fail
 	revoked, lookupFails bool
+	// section is the account's level in the panel section
+	// server-management, write unless a test lowers it; policyFails makes
+	// the policy lookup fail
+	section     access.Level
+	policyFails bool
 }
 
 // setPermission changes the permission table while sockets are open.
@@ -82,9 +88,17 @@ func (w *termWorld) setPermission(revoked, lookupFails bool) {
 	w.mu.Unlock()
 }
 
+// setSection changes the account's panel access policy while sockets are
+// open.
+func (w *termWorld) setSection(level access.Level, fails bool) {
+	w.mu.Lock()
+	w.section, w.policyFails = level, fails
+	w.mu.Unlock()
+}
+
 func newTermWorld(t *testing.T, noPty bool, mutate func(*Options)) *termWorld {
 	t.Helper()
-	w := &termWorld{t: t, session: &fakeSession{signedIn: true, userID: 7, role: "admin"}}
+	w := &termWorld{t: t, session: &fakeSession{signedIn: true, userID: 7, role: "admin"}, section: access.LevelWrite}
 	w.reg = ws.New(ws.Options{
 		Session: func(*http.Request) ws.Session {
 			in, id, role := w.session.get()
@@ -102,6 +116,18 @@ func newTermWorld(t *testing.T, noPty bool, mutate func(*Options)) *termWorld {
 				return true, errors.New("lookup failed")
 			}
 			return role == "admin" && permission == "server.config" && !w.revoked, nil
+		},
+		SectionAccess: func(_ context.Context, user access.PolicyUser, section string, level access.Level) (bool, error) {
+			w.mu.Lock()
+			defer w.mu.Unlock()
+			w.lookups = append(w.lookups, "policy "+strconv.FormatInt(user.ID, 10)+" "+user.Role+" "+section+" "+string(level))
+			if w.policyFails {
+				return true, errors.New("policy lookup failed")
+			}
+			if section != "server-management" {
+				return false, nil
+			}
+			return w.section == access.LevelWrite || (w.section == access.LevelRead && level == access.LevelRead), nil
 		},
 	})
 	home := t.TempDir()
@@ -263,25 +289,33 @@ func gone(pid int, limit time.Duration) bool {
 }
 
 // The checks before the handshake, in their order: the origin, a session
-// with a user, then server.config of the session's role (a failed lookup
-// refuses too). Only a socket that opens writes audit entries.
+// with a user, server.config of the session's role (a failed lookup
+// refuses too), then write in the panel section server-management of the
+// account's policy, as the guard asks for the routes (RV89; a failed
+// lookup refuses too). Only a socket that opens writes audit entries.
 func TestTerminalUpgradeChecks(t *testing.T) {
+	const policy = ",policy 7 admin server-management write"
 	cases := []struct {
-		name     string
-		header   http.Header
-		signedIn bool
-		role     string
-		want     int
-		lookups  string
+		name        string
+		header      http.Header
+		signedIn    bool
+		role        string
+		section     access.Level
+		policyFails bool
+		want        int
+		lookups     string
 	}{
-		{"foreign origin", http.Header{"Origin": {"https://evil.example"}}, true, "admin", 403, ""},
-		{"no origin with a session cookie", http.Header{"Origin": {""}, "Cookie": {"bd.sid=s%3Ax"}}, true, "admin", 403, ""},
-		{"signed out", nil, false, "admin", 401, ""},
-		{"signed out, foreign origin", http.Header{"Origin": {"https://evil.example"}}, false, "", 403, ""},
-		{"role without server.config", nil, true, "viewer", 403, "viewer server.config"},
-		{"lookup fails", nil, true, "throws", 403, "throws server.config"},
-		{"no origin, no cookie", http.Header{"Origin": {""}}, true, "admin", 101, "admin server.config"},
-		{"allowed", http.Header{"X-Forwarded-For": {" 198.51.100.9 , 10.0.0.1"}}, true, "admin", 101, "admin server.config"},
+		{"foreign origin", http.Header{"Origin": {"https://evil.example"}}, true, "admin", access.LevelWrite, false, 403, ""},
+		{"no origin with a session cookie", http.Header{"Origin": {""}, "Cookie": {"bd.sid=s%3Ax"}}, true, "admin", access.LevelWrite, false, 403, ""},
+		{"signed out", nil, false, "admin", access.LevelWrite, false, 401, ""},
+		{"signed out, foreign origin", http.Header{"Origin": {"https://evil.example"}}, false, "", access.LevelWrite, false, 403, ""},
+		{"role without server.config", nil, true, "viewer", access.LevelWrite, false, 403, "viewer server.config"},
+		{"lookup fails", nil, true, "throws", access.LevelWrite, false, 403, "throws server.config"},
+		{"section closed by the policy", nil, true, "admin", access.LevelNone, false, 403, "admin server.config" + policy},
+		{"section read only by the policy", nil, true, "admin", access.LevelRead, false, 403, "admin server.config" + policy},
+		{"policy lookup fails", nil, true, "admin", access.LevelWrite, true, 403, "admin server.config" + policy},
+		{"no origin, no cookie", http.Header{"Origin": {""}}, true, "admin", access.LevelWrite, false, 101, "admin server.config" + policy},
+		{"allowed", http.Header{"X-Forwarded-For": {" 198.51.100.9 , 10.0.0.1"}}, true, "admin", access.LevelWrite, false, 101, "admin server.config" + policy},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -292,6 +326,7 @@ func TestTerminalUpgradeChecks(t *testing.T) {
 			w.session.mu.Lock()
 			w.session.signedIn, w.session.role = tc.signedIn, tc.role
 			w.session.mu.Unlock()
+			w.setSection(tc.section, tc.policyFails)
 			c, res := w.dial(tc.header)
 			if res.StatusCode != tc.want {
 				t.Errorf("status %d, want %d", res.StatusCode, tc.want)
@@ -362,11 +397,12 @@ func TestTerminalNeedsInitFirst(t *testing.T) {
 }
 
 // A shell ends with its socket: the close message, the client going away
-// without a close frame, the end of the session, and the role losing
-// server.config (or the lookup failing) all end every shell the socket
-// started, the first of a second init too.
+// without a close frame, the end of the session, the role losing
+// server.config (or the lookup failing), and the account's policy
+// lowering server-management below write (or its lookup failing, RV89)
+// all end every shell the socket started, the first of a second init too.
 func TestTerminalShellsEndWithTheSocket(t *testing.T) {
-	for _, how := range []string{"close message", "connection dropped", "session ended", "session of another user", "permission taken", "permission lookup fails", "console stops"} {
+	for _, how := range []string{"close message", "connection dropped", "session ended", "session of another user", "permission taken", "permission lookup fails", "policy lowered to read", "policy lookup fails", "console stops"} {
 		t.Run(how, func(t *testing.T) {
 			defer wstest.Goroutines(t)()
 			w := newTermWorld(t, true, nil)
@@ -393,13 +429,17 @@ func TestTerminalShellsEndWithTheSocket(t *testing.T) {
 				w.setPermission(true, false)
 			case "permission lookup fails":
 				w.setPermission(false, true)
+			case "policy lowered to read":
+				w.setSection(access.LevelRead, false)
+			case "policy lookup fails":
+				w.setSection(access.LevelWrite, true)
 			case "console stops":
 				w.reg.Close()
 			}
 			if !gone(first, 3*time.Second) || !gone(second, 3*time.Second) {
 				t.Errorf("shells still run after %s", how)
 			}
-			if how == "session ended" || how == "session of another user" || strings.HasPrefix(how, "permission") {
+			if how == "session ended" || how == "session of another user" || strings.HasPrefix(how, "permission") || strings.HasPrefix(how, "policy") {
 				c.Wait(3*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed })
 				if closed, code, reason := c.Closed(); !closed || code != 1008 || reason != "Session ended" {
 					t.Errorf("closed %v %d %q", closed, code, reason)
