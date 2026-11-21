@@ -3,7 +3,8 @@
 //
 // Reading needs the permission device.view, changing a ticket or
 // commenting on it device.edit. A viewer sees the tickets assigned to it
-// and no internal comments.
+// (mayRead), with their comments and attachments, and no internal
+// comments.
 //
 // The two routes for devices, POST and GET /api/tickets/bd, take a device
 // token instead of a session (device.go).
@@ -143,13 +144,32 @@ func ticketID(r *http.Request, name string) (id jsbind.Value, ok bool) {
 	return jsbind.Number(n), true
 }
 
-// ticketOf reads the ticket the address names; nil when there is none.
+// ticketOf reads the ticket the address names; nil when there is none
+// or the account may not read it.
 func (h *handlers) ticketOf(r *http.Request) (*ticket, error) {
 	id, ok := ticketID(r, "id")
 	if !ok {
 		return nil, nil
 	}
-	return ticketByID(r.Context(), h.db, id)
+	return h.readable(r, id)
+}
+
+// readable is the ticket with the id when the account may read it, nil
+// when there is none or it may not.
+func (h *handlers) readable(r *http.Request, id jsbind.Value) (*ticket, error) {
+	t, err := ticketByID(r.Context(), h.db, id)
+	if err != nil || t == nil || !mayRead(r, t) {
+		return nil, err
+	}
+	return t, nil
+}
+
+// mayRead reports whether the account may read the ticket, its comments
+// and its attachments: a viewer only the tickets assigned to it, every
+// other role every ticket.
+func mayRead(r *http.Request, t *ticket) bool {
+	user := kit.User(r)
+	return user.Role != "viewer" || t.AssignedTo.Valid && t.AssignedTo.String == user.Username
 }
 
 // number is `${n}` for a row id.
@@ -202,9 +222,14 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, ticketList{Tickets: tickets, Total: len(tickets)})
 }
 
-// stats answers GET /api/tickets/stats.
+// stats answers GET /api/tickets/stats; a viewer's counts take the
+// tickets assigned to it.
 func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
-	stats, err := countTickets(r.Context(), h.db)
+	assignee := jsbind.Undefined
+	if user := kit.User(r); user.Role == "viewer" {
+		assignee = jsbind.String(user.Username)
+	}
+	stats, err := countTickets(r.Context(), h.db, assignee)
 	if err != nil {
 		h.serverError(w, r, "Stats error", err)
 		return

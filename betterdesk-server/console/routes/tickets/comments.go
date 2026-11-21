@@ -49,9 +49,17 @@ type commentList struct {
 }
 
 // comments answers GET /api/tickets/{id}/comments. A viewer does not get
-// the internal ones.
+// the internal ones, and gets none of a ticket it may not read.
 func (h *handlers) comments(w http.ResponseWriter, r *http.Request) {
 	id, ok := ticketID(r, "id")
+	if ok && kit.User(r).Role == "viewer" {
+		t, err := h.readable(r, id)
+		if err != nil {
+			h.serverError(w, r, "Comments list error", err)
+			return
+		}
+		ok = t != nil
+	}
 	if !ok {
 		kit.JSON(w, r, http.StatusOK, commentList{Comments: []comment{}})
 		return

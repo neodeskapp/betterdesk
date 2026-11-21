@@ -402,3 +402,9 @@ var _ = ticketFixes.Add("S17", map[string]replay.Fix{
 	"admin GET /api/tickets/attachments/4 ": {NodeStatus: 412, Status: 412, Answer: `{"success":false,"error":"Precondition Failed"}`,
 		Headers: map[string]string{"Content-Type": "application/json; charset=utf-8", "Content-Disposition": ""}},
 })
+
+// RV62: a viewer's counts take only the tickets assigned to it, as its
+// list does.
+var _ = ticketFixes.Add("RV62", map[string]replay.Fix{
+	"viewer GET /api/tickets/stats ": {Status: 200, Answer: `{"total":2,"open":1,"in_progress":0,"resolved":1,"closed":0}`},
+})

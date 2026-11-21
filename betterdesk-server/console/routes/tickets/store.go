@@ -121,14 +121,25 @@ type ticketStats struct {
 	Closed     int64 `json:"closed"`
 }
 
-func countTickets(ctx context.Context, db *store.DB) (ticketStats, error) {
+// countTickets counts every ticket, or with assignee set the tickets
+// assigned to it.
+func countTickets(ctx context.Context, db *store.DB, assignee jsbind.Value) (ticketStats, error) {
 	var s ticketStats
-	err := db.QueryRow(ctx, `SELECT COUNT(*),
+	query := `SELECT COUNT(*),
 		COUNT(CASE WHEN status = 'open' THEN 1 END),
 		COUNT(CASE WHEN status = 'in_progress' THEN 1 END),
 		COUNT(CASE WHEN status = 'resolved' THEN 1 END),
 		COUNT(CASE WHEN status = 'closed' THEN 1 END)
-		FROM tickets`).Scan(&s.Total, &s.Open, &s.InProgress, &s.Resolved, &s.Closed)
+		FROM tickets`
+	var args []any
+	if !assignee.IsUndefined() {
+		query += " WHERE assigned_to = ?"
+		var err error
+		if args, err = jsbind.Args(db.Dialect(), 1, assignee); err != nil {
+			return s, fmt.Errorf("count tickets: %w", err)
+		}
+	}
+	err := store.SelectRow(ctx, db, query, args...).Scan(&s.Total, &s.Open, &s.InProgress, &s.Resolved, &s.Closed)
 	if err != nil {
 		return s, fmt.Errorf("count tickets: %w", err)
 	}
@@ -294,9 +305,10 @@ func addComment(ctx context.Context, db *store.DB, ticketID jsbind.Value, author
 }
 
 // attachment is a row of ticket_attachments. StoragePath names the file
-// in the attachment folder (older rows: its absolute path); it never goes
-// into an answer.
+// in the attachment folder (older rows: its absolute path); neither it
+// nor the ticket's id goes into an answer.
 type attachment struct {
+	TicketID    jsbind.Cell      `json:"-"`
 	ID          jsbind.Cell      `json:"id"`
 	Filename    string           `json:"filename"`
 	Mimetype    store.NullString `json:"mimetype"`
@@ -306,10 +318,10 @@ type attachment struct {
 	StoragePath string           `json:"-"`
 }
 
-const attachmentColumns = "id, filename, mimetype, size_bytes, uploaded_by, created_at, storage_path"
+const attachmentColumns = "ticket_id, id, filename, mimetype, size_bytes, uploaded_by, created_at, storage_path"
 
 func (a *attachment) dest() []any {
-	return []any{&a.ID, &a.Filename, &a.Mimetype, &a.SizeBytes, &a.UploadedBy, &a.CreatedAt, &a.StoragePath}
+	return []any{&a.TicketID, &a.ID, &a.Filename, &a.Mimetype, &a.SizeBytes, &a.UploadedBy, &a.CreatedAt, &a.StoragePath}
 }
 
 // ticketAttachments lists a ticket's attachments, oldest first.

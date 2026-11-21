@@ -159,7 +159,7 @@ func TestTheDeviceRoutesComeLast(t *testing.T) {
 func TestIDsBeyondTheColumnNameNoTicket(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		g := newGroup(t, db)
-		g.want(g.do("operator", "POST", "/api/tickets", `{"title":"Printer"}`), 201, `{"success":true,"ticket":{"id":1,"title":"Printer"}}`)
+		g.want(g.do("operator", "POST", "/api/tickets", `{"title":"Printer","assigned_to":"e2e_viewer"}`), 201, `{"success":true,"ticket":{"id":1,"title":"Printer"}}`)
 		notFound := `{"error":"Ticket not found"}`
 		for _, id := range []string{"2147483648", "4294967297", "99999999999999999999", "99999999999999999999999", "1" + strings.Repeat("0", 400)} {
 			g.want(g.do("admin", "GET", "/api/tickets/"+id, ""), 404, notFound)

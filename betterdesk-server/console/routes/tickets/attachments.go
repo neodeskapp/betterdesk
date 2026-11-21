@@ -191,9 +191,18 @@ type attachmentList struct {
 	Attachments []attachment `json:"attachments"`
 }
 
-// attachments answers GET /api/tickets/{id}/attachments.
+// attachments answers GET /api/tickets/{id}/attachments; a viewer gets
+// none of a ticket it may not read.
 func (h *handlers) attachments(w http.ResponseWriter, r *http.Request) {
 	id, ok := ticketID(r, "id")
+	if ok && kit.User(r).Role == "viewer" {
+		t, err := h.readable(r, id)
+		if err != nil {
+			h.serverError(w, r, "Attachments list error", err)
+			return
+		}
+		ok = t != nil
+	}
 	if !ok {
 		kit.JSON(w, r, http.StatusOK, attachmentList{Attachments: []attachment{}})
 		return
@@ -208,7 +217,8 @@ func (h *handlers) attachments(w http.ResponseWriter, r *http.Request) {
 
 // download answers GET /api/tickets/attachments/{aid} with the file, as a
 // download under its stored name and with its stored type. Conditional
-// and range requests work as for any file the console serves.
+// and range requests work as for any file the console serves. An
+// attachment of a ticket the account may not read is not found.
 func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	var (
 		a   *attachment
@@ -216,6 +226,12 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	)
 	if id, ok := ticketID(r, "aid"); ok {
 		a, err = attachmentByID(r.Context(), h.db, id)
+	}
+	if err == nil && a != nil && kit.User(r).Role == "viewer" {
+		var t *ticket
+		if t, err = h.readable(r, a.TicketID.Value()); t == nil {
+			a = nil
+		}
 	}
 	if err == nil && a == nil {
 		fail(w, r, http.StatusNotFound, "Attachment not found")
