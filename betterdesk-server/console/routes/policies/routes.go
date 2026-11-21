@@ -24,14 +24,15 @@ type handlers struct {
 var categories = []string{"connection", "features", "security", "network", "update"}
 
 // Register adds the group's routes. Reads and writes are for the admin
-// roles and need a session.
+// roles and need a session; a write of an organization's policies also
+// needs org.edit, as the API server asks for the same write.
 func Register(d *kit.Deps) {
 	h := &handlers{api: d.GoAPI, log: d.Log.Child("Policies")}
 	r := d.Router
 
 	r.Get("/api/panel/policies/{orgId}", h.read(""), d.RequireAuth, d.RequireAdmin)
 	for _, category := range categories {
-		r.Put("/api/panel/policies/{orgId}/"+category, h.write("/"+category), d.RequireAuth, d.RequireAdmin)
+		r.Put("/api/panel/policies/{orgId}/"+category, h.write("/"+category), d.RequireAuth, d.RequireAdmin, d.RequirePermission("org.edit"))
 	}
 	r.Get("/api/panel/policies/{orgId}/effective/{deviceId}", h.effective, d.RequireAuth, d.RequireAdmin)
 	r.Get("/api/panel/policies/{orgId}/audit", h.read("/audit"), d.RequireAuth, d.RequireAdmin)

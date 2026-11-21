@@ -61,6 +61,10 @@ var fixes = slices.Concat(proxytest.Fixes("FL4",
 	// The body goes to the API server with every member, also __proto__,
 	// constructor and prototype.
 	868,
+), proxytest.Fixes("RV68",
+	// A server admin, who may not edit organizations, writes no policies:
+	// 403 for org.edit before any call.
+	20, 28, 36, 44, 52, 60, 68, 76, 84, 92,
 ))
 
 // TestVectors replays what routes/policies.routes.js of the Node console
@@ -241,5 +245,35 @@ func TestPolicyWritesNeedASession(t *testing.T) {
 				t.Errorf("PUT %s as pro: %d %s after %d calls", path, rec.Code, rec.Body, len(calls))
 			}
 		}
+	}
+}
+
+// TestPolicyWritesNeedOrgEdit: the five policy writes ask org.edit, which
+// the API server asks for the same write: a server admin is refused before
+// any call and still reads the policies; a global admin writes them (BUGS
+// RV68, A83).
+func TestPolicyWritesNeedOrgEdit(t *testing.T) {
+	w := proxytest.NewWorld(t, register)
+	ok := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"ok":true}`}
+	body := `{"mode":"attended"}`
+	account := func(id int64, role string) *proxytest.Account {
+		a := &proxytest.Account{UserID: id}
+		a.User.Username, a.User.Role = "e2e_"+role, role
+		return a
+	}
+	serverAdmin, globalAdmin := account(3, "server_admin"), account(4, "global_admin")
+	for _, category := range []string{"connection", "features", "security", "network", "update"} {
+		path := "/api/panel/policies/org-1/" + category
+		rec, calls := w.Do(proxytest.Request{Method: "PUT", Path: path, Type: "application/json", Body: &body, Session: serverAdmin}, ok)
+		if rec.Code != 403 || rec.Body.String() != `{"success":false,"error":"Permission denied: org.edit"}` || len(calls) != 0 {
+			t.Errorf("PUT %s as server_admin: %d %s after %d calls", path, rec.Code, rec.Body, len(calls))
+		}
+		rec, calls = w.Do(proxytest.Request{Method: "PUT", Path: path, Type: "application/json", Body: &body, Session: globalAdmin}, ok)
+		if rec.Code != 200 || len(calls) != 1 {
+			t.Errorf("PUT %s as global_admin: %d %s after %d calls", path, rec.Code, rec.Body, len(calls))
+		}
+	}
+	if rec, calls := w.Do(proxytest.Request{Method: "GET", Path: "/api/panel/policies/org-1", Session: serverAdmin}, ok); rec.Code != 200 || len(calls) != 1 {
+		t.Errorf("GET as server_admin: %d %s after %d calls", rec.Code, rec.Body, len(calls))
 	}
 }

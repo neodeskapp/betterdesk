@@ -18,6 +18,15 @@
   "calls": []
  },
  {
+  "vector": 20,
+  "bug": "RV68",
+  "request": "PUT /api/panel/policies/org-1/connection",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
+  "calls": []
+ },
+ {
   "vector": 24,
   "bug": "FL9",
   "request": "PUT /api/bd/api/panel/policies/org-1/connection",
@@ -33,6 +42,15 @@
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
+  "calls": []
+ },
+ {
+  "vector": 28,
+  "bug": "RV68",
+  "request": "PUT /api/bd/api/panel/policies/org-1/connection",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
   "calls": []
  },
  {
@@ -54,6 +72,15 @@
   "calls": []
  },
  {
+  "vector": 36,
+  "bug": "RV68",
+  "request": "PUT /api/panel/policies/org-1/features",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
+  "calls": []
+ },
+ {
   "vector": 40,
   "bug": "FL9",
   "request": "PUT /api/bd/api/panel/policies/org-1/features",
@@ -69,6 +96,15 @@
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
+  "calls": []
+ },
+ {
+  "vector": 44,
+  "bug": "RV68",
+  "request": "PUT /api/bd/api/panel/policies/org-1/features",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
   "calls": []
  },
  {
@@ -90,6 +126,15 @@
   "calls": []
  },
  {
+  "vector": 52,
+  "bug": "RV68",
+  "request": "PUT /api/panel/policies/org-1/security",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
+  "calls": []
+ },
+ {
   "vector": 56,
   "bug": "FL9",
   "request": "PUT /api/bd/api/panel/policies/org-1/security",
@@ -105,6 +150,15 @@
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
+  "calls": []
+ },
+ {
+  "vector": 60,
+  "bug": "RV68",
+  "request": "PUT /api/bd/api/panel/policies/org-1/security",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
   "calls": []
  },
  {
@@ -126,6 +180,15 @@
   "calls": []
  },
  {
+  "vector": 68,
+  "bug": "RV68",
+  "request": "PUT /api/panel/policies/org-1/network",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
+  "calls": []
+ },
+ {
   "vector": 72,
   "bug": "FL9",
   "request": "PUT /api/bd/api/panel/policies/org-1/network",
@@ -141,6 +204,15 @@
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
+  "calls": []
+ },
+ {
+  "vector": 76,
+  "bug": "RV68",
+  "request": "PUT /api/bd/api/panel/policies/org-1/network",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
   "calls": []
  },
  {
@@ -162,6 +234,15 @@
   "calls": []
  },
  {
+  "vector": 84,
+  "bug": "RV68",
+  "request": "PUT /api/panel/policies/org-1/update",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
+  "calls": []
+ },
+ {
   "vector": 88,
   "bug": "FL9",
   "request": "PUT /api/bd/api/panel/policies/org-1/update",
@@ -177,6 +258,15 @@
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
+  "calls": []
+ },
+ {
+  "vector": 92,
+  "bug": "RV68",
+  "request": "PUT /api/bd/api/panel/policies/org-1/update",
+  "status": 403,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
   "calls": []
  },
  {
