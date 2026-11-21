@@ -166,7 +166,7 @@ var (
 		"CDAP_TLS":             setOf("Y", "N", "y", "n", "true", "false", "1", "0"),
 	}
 	booleanWords = setOf("true", "false", "1", "0", "yes", "no", "on", "off", "y", "n")
-	secretKey    = regexp.MustCompile(`(?i)(PASSWORD|PASS|SECRET|TOKEN|API_KEY|PRIVATE_KEY|DATABASE_URL)`)
+	secretKey    = regexp.MustCompile(`(?i)(PASSWORD|PASS|SECRET|TOKEN|API_KEY|PRIVATE_KEY|DATABASE_URL|VAULT_KEY|SEED)`)
 	portValue    = regexp.MustCompile(`^[0-9]{1,5}$`)
 )
 
