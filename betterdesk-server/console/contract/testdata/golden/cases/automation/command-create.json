@@ -82,7 +82,7 @@
    "roles": [
     "server_admin"
    ],
-   "status": 201,
+   "status": 403,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -103,28 +103,11 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "command.created_at",
-     "format": "9999-99-99 99:99:99"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
-     "command": {
-      "command_type": "powershell",
-      "completed_at": null,
-      "created_at": "<volatile>",
-      "created_by": "e2e_server_admin",
-      "device_id": "900100001",
-      "executed_at": null,
-      "id": 1,
-      "payload": "Get-Process",
-      "result": null,
-      "status": "pending"
-     },
-     "success": true
+     "error": "Permission denied: device.connect",
+     "success": false
     }
    }
   },
@@ -169,7 +152,7 @@
       "created_by": "e2e_super_admin",
       "device_id": "900100001",
       "executed_at": null,
-      "id": 2,
+      "id": 1,
       "payload": "Get-Process",
       "result": null,
       "status": "pending"
@@ -219,7 +202,7 @@
       "created_by": "e2e_admin",
       "device_id": "900100001",
       "executed_at": null,
-      "id": 3,
+      "id": 2,
       "payload": "Get-Process",
       "result": null,
       "status": "pending"
