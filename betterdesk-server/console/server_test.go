@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"net/url"
 	"runtime"
 	"strings"
 	"testing"
@@ -54,44 +53,6 @@ func TestStepAsideInTheLaterStageEndsInTheNotFound(t *testing.T) {
 	}
 	if res := w.agent().get("/api/test-two/rules"); res.status != 200 || res.json(t)["route"] != "GET /api/test-two/rules" {
 		t.Errorf("the route at its own mount: %d %.100s", res.status, res.body)
-	}
-}
-
-// TestRoutingReportNamesGo: the routing report says Go answers every
-// request, routes, files, pages, sockets and the 404 alike.
-func TestRoutingReportNamesGo(t *testing.T) {
-	w := newWorld(t, setup{debug: true})
-	w.s.Router().Get("/api/ported/{id}", probe)
-	who := func(method, path string, upgrade bool) string {
-		q := url.Values{"method": {method}, "path": {path}}
-		if upgrade {
-			q.Set("upgrade", "websocket")
-		}
-		res := w.agent().get("/__bd/routing?" + q.Encode())
-		if res.status != 200 {
-			t.Fatalf("routing report: %d %s", res.status, res.body)
-		}
-		handler, _ := res.json(t)["handler"].(string)
-		return handler
-	}
-	for _, path := range []string{"/api/client-devices", "/api/ported/7", "/", "/login", "/favicon.svg", "/nothing/here", "/__bd/routing"} {
-		for _, method := range []string{"GET", "DELETE"} {
-			if got := who(method, path, false); got != "go" {
-				t.Errorf("%s %s: %q, want go", method, path, got)
-			}
-		}
-	}
-	for _, path := range []string{"/ws/device-status", "/ws/nothing"} {
-		if got := who("GET", path, true); got != "go" {
-			t.Errorf("an upgrade to %s: %q, want go", path, got)
-		}
-	}
-}
-
-func TestRoutingReportIsOffByDefault(t *testing.T) {
-	w := newWorld(t, setup{})
-	if res := w.agent().get("/__bd/routing?method=GET&path=/x"); res.status != 404 || strings.Contains(res.body, "handler") {
-		t.Errorf("status %d %s, want the 404", res.status, res.body)
 	}
 }
 

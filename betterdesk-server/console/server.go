@@ -45,7 +45,6 @@ import (
 	"github.com/unitronix/betterdesk-server/console/limits"
 	"github.com/unitronix/betterdesk-server/console/listen"
 	"github.com/unitronix/betterdesk-server/console/mail"
-	"github.com/unitronix/betterdesk-server/console/proxy"
 	"github.com/unitronix/betterdesk-server/console/qr"
 	"github.com/unitronix/betterdesk-server/console/remoterelay"
 	"github.com/unitronix/betterdesk-server/console/restart"
@@ -102,7 +101,6 @@ type Server struct {
 	deps     *kit.Deps
 	early    *kit.Router
 	router   *kit.Router
-	routing  http.Handler
 	pipeline http.Handler
 	jobs     *jobs.Registry
 	// net are the listeners (listeners.go)
@@ -123,9 +121,6 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		getenv = func(string) string { return "" }
 	}
 	s := &Server{cfg: cfg, early: kit.NewRouter(), router: kit.NewRouter(), jobs: jobs.New(), apiListener: opts.APIListener}
-	if cfg.DebugRouting {
-		s.routing = proxy.Routing(func(*http.Request) bool { return true }, false)
-	}
 
 	if err := os.MkdirAll(cfg.UploadsDir, 0o755); err != nil {
 		logging.Logf("console", "WARN: cannot create the uploads folder %s: %v", cfg.UploadsDir, err)
@@ -459,10 +454,11 @@ func (s *Server) Jobs() *jobs.Registry { return s.jobs }
 // ServeHTTP sends a request through the pipeline. An upgrade to a socket
 // the console has (console/ws) goes to that socket, outside the pipeline,
 // as Node's upgrade listener ran outside Express; any other upgrade
-// passes the pipeline like a plain request.
+// passes the pipeline like a plain request. The routing report
+// (routing.go), when switched on, answers before all of them.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if s.routing != nil && r.Method == http.MethodGet && r.URL.Path == proxy.RoutingPath {
-		s.routing.ServeHTTP(w, r)
+	if s.cfg.DebugRouting && r.Method == http.MethodGet && r.URL.Path == routingPath {
+		routingReport(w, r)
 		return
 	}
 	if s.deps.Sockets.Serves(r) {
