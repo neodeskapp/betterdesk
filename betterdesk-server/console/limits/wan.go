@@ -169,7 +169,7 @@ func WANStack(opts WANOptions) func(http.Handler) http.Handler {
 	}
 	key := func(r *http.Request) string {
 		if ip := opts.ClientIP(r); ip != "" {
-			return ip
+			return bucketKey(ip)
 		}
 		return "unknown"
 	}

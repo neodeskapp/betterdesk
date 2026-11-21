@@ -2,6 +2,7 @@ package limits
 
 import (
 	"net/http"
+	"net/netip"
 	"regexp"
 	"strings"
 	"time"
@@ -226,11 +227,11 @@ func NewSet(opts Options) *Set {
 	return s
 }
 
-// addressKey is the client's address, else the X-Forwarded-For header as
-// sent, else "unknown".
+// addressKey is the client's address (an IPv6 address by its /64, see
+// bucketKey), else the X-Forwarded-For header as sent, else "unknown".
 func (s *Set) addressKey(r *http.Request) string {
 	if ip := s.opts.ClientIP(r); ip != "" {
-		return ip
+		return bucketKey(ip)
 	}
 	if forwarded := strings.Join(r.Header.Values("X-Forwarded-For"), ", "); forwarded != "" {
 		return forwarded
@@ -302,4 +303,17 @@ func (s *Set) AppLevel() func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// bucketKey is the key of a client address. An IPv6 address counts by its
+// /64, the network a line or a hosted machine gets, so that moving
+// through its 2^64 addresses gives no new budget and no new entry per
+// address; an IPv4 address, also one written as IPv6 (::ffff:a.b.c.d),
+// and text that is no address count as they are.
+func bucketKey(addr string) string {
+	ip, err := netip.ParseAddr(addr)
+	if err != nil || ip.Is4() || ip.Is4In6() {
+		return addr
+	}
+	return netip.PrefixFrom(ip.WithZone(""), 64).Masked().String()
 }
