@@ -33,7 +33,10 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "commands"
+    {
+     "path": "commands[#]",
+     "elements": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -72,7 +75,10 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "commands"
+    {
+     "path": "commands[#]",
+     "elements": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -112,12 +118,32 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "commands"
+    {
+     "path": "commands[#]",
+     "elements": true
+    },
+    {
+     "path": "commands[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
-     "commands": [],
+     "commands": [
+      {
+       "command_type": "powershell",
+       "completed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "e2e_server_admin",
+       "device_id": "900100001",
+       "executed_at": null,
+       "has_result": false,
+       "id": 1,
+       "payload": "Get-Process",
+       "status": "pending"
+      }
+     ],
      "total": 1
     }
    }
@@ -151,12 +177,40 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "commands"
+    {
+     "path": "commands[#]",
+     "elements": true
+    },
+    {
+     "path": "commands[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "commands[*].created_by",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "commands[*].id",
+     "integer": true
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
-     "commands": [],
+     "commands": [
+      {
+       "command_type": "powershell",
+       "completed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "<volatile>",
+       "device_id": "900100001",
+       "executed_at": null,
+       "has_result": false,
+       "id": 0,
+       "payload": "Get-Process",
+       "status": "pending"
+      }
+     ],
      "total": 2
     }
    }
@@ -190,12 +244,40 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "commands"
+    {
+     "path": "commands[#]",
+     "elements": true
+    },
+    {
+     "path": "commands[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "commands[*].created_by",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "commands[*].id",
+     "integer": true
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
-     "commands": [],
+     "commands": [
+      {
+       "command_type": "powershell",
+       "completed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "<volatile>",
+       "device_id": "900100001",
+       "executed_at": null,
+       "has_result": false,
+       "id": 0,
+       "payload": "Get-Process",
+       "status": "pending"
+      }
+     ],
      "total": 3
     }
    }

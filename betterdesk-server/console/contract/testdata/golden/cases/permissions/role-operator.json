@@ -33,7 +33,10 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "data.permissions"
+    {
+     "path": "data.permissions",
+     "anyOrder": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -74,7 +77,10 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "data.permissions"
+    {
+     "path": "data.permissions",
+     "anyOrder": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -117,13 +123,35 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "data.permissions"
+    {
+     "path": "data.permissions",
+     "anyOrder": true
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "permissions": [],
+      "permissions": [
+       "audit.view",
+       "billing.reports",
+       "billing.view",
+       "cdap.command",
+       "cdap.view",
+       "chat.access",
+       "device.connect",
+       "device.connection_mode",
+       "device.edit",
+       "device.view",
+       "guest.create",
+       "mesh.power",
+       "metrics.view",
+       "org.manage_devices",
+       "remote_target.connect",
+       "remote_target.test",
+       "remote_target.view",
+       "user.view"
+      ],
       "role": "operator"
      },
      "success": true

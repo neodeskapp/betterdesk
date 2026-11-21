@@ -37,13 +37,16 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "data.permissions"
+    {
+     "path": "data.permissions",
+     "anyOrder": true
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "permissions": [],
+      "permissions": null,
       "role": "pro"
      },
      "success": true

@@ -32,13 +32,26 @@ type VolatileMark struct {
 	// Integer says every number at the path was a whole number in the
 	// recordings. A number there must be whole.
 	Integer bool `json:"integer,omitempty"`
+	// AnyOrder marks an array whose elements come in no fixed order. Its
+	// value is not volatile: it must hold the same elements, compared
+	// after sorting both sides. Set by hand with the prefix AnyOrder.
+	AnyOrder bool `json:"anyOrder,omitempty"`
+	// Elements is set on a length mark ([#]) when the golden keeps its
+	// first element as the sample of every element: each element must
+	// equal it, except at the marks below the array ([*]). Without it
+	// (goldens recorded before samples were kept) each element only has
+	// to be of the sample's JSON type.
+	Elements bool `json:"elements,omitempty"`
+	// Optional marks a key that may be missing. Where it is there, its
+	// value is volatile. Set by hand with the prefix Optional.
+	Optional bool `json:"optional,omitempty"`
 }
 
 // MarshalJSON writes a mark without a format as its path.
 func (m VolatileMark) MarshalJSON() ([]byte, error) {
 	type plain VolatileMark
 	var value any = plain(m)
-	if m.Format == "" && m.Pattern == "" && !m.Integer {
+	if m.Format == "" && m.Pattern == "" && !m.Integer && !m.AnyOrder && !m.Elements && !m.Optional {
 		value = m.Path
 	}
 	return marshalPlain(value)
@@ -62,28 +75,51 @@ func (m *VolatileMark) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// plainMarks makes marks without formats from paths.
+// plainMarks makes marks without formats from paths. A path that starts
+// with AnyOrder makes a mark of an array in any order, one that starts
+// with Optional a mark of a key that may be missing.
 func plainMarks(paths []string) []VolatileMark {
 	if len(paths) == 0 {
 		return nil
 	}
 	marks := make([]VolatileMark, len(paths))
 	for i, p := range paths {
+		if rest, ok := strings.CutPrefix(p, AnyOrder); ok {
+			marks[i] = VolatileMark{Path: rest, AnyOrder: true}
+			continue
+		}
+		if rest, ok := strings.CutPrefix(p, Optional); ok {
+			marks[i] = VolatileMark{Path: rest, Optional: true}
+			continue
+		}
 		marks[i] = VolatileMark{Path: p}
 	}
 	return marks
 }
 
-// markPaths lists the paths of marks.
+// markPaths lists the paths of marks, a mark of an array in any order
+// with the prefix AnyOrder, a mark of a key that may be missing with the
+// prefix Optional.
 func markPaths(marks []VolatileMark) []string {
 	if len(marks) == 0 {
 		return nil
 	}
 	paths := make([]string, len(marks))
 	for i, m := range marks {
-		paths[i] = m.Path
+		paths[i] = m.text()
 	}
 	return paths
+}
+
+// text is the mark's path as plainMarks reads it.
+func (m VolatileMark) text() string {
+	if m.AnyOrder {
+		return AnyOrder + m.Path
+	}
+	if m.Optional {
+		return Optional + m.Path
+	}
+	return m.Path
 }
 
 // formatClass is the class of a string: digits become 9, ASCII lower-case

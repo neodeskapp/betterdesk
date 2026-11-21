@@ -11,7 +11,7 @@ import (
 // Roles and permission overrides. The overrides written here are for the
 // role "pro", which cannot sign in to the console, and each turn deletes
 // what it set. The API server lists a role's permissions in no fixed
-// order, so those lists are free.
+// order, so those lists are compared in any order.
 func init() {
 	some := contract.Roles("signed-out", "viewer", "server_admin", "admin")
 	admins := contract.Roles("server_admin", "super_admin", "admin")
@@ -21,11 +21,11 @@ func init() {
 	}
 
 	contract.Group("permissions",
-		contract.Case{Name: "roles", Path: "/api/panel/roles", Volatile: []string{"data.roles[*].permissions"}},
+		contract.Case{Name: "roles", Path: "/api/panel/roles", Volatile: []string{contract.AnyOrder + "data.roles[*].permissions"}},
 		contract.Case{Name: "roles-head", Method: "HEAD", Path: "/api/panel/roles", Roles: some},
-		contract.Case{Name: "role-operator", Path: "/api/panel/roles/operator/permissions", Volatile: []string{"data.permissions"}},
-		contract.Case{Name: "role-super-admin", Path: "/api/panel/roles/super_admin/permissions", Volatile: []string{"data.permissions"}, Roles: admins},
-		contract.Case{Name: "role-with-spaces-around", Path: "/api/panel/roles/%20viewer%20/permissions", Volatile: []string{"data.permissions"}, Roles: admins},
+		contract.Case{Name: "role-operator", Path: "/api/panel/roles/operator/permissions", Volatile: []string{contract.AnyOrder + "data.permissions"}},
+		contract.Case{Name: "role-super-admin", Path: "/api/panel/roles/super_admin/permissions", Volatile: []string{contract.AnyOrder + "data.permissions"}, Roles: admins},
+		contract.Case{Name: "role-with-spaces-around", Path: "/api/panel/roles/%20viewer%20/permissions", Volatile: []string{contract.AnyOrder + "data.permissions"}, Roles: admins},
 		contract.Case{Name: "role-unknown", Path: "/api/panel/roles/nobody/permissions", Roles: some},
 		contract.Case{Name: "role-in-upper-case", Path: "/api/panel/roles/OPERATOR/permissions", Roles: admins},
 		contract.Case{Name: "role-with-a-space", Path: "/api/panel/roles/oper%20ator/permissions", Roles: some},
@@ -45,7 +45,7 @@ func init() {
 		contract.Case{Name: "overrides-of-two-roles", Path: "/api/panel/role-permissions", Query: url.Values{"role": {"pro", "viewer"}}, Roles: admins},
 		contract.Case{Name: "overrides-of-role-in-brackets", Path: "/api/panel/role-permissions", Query: url.Values{"role[]": {"pro"}}, Roles: admins},
 		contract.Case{Name: "overrides-of-role-as-object", Path: "/api/panel/role-permissions", Query: url.Values{"role[name]": {"pro"}}, Roles: admins},
-		contract.Case{Name: "role-pro-after-set", Path: "/api/panel/roles/pro/permissions", Volatile: []string{"data.permissions"}, Roles: admins},
+		contract.Case{Name: "role-pro-after-set", Path: "/api/panel/roles/pro/permissions", Volatile: []string{contract.AnyOrder + "data.permissions"}, Roles: admins},
 		set("set-again-to-denied", map[string]any{"role": "pro", "permission": "device.view", "granted": false}, writers),
 		contract.Case{Name: "overrides-of-pro-after-denied", Path: "/api/panel/role-permissions", Query: url.Values{"role": {"pro"}}, Roles: admins},
 		set("set-second", map[string]any{"role": []any{"pro"}, "permission": []any{"audit.view"}, "granted": true}, writers),
@@ -90,6 +90,6 @@ func init() {
 		contract.Case{Name: "delete-permission-with-a-slash", Method: "DELETE", Path: "/api/panel/role-permissions/pro/device%2Fview", Roles: writers},
 		contract.Case{Name: "delete-without-csrf-token", Method: "DELETE", Path: "/api/panel/role-permissions/pro/device.view", NoCSRF: true, Roles: some},
 		contract.Case{Name: "overrides-after-delete", Path: "/api/panel/role-permissions", Roles: admins},
-		contract.Case{Name: "role-pro-after-delete", Path: "/api/panel/roles/pro/permissions", Volatile: []string{"data.permissions"}, Roles: admins},
+		contract.Case{Name: "role-pro-after-delete", Path: "/api/panel/roles/pro/permissions", Volatile: []string{contract.AnyOrder + "data.permissions"}, Roles: admins},
 	)
 }

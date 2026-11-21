@@ -84,10 +84,17 @@ func detectVolatile(first, second Answer, known, knownHeaders []string, now time
 type walker struct {
 	now   time.Time
 	found *detection
+	// element says the walk compares an element of an array whose length
+	// is volatile with the array's sample element.
+	element bool
 }
 
 func (w walker) problem(here path, format string, args ...any) {
-	w.found.Problems = append(w.found.Problems, "body "+here.String()+": "+fmt.Sprintf(format, args...))
+	text := fmt.Sprintf(format, args...)
+	if w.element {
+		text = "an element is not like the first element, which the golden keeps as the sample of all (in the words below the first recording is the sample, the second the element): " + text
+	}
+	w.found.Problems = append(w.found.Problems, "body "+here.String()+": "+text)
 }
 
 // compare walks two recordings of a JSON value. It returns the volatile
@@ -109,7 +116,9 @@ func (w walker) compare(here path, a, b any, at volatileAt) []path {
 		for _, key := range sortedKeys(va) {
 			other, ok := vb[key]
 			if !ok {
-				onlyA = append(onlyA, key)
+				if !at.key(key).isOptional() {
+					onlyA = append(onlyA, key)
+				}
 				continue
 			}
 			s := step{kind: stepKey, key: key}
@@ -118,7 +127,7 @@ func (w walker) compare(here path, a, b any, at volatileAt) []path {
 			}
 		}
 		for _, key := range sortedKeys(vb) {
-			if _, ok := va[key]; !ok {
+			if _, ok := va[key]; !ok && !at.key(key).isOptional() {
 				onlyB = append(onlyB, key)
 			}
 		}
@@ -128,11 +137,20 @@ func (w walker) compare(here path, a, b any, at volatileAt) []path {
 		return found
 	case []any:
 		vb := b.([]any)
-		if at.isLength() {
+		if at.isAnyOrder() {
+			var differ []Diff
+			compareAnyOrder("", va, vb, &differ)
+			if len(differ) > 0 {
+				w.problem(here, "the elements differ in any order: %s", strings.NewReplacer("missing element", "only in the first recording:", "unexpected element", "only in the second recording:").Replace(joinDiffs(differ)))
+			}
 			return nil
 		}
-		if len(va) != len(vb) {
-			return []path{{step{kind: stepLength}}}
+		if at.isLength() || len(va) != len(vb) {
+			found := w.elements(here, va, vb, at)
+			if at.isLength() {
+				return found
+			}
+			return append([]path{{step{kind: stepLength}}}, found...)
 		}
 		// What every element has volatile becomes [*], the rest [index].
 		perElement := make([][]path, len(va))
@@ -168,6 +186,44 @@ func (w walker) compare(here path, a, b any, at volatileAt) []path {
 		return []path{{}}
 	}
 	return nil
+}
+
+// elements compares every element of two recordings of an array whose
+// length is volatile with the first element of the first recording,
+// which the golden keeps as the sample of all elements. What differs in
+// value is volatile below the array ([*]); a difference in keys or type
+// is a problem. An empty first recording has no sample, and nothing is
+// compared.
+func (w walker) elements(here path, a, b []any, at volatileAt) []path {
+	if len(a) == 0 {
+		return nil
+	}
+	sample := w
+	sample.element = true
+	var found []path
+	seen := map[string]bool{}
+	for _, elements := range [][]any{a, b} {
+		for i, element := range elements {
+			s := step{kind: stepIndex, index: i}
+			for _, sub := range sample.compare(here.with(s), a[0], element, at.element(i)) {
+				p := append(path{{kind: stepEvery}}, sub...)
+				if !seen[p.String()] {
+					seen[p.String()] = true
+					found = append(found, p)
+				}
+			}
+		}
+	}
+	return found
+}
+
+// joinDiffs writes the What of each diff, separated by semicolons.
+func joinDiffs(diffs []Diff) string {
+	parts := make([]string, len(diffs))
+	for i, d := range diffs {
+		parts[i] = d.What
+	}
+	return strings.Join(parts, "; ")
 }
 
 // timeWindow is how far from now a value may be to count as bound to the
@@ -220,9 +276,10 @@ func timeBound(value any, now time.Time) bool {
 // placeholder of its type, so a golden holds nothing that belongs to one
 // instance and recording again changes as little as possible: strings
 // become "<volatile>", numbers 0, booleans false, objects {} and arrays [].
-// An array with a volatile length keeps one emptied element as the sample
-// of its element type. A volatile body that is not JSON loses length, hash
-// and head.
+// An array with a volatile length keeps its first element as the sample of
+// its elements, masked by the marks below the array. An array in any
+// order is sorted. A volatile body that is not JSON loses
+// length, hash and head.
 func maskVolatile(a Answer, volatile []string) (Answer, error) {
 	set, err := newVolatileSet(volatile)
 	if err != nil {
@@ -256,11 +313,14 @@ func maskJSON(value any, at volatileAt) any {
 			v[key] = maskJSON(child, at.key(key))
 		}
 	case []any:
+		if at.isAnyOrder() {
+			return sortedElements(v)
+		}
 		if at.isLength() {
 			if len(v) == 0 {
 				return v
 			}
-			return []any{placeholder(v[0])}
+			return []any{maskJSON(v[0], at.element(0))}
 		}
 		for i, child := range v {
 			v[i] = maskJSON(child, at.element(i))

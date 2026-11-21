@@ -28,9 +28,9 @@ func init() {
 		contract.Case{Name: "get-unknown", Path: "/api/panel/org/999999999"},
 		contract.Case{Name: "get-invalid-id", Path: "/api/panel/org/bad$id"},
 		contract.Case{Name: "users", Path: "/api/panel/org/{org}/users"},
-		// The accounts carry last_login once they have signed in, which
-		// depends on the groups that ran before
-		contract.Case{Name: "available-users", Path: "/api/panel/org/{org}/available-users", Volatile: []string{"users"}},
+		// An account carries last_login once it has signed in, which
+		// depends on the groups that ran before; the list itself is pinned
+		contract.Case{Name: "available-users", Path: "/api/panel/org/{org}/available-users", Volatile: []string{contract.Optional + "users[*].last_login"}},
 		contract.Case{Name: "invitations", Path: "/api/panel/org/{org}/invitations"},
 		contract.Case{Name: "devices", Path: "/api/panel/org/{org}/devices"},
 		contract.Case{Name: "settings", Path: "/api/panel/org/{org}/settings"},
@@ -92,7 +92,7 @@ func init() {
 			Name: "link-member", Method: "POST", Path: "/api/panel/org/{created}/members",
 			Body: map[string]any{"user_id": 1, "role": "user"},
 		},
-		contract.Case{Name: "created-available-users", Path: "/api/panel/org/{created}/available-users", Volatile: []string{"users"}},
+		contract.Case{Name: "created-available-users", Path: "/api/panel/org/{created}/available-users", Volatile: []string{contract.Optional + "users[*].last_login"}},
 		contract.Case{Name: "unlink-member-hex-id", Method: "DELETE", Path: "/api/panel/org/{created}/members/0x1"},
 		contract.Case{Name: "unlink-member-again", Method: "DELETE", Path: "/api/panel/org/{created}/members/1"},
 		contract.Case{Name: "unlink-member-unknown", Method: "DELETE", Path: "/api/panel/org/{created}/members/999999999"},

@@ -33,7 +33,7 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "users"
+    "users[*].last_login"
    ],
    "body": {
     "kind": "json",
@@ -70,7 +70,7 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "users"
+    "users[*].last_login"
    ],
    "body": {
     "kind": "json",
@@ -111,7 +111,7 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "users"
+    "users[*].last_login"
    ],
    "body": {
     "kind": "json",
@@ -154,12 +154,126 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "users"
+    {
+     "path": "users[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "users[*].last_login",
+     "format": "9999-99-99 99:99:99"
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
-     "users": []
+     "users": [
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 2,
+       "is_server_admin": false,
+       "role": "operator",
+       "totp_enabled": false,
+       "username": "demo_operator"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 4,
+       "is_server_admin": false,
+       "role": "server_admin",
+       "totp_enabled": false,
+       "username": "demo_serveradmin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 3,
+       "is_server_admin": false,
+       "role": "viewer",
+       "totp_enabled": false,
+       "username": "demo_viewer"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 5,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "admin",
+       "totp_enabled": false,
+       "username": "e2e_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 8,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "global_admin",
+       "totp_enabled": false,
+       "username": "e2e_global_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 11,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "guest_issuer",
+       "totp_enabled": false,
+       "username": "e2e_guest_issuer"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 9,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "operator",
+       "totp_enabled": false,
+       "username": "e2e_operator"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 12,
+       "is_server_admin": false,
+       "role": "pro",
+       "totp_enabled": false,
+       "username": "e2e_pro"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 7,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "server_admin",
+       "totp_enabled": false,
+       "username": "e2e_server_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 6,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "super_admin",
+       "totp_enabled": false,
+       "username": "e2e_super_admin"
+      },
+      {
+       "auth_provider": "",
+       "created_at": "<volatile>",
+       "id": 10,
+       "is_server_admin": false,
+       "last_login": "<volatile>",
+       "role": "viewer",
+       "totp_enabled": false,
+       "username": "e2e_viewer"
+      }
+     ]
     }
    }
   }

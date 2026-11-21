@@ -36,8 +36,22 @@
     "x-xss-protection": "0"
    },
    "volatile": [
+    {
+     "path": "events[*].details",
+     "optional": true
+    },
+    {
+     "path": "events[*].target",
+     "optional": true
+    },
     "count",
-    "events[#]",
+    {
+     "path": "events[#]",
+     "elements": true
+    },
+    "events[*].action",
+    "events[*].actor",
+    "events[*].timestamp",
     "total"
    ],
    "body": {

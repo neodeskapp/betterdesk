@@ -36,17 +36,48 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "count",
-    "events[#]",
+    {
+     "path": "events[*].details",
+     "optional": true
+    },
+    {
+     "path": "events[*].target",
+     "optional": true
+    },
+    "events[*].actor",
+    {
+     "path": "events[*].timestamp",
+     "pattern": "^9999-99-99A99:99:99(\\.9{1,9})?A$"
+    },
     "total"
    ],
    "body": {
     "kind": "json",
     "json": {
-     "count": 0,
+     "count": 3,
      "enabled": true,
      "events": [
-      {}
+      {
+       "action": "org_policy_changed",
+       "actor": "<volatile>",
+       "details": {},
+       "target": "<volatile>",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "<volatile>",
+       "details": {},
+       "target": "<volatile>",
+       "timestamp": "<volatile>"
+      },
+      {
+       "action": "org_policy_changed",
+       "actor": "<volatile>",
+       "details": {},
+       "target": "<volatile>",
+       "timestamp": "<volatile>"
+      }
      ],
      "total": 0
     }

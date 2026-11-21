@@ -98,6 +98,7 @@ func TestDetectVolatileValues(t *testing.T) {
 		"items[*].created",
 		"items[0].id",
 		"log[#]",
+		"log[*]",
 		"online",
 		"some[1].seen",
 		"token",
@@ -108,11 +109,11 @@ func TestDetectVolatileValues(t *testing.T) {
 }
 
 func TestDetectVolatileSkipsWhatIsKnown(t *testing.T) {
-	first := jsonAnswer(200, `{"sessions": {"abc": 1}, "list": [1, 2], "x": "a", "v": null}`)
-	second := jsonAnswer(200, `{"sessions": {"xyz": 1, "q": 2}, "list": ["a"], "x": "b", "v": null}`)
+	first := jsonAnswer(200, `{"sessions": {"abc": 1}, "list": [1, 1], "x": "a", "v": null}`)
+	second := jsonAnswer(200, `{"sessions": {"xyz": 1, "q": 2}, "list": [1], "x": "b", "v": null}`)
 	found := detectVolatile(first, second, []string{"sessions", "list[#]"}, nil, recordedAt)
 	if len(found.Problems) > 0 || !reflect.DeepEqual(found.Volatile, []string{"x"}) {
-		t.Errorf("found %+v, want only x and no problems: sessions and the length of list are marked by hand", found)
+		t.Errorf("found %+v, want only x and no problems: sessions and the length of list are marked by hand, and the elements of list are all 1", found)
 	}
 }
 
@@ -226,7 +227,7 @@ func TestMaskVolatile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := `{"count":0,"empty":[],"items":[{"created":"<volatile>","id":1},{"created":"<volatile>","id":0}],"keep":"x","log":[{}],"nothing":null,"online":false,"sessions":{},"token":"<volatile>"}`
+	want := `{"count":0,"empty":[],"items":[{"created":"<volatile>","id":1},{"created":"<volatile>","id":0}],"keep":"x","log":[{"line":"a"}],"nothing":null,"online":false,"sessions":{},"token":"<volatile>"}`
 	if got := string(masked.Body.JSON); got != want {
 		t.Errorf("masked body:\n got %s\nwant %s", got, want)
 	}

@@ -33,7 +33,10 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "entries[#]"
+    {
+     "path": "entries[#]",
+     "elements": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -75,7 +78,10 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "entries[#]"
+    {
+     "path": "entries[#]",
+     "elements": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -119,13 +125,37 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "entries[#]"
+    {
+     "path": "entries[#]",
+     "elements": true
+    },
+    {
+     "path": "entries[*].details.category",
+     "pattern": "^a+$"
+    },
+    {
+     "path": "entries[*].details.org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    },
+    {
+     "path": "entries[*].timestamp",
+     "pattern": "^9999-99-99A99:99:99\\.9+A$"
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
      "entries": [
-      {}
+      {
+       "action": "org_policy_changed",
+       "actor": "127.0.0.1",
+       "details": {
+        "category": "<volatile>",
+        "org_id": "<volatile>"
+       },
+       "target": "apikey:console-bridge",
+       "timestamp": "<volatile>"
+      }
      ]
     }
    }

@@ -37,13 +37,60 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "data.permissions"
+    {
+     "path": "data.permissions",
+     "anyOrder": true
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "permissions": [],
+      "permissions": [
+       "audit.view",
+       "billing.export",
+       "billing.manage",
+       "billing.reports",
+       "billing.view",
+       "blocklist.edit",
+       "branding.edit",
+       "cdap.command",
+       "cdap.files",
+       "cdap.terminal",
+       "cdap.view",
+       "chat.access",
+       "device.ban",
+       "device.change_id",
+       "device.connect",
+       "device.connection_mode",
+       "device.delete",
+       "device.edit",
+       "device.view",
+       "enrollment.approve",
+       "enrollment.manage",
+       "guest.create",
+       "mesh.files",
+       "mesh.power",
+       "mesh.terminal",
+       "metrics.view",
+       "org.create",
+       "org.delete",
+       "org.edit",
+       "org.manage_devices",
+       "org.manage_users",
+       "remote_target.connect",
+       "remote_target.delete",
+       "remote_target.edit",
+       "remote_target.test",
+       "remote_target.view",
+       "server.attestation",
+       "server.config",
+       "server.keys",
+       "user.create",
+       "user.delete",
+       "user.edit",
+       "user.view"
+      ],
       "role": "super_admin"
      },
      "success": true

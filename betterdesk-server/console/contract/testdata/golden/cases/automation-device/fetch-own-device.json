@@ -37,12 +37,40 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "commands"
+    {
+     "path": "commands[#]",
+     "elements": true
+    },
+    {
+     "path": "commands[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "commands[*].created_by",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "commands[*].id",
+     "integer": true
+    }
    ],
    "body": {
     "kind": "json",
     "json": {
-     "commands": []
+     "commands": [
+      {
+       "command_type": "powershell",
+       "completed_at": null,
+       "created_at": "<volatile>",
+       "created_by": "<volatile>",
+       "device_id": "900100001",
+       "executed_at": null,
+       "id": 0,
+       "payload": "Get-Process",
+       "result": null,
+       "status": "pending"
+      }
+     ]
     }
    }
   }

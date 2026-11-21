@@ -327,7 +327,7 @@ func init() {
 			Name: "command-create-without-csrf-token", Method: "POST", Path: "/api/automation/commands",
 			Body: map[string]any{"device_id": "900100001", "payload": "whoami"}, NoCSRF: true,
 		},
-		contract.Case{Name: "commands", Path: "/api/automation/commands", Volatile: []string{"~commands", "total"}},
+		contract.Case{Name: "commands", Path: "/api/automation/commands", Volatile: []string{"commands[#]", "total"}},
 		contract.Case{Name: "commands-head", Method: "HEAD", Path: "/api/automation/commands", Roles: few},
 		contract.Case{
 			Name: "commands-newest-of-device", Path: "/api/automation/commands",
@@ -344,7 +344,7 @@ func init() {
 		contract.Case{Name: "commands-limit-negative", Path: "/api/automation/commands", Query: url.Values{"device_id": {"no-such-device"}, "limit": {"-1"}}},
 		// Since 3.5.264 the limit is held at 500 and the whole list comes
 		// back, in an order the creation second of the earlier cases decides
-		contract.Case{Name: "commands-limit-too-large", Path: "/api/automation/commands", Query: url.Values{"limit": {"99999999999999999999"}}, Volatile: []string{"commands"}},
+		contract.Case{Name: "commands-limit-too-large", Path: "/api/automation/commands", Query: url.Values{"limit": {"99999999999999999999"}}, Volatile: []string{"commands[#]"}},
 		contract.Case{Name: "commands-limit-object", Path: "/api/automation/commands", Query: url.Values{"device_id": {"no-such-device"}, "limit[rows]": {"1"}}},
 		contract.Case{Name: "commands-status-twice", Path: "/api/automation/commands", Query: url.Values{"status": {"pending", "running"}}},
 		contract.Case{Name: "commands-status-object", Path: "/api/automation/commands", Query: url.Values{"status[is]": {"pending"}}},
@@ -467,7 +467,7 @@ func init() {
 
 		// Fetching
 		asDevice(contract.Case{Name: "fetch", Volatile: ids}),
-		asDevice(contract.Case{Name: "fetch-own-device", Headers: device, Volatile: []string{"commands"}}),
+		asDevice(contract.Case{Name: "fetch-own-device", Headers: device, Volatile: []string{"commands[#]"}}),
 		asDevice(contract.Case{Name: "fetch-without-token", Headers: none}),
 		asDevice(contract.Case{Name: "fetch-unknown-token", Headers: unknown}),
 		asDevice(contract.Case{Name: "fetch-basic", Headers: basic}),

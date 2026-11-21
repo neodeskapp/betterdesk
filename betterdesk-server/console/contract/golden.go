@@ -144,6 +144,18 @@ type recording struct {
 // down, like a duration that is "51.3s" now and "1m3.2s" a little later.
 const FreeForm = "~"
 
+// AnyOrder starts a path set by hand of an array whose elements come in
+// no fixed order, like the permissions of a role. The array is not
+// volatile: it must hold the same elements as the golden, and both are
+// sorted before they are compared. The golden keeps the elements sorted.
+const AnyOrder = "@"
+
+// Optional starts a path set by hand of a key that some objects have and
+// others do not, like the details of only some audit events in a list
+// whose elements are compared with one sample. The key may be missing on
+// either side; where it is there, its value is volatile.
+const Optional = "?"
+
 // handMarks splits the marks set by hand into their paths and the set of
 // those that are free in format.
 func handMarks(marks []string) (paths []string, free map[string]bool) {
@@ -240,13 +252,15 @@ func (rec *recording) merge(first *Golden, now time.Time) (golden *Golden, probl
 		settled := map[string]VolatileMark{}
 		if first.Recordings >= 2 {
 			for _, mark := range p.before.Volatile {
-				settled[mark.Path] = mark
+				settled[mark.text()] = mark
 			}
 		}
 		marks := make([]VolatileMark, len(p.volatile))
 		for i, text := range p.volatile {
 			mark, isSettled := settled[text]
-			if free[text] {
+			if strings.HasPrefix(text, AnyOrder) || strings.HasPrefix(text, Optional) {
+				mark = plainMarks([]string{text})[0]
+			} else if free[text] {
 				mark = VolatileMark{Path: text}
 			} else if !isSettled {
 				key := fmt.Sprintf("%d %s", p.before.Status, text)
@@ -254,6 +268,8 @@ func (rec *recording) merge(first *Golden, now time.Time) (golden *Golden, probl
 					derived[key] = deriveMark(text, samples[p.before.Status]...)
 				}
 				mark = derived[key]
+				// The golden keeps the first element as the sample
+				mark.Elements = strings.HasSuffix(text, "[#]")
 			}
 			marks[i] = mark
 		}
@@ -452,13 +468,13 @@ func withHandMarks(want GoldenAnswer, volatile, volatileHeaders []string) Golden
 		marks := append([]VolatileMark(nil), want.Volatile...)
 		known := map[string]int{}
 		for i, mark := range marks {
-			known[mark.Path] = i
+			known[mark.text()] = i
 		}
 		for _, p := range paths {
 			i, ok := known[p]
 			switch {
 			case !ok:
-				marks = append(marks, VolatileMark{Path: p})
+				marks = append(marks, plainMarks([]string{p})[0])
 			case free[p]:
 				marks[i] = VolatileMark{Path: p}
 			}

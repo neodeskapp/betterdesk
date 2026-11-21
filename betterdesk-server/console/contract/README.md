@@ -469,7 +469,15 @@ what it got (`"recordings": 1`). The second run is merged in
   marked in `"volatile"`. When every element of an array differs at the same
   key the mark uses `[*]` (`data.items[*].created_at`), otherwise the index.
 - Where the arrays have different lengths, the mark is the length:
-  `data.items[#]`. The golden keeps one emptied element as a sample.
+  `data.items[#]`, written `{"path": "data.items[#]", "elements": true}`.
+  The golden keeps the first element of the first recording as the sample
+  of all elements, and every element of both recordings is compared with
+  it: what differs in value is marked below the array
+  (`data.items[*].id`), a difference in keys or type fails the recording.
+  A later answer may have any number of elements, each like the sample: the
+  same keys, the same values except at the marks, the formats of the marks.
+  A length mark without `"elements"` comes from a golden recorded before:
+  its sample was emptied, and each element only has to be of its JSON type.
 - A body that is not JSON and differs is volatile as a whole: `$`.
 - A value both recordings agree on is still marked when it holds a date
   within 45 days of the recording, or is a Unix time in that range. Both
@@ -520,7 +528,20 @@ A volatile value is free, but its type and its format are not:
   format: only the type is checked there.
 - A volatile **number** that was a whole number in both recordings is marked
   `"integer": true` and must stay whole.
-- A mark set by hand on an object or array checks the type only.
+- A mark set by hand on an object or array checks the type only. Mark the
+  field that changes (`users[*].last_login`), not the list, or the length
+  (`users[#]`) for a list that grows.
+- A list whose elements come in no fixed order (a role's permissions) is
+  marked by hand with `@` in front (`contract.AnyOrder + "data.permissions"`,
+  `{"path": "data.permissions", "anyOrder": true}` in the golden). It is not
+  volatile: it must hold the same elements, each as often, in any order.
+  The golden keeps them sorted, and two recordings with other elements fail
+  the recording.
+- A key that only some objects have (the details of some audit events in a
+  list compared with one sample, the last sign-in of an account that has
+  signed in) is marked by hand with `?` in front
+  (`contract.Optional + "events[*].details"`, `"optional": true`). It may be
+  missing on either side; where it is there, its value is volatile.
 
 ```json
 "volatile": [

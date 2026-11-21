@@ -36,8 +36,6 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "count",
-    "events[#]",
     "total"
    ],
    "body": {

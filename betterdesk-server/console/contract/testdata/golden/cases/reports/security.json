@@ -35,8 +35,14 @@
    },
    "volatile": [
     "data.audit_log_count",
-    "data.banned_devices",
-    "data.recent_audit"
+    {
+     "path": "data.banned_devices[#]",
+     "elements": true
+    },
+    {
+     "path": "data.recent_audit[#]",
+     "elements": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -75,8 +81,48 @@
    },
    "volatile": [
     "data.audit_log_count",
-    "data.banned_devices",
-    "data.recent_audit",
+    {
+     "path": "data.banned_devices[#]",
+     "elements": true
+    },
+    "data.banned_devices[*].ban_reason",
+    {
+     "path": "data.banned_devices[*].hostname",
+     "pattern": "^aaaa-a+-a+$"
+    },
+    {
+     "path": "data.banned_devices[*].id",
+     "format": "999999999"
+    },
+    {
+     "path": "data.banned_devices[*].ip",
+     "format": "99.9.9.99"
+    },
+    {
+     "path": "data.recent_audit[#]",
+     "elements": true
+    },
+    {
+     "path": "data.recent_audit[*].action",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
+     "path": "data.recent_audit[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    "data.recent_audit[*].details",
+    {
+     "path": "data.recent_audit[*].id",
+     "integer": true
+    },
+    {
+     "path": "data.recent_audit[*].user_id",
+     "integer": true
+    },
+    {
+     "path": "data.recent_audit[*].username",
+     "pattern": "^[9aA+/_=-]+$"
+    },
     {
      "path": "generated_at",
      "format": "9999-99-99A99:99:99.999A"
@@ -87,7 +133,14 @@
     "json": {
      "data": {
       "audit_log_count": 0,
-      "banned_devices": [],
+      "banned_devices": [
+       {
+        "ban_reason": "<volatile>",
+        "hostname": "<volatile>",
+        "id": "<volatile>",
+        "ip": "<volatile>"
+       }
+      ],
       "dlp": {
        "recent_events": [],
        "stats": {
@@ -98,7 +151,17 @@
         "usb_events": null
        }
       },
-      "recent_audit": []
+      "recent_audit": [
+       {
+        "action": "<volatile>",
+        "created_at": "<volatile>",
+        "details": "<volatile>",
+        "id": 0,
+        "ip_address": "<client-ip>",
+        "user_id": 0,
+        "username": "<volatile>"
+       }
+      ]
      },
      "filters": {},
      "generated_at": "<volatile>",

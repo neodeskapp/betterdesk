@@ -36,7 +36,11 @@ func (d Diff) String() string {
 // not a null), arrays in the same order, numbers by value. At a path in
 // want.Volatile the value is free, but its JSON type has to match and, when
 // the mark has one, its format (see VolatileMark). An array with a volatile
-// length may have any number of elements.
+// length may have any number of elements: each is compared with the
+// golden's sample element and the marks below the array when the length
+// mark says so (VolatileMark.Elements), else it only has to be of the
+// sample's type. An array marked AnyOrder must hold the same elements in
+// any order.
 func CompareAnswers(want GoldenAnswer, got Answer) []Diff {
 	var diffs []Diff
 	if want.Failed != got.Failed {
@@ -181,36 +185,42 @@ func compareJSON(p path, want, got any, at volatileAt, diffs *[]Diff) {
 		}
 		return
 	}
+	if w, isArray := want.([]any); isArray && at.isAnyOrder() {
+		compareAnyOrder(where, w, got.([]any), diffs)
+		return
+	}
 	switch w := want.(type) {
 	case map[string]any:
 		g := got.(map[string]any)
 		for _, key := range sortedKeys(w) {
 			gotValue, ok := g[key]
 			if !ok {
-				*diffs = append(*diffs, Diff{Where: where, What: "missing key " + quote(key)})
+				if !at.key(key).isOptional() {
+					*diffs = append(*diffs, Diff{Where: where, What: "missing key " + quote(key)})
+				}
 				continue
 			}
 			compareJSON(p.with(step{kind: stepKey, key: key}), w[key], gotValue, at.key(key), diffs)
 		}
 		for _, key := range sortedKeys(g) {
-			if _, ok := w[key]; !ok {
+			if _, ok := w[key]; !ok && !at.key(key).isOptional() {
 				*diffs = append(*diffs, Diff{Where: where, What: "unexpected key " + quote(key) + " with value " + show(g[key])})
 			}
 		}
 	case []any:
 		g := got.([]any)
 		if at.isLength() {
-			// Any number of elements; each has to be of the type the
-			// golden's sample element has.
+			// Any number of elements; each has to be like the golden's
+			// sample element, or of its type in an older golden.
 			if len(w) == 0 {
 				return
 			}
 			for i, element := range g {
-				if jsonType(element) != jsonType(w[0]) {
-					*diffs = append(*diffs, Diff{
-						Where: "body " + p.with(step{kind: stepIndex, index: i}).String(),
-						What:  "type", Want: jsonType(w[0]), Got: jsonType(element) + " " + show(element),
-					})
+				here := p.with(step{kind: stepIndex, index: i})
+				if at.checksElements() {
+					compareJSON(here, w[0], element, at.element(i), diffs)
+				} else if jsonType(element) != jsonType(w[0]) {
+					*diffs = append(*diffs, Diff{Where: "body " + here.String(), What: "type", Want: jsonType(w[0]), Got: jsonType(element) + " " + show(element)})
 				}
 			}
 			return
@@ -226,6 +236,49 @@ func compareJSON(p path, want, got any, at volatileAt, diffs *[]Diff) {
 			*diffs = append(*diffs, Diff{Where: where, Want: show(want), Got: show(got)})
 		}
 	}
+}
+
+// compareAnyOrder compares two arrays as lists of elements in any order:
+// every element of want must be in got as often, and nothing else.
+// Elements are compared by their JSON text, keys sorted.
+func compareAnyOrder(where string, want, got []any, diffs *[]Diff) {
+	count := map[string]int{}
+	for _, element := range want {
+		count[string(encodeJSON(element))]++
+	}
+	var unexpected []string
+	for _, element := range got {
+		text := string(encodeJSON(element))
+		if count[text] > 0 {
+			count[text]--
+			continue
+		}
+		unexpected = append(unexpected, text)
+	}
+	var missing []string
+	for text, n := range count {
+		for ; n > 0; n-- {
+			missing = append(missing, text)
+		}
+	}
+	sort.Strings(missing)
+	sort.Strings(unexpected)
+	for _, text := range missing {
+		*diffs = append(*diffs, Diff{Where: where, What: "missing element (in any order) " + clip(text)})
+	}
+	for _, text := range unexpected {
+		*diffs = append(*diffs, Diff{Where: where, What: "unexpected element (in any order) " + clip(text)})
+	}
+}
+
+// sortedElements returns the elements of an array sorted by their JSON
+// text, the order a golden keeps an array in any order in.
+func sortedElements(array []any) []any {
+	out := append([]any(nil), array...)
+	sort.SliceStable(out, func(i, j int) bool {
+		return string(encodeJSON(out[i])) < string(encodeJSON(out[j]))
+	})
+	return out
 }
 
 // equalScalar compares two values of the same JSON type that are not

@@ -36,8 +36,9 @@ var matrixQueries = map[string]string{
 // A path that starts with "~" is free in format too. By matrix entry ID.
 var (
 	matrixVolatile = map[string][]string{
-		// Each role's permissions come in another order on every call.
-		"GET /api/panel/roles": {"data.roles[*].permissions"},
+		// Each role's permissions come in another order on every call:
+		// the same permissions, compared in any order.
+		"GET /api/panel/roles": {AnyOrder + "data.roles[*].permissions"},
 		// What the machine the console runs on looks like right now: its
 		// processes, disks, processor, memory and network.
 		"GET /api/system/info": {

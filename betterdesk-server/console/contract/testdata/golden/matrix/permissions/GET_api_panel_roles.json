@@ -33,7 +33,10 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "data.roles[*].permissions"
+    {
+     "path": "data.roles[*].permissions",
+     "anyOrder": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -74,7 +77,10 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "data.roles[*].permissions"
+    {
+     "path": "data.roles[*].permissions",
+     "anyOrder": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -119,7 +125,10 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "data.roles[*].permissions"
+    {
+     "path": "data.roles[*].permissions",
+     "anyOrder": true
+    }
    ],
    "body": {
     "kind": "json",
@@ -176,56 +185,224 @@
         "is_super_admin": true,
         "level": 5,
         "name": "super_admin",
-        "permissions": []
+        "permissions": [
+         "audit.view",
+         "billing.export",
+         "billing.manage",
+         "billing.reports",
+         "billing.view",
+         "blocklist.edit",
+         "branding.edit",
+         "cdap.command",
+         "cdap.files",
+         "cdap.terminal",
+         "cdap.view",
+         "chat.access",
+         "device.ban",
+         "device.change_id",
+         "device.connect",
+         "device.connection_mode",
+         "device.delete",
+         "device.edit",
+         "device.view",
+         "enrollment.approve",
+         "enrollment.manage",
+         "guest.create",
+         "mesh.files",
+         "mesh.power",
+         "mesh.terminal",
+         "metrics.view",
+         "org.create",
+         "org.delete",
+         "org.edit",
+         "org.manage_devices",
+         "org.manage_users",
+         "remote_target.connect",
+         "remote_target.delete",
+         "remote_target.edit",
+         "remote_target.test",
+         "remote_target.view",
+         "server.attestation",
+         "server.config",
+         "server.keys",
+         "user.create",
+         "user.delete",
+         "user.edit",
+         "user.view"
+        ]
        },
        {
         "is_server_level": true,
         "is_super_admin": true,
         "level": 5,
         "name": "admin",
-        "permissions": []
+        "permissions": [
+         "audit.view",
+         "billing.export",
+         "billing.manage",
+         "billing.reports",
+         "billing.view",
+         "blocklist.edit",
+         "branding.edit",
+         "cdap.command",
+         "cdap.files",
+         "cdap.terminal",
+         "cdap.view",
+         "chat.access",
+         "device.ban",
+         "device.change_id",
+         "device.connect",
+         "device.connection_mode",
+         "device.delete",
+         "device.edit",
+         "device.view",
+         "enrollment.approve",
+         "enrollment.manage",
+         "guest.create",
+         "mesh.files",
+         "mesh.power",
+         "mesh.terminal",
+         "metrics.view",
+         "org.create",
+         "org.delete",
+         "org.edit",
+         "org.manage_devices",
+         "org.manage_users",
+         "remote_target.connect",
+         "remote_target.delete",
+         "remote_target.edit",
+         "remote_target.test",
+         "remote_target.view",
+         "server.attestation",
+         "server.config",
+         "server.keys",
+         "user.create",
+         "user.delete",
+         "user.edit",
+         "user.view"
+        ]
        },
        {
         "is_server_level": true,
         "is_super_admin": false,
         "level": 4,
         "name": "server_admin",
-        "permissions": []
+        "permissions": [
+         "audit.view",
+         "blocklist.edit",
+         "device.view",
+         "enrollment.manage",
+         "metrics.view",
+         "remote_target.view",
+         "server.attestation",
+         "server.config",
+         "server.keys",
+         "user.view"
+        ]
        },
        {
         "is_server_level": true,
         "is_super_admin": false,
         "level": 4,
         "name": "global_admin",
-        "permissions": []
+        "permissions": [
+         "audit.view",
+         "billing.export",
+         "billing.manage",
+         "billing.reports",
+         "billing.view",
+         "branding.edit",
+         "cdap.command",
+         "cdap.files",
+         "cdap.terminal",
+         "cdap.view",
+         "chat.access",
+         "device.ban",
+         "device.change_id",
+         "device.connect",
+         "device.connection_mode",
+         "device.delete",
+         "device.edit",
+         "device.view",
+         "enrollment.approve",
+         "enrollment.manage",
+         "guest.create",
+         "mesh.files",
+         "mesh.power",
+         "mesh.terminal",
+         "metrics.view",
+         "org.create",
+         "org.delete",
+         "org.edit",
+         "org.manage_devices",
+         "org.manage_users",
+         "remote_target.connect",
+         "remote_target.delete",
+         "remote_target.edit",
+         "remote_target.test",
+         "remote_target.view",
+         "user.create",
+         "user.delete",
+         "user.edit",
+         "user.view"
+        ]
        },
        {
         "is_server_level": false,
         "is_super_admin": false,
         "level": 2,
         "name": "operator",
-        "permissions": []
+        "permissions": [
+         "audit.view",
+         "billing.reports",
+         "billing.view",
+         "cdap.command",
+         "cdap.view",
+         "chat.access",
+         "device.connect",
+         "device.connection_mode",
+         "device.edit",
+         "device.view",
+         "guest.create",
+         "mesh.power",
+         "metrics.view",
+         "org.manage_devices",
+         "remote_target.connect",
+         "remote_target.test",
+         "remote_target.view",
+         "user.view"
+        ]
        },
        {
         "is_server_level": false,
         "is_super_admin": false,
         "level": 1,
         "name": "viewer",
-        "permissions": []
+        "permissions": [
+         "audit.view",
+         "cdap.view",
+         "chat.access",
+         "device.view",
+         "metrics.view",
+         "remote_target.view"
+        ]
        },
        {
         "is_server_level": false,
         "is_super_admin": false,
         "level": 1,
         "name": "guest_issuer",
-        "permissions": []
+        "permissions": [
+         "device.view",
+         "guest.create"
+        ]
        },
        {
         "is_server_level": false,
         "is_super_admin": false,
         "level": 0,
         "name": "pro",
-        "permissions": []
+        "permissions": null
        }
       ]
      },

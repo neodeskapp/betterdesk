@@ -31,7 +31,7 @@ func init() {
 		"~data.devices_with_activity", "~data.daily_reports", "~data.total_active_secs", "~data.total_idle_secs", "data.top_applications",
 	}
 	devices := []string{"~data.total_devices", "~data.online", "~data.offline", "~data.banned", "data.platform_distribution", "data.stats"}
-	security := []string{"~data.audit_log_count", "data.recent_audit", "data.banned_devices"}
+	security := []string{"~data.audit_log_count", "data.recent_audit[#]", "data.banned_devices[#]"}
 	generate := func(name string, body map[string]any, volatile ...string) contract.Case {
 		return contract.Case{Name: name, Method: "POST", Path: "/api/reports/generate", Body: body, Roles: writers, Volatile: volatile}
 	}

@@ -36,17 +36,35 @@
     "x-xss-protection": "0"
    },
    "volatile": [
-    "count",
-    "events[#]",
+    {
+     "path": "events[*].details",
+     "optional": true
+    },
+    {
+     "path": "events[*].target",
+     "optional": true
+    },
+    "events[*].action",
+    "events[*].actor",
+    {
+     "path": "events[*].timestamp",
+     "pattern": "^9999-99-99A99:99:99(\\.9{1,9})?A$"
+    },
     "total"
    ],
    "body": {
     "kind": "json",
     "json": {
-     "count": 0,
+     "count": 1,
      "enabled": true,
      "events": [
-      {}
+      {
+       "action": "<volatile>",
+       "actor": "<volatile>",
+       "details": {},
+       "target": "<volatile>",
+       "timestamp": "<volatile>"
+      }
      ],
      "total": 0
     }

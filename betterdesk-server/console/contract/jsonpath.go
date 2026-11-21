@@ -177,7 +177,9 @@ func lookup(value any, p path) (found any, ok bool) {
 
 // volatileSet is a set of paths whose values change from run to run. A
 // value at such a path is compared by its JSON type only; an array whose
-// length is in the set ([#]) may have any number of elements.
+// length is in the set ([#]) may have any number of elements, each like
+// the golden's sample element when the mark says so. It also holds the arrays whose
+// elements come in any order (VolatileMark.AnyOrder).
 type volatileSet struct {
 	root *volatileNode
 }
@@ -185,6 +187,13 @@ type volatileSet struct {
 type volatileNode struct {
 	value  bool
 	length bool
+	// anyOrder says the array here is compared after sorting.
+	anyOrder bool
+	// elements says each element of an array with a volatile length is
+	// compared with the golden's sample element (VolatileMark.Elements).
+	elements bool
+	// optional says the key here may be missing (VolatileMark.Optional).
+	optional bool
 	// mark is what stays checked of a volatile value here.
 	mark  *VolatileMark
 	keys  map[string]*volatileNode
@@ -204,8 +213,18 @@ func newVolatileSetOf(marks []VolatileMark) (*volatileSet, error) {
 		if err != nil {
 			return nil, err
 		}
+		if marks[i].AnyOrder {
+			if len(p) > 0 && p[len(p)-1].kind == stepLength {
+				return nil, fmt.Errorf("path %q: an array in any order has no length mark", marks[i].Path)
+			}
+			set.addAnyOrder(p)
+			continue
+		}
 		if node := set.add(p); node != nil {
 			node.mark = &marks[i]
+			node.optional = marks[i].Optional
+		} else if marks[i].Elements {
+			set.reach(p[:len(p)-1]).elements = true
 		}
 	}
 	return set, nil
@@ -214,6 +233,24 @@ func newVolatileSetOf(marks []VolatileMark) (*volatileSet, error) {
 // add puts a path into the set and returns the node of its value, or nil
 // for a length mark.
 func (set *volatileSet) add(p path) *volatileNode {
+	if len(p) > 0 && p[len(p)-1].kind == stepLength {
+		set.reach(p[:len(p)-1]).length = true
+		return nil
+	}
+	node := set.reach(p)
+	node.value = true
+	return node
+}
+
+// addAnyOrder marks the array at a path as one whose elements come in
+// any order.
+func (set *volatileSet) addAnyOrder(p path) {
+	set.reach(p).anyOrder = true
+}
+
+// reach returns the node of a path without [#], making the nodes on the
+// way.
+func (set *volatileSet) reach(p path) *volatileNode {
 	node := set.root
 	for _, s := range p {
 		switch s.kind {
@@ -238,12 +275,8 @@ func (set *volatileSet) add(p path) *volatileNode {
 				node.every = &volatileNode{}
 			}
 			node = node.every
-		case stepLength:
-			node.length = true
-			return nil
 		}
 	}
-	node.value = true
 	return node
 }
 
@@ -277,6 +310,37 @@ func (at volatileAt) marks() []*VolatileMark {
 		}
 	}
 	return marks
+}
+
+// isOptional reports whether the key here may be missing.
+func (at volatileAt) isOptional() bool {
+	for _, node := range at {
+		if node.optional {
+			return true
+		}
+	}
+	return false
+}
+
+// isAnyOrder reports whether the array here is compared after sorting.
+func (at volatileAt) isAnyOrder() bool {
+	for _, node := range at {
+		if node.anyOrder {
+			return true
+		}
+	}
+	return false
+}
+
+// checksElements reports whether each element of the array here, whose
+// length is volatile, is compared with the golden's sample element.
+func (at volatileAt) checksElements() bool {
+	for _, node := range at {
+		if node.elements {
+			return true
+		}
+	}
+	return false
 }
 
 // isLength reports whether the array here has a volatile length.

@@ -36,8 +36,25 @@
     "x-xss-protection": "0"
    },
    "volatile": [
+    {
+     "path": "events[*].details",
+     "optional": true
+    },
+    {
+     "path": "events[*].target",
+     "optional": true
+    },
     "count",
-    "events[#]",
+    {
+     "path": "events[#]",
+     "elements": true
+    },
+    "events[*].action",
+    "events[*].actor",
+    {
+     "path": "events[*].timestamp",
+     "pattern": "^9999-99-99A99:99:99(\\.9{1,9})?A$"
+    },
     "total"
    ],
    "body": {
@@ -46,7 +63,13 @@
      "count": 0,
      "enabled": true,
      "events": [
-      {}
+      {
+       "action": "<volatile>",
+       "actor": "<volatile>",
+       "details": {},
+       "target": "<volatile>",
+       "timestamp": "<volatile>"
+      }
      ],
      "total": 0
     }
