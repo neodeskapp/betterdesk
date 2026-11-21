@@ -173,7 +173,7 @@ func (s *Server) handleWSRelayUpgrade(w http.ResponseWriter, r *http.Request) {
 
 // wsEffectiveRemoteAddr returns the client address for WS relay registration.
 // When TrustProxy is enabled and the direct peer is in TRUSTED_PROXIES, prefer
-// X-Real-IP then the first X-Forwarded-For hop. 
+// X-Real-IP then the first X-Forwarded-For hop.
 func wsEffectiveRemoteAddr(r *http.Request, cfg *config.Config) string {
 	if r == nil {
 		return ""
