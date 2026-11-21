@@ -695,6 +695,15 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// mayChangeAccount reports whether the caller may change or delete the
+// account: its own, or one whose role the caller could give.
+func mayChangeAccount(r *http.Request, target *db.User) bool {
+	if caller, ok := r.Context().Value(ctxKeyUser).(*db.User); ok && caller != nil && caller.ID == target.ID {
+		return true
+	}
+	return auth.CanAssignRole(getRoleFromCtx(r), target.Role)
+}
+
 // handleUpdateUser updates a user's password and/or role.
 // PUT /api/users/{id}
 func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -707,6 +716,10 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	user, err := s.db.GetUserByID(id)
 	if err != nil || user == nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
+		return
+	}
+	if !mayChangeAccount(r, user) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot change an account with a role higher than your own"})
 		return
 	}
 
@@ -855,6 +868,10 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	user, err := s.db.GetUserByID(id)
 	if err != nil || user == nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
+		return
+	}
+	if !mayChangeAccount(r, user) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot delete an account with a role higher than your own"})
 		return
 	}
 
