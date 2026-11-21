@@ -42,6 +42,24 @@ func TestMapGetNotFound(t *testing.T) {
 	}
 }
 
+// TestMapGetReturnsACopy: what a caller does with the entry Get returned
+// changes nothing in the map; the map's own methods write under its lock.
+func TestMapGetReturnsACopy(t *testing.T) {
+	m := NewMap()
+	m.Put(&Entry{ID: "COPY1", IP: "10.0.0.1:1", IPHistory: []string{"10.0.0.9:9"}, LastReg: time.Now()})
+	got := m.Get("COPY1")
+	got.Banned = true
+	got.IP = "10.0.0.2:2"
+	got.IPHistory[0] = "changed"
+	again := m.Get("COPY1")
+	if again.Banned || again.IP != "10.0.0.1:1" || again.IPHistory[0] != "10.0.0.9:9" {
+		t.Errorf("writing to the entry Get returned changed the map: %+v", again)
+	}
+	if !m.SetBanned("COPY1", true) || !m.Get("COPY1").Banned {
+		t.Error("SetBanned did not reach the map")
+	}
+}
+
 func TestMapRemove(t *testing.T) {
 	m := NewMap()
 	m.Put(&Entry{ID: "R1", LastReg: time.Now()})
@@ -68,7 +86,7 @@ func TestMapRenamePreservesLiveConnection(t *testing.T) {
 	if conn.closed {
 		t.Fatal("Rename closed the live connection")
 	}
-	if m.Get("OLDID") != nil || m.Get("NEWID") != entry {
+	if got := m.Get("NEWID"); m.Get("OLDID") != nil || got == nil || got.ID != "NEWID" || got.WSConn != conn {
 		t.Fatal("renamed entry was not moved atomically")
 	}
 
@@ -81,15 +99,15 @@ func TestMapRenamePreservesLiveConnection(t *testing.T) {
 
 func TestMapRenameRejectsOccupiedTarget(t *testing.T) {
 	m := NewMap()
-	oldEntry := &Entry{ID: "OLDID", LastReg: time.Now()}
-	newEntry := &Entry{ID: "NEWID", LastReg: time.Now()}
+	oldEntry := &Entry{ID: "OLDID", Version: "old", LastReg: time.Now()}
+	newEntry := &Entry{ID: "NEWID", Version: "new", LastReg: time.Now()}
 	m.Put(oldEntry)
 	m.Put(newEntry)
 
 	if moved, ok := m.Rename("OLDID", "NEWID"); ok || moved != nil {
 		t.Fatalf("Rename occupied target = (%v, %v), want (nil, false)", moved, ok)
 	}
-	if m.Get("OLDID") != oldEntry || m.Get("NEWID") != newEntry {
+	if o, n := m.Get("OLDID"), m.Get("NEWID"); o == nil || o.Version != "old" || n == nil || n.Version != "new" {
 		t.Fatal("failed Rename modified the map")
 	}
 }

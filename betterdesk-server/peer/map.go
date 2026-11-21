@@ -221,11 +221,19 @@ func NewMap() *Map {
 	}
 }
 
-// Get returns a peer entry by ID, or nil if not found.
+// Get returns a copy of a peer entry by ID, or nil if not found. Writing
+// to the copy changes nothing in the map: the map's methods (SetBanned,
+// SetKeys, UpdateHeartbeat and the others) change an entry under the lock.
 func (m *Map) Get(id string) *Entry {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.entries[id]
+	e, ok := m.entries[id]
+	if !ok {
+		return nil
+	}
+	c := *e
+	c.IPHistory = append([]string(nil), e.IPHistory...)
+	return &c
 }
 
 // Put adds or updates a peer entry. Returns the previous entry (nil if new).
@@ -261,8 +269,6 @@ func (m *Map) SetPKIfEmpty(id string, pk []byte) bool {
 }
 
 // SetRelayServer records the relay endpoint a peer itself advertised.
-// Must be called under the map lock: Entry is shared, so writing through a
-// pointer returned by Get() would race with readers.
 func (m *Map) SetRelayServer(id, relay string) bool {
 	if m == nil || id == "" {
 		return false

@@ -87,7 +87,7 @@ func TestLoopbackClientNeedsThePanelProof(t *testing.T) {
 		{"operator-only outbound", config.EnrollmentModeOpen, func(srv *Server) { srv.cfg.OperatorOnlyOutbound = true }},
 		{"banned peer on the address", config.EnrollmentModeOpen, func(srv *Server) {
 			putOnlinePeer(srv, "BANNEDLOOP1", "127.0.0.1", 40001, peer.ConnTCP)
-			srv.peers.Get("BANNEDLOOP1").Banned = true
+			srv.peers.SetBanned("BANNEDLOOP1", true)
 		}},
 	}
 	for _, tc := range cases {

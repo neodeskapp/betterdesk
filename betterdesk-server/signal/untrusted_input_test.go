@@ -271,9 +271,13 @@ func TestIceCandidateBetweenPunchEndsIsForwarded(t *testing.T) {
 
 	// The target answers with its own candidates to the initiator's id.
 	putOnlinePeer(srv, "ICEINI002", peerAddr.IP.String(), peerAddr.Port+1, peer.ConnUDP)
-	srv.peers.Get("ICEINI002").UDPAddr = peerAddr
-	srv.peers.Get("ICETGT002").UDPAddr = udpAddr("203.0.113.96", 40000)
-	srv.peers.Get("ICETGT002").IP = "203.0.113.96:40000"
+	initiatorEntry := srv.peers.Get("ICEINI002")
+	initiatorEntry.UDPAddr = peerAddr
+	srv.peers.Put(initiatorEntry)
+	targetEntry := srv.peers.Get("ICETGT002")
+	targetEntry.UDPAddr = udpAddr("203.0.113.96", 40000)
+	targetEntry.IP = "203.0.113.96:40000"
+	srv.peers.Put(targetEntry)
 	srv.handleMessage(iceCandidateTo("ICEINI002"), &net.TCPAddr{IP: net.ParseIP("203.0.113.96"), Port: 40000})
 	if readUDPRendezvous(t, recv).GetIceCandidate() == nil {
 		t.Fatal("the target's candidate did not reach the initiator")
