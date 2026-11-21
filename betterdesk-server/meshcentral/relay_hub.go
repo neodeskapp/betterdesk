@@ -12,69 +12,88 @@ import (
 	"github.com/unitronix/betterdesk-server/audit"
 )
 
-// relayHub multiplexes one mesh agent tunnel to multiple browser viewers (KVM p=2).
+// relayHub multiplexes one mesh agent tunnel to multiple browser viewers
+// (KVM p=2). It ends when its agent leaves, when the last socket leaves,
+// or when no agent and viewer met within waitForPeers.
 type relayHub struct {
-	gateway   *Gateway
-	relayID   string
-	proto     string
-	mu        sync.Mutex
-	agent     *relayPeer
-	viewers   []*relayPeer
-	recorder  *relayRecorder
-	recPath   string
-	auditUser string
-	auditPeer string
+	gateway     *Gateway
+	relayID     string
+	proto       string
+	mu          sync.Mutex
+	agent       *relayPeer
+	viewers     []*relayPeer
+	recorder    *relayRecorder
+	recPath     string
+	auditUser   string
+	auditPeer   string
 	sessionType string
-	started   bool
-	done      atomic.Bool
+	started     bool
+	idle        *time.Timer
+	// ended is closed when the hub has ended
+	ended chan struct{}
+	done  atomic.Bool
 }
 
+// runKvmRelayHub runs one socket of a KVM hub until the socket or the hub
+// ends.
 func (g *Gateway) runKvmRelayHub(ctx context.Context, relayID string, peer *relayPeer, proto string) {
-	hub := &relayHub{
-		gateway: g,
-		relayID: relayID,
-		proto:   proto,
-	}
+	hub := &relayHub{gateway: g, relayID: relayID, proto: proto, ended: make(chan struct{})}
 	if v, loaded := g.relayHubs.LoadOrStore(relayID, hub); loaded {
 		hub = v.(*relayHub)
 	} else {
-		go hub.idleCleanup(ctx)
+		hub.mu.Lock()
+		hub.idle = time.AfterFunc(g.waitForPeers(), hub.endIfNotStarted)
+		hub.mu.Unlock()
 	}
-
-	hub.attach(ctx, peer)
-	<-ctx.Done()
-	hub.detach(peer)
-}
-
-func (h *relayHub) idleCleanup(ctx context.Context) {
-	t := time.NewTimer(2 * time.Minute)
-	defer t.Stop()
+	if !hub.attach(peer) {
+		peer.ws.Close(websocket.StatusPolicyViolation, "relay in use")
+		return
+	}
 	select {
-	case <-t.C:
-		h.gateway.relayHubs.Delete(h.relayID)
-		h.gateway.relayMeta.Delete(h.relayID)
+	case <-peer.gone:
+	case <-hub.ended:
 	case <-ctx.Done():
 	}
+	hub.detach(peer)
+	peer.ws.Close(websocket.StatusNormalClosure, "")
 }
 
-func (h *relayHub) attach(ctx context.Context, peer *relayPeer) {
+// endIfNotStarted ends a hub whose agent and viewers never met.
+func (h *relayHub) endIfNotStarted() {
 	h.mu.Lock()
+	started := h.started
+	h.mu.Unlock()
+	if !started {
+		h.finish()
+	}
+}
+
+// attach adds a viewer, or the agent, and starts the piping when both are
+// there. It reports false for a hub that has ended or has an agent already.
+func (h *relayHub) attach(peer *relayPeer) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.done.Load() {
+		return false
+	}
 	if peer.browser {
 		h.viewers = append(h.viewers, peer)
 		sig := RelayConnectSignal(h.recorder != nil)
-		peer.ws.Write(ctx, websocket.MessageText, []byte(sig))
+		peer.ws.Write(peer.ctx, websocket.MessageText, []byte(sig))
 		if !h.started && h.agent != nil {
-			h.startPiping(ctx)
+			h.startPipingLocked()
 		}
-		h.mu.Unlock()
-		go h.readViewer(ctx, peer)
-		return
+		go h.readViewer(peer)
+		return true
+	}
+	if h.agent != nil {
+		return false
 	}
 	h.agent = peer
 	if !h.started && len(h.viewers) > 0 {
-		h.startPiping(ctx)
+		h.startPipingLocked()
 	}
-	h.mu.Unlock()
+	return true
 }
 
 func (h *relayHub) detach(peer *relayPeer) {
@@ -96,7 +115,7 @@ func (h *relayHub) detach(peer *relayPeer) {
 	}
 }
 
-func (h *relayHub) startPiping(ctx context.Context) {
+func (h *relayHub) startPipingLocked() {
 	if h.started {
 		return
 	}
@@ -131,10 +150,10 @@ func (h *relayHub) startPiping(ctx context.Context) {
 
 	sig := RelayConnectSignal(recording)
 	if h.agent != nil {
-		h.agent.ws.Write(ctx, websocket.MessageText, []byte(sig))
+		h.agent.ws.Write(h.agent.ctx, websocket.MessageText, []byte(sig))
 	}
 	for _, v := range h.viewers {
-		v.ws.Write(ctx, websocket.MessageText, []byte(sig))
+		v.ws.Write(v.ctx, websocket.MessageText, []byte(sig))
 	}
 
 	if h.gateway.auditLog != nil {
@@ -146,56 +165,64 @@ func (h *relayHub) startPiping(ctx context.Context) {
 	}
 
 	if h.agent != nil {
-		go h.readAgent(ctx)
+		go h.readAgent(h.agent, h.recorder)
 	}
 }
 
-func (h *relayHub) readAgent(ctx context.Context) {
+// readAgent sends the agent's messages to every viewer until the agent
+// leaves, which ends the hub.
+func (h *relayHub) readAgent(agent *relayPeer, recorder *relayRecorder) {
 	defer func() {
 		h.mu.Lock()
-		h.agent = nil
+		if h.agent == agent {
+			h.agent = nil
+		}
 		h.mu.Unlock()
 		h.finish()
 	}()
-	agent := h.agent
-	if agent == nil {
-		return
-	}
 	for {
-		typ, data, err := agent.ws.Read(ctx)
-		if err != nil {
-			return
-		}
-		if h.recorder != nil && len(data) > 0 {
-			h.recorder.Write(int(typ), data)
-		}
-		h.mu.Lock()
-		viewers := append([]*relayPeer{}, h.viewers...)
-		h.mu.Unlock()
-		for _, v := range viewers {
-			if err := v.ws.Write(ctx, typ, data); err != nil {
-				v.ws.Close(websocket.StatusGoingAway, "")
+		select {
+		case f := <-agent.frames:
+			if recorder != nil && len(f.data) > 0 {
+				recorder.Write(int(f.typ), f.data)
 			}
+			h.mu.Lock()
+			viewers := append([]*relayPeer{}, h.viewers...)
+			h.mu.Unlock()
+			for _, v := range viewers {
+				if err := v.ws.Write(v.ctx, f.typ, f.data); err != nil {
+					v.ws.Close(websocket.StatusGoingAway, "")
+				}
+			}
+		case <-agent.gone:
+			return
+		case <-h.ended:
+			return
 		}
 	}
 }
 
-func (h *relayHub) readViewer(ctx context.Context, viewer *relayPeer) {
+// readViewer sends a viewer's messages to the agent until the viewer
+// leaves or the hub ends.
+func (h *relayHub) readViewer(viewer *relayPeer) {
 	for {
-		typ, data, err := viewer.ws.Read(ctx)
-		if err != nil {
+		select {
+		case f := <-viewer.frames:
+			h.mu.Lock()
+			agent, recorder := h.agent, h.recorder
+			h.mu.Unlock()
+			if agent == nil {
+				continue
+			}
+			if recorder != nil && len(f.data) > 0 {
+				recorder.Write(int(f.typ), f.data)
+			}
+			if err := agent.ws.Write(agent.ctx, f.typ, f.data); err != nil {
+				return
+			}
+		case <-viewer.gone:
 			return
-		}
-		h.mu.Lock()
-		agent := h.agent
-		h.mu.Unlock()
-		if agent == nil {
-			continue
-		}
-		if h.recorder != nil && len(data) > 0 {
-			h.recorder.Write(int(typ), data)
-		}
-		if err := agent.ws.Write(ctx, typ, data); err != nil {
+		case <-h.ended:
 			return
 		}
 	}
@@ -205,21 +232,29 @@ func (h *relayHub) finish() {
 	if h.done.Swap(true) {
 		return
 	}
-	if h.recorder != nil {
-		h.recorder.Close()
+	h.mu.Lock()
+	if h.idle != nil {
+		h.idle.Stop()
 	}
-	h.gateway.relayHubs.Delete(h.relayID)
+	recorder, recPath := h.recorder, h.recPath
+	auditUser, auditPeer, sessionType := h.auditUser, h.auditPeer, h.sessionType
+	h.mu.Unlock()
+	close(h.ended)
+	if recorder != nil {
+		recorder.Close()
+	}
+	h.gateway.relayHubs.CompareAndDelete(h.relayID, h)
 	h.gateway.relayMeta.Delete(h.relayID)
 	if h.gateway.auditLog != nil {
 		fields := map[string]string{
 			"event": "mesh_session_end",
-			"type":  h.sessionType,
+			"type":  sessionType,
 			"proto": h.proto,
 		}
-		if h.recPath != "" {
-			fields["recording"] = h.recPath
+		if recPath != "" {
+			fields["recording"] = recPath
 		}
-		h.gateway.auditLog.Log(audit.ActionPeerUpdated, h.auditUser, h.auditPeer, fields)
+		h.gateway.auditLog.Log(audit.ActionPeerUpdated, auditUser, auditPeer, fields)
 	}
 	log.Printf("[mesh] Relay hub %s ended", h.relayID)
 }

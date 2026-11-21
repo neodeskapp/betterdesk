@@ -249,6 +249,14 @@ func (g *Gateway) createRelayTunnel(peerID, userID, relayBase string, protocol i
 		g.setRelayMeta(relayID, nil)
 		return "", "", err
 	}
+	// A relay no socket came to is forgotten, so its cookies open nothing.
+	time.AfterFunc(g.waitForPeers(), func() {
+		_, session := g.relays.Load(relayID)
+		_, hub := g.relayHubs.Load(relayID)
+		if !session && !hub {
+			g.relayMeta.Delete(relayID)
+		}
+	})
 	if g.auditLog != nil {
 		fields := map[string]string{
 			"event": "mesh_session_start",

@@ -41,6 +41,10 @@ type Gateway struct {
 	relayHubs sync.Map // relayID -> *relayHub (KVM multiplex)
 	relayMeta sync.Map // relayID -> *relayMeta
 
+	// relayWait is how long a relay waits for its peers (relayWaitDefault
+	// when 0).
+	relayWait time.Duration
+
 	ctx    context.Context
 	cancel context.CancelFunc
 

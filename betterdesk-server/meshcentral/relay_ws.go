@@ -13,21 +13,101 @@ import (
 	"github.com/unitronix/betterdesk-server/audit"
 )
 
+// relayWaitDefault is how long a relay waits for its peers: the agent and
+// the browser of a session, the agent and the first viewer of a KVM hub.
+const relayWaitDefault = 2 * time.Minute
+
+// waitForPeers is the gateway's relayWait.
+func (g *Gateway) waitForPeers() time.Duration {
+	if g.relayWait > 0 {
+		return g.relayWait
+	}
+	return relayWaitDefault
+}
+
+// relayFrame is one message of a relay socket.
+type relayFrame struct {
+	typ  websocket.MessageType
+	data []byte
+}
+
+// relayPeer is one socket of a relay. Its messages are read from the
+// moment it comes in, so its close is seen while it waits; frames hands
+// them on one at a time, and gone is closed when the socket has ended.
 type relayPeer struct {
-	ws            *websocket.Conn
-	authenticated bool
-	userID        string
-	browser       bool
+	ws      *websocket.Conn
+	ctx     context.Context
+	userID  string
+	browser bool
+	frames  chan relayFrame
+	gone    chan struct{}
 }
 
+// newRelayPeer starts reading the socket until it ends or ctx ends.
+func newRelayPeer(ctx context.Context, ws *websocket.Conn, userID string, browser bool) *relayPeer {
+	p := &relayPeer{ws: ws, ctx: ctx, userID: userID, browser: browser,
+		frames: make(chan relayFrame), gone: make(chan struct{})}
+	go func() {
+		defer close(p.gone)
+		for {
+			typ, data, err := ws.Read(ctx)
+			if err != nil {
+				return
+			}
+			select {
+			case p.frames <- relayFrame{typ, data}:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	return p
+}
+
+// relaySession pairs the two sockets of a relay that is no KVM hub.
 type relaySession struct {
-	id     string
-	peer1  *relayPeer
-	state  int // 0 waiting, 1 paired, 2 piping
-	mu     sync.Mutex
-	cancel context.CancelFunc
+	id    string
+	mu    sync.Mutex
+	peer1 *relayPeer
+	// state is relayWaiting, relayPaired or relayAbandoned
+	state int
+	// paired is closed when the second peer came, done when the piping
+	// has ended, abandoned when the session was given up unpaired.
+	paired    chan struct{}
+	done      chan struct{}
+	abandoned chan struct{}
 }
 
+const (
+	relayWaiting = iota
+	relayPaired
+	relayAbandoned
+)
+
+func newRelaySession(id string) *relaySession {
+	return &relaySession{id: id, paired: make(chan struct{}), done: make(chan struct{}), abandoned: make(chan struct{})}
+}
+
+// abandon gives the session up when nobody paired with its first peer. It
+// reports whether the session is given up, now or before; false when it
+// is paired.
+func (s *relaySession) abandon() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	switch s.state {
+	case relayPaired:
+		return false
+	case relayWaiting:
+		s.state = relayAbandoned
+		close(s.abandoned)
+	}
+	return true
+}
+
+// handleRelayWS is /meshrelay.ashx: one socket of a relay the console
+// opened with createRelayTunnel. Before the handshake the socket needs a
+// valid auth (browser) or rauth (agent) cookie of the node the relay was
+// opened to; anything else is 403.
 func (g *Gateway) handleRelayWS(w http.ResponseWriter, r *http.Request) {
 	if !g.allowIP(w, r) {
 		return
@@ -38,23 +118,10 @@ func (g *Gateway) handleRelayWS(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing id", http.StatusBadRequest)
 		return
 	}
-
-	var cookieData *RelayCookieData
-	if auth := q.Get("auth"); auth != "" {
-		cd, err := g.cookies.Decode(auth, 240)
-		if err != nil {
-			http.Error(w, "invalid auth", http.StatusForbidden)
-			return
-		}
-		cookieData = cd
-	}
-	if rauth := q.Get("rauth"); rauth != "" {
-		cd, err := g.cookies.Decode(rauth, 240)
-		if err != nil {
-			http.Error(w, "invalid rauth", http.StatusForbidden)
-			return
-		}
-		cookieData = cd
+	cookie, ok := g.relayCookie(relayID, q.Get("auth"), q.Get("rauth"))
+	if !ok {
+		http.Error(w, "invalid auth", http.StatusForbidden)
+		return
 	}
 
 	conn, err := websocket.Accept(w, r, g.webSocketAcceptOptions())
@@ -62,75 +129,109 @@ func (g *Gateway) handleRelayWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	conn.SetReadLimit(32 * 1024 * 1024)
-
-	isBrowser := q.Get("browser") == "1"
-	peer := &relayPeer{
-		ws:            conn,
-		authenticated: cookieData != nil,
-		browser:       isBrowser,
-	}
-	if cookieData != nil && cookieData.RUserID != "" {
-		peer.userID = cookieData.RUserID
-	}
+	defer conn.CloseNow()
 
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 	if g.ctx != nil {
-		ctx2, c2 := context.WithCancel(g.ctx)
-		defer c2()
-		go func() {
-			select {
-			case <-g.ctx.Done():
-				cancel()
-			case <-ctx.Done():
-				c2()
-			}
-		}()
-		ctx = ctx2
+		stop := context.AfterFunc(g.ctx, cancel)
+		defer stop()
 	}
 
+	peer := newRelayPeer(ctx, conn, cookie.RUserID, q.Get("browser") == "1")
 	g.pairRelay(ctx, relayID, peer, q.Get("p"))
+}
+
+// relayCookie decodes the cookie of a relay socket (rauth wins over auth)
+// and checks that it names the node of the relay's agent.
+func (g *Gateway) relayCookie(relayID, auth, rauth string) (*RelayCookieData, bool) {
+	raw := auth
+	if rauth != "" {
+		raw = rauth
+	}
+	if raw == "" {
+		return nil, false
+	}
+	cookie, err := g.cookies.Decode(raw, 240)
+	if err != nil || cookie.NodeID == "" {
+		return nil, false
+	}
+	meta := g.getRelayMeta(relayID)
+	if meta == nil || meta.PeerID == "" || g.MeshNodeID(meta.PeerID) != cookie.NodeID {
+		return nil, false
+	}
+	return cookie, true
 }
 
 func isKvmRelayProto(proto string) bool {
 	return proto == "2"
 }
 
+// pairRelay runs one socket of a relay until it ends: the first peer waits
+// for the second, at most waitForPeers, and the second pipes the two
+// together. Either peer leaving ends the session and both sockets; a third
+// socket is closed.
 func (g *Gateway) pairRelay(ctx context.Context, relayID string, peer *relayPeer, proto string) {
 	if isKvmRelayProto(proto) {
 		g.runKvmRelayHub(ctx, relayID, peer, proto)
 		return
 	}
-	var session *relaySession
-	if v, loaded := g.relays.LoadOrStore(relayID, &relaySession{id: relayID}); loaded {
-		session = v.(*relaySession)
-	} else {
-		session = v.(*relaySession)
-		go func() {
-			t := time.NewTimer(2 * time.Minute)
-			defer t.Stop()
-			select {
-			case <-t.C:
-				g.relays.Delete(relayID)
-				g.relayMeta.Delete(relayID)
-			case <-ctx.Done():
-			}
-		}()
+	v, loaded := g.relays.LoadOrStore(relayID, newRelaySession(relayID))
+	session := v.(*relaySession)
+	if !loaded {
+		timer := time.AfterFunc(g.waitForPeers(), func() { session.abandon() })
+		defer timer.Stop()
 	}
 
 	session.mu.Lock()
-	if session.peer1 == nil {
+	switch {
+	case session.state == relayAbandoned:
+		session.mu.Unlock()
+		peer.ws.Close(websocket.StatusGoingAway, "")
+		return
+	case session.peer1 == nil:
 		session.peer1 = peer
 		session.mu.Unlock()
-		<-ctx.Done()
-		peer.ws.Close(websocket.StatusNormalClosure, "")
+		g.waitAsFirstPeer(ctx, session, peer)
+		return
+	case session.state == relayPaired:
+		session.mu.Unlock()
+		peer.ws.Close(websocket.StatusPolicyViolation, "relay in use")
 		return
 	}
-	peer2 := peer
 	peer1 := session.peer1
-	session.state = 1
+	session.state = relayPaired
+	close(session.paired)
 	session.mu.Unlock()
+	defer close(session.done)
+	g.pipeSession(ctx, relayID, proto, peer1, peer)
+}
 
+// waitAsFirstPeer waits for the second peer and then for the end of the
+// session, or gives the session up when the socket ends, the time is over
+// or the gateway stops.
+func (g *Gateway) waitAsFirstPeer(ctx context.Context, session *relaySession, peer *relayPeer) {
+	select {
+	case <-session.paired:
+	case <-peer.gone:
+	case <-session.abandoned:
+	case <-ctx.Done():
+	}
+	if session.abandon() {
+		g.relays.CompareAndDelete(session.id, session)
+		g.relayMeta.Delete(session.id)
+		peer.ws.Close(websocket.StatusGoingAway, "")
+		return
+	}
+	// Paired: the second peer's handler pipes until the session ends.
+	select {
+	case <-session.done:
+	case <-ctx.Done():
+	}
+}
+
+// pipeSession pipes a paired session until one side ends.
+func (g *Gateway) pipeSession(ctx context.Context, relayID, proto string, peer1, peer2 *relayPeer) {
 	meta := g.getRelayMeta(relayID)
 	recording := meta != nil && meta.Record
 	sig := RelayConnectSignal(recording)
@@ -172,7 +273,7 @@ func (g *Gateway) pairRelay(ctx context.Context, relayID string, peer *relayPeer
 		})
 	}
 
-	pipeRelay(ctx, peer1.ws, peer2.ws, recorder)
+	pipeRelay(ctx, peer1, peer2, recorder)
 	if recorder != nil {
 		recorder.Close()
 	}
@@ -193,29 +294,49 @@ func (g *Gateway) pairRelay(ctx context.Context, relayID string, peer *relayPeer
 	log.Printf("[mesh] Relay session %s ended", relayID)
 }
 
-func pipeRelay(ctx context.Context, a, b *websocket.Conn, recorder *relayRecorder) {
+// pipeRelay copies the messages of each peer to the other until one side
+// ends, then closes both sockets.
+func pipeRelay(ctx context.Context, a, b *relayPeer, recorder *relayRecorder) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	var wg sync.WaitGroup
-	copyWS := func(dst, src *websocket.Conn) {
+	copyFrames := func(dst, src *relayPeer) {
 		defer wg.Done()
+		defer cancel()
 		for {
-			typ, data, err := src.Read(ctx)
-			if err != nil {
+			select {
+			case f := <-src.frames:
+				if recorder != nil && len(f.data) > 0 {
+					recorder.Write(int(f.typ), f.data)
+				}
+				if err := dst.ws.Write(ctx, f.typ, f.data); err != nil {
+					return
+				}
+			case <-src.gone:
 				return
-			}
-			if recorder != nil && len(data) > 0 {
-				recorder.Write(int(typ), data)
-			}
-			if err := dst.Write(ctx, typ, data); err != nil {
+			case <-ctx.Done():
 				return
 			}
 		}
 	}
 	wg.Add(2)
-	go copyWS(b, a)
-	go copyWS(a, b)
+	go copyFrames(b, a)
+	go copyFrames(a, b)
 	wg.Wait()
-	a.Close(websocket.StatusNormalClosure, "")
-	b.Close(websocket.StatusNormalClosure, "")
+	closeAll(a, b)
+}
+
+// closeAll closes the sockets of the peers at once.
+func closeAll(peers ...*relayPeer) {
+	var wg sync.WaitGroup
+	for _, p := range peers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			p.ws.Close(websocket.StatusNormalClosure, "")
+		}()
+	}
+	wg.Wait()
 }
 
 // KVMRelay handles opaque MNG_KVM binary relay (protocol p=2).
