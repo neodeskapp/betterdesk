@@ -2991,8 +2991,9 @@ do_migrate_postgresql() {
     
     if [ ! -f "$migrate_tool" ]; then
         print_warning "Migration tool not found: $migrate_tool"
-        print_info "You can migrate manually using:"
-        echo "  $migrate_tool sqlite2pg --sqlite \"$sqlite_db\" --pg \"postgres://$POSTGRESQL_USER:$POSTGRESQL_PASS@localhost:5432/$POSTGRESQL_DB?sslmode=disable\""
+        print_info "You can move the whole install (every server and console table) by hand, with the server container stopped:"
+        echo "  $migrate_tool -mode sqlite2pg -src \"$sqlite_db\" -dst \"postgres://$POSTGRESQL_USER:$POSTGRESQL_PASS@localhost:5432/$POSTGRESQL_DB?sslmode=disable\" -overwrite"
+        print_info "-overwrite replaces the rows the server wrote into PostgreSQL at its first start."
         echo ""
         print_info "PostgreSQL container is running. You can connect to it with:"
         echo "  docker exec -it betterdesk-postgres psql -U $POSTGRESQL_USER -d $POSTGRESQL_DB"

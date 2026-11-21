@@ -220,7 +220,7 @@ FAKE_MIGRATE
     LOG_FILE="$temp_dir/log"
     print_header() { :; }
     press_enter() { :; }
-    menu_choose() { MENU_CHOICE="$TEST_MENU_CHOICE"; }
+    menu_choose() { MENU_CHOICE="$TEST_MENU_CHOICE"; printf '%s\n' "${_menu_items[@]}" > "$temp_dir/items"; }
     own_by_service_user() { printf '%s\n' "$*" >> "$owned"; }
 
     local src="$RUSTDESK_PATH/db_v2.sqlite3" dst="$RUSTDESK_PATH/betterdesk.sqlite3"
@@ -233,7 +233,21 @@ FAKE_MIGRATE
         : > "$owned"
         TEST_MENU_CHOICE="$1" do_migrate_database <<< "$2" > /dev/null 2>&1
     }
-    migrations() { grep -E -- '-mode (rust2go|nodejs2go|pg2sqlite)' "$calls" || true; }
+    migrations() { grep -E -- '-mode (rust2go|nodejs2go|pg2sqlite|sqlite2pg)' "$calls" || true; }
+
+    # RV81: sqlite2pg and pg2sqlite move the whole install, and the menu
+    # says so. sqlite2pg replaces a PostgreSQL database with data in it
+    # only after the user agreed.
+    run_menu 3 $'\npostgres://u@h/db\ny'
+    grep -q $'^SQLite -> PostgreSQL\tMove the whole install' "$temp_dir/items" \
+        || fail "the menu does not say SQLite -> PostgreSQL moves the whole install: $(cat "$temp_dir/items")"
+    grep -q $'^PostgreSQL -> SQLite\tMove the whole install' "$temp_dir/items" \
+        || fail "the menu does not say PostgreSQL -> SQLite moves the whole install: $(cat "$temp_dir/items")"
+    [ "$(migrations)" = "-mode sqlite2pg -src $src -dst postgres://u@h/db -overwrite" ] \
+        || fail "sqlite2pg after an agreed replace ran as: $(migrations)"
+    run_menu 3 $'\npostgres://u@h/db\nn'
+    [ "$(migrations)" = "-mode sqlite2pg -src $src -dst postgres://u@h/db" ] \
+        || fail "sqlite2pg after a declined replace ran as: $(migrations)"
 
     # pg2sqlite into the existing default file: agreed, then declined
     run_menu 4 $'postgres://u@h/db\n\ny'

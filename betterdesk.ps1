@@ -4887,8 +4887,8 @@ function Do-MigrateDatabase {
     $items = @(
         "Rust -> Go`tLegacy Rust hbbs database to Go server",
         "Node.js -> Go`tNode.js web console to Go server",
-        "SQLite -> PostgreSQL`tBetterDesk Go SQLite to PostgreSQL",
-        "PostgreSQL -> SQLite`tPostgreSQL back to SQLite",
+        "SQLite -> PostgreSQL`tWhole install (every server and console table) to PostgreSQL",
+        "PostgreSQL -> SQLite`tWhole install from PostgreSQL to a SQLite file",
         "Backup`tCreate a timestamped SQLite backup",
         "Back`tReturn to the main menu"
     )
@@ -5003,11 +5003,15 @@ function Do-MigrateDatabase {
                 return
             }
 
+            Print-Info "Every table of the server and the console moves: devices, users, settings, tickets, groups, audit log and the rest."
+            $migrateArgs = @("-mode", "sqlite2pg", "-src", $srcDb, "-dst", $pgUri)
+            if (Confirm-Action "If the PostgreSQL database already holds data, replace all of it?") { $migrateArgs += "-overwrite" }
+
             Print-Step "Creating backup before migration..."
             & $migrateBin -mode backup -src $srcDb 2>&1 | ForEach-Object { Write-Host $_ }
 
             Print-Step "Running SQLite -> PostgreSQL migration..."
-            & $migrateBin -mode sqlite2pg -src $srcDb -dst $pgUri 2>&1 | ForEach-Object { Write-Host $_ }
+            & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
 
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "SQLite -> PostgreSQL migration completed successfully!"
@@ -5030,6 +5034,7 @@ function Do-MigrateDatabase {
             $dstDb = Read-Host "Destination SQLite file [$defaultDst]"
             if ([string]::IsNullOrEmpty($dstDb)) { $dstDb = $defaultDst }
 
+            Print-Info "Every table of the server and the console moves: devices, users, settings, tickets, groups, audit log and the rest."
             if (-not (Confirm-MigrateOverwrite $dstDb)) {
                 Press-Enter
                 return

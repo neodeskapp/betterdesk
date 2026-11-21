@@ -159,7 +159,7 @@ function Test-MigrationMenusPassOverwrite {
     $script:migrateCalls = @()
     function Get-MigrateBin { return 'fake-migrate' }
     function fake-migrate { $script:migrateCalls += ($args -join ' '); $global:LASTEXITCODE = 0 }
-    function Invoke-MenuChoose { param($Title, $Subtitle, $Items, $Returns) $script:MENU_CHOICE = $script:testChoice }
+    function Invoke-MenuChoose { param($Title, $Subtitle, $Items, $Returns) $script:MENU_CHOICE = $script:testChoice; $script:menuItems = $Items }
     function Read-Host { param($Prompt) if ($script:answers.Count -gt 0) { $script:answers.Dequeue() } else { '' } }
     function Press-Enter { }
     function Clear-Host { }
@@ -169,13 +169,23 @@ function Test-MigrationMenusPassOverwrite {
         $script:answers = New-Object System.Collections.Queue
         foreach ($a in $Answers) { $script:answers.Enqueue($a) }
         Do-MigrateDatabase *> $null
-        return @($script:migrateCalls | Where-Object { $_ -match '-mode (rust2go|nodejs2go|pg2sqlite)' })
+        return @($script:migrateCalls | Where-Object { $_ -match '-mode (rust2go|nodejs2go|pg2sqlite|sqlite2pg)' })
     }
 
     $src = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
     $dst = Join-Path $script:RUSTDESK_PATH 'betterdesk.sqlite3'
     Set-Content -Path $src -Value 'db'
     Set-Content -Path $dst -Value 'old'
+
+    # RV81: sqlite2pg and pg2sqlite move the whole install, and the menu
+    # says so. sqlite2pg replaces a PostgreSQL database with data in it only
+    # after the user agreed.
+    $runs = Invoke-TestMenu '3' @('', 'postgres://u@h/db', 'y')
+    if (-not ($script:menuItems -match '^SQLite -> PostgreSQL\tWhole install')) { Fail "the menu does not say SQLite -> PostgreSQL moves the whole install: $($script:menuItems)" }
+    if (-not ($script:menuItems -match '^PostgreSQL -> SQLite\tWhole install')) { Fail "the menu does not say PostgreSQL -> SQLite moves the whole install: $($script:menuItems)" }
+    if ("$runs" -ne "-mode sqlite2pg -src $src -dst postgres://u@h/db -overwrite") { Fail "sqlite2pg after an agreed replace ran as: $runs" }
+    $runs = Invoke-TestMenu '3' @('', 'postgres://u@h/db', 'n')
+    if ("$runs" -ne "-mode sqlite2pg -src $src -dst postgres://u@h/db") { Fail "sqlite2pg after a declined replace ran as: $runs" }
 
     $runs = Invoke-TestMenu '4' @('postgres://u@h/db', '', 'y')
     if ($runs -notcontains "-mode pg2sqlite -src postgres://u@h/db -dst $src -overwrite") { Fail "pg2sqlite after an agreed overwrite ran as: $runs" }

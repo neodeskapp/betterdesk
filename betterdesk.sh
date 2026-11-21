@@ -7305,8 +7305,8 @@ do_migrate_database() {
     local _menu_items=(
         $'Rust -> Go\tMigrate legacy Rust hbbs database to the Go server'
         $'Node.js -> Go\tMigrate the Node.js web console DB to the Go server'
-        $'SQLite -> PostgreSQL\tMigrate BetterDesk Go SQLite to PostgreSQL'
-        $'PostgreSQL -> SQLite\tMigrate PostgreSQL back to SQLite'
+        $'SQLite -> PostgreSQL\tMove the whole install (every server and console table) to PostgreSQL'
+        $'PostgreSQL -> SQLite\tMove the whole install from PostgreSQL to a SQLite file'
         $'Backup\tCreate a timestamped SQLite database backup'
         $'Back\tReturn to the main menu'
     )
@@ -7422,11 +7422,17 @@ do_migrate_database() {
                 return
             fi
 
+            print_info "Every table of the server and the console moves: devices, users, settings, tickets, groups, audit log and the rest."
+            local pg_overwrite=""
+            if confirm "If the PostgreSQL database already holds data, replace all of it?"; then
+                pg_overwrite="-overwrite"
+            fi
+
             print_step "Creating backup before migration..."
             "$migrate_bin" -mode backup -src "$src_db" 2>&1 || true
 
             print_step "Running SQLite → PostgreSQL migration..."
-            "$migrate_bin" -mode sqlite2pg -src "$src_db" -dst "$pg_uri" 2>&1
+            "$migrate_bin" -mode sqlite2pg -src "$src_db" -dst "$pg_uri" ${pg_overwrite:+"$pg_overwrite"} 2>&1
 
             if [ $? -eq 0 ]; then
                 print_success "SQLite → PostgreSQL migration completed successfully!"
@@ -7449,6 +7455,7 @@ do_migrate_database() {
             read -p "Destination SQLite file [$default_dst]: " dst_db
             dst_db="${dst_db:-$default_dst}"
 
+            print_info "Every table of the server and the console moves: devices, users, settings, tickets, groups, audit log and the rest."
             if ! migrate_dst_overwrite "$dst_db"; then
                 press_enter
                 return
