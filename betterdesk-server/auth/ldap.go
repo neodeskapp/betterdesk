@@ -177,8 +177,9 @@ func (p *LDAPProvider) dial(cfg *LDAPConfig) (*ldapv3.Conn, error) {
 
 // authenticateDirectBind performs a direct bind with a DN template.
 func (p *LDAPProvider) authenticateDirectBind(conn *ldapv3.Conn, cfg *LDAPConfig, username, password string) (*LDAPResult, error) {
-	// Build DN from template
-	dn := strings.ReplaceAll(cfg.DirectBindDN, "{{username}}", ldapv3.EscapeFilter(username))
+	// The name goes into the template as a DN value, so that its commas,
+	// plus signs and equals signs cannot add parts to the DN
+	dn := strings.ReplaceAll(cfg.DirectBindDN, "{{username}}", ldapv3.EscapeDN(username))
 
 	if err := conn.Bind(dn, password); err != nil {
 		if ldapv3.IsErrorWithCode(err, ldapv3.LDAPResultInvalidCredentials) {

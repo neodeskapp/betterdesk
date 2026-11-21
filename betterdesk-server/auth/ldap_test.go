@@ -75,3 +75,32 @@ func TestLDAPGroupMatches(t *testing.T) {
 		}
 	}
 }
+
+// Direct bind puts the typed name into the DN template escaped as a DN
+// value: a name with a comma cannot reach an entry in another container
+// (RV129).
+func TestLDAPDirectBindEscapesTheName(t *testing.T) {
+	contractor := fakeEntry{
+		dn:       "uid=bob,ou=contractors,ou=people,dc=corp,dc=example",
+		password: "pw",
+		attrs:    map[string][]string{"uid": {"bob"}},
+	}
+	dir := newFakeDirectory(t, aliceEntry, contractor)
+	cfg := dir.config()
+	cfg.DirectBind = true
+	cfg.DirectBindDN = "uid={{username}},ou=people,dc=corp,dc=example"
+	cfg.UserAttrID = "uid"
+	p := NewLDAPProvider(cfg)
+
+	result, err := p.Authenticate("bob,ou=contractors", "pw")
+	if err != nil || result == nil || result.Authenticated {
+		t.Errorf("a name with a comma: %+v, %v", result, err)
+	}
+	binds := dir.bindDNs()
+	if len(binds) != 1 || binds[0] != `uid=bob\,ou=contractors,ou=people,dc=corp,dc=example` {
+		t.Errorf("bound as %q", binds)
+	}
+	if result, err := p.Authenticate("alice", "secret"); err != nil || result == nil || !result.Authenticated {
+		t.Errorf("alice: %+v, %v", result, err)
+	}
+}
