@@ -980,7 +980,8 @@
       "test_hint": "Csatlakozik a mentett levelezőszerverhez, és bejelentkezik. Előbb mentse a módosításokat.",
       "uses_title": "Mi küld levelet",
       "uses_alerts": "A riasztási szabályok levelet küldhetnek, amikor teljesülnek.",
-      "uses_help": "Az operátorok minden új segítségkérésről levelet kaphatnak. Ezt a számlázási beállításokban lehet megadni."
+      "uses_help": "Az operátorok minden új segítségkérésről levelet kaphatnak. Ezt a számlázási beállításokban lehet megadni.",
+      "pass_hint_masked": "A mentett jelszó pontokként jelenik meg. Módosításához írjon be újat."
     },
     "ui": {
       "search_placeholder": "Keresés a beállításokban…",

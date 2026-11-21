@@ -980,7 +980,8 @@
       "test_hint": "Muodostaa yhteyden tallennettuun palvelimeen ja kirjautuu. Tallenna muutokset ensin.",
       "uses_title": "Mikä lähettää sähköpostia",
       "uses_alerts": "Hälytyssäännöt voivat lähettää sähköpostin, kun ne laukeavat.",
-      "uses_help": "Operaattorit voivat saada sähköpostin jokaisesta uudesta tukipyynnöstä. Tämä määritetään laskutusasetuksissa."
+      "uses_help": "Operaattorit voivat saada sähköpostin jokaisesta uudesta tukipyynnöstä. Tämä määritetään laskutusasetuksissa.",
+      "pass_hint_masked": "Tallennettu salasana näkyy pisteinä. Vaihda se kirjoittamalla uusi."
     },
     "ui": {
       "search_placeholder": "Hae asetuksista…",

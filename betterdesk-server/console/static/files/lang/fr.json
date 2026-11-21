@@ -978,7 +978,8 @@
       "test_hint": "Se connecte au serveur enregistré et s'authentifie. Enregistrez d'abord vos modifications.",
       "uses_title": "Ce qui envoie des e-mails",
       "uses_alerts": "Les règles d'alerte peuvent envoyer un e-mail quand elles se déclenchent.",
-      "uses_help": "Les opérateurs peuvent recevoir un e-mail pour chaque nouvelle demande d'aide. Cela se règle dans les paramètres de facturation."
+      "uses_help": "Les opérateurs peuvent recevoir un e-mail pour chaque nouvelle demande d'aide. Cela se règle dans les paramètres de facturation.",
+      "pass_hint_masked": "Un mot de passe enregistré s'affiche sous forme de points. Saisissez-en un nouveau pour le changer."
     },
     "ui": {
       "search_placeholder": "Rechercher dans les paramètres…",

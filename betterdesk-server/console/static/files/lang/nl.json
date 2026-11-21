@@ -974,7 +974,8 @@
       "test_hint": "Maakt verbinding met de opgeslagen mailserver en meldt zich aan. Sla uw wijzigingen eerst op.",
       "uses_title": "Wat e-mail verstuurt",
       "uses_alerts": "Waarschuwingsregels kunnen een e-mail sturen als ze afgaan.",
-      "uses_help": "Operators kunnen voor elk nieuw hulpverzoek een e-mail krijgen. Dit stelt u in bij de factureringsinstellingen."
+      "uses_help": "Operators kunnen voor elk nieuw hulpverzoek een e-mail krijgen. Dit stelt u in bij de factureringsinstellingen.",
+      "pass_hint_masked": "Een opgeslagen wachtwoord wordt als puntjes getoond. Typ een nieuw om het te wijzigen."
     },
     "ui": {
       "search_placeholder": "Instellingen zoeken…",

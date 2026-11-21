@@ -980,7 +980,8 @@
       "test_hint": "Forbinder til den gemte mailserver og logger ind. Gem dine ændringer først.",
       "uses_title": "Hvad sender e-mails",
       "uses_alerts": "Advarselsregler kan sende en e-mail, når de udløses.",
-      "uses_help": "Operatører kan få en e-mail for hver ny hjælpeanmodning. Det sættes op i faktureringsindstillingerne."
+      "uses_help": "Operatører kan få en e-mail for hver ny hjælpeanmodning. Det sættes op i faktureringsindstillingerne.",
+      "pass_hint_masked": "En gemt adgangskode vises som prikker. Skriv en ny for at ændre den."
     },
     "ui": {
       "search_placeholder": "Søg i indstillinger…",

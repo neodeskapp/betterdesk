@@ -980,7 +980,8 @@
       "test_hint": "Ansluter till den sparade e-postservern och loggar in. Spara dina ändringar först.",
       "uses_title": "Vad skickar e-post",
       "uses_alerts": "Larmregler kan skicka e-post när de utlöses.",
-      "uses_help": "Operatörer kan få e-post för varje ny hjälpbegäran. Det ställs in i faktureringsinställningarna."
+      "uses_help": "Operatörer kan få e-post för varje ny hjälpbegäran. Det ställs in i faktureringsinställningarna.",
+      "pass_hint_masked": "Ett sparat lösenord visas som punkter. Skriv ett nytt för att ändra det."
     },
     "ui": {
       "search_placeholder": "Sök i inställningar…",

@@ -980,7 +980,8 @@
       "test_hint": "Kayıtlı e-posta sunucusuna bağlanır ve oturum açar. Önce değişikliklerinizi kaydedin.",
       "uses_title": "E-posta gönderenler",
       "uses_alerts": "Uyarı kuralları tetiklendiğinde e-posta gönderebilir.",
-      "uses_help": "Operatörler her yeni yardım isteği için e-posta alabilir. Bu, faturalandırma ayarlarında yapılır."
+      "uses_help": "Operatörler her yeni yardım isteği için e-posta alabilir. Bu, faturalandırma ayarlarında yapılır.",
+      "pass_hint_masked": "Kayıtlı parola nokta olarak görünür. Değiştirmek için yenisini yazın."
     },
     "ui": {
       "search_placeholder": "Ayarlarda ara…",

@@ -6,7 +6,7 @@
 -->
 <script lang="ts">
 	import { errorText, getSmtp, saveSmtp, testSmtp, type SmtpConfig } from '#lib/api/settings-system.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import TabCols from '#lib/settings-b/TabCols.svelte';
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
@@ -43,7 +43,11 @@
 		alert_email: string;
 	}
 
-	/** The form for a saved configuration; the password is never sent back, so it starts empty */
+	/**
+	 * The form for a saved configuration. The password field holds the
+	 * server's mask while a password is saved: sent back untouched it keeps
+	 * that password, cleared it removes it.
+	 */
 	function toValues(c: SmtpConfig | null): Values {
 		const configured = !!c?.configured;
 		return {
@@ -53,7 +57,7 @@
 			// The switch is the form's own: on when a user name is saved
 			auth: configured && !!c?.user,
 			user: configured ? (c?.user ?? '') : '',
-			pass: '',
+			pass: configured ? (c?.pass ?? '') : '',
 			from: configured ? (c?.from ?? '') : '',
 			alert_email: configured ? (c?.alert_email ?? '') : ''
 		};
@@ -204,7 +208,10 @@
 						<Field
 							id="email-smtp-pass"
 							label={t('settings.email.smtp_pass')}
-							hint={t('settings.email.pass_hint')}
+							hint={tf(
+								'settings.email.pass_hint_masked',
+								'A saved password shows as dots. Type a new one to change it.'
+							)}
 							width="host"
 						>
 							{#snippet children(f)}

@@ -974,7 +974,8 @@
       "test_hint": "Verbindet sich mit dem gespeicherten Mailserver und meldet sich an. Speichern Sie Ihre Änderungen vorher.",
       "uses_title": "Was E-Mails verschickt",
       "uses_alerts": "Warnregeln können eine E-Mail senden, wenn sie auslösen.",
-      "uses_help": "Operatoren können für jede neue Hilfeanfrage eine E-Mail bekommen. Das richten Sie in den Abrechnungseinstellungen ein."
+      "uses_help": "Operatoren können für jede neue Hilfeanfrage eine E-Mail bekommen. Das richten Sie in den Abrechnungseinstellungen ein.",
+      "pass_hint_masked": "Ein gespeichertes Passwort wird als Punkte angezeigt. Geben Sie ein neues ein, um es zu ändern."
     },
     "ui": {
       "search_placeholder": "Einstellungen durchsuchen…",

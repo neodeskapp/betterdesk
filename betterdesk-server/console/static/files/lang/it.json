@@ -974,7 +974,8 @@
       "test_hint": "Si collega al server di posta salvato ed effettua l'accesso. Salva prima le modifiche.",
       "uses_title": "Cosa invia email",
       "uses_alerts": "Le regole di avviso possono inviare un'email quando scattano.",
-      "uses_help": "Gli operatori possono ricevere un'email per ogni nuova richiesta di aiuto. Si imposta nelle impostazioni di fatturazione."
+      "uses_help": "Gli operatori possono ricevere un'email per ogni nuova richiesta di aiuto. Si imposta nelle impostazioni di fatturazione.",
+      "pass_hint_masked": "Una password salvata appare come punti. Digitane una nuova per cambiarla."
     },
     "ui": {
       "search_placeholder": "Cerca nelle impostazioni…",

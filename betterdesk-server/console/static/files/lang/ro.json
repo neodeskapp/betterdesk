@@ -980,7 +980,8 @@
       "test_hint": "Se conectează la serverul salvat și se autentifică. Salvați mai întâi modificările.",
       "uses_title": "Ce trimite e-mailuri",
       "uses_alerts": "Regulile de alertă pot trimite un e-mail când se declanșează.",
-      "uses_help": "Operatorii pot primi un e-mail pentru fiecare cerere nouă de ajutor. Se configurează în setările de facturare."
+      "uses_help": "Operatorii pot primi un e-mail pentru fiecare cerere nouă de ajutor. Se configurează în setările de facturare.",
+      "pass_hint_masked": "O parolă salvată apare ca puncte. Introduceți una nouă pentru a o schimba."
     },
     "ui": {
       "search_placeholder": "Căutați în setări…",

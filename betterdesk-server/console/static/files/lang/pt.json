@@ -974,7 +974,8 @@
       "test_hint": "Liga-se ao servidor de correio guardado e inicia sessão. Guarde primeiro as alterações.",
       "uses_title": "O que envia e-mails",
       "uses_alerts": "As regras de alerta podem enviar um e-mail quando disparam.",
-      "uses_help": "Os operadores podem receber um e-mail por cada novo pedido de ajuda. Isto configura-se nas definições de faturação."
+      "uses_help": "Os operadores podem receber um e-mail por cada novo pedido de ajuda. Isto configura-se nas definições de faturação.",
+      "pass_hint_masked": "Uma senha salva aparece como pontos. Digite uma nova para alterá-la."
     },
     "ui": {
       "search_placeholder": "Pesquisar configurações…",

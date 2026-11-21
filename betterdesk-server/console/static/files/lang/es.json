@@ -974,7 +974,8 @@
       "test_hint": "Se conecta al servidor de correo guardado e inicia sesión. Guarde antes sus cambios.",
       "uses_title": "Qué envía correos",
       "uses_alerts": "Las reglas de alerta pueden enviar un correo al dispararse.",
-      "uses_help": "Los operadores pueden recibir un correo por cada nueva solicitud de ayuda. Se configura en los ajustes de facturación."
+      "uses_help": "Los operadores pueden recibir un correo por cada nueva solicitud de ayuda. Se configura en los ajustes de facturación.",
+      "pass_hint_masked": "Una contraseña guardada se muestra como puntos. Escriba una nueva para cambiarla."
     },
     "ui": {
       "search_placeholder": "Buscar ajustes…",

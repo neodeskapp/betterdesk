@@ -980,7 +980,8 @@
       "test_hint": "Kobler til den lagrede e-postserveren og logger på. Lagre endringene først.",
       "uses_title": "Hva sender e-post",
       "uses_alerts": "Varselregler kan sende e-post når de utløses.",
-      "uses_help": "Operatører kan få e-post for hver nye hjelpeforespørsel. Dette settes opp i faktureringsinnstillingene."
+      "uses_help": "Operatører kan få e-post for hver nye hjelpeforespørsel. Dette settes opp i faktureringsinnstillingene.",
+      "pass_hint_masked": "Et lagret passord vises som prikker. Skriv inn et nytt for å endre det."
     },
     "ui": {
       "search_placeholder": "Søk i innstillinger…",

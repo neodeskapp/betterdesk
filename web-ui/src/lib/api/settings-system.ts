@@ -442,6 +442,8 @@ export const SmtpConfig = v.looseObject({
 	port: v.optional(v.nullable(NumLike)),
 	secure: BoolLike,
 	user: Text,
+	/** The server's mask (********) when a password is saved, else empty */
+	pass: Text,
 	from: Text,
 	alert_email: Text
 });
@@ -457,7 +459,7 @@ export interface SmtpInput {
 	port: number;
 	secure: boolean;
 	user: string;
-	/** Empty keeps the saved password */
+	/** The mask the server sent keeps the saved password; an empty text removes it */
 	pass: string;
 	from: string;
 	alert_email: string;

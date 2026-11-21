@@ -974,7 +974,8 @@
       "test_hint": "Připojí se k uloženému poštovnímu serveru a přihlásí se. Nejdřív změny uložte.",
       "uses_title": "Co posílá e-maily",
       "uses_alerts": "Pravidla upozornění mohou při spuštění poslat e-mail.",
-      "uses_help": "Operátoři mohou dostat e-mail o každé nové žádosti o pomoc. Nastavuje se v nastavení fakturace."
+      "uses_help": "Operátoři mohou dostat e-mail o každé nové žádosti o pomoc. Nastavuje se v nastavení fakturace.",
+      "pass_hint_masked": "Uložené heslo se zobrazuje jako tečky. Pro změnu zadejte nové."
     },
     "ui": {
       "search_placeholder": "Hledat v nastavení…",

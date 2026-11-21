@@ -980,7 +980,8 @@
       "test_hint": "Kết nối tới máy chủ thư đã lưu và đăng nhập. Hãy lưu thay đổi trước.",
       "uses_title": "Những gì gửi email",
       "uses_alerts": "Quy tắc cảnh báo có thể gửi email khi được kích hoạt.",
-      "uses_help": "Nhân viên hỗ trợ có thể nhận email cho mỗi yêu cầu trợ giúp mới. Mục này được thiết lập trong cài đặt thanh toán."
+      "uses_help": "Nhân viên hỗ trợ có thể nhận email cho mỗi yêu cầu trợ giúp mới. Mục này được thiết lập trong cài đặt thanh toán.",
+      "pass_hint_masked": "Mật khẩu đã lưu hiển thị dưới dạng dấu chấm. Nhập mật khẩu mới để thay đổi."
     },
     "ui": {
       "search_placeholder": "Tìm kiếm cài đặt…",

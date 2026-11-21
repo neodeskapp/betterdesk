@@ -1171,7 +1171,14 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	['email', 'email-smtp-user', 'settings.email.smtp_user', '', [], 'server.config'],
-	['email', 'email-smtp-pass', 'settings.email.smtp_pass', '', ['settings.email.pass_hint'], 'server.config'],
+	[
+		'email',
+		'email-smtp-pass',
+		'settings.email.smtp_pass',
+		'',
+		['settings.email.pass_hint_masked'],
+		'server.config'
+	],
 	['email', 'email-smtp-from', 'settings.email.smtp_from', '', ['settings.email.from_hint'], 'server.config'],
 	[
 		'email',

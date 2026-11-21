@@ -974,7 +974,8 @@
       "test_hint": "Łączy się z zapisanym serwerem poczty i loguje. Najpierw zapisz zmiany.",
       "uses_title": "Co wysyła e-maile",
       "uses_alerts": "Reguły alertów mogą wysłać e-mail, gdy zadziałają.",
-      "uses_help": "Operatorzy mogą dostawać e-mail o każdej nowej prośbie o pomoc. Ustawia się to w ustawieniach rozliczeń."
+      "uses_help": "Operatorzy mogą dostawać e-mail o każdej nowej prośbie o pomoc. Ustawia się to w ustawieniach rozliczeń.",
+      "pass_hint_masked": "Zapisane hasło jest wyświetlane jako kropki. Wpisz nowe, aby je zmienić."
     },
     "ui": {
       "search_placeholder": "Szukaj w ustawieniach…",

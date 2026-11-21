@@ -980,7 +980,8 @@
       "test_hint": "Menyambung ke server email yang tersimpan lalu login. Simpan perubahan Anda dulu.",
       "uses_title": "Yang mengirim email",
       "uses_alerts": "Aturan peringatan bisa mengirim email saat terpicu.",
-      "uses_help": "Operator bisa menerima email untuk setiap permintaan bantuan baru. Ini diatur di pengaturan penagihan."
+      "uses_help": "Operator bisa menerima email untuk setiap permintaan bantuan baru. Ini diatur di pengaturan penagihan.",
+      "pass_hint_masked": "Kata sandi tersimpan tampil sebagai titik. Ketik yang baru untuk mengubahnya."
     },
     "ui": {
       "search_placeholder": "Cari pengaturan…",

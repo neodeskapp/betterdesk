@@ -1102,7 +1102,8 @@
             "test_hint": "Connects to the saved mail server and signs in. Save your changes first.",
             "uses_title": "What sends email",
             "uses_alerts": "Alert rules can send an email when they fire.",
-            "uses_help": "Operators can get an email for each new help request. This is set up in the billing settings."
+            "uses_help": "Operators can get an email for each new help request. This is set up in the billing settings.",
+            "pass_hint_masked": "A saved password shows as dots. Type a new one to change it."
         },
         "enrollment_ldap_hint": "LDAP/AD and OIDC settings are under the LDAP / AD and OIDC / SSO tabs above.",
         "oidc_redirect_url_invalid": "Redirect URL must use http(s) and end with /api/auth/oidc/callback (or /api/oidc/callback).",
