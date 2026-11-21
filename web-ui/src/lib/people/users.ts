@@ -46,6 +46,22 @@ export function assignableRoles(myRole: string | null | undefined): string[] {
 }
 
 /**
+ * Whether the signed-in person may edit, reset or delete this account, as
+ * mayChange on the server: their own, one whose role they may give, and
+ * for a global admin also guest_issuer accounts.
+ */
+export function mayChangeUser(
+	myRole: string | null | undefined,
+	myId: string,
+	user: Pick<ConsoleUser, 'id' | 'role'>
+): boolean {
+	if (String(user.id) === myId) return true;
+	return (
+		assignableRoles(myRole).includes(user.role) || (myRole === 'global_admin' && user.role === 'guest_issuer')
+	);
+}
+
+/**
  * The role choices of the user sheet: the roles the editor may give, plus
  * the user's current role (shown, but not choosable) so it stays clear.
  * LDAP accounts get their role from the directory: every choice is locked.

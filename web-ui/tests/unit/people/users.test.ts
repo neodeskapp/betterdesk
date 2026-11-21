@@ -6,6 +6,7 @@ import {
 	availableOrgs,
 	eachLimited,
 	filterUsers,
+	mayChangeUser,
 	passwordProblem,
 	passwordStrength,
 	providerOf,
@@ -28,6 +29,17 @@ describe('roles a person may give (canAssignUserRole on the server)', () => {
 		}
 		// guest_issuer is never offered: the server never assigns it from the console
 		expect(assignableRoles('super_admin')).not.toContain('guest_issuer');
+	});
+
+	test('who may edit, reset or delete an account: its own, a role the editor may give, guest issuers for global admins', () => {
+		const me = user({ id: 5, role: 'global_admin' });
+		expect(mayChangeUser('global_admin', '5', me)).toBe(true);
+		expect(mayChangeUser('global_admin', '5', user({ id: 6, role: 'operator' }))).toBe(true);
+		expect(mayChangeUser('global_admin', '5', user({ id: 7, role: 'guest_issuer' }))).toBe(true);
+		for (const role of ['super_admin', 'server_admin', 'global_admin'])
+			expect(mayChangeUser('global_admin', '5', user({ id: 8, role }))).toBe(false);
+		expect(mayChangeUser('super_admin', '1', user({ id: 8, role: 'super_admin' }))).toBe(true);
+		expect(mayChangeUser('server_admin', '2', user({ id: 9, role: 'viewer' }))).toBe(false);
 	});
 
 	test('a role the editor may not give stays visible and locked, so the current role is clear', () => {

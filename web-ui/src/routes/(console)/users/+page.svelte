@@ -44,12 +44,13 @@
 		DESCRIBED_ROLES,
 		eachLimited,
 		filterUsers,
+		mayChangeUser,
 		providerOf,
 		scopeText
 	} from '#lib/people/users.ts';
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
 	import { myPresence } from '#lib/state/presence.svelte.ts';
-	import { can, session } from '#lib/state/session.svelte.ts';
+	import { can, sectionWritable, session } from '#lib/state/session.svelte.ts';
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
@@ -77,10 +78,13 @@
 	import UserSheet from './UserSheet.svelte';
 
 	const allowed = can('user.view');
-	const canCreate = can('user.create') && assignableRoles(session.user?.role).length > 0;
+	/* With the Users section at read every write is refused, also creating and deleting */
+	const canCreate = can('user.create') && sectionWritable() && assignableRoles(session.user?.role).length > 0;
 	const canEdit = can('user.edit');
-	const canDelete = can('user.delete');
+	const canDelete = can('user.delete') && sectionWritable();
 	const meId = String(session.user?.id ?? '');
+	/** The server changes only the person's own account and those whose role they may give */
+	const mayChange = (u: ConsoleUser) => mayChangeUser(session.user?.role, meId, u);
 
 	/* ── Labels ── */
 
@@ -215,7 +219,7 @@
 	let accessFor = $state.raw<{ subject: AccessSubject; name: string; role?: string } | null>(null);
 
 	function openRow(u: ConsoleUser) {
-		if (canEdit) editing = { user: u };
+		if (canEdit && mayChange(u)) editing = { user: u };
 		else orgsFor = u;
 	}
 
@@ -376,8 +380,9 @@
 {#snippet actionsCell(u: ConsoleUser)}
 	{@const self = String(u.id) === meId}
 	{@const local = providerOf(u) === 'local'}
+	{@const changeable = mayChange(u)}
 	<MenuButton kebab label={t('users.actions_for', { username: u.username })}>
-		{#if canEdit}
+		{#if canEdit && changeable}
 			<MenuItem class="act-edit" icon={ICONS.edit} onselect={() => (editing = { user: u })}
 				>{t('users.edit')}</MenuItem
 			>
@@ -396,7 +401,7 @@
 			onselect={() => (accessFor = { subject: { kind: 'user', id: u.id }, name: u.username, role: u.role })}
 			>{tf('users.access_menu', 'Panel access…')}</MenuItem
 		>
-		{#if canDelete && !self}
+		{#if canDelete && changeable && !self}
 			<MenuDivider />
 			<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void removeUser(u)}
 				>{t('users.delete_menu')}</MenuItem
