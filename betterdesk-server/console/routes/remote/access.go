@@ -23,6 +23,8 @@ type grants struct {
 	// session says the account's session let the request through, so the
 	// account's device scope decides too.
 	session bool
+	// target is the remote target the request is for, nil for a device.
+	target *goapi.Object
 }
 
 type grantsKey struct{}
@@ -65,8 +67,8 @@ type guestDenied struct {
 // these allows it, in this order:
 //
 //   - a session whose account has device.connect (remote_target.connect
-//     for an rt_ target): the remote client's guard decides;
-//   - for an rt_ target nothing else: the guard decides;
+//     for a remote target): the remote client's guard decides;
+//   - for a remote target nothing else: the guard decides;
 //   - a guest link (?guest=, ?t= or the guest cookie) good for this
 //     device; it is stored in the guest cookie. A link from the query
 //     that is not good answers 403 guest_denied, one from the cookie only
@@ -75,18 +77,24 @@ type guestDenied struct {
 //     good for this device;
 //   - else the remote client's guard with device.connect.
 //
-// A guest token (query or cookie) or share token that cannot be turned
-// into text is refused with 400. Where a session lets the request
-// through, the viewer checks the account's device scope as well.
+// An id that starts with rt_ is a remote target when the API server has
+// a target of that id, else a device: the signal server takes such ids
+// for devices too. A guest token (query or cookie) or share token that
+// cannot be turned into text is refused with 400. Where a session lets
+// the request through, the viewer checks the account's device scope as
+// well.
 func (h *handlers) requireRemoteAccess(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		deviceID := r.PathValue("deviceId")
-		target := strings.HasPrefix(deviceID, "rt_")
+		g := &grants{}
+		if strings.HasPrefix(deviceID, "rt_") {
+			g.target = h.d.GoAPI.GetRemoteTarget(r.Context(), deviceID)
+		}
+		target := g.target != nil
 		permission := "device.connect"
 		if target {
 			permission = "remote_target.connect"
 		}
-		g := &grants{}
 		r = r.WithContext(context.WithValue(r.Context(), grantsKey{}, g))
 		if (kit.UserID(r) != 0 && kit.HasPermission(r, permission)) || target {
 			g.session = true

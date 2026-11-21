@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"regexp"
-	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
@@ -83,21 +82,15 @@ func (h *handlers) viewer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	g := grantsOf(r)
-	target := strings.HasPrefix(deviceID, "rt_")
-	var device *goapi.Object
-	if target {
-		device = h.d.GoAPI.GetRemoteTarget(ctx, deviceID)
-	} else if h.src.relay != nil {
+	// A remote target's protocol and settings come from the record the
+	// access check found
+	target := g.target != nil
+	device := g.target
+	if !target && h.src.relay != nil {
 		// A failed lookup leaves the viewer without the device's name
 		if found, err := h.src.relay.Device(ctx, deviceID); err == nil {
 			device = found
 		}
-	}
-	// A remote target's protocol and settings come from its record:
-	// without one there is nothing to connect to
-	if target && device == nil {
-		kit.JSON(w, r, http.StatusNotFound, viewerFailure{Code: "not_found", Error: kit.T(r, "errors.not_found_message", nil)})
-		return
 	}
 	// An account's session reaches only the devices and targets of its
 	// device scope, as the viewer's socket does; a device the console does

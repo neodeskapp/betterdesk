@@ -504,12 +504,14 @@ func appVersionOf(t *testing.T, vectors []vector) string {
 // limit and the body, and what they asked the API server, the device
 // table and the remote relay, on SQLite and PostgreSQL. A vector whose
 // answer a bug fix changed on purpose is held to another vector's answer
-// (answeredAs) or to the answer it gets since the fix (refusedSessions).
+// (answeredAs) or to the answer it gets since the fix (refusedSessions,
+// targetLookups).
 func TestNodeVectors(t *testing.T) {
 	vectors := loadVectors(t)
 	version := appVersionOf(t, vectors)
 	twins := answeredAs(t, vectors)
 	refused := refusedSessions(t, vectors)
+	lookedUp, devices := targetLookups(t, vectors)
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := newWorld(t, db, version, false)
 		on := newWorld(t, storetest.Migrated(t), version, true)
@@ -528,6 +530,14 @@ func TestNodeVectors(t *testing.T) {
 				target = on
 			}
 			rec := target.do(v)
+			if devices[i] {
+				// RV30: an rt_ id no target has is a device
+				id := strings.TrimPrefix(v.Request.Path, "/api/remote/viewer/")
+				if body := rec.Body.String(); rec.Code != http.StatusOK || !strings.Contains(body, `"deviceId":"`+id+`"`) || !strings.Contains(body, `"remote_target":false`) {
+					t.Errorf("vector %d: %s answered %d %.200s, want the viewer's data of a device", i, v.Request.Path, rec.Code, body)
+				}
+				continue
+			}
 			expected := v
 			if j, ok := twins[i]; ok {
 				expected = &vectors[j]
@@ -536,7 +546,12 @@ func TestNodeVectors(t *testing.T) {
 				target.mu.Lock()
 				target.issued += issues(v) - issues(expected)
 				target.mu.Unlock()
+				if fixed, ok := lookedUp[j]; ok {
+					expected = &fixed
+				}
 			} else if fixed, ok := refused[i]; ok {
+				expected = &fixed
+			} else if fixed, ok := lookedUp[i]; ok {
 				expected = &fixed
 			}
 			if problems := compare(target, expected, rec); len(problems) > 0 {

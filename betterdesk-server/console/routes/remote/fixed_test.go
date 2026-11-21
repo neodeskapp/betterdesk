@@ -147,3 +147,37 @@ func namesNoText(r request) bool {
 	}
 	return named
 }
+
+// targetLookups holds the Node vectors of the viewer for an rt_ id, whose
+// answer RV30 changed on purpose. The access check asks the API server
+// for the remote target before anything else, as the id names a target
+// only when one exists: a vector whose scene has the target gets that
+// lookup first in its calls, and answers as before. One whose scene has
+// no target (not found, a failed or hanging call) is a device now; those
+// are listed in devices, and their answer is the viewer's device data
+// (checked in TestNodeVectors and TestAnIDWithTheTargetPrefixIsADeviceWhenNoTargetHasIt).
+func targetLookups(t *testing.T, vectors []vector) (fixed map[int]vector, devices map[int]bool) {
+	t.Helper()
+	fixed, devices = map[int]vector{}, map[int]bool{}
+	for i, v := range vectors {
+		path, _, _ := strings.Cut(v.Request.Path, "?")
+		id, ok := strings.CutPrefix(path, "/api/remote/viewer/")
+		if !ok || !strings.HasPrefix(id, "rt_") {
+			continue
+		}
+		lookup := apiCall{Method: http.MethodGet, URL: "/api/remote-targets/" + id}
+		if answer, found := v.World.API["GET /api/remote-targets/"+id]; !found || answer.Hang || answer.Status != http.StatusOK {
+			devices[i] = true
+			continue
+		}
+		if len(v.Calls) > 0 && v.Calls[0] == lookup {
+			continue
+		}
+		v.Calls = append([]apiCall{lookup}, v.Calls...)
+		fixed[i] = v
+	}
+	if len(fixed) == 0 || len(devices) == 0 {
+		t.Fatalf("%d viewer vectors of a target without its lookup first, %d of an rt_ id no target has; want both", len(fixed), len(devices))
+	}
+	return fixed, devices
+}
