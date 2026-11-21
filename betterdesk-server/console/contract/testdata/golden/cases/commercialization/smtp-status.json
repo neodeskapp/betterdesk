@@ -110,15 +110,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "alert_email": "ops@example.com",
-     "configured": true,
-     "from": "console@example.com",
-     "host": "127.0.0.1",
-     "pass": "********",
-     "port": 1,
-     "secure": false,
-     "tlsVerify": false,
-     "user": "contract"
+     "configured": true
     }
    }
   }

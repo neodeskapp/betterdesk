@@ -1,6 +1,7 @@
 package commercialization
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -59,13 +60,23 @@ func refuseNothingToSave(w http.ResponseWriter, r *http.Request, body any, field
 	return true
 }
 
-// smtpStatus answers GET /api/panel/commercialization/smtp-status: the
-// SMTP settings in use with the password masked, or {"configured":false},
-// for the billing page to say whether help request mails can go out.
+// smtpConfigured is the answer of smtp-status.
+type smtpConfigured struct {
+	Configured bool `json:"configured"`
+}
+
+// smtpStatus answers GET /api/panel/commercialization/smtp-status with
+// {"configured":true|false}, for the billing page to say whether help
+// request mails can go out. The settings themselves are the settings
+// page's, behind server.config.
 func (h *handlers) smtpStatus(w http.ResponseWriter, r *http.Request) {
-	answer := h.d.Mail.GetSMTPSettings(r.Context())
-	if answer.LogError != "" {
-		h.log.Child("Settings").Error(answer.LogError)
+	var status smtpConfigured
+	settings, err := json.Marshal(h.d.Mail.GetSMTPSettings(r.Context()).Body)
+	if err == nil {
+		err = json.Unmarshal(settings, &status)
 	}
-	kit.JSON(w, r, answer.Status, answer.Body)
+	if err != nil {
+		h.log.Child("Settings").Error("SMTP status:", err)
+	}
+	kit.JSON(w, r, http.StatusOK, status)
 }

@@ -238,8 +238,9 @@ func TestEmailConfig(t *testing.T) {
 	}
 }
 
-// TestSMTPStatus reads the SMTP settings for the billing page, with the
-// password masked.
+// TestSMTPStatus says whether SMTP is set up, for the billing page, and
+// nothing of the settings themselves, which the settings route keeps
+// behind server.config (BUGS.md RV93).
 func TestSMTPStatus(t *testing.T) {
 	w, _, _ := clockWorld(t, false)
 	operator := account(5, "operator")
@@ -252,8 +253,16 @@ func TestSMTPStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	rec, _ = w.Do(proxytest.Request{Path: "/api/panel/commercialization/smtp-status", Session: operator}, nil)
-	if body := rec.Body.String(); strings.Contains(body, "secret-pass") || !strings.Contains(body, `"pass":"********"`) {
-		t.Errorf("with settings: %s", body)
+	if body := rec.Body.String(); rec.Code != 200 || body != `{"configured":true}` {
+		t.Errorf("with settings: %d %s", rec.Code, body)
+	}
+	// A configuration without a host is none
+	if _, err := w.Deps.Store.Exec(context.Background(), "UPDATE settings SET value = ? WHERE key = 'smtp_config'", `{"user":"u"}`); err != nil {
+		t.Fatal(err)
+	}
+	rec, _ = w.Do(proxytest.Request{Path: "/api/panel/commercialization/smtp-status", Session: operator}, nil)
+	if body := rec.Body.String(); body != `{"configured":false}` {
+		t.Errorf("without a host: %s", body)
 	}
 	rec, _ = w.Do(proxytest.Request{Path: "/api/panel/commercialization/smtp-status", Session: account(6, "viewer")}, nil)
 	if rec.Code != 403 {
