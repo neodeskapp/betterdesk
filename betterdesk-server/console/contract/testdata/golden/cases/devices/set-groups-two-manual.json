@@ -103,19 +103,11 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    {
-     "path": "data.groupGuids[*]",
-     "pattern": "^[9aA+/_=-]{36}$"
-    }
-   ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "groupGuids": [
-       "<volatile>"
-      ]
+      "groupGuids": []
      },
      "success": true
     }
