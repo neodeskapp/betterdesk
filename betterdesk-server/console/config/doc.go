@@ -6,8 +6,6 @@
 //	Variable                 Default               Meaning
 //	CONSOLE_PORT             5000                  Port the Go console listens on. 0: the Go console does not start.
 //	HOST                     127.0.0.1             Address the console listens on.
-//	CONSOLE_NODE_UPSTREAM    (none)                http(s) address of the Node console while routes move. With it, Go
-//	                                               answers only the routes it has and forwards everything else.
 //	CONSOLE_DEBUG_ROUTING    (off)                 "1" adds GET /__bd/routing for the contract suite.
 //	TRUST_PROXY              (off)                 Which proxies may speak for the client: false, true, a hop count,
 //	                                               loopback, linklocal, uniquelocal, addresses or ranges.
@@ -82,8 +80,7 @@
 //	WS_HBBR_PORT             21117
 //	BETTERDESK_CLIENT_GENERATOR_MODE  download     "embedded" builds the support client from source on this machine
 //	                                               instead of using the downloaded templates.
-//	AGENT_BUILD_WORKER       (on)                  "off" keeps the support client build worker from starting. It never
-//	                                               starts while a Node console runs behind this one.
+//	AGENT_BUILD_WORKER       (on)                  "off" keeps the support client build worker from starting.
 //	AGENT_BUILD_POLL_MS      5000                  How often the build worker looks for a queued build. Zero, a
 //	                                               negative number or no number: every millisecond.
 //	AGENT_BUILD_COOLDOWN_MS  1000                  Pause after a build. Zero, negative or no number: none.

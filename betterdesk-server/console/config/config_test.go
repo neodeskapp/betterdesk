@@ -41,7 +41,7 @@ func TestLoadDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Port != 5000 || cfg.Host != "127.0.0.1" || cfg.NodeUpstream != nil || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
+	if cfg.Port != 5000 || cfg.Host != "127.0.0.1" || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
 		t.Errorf("defaults = %+v", cfg)
 	}
 	if cfg.NodeEnv != "development" || cfg.Production || cfg.Docker || cfg.HTTPS || cfg.AllowSelfSignedCerts {
@@ -124,8 +124,7 @@ func TestPanelGroupingSettings(t *testing.T) {
 func TestLoadValues(t *testing.T) {
 	cfg, err := load(env(map[string]string{
 		"HOST": "127.0.0.1", "CONSOLE_PORT": "5100", "TRUST_PROXY": "loopback",
-		"CONSOLE_NODE_UPSTREAM": "http://127.0.0.1:5001",
-		"NODE_ENV":              "production", "HTTPS_ENABLED": "TRUE", "HSTS_ENABLED": "On", "ALLOW_SELF_SIGNED_CERTS": "True",
+		"NODE_ENV": "production", "HTTPS_ENABLED": "TRUE", "HSTS_ENABLED": "On", "ALLOW_SELF_SIGNED_CERTS": "True",
 		"DEFAULT_LANGUAGE": "de", "DEVICE_SCOPE_DEFAULT": "Restricted", "LOG_LEVEL": " Debug ",
 		"DATA_DIR": "/data", "CONSOLE_DIR": "/console", "CONSOLE_LANG_DIR": "/langs", "WEB_UI_DIR": "/ui",
 		"HBBS_API_URL": "http://127.0.0.1:21121/api",
@@ -135,9 +134,6 @@ func TestLoadValues(t *testing.T) {
 	}
 	if cfg.Addr() != "127.0.0.1:5100" {
 		t.Errorf("Addr = %q", cfg.Addr())
-	}
-	if cfg.NodeUpstream == nil || cfg.NodeUpstream.Host != "127.0.0.1:5001" {
-		t.Errorf("NodeUpstream = %v", cfg.NodeUpstream)
 	}
 	if !cfg.TrustProxy.Enabled() {
 		t.Error("TrustProxy is off")
@@ -360,8 +356,6 @@ func TestLoadRejectsBadValues(t *testing.T) {
 		{"CONSOLE_PORT": "abc"},
 		{"CONSOLE_PORT": "70000"},
 		{"TRUST_PROXY": "not an address"},
-		{"CONSOLE_NODE_UPSTREAM": "ftp://x"},
-		{"CONSOLE_NODE_UPSTREAM": "127.0.0.1:5001"},
 	} {
 		if _, err := Load(env(values)); err == nil {
 			t.Errorf("Load(%v) accepted a bad value", values)

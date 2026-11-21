@@ -33,14 +33,9 @@ type Config struct {
 	// (TRUST_PROXY).
 	TrustProxy httpx.TrustProxy
 
-	// NodeUpstream is the Node console's internal address while routes
-	// move from Node to Go (CONSOLE_NODE_UPSTREAM). nil when Go serves
-	// everything.
-	NodeUpstream *url.URL
-
 	// DebugRouting adds GET /__bd/routing, where the contract suite asks
-	// whether Go or Node answers a route (CONSOLE_DEBUG_ROUTING=1). Test
-	// stacks set it; an install does not.
+	// who answers a route (CONSOLE_DEBUG_ROUTING=1). Test stacks set it;
+	// an install does not.
 	DebugRouting bool
 
 	// NodeEnv is NODE_ENV, "development" when unset. Production is
@@ -294,14 +289,6 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 		return nil, fmt.Errorf("TRUST_PROXY: %w", err)
 	}
 	cfg.TrustProxy = trust
-
-	if raw := strings.TrimSpace(getenv("CONSOLE_NODE_UPSTREAM")); raw != "" {
-		u, err := url.Parse(raw)
-		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-			return nil, fmt.Errorf("CONSOLE_NODE_UPSTREAM %q is not an http(s) URL", raw)
-		}
-		cfg.NodeUpstream = u
-	}
 
 	cfg.DebugRouting = strings.TrimSpace(getenv("CONSOLE_DEBUG_ROUTING")) == "1"
 
