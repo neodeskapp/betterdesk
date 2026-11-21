@@ -91,6 +91,12 @@ func (s *Server) handleChatSendMessage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
+	// The console relays messages of its signed-in operators and names
+	// them; any other caller posts as itself.
+	if !arrivedInternally(r) {
+		body.FromID = getUsernameFromCtx(r)
+		body.FromName = body.FromID
+	}
 
 	if body.ConversationID == "" || body.FromID == "" || body.Text == "" {
 		http.Error(w, `{"error":"conversation_id, from_id, and text required"}`, http.StatusBadRequest)
@@ -343,6 +349,12 @@ func (s *Server) handleChatCreateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The creator decides who may delete the group, so a caller other
+	// than the console creates it as itself.
+	if !arrivedInternally(r) {
+		body.CreatedBy = getUsernameFromCtx(r)
+	}
+
 	g := &db.ChatGroup{
 		ID:        "group:" + uuid.New().String()[:8],
 		Name:      body.Name,
@@ -421,12 +433,23 @@ func (s *Server) handleChatUpdateGroup(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"ok": true})
 }
 
-// handleChatDeleteGroup deletes a chat group.
+// handleChatDeleteGroup deletes a chat group and its history. Only an
+// existing group is deleted, so a device conversation keeps its history,
+// and only by its creator or a super admin.
 // DELETE /api/chat/groups/{id}
 func (s *Server) handleChatDeleteGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := strings.TrimPrefix(r.URL.Path, "/api/chat/groups/")
 	if groupID == "" {
 		http.Error(w, `{"error":"group id required"}`, http.StatusBadRequest)
+		return
+	}
+	group, err := s.db.GetChatGroup(groupID)
+	if err != nil || group == nil {
+		http.Error(w, `{"error":"group not found"}`, http.StatusNotFound)
+		return
+	}
+	if !auth.IsSuperAdminRole(getRoleFromCtx(r)) && group.CreatedBy != actorFromCtx(r) {
+		http.Error(w, `{"error":"only the group's creator or an admin may delete it"}`, http.StatusForbidden)
 		return
 	}
 
