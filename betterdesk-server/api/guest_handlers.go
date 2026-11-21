@@ -22,7 +22,7 @@ func (s *Server) isGuestAdmin(role string) bool {
 
 // POST /api/guest/access-links
 func (s *Server) handleGuestAccessCreate(w http.ResponseWriter, r *http.Request) {
-	username := usernameFromRequest(r)
+	username := actorFromCtx(r)
 	var body struct {
 		PeerIDs    []string `json:"peer_ids"`
 		TTLMinutes int      `json:"ttl_minutes"`
@@ -150,7 +150,7 @@ func (s *Server) handleGuestAccessEvent(w http.ResponseWriter, r *http.Request) 
 
 // GET /api/guest/access-links
 func (s *Server) handleGuestAccessList(w http.ResponseWriter, r *http.Request) {
-	username := usernameFromRequest(r)
+	username := actorFromCtx(r)
 	role := getRoleFromCtx(r)
 	grants, err := s.guestAccessStore().ListActive(username, s.isGuestAdmin(role))
 	if err != nil {
@@ -182,7 +182,7 @@ func (s *Server) handleGuestAccessRevoke(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "id required"})
 		return
 	}
-	username := usernameFromRequest(r)
+	username := actorFromCtx(r)
 	role := getRoleFromCtx(r)
 	ok, err := s.guestAccessStore().RevokeByID(id, username, s.isGuestAdmin(role))
 	if err != nil {
