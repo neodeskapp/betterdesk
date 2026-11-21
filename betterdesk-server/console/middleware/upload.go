@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -22,6 +23,9 @@ const (
 	UploadFieldTooLong    = "LIMIT_FIELD_VALUE"
 	UploadMissingName     = "MISSING_FIELD_NAME"
 	UploadArrayIndexLarge = "LIMIT_FIELD_ARRAY_INDEX"
+	UploadFieldNameLong   = "LIMIT_FIELD_KEY"
+	UploadTooManyFields   = "LIMIT_FIELD_COUNT"
+	UploadTooManyParts    = "LIMIT_PART_COUNT"
 )
 
 var uploadMessages = map[string]string{
@@ -30,6 +34,9 @@ var uploadMessages = map[string]string{
 	UploadFieldTooLong:    "Field value too long",
 	UploadMissingName:     "Field name missing",
 	UploadArrayIndexLarge: "Field name array index too large",
+	UploadFieldNameLong:   "Field name too long",
+	UploadTooManyFields:   "Too many fields",
+	UploadTooManyParts:    "Too many parts",
 }
 
 // UploadError is a multipart upload that broke one of the limits.
@@ -119,6 +126,17 @@ const (
 	maxFieldSize = 1 << 20
 	// maxFieldIndex is the largest array index a field name may use.
 	maxFieldIndex = 10000
+	// maxFieldSlots is how many places the arrays of a form's fields may
+	// have together, holes included: a hole is written as null.
+	maxFieldSlots = 100000
+	// maxFieldNameSize is the longest field name in bytes, the default of
+	// multer's fieldNameSize.
+	maxFieldNameSize = 100
+	// maxFields is how many text fields a form may have, net/http's limit
+	// of 1000 parts for a form it reads; maxParts counts every part,
+	// skipped files and parts without a name included.
+	maxFields = 1000
+	maxParts  = 2000
 )
 
 // ParseUpload reads a multipart/form-data request with one file field, as
@@ -157,6 +175,7 @@ func ParseUpload(r *http.Request, opts UploadOptions) (*Upload, error) {
 	up := &Upload{}
 	fields := newFieldObject()
 	slots := 1
+	parts, fieldCount := 0, 0
 	fail := func(err error) (*Upload, error) {
 		if up.File != nil && up.File.Path != "" {
 			_ = os.Remove(up.File.Path)
@@ -177,6 +196,9 @@ func ParseUpload(r *http.Request, opts UploadOptions) (*Upload, error) {
 		if err != nil {
 			return fail(formError(err))
 		}
+		if parts++; parts > maxParts {
+			return fail(uploadError(UploadTooManyParts, "", ""))
+		}
 		p, ok := describePart(part)
 		if !ok {
 			continue
@@ -184,6 +206,12 @@ func ParseUpload(r *http.Request, opts UploadOptions) (*Upload, error) {
 		if !p.isFile {
 			if !p.hasName {
 				return fail(uploadError(UploadMissingName, "", ""))
+			}
+			if fieldCount++; fieldCount > maxFields {
+				return fail(uploadError(UploadTooManyFields, "", ""))
+			}
+			if len(p.name) > maxFieldNameSize {
+				return fail(uploadError(UploadFieldNameLong, p.name, ""))
 			}
 			raw, err := io.ReadAll(io.LimitReader(part, maxFieldSize+1))
 			if err != nil {
@@ -226,6 +254,9 @@ func ParseUpload(r *http.Request, opts UploadOptions) (*Upload, error) {
 			return fail(err)
 		}
 		up.File = file
+	}
+	if fields.slots() > maxFieldSlots {
+		return fail(uploadError(UploadArrayIndexLarge, "", ""))
 	}
 	up.Fields = fields.object()
 	return up, nil
@@ -583,13 +614,47 @@ func extendedValue(s string, i int) (string, int, bool) {
 }
 
 // fieldNode is one node of the text fields of an upload: a string, an
-// object or an array (which may have holes).
+// object or an array. An array keeps its elements by index and its length
+// as JavaScript counts it, so a hole costs nothing until the array is
+// written out, where it is null.
 type fieldNode struct {
 	kind    Kind
 	text    string
 	keys    []string
 	members map[string]*fieldNode
-	items   []*fieldNode
+	at      map[int]*fieldNode
+	length  int
+}
+
+func newFieldArray(items ...*fieldNode) *fieldNode {
+	n := &fieldNode{kind: KindArray, at: map[int]*fieldNode{}}
+	for _, item := range items {
+		n.push(item)
+	}
+	return n
+}
+
+// push adds an element at the end of an array.
+func (n *fieldNode) push(item *fieldNode) {
+	n.at[n.length] = item
+	n.length++
+}
+
+// slots counts the places of the arrays below n, holes included.
+func (n *fieldNode) slots() int {
+	total := 0
+	switch n.kind {
+	case KindArray:
+		total = n.length
+		for _, item := range n.at {
+			total += item.slots()
+		}
+	case KindObject:
+		for _, member := range n.members {
+			total += member.slots()
+		}
+	}
+	return total
 }
 
 func newFieldObject() *fieldNode {
@@ -654,10 +719,10 @@ func fieldPath(key string) ([]fieldStep, error) {
 
 func (n *fieldNode) get(step fieldStep) *fieldNode {
 	if n.kind == KindArray {
-		if !step.array || step.index >= len(n.items) {
+		if !step.array {
 			return nil
 		}
-		return n.items[step.index]
+		return n.at[step.index]
 	}
 	return n.members[step.key]
 }
@@ -668,10 +733,8 @@ func (n *fieldNode) put(step fieldStep, child *fieldNode) {
 		if !step.array {
 			return
 		}
-		for len(n.items) <= step.index {
-			n.items = append(n.items, nil)
-		}
-		n.items[step.index] = child
+		n.at[step.index] = child
+		n.length = max(n.length, step.index+1)
 		return
 	}
 	if _, seen := n.members[step.key]; !seen {
@@ -700,7 +763,7 @@ func (n *fieldNode) append(key, value string) error {
 		case current == nil:
 			child := newFieldObject()
 			if step.nextArray {
-				child = &fieldNode{kind: KindArray}
+				child = newFieldArray()
 			}
 			context.put(step, child)
 			context = child
@@ -708,10 +771,13 @@ func (n *fieldNode) append(key, value string) error {
 			context = current
 		case current.kind == KindArray:
 			obj := newFieldObject()
-			for index, item := range current.items {
-				if item != nil {
-					obj.put(fieldStep{key: strconv.Itoa(index)}, item)
-				}
+			indexes := make([]int, 0, len(current.at))
+			for index := range current.at {
+				indexes = append(indexes, index)
+			}
+			slices.Sort(indexes)
+			for _, index := range indexes {
+				obj.put(fieldStep{key: strconv.Itoa(index)}, current.at[index])
 			}
 			context.put(step, obj)
 			context = obj
@@ -729,16 +795,16 @@ func (n *fieldNode) setLast(step fieldStep, current *fieldNode, value string) {
 	switch {
 	case current == nil:
 		if step.append {
-			n.put(step, &fieldNode{kind: KindArray, items: []*fieldNode{scalarNode(value)}})
+			n.put(step, newFieldArray(scalarNode(value)))
 		} else {
 			n.put(step, scalarNode(value))
 		}
 	case current.kind == KindArray:
-		current.items = append(current.items, scalarNode(value))
+		current.push(scalarNode(value))
 	case current.kind == KindObject:
 		current.setLast(fieldStep{}, current.members[""], value)
 	default:
-		n.put(step, &fieldNode{kind: KindArray, items: []*fieldNode{current, scalarNode(value)}})
+		n.put(step, newFieldArray(current, scalarNode(value)))
 	}
 }
 
@@ -752,11 +818,11 @@ func (n *fieldNode) writeJSON(buf *bytes.Buffer) {
 		buf.Write(raw)
 	case n.kind == KindArray:
 		buf.WriteByte('[')
-		for i, item := range n.items {
+		for i := range n.length {
 			if i > 0 {
 				buf.WriteByte(',')
 			}
-			item.writeJSON(buf)
+			n.at[i].writeJSON(buf)
 		}
 		buf.WriteByte(']')
 	default:

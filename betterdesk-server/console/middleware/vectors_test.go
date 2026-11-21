@@ -643,6 +643,14 @@ func knownDifference(v vector) (difference, bool) {
 		return difference{"encoding/json stops at 10000 levels of nesting, V8 has no such limit", 400, "Internal Server Error"}, true
 	case strings.Contains(v.Name, "utf-7"):
 		return difference{"UTF-7 bodies are not supported: 415 instead of being parsed", 415, ""}, true
+	case strings.HasPrefix(v.Name, "upload ") && strings.HasSuffix(v.Name, " long field name"):
+		// The test pipeline's memory route passes the error to the error
+		// handler, which hides the message in production; the disk route
+		// answers it with 400
+		if v.Path == "/up/disk" {
+			return difference{"RV193: a field name longer than 100 bytes is refused", http.StatusBadRequest, "Field name too long"}, true
+		}
+		return difference{"RV193: a field name longer than 100 bytes is refused", http.StatusInternalServerError, ""}, true
 	case strings.Contains(v.Name, "body in file crlf"):
 		return difference{"a boundary followed by other text ends the part in busboy; Go keeps reading the file", 200, "\"size\":18"}, true
 	case strings.HasPrefix(v.Name, "rule ") && strings.HasPrefix(v.Path, "/API/"):
