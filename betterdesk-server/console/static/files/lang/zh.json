@@ -1695,7 +1695,10 @@
       "generic_agent_release_public_key_missing": "未配置用于验证签名的公钥。",
       "generic_agent_release_signature_invalid": "版本清单签名验证失败。",
       "generic_agent_release_manifest_invalid": "版本清单未通过验证（schema、sku 或 assets）。",
-      "generic_agent_release_checksum_mismatch": "资源校验和不匹配：{{detail}}"
+      "generic_agent_release_checksum_mismatch": "资源校验和不匹配：{{detail}}",
+      "generic_agent_release_tag_invalid": "该版本标签不是有效的 support-v* 版本，已拒绝。",
+      "generic_agent_release_not_newer": "该版本并不比已导入的版本更新。",
+      "generic_agent_release_already_imported": "该版本已导入。"
     },
     "legacy_title": "客户端配置生成器",
     "connection_section": "服务器连接",

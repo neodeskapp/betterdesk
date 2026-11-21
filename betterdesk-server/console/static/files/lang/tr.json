@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "İmzayı doğrulamak için genel anahtar yapılandırılmamış.",
       "generic_agent_release_signature_invalid": "Manifest imza doğrulaması başarısız.",
       "generic_agent_release_manifest_invalid": "Manifest doğrulamayı geçemedi (schema, sku veya assets).",
-      "generic_agent_release_checksum_mismatch": "Varlık için sağlama toplamı uyuşmuyor: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Varlık için sağlama toplamı uyuşmuyor: {{detail}}",
+      "generic_agent_release_tag_invalid": "Sürüm etiketi geçerli bir support-v* sürümü değil ve reddedildi.",
+      "generic_agent_release_not_newer": "Bu sürüm, zaten içe aktarılmış sürümlerden daha yeni değil.",
+      "generic_agent_release_already_imported": "Bu sürüm zaten içe aktarıldı."
     },
     "legacy_title": "İstemci Yapılandırma Oluşturucu",
     "connection_section": "Sunucu bağlantısı",

@@ -1702,7 +1702,10 @@
       "generic_agent_release_public_key_missing": "لم يُضبط مفتاح عام للتحقق من التوقيع.",
       "generic_agent_release_signature_invalid": "فشل التحقق من توقيع البيان.",
       "generic_agent_release_manifest_invalid": "لم يجتز البيان التحقق (schema أو sku أو assets).",
-      "generic_agent_release_checksum_mismatch": "عدم تطابق المجموع الاختباري للمورد: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "عدم تطابق المجموع الاختباري للمورد: {{detail}}",
+      "generic_agent_release_tag_invalid": "وسم الإصدار ليس إصدار support-v* صالحًا وتم رفضه.",
+      "generic_agent_release_not_newer": "هذا الإصدار ليس أحدث من الإصدارات المستوردة مسبقًا.",
+      "generic_agent_release_already_imported": "تم استيراد هذا الإصدار بالفعل."
     },
     "legacy_title": "مولد تكوين العميل",
     "connection_section": "اتصال الخادم",

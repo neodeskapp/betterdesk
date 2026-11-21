@@ -1711,7 +1711,10 @@
       "generic_agent_release_public_key_missing": "Brak skonfigurowanego klucza publicznego do weryfikacji podpisu wydania.",
       "generic_agent_release_signature_invalid": "Weryfikacja podpisu manifestu wydania nie powiodła się.",
       "generic_agent_release_manifest_invalid": "Manifest wydania nie przeszedł walidacji (schema, sku lub assets).",
-      "generic_agent_release_checksum_mismatch": "Niezgodność sumy kontrolnej artefaktu: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Niezgodność sumy kontrolnej artefaktu: {{detail}}",
+      "generic_agent_release_tag_invalid": "Tag wydania nie jest prawidłową wersją support-v* i został odrzucony.",
+      "generic_agent_release_not_newer": "To wydanie nie jest nowsze niż już zaimportowane wydania.",
+      "generic_agent_release_already_imported": "To wydanie zostało już zaimportowane."
     },
     "legacy_title": "Generator konfiguracji klienta",
     "config_options": "Opcje konfiguracji",

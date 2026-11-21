@@ -1745,7 +1745,10 @@
             "generic_agent_release_public_key_missing": "No public key configured to verify the release signature.",
             "generic_agent_release_signature_invalid": "Release manifest signature verification failed.",
             "generic_agent_release_manifest_invalid": "Release manifest failed validation (schema, sku, or assets).",
-            "generic_agent_release_checksum_mismatch": "Checksum mismatch for release asset: {{detail}}"
+            "generic_agent_release_checksum_mismatch": "Checksum mismatch for release asset: {{detail}}",
+            "generic_agent_release_tag_invalid": "The release tag is not a valid support-v* version and was rejected.",
+            "generic_agent_release_not_newer": "The release is not newer than the releases already imported.",
+            "generic_agent_release_already_imported": "This release has already been imported."
         },
         "legacy_title": "Client Configuration Generator",
         "config_options": "Configuration Options",

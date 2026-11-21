@@ -1695,7 +1695,10 @@
       "generic_agent_release_public_key_missing": "Nenhuma chave pública configurada para verificar a assinatura.",
       "generic_agent_release_signature_invalid": "Falha na verificação da assinatura do manifesto.",
       "generic_agent_release_manifest_invalid": "O manifesto não passou na validação (schema, sku ou assets).",
-      "generic_agent_release_checksum_mismatch": "Soma de verificação incorreta para o artefacto: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Soma de verificação incorreta para o artefacto: {{detail}}",
+      "generic_agent_release_tag_invalid": "A tag da versão não é uma versão support-v* válida e foi rejeitada.",
+      "generic_agent_release_not_newer": "A versão não é mais recente do que as versões já importadas.",
+      "generic_agent_release_already_imported": "Esta versão já foi importada."
     },
     "legacy_title": "Gerador de configuração do cliente",
     "connection_section": "Ligação al servidor",

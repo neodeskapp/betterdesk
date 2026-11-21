@@ -1695,7 +1695,10 @@
       "generic_agent_release_public_key_missing": "서명 검증용 공개 키가 구성되지 않았습니다.",
       "generic_agent_release_signature_invalid": "릴리스 매니페스트 서명 검증에 실패했습니다.",
       "generic_agent_release_manifest_invalid": "릴리스 매니페스트 검증에 실패했습니다(schema, sku 또는 assets).",
-      "generic_agent_release_checksum_mismatch": "자산 체크섬이 일치하지 않습니다: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "자산 체크섬이 일치하지 않습니다: {{detail}}",
+      "generic_agent_release_tag_invalid": "릴리스 태그가 올바른 support-v* 버전이 아니어서 거부되었습니다.",
+      "generic_agent_release_not_newer": "이 릴리스는 이미 가져온 릴리스보다 최신이 아닙니다.",
+      "generic_agent_release_already_imported": "이 릴리스는 이미 가져왔습니다."
     },
     "legacy_title": "클라이언트 구성 생성기",
     "connection_section": "서버 연결",

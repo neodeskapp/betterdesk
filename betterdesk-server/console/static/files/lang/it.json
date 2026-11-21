@@ -1695,7 +1695,10 @@
       "generic_agent_release_public_key_missing": "Nessuna chiave pubblica configurata per verificare la firma.",
       "generic_agent_release_signature_invalid": "Verifica della firma del manifesto non riuscita.",
       "generic_agent_release_manifest_invalid": "Il manifesto non ha superato la validazione (schema, sku o assets).",
-      "generic_agent_release_checksum_mismatch": "Checksum non corrispondente per l'asset: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Checksum non corrispondente per l'asset: {{detail}}",
+      "generic_agent_release_tag_invalid": "Il tag della release non è una versione support-v* valida ed è stato rifiutato.",
+      "generic_agent_release_not_newer": "La release non è più recente di quelle già importate.",
+      "generic_agent_release_already_imported": "Questa release è già stata importata."
     },
     "legacy_title": "Generatore configurazione client",
     "connection_section": "Connessione au serveur",

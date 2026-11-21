@@ -1695,7 +1695,10 @@
       "generic_agent_release_public_key_missing": "Kein öffentlicher Schlüssel zur Signaturprüfung konfiguriert.",
       "generic_agent_release_signature_invalid": "Signaturprüfung des Release-Manifests fehlgeschlagen.",
       "generic_agent_release_manifest_invalid": "Release-Manifest hat die Validierung nicht bestanden (Schema, SKU oder Assets).",
-      "generic_agent_release_checksum_mismatch": "Prüfsummenfehler für Release-Asset: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Prüfsummenfehler für Release-Asset: {{detail}}",
+      "generic_agent_release_tag_invalid": "Der Release-Tag ist keine gültige support-v*-Version und wurde abgelehnt.",
+      "generic_agent_release_not_newer": "Das Release ist nicht neuer als die bereits importierten Releases.",
+      "generic_agent_release_already_imported": "Dieses Release wurde bereits importiert."
     },
     "legacy_title": "Client-Konfigurationsgenerator",
     "background_color": "Fensterhintergrund",

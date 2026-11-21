@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "Ingen offentlig nøkkel er konfigurert for å verifisere signaturen.",
       "generic_agent_release_signature_invalid": "Verifisering av manifestsignatur mislyktes.",
       "generic_agent_release_manifest_invalid": "Manifestet bestod ikke validering (schema, sku eller assets).",
-      "generic_agent_release_checksum_mismatch": "Sjekksum samsvarer ikke for objekt: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Sjekksum samsvarer ikke for objekt: {{detail}}",
+      "generic_agent_release_tag_invalid": "Release-taggen er ikke en gyldig support-v*-versjon og ble avvist.",
+      "generic_agent_release_not_newer": "Releaset er ikke nyere enn de som allerede er importert.",
+      "generic_agent_release_already_imported": "Dette releaset er allerede importert."
     },
     "legacy_title": "Klientkonfigurasjonsgenerator",
     "connection_section": "Servertilkobling",

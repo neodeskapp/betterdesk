@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "Ingen offentlig nyckel är konfigurerad för att verifiera signaturen.",
       "generic_agent_release_signature_invalid": "Verifiering av manifestsignatur misslyckades.",
       "generic_agent_release_manifest_invalid": "Manifestet klarade inte validering (schema, sku eller assets).",
-      "generic_agent_release_checksum_mismatch": "Kontrollsumma stämmer inte för fil: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Kontrollsumma stämmer inte för fil: {{detail}}",
+      "generic_agent_release_tag_invalid": "Release-taggen är ingen giltig support-v*-version och avvisades.",
+      "generic_agent_release_not_newer": "Releasen är inte nyare än de releaser som redan har importerats.",
+      "generic_agent_release_already_imported": "Den här releasen har redan importerats."
     },
     "legacy_title": "Klientkonfigurationsgenerator",
     "connection_section": "Serveranslutning",

@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "Ingen offentlig nøgle er konfigureret til at verificere signaturen.",
       "generic_agent_release_signature_invalid": "Verifikation af manifestsignatur mislykkedes.",
       "generic_agent_release_manifest_invalid": "Manifestet bestod ikke validering (schema, sku eller assets).",
-      "generic_agent_release_checksum_mismatch": "Kontrolsum matcher ikke for aktiv: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Kontrolsum matcher ikke for aktiv: {{detail}}",
+      "generic_agent_release_tag_invalid": "Release-tagget er ikke en gyldig support-v*-version og blev afvist.",
+      "generic_agent_release_not_newer": "Releaset er ikke nyere end de releases, der allerede er importeret.",
+      "generic_agent_release_already_imported": "Dette release er allerede importeret."
     },
     "legacy_title": "Klientkonfigurationsgenerator",
     "connection_section": "Serverforbindelse",

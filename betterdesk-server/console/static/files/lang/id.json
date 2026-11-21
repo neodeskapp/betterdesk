@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "Tidak ada kunci publik yang dikonfigurasi untuk memverifikasi tanda tangan.",
       "generic_agent_release_signature_invalid": "Verifikasi tanda tangan manifes gagal.",
       "generic_agent_release_manifest_invalid": "Manifes gagal validasi (schema, sku, atau assets).",
-      "generic_agent_release_checksum_mismatch": "Checksum tidak cocok untuk aset: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Checksum tidak cocok untuk aset: {{detail}}",
+      "generic_agent_release_tag_invalid": "Tag rilis bukan versi support-v* yang valid dan ditolak.",
+      "generic_agent_release_not_newer": "Rilis ini tidak lebih baru daripada rilis yang sudah diimpor.",
+      "generic_agent_release_already_imported": "Rilis ini sudah diimpor."
     },
     "legacy_title": "Generator Konfigurasi Klien",
     "connection_section": "Koneksi server",

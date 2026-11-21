@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "Nu este configurată nicio cheie publică pentru verificarea semnăturii.",
       "generic_agent_release_signature_invalid": "Verificarea semnăturii manifestului a eșuat.",
       "generic_agent_release_manifest_invalid": "Manifestul nu a trecut validarea (schema, sku sau assets).",
-      "generic_agent_release_checksum_mismatch": "Suma de control nu se potrivește pentru artefact: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Suma de control nu se potrivește pentru artefact: {{detail}}",
+      "generic_agent_release_tag_invalid": "Eticheta versiunii nu este o versiune support-v* validă și a fost respinsă.",
+      "generic_agent_release_not_newer": "Versiunea nu este mai nouă decât cele deja importate.",
+      "generic_agent_release_already_imported": "Această versiune a fost deja importată."
     },
     "legacy_title": "Generator de configurare a clientului",
     "connection_section": "Conexiune server",

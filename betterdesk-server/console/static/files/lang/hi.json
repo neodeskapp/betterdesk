@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "हस्ताक्षर सत्यापन के लिए कोई सार्वजनिक कुंजी कॉन्फ़िगर नहीं है।",
       "generic_agent_release_signature_invalid": "मैनिफ़ेस्ट हस्ताक्षर सत्यापन विफल।",
       "generic_agent_release_manifest_invalid": "मैनिफ़ेस्ट सत्यापन विफल (schema, sku या assets)।",
-      "generic_agent_release_checksum_mismatch": "एसेट चेकसम मेल नहीं खाता: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "एसेट चेकसम मेल नहीं खाता: {{detail}}",
+      "generic_agent_release_tag_invalid": "रिलीज़ टैग मान्य support-v* संस्करण नहीं है और अस्वीकार कर दिया गया।",
+      "generic_agent_release_not_newer": "यह रिलीज़ पहले से आयात की गई रिलीज़ से नई नहीं है।",
+      "generic_agent_release_already_imported": "यह रिलीज़ पहले ही आयात की जा चुकी है।"
     },
     "legacy_title": "क्लाइंट कॉन्फ़िगरेशन जेनरेटर",
     "connection_section": "सर्वर कनेक्शन",

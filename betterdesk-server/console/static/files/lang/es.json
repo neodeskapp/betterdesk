@@ -1695,7 +1695,10 @@
       "generic_agent_release_public_key_missing": "No hay clave pública configurada para verificar la firma.",
       "generic_agent_release_signature_invalid": "Falló la verificación de la firma del manifiesto.",
       "generic_agent_release_manifest_invalid": "El manifiesto no superó la validación (esquema, sku o assets).",
-      "generic_agent_release_checksum_mismatch": "La suma de comprobación no coincide para el artefacto: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "La suma de comprobación no coincide para el artefacto: {{detail}}",
+      "generic_agent_release_tag_invalid": "La etiqueta de la versión no es una versión support-v* válida y se rechazó.",
+      "generic_agent_release_not_newer": "La versión no es más reciente que las versiones ya importadas.",
+      "generic_agent_release_already_imported": "Esta versión ya se importó."
     },
     "legacy_title": "Generador de configuración del cliente",
     "background_color": "Fondo de ventana",

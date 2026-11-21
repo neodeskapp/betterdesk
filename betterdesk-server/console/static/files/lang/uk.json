@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "Не налаштовано відкритий ключ для перевірки підпису.",
       "generic_agent_release_signature_invalid": "Перевірка підпису маніфесту не вдалася.",
       "generic_agent_release_manifest_invalid": "Маніфест не пройшов перевірку (schema, sku або assets).",
-      "generic_agent_release_checksum_mismatch": "Невідповідність контрольної суми артефакту: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Невідповідність контрольної суми артефакту: {{detail}}",
+      "generic_agent_release_tag_invalid": "Тег випуску не є дійсною версією support-v* і був відхилений.",
+      "generic_agent_release_not_newer": "Цей випуск не новіший за вже імпортовані випуски.",
+      "generic_agent_release_already_imported": "Цей випуск уже імпортовано."
     },
     "legacy_title": "Генератор конфігурації клієнта",
     "connection_section": "Підключення до сервера",

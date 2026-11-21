@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "ไม่ได้ตั้งค่าคีย์สาธารณะสำหรับตรวจสอบลายเซ็น",
       "generic_agent_release_signature_invalid": "การตรวจสอบลายเซ็นของแมนิเฟสต์ล้มเหลว",
       "generic_agent_release_manifest_invalid": "แมนิเฟสต์ไม่ผ่านการตรวจสอบ (schema, sku หรือ assets)",
-      "generic_agent_release_checksum_mismatch": "checksum ของไฟล์ไม่ตรงกัน: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "checksum ของไฟล์ไม่ตรงกัน: {{detail}}",
+      "generic_agent_release_tag_invalid": "แท็กรีลีสไม่ใช่เวอร์ชัน support-v* ที่ถูกต้องและถูกปฏิเสธ",
+      "generic_agent_release_not_newer": "รีลีสนี้ไม่ใหม่กว่ารีลีสที่นำเข้าไว้แล้ว",
+      "generic_agent_release_already_imported": "รีลีสนี้ถูกนำเข้าแล้ว"
     },
     "legacy_title": "ตัวสร้างการกำหนดค่าไคลเอนต์",
     "connection_section": "การเชื่อมต่อเซิร์ฟเวอร์",

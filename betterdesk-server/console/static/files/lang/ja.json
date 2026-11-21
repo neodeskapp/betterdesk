@@ -1695,7 +1695,10 @@
       "generic_agent_release_public_key_missing": "署名検証用の公開鍵が設定されていません。",
       "generic_agent_release_signature_invalid": "リリースマニフェストの署名検証に失敗しました。",
       "generic_agent_release_manifest_invalid": "リリースマニフェストの検証に失敗しました（schema / sku / assets）。",
-      "generic_agent_release_checksum_mismatch": "アセットのチェックサムが一致しません: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "アセットのチェックサムが一致しません: {{detail}}",
+      "generic_agent_release_tag_invalid": "リリースタグが有効な support-v* バージョンではないため、拒否されました。",
+      "generic_agent_release_not_newer": "このリリースはインポート済みのリリースより新しくありません。",
+      "generic_agent_release_already_imported": "このリリースはすでにインポートされています。"
     },
     "legacy_title": "クライアント構成ジェネレーター",
     "connection_section": "サーバー接続",

@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "Chưa cấu hình khóa công khai để xác minh chữ ký.",
       "generic_agent_release_signature_invalid": "Xác minh chữ ký bản kê thất bại.",
       "generic_agent_release_manifest_invalid": "Bản kê không vượt qua xác thực (schema, sku hoặc assets).",
-      "generic_agent_release_checksum_mismatch": "Checksum không khớp cho tài nguyên: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Checksum không khớp cho tài nguyên: {{detail}}",
+      "generic_agent_release_tag_invalid": "Thẻ bản phát hành không phải phiên bản support-v* hợp lệ và đã bị từ chối.",
+      "generic_agent_release_not_newer": "Bản phát hành này không mới hơn các bản đã nhập.",
+      "generic_agent_release_already_imported": "Bản phát hành này đã được nhập."
     },
     "legacy_title": "Trình tạo cấu hình máy khách",
     "connection_section": "Kết nối máy chủ",

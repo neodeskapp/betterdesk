@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "Nincs nyilvános kulcs beállítva az aláírás ellenőrzéséhez.",
       "generic_agent_release_signature_invalid": "A manifest aláírásának ellenőrzése sikertelen.",
       "generic_agent_release_manifest_invalid": "A manifest nem ment át a validáción (schema, sku vagy assets).",
-      "generic_agent_release_checksum_mismatch": "Ellenőrzőösszeg-eltérés az eszköznél: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Ellenőrzőösszeg-eltérés az eszköznél: {{detail}}",
+      "generic_agent_release_tag_invalid": "A kiadás címkéje nem érvényes support-v* verzió, ezért elutasítva.",
+      "generic_agent_release_not_newer": "A kiadás nem újabb a már importált kiadásoknál.",
+      "generic_agent_release_already_imported": "Ezt a kiadást már importálták."
     },
     "legacy_title": "Klienskonfiguráció-generátor",
     "connection_section": "Szerver kapcsolat",

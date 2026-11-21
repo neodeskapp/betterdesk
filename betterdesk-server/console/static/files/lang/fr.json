@@ -1719,7 +1719,10 @@
       "generic_agent_release_public_key_missing": "Aucune clé publique configurée pour vérifier la signature.",
       "generic_agent_release_signature_invalid": "Échec de la vérification de la signature du manifeste.",
       "generic_agent_release_manifest_invalid": "Le manifeste n’a pas passé la validation (schéma, sku ou assets).",
-      "generic_agent_release_checksum_mismatch": "Somme de contrôle incorrecte pour l’artefact : {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Somme de contrôle incorrecte pour l’artefact : {{detail}}",
+      "generic_agent_release_tag_invalid": "Le tag de la version n'est pas une version support-v* valide et a été refusé.",
+      "generic_agent_release_not_newer": "Cette version n'est pas plus récente que les versions déjà importées.",
+      "generic_agent_release_already_imported": "Cette version a déjà été importée."
     },
     "legacy_title": "Client-Konfigurationsgenerator",
     "config_options": "Options de configuration",

@@ -1695,7 +1695,10 @@
       "generic_agent_release_public_key_missing": "Není nakonfigurován veřejný klíč pro ověření podpisu.",
       "generic_agent_release_signature_invalid": "Ověření podpisu manifestu se nezdařilo.",
       "generic_agent_release_manifest_invalid": "Manifest neprošel validací (schema, sku nebo assets).",
-      "generic_agent_release_checksum_mismatch": "Neshoda kontrolního součtu artefaktu: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Neshoda kontrolního součtu artefaktu: {{detail}}",
+      "generic_agent_release_tag_invalid": "Značka vydání není platná verze support-v* a byla odmítnuta.",
+      "generic_agent_release_not_newer": "Vydání není novější než již importovaná vydání.",
+      "generic_agent_release_already_imported": "Toto vydání už bylo importováno."
     },
     "legacy_title": "Generátor konfigurace klienta",
     "connection_section": "Polaczenie z serverem",

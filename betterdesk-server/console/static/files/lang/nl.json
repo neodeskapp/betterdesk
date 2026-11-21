@@ -1695,7 +1695,10 @@
       "generic_agent_release_public_key_missing": "Geen publieke sleutel geconfigureerd om de handtekening te verifiëren.",
       "generic_agent_release_signature_invalid": "Handtekeningverificatie van het release-manifest mislukt.",
       "generic_agent_release_manifest_invalid": "Release-manifest validatie mislukt (schema, sku of assets).",
-      "generic_agent_release_checksum_mismatch": "Checksum komt niet overeen voor asset: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Checksum komt niet overeen voor asset: {{detail}}",
+      "generic_agent_release_tag_invalid": "De release-tag is geen geldige support-v*-versie en is geweigerd.",
+      "generic_agent_release_not_newer": "De release is niet nieuwer dan de al geïmporteerde releases.",
+      "generic_agent_release_already_imported": "Deze release is al geïmporteerd."
     },
     "legacy_title": "Generator voor clientconfiguratie",
     "connection_section": "Serververbinding",

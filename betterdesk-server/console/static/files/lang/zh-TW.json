@@ -1719,7 +1719,10 @@
       "generic_agent_release_public_key_missing": "未設定用於驗證簽章的公開金鑰。",
       "generic_agent_release_signature_invalid": "版本清單簽章驗證失敗。",
       "generic_agent_release_manifest_invalid": "版本清單未通過驗證（schema、sku 或 assets）。",
-      "generic_agent_release_checksum_mismatch": "資源檢查碼不符：{{detail}}"
+      "generic_agent_release_checksum_mismatch": "資源檢查碼不符：{{detail}}",
+      "generic_agent_release_tag_invalid": "此版本標籤不是有效的 support-v* 版本，已拒絕。",
+      "generic_agent_release_not_newer": "此版本並不比已匯入的版本更新。",
+      "generic_agent_release_already_imported": "此版本已匯入。"
     },
     "legacy_title": "客戶端配置生成器",
     "config_options": "配置選項",

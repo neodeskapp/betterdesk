@@ -1701,7 +1701,10 @@
       "generic_agent_release_public_key_missing": "Allekirjoituksen varmennukseen ei ole määritetty julkista avainta.",
       "generic_agent_release_signature_invalid": "Manifestin allekirjoituksen varmennus epäonnistui.",
       "generic_agent_release_manifest_invalid": "Manifesti ei läpäissyt validointia (schema, sku tai assets).",
-      "generic_agent_release_checksum_mismatch": "Tiedoston tarkistussumma ei täsmää: {{detail}}"
+      "generic_agent_release_checksum_mismatch": "Tiedoston tarkistussumma ei täsmää: {{detail}}",
+      "generic_agent_release_tag_invalid": "Julkaisun tunniste ei ole kelvollinen support-v*-versio, ja se hylättiin.",
+      "generic_agent_release_not_newer": "Julkaisu ei ole uudempi kuin jo tuodut julkaisut.",
+      "generic_agent_release_already_imported": "Tämä julkaisu on jo tuotu."
     },
     "legacy_title": "Asiakasmääritysten luontityökalu",
     "connection_section": "Palvelinyhteys",
