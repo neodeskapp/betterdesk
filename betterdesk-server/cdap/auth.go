@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/coder/websocket"
@@ -115,16 +116,37 @@ func (g *Gateway) handleAuth(ctx context.Context, conn *websocket.Conn, clientIP
 	return dc, nil
 }
 
+// Failed password sign-ins: after maxFailedSignIns within
+// failedSignInWindow for an account, or from an address, every sign-in of
+// it is refused until the window has moved on, as the API's login limits.
+const (
+	maxFailedSignIns   = 5
+	failedSignInWindow = 5 * time.Minute
+)
+
 // authUserPassword verifies username/password credentials.
 func (g *Gateway) authUserPassword(p AuthPayload, clientIP string) (string, string, error) {
 	if p.Username == "" || p.Password == "" {
 		return "", "", fmt.Errorf("username and password required")
+	}
+	account, address := "user:"+strings.ToLower(p.Username), "ip:"+clientIP
+	if g.signins.IsBlocked(account) || g.signins.IsBlocked(address) {
+		g.auditAction("cdap_auth_failed", clientIP, map[string]string{
+			"username": p.Username,
+			"reason":   "too many failed sign-ins",
+		})
+		return "", "", fmt.Errorf("too many failed sign-ins, try again later")
+	}
+	failed := func() {
+		g.signins.Allow(account)
+		g.signins.Allow(address)
 	}
 
 	user, err := g.db.GetUser(p.Username)
 	if err != nil || user == nil {
 		// Timing-safe: always call VerifyPassword even for non-existent users
 		auth.VerifyPassword("dummy:hash", p.Password)
+		failed()
 		g.auditAction("cdap_auth_failed", clientIP, map[string]string{
 			"username": p.Username,
 			"reason":   "invalid credentials",
@@ -133,6 +155,7 @@ func (g *Gateway) authUserPassword(p AuthPayload, clientIP string) (string, stri
 	}
 
 	if !auth.VerifyPassword(user.PasswordHash, p.Password) {
+		failed()
 		g.auditAction("cdap_auth_failed", clientIP, map[string]string{
 			"username": p.Username,
 			"reason":   "invalid password",
@@ -146,6 +169,7 @@ func (g *Gateway) authUserPassword(p AuthPayload, clientIP string) (string, stri
 			return "", "", fmt.Errorf("2fa_required")
 		}
 		if !auth.ValidateTOTP(user.TOTPSecret, p.TOTPCode) {
+			failed()
 			g.auditAction("cdap_auth_failed", clientIP, map[string]string{
 				"username": p.Username,
 				"reason":   "invalid 2fa code",

@@ -39,6 +39,9 @@ type Gateway struct {
 	blocklist *security.Blocklist
 	jwt       *auth.JWTManager
 	limiter   *ratelimit.IPLimiter
+	// signins counts failed password sign-ins per account ("user:<name>")
+	// and per address ("ip:<address>").
+	signins *ratelimit.IPLimiter
 	// sessionGrantSigner binds passive Support Agent sessions to the
 	// authenticated CDAP operator and target device.
 	sessionGrantSigner *sessiongrant.Signer
@@ -103,6 +106,7 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, eventBus *
 		peerMap:     peerMap,
 		eventBus:    eventBus,
 		limiter:     ratelimit.NewIPLimiter(rateLimit, 1*time.Minute, 5*time.Minute),
+		signins:     ratelimit.NewIPLimiter(maxFailedSignIns, failedSignInWindow, 10*time.Minute),
 		alertEngine: NewAlertEngine(eventBus),
 		delegations: NewDelegationStore(),
 	}
@@ -244,7 +248,7 @@ func (g *Gateway) handleHealth(w http.ResponseWriter, r *http.Request) {
 // CDAP protocol state machine.
 func (g *Gateway) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Extract client IP for rate limiting and logging
-	clientIP := extractIP(r)
+	clientIP := extractIP(r, g.cfg)
 
 	// Rate limit
 	if g.limiter != nil && !g.limiter.Allow(clientIP) {
@@ -639,17 +643,20 @@ func (g *Gateway) GetDeviceConn(deviceID string) *DeviceConn {
 	return val.(*DeviceConn)
 }
 
-// extractIP extracts the client IP from the request, respecting X-Forwarded-For
-// only when trust-proxy is configured (handled upstream in the HTTP handler).
-func extractIP(r *http.Request) string {
-	// Try X-Real-IP first (set by nginx)
-	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return ip
-	}
-	// Try X-Forwarded-For
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		parts := strings.SplitN(xff, ",", 2)
-		return strings.TrimSpace(parts[0])
+// extractIP is the client's address: X-Real-IP, else the first entry of
+// X-Forwarded-For, when the connection comes from a trusted proxy
+// (TRUST_PROXY and TRUSTED_PROXIES), else the socket's address.
+func extractIP(r *http.Request, cfg *config.Config) string {
+	if cfg.ShouldHonorForwardedHeaders(r.RemoteAddr) {
+		if ip := strings.TrimSpace(r.Header.Get("X-Real-IP")); ip != "" {
+			return ip
+		}
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			parts := strings.SplitN(xff, ",", 2)
+			if ip := strings.TrimSpace(parts[0]); ip != "" {
+				return ip
+			}
+		}
 	}
 	// Fall back to remote addr
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
