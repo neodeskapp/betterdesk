@@ -8,6 +8,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
+	grants "github.com/unitronix/betterdesk-server/guestaccess"
 )
 
 // guestGrant is a guest link the API server found good for an upgrade.
@@ -63,6 +64,44 @@ type consumeState struct {
 	err  error
 }
 
+// countedUse is a guest session whose use of a link was counted: the
+// link as the API server described it then, and the key of the use.
+type countedUse struct {
+	data any
+	key  string
+}
+
+// countedKey names a guest session's use of a link by what an upgrade
+// knows before the API server answers: the token, the session id and the
+// device.
+func (g *guestGrant) countedKey() string {
+	return g.token + "\x00" + g.sessionID + "\x00" + g.peerID
+}
+
+// useLimitReached reports the API server's answer for a link whose uses
+// are all counted.
+func useLimitReached(data any) bool {
+	text, _ := goapi.Dig(data, "error").(string)
+	return text == grants.UseLimitReached
+}
+
+// countedGrant is the link of a guest session whose use the console
+// counted, while the use is remembered; nil for any other. The use that
+// reaches a link's max_uses makes the API server call the link used up,
+// also for the session that counted it, so the session's own upgrades and
+// rechecks go by this.
+func (s *Service) countedGrant(token, sessionID, peerID string) *guestGrant {
+	g := &guestGrant{token: token, sessionID: sessionID, peerID: peerID}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	use, ok := s.counted[g.countedKey()]
+	if !ok {
+		return nil
+	}
+	g.data = use.data
+	return g
+}
+
 // consume counts one use of the link for the guest session, once per link
 // and session id (consumeGuestSession). A counted use is remembered until
 // the link ends (a second at least; 15 seconds when the link has no end);
@@ -90,9 +129,16 @@ func (s *Service) consume(ctx context.Context, g *guestGrant) error {
 			}
 			lifetime = time.Duration(left) * time.Millisecond
 		}
+		counted := g.countedKey()
+		s.mu.Lock()
+		s.counted[counted] = countedUse{data: g.data, key: key}
+		s.mu.Unlock()
 		s.clock.AfterFunc(jsDelay(lifetime), func() {
 			s.mu.Lock()
 			delete(s.consumes, key)
+			if s.counted[counted].key == key {
+				delete(s.counted, counted)
+			}
 			s.mu.Unlock()
 		})
 	} else {
@@ -146,6 +192,11 @@ func (s *Service) InvalidateGuestGrant(grantID string) int {
 	for key := range s.consumes {
 		if strings.HasPrefix(key, grantID+"\x00") {
 			delete(s.consumes, key)
+		}
+	}
+	for counted, use := range s.counted {
+		if strings.HasPrefix(use.key, grantID+"\x00") {
+			delete(s.counted, counted)
 		}
 	}
 	list := append([]*bridge(nil), s.grants[grantID]...)

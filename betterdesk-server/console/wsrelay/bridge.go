@@ -413,8 +413,9 @@ func (b *bridge) resetIdleLocked() {
 // revalidate asks the API server again whether the guest's link is good,
 // and then every GuestRevalidationInterval, or at the link's end when that
 // comes sooner. A link the API server no longer finds good, or one past
-// its end, ends the bridge. A check that fails is not taken as a refusal:
-// the link stays until its end.
+// its end, ends the bridge; a link whose uses are all counted stays good
+// for a guest session whose use the console counted. A check that fails
+// is not taken as a refusal: the link stays until its end.
 func (b *bridge) revalidate() {
 	if b.isCleaned() {
 		return
@@ -423,7 +424,7 @@ func (b *bridge) revalidate() {
 	data, err := b.s.validate(b.background, g.token, g.peerID)
 	if err != nil {
 		logf("WARN: WS proxy [%s]: guest grant revalidation failed: %s", b.label, err.Error())
-	} else if !goapi.Truthy(goapi.Dig(data, "valid")) {
+	} else if !goapi.Truthy(goapi.Dig(data, "valid")) && !(useLimitReached(data) && b.s.countedGrant(g.token, g.sessionID, g.peerID) != nil) {
 		b.cleanup("guest-grant-invalid", "")
 		return
 	}

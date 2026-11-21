@@ -152,6 +152,9 @@ type Service struct {
 	perIP    *ws.AddrCounter
 	grants   map[string][]*bridge
 	consumes map[string]*consumeState
+	// counted are the guest sessions whose use of a link was counted, by
+	// countedKey, while the use is remembered (see consume).
+	counted map[string]countedUse
 }
 
 // New returns the service; Register adds its sockets.
@@ -194,6 +197,7 @@ func New(opts Options) *Service {
 		perIP:      ws.NewAddrCounter(),
 		grants:     map[string][]*bridge{},
 		consumes:   map[string]*consumeState{},
+		counted:    map[string]countedUse{},
 	}
 }
 

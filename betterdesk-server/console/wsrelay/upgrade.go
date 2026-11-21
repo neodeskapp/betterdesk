@@ -53,10 +53,13 @@ func (s *Service) serve(u *ws.Upgrade, label string) {
 				return
 			}
 			data, err := s.validate(u.Context(), token, peerID)
-			if err != nil {
+			switch {
+			case err != nil:
 				logf("WARN: WS proxy: guest token validation failed for %s: %s", pathname, err.Error())
-			} else if goapi.Truthy(goapi.Dig(data, "valid")) {
+			case goapi.Truthy(goapi.Dig(data, "valid")):
 				guest = &guestGrant{data: data, token: token, peerID: peerID, sessionID: sessionID}
+			case useLimitReached(data):
+				guest = s.countedGrant(token, sessionID, peerID)
 			}
 		}
 	}

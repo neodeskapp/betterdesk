@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -22,6 +23,9 @@ const MaxTTLMinutes = 24 * 60
 
 // DefaultTTLMinutes used when caller passes <= 0.
 const DefaultTTLMinutes = 60
+
+// UseLimitReached is the error of a link whose uses are all counted.
+const UseLimitReached = "guest link use limit reached"
 
 // Grant is the persisted grant payload (JSON in server_config).
 type Grant struct {
@@ -186,7 +190,7 @@ func (g *Grant) isActive() error {
 		return fmt.Errorf("guest link expired")
 	}
 	if g.MaxUses > 0 && g.UseCount >= g.MaxUses {
-		return fmt.Errorf("guest link use limit reached")
+		return errors.New(UseLimitReached)
 	}
 	return nil
 }
