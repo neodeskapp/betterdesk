@@ -17,6 +17,7 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -155,6 +156,30 @@ func setOIDCDiscoveryRetryIntervalForTest(d time.Duration) (restore func()) {
 	prev := oidcDiscoveryRetryIntervalNs.Swap(int64(d))
 	return func() { oidcDiscoveryRetryIntervalNs.Store(prev) }
 }
+
+// maxOIDCPending caps the sign-ins in progress the provider keeps, each of
+// its maps of states and of desktop client starts. The starts are public,
+// so without a cap every call would add an entry until the cleanup.
+const maxOIDCPending = 4096
+
+// Longest fields a start may store, in bytes.
+const (
+	maxOIDCReturnURL   = 2048
+	maxOIDCClientID    = 64
+	maxOIDCClientUUID  = 128
+	maxOIDCDeviceName  = 128
+	maxOIDCDeviceOS    = 64
+	maxOIDCDeviceType  = 32
+	oidcStateLifetime  = 15 * time.Minute
+	oidcClientLifetime = 10 * time.Minute
+)
+
+// ErrOIDCTooManyPending refuses a start while maxOIDCPending sign-ins are in
+// progress.
+var ErrOIDCTooManyPending = errors.New("too many single sign-ons in progress")
+
+// ErrOIDCFieldTooLong refuses a start with a field over its limit.
+var ErrOIDCFieldTooLong = errors.New("single sign-on start field too long")
 
 // OIDCProvider manages OIDC authentication.
 type OIDCProvider struct {
@@ -381,6 +406,10 @@ type ClientDeviceInfo struct {
 // BuildClientAuthURL starts OIDC for the stock RustDesk desktop client.
 // The returned code is the OAuth state value; the client polls auth-query with it.
 func (p *OIDCProvider) BuildClientAuthURL(clientID, clientUUID string, device ClientDeviceInfo) (authURL, code string, err error) {
+	if len(clientID) > maxOIDCClientID || len(clientUUID) > maxOIDCClientUUID || len(device.Name) > maxOIDCDeviceName ||
+		len(device.OS) > maxOIDCDeviceOS || len(device.Type) > maxOIDCDeviceType {
+		return "", "", ErrOIDCFieldTooLong
+	}
 	authURL, code, err = p.buildAuthURL(oidcState{
 		Flow:       OIDCFlowClient,
 		ClientID:   clientID,
@@ -393,6 +422,14 @@ func (p *OIDCProvider) BuildClientAuthURL(clientID, clientUUID string, device Cl
 		return "", "", err
 	}
 	p.mu.Lock()
+	if len(p.clientPending) >= maxOIDCPending {
+		dropExpired(p.clientPending, oidcClientLifetime, func(c *ClientOIDCPending) time.Time { return c.CreatedAt })
+	}
+	if len(p.clientPending) >= maxOIDCPending {
+		delete(p.states, code)
+		p.mu.Unlock()
+		return "", "", ErrOIDCTooManyPending
+	}
 	p.clientPending[code] = &ClientOIDCPending{
 		ClientID:   clientID,
 		ClientUUID: clientUUID,
@@ -406,6 +443,9 @@ func (p *OIDCProvider) BuildClientAuthURL(clientID, clientUUID string, device Cl
 }
 
 func (p *OIDCProvider) buildAuthURL(base oidcState) (string, string, error) {
+	if len(base.ReturnURL) > maxOIDCReturnURL {
+		return "", "", ErrOIDCFieldTooLong
+	}
 	authEP := p.getAuthEndpoint()
 	if authEP == "" {
 		return "", "", fmt.Errorf("authorization endpoint not configured")
@@ -472,8 +512,14 @@ func (p *OIDCProvider) buildAuthURL(base oidcState) (string, string, error) {
 
 	// Store state
 	p.mu.Lock()
+	defer p.mu.Unlock()
+	if len(p.states) >= maxOIDCPending {
+		dropExpired(p.states, oidcStateLifetime, func(s *oidcState) time.Time { return s.CreatedAt })
+	}
+	if len(p.states) >= maxOIDCPending {
+		return "", "", ErrOIDCTooManyPending
+	}
 	p.states[state] = stateEntry
-	p.mu.Unlock()
 
 	return authEP + "?" + params.Encode(), state, nil
 }
@@ -794,6 +840,17 @@ func (p *OIDCProvider) resolveRoleWithSource(groups []string) (string, bool) {
 	return bestRole, matched
 }
 
+// dropExpired deletes the entries of m older than lifetime. The caller
+// holds p.mu.
+func dropExpired[V any](m map[string]V, lifetime time.Duration, created func(V) time.Time) {
+	now := time.Now()
+	for k, v := range m {
+		if now.Sub(created(v)) > lifetime {
+			delete(m, k)
+		}
+	}
+}
+
 // cleanupStates removes expired state entries every 5 minutes.
 // Exits when Close() is called.
 func (p *OIDCProvider) cleanupStates() {
@@ -805,24 +862,11 @@ func (p *OIDCProvider) cleanupStates() {
 			return
 		case <-ticker.C:
 			p.mu.Lock()
-			now := time.Now()
-			for k, v := range p.states {
-				if now.Sub(v.CreatedAt) > 15*time.Minute {
-					delete(p.states, k)
-				}
-			}
+			dropExpired(p.states, oidcStateLifetime, func(s *oidcState) time.Time { return s.CreatedAt })
 			// Auth codes are short-lived (60s); anything older is stale.
-			for k, v := range p.codes {
-				if now.Sub(v.CreatedAt) > 60*time.Second {
-					delete(p.codes, k)
-				}
-			}
+			dropExpired(p.codes, 60*time.Second, func(c *oidcAuthCode) time.Time { return c.CreatedAt })
 			// Client OIDC pending (auth + poll window ~3–10 min).
-			for k, v := range p.clientPending {
-				if now.Sub(v.CreatedAt) > 10*time.Minute {
-					delete(p.clientPending, k)
-				}
-			}
+			dropExpired(p.clientPending, oidcClientLifetime, func(c *ClientOIDCPending) time.Time { return c.CreatedAt })
 			p.mu.Unlock()
 		}
 	}
