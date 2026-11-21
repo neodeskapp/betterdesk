@@ -81,7 +81,7 @@
 	const errText = (err: unknown) =>
 		err instanceof Error && err.message ? err.message : t('errors.server_error');
 
-	/* ── Server information (everyone) ── */
+	/* ── Server information (versions for everyone, the rest with server.config) ── */
 
 	let info = $state.raw<ServerInfo | null>(null);
 	let infoError = $state('');
@@ -559,8 +559,11 @@
 			items={[
 				{ label: t('settings.general.console_version'), value: consoleVersion },
 				{ label: t('settings.general.server_version'), value: serverVersion },
-				{ label: t('settings.general.database_file'), value: dbPath },
-				{ label: t('settings.general.running_for'), value: uptime > 0 ? formatDuration(uptime) : '' }
+				// The database file and the uptime come only with server.config
+				...(info?.paths ? [{ label: t('settings.general.database_file'), value: dbPath }] : []),
+				...(info?.server
+					? [{ label: t('settings.general.running_for'), value: uptime > 0 ? formatDuration(uptime) : '' }]
+					: [])
 			]}
 		/>
 		{#if can('audit.view')}

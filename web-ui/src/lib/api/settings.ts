@@ -35,7 +35,7 @@ export const ServerInfo = v.looseObject({
 });
 export type ServerInfo = v.InferOutput<typeof ServerInfo>;
 
-/** Versions, database file, uptime; every signed-in person */
+/** Versions for every signed-in person; database file and uptime with server.config */
 export function getServerInfo(signal?: AbortSignal): Promise<ServerInfo> {
 	return api(wrapped(ServerInfo), '/api/settings/info', { signal });
 }

@@ -405,10 +405,17 @@ func TestInfoAndServerInfo(t *testing.T) {
 		if _, err := db.Exec(context.Background(), `INSERT INTO peer (id, is_deleted, status_online, is_banned) VALUES ('a', `+db.Pick("0, 1, 0", "FALSE, TRUE, FALSE")+`), ('b', `+db.Pick("0, 0, 1", "FALSE, FALSE, TRUE")+`), ('c', `+db.Pick("1, 1, 1", "TRUE, TRUE, TRUE")+`)`); err != nil {
 			t.Fatal(err)
 		}
-		// Every account reads it (PA3, F1).
-		res := s.As("viewer").Do("GET", "/api/settings/info", "")
-		if res.Status != http.StatusOK {
-			t.Errorf("viewer: %d %s", res.Status, res.Body)
+		// Every account reads the versions and the server's status (PA3,
+		// F1); the rest is for server.config (BUGS RV98, A83)
+		for _, role := range []string{"viewer", "operator", "global_admin"} {
+			res := s.As(role).Do("GET", "/api/settings/info", "")
+			if want := `{"success":true,"data":{"app":{"name":"BetterDesk Console","version":"4.5.6"},"goServer":{"status":"running","version":"9.9.9"}}}`; res.Status != http.StatusOK || res.Body != want {
+				t.Errorf("%s: %d %s, want %s", role, res.Status, res.Body, want)
+			}
+		}
+		res := s.As("server_admin").Do("GET", "/api/settings/info", "")
+		if !strings.Contains(res.Body, `"paths":{"database":"/srv/db_v2.sqlite3"`) {
+			t.Errorf("server_admin: %d %s", res.Status, res.Body)
 		}
 		res = s.As("admin").Do("GET", "/api/settings/info", "")
 		got := decode(t, res.Body)

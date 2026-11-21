@@ -45,10 +45,38 @@ type pathsInfo struct {
 	APIKey    string `json:"apiKey"`
 }
 
+// shortInfo is what an account without server.config reads of the
+// server information: the versions and whether the server answers.
+type shortInfo struct {
+	App      shortApp    `json:"app"`
+	GoServer shortServer `json:"goServer"`
+}
+
+type shortApp struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+type shortServer struct {
+	Status  any `json:"status"`
+	Version any `json:"version,omitempty"`
+}
+
 // info answers GET /api/settings/info: the console's version and process,
 // the server's health, the database and key files, and the device counts.
+// Every account reads the two versions and the server's status; the host
+// name, the paths, the server's health detail with its connection
+// settings and the device counts of the whole server are for an account
+// with server.config.
 func (g *general) info(w http.ResponseWriter, r *http.Request) {
 	health := g.d.Backend.GetHealth(r.Context())
+	if !kit.HasPermission(r, "server.config") {
+		kit.OK(w, r, shortInfo{
+			App:      shortApp{Name: "BetterDesk Console", Version: g.version},
+			GoServer: shortServer{Status: health.Get("status"), Version: health.Get("version")},
+		})
+		return
+	}
 	stats, err := g.d.DeviceGroups.PeerStats(r.Context())
 	if err != nil {
 		g.serverError(w, r, "Get server info error", err)
