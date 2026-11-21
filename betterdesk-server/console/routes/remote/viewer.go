@@ -72,7 +72,9 @@ type viewerFailure struct {
 // viewer needs for one device, once requireRemoteAccess let the request
 // through: the device's name and platform, how to reach it (transport and
 // capabilities), the server's key, the connection policy, the guest token,
-// the dev mock, the account and whether it may write work reports.
+// the dev mock, the account and whether it may write work reports. A
+// RustDesk session (transport rd) without the server's key is refused
+// with 503 server_key_unavailable.
 func (h *handlers) viewer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deviceID := r.PathValue("deviceId")
@@ -170,6 +172,12 @@ func (h *handlers) viewer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := h.serverKey(ctx)
+	if key == "" && caps.Transport == "rd" {
+		// The RustDesk client checks the device's identity against the
+		// server's key and stops at the handshake without one
+		kit.JSON(w, r, http.StatusServiceUnavailable, viewerFailure{Code: "server_key_unavailable", Error: noServerKey})
+		return
+	}
 	connection := h.connectionSnapshot(ctx)
 	guestToken := g.guestToken
 	if guestToken == "" {
@@ -243,6 +251,10 @@ func orValue(a, b any) any {
 	}
 	return b
 }
+
+// noServerKey is the reason a RustDesk session is refused without the
+// server's public key.
+const noServerKey = "The server's public key could not be read, so the device's identity cannot be checked."
 
 // serverKey is the server's public key for the viewer, "" when there is
 // none or it cannot be read.

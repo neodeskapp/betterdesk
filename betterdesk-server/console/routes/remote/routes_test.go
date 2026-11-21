@@ -505,13 +505,14 @@ func appVersionOf(t *testing.T, vectors []vector) string {
 // table and the remote relay, on SQLite and PostgreSQL. A vector whose
 // answer a bug fix changed on purpose is held to another vector's answer
 // (answeredAs) or to the answer it gets since the fix (refusedSessions,
-// targetLookups).
+// targetLookups, keylessSessions).
 func TestNodeVectors(t *testing.T) {
 	vectors := loadVectors(t)
 	version := appVersionOf(t, vectors)
 	twins := answeredAs(t, vectors)
 	refused := refusedSessions(t, vectors)
 	lookedUp, devices := targetLookups(t, vectors)
+	keyless := keylessSessions(t, vectors)
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := newWorld(t, db, version, false)
 		on := newWorld(t, storetest.Migrated(t), version, true)
@@ -552,6 +553,8 @@ func TestNodeVectors(t *testing.T) {
 			} else if fixed, ok := refused[i]; ok {
 				expected = &fixed
 			} else if fixed, ok := lookedUp[i]; ok {
+				expected = &fixed
+			} else if fixed, ok := keyless[i]; ok {
 				expected = &fixed
 			}
 			if problems := compare(target, expected, rec); len(problems) > 0 {

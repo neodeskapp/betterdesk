@@ -181,3 +181,33 @@ func targetLookups(t *testing.T, vectors []vector) (fixed map[int]vector, device
 	}
 	return fixed, devices
 }
+
+// keylessSessions holds the Node vectors whose answer RV210 changed on
+// purpose, with the answer they get now. The viewer's data of a RustDesk
+// session (transport rd) that Node answered with an empty server key is
+// refused with 503 server_key_unavailable before the server's health is
+// asked for the connection policy.
+func keylessSessions(t *testing.T, vectors []vector) map[int]vector {
+	t.Helper()
+	const refused = `{"success":false,"code":"server_key_unavailable","error":"The server's public key could not be read, so the device's identity cannot be checked."}`
+	fixed := map[int]vector{}
+	for i, v := range vectors {
+		if !strings.HasPrefix(v.Request.Path, "/api/remote/viewer/") || v.Status != http.StatusOK ||
+			!strings.Contains(v.Body, `"serverPubKey":""`) || !strings.Contains(v.Body, `"capabilities":{"transport":"rd"`) {
+			continue
+		}
+		calls := []apiCall{}
+		for _, call := range v.Calls {
+			if strings.HasPrefix(call.URL, "/api/health") {
+				break
+			}
+			calls = append(calls, call)
+		}
+		v.Status, v.Body, v.Calls = http.StatusServiceUnavailable, refused, calls
+		fixed[i] = v
+	}
+	if len(fixed) == 0 {
+		t.Fatal("no vector answers a RustDesk session with an empty server key")
+	}
+	return fixed
+}
