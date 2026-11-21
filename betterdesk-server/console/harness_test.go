@@ -41,6 +41,8 @@ type setup struct {
 	listener http.Handler
 	// configure changes the configuration before the console is built.
 	configure func(*config.Config)
+	// options changes the console's options before it is built.
+	options func(*Options)
 }
 
 // world is a console server on a fresh database with a test client.
@@ -111,7 +113,11 @@ func newWorld(t *testing.T, o setup) *world {
 		apiHandler = http.NotFoundHandler()
 	}
 	w := &world{t: t, db: db}
-	s, err := New(context.Background(), Options{Config: cfg, Store: db, API: apiHandler, APIListener: o.listener})
+	opts := Options{Config: cfg, Store: db, API: apiHandler, APIListener: o.listener}
+	if o.options != nil {
+		o.options(&opts)
+	}
+	s, err := New(context.Background(), opts)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}

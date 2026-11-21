@@ -54,6 +54,7 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		Version:     Version,
 		Commit:      Commit,
 		Exit:        requestRestart,
+		ServerDB:    cfg.DBPath,
 	})
 	if err != nil {
 		_ = sdb.Close()

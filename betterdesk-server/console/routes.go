@@ -1,6 +1,7 @@
 package console
 
 import (
+	"github.com/unitronix/betterdesk-server/console/backup"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/activity"
 	authroutes "github.com/unitronix/betterdesk-server/console/routes/auth"
@@ -79,7 +80,8 @@ var (
 //
 // Groups of the early stage (routes/rustdesk-api.routes.js, then
 // routes/bd-api.routes.js at /api/bd) register on d.Early and go first.
-func registerRoutes(d *kit.Deps) {
+// backups is the console's backup service, which the updater uses too.
+func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	rustdeskapi.Register(d)         // routes/rustdesk-api.routes.js (server.js), early stage
 	bdapi.Register(d.At("/api/bd")) // routes/bd-api.routes.js at /api/bd (server.js), early stage
 	remote.RegisterAgentToken(d)    // routes/bd-api.routes.js at /api/bd (server.js): POST /remote-agent-token, early stage
@@ -90,7 +92,8 @@ func registerRoutes(d *kit.Deps) {
 	devices.Register(d)             // routes/devices.routes.js; its scope check (Use) also guards the folder group's /api/devices/{id}/folder
 	keys.Register(d)                // routes/keys.routes.js
 	settings.Register(d)            // routes/settings.routes.js: the general settings and the branding
-	settingsbackup.Register(d)      // routes/settings.routes.js: backup, restore and the scheduled backups
+	// routes/settings.routes.js: backup, restore and the scheduled backups
+	settingsbackup.RegisterWith(d, backups)
 	// routes/settings.routes.js: the update and management routes
 	settingsupdates.Register(d)
 	generator.Register(d)      // routes/generator.routes.js

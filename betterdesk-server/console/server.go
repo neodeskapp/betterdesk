@@ -48,6 +48,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/qr"
 	"github.com/unitronix/betterdesk-server/console/remoterelay"
 	"github.com/unitronix/betterdesk-server/console/restart"
+	"github.com/unitronix/betterdesk-server/console/routes/settingsbackup"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/servermgmt"
 	"github.com/unitronix/betterdesk-server/console/session"
@@ -90,9 +91,13 @@ type Options struct {
 	// a confirmed restart, an installed update and a restore. Nil never
 	// ends the process.
 	Exit func()
-	// DataBackup makes the data backup before an update
-	// (console/backup's Service). Nil makes none.
-	DataBackup updater.DataBackup
+	// ServerDB is the server's database DSN (its -db flag or DB_URL): the
+	// SQLite file a data backup holds and a restore of the server's
+	// database is left next to. Empty takes DB_PATH.
+	ServerDB string
+	// updaterOptions changes the updater's options before it is built:
+	// tests give it a GitHub and a binary of their own.
+	updaterOptions func(*updater.Options)
 }
 
 // Server is the console's HTTP server.
@@ -293,7 +298,12 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		ArtifactDir: cfg.AgentArtifactDir, Embedded: cfg.GeneratorEmbedded, WorkerEnabled: cfg.AgentBuildWorker,
 		PollInterval: cfg.AgentBuildPoll, Cooldown: cfg.AgentBuildCooldown, Logger: s.deps.Log,
 	})
-	s.deps.Updater = updater.New(updater.Options{
+	s.deps.DeviceGroups = devicegroups.New(devicegroups.Options{DB: opts.Store, Access: s.deps.Access})
+	s.deps.Backend = goapi.NewBackend(api, devicegroups.DeviceStore{Groups: s.deps.DeviceGroups})
+	// One backup service for the backup routes and the data backup the
+	// updater keeps before an install
+	backups := settingsbackup.NewBackups(s.deps, opts.ServerDB)
+	updates := updater.Options{
 		DataDir:    cfg.DataDir,
 		ConsoleDir: cfg.ConsoleDir,
 		EnvFile:    getenv("BETTERDESK_ENV_FILE"),
@@ -301,12 +311,14 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Commit:     opts.Commit,
 		Docker:     cfg.Docker,
 		Getenv:     getenv,
-		DataBackup: opts.DataBackup,
+		DataBackup: backups,
 		Setting:    readSetting(opts.Store),
 		Logger:     s.deps.Log.Child("UPDATE"),
-	})
-	s.deps.DeviceGroups = devicegroups.New(devicegroups.Options{DB: opts.Store, Access: s.deps.Access})
-	s.deps.Backend = goapi.NewBackend(api, devicegroups.DeviceStore{Groups: s.deps.DeviceGroups})
+	}
+	if opts.updaterOptions != nil {
+		opts.updaterOptions(&updates)
+	}
+	s.deps.Updater = updater.New(updates)
 	s.deps.Mail = mail.New(mail.Options{
 		DB:          opts.Store,
 		Transport:   &mail.SMTP{},
@@ -414,7 +426,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if mdns := getenv("PANEL_MDNS"); mdns != "" && mdns != "off" && mdns != "0" {
 		s.jobs.Add("mDNS announcement", func(ctx context.Context) { discovery.NewMDNS(s.announced(lan)).Run(ctx) })
 	}
-	registerRoutes(s.deps)
+	registerRoutes(s.deps, backups)
 	registerSockets(s.deps)
 	s.newClientAPI()
 	s.pipeline = s.buildPipeline()
