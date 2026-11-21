@@ -21,6 +21,15 @@ func peerUUIDFromDB(stored string) []byte {
 	return []byte(stored)
 }
 
+// relayUUIDShort returns the first eight characters of a relay uuid for log
+// lines. The uuid is client text and may be shorter.
+func relayUUIDShort(id string) string {
+	if len(id) <= 8 {
+		return id
+	}
+	return id[:8]
+}
+
 func peerUUIDEqual(a, b []byte) bool {
 	return bytes.Equal(normalizePeerUUIDBytes(a), normalizePeerUUIDBytes(b))
 }

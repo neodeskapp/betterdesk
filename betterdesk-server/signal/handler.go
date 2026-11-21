@@ -1551,7 +1551,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	relayUUID := msg.Uuid
 	if relayUUID == "" {
 		relayUUID = uuid.New().String()
-		log.Printf("[signal] RequestRelay: client %s sent empty UUID, generated %s", raddr, relayUUID[:8])
+		log.Printf("[signal] RequestRelay: client %s sent empty UUID, generated %s", raddr, relayUUIDShort(relayUUID))
 	}
 
 	log.Printf("[signal] RequestRelay from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
@@ -1682,7 +1682,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	}
 
 	// Confirm to initiator with SIGNED public key
-	log.Printf("[signal] RequestRelay (UDP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUID[:8], relayServer)
+	log.Printf("[signal] RequestRelay (UDP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUIDShort(relayUUID), relayServer)
 	resp := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
@@ -1721,7 +1721,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	relayUUID := msg.Uuid
 	if relayUUID == "" {
 		relayUUID = uuid.New().String()
-		log.Printf("[signal] RequestRelay (TCP): client %s sent empty UUID, generated %s", raddr, relayUUID[:8])
+		log.Printf("[signal] RequestRelay (TCP): client %s sent empty UUID, generated %s", raddr, relayUUIDShort(relayUUID))
 	}
 
 	log.Printf("[signal] RequestRelay (TCP) from %s for target %s (uuid=%s, secure=%v, connType=%v)", raddr, targetID, relayUUID, msg.Secure, msg.ConnType)
@@ -1857,7 +1857,7 @@ func (s *Server) handleRequestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr,
 	// The UUID divergence is handled where it actually matters: a target that
 	// answers with a different UUID is correlated through the pending entry
 	// stored above, so both sides still reach hbbr and pair.
-	log.Printf("[signal] RequestRelay (TCP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUID[:8], relayServer)
+	log.Printf("[signal] RequestRelay (TCP): returning RelayResponse to initiator %s (uuid=%s, relay=%s)", raddr, relayUUIDShort(relayUUID), relayServer)
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
@@ -1944,11 +1944,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		}
 		if rr.Uuid == "" && pending.uuid != "" {
 			rr.Uuid = pending.uuid
-			short := pending.uuid
-			if len(short) > 8 {
-				short = short[:8]
-			}
-			log.Printf("[signal] RelayResponse from %s has empty UUID — recovered original %s from pending store", senderAddr, short)
+			log.Printf("[signal] RelayResponse from %s has empty UUID — recovered original %s from pending store", senderAddr, relayUUIDShort(pending.uuid))
 		}
 	}
 
@@ -1987,12 +1983,12 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		}
 		if storedUUID != "" {
 			rr.Uuid = storedUUID
-			log.Printf("[signal] RelayResponse from %s has empty UUID — recovered original %s from pending store", senderAddr, storedUUID[:8])
+			log.Printf("[signal] RelayResponse from %s has empty UUID — recovered original %s from pending store", senderAddr, relayUUIDShort(storedUUID))
 		} else {
 			// Last resort: generate a new UUID. This will likely fail relay pairing
 			// because target already connected with different (empty?) UUID.
 			rr.Uuid = uuid.New().String()
-			log.Printf("[signal] WARNING: RelayResponse from %s has empty UUID and no pending UUID found — generated %s (relay pairing may fail)", senderAddr, rr.Uuid[:8])
+			log.Printf("[signal] WARNING: RelayResponse from %s has empty UUID and no pending UUID found — generated %s (relay pairing may fail)", senderAddr, relayUUIDShort(rr.Uuid))
 		}
 	}
 
@@ -2368,7 +2364,7 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 		s.storePendingUUID(target.ID, raddr, relayUUID, initiatorID)
 		s.sendUDP(reqRelay, target.UDPAddr)
 		log.Printf("[signal] sendRelayResponse: forwarded RequestRelay to target %s at %s (uuid=%s relay_to_initiator=%s relay_to_target=%s)",
-			target.ID, target.UDPAddr, relayUUID[:8], relay, targetRelay)
+			target.ID, target.UDPAddr, relayUUIDShort(relayUUID), relay, targetRelay)
 	}
 }
 

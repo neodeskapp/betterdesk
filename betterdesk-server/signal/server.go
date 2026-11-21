@@ -461,8 +461,20 @@ func (s *Server) serveUDP() {
 			continue
 		}
 
-		s.handleUDPMessage(msg, raddr)
+		s.recoverMessagePanic("UDP", raddr.String(), func() { s.handleUDPMessage(msg, raddr) })
 	}
+}
+
+// recoverMessagePanic runs fn and turns a panic into a log line, so one
+// malformed message from a client cannot stop the process that also serves
+// the API and the console.
+func (s *Server) recoverMessagePanic(transport, remote string, fn func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[signal] %s message from %q: recovered panic: %v", transport, remote, r)
+		}
+	}()
+	fn()
 }
 
 // serveTCP accepts TCP connections and handles framed signal messages.
@@ -497,7 +509,7 @@ func (s *Server) serveTCP() {
 			}
 		}
 
-		go s.handleTCPConn(conn)
+		go s.recoverMessagePanic("TCP", conn.RemoteAddr().String(), func() { s.handleTCPConn(conn) })
 	}
 }
 
@@ -916,7 +928,7 @@ func (s *Server) serveNAT() {
 				continue
 			}
 		}
-		go s.handleNATConn(conn)
+		go s.recoverMessagePanic("NAT", conn.RemoteAddr().String(), func() { s.handleNATConn(conn) })
 	}
 }
 
