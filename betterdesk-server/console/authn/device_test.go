@@ -97,6 +97,63 @@ func TestABannedOrDeletedDeviceProvesNothing(t *testing.T) {
 	})
 }
 
+// TestServerDeletesAndBansEndDeviceTokens: a delete, soft or hard, and a
+// ban end the device's device tokens whichever port they come through,
+// since the signal server's own delete and ban revoke them in the shared
+// database. A restore or an unban gives none back; the tokens of accounts
+// and of other devices stay (BUGS RV231).
+func TestServerDeletesAndBansEndDeviceTokens(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
+		server := storetest.GoServer(t, db)
+		ctx := context.Background()
+		s, _, _ := testService(t, db, nil)
+		id := addUser(t, s, "admin", "pw", "admin", "local")
+		devices := []string{"dev-soft", "dev-hard", "dev-ban", "dev-other"}
+		tokens := map[string]string{}
+		for _, device := range devices {
+			mustExec(t, db, `INSERT INTO peers (id) VALUES (?)`, device)
+			token, err := s.IssueDeviceToken(ctx, id, device, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			tokens[device] = token
+		}
+		account, err := s.GenerateSignInToken(ctx, id, "dev-ban", "uuid-1", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for _, step := range []struct {
+			name string
+			run  func() error
+		}{
+			{"soft delete", func() error { return server.DeletePeer("dev-soft") }},
+			{"restore", func() error { return server.RestorePeer("dev-soft") }},
+			{"hard delete", func() error { return server.HardDeletePeer("dev-hard") }},
+			{"ban", func() error { return server.BanPeer("dev-ban", "test") }},
+			{"unban", func() error { return server.UnbanPeer("dev-ban") }},
+		} {
+			if err := step.run(); err != nil {
+				t.Fatalf("%s: %v", step.name, err)
+			}
+		}
+
+		for _, device := range devices {
+			want := device == "dev-other"
+			if _, err := s.RequireDeviceToken(ctx, "Bearer "+tokens[device]); (err == nil) != want {
+				t.Errorf("device request of %s: %v, want through %v", device, err, want)
+			}
+			if ok, err := s.VerifyDeviceWSAuth(ctx, device, tokens[device]); ok != want || err != nil {
+				t.Errorf("device socket of %s: %v, %v; want %v", device, ok, err, want)
+			}
+		}
+		if user, err := s.ValidateAccessToken(ctx, account); err != nil || user == nil {
+			t.Errorf("account token after the ban of its client id: %v, %v; want it live", user, err)
+		}
+	})
+}
+
 // Only a token the console issued for a device proves the device: an
 // account's sign-in token proves none, whatever client id it stored, and a
 // device token signs no account in. The revocations of an account's

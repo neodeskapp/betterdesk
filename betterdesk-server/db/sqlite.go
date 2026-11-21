@@ -1166,18 +1166,31 @@ func (s *SQLiteDB) UpsertPeer(p *Peer) error {
 	return nil
 }
 
-// DeletePeer marks a peer as soft-deleted.
+// DeletePeer marks a peer as soft-deleted and revokes its device tokens
+// (device_access_tokens.go).
 func (s *SQLiteDB) DeletePeer(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err := s.db.Exec(
-		`UPDATE peers SET soft_deleted = 1, deleted_at = datetime('now') WHERE id = ?`, id)
-	return err
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec(
+		`UPDATE peers SET soft_deleted = 1, deleted_at = datetime('now') WHERE id = ?`, id); err != nil {
+		return err
+	}
+	if err := sqliteRevokeDeviceAccessTokens(tx, id); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
-// HardDeletePeer permanently removes a peer from the database and releases
-// any id_change_history reservations for that ID (#213).
+// HardDeletePeer permanently removes a peer from the database, revokes its
+// device tokens and releases any id_change_history reservations for that
+// ID (#213).
 func (s *SQLiteDB) HardDeletePeer(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1189,6 +1202,9 @@ func (s *SQLiteDB) HardDeletePeer(id string) error {
 	defer tx.Rollback()
 
 	if _, err := tx.Exec(`DELETE FROM peers WHERE id = ?`, id); err != nil {
+		return err
+	}
+	if err := sqliteRevokeDeviceAccessTokens(tx, id); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(
@@ -1719,18 +1735,30 @@ func (s *SQLiteDB) SetAllOffline() error {
 	return err
 }
 
-// BanPeer bans a specific peer by ID.
+// BanPeer bans a specific peer by ID and revokes its device tokens.
 func (s *SQLiteDB) BanPeer(id string, reason string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err := s.db.Exec(
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec(
 		`UPDATE peers SET banned = 1, ban_reason = ?, banned_at = datetime('now') WHERE id = ?`,
-		reason, id)
-	return err
+		reason, id); err != nil {
+		return err
+	}
+	if err := sqliteRevokeDeviceAccessTokens(tx, id); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
-// UnbanPeer removes the ban from a peer.
+// UnbanPeer removes the ban from a peer. The device tokens its ban revoked
+// stay revoked.
 func (s *SQLiteDB) UnbanPeer(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1768,7 +1796,8 @@ func (s *SQLiteDB) IsPeerSoftDeleted(id string) (bool, error) {
 
 // RestorePeer clears soft_deleted and deleted_at for a previously deleted
 // peer. Required because UpsertPeer no longer does this implicitly
-// (GHSA-3v82-3gf8-fxx8).
+// (GHSA-3v82-3gf8-fxx8). The device tokens its delete revoked stay
+// revoked.
 func (s *SQLiteDB) RestorePeer(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

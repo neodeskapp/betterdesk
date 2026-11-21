@@ -15,9 +15,11 @@ import (
 // the signal server. An account's sign-in token proves no device, whatever
 // client id it stored. The header X-Device-Id names a device and proves
 // nothing. A device token proves nothing while the signal server holds
-// its device as banned or soft-deleted, whoever banned or deleted it; the
-// console's own deletes and bans also revoke the device's tokens
-// (RevokeDeviceTokens), which a hard delete leaves no row to check.
+// its device as banned or soft-deleted, whoever banned or deleted it.
+// Every delete and ban also revokes the device's tokens for good: the
+// signal server's own (package db, in the same transaction, whichever
+// port or command made it) and the console's (RevokeDeviceTokens), so a
+// hard delete, which leaves no row to check, ends them too.
 
 // deviceIDPattern is the form of a device id a token can be bound to.
 var deviceIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{3,64}$`)

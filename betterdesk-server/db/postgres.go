@@ -1034,15 +1034,28 @@ func (pg *PostgresDB) UpsertPeer(p *Peer) error {
 	return nil
 }
 
-// DeletePeer marks a peer as soft-deleted.
+// DeletePeer marks a peer as soft-deleted and revokes its device tokens
+// (device_access_tokens.go).
 func (pg *PostgresDB) DeletePeer(id string) error {
-	_, err := pg.pool.Exec(pg.ctx,
-		`UPDATE peers SET soft_deleted = TRUE, deleted_at = NOW() WHERE id = $1`, id)
-	return err
+	tx, err := pg.pool.Begin(pg.ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(pg.ctx)
+
+	if _, err := tx.Exec(pg.ctx,
+		`UPDATE peers SET soft_deleted = TRUE, deleted_at = NOW() WHERE id = $1`, id); err != nil {
+		return err
+	}
+	if err := pgRevokeDeviceAccessTokens(pg.ctx, tx, id); err != nil {
+		return err
+	}
+	return tx.Commit(pg.ctx)
 }
 
-// HardDeletePeer permanently removes a peer from the database and releases
-// any id_change_history reservations for that ID (#213).
+// HardDeletePeer permanently removes a peer from the database, revokes its
+// device tokens and releases any id_change_history reservations for that
+// ID (#213).
 func (pg *PostgresDB) HardDeletePeer(id string) error {
 	tx, err := pg.pool.Begin(pg.ctx)
 	if err != nil {
@@ -1051,6 +1064,9 @@ func (pg *PostgresDB) HardDeletePeer(id string) error {
 	defer tx.Rollback(pg.ctx)
 
 	if _, err := tx.Exec(pg.ctx, `DELETE FROM peers WHERE id = $1`, id); err != nil {
+		return err
+	}
+	if err := pgRevokeDeviceAccessTokens(pg.ctx, tx, id); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(pg.ctx,
@@ -1457,15 +1473,27 @@ func (pg *PostgresDB) SetAllOffline() error {
 
 // ── Ban System ────────────────────────────────────────────────────────
 
-// BanPeer bans a specific peer by ID.
+// BanPeer bans a specific peer by ID and revokes its device tokens.
 func (pg *PostgresDB) BanPeer(id string, reason string) error {
-	_, err := pg.pool.Exec(pg.ctx,
+	tx, err := pg.pool.Begin(pg.ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(pg.ctx)
+
+	if _, err := tx.Exec(pg.ctx,
 		`UPDATE peers SET banned = TRUE, ban_reason = $1, banned_at = NOW() WHERE id = $2`,
-		reason, id)
-	return err
+		reason, id); err != nil {
+		return err
+	}
+	if err := pgRevokeDeviceAccessTokens(pg.ctx, tx, id); err != nil {
+		return err
+	}
+	return tx.Commit(pg.ctx)
 }
 
-// UnbanPeer removes the ban from a peer.
+// UnbanPeer removes the ban from a peer. The device tokens its ban revoked
+// stay revoked.
 func (pg *PostgresDB) UnbanPeer(id string) error {
 	_, err := pg.pool.Exec(pg.ctx,
 		`UPDATE peers SET banned = FALSE, ban_reason = '', banned_at = NULL WHERE id = $1`, id)
@@ -1496,7 +1524,8 @@ func (pg *PostgresDB) IsPeerSoftDeleted(id string) (bool, error) {
 
 // RestorePeer clears soft_deleted and deleted_at for a previously deleted
 // peer. Required because UpsertPeer no longer does this implicitly
-// (GHSA-3v82-3gf8-fxx8).
+// (GHSA-3v82-3gf8-fxx8). The device tokens its delete revoked stay
+// revoked.
 func (pg *PostgresDB) RestorePeer(id string) error {
 	_, err := pg.pool.Exec(pg.ctx,
 		`UPDATE peers SET soft_deleted = FALSE, deleted_at = NULL WHERE id = $1`,
