@@ -6410,7 +6410,8 @@
     "step_done": "Concluído",
     "step_warning": "A verificar",
     "step_failed": "Falhou",
-    "step_skipped": "Ignorado"
+    "step_skipped": "Ignorado",
+    "restore_restart_by_hand": "Backup restaurado. Inicie o servidor novamente para usá-lo."
   },
   "permissions": {
     "title": "Permissões",

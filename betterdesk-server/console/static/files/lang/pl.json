@@ -6539,7 +6539,8 @@
     "step_done": "Gotowe",
     "step_warning": "Do sprawdzenia",
     "step_failed": "Nieudane",
-    "step_skipped": "Pominięto"
+    "step_skipped": "Pominięto",
+    "restore_restart_by_hand": "Kopia zapasowa przywrócona. Uruchom serwer ponownie, aby jej użyć."
   },
   "accessibility": {
     "title": "Dostępność",

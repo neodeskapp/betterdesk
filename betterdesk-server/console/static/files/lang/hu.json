@@ -6416,7 +6416,8 @@
     "step_done": "Kész",
     "step_warning": "Ellenőrizni kell",
     "step_failed": "Sikertelen",
-    "step_skipped": "Kihagyva"
+    "step_skipped": "Kihagyva",
+    "restore_restart_by_hand": "A biztonsági mentés visszaállítva. Használatához indítsa újra a szervert."
   },
   "permissions": {
     "title": "Engedélyek",

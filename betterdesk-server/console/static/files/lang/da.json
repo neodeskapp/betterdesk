@@ -6416,7 +6416,8 @@
     "step_done": "Færdig",
     "step_warning": "Bør tjekkes",
     "step_failed": "Mislykkedes",
-    "step_skipped": "Sprunget over"
+    "step_skipped": "Sprunget over",
+    "restore_restart_by_hand": "Sikkerhedskopien er gendannet. Start serveren igen for at bruge den."
   },
   "permissions": {
     "title": "Tilladelser",

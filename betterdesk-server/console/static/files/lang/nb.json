@@ -6416,7 +6416,8 @@
     "step_done": "Ferdig",
     "step_warning": "Bør sjekkes",
     "step_failed": "Mislyktes",
-    "step_skipped": "Hoppet over"
+    "step_skipped": "Hoppet over",
+    "restore_restart_by_hand": "Sikkerhetskopien er gjenopprettet. Start serveren på nytt for å bruke den."
   },
   "permissions": {
     "title": "Tillatelser",

@@ -6416,7 +6416,8 @@
     "step_done": "Selesai",
     "step_warning": "Perlu diperiksa",
     "step_failed": "Gagal",
-    "step_skipped": "Dilewati"
+    "step_skipped": "Dilewati",
+    "restore_restart_by_hand": "Cadangan dipulihkan. Jalankan ulang server untuk menggunakannya."
   },
   "permissions": {
     "title": "Izin",

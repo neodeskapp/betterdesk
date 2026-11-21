@@ -6417,7 +6417,8 @@
     "step_done": "تم",
     "step_warning": "يحتاج إلى مراجعة",
     "step_failed": "فشل",
-    "step_skipped": "تم التخطي"
+    "step_skipped": "تم التخطي",
+    "restore_restart_by_hand": "تمت استعادة النسخة الاحتياطية. أعد تشغيل الخادم لاستخدامها."
   },
   "permissions": {
     "title": "الأذونات",

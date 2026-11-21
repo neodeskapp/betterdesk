@@ -6612,7 +6612,8 @@
         "step_done": "Done",
         "step_warning": "Needs a look",
         "step_failed": "Failed",
-        "step_skipped": "Skipped"
+        "step_skipped": "Skipped",
+        "restore_restart_by_hand": "Backup restored. Start the server again to use it."
     },
     "accessibility": {
         "title": "Accessibility",

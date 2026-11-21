@@ -6416,7 +6416,8 @@
     "step_done": "Gata",
     "step_warning": "De verificat",
     "step_failed": "Eșuat",
-    "step_skipped": "Omis"
+    "step_skipped": "Omis",
+    "restore_restart_by_hand": "Copia de rezervă a fost restaurată. Porniți din nou serverul pentru a o folosi."
   },
   "permissions": {
     "title": "Permisiuni",

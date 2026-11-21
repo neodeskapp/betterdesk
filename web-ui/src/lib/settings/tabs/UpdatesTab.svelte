@@ -36,7 +36,9 @@
 	import UpdateInstall from '#lib/settings-b/UpdateInstall.svelte';
 	import {
 		GO_SOURCES,
+		awaitRestart,
 		buildTools,
+		consoleVersionNow,
 		checkState,
 		componentRows,
 		goVersionNumber,
@@ -45,6 +47,7 @@
 		isDockerMode,
 		preflightNotice,
 		preflightWarningKey,
+		sleepMs,
 		toolchainWillInstall,
 		type UpdateState
 	} from '#lib/settings-b/updates.ts';
@@ -235,10 +238,19 @@
 
 	async function rebuild() {
 		rebuilding = true;
+		const before = await consoleVersionNow(getConsoleStatus);
 		try {
 			await rebuildServerBinary();
 			toast.success(t('updates.rebuild_server_success'));
-			await loadBinaryStatus();
+			// Under a supervisor the console ends two seconds after the answer: wait for it before reading
+			const end = await awaitRestart(
+				before,
+				{ version: async () => (await getConsoleStatus()).cacheVersion ?? '', sleep: sleepMs },
+				{ settleMs: 6000 }
+			);
+			if (end === 'restarted') location.reload();
+			else if (end === 'timeout') toast.warning(t('updates.restart_timeout'));
+			else await loadBinaryStatus();
 		} catch (err) {
 			toast.error(errorText(err, t('updates.rebuild_server_failed')));
 		} finally {

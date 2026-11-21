@@ -6416,7 +6416,8 @@
     "step_done": "Valmis",
     "step_warning": "Tarkista",
     "step_failed": "Epäonnistui",
-    "step_skipped": "Ohitettu"
+    "step_skipped": "Ohitettu",
+    "restore_restart_by_hand": "Varmuuskopio palautettu. Käynnistä palvelin uudelleen, jotta se otetaan käyttöön."
   },
   "permissions": {
     "title": "Käyttöoikeudet",

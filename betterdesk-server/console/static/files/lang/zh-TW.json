@@ -6543,7 +6543,8 @@
     "step_done": "完成",
     "step_warning": "需要檢查",
     "step_failed": "失敗",
-    "step_skipped": "已略過"
+    "step_skipped": "已略過",
+    "restore_restart_by_hand": "已還原備份。請重新啟動伺服器以使用它。"
   },
   "accessibility": {
     "title": "無障礙",

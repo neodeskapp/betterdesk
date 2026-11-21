@@ -6416,7 +6416,8 @@
     "step_done": "เสร็จแล้ว",
     "step_warning": "ต้องตรวจสอบ",
     "step_failed": "ไม่สำเร็จ",
-    "step_skipped": "ข้ามแล้ว"
+    "step_skipped": "ข้ามแล้ว",
+    "restore_restart_by_hand": "กู้คืนข้อมูลสำรองแล้ว เริ่มเซิร์ฟเวอร์ใหม่เพื่อใช้งาน"
   },
   "permissions": {
     "title": "สิทธิ์",

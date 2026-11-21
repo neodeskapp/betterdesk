@@ -6416,7 +6416,8 @@
     "step_done": "Tamam",
     "step_warning": "Kontrol edilmeli",
     "step_failed": "Başarısız",
-    "step_skipped": "Atlandı"
+    "step_skipped": "Atlandı",
+    "restore_restart_by_hand": "Yedek geri yüklendi. Kullanmak için sunucuyu yeniden başlatın."
   },
   "permissions": {
     "title": "İzinler",

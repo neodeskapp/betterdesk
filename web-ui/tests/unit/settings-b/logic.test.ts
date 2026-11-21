@@ -39,6 +39,7 @@ import {
 	zoneOffset
 } from '../../../src/lib/settings-b/time.ts';
 import {
+	awaitRestart,
 	buildTools,
 	checkState,
 	componentRows,
@@ -473,5 +474,30 @@ describe('translations', () => {
 			{ area: 'settings', count: 2 },
 			{ area: 'devices', count: 1 }
 		]);
+	});
+});
+
+describe('waiting for the console after a restore or a rebuild', () => {
+	const run = (answers: (string | Error)[], settleMs = Infinity, max = 10) => {
+		let i = 0;
+		const slept: number[] = [];
+		const version = async () => {
+			const a = answers[Math.min(i++, answers.length - 1)]!;
+			if (a instanceof Error) throw a;
+			return a;
+		};
+		return awaitRestart('v1', { version, sleep: async (ms) => void slept.push(ms) }, { max, settleMs }).then(
+			(end) => ({ end, slept })
+		);
+	};
+
+	test('down, then a new version: restarted; the same version after being down counts too', async () => {
+		expect((await run(['v1', new Error('down'), new Error('down'), 'v2'])).end).toBe('restarted');
+		expect((await run([new Error('down'), 'v1'])).end).toBe('restarted');
+	});
+
+	test('a console that never goes down stays (rebuild without a supervisor) or times out', async () => {
+		expect((await run(['v1'], 6000)).end).toBe('stayed');
+		expect((await run(['v1'], Infinity, 3)).end).toBe('timeout');
 	});
 });

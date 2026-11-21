@@ -6410,7 +6410,8 @@
     "step_done": "Hecho",
     "step_warning": "Revíselo",
     "step_failed": "Falló",
-    "step_skipped": "Omitido"
+    "step_skipped": "Omitido",
+    "restore_restart_by_hand": "Copia de seguridad restaurada. Inicie el servidor de nuevo para usarla."
   },
   "permissions": {
     "title": "Permisos",

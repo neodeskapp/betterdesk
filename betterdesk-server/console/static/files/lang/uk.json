@@ -6416,7 +6416,8 @@
     "step_done": "Готово",
     "step_warning": "Потребує перевірки",
     "step_failed": "Не вдалося",
-    "step_skipped": "Пропущено"
+    "step_skipped": "Пропущено",
+    "restore_restart_by_hand": "Резервну копію відновлено. Запустіть сервер знову, щоб її використати."
   },
   "permissions": {
     "title": "Дозволи",

@@ -6410,7 +6410,8 @@
     "step_done": "完了",
     "step_warning": "要確認",
     "step_failed": "失敗",
-    "step_skipped": "スキップ"
+    "step_skipped": "スキップ",
+    "restore_restart_by_hand": "バックアップを復元しました。使用するにはサーバーを再起動してください。"
   },
   "permissions": {
     "title": "権限",

@@ -6410,7 +6410,8 @@
     "step_done": "Hotovo",
     "step_warning": "Vyžaduje kontrolu",
     "step_failed": "Selhalo",
-    "step_skipped": "Přeskočeno"
+    "step_skipped": "Přeskočeno",
+    "restore_restart_by_hand": "Záloha obnovena. Pro její použití server znovu spusťte."
   },
   "permissions": {
     "title": "Oprávnění",

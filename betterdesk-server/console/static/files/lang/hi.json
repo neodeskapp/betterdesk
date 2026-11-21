@@ -6416,7 +6416,8 @@
     "step_done": "पूरा",
     "step_warning": "जाँचना होगा",
     "step_failed": "विफल",
-    "step_skipped": "छोड़ा गया"
+    "step_skipped": "छोड़ा गया",
+    "restore_restart_by_hand": "बैकअप बहाल किया गया। इसे इस्तेमाल करने के लिए सर्वर फिर से शुरू करें।"
   },
   "permissions": {
     "title": "अनुमतियां",

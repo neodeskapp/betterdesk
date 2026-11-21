@@ -6543,7 +6543,8 @@
     "step_done": "Terminé",
     "step_warning": "À vérifier",
     "step_failed": "Échec",
-    "step_skipped": "Ignoré"
+    "step_skipped": "Ignoré",
+    "restore_restart_by_hand": "Sauvegarde restaurée. Redémarrez le serveur pour l'utiliser."
   },
   "accessibility": {
     "title": "Barrierefreiheit",

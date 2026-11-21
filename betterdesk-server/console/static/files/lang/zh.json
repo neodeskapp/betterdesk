@@ -6521,7 +6521,8 @@
     "step_done": "完成",
     "step_warning": "需要检查",
     "step_failed": "失败",
-    "step_skipped": "已跳过"
+    "step_skipped": "已跳过",
+    "restore_restart_by_hand": "已恢复备份。请重新启动服务器以使用它。"
   },
   "accessibility": {
     "title": "无障碍",

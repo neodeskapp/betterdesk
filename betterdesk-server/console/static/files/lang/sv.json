@@ -6416,7 +6416,8 @@
     "step_done": "Klar",
     "step_warning": "Behöver kontrolleras",
     "step_failed": "Misslyckades",
-    "step_skipped": "Hoppades över"
+    "step_skipped": "Hoppades över",
+    "restore_restart_by_hand": "Säkerhetskopian är återställd. Starta servern igen för att använda den."
   },
   "permissions": {
     "title": "Behörigheter",

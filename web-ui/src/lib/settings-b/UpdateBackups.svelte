@@ -8,6 +8,7 @@
 		deleteUpdateBackup,
 		errorText,
 		getBackupRetention,
+		getConsoleStatus,
 		listUpdateBackups,
 		pruneUpdateBackups,
 		restoreUpdateBackup,
@@ -15,7 +16,7 @@
 		type UpdateBackup
 	} from '#lib/api/settings-system.ts';
 	import { formatBytes, formatNumber } from '#lib/i18n/format.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
@@ -27,7 +28,7 @@
 	import Time from '#lib/ui/Time.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import { retentionValid } from './updates.ts';
+	import { awaitRestart, consoleVersionNow, restartBlocked, retentionValid, sleepMs } from './updates.ts';
 
 	let backups = $state.raw<UpdateBackup[]>([]);
 	let listState = $state<'loading' | 'ready' | 'error'>('loading');
@@ -106,11 +107,28 @@
 		});
 		if (!yes) return;
 		busy = name;
+		const before = await consoleVersionNow(getConsoleStatus);
 		try {
-			await restoreUpdateBackup(name);
+			const answer = await restoreUpdateBackup(name);
+			if (restartBlocked(answer)) {
+				// No supervisor: the old process goes on until someone starts the server again
+				toast.warning(
+					tf('updates.restore_restart_by_hand', 'Backup restored. Start the server again to use it.')
+				);
+				busy = null;
+				return;
+			}
 			toast.success(t('updates.restore_success'));
-			// The console restarts with the restored files
-			setTimeout(() => location.reload(), 2000);
+			// The console ends shortly after the answer: reload once it answers again
+			const end = await awaitRestart(before, {
+				version: async () => (await getConsoleStatus()).cacheVersion ?? '',
+				sleep: sleepMs
+			});
+			if (end === 'restarted') location.reload();
+			else {
+				toast.warning(t('updates.restart_timeout'));
+				busy = null;
+			}
 		} catch (err) {
 			toast.error(errorText(err, t('errors.server_error')));
 			busy = null;

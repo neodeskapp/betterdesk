@@ -6410,7 +6410,8 @@
     "step_done": "Klaar",
     "step_warning": "Even nakijken",
     "step_failed": "Mislukt",
-    "step_skipped": "Overgeslagen"
+    "step_skipped": "Overgeslagen",
+    "restore_restart_by_hand": "Back-up hersteld. Start de server opnieuw om deze te gebruiken."
   },
   "permissions": {
     "title": "Machtigingen",

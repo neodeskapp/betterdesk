@@ -6410,7 +6410,8 @@
     "step_done": "Erledigt",
     "step_warning": "Bitte prüfen",
     "step_failed": "Fehlgeschlagen",
-    "step_skipped": "Übersprungen"
+    "step_skipped": "Übersprungen",
+    "restore_restart_by_hand": "Sicherung wiederhergestellt. Starten Sie den Server neu, um sie zu verwenden."
   },
   "permissions": {
     "title": "Berechtigungen",

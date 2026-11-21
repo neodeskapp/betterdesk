@@ -6416,7 +6416,8 @@
     "step_done": "Xong",
     "step_warning": "Cần xem lại",
     "step_failed": "Thất bại",
-    "step_skipped": "Đã bỏ qua"
+    "step_skipped": "Đã bỏ qua",
+    "restore_restart_by_hand": "Đã khôi phục bản sao lưu. Hãy khởi động lại máy chủ để sử dụng."
   },
   "permissions": {
     "title": "Quyền",

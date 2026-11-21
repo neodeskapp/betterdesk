@@ -238,3 +238,54 @@ export function recoveredResult(
 export function retentionValid(n: number): boolean {
 	return Number.isInteger(n) && n >= 0 && n <= 1000;
 }
+
+/** How often the console is asked while it restarts, and how often at most */
+export const RESTART_PROBE_MS = 2000;
+export const RESTART_PROBES = 90;
+
+/**
+ * Wait until the console answers after a restart: with another cache
+ * version, or at all after it was down. `settleMs`: a console that stays
+ * up with the same version that long did not restart ('stayed'); a
+ * rebuild without a supervisor does not end the process.
+ */
+export async function awaitRestart(
+	before: string,
+	deps: { version: () => Promise<string>; sleep: (ms: number) => Promise<void> },
+	opts: { max?: number; settleMs?: number } = {}
+): Promise<'restarted' | 'stayed' | 'timeout'> {
+	const max = opts.max ?? RESTART_PROBES;
+	const settle = opts.settleMs ?? Infinity;
+	let down = false;
+	for (let attempt = 1; attempt <= max; attempt++) {
+		await deps.sleep(RESTART_PROBE_MS);
+		try {
+			const version = await deps.version();
+			if (down || (before && version !== before)) return 'restarted';
+			if (attempt * RESTART_PROBE_MS >= settle) return 'stayed';
+		} catch {
+			down = true;
+		}
+	}
+	return 'timeout';
+}
+
+/** Why the console does not restart by itself after a restore (no supervisor), or null */
+export function restartBlocked(answer: unknown): string | null {
+	const v =
+		answer && typeof answer === 'object'
+			? (answer as { consoleRestartBlocked?: unknown }).consoleRestartBlocked
+			: null;
+	return typeof v === 'string' && v ? v : null;
+}
+
+/** The console's cache version now; '' when it does not answer */
+export async function consoleVersionNow(status: () => Promise<{ cacheVersion?: string }>): Promise<string> {
+	try {
+		return (await status()).cacheVersion ?? '';
+	} catch {
+		return '';
+	}
+}
+
+export const sleepMs = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
