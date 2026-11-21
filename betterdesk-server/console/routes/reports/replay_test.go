@@ -193,6 +193,53 @@ func rangeFixes(dialect string) map[string]replay.Fix {
 	return steps
 }
 
+// RV96: an activity report covers at most the 366 days before its end,
+// or before now without one. The recorded activity lies in 2019, so a
+// report without an end has none of it, where Node read every summary:
+// its counts are 0, its top applications empty, and the CSV of them has
+// no rows.
+var _ = reportFixes.Add("RV96", yearFixes("sqlite"))
+var _ = reportFixes.Add("RV96", yearFixes("postgres"))
+
+func yearFixes(dialect string) map[string]replay.Fix {
+	const none = `{"devices_with_activity":0,"daily_reports":0,"total_active_secs":0,"total_idle_secs":0,"top_applications":[]}`
+	steps := map[string]replay.Fix{}
+	for _, step := range recordedStepsOn(dialect) {
+		typ, _ := bodyMember(step, "type")
+		from, _ := bodyMember(step, "from")
+		to, _ := bodyMember(step, "to")
+		if typ != "activity" || step.Status != 200 || !isTime(from) || !isTime(to) || (to != nil && to != false && to != 0.0 && to != "") {
+			continue
+		}
+		var fix replay.Fix
+		switch step.Path {
+		case "/api/reports/generate":
+			parsed, err := goapi.Parse([]byte(step.Answer))
+			if err != nil {
+				panic(err)
+			}
+			empty, _ := goapi.Parse([]byte(none))
+			parsed.(*goapi.Object).Set("data", empty)
+			fix = replay.Fix{Status: 200, Answer: string(engine.Stringify(parsed))}
+		case "/api/reports/generate/csv":
+			if section, _ := bodyMember(step, "section"); section == "top_applications" {
+				fix = replay.Fix{Status: 200, Lacks: []string{"name", "Chrome"}}
+			} else {
+				header, _, _ := strings.Cut(step.Answer, "\n")
+				fix = replay.Fix{Status: 200, Answer: header + "\n0,0,0,0"}
+			}
+		default:
+			continue
+		}
+		fix.Dialect = dialect
+		steps[replay.FixKey(step)] = fix
+	}
+	if len(steps) < 10 {
+		panic(fmt.Sprintf("RV96: %d activity reports without an end on %s", len(steps), dialect))
+	}
+	return steps
+}
+
 // isTime reports whether a from or to of a recorded body sets a valid
 // bound or none: a value that is not true, a date alone, or a time with
 // seconds.
