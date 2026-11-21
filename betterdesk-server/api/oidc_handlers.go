@@ -438,8 +438,9 @@ func (s *Server) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	// Store a one-time auth code that the panel will exchange via a
 	// server-to-server POST to /api/auth/oidc/exchange. This prevents the
 	// JWT from being exposed in the browser URL bar, Referer headers,
-	// browser history, and access logs.
-	authCode, err := s.oidcProvider.StoreAuthCode(token, user.Username, user.Role, returnURL, result.Picture)
+	// browser history, and access logs. The code carries the sign-in's
+	// state, which the console compares with the state its cookie holds.
+	authCode, err := s.oidcProvider.StoreAuthCodeForState(token, user.Username, user.Role, returnURL, result.Picture, result.State)
 	if err != nil {
 		log.Printf("[OIDC] Failed to store auth code for %s: %v", user.Username, err)
 		loginErr("oidc_error")
@@ -487,7 +488,11 @@ func (s *Server) handleOIDCSessionRedirect(w http.ResponseWriter, r *http.Reques
 // itself is the credential).
 //
 // Request body: {"code": "..."}
-// Response:     {"token": "...", "username": "...", "role": "...", "return_url": "...", "picture": "..."}
+// Response:     {"token": "...", "username": "...", "role": "...", "return_url": "...", "picture": "...", "state": "..."}
+//
+// "state" is the OAuth state of the sign-in. The console's session route
+// takes it in place of the code when the identity provider sent the
+// browser to this server's port, so the console never saw the code.
 //
 // "picture" is the IdP's picture claim (an http(s) URL or a data:image URL,
 // see auth.SanitizeOIDCPicture). It is always present and "" when the IdP
@@ -521,6 +526,7 @@ func (s *Server) handleOIDCExchange(w http.ResponseWriter, r *http.Request) {
 		"role":       entry.Role,
 		"return_url": entry.ReturnURL,
 		"picture":    entry.Picture,
+		"state":      entry.State,
 	})
 }
 
