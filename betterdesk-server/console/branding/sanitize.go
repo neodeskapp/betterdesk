@@ -3,6 +3,7 @@ package branding
 import (
 	"regexp"
 	"strings"
+	"unicode/utf8"
 )
 
 // The CSS cleaning rules are regular expressions written for JavaScript.
@@ -93,18 +94,37 @@ func (t tagStripper) strip(s string) string {
 	}
 }
 
+// maxStripPasses is how many passes stripUntilStable makes at most. A
+// value made by hand needs one or two; one that needs more was built so
+// that every pass frees one more match, which costs a pass per word.
+const maxStripPasses = 8
+
 // stripUntilStable runs the replacers in order, again and again, until a
-// full pass changes nothing.
-func stripUntilStable(s string, replacers ...func(string) string) string {
-	for {
+// full pass changes nothing. ok is false when maxStripPasses passes still
+// changed something; the value is then not clean.
+func stripUntilStable(s string, replacers ...func(string) string) (out string, ok bool) {
+	for range maxStripPasses {
 		prev := s
 		for _, replace := range replacers {
 			s = replace(s)
 		}
 		if s == prev {
-			return s
+			return s, true
 		}
 	}
+	return "", false
+}
+
+// cutBytes is s cut to at most n bytes, at the start of a character. The
+// bytes it keeps are not touched.
+func cutBytes(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	for n > 0 && !utf8.RuneStart(s[n]) {
+		n--
+	}
+	return s[:n]
 }
 
 func remover(re *regexp.Regexp, with string) func(string) string {
@@ -115,6 +135,8 @@ func remover(re *regexp.Regexp, with string) func(string) string {
 // generated stylesheet. Only letters, digits, white space and # % . , ( )
 // / - stay, "expression(" and "url(" are taken out until none is left (also
 // one wrapped around itself), and the result is cut at 400 characters.
+// Only the first 8,000 bytes that stay are cleaned, and a value that is
+// not clean after maxStripPasses passes is "".
 func SanitizeCSSColorValue(value any) (out string, err error) {
 	defer catch(&err)
 	return sanitizeCSSColorValue(value), nil
@@ -140,14 +162,19 @@ func sanitizeCSSColorValue(value any) string {
 		}
 		b.WriteRune(r)
 	}
-	v = stripUntilStable(b.String(), remover(reCSSExpression, ""), remover(reCSSURL, ""))
+	v, ok := stripUntilStable(cutBytes(b.String(), 8000), remover(reCSSExpression, ""), remover(reCSSURL, ""))
+	if !ok {
+		return ""
+	}
 	return substring(v, 400)
 }
 
 // SanitizeCustomCSS cleans the free CSS an administrator can add: no tags,
 // no @import, expression(), behavior or -moz-binding, no script or data
 // URLs, at most 20,000 characters. The rules run until none finds
-// anything, so a word wrapped around itself is gone too.
+// anything, so a word wrapped around itself is gone too. Only the first
+// 160,000 bytes are cleaned, and CSS that is not clean after
+// maxStripPasses passes is "".
 func SanitizeCustomCSS(value any) (out string, err error) {
 	defer catch(&err)
 	return sanitizeCustomCSS(value), nil
@@ -157,7 +184,7 @@ func sanitizeCustomCSS(value any) string {
 	if value == nil || value == Undefined {
 		return ""
 	}
-	css := stripUntilStable(toString(value),
+	css, ok := stripUntilStable(cutBytes(toString(value), 160000),
 		remover(reCSSStyleTag, ""),
 		remover(reCSSAnyTag, ""),
 		scriptTag.strip,
@@ -169,6 +196,9 @@ func sanitizeCustomCSS(value any) string {
 		remover(reCSSMozBinding, ""),
 		remover(reCSSScriptURL, "none"),
 	)
+	if !ok {
+		return ""
+	}
 	return substring(css, 20000)
 }
 

@@ -41,10 +41,24 @@ func hasCSSWord(text string, rules []*regexp.Regexp) bool {
 	return false
 }
 
+// stripAll runs the replacers in order until a full pass changes nothing,
+// without the console's bound on the passes.
+func stripAll(s string, replacers ...func(string) string) string {
+	for {
+		prev := s
+		for _, replace := range replacers {
+			s = replace(s)
+		}
+		if s == prev {
+			return s
+		}
+	}
+}
+
 // nodeCustomCSS and nodeColor are the CSS cleaners as Node ran them: the
 // rules for words once each, after the tags.
 func nodeCustomCSS(text string) string {
-	css := stripUntilStable(text, remover(reCSSStyleTag, ""), remover(reCSSAnyTag, ""), scriptTag.strip, styleTag.strip, remover(reEventAttr, " "))
+	css := stripAll(text, remover(reCSSStyleTag, ""), remover(reCSSAnyTag, ""), scriptTag.strip, styleTag.strip, remover(reEventAttr, " "))
 	for i, re := range customCSSWords {
 		with := ""
 		if i == len(customCSSWords)-1 {
@@ -101,9 +115,9 @@ func nodeSVG(s string) string {
 	}
 	s = reXMLInstruction.ReplaceAllLiteralString(s, "")
 	s = reDoctype.ReplaceAllLiteralString(s, "")
-	s = stripUntilStable(s, remover(reSVGDangerousTags, ""), remover(reSVGDangerousSelfClosing, ""))
-	s = stripUntilStable(s, remover(reSVGDangerousAttrs, ""), remover(reSVGScriptHref, ` href="#"`), remover(reSVGCSSExpression, "blocked-"))
-	return stripUntilStable(s, scriptTag.strip, styleTag.strip, remover(reEventAttr, " "))
+	s = stripAll(s, remover(reSVGDangerousTags, ""), remover(reSVGDangerousSelfClosing, ""))
+	s = stripAll(s, remover(reSVGDangerousAttrs, ""), remover(reSVGScriptHref, ` href="#"`), remover(reSVGCSSExpression, "blocked-"))
+	return stripAll(s, scriptTag.strip, styleTag.strip, remover(reEventAttr, " "))
 }
 
 // fixedSVG checks a recorded call of sanitizeSvg whose answer differs
