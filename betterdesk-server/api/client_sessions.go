@@ -239,6 +239,14 @@ func (s *Server) authenticateClientSession(token string) (username, role string,
 	if err != nil || user == nil {
 		return "", "", false
 	}
+	// A session opened before the account's password or second factor
+	// changed ends with that change (whole seconds on both sides).
+	if user.CredentialsChangedAt > 0 {
+		createdAt, err := parseClientSessionTime(sess.CreatedAt)
+		if err != nil || createdAt.Unix() < user.CredentialsChangedAt {
+			return "", "", false
+		}
+	}
 
 	if s.clientSessionSliding() {
 		now := time.Now().UTC()

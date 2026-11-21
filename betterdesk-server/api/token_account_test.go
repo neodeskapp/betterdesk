@@ -140,3 +140,38 @@ func TestPasswordChangeEndsTheAccountsTokens(t *testing.T) {
 		t.Errorf("second factor of a sign-in begun before the password change: %d %s, want 401", status, body)
 	}
 }
+
+// TestPasswordChangeEndsDesktopClientSessions: a desktop client's session
+// opened before the account's password changed is refused (RV181).
+func TestPasswordChangeEndsDesktopClientSessions(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	if err := database.EnsureClientSessionsSchema(); err != nil {
+		t.Fatal(err)
+	}
+	user := &db.User{Username: "deskuser", PasswordHash: mustHash(t, "first-pass-1"), Role: auth.RoleOperator}
+	if err := database.CreateUser(user); err != nil {
+		t.Fatal(err)
+	}
+	token, err := srv.issueClientSession(user, "DESK0001", "desk-uuid-1", "192.0.2.10")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, ok := srv.authenticateClientSession(token); !ok {
+		t.Fatal("session before the change refused")
+	}
+	nextSecond()
+	user.PasswordHash = mustHash(t, "second-pass-2")
+	if err := database.UpdateUser(user); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, ok := srv.authenticateClientSession(token); ok {
+		t.Error("session opened before the password change still accepted")
+	}
+	fresh, err := srv.issueClientSession(user, "DESK0001", "desk-uuid-1", "192.0.2.10")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, ok := srv.authenticateClientSession(fresh); !ok {
+		t.Error("session opened after the password change refused")
+	}
+}
