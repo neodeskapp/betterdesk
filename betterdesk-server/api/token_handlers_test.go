@@ -51,3 +51,45 @@ func TestCreateDeviceTokenAnswersPrefixAndTime(t *testing.T) {
 		check("generate-bulk", tok)
 	}
 }
+
+// TestUpdateDeviceTokenClearsNoteAndLimit: an edit with a note of "" clears
+// the note and max_uses 0 makes the token unlimited; fields the body leaves
+// out keep their values (RV196).
+func TestUpdateDeviceTokenClearsNoteAndLimit(t *testing.T) {
+	srv, _ := newInternalServer(t, nil)
+	status, body := asConsole(t, srv, http.MethodPost, "/api/tokens", `{"name":"bundle","max_uses":5,"note":"for the lab"}`)
+	var created struct {
+		ID int64 `json:"id"`
+	}
+	if err := json.Unmarshal([]byte(body), &created); status != http.StatusCreated || err != nil {
+		t.Fatalf("create: %d %s", status, body)
+	}
+	path := "/api/tokens/" + strconv.FormatInt(created.ID, 10)
+	type token struct {
+		Name    string `json:"name"`
+		MaxUses int    `json:"max_uses"`
+		Note    string `json:"note"`
+	}
+	read := func() token {
+		t.Helper()
+		_, body := asConsole(t, srv, http.MethodGet, path, "")
+		var got token
+		if err := json.Unmarshal([]byte(body), &got); err != nil {
+			t.Fatalf("read %s: %v", body, err)
+		}
+		return got
+	}
+
+	if status, body := asConsole(t, srv, http.MethodPut, path, `{"name":"renamed"}`); status != http.StatusOK {
+		t.Fatalf("rename: %d %s", status, body)
+	}
+	if got := read(); got != (token{"renamed", 5, "for the lab"}) {
+		t.Errorf("after a rename: %+v, want the limit and note kept", got)
+	}
+	if status, body := asConsole(t, srv, http.MethodPut, path, `{"max_uses":0,"note":""}`); status != http.StatusOK {
+		t.Fatalf("clear: %d %s", status, body)
+	}
+	if got := read(); got != (token{"renamed", 0, ""}) {
+		t.Errorf("after max_uses 0 and an empty note: %+v, want unlimited without a note", got)
+	}
+}

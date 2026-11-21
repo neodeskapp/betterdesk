@@ -228,25 +228,26 @@ func (s *Server) handleUpdateDeviceToken(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// A field the body leaves out keeps its value; a note of "" clears the
+	// note and max_uses 0 lifts the limit.
 	var req struct {
-		Name    string `json:"name"`
-		MaxUses int    `json:"max_uses"`
-		Note    string `json:"note"`
+		Name    string  `json:"name"`
+		MaxUses *int    `json:"max_uses"`
+		Note    *string `json:"note"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	// Update fields
 	if req.Name != "" {
 		token.Name = req.Name
 	}
-	if req.MaxUses > 0 {
-		token.MaxUses = req.MaxUses
+	if req.MaxUses != nil && *req.MaxUses >= 0 {
+		token.MaxUses = *req.MaxUses
 	}
-	if req.Note != "" {
-		token.Note = req.Note
+	if req.Note != nil {
+		token.Note = *req.Note
 	}
 
 	if err := s.db.UpdateDeviceToken(token); err != nil {
