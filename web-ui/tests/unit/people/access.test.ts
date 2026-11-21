@@ -326,6 +326,21 @@ describe('the panel access sheet', () => {
 		);
 	});
 
+	test('for a super admin the sections give way to a note; the client features stay', async () => {
+		session.permissions = ['user.view', 'user.edit'];
+		render(AccessSheet, {
+			subject: { kind: 'user', id: 7 },
+			name: 'root',
+			role: 'super_admin',
+			onclose: () => {}
+		});
+		await waitFor(() => expect(feature('terminal')).not.toBeNull());
+		expect(screen.getByText(/section settings do not apply to them/)).toBeInTheDocument();
+		expect(row('devices')).toBeNull();
+		expect(row('group:core')).toBeNull();
+		expect(within(feature('terminal')).getByRole('combobox')).toHaveValue('inherit');
+	});
+
 	test('with only user.view: what applies now, without controls or Save', async () => {
 		session.permissions = ['user.view'];
 		render(AccessSheet, { subject: { kind: 'group', guid: 'g1' }, name: 'Helpdesk', onclose: () => {} });

@@ -2034,6 +2034,7 @@
     "access_user_note": "Uma definição aqui prevalece sobre os grupos desta pessoa. Sem ela, aplica-se a definição mais alta dos grupos e depois a função.",
     "access_group_note": "Os membros recebem o nível mais alto dado por qualquer um dos seus grupos, salvo se a sua própria definição disser outra coisa.",
     "access_self_warning": "Estas definições aplicam-se à sua própria conta. Se retirar o seu acesso a Utilizadores, não as poderá repor sozinho.",
+    "access_super_admin_note": "Os superadministradores têm sempre acesso total a todas as secções, por isso as definições de secção não se aplicam a eles. As funcionalidades do cliente aplicam-se.",
     "access_whole_group": "Todas as secções deste grupo",
     "access_not_set": "Não definido",
     "access_feature_inherit": "Predefinição",

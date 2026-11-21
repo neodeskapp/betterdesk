@@ -2034,6 +2034,7 @@
     "access_user_note": "此处的设置优先于此人的组。若未设置，则应用其组中最高的设置，然后是其角色。",
     "access_group_note": "成员获得其任一组给予的最高级别，除非其自身的设置另有规定。",
     "access_self_warning": "这些设置应用于您自己的账户。如果您移除自己对用户的访问权限，将无法自行改回。",
+    "access_super_admin_note": "超级管理员始终拥有所有部分的完整访问权限，因此部分设置对他们不适用。客户端功能仍然适用。",
     "access_whole_group": "此组中的所有部分",
     "access_not_set": "未设置",
     "access_feature_inherit": "默认",

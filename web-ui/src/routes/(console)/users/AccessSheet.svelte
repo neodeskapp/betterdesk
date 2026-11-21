@@ -7,7 +7,10 @@
   on the server). Hard-locked features are always off and have no control.
 
   user.edit edits and saves the whole policy at once; with only user.view
-  the sheet shows what applies now, without controls.
+  the sheet shows what applies now, without controls. A super admin keeps
+  full access in every section whatever is set (the server applies no
+  section setting to them), so for one the sections give way to a note
+  and only the client features show.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -60,6 +63,8 @@
 	const isMe = untrack(
 		() => subject.kind === 'user' && String(subject.id) === String(session.user?.id ?? '')
 	);
+	/** super_admin and admin: section settings do not apply to them */
+	const superAdmin = untrack(() => kind === 'user' && (role === 'super_admin' || role === 'admin'));
 
 	let catalog = $state.raw<AccessCatalog | null>(null);
 	let effective = $state.raw<AccessPolicy['effective'] | null>(null);
@@ -237,7 +242,7 @@
 							'Members get the highest level any of their groups gives, unless their own setting says otherwise.'
 						)}
 			</p>
-			{#if isMe && editable}
+			{#if isMe && editable && !superAdmin}
 				<Notice
 					tone="warning"
 					message={tf(
@@ -256,18 +261,31 @@
 				/>
 			{/if}
 
-			{#each groups as g (g.key)}
-				<FormSection title={label(`users.access_group_${g.key}`, g.label)}>
-					<ul class="rows">
-						{#if editable}
-							{@render sectionRow(g.key, tf('users.access_whole_group', 'All sections in this group'), true)}
-						{/if}
-						{#each g.sections as s (s.key)}
-							{@render sectionRow(s.key, label(sectionLabelKeys(s.key), s.label), false)}
-						{/each}
-					</ul>
-				</FormSection>
-			{/each}
+			{#if superAdmin}
+				<Notice
+					message={tf(
+						'users.access_super_admin_note',
+						'Super admins always have full access to every section, so section settings do not apply to them. Client features still do.'
+					)}
+				/>
+			{:else}
+				{#each groups as g (g.key)}
+					<FormSection title={label(`users.access_group_${g.key}`, g.label)}>
+						<ul class="rows">
+							{#if editable}
+								{@render sectionRow(
+									g.key,
+									tf('users.access_whole_group', 'All sections in this group'),
+									true
+								)}
+							{/if}
+							{#each g.sections as s (s.key)}
+								{@render sectionRow(s.key, label(sectionLabelKeys(s.key), s.label), false)}
+							{/each}
+						</ul>
+					</FormSection>
+				{/each}
+			{/if}
 
 			<FormSection title={t('users.client_features')}>
 				<ul class="rows">

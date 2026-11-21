@@ -202,6 +202,43 @@ func TestResolveForUserPrecedence(t *testing.T) {
 	}
 }
 
+// TestSectionRowsDoNotLowerASuperAdmin: the section rows of an account
+// and of its user groups are not applied to super_admin and admin, who
+// keep write in every section and so can always repair access; client
+// feature rows still apply. A global admin, no super admin role, is
+// lowered by its rows (BUGS RV13, A92).
+func TestSectionRowsDoNotLowerASuperAdmin(t *testing.T) {
+	data := &fakeData{
+		sections: map[string][]SectionRow{
+			"user:7":    {{ResourceKey: "users", AccessLevel: "none"}, {ResourceKey: "group:devices", AccessLevel: "read"}},
+			"group:ops": {{ResourceKey: "remote", AccessLevel: "none"}},
+		},
+		features:   map[string][]FeatureRow{"user:7": {{FeatureKey: "clipboard", Enabled: false}}},
+		userGroups: []UserGroup{{GUID: "ops", Name: "Operators"}},
+	}
+	roles := &fakeRoles{permissions: map[string][]string{"global_admin": {"user.view", "user.edit", "device.view", "device.edit", "remote_target.view", "remote_target.connect"}}}
+	for _, role := range []string{"super_admin", "admin", "global_admin"} {
+		policy, err := fakeService(data, roles).ResolveForUser(context.Background(), PolicyUser{ID: 7, Role: role})
+		if err != nil {
+			t.Fatal(err)
+		}
+		lowered := false
+		for _, entry := range Catalog {
+			got, _ := policy.Sections.Get(entry.Key)
+			if role != "global_admin" && got != (SectionAccess{Access: LevelWrite, Source: SourceRole, RoleCeiling: LevelWrite}) {
+				t.Errorf("%s, section %s: %+v, want write from the role", role, entry.Key, got)
+			}
+			lowered = lowered || got.Source != SourceRole
+		}
+		if role == "global_admin" && !lowered {
+			t.Errorf("global_admin: no section came from a row")
+		}
+		if clipboard, _ := policy.Features.Get("clipboard"); clipboard != (FeatureAccess{Enabled: false, Source: SourceUser}) {
+			t.Errorf("%s, clipboard: %+v", role, clipboard)
+		}
+	}
+}
+
 func TestMergeUserPolicyRules(t *testing.T) {
 	ceiling := ceilingFor(newPermissionSet([]string{"device.view", "user.view", "user.edit", "device.connect"}))
 	cases := []struct {

@@ -222,7 +222,9 @@ func mergeGroupPolicy(groupGUID string, sectionRows []SectionRow, featureRows []
 // for the section, its row for the section's catalog group, the highest row
 // among its user groups (for the section or its catalog group), the role's
 // ceiling. The level is then capped at the role's ceiling: a row can lower
-// what the role gives, never raise it.
+// what the role gives, never raise it. A super admin role
+// (auth.IsSuperAdminRole) gets no section rows at all: it has write in
+// every section, so it can always repair the access of others.
 // Client features: the account's row, else on when any of its groups turns
 // the feature on, else on; a hard locked feature is always off.
 func (s *Service) ResolveForUser(ctx context.Context, user PolicyUser) (*Policy, error) {
@@ -255,6 +257,9 @@ func (s *Service) ResolveForUser(ctx context.Context, user PolicyUser) (*Policy,
 		}
 		rows.groupSections = append(rows.groupSections, sections...)
 		rows.groupFeatures = append(rows.groupFeatures, features...)
+	}
+	if IsSuperAdminRole(user.Role) {
+		rows.sections, rows.groupSections = nil, nil
 	}
 	return mergeUserPolicy(subjectID, ceiling, rows), nil
 }

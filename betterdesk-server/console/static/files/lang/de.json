@@ -2034,6 +2034,7 @@
     "access_user_note": "Eine Einstellung hier gilt vor den Gruppen dieser Person. Ohne Einstellung gilt die höchste Einstellung ihrer Gruppen, danach ihre Rolle.",
     "access_group_note": "Mitglieder erhalten die höchste Stufe, die eine ihrer Gruppen vergibt, außer ihre eigene Einstellung legt etwas anderes fest.",
     "access_self_warning": "Diese Einstellungen gelten für Ihr eigenes Konto. Wenn Sie sich den Zugriff auf Benutzer nehmen, können Sie sie nicht selbst zurücksetzen.",
+    "access_super_admin_note": "Super-Admins haben immer vollen Zugriff auf alle Bereiche, daher gelten Bereichseinstellungen für sie nicht. Client-Funktionen gelten weiterhin.",
     "access_whole_group": "Alle Bereiche dieser Gruppe",
     "access_not_set": "Nicht festgelegt",
     "access_feature_inherit": "Standard",

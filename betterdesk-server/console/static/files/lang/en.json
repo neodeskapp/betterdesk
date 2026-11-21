@@ -2116,6 +2116,7 @@
         "access_user_note": "A setting here wins over this person's groups. Without one, the highest setting of their groups applies, then their role.",
         "access_group_note": "Members get the highest level any of their groups gives, unless their own setting says otherwise.",
         "access_self_warning": "These settings apply to your own account. If you take away your access to Users, you cannot change them back yourself.",
+        "access_super_admin_note": "Super admins always have full access to every section, so section settings do not apply to them. Client features still do.",
         "access_whole_group": "All sections in this group",
         "access_not_set": "Not set",
         "access_feature_inherit": "Default",

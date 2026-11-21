@@ -2040,6 +2040,7 @@
     "access_user_note": "Cài đặt ở đây được ưu tiên hơn các nhóm của người này. Nếu không có, áp dụng cài đặt cao nhất trong các nhóm, rồi đến vai trò.",
     "access_group_note": "Thành viên nhận mức cao nhất mà bất kỳ nhóm nào của họ cấp, trừ khi cài đặt riêng của họ quy định khác.",
     "access_self_warning": "Các cài đặt này áp dụng cho tài khoản của chính bạn. Nếu bạn bỏ quyền truy cập Người dùng của mình, bạn sẽ không tự đổi lại được.",
+    "access_super_admin_note": "Quản trị viên cấp cao luôn có toàn quyền truy cập mọi mục, nên cài đặt mục không áp dụng cho họ. Tính năng ứng dụng khách vẫn áp dụng.",
     "access_whole_group": "Tất cả các mục trong nhóm này",
     "access_not_set": "Chưa đặt",
     "access_feature_inherit": "Mặc định",

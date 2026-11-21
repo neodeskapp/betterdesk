@@ -2034,6 +2034,7 @@
     "access_user_note": "Un'impostazione qui prevale sui gruppi di questa persona. Senza, vale l'impostazione più alta dei suoi gruppi, poi il suo ruolo.",
     "access_group_note": "I membri ricevono il livello più alto dato da uno dei loro gruppi, a meno che la loro impostazione dica altro.",
     "access_self_warning": "Queste impostazioni valgono per il tuo account. Se togli il tuo accesso a Utenti, non potrai ripristinarle da solo.",
+    "access_super_admin_note": "I super amministratori hanno sempre accesso completo a tutte le sezioni, quindi le impostazioni delle sezioni non si applicano a loro. Le funzioni del client sì.",
     "access_whole_group": "Tutte le sezioni di questo gruppo",
     "access_not_set": "Non impostato",
     "access_feature_inherit": "Predefinito",

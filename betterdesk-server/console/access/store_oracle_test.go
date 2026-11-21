@@ -152,7 +152,7 @@ func TestOracleStore(t *testing.T) {
 
 			var result any
 			var err error
-			found := true
+			found, superAdmin := true, false
 			switch step.Op {
 			case "groups":
 				var groups []DeviceGroup
@@ -179,6 +179,7 @@ func TestOracleStore(t *testing.T) {
 				var user *PolicyUser
 				if user, err = s.PolicyUserByID(ctx, int64(id)); err == nil {
 					if found = user != nil; found {
+						superAdmin = IsSuperAdminRole(user.Role)
 						var policy *Policy
 						if policy, err = s.ResolveForUser(ctx, *user); err == nil {
 							result = jsJSON(t, policy)
@@ -321,6 +322,13 @@ func TestOracleStore(t *testing.T) {
 			want := string(step.Result)
 			if want == "" {
 				want = "null"
+			}
+			if superAdmin {
+				// RV13: no section row lowers a super admin (DECISIONS A92)
+				var text string
+				if json.Unmarshal(step.Result, &text) == nil {
+					want = jsJSON(t, superAdminPolicy(text))
+				}
 			}
 			if got := jsJSON(t, result); got != want {
 				t.Fatalf("%s %s\n got  %s\n want %s", label, jsJSON(t, step.User), got, want)

@@ -2040,6 +2040,7 @@
     "access_user_note": "Az itteni beállítás felülírja a személy csoportjait. Ha nincs, a csoportjai közül a legmagasabb beállítás érvényes, utána a szerepköre.",
     "access_group_note": "A tagok a csoportjaik által adott legmagasabb szintet kapják, hacsak a saját beállításuk mást nem mond.",
     "access_self_warning": "Ezek a beállítások a saját fiókjára vonatkoznak. Ha elveszi a saját hozzáférését a Felhasználókhoz, nem tudja őket visszaállítani.",
+    "access_super_admin_note": "A szuperadminisztrátorok mindig teljes hozzáféréssel rendelkeznek minden szakaszhoz, ezért a szakaszbeállítások nem vonatkoznak rájuk. Az ügyfélfunkciók továbbra is igen.",
     "access_whole_group": "A csoport összes része",
     "access_not_set": "Nincs beállítva",
     "access_feature_inherit": "Alapértelmezett",

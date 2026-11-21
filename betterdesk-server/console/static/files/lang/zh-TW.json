@@ -2056,6 +2056,7 @@
     "access_user_note": "此處的設定優先於此人的群組。若未設定，則套用其群組中最高的設定，再來是其角色。",
     "access_group_note": "成員會取得其任一群組給予的最高等級，除非其本身的設定另有規定。",
     "access_self_warning": "這些設定套用於您自己的帳戶。若您移除自己對使用者的存取權，將無法自行改回。",
+    "access_super_admin_note": "超級管理員一律擁有所有區段的完整存取權，因此區段設定不適用於他們。用戶端功能仍然適用。",
     "access_whole_group": "此群組中的所有區段",
     "access_not_set": "未設定",
     "access_feature_inherit": "預設",

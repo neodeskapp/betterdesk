@@ -2040,6 +2040,7 @@
     "access_user_note": "Pengaturan di sini mengalahkan grup orang ini. Tanpa pengaturan, berlaku pengaturan tertinggi dari grupnya, lalu perannya.",
     "access_group_note": "Anggota mendapat tingkat tertinggi yang diberikan salah satu grupnya, kecuali pengaturannya sendiri menyatakan lain.",
     "access_self_warning": "Pengaturan ini berlaku untuk akun Anda sendiri. Jika Anda mencabut akses Anda ke Pengguna, Anda tidak bisa mengubahnya kembali sendiri.",
+    "access_super_admin_note": "Super admin selalu memiliki akses penuh ke setiap bagian, jadi pengaturan bagian tidak berlaku bagi mereka. Fitur klien tetap berlaku.",
     "access_whole_group": "Semua bagian dalam grup ini",
     "access_not_set": "Belum diatur",
     "access_feature_inherit": "Bawaan",

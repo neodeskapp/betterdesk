@@ -2108,6 +2108,7 @@
     "access_user_note": "Ustawienie tutaj ma pierwszeństwo przed grupami tej osoby. Bez niego obowiązuje najwyższe ustawienie jej grup, a potem jej rola.",
     "access_group_note": "Członkowie otrzymują najwyższy poziom nadany przez którąkolwiek z ich grup, chyba że ich własne ustawienie mówi inaczej.",
     "access_self_warning": "Te ustawienia dotyczą Twojego konta. Jeśli odbierzesz sobie dostęp do Użytkowników, nie cofniesz ich sam.",
+    "access_super_admin_note": "Superadministratorzy zawsze mają pełny dostęp do każdej sekcji, więc ustawienia sekcji ich nie dotyczą. Funkcje klienta nadal obowiązują.",
     "access_whole_group": "Wszystkie sekcje w tej grupie",
     "access_not_set": "Nie ustawiono",
     "access_feature_inherit": "Domyślnie",

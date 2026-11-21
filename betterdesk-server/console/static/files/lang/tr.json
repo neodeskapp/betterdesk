@@ -2040,6 +2040,7 @@
     "access_user_note": "Buradaki ayar bu kişinin gruplarından önce gelir. Ayar yoksa gruplarının en yüksek ayarı, sonra rolü geçerli olur.",
     "access_group_note": "Üyeler, kendi ayarları aksini söylemedikçe gruplarından herhangi birinin verdiği en yüksek seviyeyi alır.",
     "access_self_warning": "Bu ayarlar kendi hesabınız için geçerlidir. Kullanıcılar erişiminizi kaldırırsanız bunları kendiniz geri alamazsınız.",
+    "access_super_admin_note": "Süper yöneticiler her bölüme her zaman tam erişime sahiptir, bu yüzden bölüm ayarları onlara uygulanmaz. İstemci özellikleri yine uygulanır.",
     "access_whole_group": "Bu gruptaki tüm bölümler",
     "access_not_set": "Ayarlanmadı",
     "access_feature_inherit": "Varsayılan",

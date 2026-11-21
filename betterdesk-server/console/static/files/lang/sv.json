@@ -2040,6 +2040,7 @@
     "access_user_note": "En inställning här går före personens grupper. Utan en gäller den högsta inställningen i grupperna, sedan rollen.",
     "access_group_note": "Medlemmar får den högsta nivån som någon av deras grupper ger, om inte deras egen inställning säger något annat.",
     "access_self_warning": "De här inställningarna gäller ditt eget konto. Om du tar bort din åtkomst till Användare kan du inte ändra tillbaka dem själv.",
+    "access_super_admin_note": "Superadministratörer har alltid full åtkomst till alla avsnitt, så avsnittsinställningar gäller inte för dem. Klientfunktioner gäller fortfarande.",
     "access_whole_group": "Alla delar i den här gruppen",
     "access_not_set": "Inte angiven",
     "access_feature_inherit": "Standard",

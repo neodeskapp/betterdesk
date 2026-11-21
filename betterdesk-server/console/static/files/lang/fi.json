@@ -2040,6 +2040,7 @@
     "access_user_note": "Tässä tehty asetus ohittaa henkilön ryhmät. Ilman sitä käytetään hänen ryhmiensä korkeinta asetusta ja sitten roolia.",
     "access_group_note": "Jäsenet saavat korkeimman tason, jonka jokin heidän ryhmistään antaa, ellei heidän oma asetuksensa määrää muuta.",
     "access_self_warning": "Nämä asetukset koskevat omaa tiliäsi. Jos poistat oman pääsysi Käyttäjiin, et voi muuttaa niitä itse takaisin.",
+    "access_super_admin_note": "Pääylläpitäjillä on aina täysi pääsy kaikkiin osioihin, joten osioasetukset eivät koske heitä. Asiakasohjelman ominaisuudet koskevat edelleen.",
     "access_whole_group": "Kaikki tämän ryhmän osiot",
     "access_not_set": "Ei asetettu",
     "access_feature_inherit": "Oletus",

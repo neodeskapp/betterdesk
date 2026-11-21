@@ -2040,6 +2040,7 @@
     "access_user_note": "O setare de aici are prioritate față de grupurile acestei persoane. Fără ea se aplică cea mai înaltă setare a grupurilor, apoi rolul.",
     "access_group_note": "Membrii primesc cel mai înalt nivel dat de oricare dintre grupurile lor, cu excepția cazului în care setarea proprie spune altceva.",
     "access_self_warning": "Aceste setări se aplică propriului cont. Dacă vă eliminați accesul la Utilizatori, nu le mai puteți schimba înapoi singur.",
+    "access_super_admin_note": "Superadministratorii au întotdeauna acces complet la fiecare secțiune, așa că setările secțiunilor nu li se aplică. Funcțiile clientului se aplică în continuare.",
     "access_whole_group": "Toate secțiunile din acest grup",
     "access_not_set": "Nesetat",
     "access_feature_inherit": "Implicit",

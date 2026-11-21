@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -76,6 +77,17 @@ func (e jsonOrHash) check(t *testing.T, label, got string) {
 	if hex.EncodeToString(sum[:]) != e.SHA256 {
 		t.Fatalf("%s: JSON differs from what Node sent (hash mismatch):\n got %s", label, got)
 	}
+}
+
+// resolvedSection is a section of a resolved policy whose role reaches
+// write there.
+var resolvedSection = regexp.MustCompile(`\{"access":"[a-z]+","source":"[a-z]+","role_ceiling":"write"\}`)
+
+// superAdminPolicy is a policy Node resolved for a super admin role as the
+// console resolves it: no section row applies, every section is write from
+// the role (BUGS RV13, DECISIONS A92).
+func superAdminPolicy(policy string) string {
+	return resolvedSection.ReplaceAllString(policy, `{"access":"write","source":"role","role_ceiling":"write"}`)
 }
 
 // nodeAnswer is what a middleware did with a fake response.
@@ -769,7 +781,25 @@ func TestOraclePolicyMerge(t *testing.T) {
 			if err != nil {
 				t.Fatalf("case %d: %v", i, err)
 			}
-			c.Expected.User.check(t, "case "+jsJSON(t, i)+" user policy", jsJSON(t, policy))
+			want := c.Expected.User
+			switch {
+			case IsSuperAdminRole(role) && want.JSON == nil:
+				// RV13: Node's policy is kept as a hash only, so the
+				// console's cannot be held against it: every section must
+				// be write from the role (DECISIONS A92)
+				for _, entry := range Catalog {
+					if got, _ := policy.Sections.Get(entry.Key); got != (SectionAccess{Access: LevelWrite, Source: SourceRole, RoleCeiling: LevelWrite}) {
+						t.Fatalf("case %d, super admin, section %s: %+v", i, entry.Key, got)
+					}
+				}
+			case IsSuperAdminRole(role):
+				// RV13: no section row lowers a super admin (DECISIONS A92)
+				adjusted := superAdminPolicy(*want.JSON)
+				want.JSON = &adjusted
+				want.check(t, "case "+jsJSON(t, i)+" user policy", jsJSON(t, policy))
+			default:
+				want.check(t, "case "+jsJSON(t, i)+" user policy", jsJSON(t, policy))
+			}
 		}
 		for j, g := range c.Groups {
 			group, err := s.ResolveForGroup(ctx, g.GUID)

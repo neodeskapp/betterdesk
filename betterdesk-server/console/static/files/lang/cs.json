@@ -2034,6 +2034,7 @@
     "access_user_note": "Nastavení zde má přednost před skupinami této osoby. Bez něj platí nejvyšší nastavení jejích skupin, potom její role.",
     "access_group_note": "Členové dostanou nejvyšší úroveň, kterou dává některá z jejich skupin, pokud jejich vlastní nastavení neurčuje jinak.",
     "access_self_warning": "Tato nastavení platí pro váš vlastní účet. Pokud si odeberete přístup k Uživatelům, nebudete je moci sami vrátit.",
+    "access_super_admin_note": "Superadministrátoři mají vždy plný přístup ke všem sekcím, proto se na ně nastavení sekcí nevztahuje. Funkce klienta platí i nadále.",
     "access_whole_group": "Všechny části této skupiny",
     "access_not_set": "Nenastaveno",
     "access_feature_inherit": "Výchozí",

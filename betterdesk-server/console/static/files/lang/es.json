@@ -2034,6 +2034,7 @@
     "access_user_note": "Un ajuste aquí prevalece sobre los grupos de esta persona. Sin él, se aplica el ajuste más alto de sus grupos y después su rol.",
     "access_group_note": "Los miembros obtienen el nivel más alto que da cualquiera de sus grupos, salvo que su propio ajuste diga otra cosa.",
     "access_self_warning": "Estos ajustes se aplican a su propia cuenta. Si se quita el acceso a Usuarios, no podrá volver a cambiarlos usted mismo.",
+    "access_super_admin_note": "Los superadministradores siempre tienen acceso completo a todas las secciones, por lo que los ajustes de sección no se les aplican. Las funciones del cliente sí.",
     "access_whole_group": "Todas las secciones de este grupo",
     "access_not_set": "Sin definir",
     "access_feature_inherit": "Predeterminado",

@@ -2034,6 +2034,7 @@
     "access_user_note": "Een instelling hier gaat voor de groepen van deze persoon. Zonder instelling geldt de hoogste instelling van de groepen, daarna de rol.",
     "access_group_note": "Leden krijgen het hoogste niveau dat een van hun groepen geeft, tenzij hun eigen instelling iets anders zegt.",
     "access_self_warning": "Deze instellingen gelden voor uw eigen account. Als u uw toegang tot Gebruikers weghaalt, kunt u ze zelf niet terugzetten.",
+    "access_super_admin_note": "Superbeheerders hebben altijd volledige toegang tot elk onderdeel, dus onderdeelinstellingen gelden niet voor hen. Clientfuncties wel.",
     "access_whole_group": "Alle onderdelen in deze groep",
     "access_not_set": "Niet ingesteld",
     "access_feature_inherit": "Standaard",
