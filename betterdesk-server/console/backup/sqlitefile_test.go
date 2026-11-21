@@ -3,6 +3,7 @@ package backup
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"maps"
 	"os"
 	"path/filepath"
@@ -224,6 +225,39 @@ func withServerDatabase(t *testing.T, archive, data []byte) []byte {
 	return out
 }
 
+// indexOutOfStep is a SQLite file that opens and reads, and whose index
+// holds other values than its schema names: PRAGMA integrity_check lists
+// the rows missing from it.
+func indexOutOfStep(t *testing.T) []byte {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "out-of-step.sqlite3")
+	db, err := sql.Open("sqlite", "file:"+path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	db.SetMaxOpenConns(1)
+	for _, q := range []string{
+		`CREATE TABLE t (a TEXT, b TEXT)`,
+		`CREATE INDEX t_a ON t (a)`,
+		`INSERT INTO t VALUES ('1', 'one'), ('2', 'two')`,
+		`PRAGMA writable_schema = ON`,
+		`UPDATE sqlite_master SET sql = 'CREATE INDEX t_a ON t (b)' WHERE name = 't_a'`,
+		`PRAGMA writable_schema = OFF`,
+	} {
+		if _, err := db.Exec(q); err != nil {
+			t.Fatalf("%s: %v", q, err)
+		}
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
+}
+
 // RV18: a server database that is no SQLite file, or one that fails
 // PRAGMA integrity_check, is not left for the start.
 func TestRestoreRefusesAServerDatabaseThatFailsTheCheck(t *testing.T) {
@@ -251,7 +285,9 @@ func TestRestoreRefusesAServerDatabaseThatFailsTheCheck(t *testing.T) {
 	for i := pageSize; i < len(broken); i++ {
 		broken[i] = 0xA5
 	}
-	for name, data := range map[string][]byte{"not a database": []byte("not a database"), "empty": {}, "broken pages": broken} {
+	cases := map[string][]byte{"not a database": []byte("not a database"), "empty": {}, "broken pages": broken,
+		"index out of step": indexOutOfStep(t)}
+	for name, data := range cases {
 		t.Run(name, func(t *testing.T) {
 			dst := newInstall(t, "sqlite")
 			res, err := dst.service(t, "x").RestoreFullBackup(ctx, withServerDatabase(t, archive, data), RestoreOptions{GoDB: true})
