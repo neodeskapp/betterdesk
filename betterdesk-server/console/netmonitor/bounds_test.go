@@ -161,3 +161,44 @@ func TestAnHTTPCheckOfABodyWithoutEndEnds(t *testing.T) {
 		}
 	}
 }
+
+// lookupDeadline is a resolver that notes how long a lookup may take and
+// answers with a private address.
+type lookupDeadline struct {
+	mu    sync.Mutex
+	limit time.Duration
+}
+
+func (r *lookupDeadline) LookupIPAddr(ctx context.Context, _ string) ([]net.IPAddr, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.limit = -1
+	if deadline, ok := ctx.Deadline(); ok {
+		r.limit = time.Until(deadline)
+	}
+	return []net.IPAddr{{IP: net.ParseIP("10.1.2.3")}}, nil
+}
+
+// The guard's lookup of a name has no timeout of its own: it runs under
+// the deadline of the check, from a context without one (BUGS RV44).
+func TestALookupHasTheChecksDeadline(t *testing.T) {
+	resolver := &lookupDeadline{}
+	no := false
+	m := New(Options{Store: storetest.Migrated(t), Resolver: resolver, Windows: &no,
+		Dialer: dialerFunc(func(_ context.Context, network, _ string) (net.Conn, error) {
+			return nil, &net.OpError{Op: "dial", Net: network, Err: os.NewSyscallError("connect", syscall.ECONNREFUSED)}
+		}),
+		Ping: func(context.Context, string, ...string) ([]byte, int, error) { return nil, 1, nil },
+	})
+	ctx := context.Background()
+	for name, check := range map[string]func(){
+		"ping": func() { m.PingHost(ctx, "relay.example", 5000) },
+		"tcp":  func() { m.CheckTCPPort(ctx, "relay.example", 80, 5000) },
+		"http": func() { m.CheckHTTP(ctx, "http://relay.example/", 5000) },
+	} {
+		check()
+		if resolver.limit < 4*time.Second || resolver.limit > 8*time.Second {
+			t.Errorf("%s: the lookup may take %s, want the timeout of 5 s and 3 s more", name, resolver.limit)
+		}
+	}
+}
