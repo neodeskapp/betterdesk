@@ -99,7 +99,9 @@ export const Command = v.looseObject({
 	command_type: Str,
 	payload: Str,
 	status: Str,
+	/** Only GET /api/automation/commands/{id} carries the result; the list says whether there is one */
 	result: NullableText,
+	has_result: Bool,
 	created_by: Str,
 	created_at: Str,
 	executed_at: Str,

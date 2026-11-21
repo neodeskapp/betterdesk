@@ -22,7 +22,17 @@ beforeEach(() => {
 	vi.stubGlobal('fetch', async (input: string) => {
 		const url = new URL(input, location.origin);
 		requests.push(url.pathname);
-		const data = url.pathname === '/api/automation/rules' ? { rules: [], total: 0 } : {};
+		const data =
+			url.pathname === '/api/automation/rules'
+				? { rules: [], total: 0 }
+				: url.pathname === '/api/automation/commands'
+					? {
+							commands: [
+								{ id: 1, device_id: 'd1', command_type: 'shell', status: 'completed', has_result: true },
+								{ id: 2, device_id: 'd2', command_type: 'shell', status: 'pending', has_result: false }
+							]
+						}
+					: {};
 		return {
 			ok: true,
 			status: 200,
@@ -93,4 +103,13 @@ describe('alerts and automation page', () => {
 			expect(!!screen.queryByRole('button', { name: 'automation.create_rule' })).toBe(shown);
 		}
 	);
+
+	test('the command list names a result by has_result (the list carries no result text)', async () => {
+		signIn('server_admin', ['server.config', 'device.view', 'audit.view']);
+		pageState.url = new URL('http://localhost/app/automation?tab=commands');
+		render(Page);
+		expect(await screen.findByRole('button', { name: 'automation.view_result' })).toBeVisible();
+		expect(screen.getByRole('button', { name: 'automation.details' })).toBeVisible();
+		pageState.url = new URL('http://localhost/app/automation');
+	});
 });

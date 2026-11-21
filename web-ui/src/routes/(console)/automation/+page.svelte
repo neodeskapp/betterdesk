@@ -425,7 +425,7 @@
 		label={labelFor(t, 'status', c.status)}
 	/>{/snippet}
 {#snippet commandActionsCell(c: Command)}<Button size="sm" onclick={() => (openCommand = c)}
-		>{c.result ? t('automation.view_result') : t('automation.details')}</Button
+		>{c.has_result || c.result ? t('automation.view_result') : t('automation.details')}</Button
 	>{/snippet}
 
 {#if !allowed}
