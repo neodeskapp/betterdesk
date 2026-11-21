@@ -368,12 +368,12 @@ func answersLikeListenerForLowerRoles(t *testing.T, f *internalFixture) {
 			{method: "GET", path: "/api/health", wantStatus: 200},
 		}},
 		{testOperatorKey, Identity{Username: "apikey:operator-key", Role: auth.RoleOperator}, []sampleCall{
-			{method: "GET", path: "/api/enrollment/pending", wantStatus: 200},
+			{method: "GET", path: "/api/enrollment/pending", wantStatus: 403},
 			{method: "GET", path: "/api/tokens", wantStatus: 403},
 			{method: "POST", path: "/api/peers/PEERBBB2/ban", body: `{"reason":"r"}`, wantStatus: 403},
 			{method: "PATCH", path: "/api/peers/PEERBBB2", body: `{"note":"n2"}`, wantStatus: 200},
 			{method: "GET", path: "/api/config/k", wantStatus: 403},
-			{method: "GET", path: "/api/pairing/codes", wantStatus: 200},
+			{method: "GET", path: "/api/pairing/codes", wantStatus: 403},
 		}},
 	}
 	for _, role := range roles {

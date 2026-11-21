@@ -378,15 +378,15 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/peers/{id}/connection-sessions", s.requirePermission(auth.PermDeviceView, s.handlePeerConnectionSessions))
 	mux.HandleFunc("GET /api/peers/{id}/telemetry", s.requirePermission(auth.PermDeviceView, s.scopedDevice(s.handleGetPeerTelemetry)))
 	mux.HandleFunc("POST /api/peers/{id}/telemetry/refresh", s.requirePermission(auth.PermDeviceEdit, s.scopedDevice(s.handleRefreshPeerHardware)))
-	mux.HandleFunc("POST /api/peers/{id}/telemetry/command", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleQueuePeerTelemetryCommand)))
+	mux.HandleFunc("POST /api/peers/{id}/telemetry/command", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleQueuePeerTelemetryCommand)))
 	mux.HandleFunc("GET /api/peers/{id}/linked", s.requirePermission(auth.PermDeviceView, s.scopedDevice(s.handleLinkedPeers)))
-	mux.HandleFunc("POST /api/peers/{id}/wol", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleWakeOnLan)))
-	mux.HandleFunc("GET /api/peers/{id}/access-policy", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleGetAccessPolicy)))
+	mux.HandleFunc("POST /api/peers/{id}/wol", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleWakeOnLan)))
+	mux.HandleFunc("GET /api/peers/{id}/access-policy", s.requirePermission(auth.PermDeviceView, s.scopedDevice(s.handleGetAccessPolicy)))
 	mux.HandleFunc("PUT /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.scopedDevice(s.handleSaveAccessPolicy)))
 	mux.HandleFunc("DELETE /api/peers/{id}/access-policy", s.requireRole(auth.RoleAdmin, s.scopedDevice(s.handleDeleteAccessPolicy)))
 	mux.HandleFunc("GET /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceView, s.handleGetConnectionMode))
 	mux.HandleFunc("POST /api/peers/{id}/connection-mode", s.requirePermission(auth.PermDeviceConnectionMode, s.handleSetConnectionMode))
-	mux.HandleFunc("POST /api/peers/{id}/session-grant", s.requireRole(auth.RoleOperator, s.handleIssueSupportSessionGrant))
+	mux.HandleFunc("POST /api/peers/{id}/session-grant", s.requirePermission(auth.PermDeviceConnect, s.handleIssueSupportSessionGrant))
 	mux.HandleFunc("GET /api/peers/{id}/policy", s.requirePermission(auth.PermDeviceView, s.scopedDevice(s.handleGetPeerPolicy)))
 
 	// Manually configured RDP/VNC targets.
@@ -629,9 +629,9 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/billing/currencies", s.requirePermission(auth.PermBillingView, s.handleListBillingCurrencies))
 	mux.HandleFunc("PUT /api/billing/currencies/{code}", s.requirePermission(auth.PermBillingManage, s.handleUpsertBillingCurrency))
 
-	// Enrollment — operator approval (admin/operator)
-	mux.HandleFunc("GET /api/enrollment/pending", s.requireRole(auth.RoleOperator, s.handleListPendingDevices))
-	mux.HandleFunc("GET /api/enrollment/history", s.requireRole(auth.RoleOperator, s.handleListEnrollmentHistory))
+	// Enrollment: the pending and history lists and the decisions ask enrollment.approve
+	mux.HandleFunc("GET /api/enrollment/pending", s.requirePermission(auth.PermEnrollmentApprove, s.handleListPendingDevices))
+	mux.HandleFunc("GET /api/enrollment/history", s.requirePermission(auth.PermEnrollmentApprove, s.handleListEnrollmentHistory))
 	mux.HandleFunc("POST /api/enrollment/approve/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleApproveDevice))
 	mux.HandleFunc("POST /api/enrollment/reject/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleRejectDevice))
 	mux.HandleFunc("POST /api/enrollment/clear-rejection/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleClearEnrollmentRejection))
@@ -664,12 +664,12 @@ func (s *Server) routes() *http.ServeMux {
 
 	// Short-code pairing (host + 6 characters).
 	// Redeem/preview are public because the client has no credentials yet; they are
-	// rate-limited and a valid code is required. Minting and revoking require an operator.
+	// rate-limited and a valid code is required. Minting, listing and revoking ask enrollment.approve.
 	mux.HandleFunc("POST /api/pairing/redeem", s.rateLimitPublic(s.pairingLimiter, s.handlePairingRedeem))
 	mux.HandleFunc("POST /api/pairing/config", s.rateLimitPublic(s.pairingLimiter, s.handlePairingConfigPreview))
-	mux.HandleFunc("POST /api/pairing/codes", s.requireRole(auth.RoleOperator, s.handleCreatePairingCode))
-	mux.HandleFunc("GET /api/pairing/codes", s.requireRole(auth.RoleOperator, s.handleListPairingCodes))
-	mux.HandleFunc("DELETE /api/pairing/codes/{id}", s.requireRole(auth.RoleOperator, s.handleDeletePairingCode))
+	mux.HandleFunc("POST /api/pairing/codes", s.requirePermission(auth.PermEnrollmentApprove, s.handleCreatePairingCode))
+	mux.HandleFunc("GET /api/pairing/codes", s.requirePermission(auth.PermEnrollmentApprove, s.handleListPairingCodes))
+	mux.HandleFunc("DELETE /api/pairing/codes/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleDeletePairingCode))
 
 	// CDAP device management (requires CDAP gateway to be enabled)
 	mux.HandleFunc("GET /api/cdap/status", s.requirePermission(auth.PermCDAPView, s.handleCDAPStatus))
@@ -691,14 +691,14 @@ func (s *Server) routes() *http.ServeMux {
 	// CDAP remote desktop WebSocket (admin only)
 	mux.HandleFunc("GET /api/cdap/devices/{id}/desktop", s.requireRole(auth.RoleAdmin, s.scopedDevice(s.handleCDAPDesktop)))
 
-	// CDAP video stream WebSocket (operator+)
-	mux.HandleFunc("GET /api/cdap/devices/{id}/video", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleCDAPVideo)))
+	// CDAP video stream WebSocket (device.connect)
+	mux.HandleFunc("GET /api/cdap/devices/{id}/video", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleCDAPVideo)))
 
 	// CDAP file browser WebSocket (admin only)
 	mux.HandleFunc("GET /api/cdap/devices/{id}/files", s.requireRole(auth.RoleAdmin, s.scopedDevice(s.handleCDAPFileBrowser)))
 
-	// CDAP audio stream WebSocket (operator+)
-	mux.HandleFunc("GET /api/cdap/devices/{id}/audio", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleCDAPAudio)))
+	// CDAP audio stream WebSocket (device.connect)
+	mux.HandleFunc("GET /api/cdap/devices/{id}/audio", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleCDAPAudio)))
 
 	// MeshCentral compatibility REST
 	mux.HandleFunc("GET /api/mesh/server-id", s.requirePermission(auth.PermServerConfig, s.handleMeshServerID))
@@ -709,7 +709,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/mesh/devices/{id}/desktop", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleMeshDesktopTunnel)))
 	mux.HandleFunc("POST /api/mesh/devices/{id}/terminal", s.requirePermission(auth.PermMeshTerminal, s.scopedDevice(s.handleMeshTerminalTunnel)))
 	mux.HandleFunc("POST /api/mesh/devices/{id}/files", s.requirePermission(auth.PermMeshFiles, s.scopedDevice(s.handleMeshFilesTunnel)))
-	mux.HandleFunc("POST /api/mesh/devices/{id}/share", s.requireRole(auth.RoleOperator, s.scopedDevice(s.handleMeshShareCreate)))
+	mux.HandleFunc("POST /api/mesh/devices/{id}/share", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleMeshShareCreate)))
 	mux.HandleFunc("GET /api/mesh/share/validate", s.handleMeshShareValidate)
 
 	// Guest Access Links (temporary RdClient allowlist links)
@@ -738,9 +738,9 @@ func (s *Server) routes() *http.ServeMux {
 
 	// BetterDesk desktop client management WebSocket (no API key — device auth)
 	mux.HandleFunc("GET /ws/bd-mgmt/{device_id}", s.handleBdMgmt)
-	// Management REST endpoints (admin/operator only)
+	// Management REST endpoints: status asks device.view, send device.connect
 	mux.HandleFunc("GET /api/bd/mgmt/{device_id}/status", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtStatus))
-	mux.HandleFunc("POST /api/bd/mgmt/{device_id}/send", s.requireRole(auth.RoleOperator, s.handleBdMgmtSend))
+	mux.HandleFunc("POST /api/bd/mgmt/{device_id}/send", s.requirePermission(auth.PermDeviceConnect, s.handleBdMgmtSend))
 	mux.HandleFunc("GET /api/bd/mgmt/connected", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtConnected))
 
 	// Prometheus metrics. Gated via H-03 — see handleMetrics for the actual
