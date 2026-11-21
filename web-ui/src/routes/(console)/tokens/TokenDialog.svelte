@@ -28,11 +28,13 @@
 	} = $props();
 
 	const editing = $derived(!!token);
+	/** An unlimited token (0) stays unlimited: the field keeps 0 and says what it means */
+	const unlimited = $derived(!!token && !token.max_uses);
 
 	const form = createForm({
 		initial: untrack(() => ({
 			name: token?.name ?? '',
-			max_uses: String(token ? token.max_uses || 1 : 1),
+			max_uses: String(token ? token.max_uses : 1),
 			expires_in: 0 as number,
 			note: token?.note ?? ''
 		})),
@@ -73,14 +75,14 @@
 		</Field>
 		<Field
 			label={t('tokens.max_uses')}
-			hint={editing ? t('tokens.max_uses_edit_hint') : t('tokens.max_uses_hint')}
+			hint={editing && !unlimited ? t('tokens.max_uses_edit_hint') : t('tokens.max_uses_hint')}
 			width="short"
 		>
 			{#snippet children(f)}
 				<Input
 					{...f}
 					type="number"
-					min={editing ? 1 : 0}
+					min={editing && !unlimited ? 1 : 0}
 					inputmode="numeric"
 					bind:value={form.values.max_uses}
 				/>
