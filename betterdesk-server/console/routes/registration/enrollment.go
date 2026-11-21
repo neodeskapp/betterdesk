@@ -35,8 +35,10 @@ func (h *handlers) enrollmentHistory(w http.ResponseWriter, r *http.Request) {
 // body {display_name, sync_mode, tags, folder_id, group_guids}: the API
 // server approves, and when it says it did, the device goes into the
 // folder and the device groups and the approval is audited. The answer is
-// the API client's. A sync_mode that is no text, and group_guids that are
-// no list of text, answer 400 before the API server is asked.
+// the API client's, or 500 {success: false, error, data} when the folder
+// or the device groups could not be assigned. A sync_mode that is no
+// text, and group_guids that are no list of text, answer 400 before the
+// API server is asked.
 func (h *handlers) enrollmentApprove(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.PathValue("id")
 	body := jsreq.Body(r)
@@ -48,12 +50,21 @@ func (h *handlers) enrollmentApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result := h.d.GoAPI.ApproveEnrollment(r.Context(), deviceID, field("display_name"), syncMode, field("tags"))
+	var unassigned []string
 	if result.Bool("success") {
-		h.assignFolder(r, deviceID, field("folder_id"), "Assign device to folder error:")
+		if err := h.assignFolder(r, deviceID, field("folder_id")); err != nil {
+			h.log.Error("Assign device to folder error:", err)
+			unassigned = append(unassigned, "folder")
+		}
 		if err := h.applyGroups(r, deviceID, groupGUIDs); err != nil {
 			h.log.Error("Assign device groups on enrollment approve:", err)
+			unassigned = append(unassigned, "device groups")
 		}
 		h.audit(r, "enrollment_approved", enrollmentApprovalDetails(deviceID, mode, guids))
+	}
+	if len(unassigned) > 0 {
+		kit.JSON(w, r, http.StatusInternalServerError, goapi.NewObject("success", false, "error", unassignedMessage(unassigned), "data", result.Get("data")))
+		return
 	}
 	kit.JSON(w, r, http.StatusOK, result)
 }

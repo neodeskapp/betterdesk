@@ -228,11 +228,16 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var unassigned []string
 	if deviceID := reg.Get("device_id"); goapi.Truthy(deviceID) {
 		device := jsreq.String(deviceID)
-		h.assignFolder(r, device, jsreq.Prop(body, "folder_id"), "Assign folder on LAN approve:")
+		if err := h.assignFolder(r, device, jsreq.Prop(body, "folder_id")); err != nil {
+			h.log.Error("Assign folder on LAN approve:", err)
+			unassigned = append(unassigned, "folder")
+		}
 		if err := h.applyGroups(r, device, jsreq.Prop(body, "group_guids")); err != nil {
 			h.log.Error("Assign groups on LAN approve:", err)
+			unassigned = append(unassigned, "device groups")
 		}
 		h.applyPeerFields(r, device, jsbind.Trim(displayName), jsbind.Trim(tags))
 	}
@@ -250,7 +255,17 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 		"timestamp", float64(h.now().UnixMilli()),
 	))
 	h.audit(r, "registration_approved", "Approved registration for device "+jsreq.String(reg.Get("device_id"))+" ("+jsreq.String(reg.Get("hostname"))+")")
+	if len(unassigned) > 0 {
+		kit.JSON(w, r, http.StatusInternalServerError, goapi.NewObject("success", false, "error", unassignedMessage(unassigned), "data", nullable(updated)))
+		return
+	}
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "data", nullable(updated)))
+}
+
+// unassignedMessage is the answer to an approval that was stored while
+// the folder or the device groups (parts) could not be assigned.
+func unassignedMessage(parts []string) string {
+	return "Approved, but the " + strings.Join(parts, " and ") + " could not be assigned"
 }
 
 // mayApproveFor reports whether the approver may approve a registration
@@ -339,15 +354,13 @@ func splitHost(s string) (host, port string) {
 }
 
 // assignFolder puts the device into the folder parseInt(folderID, 10)
-// names when that is a number above 0; a failure is logged.
-func (h *handlers) assignFolder(r *http.Request, deviceID string, folderID any, what string) {
+// names when that is a number above 0, and returns why it could not.
+func (h *handlers) assignFolder(r *http.Request, deviceID string, folderID any) error {
 	n, ok := jsreq.ParseInt(folderID, 10)
 	if !ok || !(n > 0) {
-		return
+		return nil
 	}
-	if err := h.d.DeviceGroups.AssignDeviceToFolder(r.Context(), jsbind.String(deviceID), jsbind.Number(n)); err != nil {
-		h.log.Error(what, err)
-	}
+	return h.d.DeviceGroups.AssignDeviceToFolder(r.Context(), jsbind.String(deviceID), jsbind.Number(n))
 }
 
 // applyPeerFields gives a device the API server knows the display name

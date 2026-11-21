@@ -1694,10 +1694,11 @@
   "step": "509 folder that does not exist PUT /api/registrations/{a}/approve",
   "bugs": [
    "RG4",
-   "RV6"
+   "RV6",
+   "RV31"
   ],
-  "status": 200,
-  "answer": "{\"success\":true,\"data\":{\"id\":35,\"device_id\":\"APPR4\",\"hostname\":\"approve-4\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:04\",\"rejected_reason\":\"\",\"access_token\":\"dccd3f589b93bbaa250c1162b53e749f4b0dee119acd204bb57c63b8c6ab0c20\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:04\",\"updated_at\":\"2026-11-19 01:19:04\"}}",
+  "status": 500,
+  "answer": "{\"success\":false,\"error\":\"Approved, but the folder could not be assigned\",\"data\":{\"id\":35,\"device_id\":\"APPR4\",\"hostname\":\"approve-4\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-21 05:05:12\",\"rejected_reason\":\"\",\"access_token\":\"bc71d3fbf17d067a04240f0d67dea4675ff875fdea158f709df8fedc074eccf4\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-21 05:05:12\",\"updated_at\":\"2026-11-21 05:05:12\"}}",
   "calls": [
    {
     "method": "GET",
@@ -1804,10 +1805,11 @@
   "step": "515 group without text PUT /api/registrations/{a}/approve",
   "bugs": [
    "RG4",
-   "RV6"
+   "RV6",
+   "RV31"
   ],
-  "status": 200,
-  "answer": "{\"success\":true,\"data\":{\"id\":38,\"device_id\":\"APPR7\",\"hostname\":\"approve-7\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-19 01:19:05\",\"rejected_reason\":\"\",\"access_token\":\"3ec2d70964dc6b13b24ff4736862e8702bce5b83ada49a5991a8f65fbf454ef5\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-19 01:19:05\",\"updated_at\":\"2026-11-19 01:19:05\"}}",
+  "status": 500,
+  "answer": "{\"success\":false,\"error\":\"Approved, but the device groups could not be assigned\",\"data\":{\"id\":38,\"device_id\":\"APPR7\",\"hostname\":\"approve-7\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2026-11-21 05:05:12\",\"rejected_reason\":\"\",\"access_token\":\"32d5d2903f8b35e24d7fef37404174f09ca427c5d101739818a2108e96cdb4da\",\"console_url\":\"http://127.0.0.1:5000\",\"server_address\":\"127.0.0.1:21116\",\"server_key\":\"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=\",\"created_at\":\"2026-11-21 05:05:12\",\"updated_at\":\"2026-11-21 05:05:12\"}}",
   "calls": [
    {
     "method": "GET",

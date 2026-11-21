@@ -156,3 +156,42 @@ func TestPendingRegistrationsAreCapped(t *testing.T) {
 		}
 	})
 }
+
+// An approval whose folder cannot be assigned is stored and audited, but
+// answered as a failure that says what is missing, for a LAN registration
+// and for the API server's enrollment queue alike (BUGS RV31).
+func TestApprovalSaysWhenTheFolderFailed(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI().On("POST /api/enrollment/approve/DEV-E", http.StatusOK, `{"success":true,"device_id":"DEV-E"}`)
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		ctx := context.Background()
+		for _, stmt := range []string{
+			"INSERT INTO pending_registrations (id, device_id, status) VALUES (1, 'DEV-F', 'pending')",
+			"INSERT INTO folders (id, name) VALUES (1, 'Lab')",
+			"DROP TABLE device_folder_assignments",
+		} {
+			if _, err := db.Exec(ctx, stmt); err != nil {
+				t.Fatalf("%s: %v", stmt, err)
+			}
+		}
+		admin := w.As("admin")
+		const want = `"success":false,"error":"Approved, but the folder could not be assigned"`
+		got := admin.Do(http.MethodPut, "/api/registrations/1/approve", `{"folder_id":1}`)
+		if got.Status != http.StatusInternalServerError || !strings.Contains(got.Body, want) || !strings.Contains(got.Body, `"status":"approved"`) {
+			t.Errorf("LAN approval: %d %s", got.Status, got.Body)
+		}
+		got = admin.Do(http.MethodPost, "/api/enrollment/approve/DEV-E", `{"folder_id":1}`)
+		if got.Status != http.StatusInternalServerError || !strings.Contains(got.Body, want) {
+			t.Errorf("enrollment approval: %d %s", got.Status, got.Body)
+		}
+		var approved int
+		for _, row := range w.AuditRows() {
+			if strings.HasPrefix(row, "registration_approved|") || strings.HasPrefix(row, "enrollment_approved|") {
+				approved++
+			}
+		}
+		if approved != 2 {
+			t.Errorf("%d approvals audited, want 2: %q", approved, w.AuditRows())
+		}
+	})
+}
