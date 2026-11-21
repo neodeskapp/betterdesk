@@ -180,3 +180,60 @@ func TestAdminRefusesToListenWithoutServerPassword(t *testing.T) {
 		t.Fatal("the admin interface listened without a password to ask for")
 	}
 }
+
+// Commands sent in the same write as the password are run: the password
+// prompt and the command loop read from one buffer.
+func TestAdminRunsCommandsSentWithThePassword(t *testing.T) {
+	_, port := setupTestAdmin(t)
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", port), 2*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+
+	fmt.Fprintf(conn, "%s\nstatus\nquit\n", testAdminPassword)
+	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	var out strings.Builder
+	buf := make([]byte, 4096)
+	for {
+		n, err := conn.Read(buf)
+		out.Write(buf[:n])
+		if err != nil {
+			break
+		}
+	}
+	if !strings.Contains(out.String(), "DB Peers") || !strings.Contains(out.String(), "Bye!") {
+		t.Fatalf("status and quit sent with the password were not run, got: %q", out.String())
+	}
+}
+
+// Stop closes the connections that are still open and waits for them.
+func TestAdminStopClosesOpenConnections(t *testing.T) {
+	srv, port := setupTestAdmin(t)
+	conn := connectAdmin(t, port)
+	sendCommand(conn, "status")
+
+	stopped := make(chan struct{})
+	go func() {
+		srv.Stop()
+		close(stopped)
+	}()
+	select {
+	case <-stopped:
+	case <-time.After(3 * time.Second):
+		t.Fatal("Stop did not return")
+	}
+
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	buf := make([]byte, 4096)
+	for {
+		_, err := conn.Read(buf)
+		if err == nil {
+			continue
+		}
+		if ne, ok := err.(net.Error); ok && ne.Timeout() {
+			t.Fatal("the connection is still open after Stop")
+		}
+		return
+	}
+}

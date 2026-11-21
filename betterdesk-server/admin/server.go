@@ -31,8 +31,11 @@ type Server struct {
 	listener      net.Listener
 	ctx           context.Context
 	cancel        context.CancelFunc
-	wg            sync.WaitGroup
+	wg            sync.WaitGroup // the accept loop and every open connection
 	version       string
+
+	connsMu sync.Mutex
+	conns   map[net.Conn]struct{} // open connections, closed by Stop
 }
 
 // New creates a new admin TCP server.
@@ -104,6 +107,11 @@ func (s *Server) Stop() {
 	log.Printf("[admin] Shutting down...")
 	s.cancel()
 	s.listener.Close()
+	s.connsMu.Lock()
+	for conn := range s.conns {
+		conn.Close()
+	}
+	s.connsMu.Unlock()
 	s.wg.Wait()
 	log.Printf("[admin] Stopped")
 }
@@ -122,21 +130,52 @@ func (s *Server) serve() {
 				continue
 			}
 		}
+		if !s.track(conn) {
+			conn.Close()
+			return
+		}
 		go s.handleConn(conn)
 	}
 }
 
+// track counts conn as open until handleConn returns. It refuses a
+// connection accepted while Stop runs.
+func (s *Server) track(conn net.Conn) bool {
+	s.connsMu.Lock()
+	defer s.connsMu.Unlock()
+	if s.ctx.Err() != nil {
+		return false
+	}
+	if s.conns == nil {
+		s.conns = make(map[net.Conn]struct{})
+	}
+	s.conns[conn] = struct{}{}
+	s.wg.Add(1)
+	return true
+}
+
+func (s *Server) untrack(conn net.Conn) {
+	s.connsMu.Lock()
+	delete(s.conns, conn)
+	s.connsMu.Unlock()
+	s.wg.Done()
+}
+
 func (s *Server) handleConn(conn net.Conn) {
+	defer s.untrack(conn)
 	defer conn.Close()
 
 	remote := conn.RemoteAddr().String()
 	log.Printf("[admin] Client connected: %s", remote)
 
+	// One scanner for the whole connection: commands sent in the same write
+	// as the password are already in its buffer.
+	scanner := bufio.NewScanner(conn)
+
 	// Password authentication (if configured)
 	if s.adminPassword != "" {
 		fmt.Fprint(conn, "Password: ")
 		conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-		scanner := bufio.NewScanner(conn)
 		if !scanner.Scan() {
 			log.Printf("[admin] Client %s disconnected during auth", remote)
 			return
@@ -154,7 +193,6 @@ func (s *Server) handleConn(conn net.Conn) {
 	fmt.Fprintf(conn, "BetterDesk Admin Console %s\r\n", s.version)
 	fmt.Fprintf(conn, "Type 'help' for available commands.\r\n\r\n")
 
-	scanner := bufio.NewScanner(conn)
 	for {
 		fmt.Fprint(conn, "> ")
 		conn.SetReadDeadline(time.Now().Add(5 * time.Minute))
