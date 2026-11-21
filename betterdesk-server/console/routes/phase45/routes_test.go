@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -81,6 +82,88 @@ func TestActivate(t *testing.T) {
 			t.Errorf("audit log:\n%s", audit)
 		}
 	})
+}
+
+// RV97: an account that holds enrollment.approve through an override but
+// has a limited device scope renames only a device it may see, and puts a
+// device only into a folder that is open to it. An agent that waits for
+// approval is in nobody's scope yet.
+func TestActivateKeepsToTheDeviceScope(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI().
+			On("GET /api/enrollment/pending", 200, `{"devices":[{"device_id":"agent-new"}],"count":1}`).
+			On("POST /api/enrollment/approve/agent-new", 200, `{"approved":true}`).
+			On("GET /api/peers/agent-closed", 200, `{"id":"agent-closed"}`).
+			On("GET /api/peers/agent-open", 200, `{"id":"agent-open"}`).
+			On("PATCH /api/peers/agent-closed", 200, `{"id":"agent-closed"}`).
+			On("PATCH /api/peers/agent-open", 200, `{"id":"agent-open"}`)
+		langs := func(cfg *config.Config) { cfg.LangDir = filepath.Join("..", "..", "static", "files", "lang") }
+		w := routetest.New(t, routetest.Options{DB: db, API: api, Config: langs,
+			Roles: routetest.Overrides{"operator": {"enrollment.approve": true}}})
+		admin, operator := w.As("admin"), w.As("operator")
+		for _, folder := range []string{`{"name":"Closed","allowed_users":["e2e_admin"]}`, `{"name":"Mine","allowed_users":["e2e_operator"]}`} {
+			if res := admin.Do("POST", "/api/folders", folder); res.Status != http.StatusOK {
+				t.Fatalf("folder %s: %d %s", folder, res.Status, res.Body)
+			}
+		}
+		if res := admin.Do("POST", "/api/folders/1/devices", `{"deviceIds":["agent-closed"]}`); res.Status != http.StatusOK {
+			t.Fatalf("assign: %d %s", res.Status, res.Body)
+		}
+		api.Calls()
+		activate := func(body string) routetest.Answer { return operator.Do("POST", "/api/agent-pairing/activate", body) }
+		noDevice := `{"success":false,"error":"You don't have access to this device."}`
+		noFolder := `{"success":false,"error":"You don't have permission to do this. Ask an administrator."}`
+
+		if res := activate(`{"device_id":"agent-closed","display_name":"Mine now"}`); res.Status != http.StatusForbidden || res.Body != noDevice {
+			t.Errorf("rename a device out of scope: %d %s", res.Status, res.Body)
+		}
+		if res := activate(`{"device_id":"agent-open","display_name":"Desk","folder_id":1}`); res.Status != http.StatusForbidden || res.Body != noFolder {
+			t.Errorf("move into a closed folder: %d %s", res.Status, res.Body)
+		}
+		if res := activate(`{"device_id":"agent-new","display_name":"Desk","folder_id":"1"}`); res.Status != http.StatusForbidden || res.Body != noFolder {
+			t.Errorf("approve into a closed folder: %d %s", res.Status, res.Body)
+		}
+		for _, call := range api.Calls() {
+			if strings.HasPrefix(call, "PATCH") || strings.HasPrefix(call, "POST") {
+				t.Errorf("a refused activation reached the API server: %s", call)
+			}
+		}
+		if got := rowsOf(t, db, "SELECT device_id FROM device_folder_assignments ORDER BY device_id"); got != "agent-closed" {
+			t.Errorf("folder assignments after the refusals: %q", got)
+		}
+
+		if res := activate(`{"device_id":"agent-new","display_name":"Desk","folder_id":2}`); res.Status != http.StatusOK {
+			t.Errorf("approve into its own folder: %d %s", res.Status, res.Body)
+		}
+		if res := activate(`{"device_id":"agent-open","display_name":"Desk"}`); res.Status != http.StatusOK {
+			t.Errorf("rename a device in scope: %d %s", res.Status, res.Body)
+		}
+		if res := admin.Do("POST", "/api/agent-pairing/activate", `{"device_id":"agent-closed","folder_id":1}`); res.Status != http.StatusOK {
+			t.Errorf("the admin: %d %s", res.Status, res.Body)
+		}
+		if got := rowsOf(t, db, "SELECT device_id || ':' || folder_id FROM device_folder_assignments ORDER BY device_id"); got != "agent-closed:1,agent-new:2" {
+			t.Errorf("folder assignments: %q", got)
+		}
+	})
+}
+
+// rowsOf reads one text column per row, joined with commas.
+func rowsOf(t *testing.T, db *store.DB, query string) string {
+	t.Helper()
+	res, err := db.Query(context.Background(), query)
+	if err != nil {
+		t.Fatalf("%s: %v", query, err)
+	}
+	defer res.Close()
+	var out []string
+	for res.Next() {
+		var s string
+		if err := res.Scan(&s); err != nil {
+			t.Fatal(err)
+		}
+		out = append(out, s)
+	}
+	return strings.Join(out, ",")
 }
 
 func itoa(n int64) string {

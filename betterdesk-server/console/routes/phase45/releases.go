@@ -6,8 +6,10 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/agentreleases"
 	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -71,8 +73,9 @@ type activated struct {
 // activate answers POST /api/agent-pairing/activate {device_id,
 // display_name, folder_id}: a generic agent that waits for approval is
 // approved under the name, one that is known already gets the name, and
-// the device goes into the folder when one is named. A failure of the API
-// server is answered with its own answer, any other with 502.
+// the device goes into the folder when one is named. A known device must
+// be in the account's device scope and the folder open to it. A failure
+// of the API server is answered with its own answer, any other with 502.
 func (h *handlers) activate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deviceID, err1 := textOr(field(r, "device_id"), "")
@@ -109,6 +112,9 @@ func (h *handlers) activate(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+	if !waiting && !h.mayRename(w, r, deviceID) || folderID > 0 && !h.mayFill(w, r, folderID) {
+		return
+	}
 	var result *goapi.Object
 	if waiting {
 		result = h.d.GoAPI.ApproveEnrollment(ctx, deviceID, displayName, "standard", "")
@@ -130,6 +136,54 @@ func (h *handlers) activate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, activated{Success: true, DeviceID: deviceID})
+}
+
+// mayRename reports whether the account may change a known device: one
+// its device scope lets it see. An id no device has passes; the API
+// server refuses it. A refusal is answered here.
+func (h *handlers) mayRename(w http.ResponseWriter, r *http.Request, deviceID string) bool {
+	ctx := r.Context()
+	user := kit.User(r)
+	scope, err := h.d.DeviceGroups.DeviceScopeForUser(ctx, user, nil)
+	if err == nil && scope == nil {
+		return true
+	}
+	allowed := true
+	if err == nil {
+		if device := h.d.Backend.GetDeviceByID(ctx, deviceID, true); device != nil {
+			allowed, err = h.d.DeviceGroups.UserCanAccessDevice(ctx, user, device)
+		}
+	}
+	if err != nil {
+		h.d.Log.Error("Agent activation scope error:", err.Error())
+		kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+		return false
+	}
+	if !allowed {
+		kit.Fail(w, r, http.StatusForbidden, kit.T(r, "errors.forbidden", nil))
+	}
+	return allowed
+}
+
+// mayFill reports whether the account may put a device into the folder:
+// one that is open to it (access.GroupRightsForUser). A refusal is
+// answered here.
+func (h *handlers) mayFill(w http.ResponseWriter, r *http.Request, folderID float64) bool {
+	ctx := r.Context()
+	group, err := h.d.Access.DeviceGroupByGUID(ctx, access.FolderGroupGUID(int64(folderID)))
+	var rights access.GroupRights
+	if err == nil {
+		rights, err = h.d.Access.GroupRightsForUser(ctx, devicegroups.ScopeUser(kit.User(r)), group)
+	}
+	if err != nil {
+		h.d.Log.Error("Agent activation scope error:", err.Error())
+		kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+		return false
+	}
+	if !rights.Change {
+		kit.Fail(w, r, http.StatusForbidden, kit.T(r, "errors.no_permission", nil))
+	}
+	return rights.Change
 }
 
 // download answers GET /downloads/generic-agent/{tag}/{name} with a file
