@@ -452,7 +452,8 @@ func (s *Server) handleMessage(msg *pb.RendezvousMessage, raddr net.Addr) *pb.Re
 		return nil
 	case msg.GetIceCandidate() != nil:
 		// WebRTC trickle ICE between two new peers; forward and stay silent.
-		s.handleIceCandidate(msg.GetIceCandidate())
+		udpAddr, _ := net.ResolveUDPAddr("udp", raddr.String())
+		s.handleIceCandidate(msg.GetIceCandidate(), udpAddr)
 		return nil
 	case msg.GetHc() != nil:
 		return &pb.RendezvousMessage{
@@ -1563,7 +1564,7 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	// names may send it, and only for a punch that initiator asked for.
 	// Stock clients send PunchHoleSent from a new socket: the IP is the
 	// target's registered one, the port is not.
-	if !s.punchHoleSentFromTarget(targetID, senderAddr) {
+	if !s.senderSpeaksForPeer(targetID, senderAddr) {
 		log.Printf("[signal] PunchHoleSent for %q from %s dropped: not the target's address", targetID, senderAddr)
 		return
 	}
@@ -2245,10 +2246,10 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		forwardAddrStr, initiatorAddr, rr.Uuid)
 }
 
-// punchHoleSentFromTarget reports whether senderAddr may speak for targetID:
+// senderSpeaksForPeer reports whether senderAddr may speak for targetID:
 // an address bound to another peer may not, and the IP must be the target's
 // registered one.
-func (s *Server) punchHoleSentFromTarget(targetID string, senderAddr *net.UDPAddr) bool {
+func (s *Server) senderSpeaksForPeer(targetID string, senderAddr *net.UDPAddr) bool {
 	if targetID == "" || senderAddr == nil {
 		return false
 	}
@@ -2328,15 +2329,21 @@ func relayAdvertisedToTarget(target *peer.Entry, fallback string) string {
 // did not exist before) leaves two new peers unable to complete negotiation.
 //
 // IceCandidate carries the destination peer id in `id` and the sender's
-// session key, so no additional routing state is required. Unknown or offline
-// targets are ignored: candidates are advisory and trickle may continue.
-func (s *Server) handleIceCandidate(msg *pb.IceCandidate) {
+// session key. It is forwarded only between the two ends of a punch the
+// server signalled (the offer travels in PunchHoleRequest), so a stranger
+// cannot send candidates to any online peer. Unknown or offline targets are
+// ignored: candidates are advisory and trickle may continue.
+func (s *Server) handleIceCandidate(msg *pb.IceCandidate, senderAddr *net.UDPAddr) {
 	if msg == nil {
 		return
 	}
 	targetID := strings.TrimSpace(msg.Id)
 	if targetID == "" {
 		log.Printf("[signal] IceCandidate without target id ignored")
+		return
+	}
+	if !s.iceCandidateAllowed(targetID, senderAddr) {
+		log.Printf("[signal] IceCandidate for %q from %s dropped: no punch between them pending", targetID, senderAddr)
 		return
 	}
 	target := s.peers.Get(targetID)
@@ -2351,6 +2358,27 @@ func (s *Server) handleIceCandidate(msg *pb.IceCandidate) {
 	if !s.sendToPeer(targetID, fwd) && target.UDPAddr != nil {
 		s.sendUDP(fwd, target.UDPAddr)
 	}
+}
+
+// iceCandidateAllowed reports whether senderAddr is the initiator of a
+// pending punch to destID, or speaks for the target of a pending punch whose
+// initiator is destID (like PunchHoleSent, possibly from a new socket).
+func (s *Server) iceCandidateAllowed(destID string, senderAddr *net.UDPAddr) bool {
+	if senderAddr == nil {
+		return false
+	}
+	if s.getPendingRelay(destID, senderAddr) != nil {
+		return true
+	}
+	allowed := false
+	s.pendingRelayUUIDs.Range(func(_, value any) bool {
+		if pu, ok := value.(*pendingUUID); ok && pu != nil && pu.initiatorID == destID && s.senderSpeaksForPeer(pu.targetID, senderAddr) {
+			allowed = true
+			return false
+		}
+		return true
+	})
+	return allowed
 }
 
 // handleTestNat handles NAT type detection (TCP port 21115).

@@ -381,7 +381,8 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 
 		case msg.GetIceCandidate() != nil:
 			// WebRTC trickle ICE between two new peers (WS transport).
-			s.handleIceCandidate(msg.GetIceCandidate())
+			fakeAddr, _ := net.ResolveUDPAddr("udp", remoteAddr)
+			s.handleIceCandidate(msg.GetIceCandidate(), fakeAddr)
 
 		case msg.GetHttpProxyRequest() != nil:
 			req := msg.GetHttpProxyRequest()

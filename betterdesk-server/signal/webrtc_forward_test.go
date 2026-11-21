@@ -88,12 +88,14 @@ func TestHandleIceCandidateForwardsToTargetPeer(t *testing.T) {
 
 	recv, targetAddr := attachTestUDPPair(t, srv)
 	putOnlinePeer(srv, "ICETARGET1", targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
+	initiator := udpAddr("198.51.100.90", 50001)
+	srv.storePendingUUID("ICETARGET1", initiator, "", "ICEINIT1")
 
 	srv.handleIceCandidate(&pb.IceCandidate{
 		Id:         "ICETARGET1",
 		SessionKey: "sess-1",
 		Candidate:  "candidate:1 1 UDP 2130706431 203.0.113.90 50000 typ host",
-	})
+	}, initiator)
 
 	msg := readUDPRendezvous(t, recv)
 	ice := msg.GetIceCandidate()
@@ -108,6 +110,6 @@ func TestHandleIceCandidateForwardsToTargetPeer(t *testing.T) {
 func TestHandleIceCandidateIgnoresUnknownTarget(t *testing.T) {
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	// Must not panic or allocate pending state for a missing peer.
-	srv.handleIceCandidate(&pb.IceCandidate{Id: "NOSUCHPEER", Candidate: "candidate:x"})
-	srv.handleIceCandidate(&pb.IceCandidate{})
+	srv.handleIceCandidate(&pb.IceCandidate{Id: "NOSUCHPEER", Candidate: "candidate:x"}, udpAddr("198.51.100.91", 1))
+	srv.handleIceCandidate(&pb.IceCandidate{}, nil)
 }

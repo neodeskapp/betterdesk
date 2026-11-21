@@ -238,3 +238,44 @@ func TestRefusalAuditHasAGlobalBudget(t *testing.T) {
 		t.Fatalf("refusals from 10 forged addresses wrote %d events in one window, want the budget of 3", recorded)
 	}
 }
+
+func iceCandidateTo(id string) *pb.RendezvousMessage {
+	return &pb.RendezvousMessage{Union: &pb.RendezvousMessage_IceCandidate{IceCandidate: &pb.IceCandidate{
+		Id: id, SessionKey: "sess", Candidate: "candidate:1 1 UDP 2130706431 203.0.113.95 50000 typ host",
+	}}}
+}
+
+// IceCandidate is forwarded only between the two ends of a punch the
+// server signalled, not from anyone to any online peer.
+func TestIceCandidateFromStrangerIsNotForwarded(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	recv, targetAddr := attachTestUDPPair(t, srv)
+	putOnlinePeer(srv, "ICETGT001", targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
+
+	srv.handleMessage(iceCandidateTo("ICETGT001"), &net.TCPAddr{IP: net.ParseIP("198.51.100.24"), Port: 5000})
+
+	expectNoUDP(t, recv, "IceCandidate from a stranger")
+}
+
+func TestIceCandidateBetweenPunchEndsIsForwarded(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	recv, peerAddr := attachTestUDPPair(t, srv)
+	initiator := &net.TCPAddr{IP: net.ParseIP("198.51.100.25"), Port: 5000}
+	putOnlinePeer(srv, "ICETGT002", peerAddr.IP.String(), peerAddr.Port, peer.ConnUDP)
+	srv.storePendingUUID("ICETGT002", udpAddr("198.51.100.25", 5000), "", "ICEINI002")
+
+	srv.handleMessage(iceCandidateTo("ICETGT002"), initiator)
+	if readUDPRendezvous(t, recv).GetIceCandidate() == nil {
+		t.Fatal("the initiator's candidate did not reach the target")
+	}
+
+	// The target answers with its own candidates to the initiator's id.
+	putOnlinePeer(srv, "ICEINI002", peerAddr.IP.String(), peerAddr.Port+1, peer.ConnUDP)
+	srv.peers.Get("ICEINI002").UDPAddr = peerAddr
+	srv.peers.Get("ICETGT002").UDPAddr = udpAddr("203.0.113.96", 40000)
+	srv.peers.Get("ICETGT002").IP = "203.0.113.96:40000"
+	srv.handleMessage(iceCandidateTo("ICEINI002"), &net.TCPAddr{IP: net.ParseIP("203.0.113.96"), Port: 40000})
+	if readUDPRendezvous(t, recv).GetIceCandidate() == nil {
+		t.Fatal("the target's candidate did not reach the initiator")
+	}
+}
