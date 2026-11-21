@@ -208,7 +208,7 @@ betterdesk-server/id_ed25519*
 betterdesk-server/test_*.go
 betterdesk-server/_test_*
 
-# --- Root-level image duplicates (originals in web-nodejs/public/img/) ---
+# --- Root-level image duplicates (the console's own are in betterdesk-server/console/static/files/public/img/) ---
 /betterdesk.png
 /betterdesk_icon.png
 /betterdesk_wallpaper.png
@@ -244,7 +244,5 @@ docs/important/betterdesk-server-deploy-paths.md
 
 # --- Task tracking (local only) ---
 tasks/todo.md
-t
-k-server
 
 docs/security/PROJECT_SECURITY_ANALYSIS_2026-05-19.md

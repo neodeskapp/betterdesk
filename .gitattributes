@@ -9,7 +9,6 @@
 *.md text eol=lf
 *.go text eol=lf
 *.js text eol=lf
-*.ejs text eol=lf
 *.css text eol=lf
 *.html text eol=lf
 *.py text eol=lf
@@ -40,6 +39,5 @@ Dockerfile* text eol=lf
 *.eot binary
 
 # Linguist overrides (GitHub language detection)
-*.ejs linguist-language=HTML
 docs/** linguist-documentation
 archive/** linguist-vendored
