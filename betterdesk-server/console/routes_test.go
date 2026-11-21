@@ -157,6 +157,27 @@ func TestUIShellCookieIsSecureInHTTPSMode(t *testing.T) {
 	}
 }
 
+// RV124: the CSRF cookie follows the session cookie. In HTTPS mode without
+// a certificate it is Secure for a request that came over HTTPS through a
+// trusted proxy, and not over plain HTTP.
+func TestCSRFCookieIsSecureBehindATLSProxy(t *testing.T) {
+	w := routesWorld(t, setup{https: true, trustProxy: "loopback"})
+	if w.s.net.cert != nil {
+		t.Fatal("a certificate loaded")
+	}
+	for _, c := range []struct {
+		name   string
+		header []string
+		secure bool
+	}{{"over HTTPS through the proxy", []string{"X-Forwarded-Proto", "https"}, true}, {"over plain HTTP", nil, false}} {
+		res := w.agent().get("/__test/token", c.header...)
+		cookie := res.cookie("__csrf")
+		if res.status != 200 || cookie == "" || strings.Contains(cookie, "; Secure") != c.secure {
+			t.Errorf("%s: %d, cookie %q, want Secure %v", c.name, res.status, cookie, c.secure)
+		}
+	}
+}
+
 func TestConsoleStrings(t *testing.T) {
 	w := routesWorld(t, setup{})
 	a := w.agent()
