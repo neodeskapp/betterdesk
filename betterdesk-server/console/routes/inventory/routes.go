@@ -8,8 +8,9 @@
 //     They are behind the device guards of package kit (device.go).
 //   - The routes people read inventory with: the list of devices with their
 //     hardware in short, and one device's last report with its last
-//     telemetry. Both need the permission device.view, and both step aside
-//     at /api/bd for the routes of other groups there.
+//     telemetry. Both need the permission device.view and keep to the
+//     account's device scope, and both step aside at /api/bd for the
+//     routes of other groups there.
 package inventory
 
 import (
@@ -17,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/alerts"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -33,6 +35,9 @@ type handlers struct {
 	log    *kit.Logger
 	// telemetryLog takes what the telemetry route logs
 	telemetryLog *kit.Logger
+	// scope is the device scope of the account of a request, nil when it
+	// sees every device
+	scope func(r *http.Request) (*access.DeviceScope, error)
 }
 
 // Register adds the group's routes below the mount.
@@ -40,6 +45,12 @@ func Register(d *kit.Deps) {
 	h := &handlers{
 		db: d.Store, api: d.GoAPI, alerts: d.Alerts,
 		log: d.Log.Child("Inventory"), telemetryLog: d.Log.Child("Telemetry"),
+		scope: func(r *http.Request) (*access.DeviceScope, error) {
+			ctx := r.Context()
+			return d.DeviceGroups.LimitedScope(ctx, kit.User(r), func() []*goapi.Object {
+				return d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{})
+			})
+		},
 	}
 	r := d.Router
 	canRead := d.RequirePermission("device.view")
@@ -107,13 +118,19 @@ type deviceList struct {
 // report's entry.
 //
 // While no device has reported, the list shows the devices the API
-// server knows instead, marked with source "peer_list".
+// server knows instead, marked with source "peer_list". An account limited
+// to some devices gets only those.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	query, _, _ := strings.Cut(r.URL.RawQuery, "#")
 	page, pageOK := pageNumber(jsbind.Query(query, "page"), 1, maxSafeInteger)
 	limit, limitOK := pageNumber(jsbind.Query(query, "limit"), 50, 100)
 	if !pageOK || !limitOK {
 		fail(w, r, http.StatusBadRequest, "Invalid pagination parameters")
+		return
+	}
+	scope, err := h.scope(r)
+	if err != nil {
+		h.serverError(w, r, "List error", err)
 		return
 	}
 	inventories, err := allInventories(r.Context(), h.db)
@@ -123,6 +140,9 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	}
 	devices := []any{}
 	for _, inv := range inventories {
+		if !scope.Has(inv.deviceID.Value().ToString()) {
+			continue
+		}
 		device, problems := summaryOf(inv)
 		if inv.unreadable != nil {
 			problems = append(problems, inv.unreadable)
@@ -133,7 +153,7 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		devices = append(devices, device)
 	}
 	if len(inventories) == 0 {
-		devices = h.knownPeers(r)
+		devices = h.knownPeers(r, scope)
 	}
 
 	total := len(devices)
@@ -153,14 +173,18 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// knownPeers is the list of devices the API server knows, in the form of
-// the inventory list. When the API server gives no list, it is empty.
-func (h *handlers) knownPeers(r *http.Request) []any {
+// knownPeers is the list of devices the API server knows that are in the
+// scope, in the form of the inventory list. When the API server gives no
+// list, it is empty.
+func (h *handlers) knownPeers(r *http.Request, scope *access.DeviceScope) []any {
 	devices := []any{}
 	for _, p := range h.api.GetAllPeers(r.Context(), false) {
 		if p == nil {
 			h.log.Warn("Peer list fallback failed: a peer of the list is null")
 			return []any{}
+		}
+		if !scope.Has(p.Str("id")) {
+			continue
 		}
 		os := p.Get("platform")
 		if !goapi.Truthy(os) {
@@ -206,9 +230,19 @@ type report struct {
 }
 
 // detail answers GET /api/inventory/{id}: the device's last report as it
-// came, with its last telemetry, null when it sent none.
+// came, with its last telemetry, null when it sent none. A device outside
+// the account's scope, or one no device has, is refused with 403.
 func (h *handlers) detail(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	scope, err := h.scope(r)
+	if err != nil {
+		h.serverError(w, r, "Detail error", err)
+		return
+	}
+	if !scope.Has(id) {
+		fail(w, r, http.StatusForbidden, kit.T(r, "errors.forbidden", nil))
+		return
+	}
 	inv, err := inventoryOf(r.Context(), h.db, id)
 	var last *telemetry
 	if err == nil {

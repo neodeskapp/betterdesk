@@ -109,6 +109,18 @@ func (s *Service) DeviceScopeForUser(ctx context.Context, user *session.User, de
 	return s.access.DeviceScopeForUser(ctx, ScopeUser(user), ScopeDevices(devices))
 }
 
+// LimitedScope returns the devices the account may see, or nil when it
+// sees every device. Whether there is a limit is decided without a device
+// list; only for an account that has one is the scope read over the list
+// of every device that all returns, which knows their folders and tags.
+func (s *Service) LimitedScope(ctx context.Context, user *session.User, all func() []*goapi.Object) (*access.DeviceScope, error) {
+	scope, err := s.DeviceScopeForUser(ctx, user, nil)
+	if err != nil || scope == nil {
+		return scope, err
+	}
+	return s.DeviceScopeForUser(ctx, user, all())
+}
+
 // UserCanAccessDevice reports whether the account may see the device, with
 // the scope computed over that device alone.
 func (s *Service) UserCanAccessDevice(ctx context.Context, user *session.User, device *goapi.Object) (bool, error) {

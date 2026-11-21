@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/access"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
@@ -141,6 +142,9 @@ func TestFullestDisk(t *testing.T) {
 	}
 }
 
+// everyDevice is the scope of an account that sees every device.
+func everyDevice(*http.Request) (*access.DeviceScope, error) { return nil, nil }
+
 // While no device has reported, the list shows the devices the API
 // server knows, in the form of the list and with its paging.
 func TestTheListFallsBackToThePeerList(t *testing.T) {
@@ -152,7 +156,7 @@ func TestTheListFallsBackToThePeerList(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(answer))
 	}))
-	h := &handlers{db: storetest.Migrated(t), api: api, log: kit.NewLogger("silent", true)}
+	h := &handlers{db: storetest.Migrated(t), api: api, log: kit.NewLogger("silent", true), scope: everyDevice}
 	get := func(target string) (int, string) {
 		rec := httptest.NewRecorder()
 		h.list(rec, httptest.NewRequest(http.MethodGet, target, nil))
