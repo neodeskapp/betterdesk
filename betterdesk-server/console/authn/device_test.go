@@ -154,6 +154,61 @@ func TestServerDeletesAndBansEndDeviceTokens(t *testing.T) {
 	})
 }
 
+// TestARenamedDeviceKeepsItsDeviceToken: the signal server's id change
+// moves the device's device tokens to the new id in the same step, so the
+// device goes on speaking under its new id and its token proves nothing
+// under the old one. A token still bound to the new id (a device the
+// console admitted under it that never reached the signal server) gives
+// way; an account's token naming the old id stays as it was (BUGS RV232).
+func TestARenamedDeviceKeepsItsDeviceToken(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
+		server := storetest.GoServer(t, db)
+		ctx := context.Background()
+		s, _, _ := testService(t, db, nil)
+		id := addUser(t, s, "admin", "pw", "admin", "local")
+		mustExec(t, db, `INSERT INTO peers (id) VALUES ('rename-old')`)
+		moving, err := s.IssueDeviceToken(ctx, id, "rename-old", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		stale, err := s.IssueDeviceToken(ctx, id, "rename-new", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		account, err := s.GenerateSignInToken(ctx, id, "rename-old", "uuid-1", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := server.ChangePeerID("rename-old", "rename-new", "panel"); err != nil {
+			t.Fatal(err)
+		}
+
+		if device, err := s.RequireDeviceToken(ctx, "Bearer "+moving); err != nil || device.DeviceID != "rename-new" {
+			t.Errorf("device request with the renamed device's token: %+v, %v; want it through as rename-new", device, err)
+		}
+		for _, c := range []struct {
+			device, token string
+			want          bool
+		}{
+			{"rename-new", moving, true},
+			{"rename-old", moving, false},
+			{"rename-new", stale, false},
+		} {
+			if ok, err := s.VerifyDeviceWSAuth(ctx, c.device, c.token); ok != c.want || err != nil {
+				t.Errorf("device socket of %s: %v, %v; want %v", c.device, ok, err, c.want)
+			}
+		}
+		if _, err := s.RequireDeviceToken(ctx, "Bearer "+stale); err == nil {
+			t.Error("device request with the token left bound to the new id: through, want it refused")
+		}
+		if user, err := s.ValidateAccessToken(ctx, account); err != nil || user == nil || user.ClientID.String != "rename-old" {
+			t.Errorf("account token naming the old id: %+v, %v; want it live and unchanged", user, err)
+		}
+	})
+}
+
 // Only a token the console issued for a device proves the device: an
 // account's sign-in token proves none, whatever client id it stored, and a
 // device token signs no account in. The revocations of an account's

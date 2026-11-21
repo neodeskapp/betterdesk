@@ -14,7 +14,9 @@ import (
 // console's device routes and sockets accept them. A delete, soft or hard,
 // and a ban revoke them in the same transaction as the change to peers,
 // whichever port or command made it; a restore or an unban gives none
-// back. A database the console has not migrated yet (no access_tokens, or
+// back. An id change moves them to the new id in the transaction of the
+// rename, so the device keeps them and none stays bound to the old id. A
+// database the console has not migrated yet (no access_tokens, or
 // one without token_kind, which holds no device tokens) has nothing to
 // revoke.
 
@@ -43,6 +45,25 @@ func sqliteRevokeDeviceAccessTokens(tx *sql.Tx, id string) error {
 	return nil
 }
 
+// sqliteMoveDeviceAccessTokens moves the console's device tokens of a
+// device whose id changes to the new id. A device token still bound to
+// the new id, of a device that had it before, is revoked first.
+func sqliteMoveDeviceAccessTokens(tx *sql.Tx, oldID, newID string) error {
+	ok, err := sqliteHasDeviceAccessTokens(tx)
+	if err != nil || !ok {
+		return err
+	}
+	if _, err := tx.Exec(
+		`UPDATE access_tokens SET revoked = 1 WHERE token_kind = 'device' AND client_id = ?`, newID); err != nil {
+		return fmt.Errorf("db: revoke the device tokens left on %s: %w", newID, err)
+	}
+	if _, err := tx.Exec(
+		`UPDATE access_tokens SET client_id = ? WHERE token_kind = 'device' AND client_id = ?`, newID, oldID); err != nil {
+		return fmt.Errorf("db: move the device tokens of %s to %s: %w", oldID, newID, err)
+	}
+	return nil
+}
+
 // pgHasDeviceAccessTokens reports whether access_tokens is in the current
 // schema with its token_kind column.
 func pgHasDeviceAccessTokens(ctx context.Context, tx pgx.Tx) (bool, error) {
@@ -67,6 +88,25 @@ func pgRevokeDeviceAccessTokens(ctx context.Context, tx pgx.Tx, id string) error
 	if _, err := tx.Exec(ctx,
 		`UPDATE access_tokens SET revoked = TRUE WHERE token_kind = 'device' AND client_id = $1`, id); err != nil {
 		return fmt.Errorf("db: revoke the device tokens of %s: %w", id, err)
+	}
+	return nil
+}
+
+// pgMoveDeviceAccessTokens moves the console's device tokens of a device
+// whose id changes to the new id. A device token still bound to the new
+// id, of a device that had it before, is revoked first.
+func pgMoveDeviceAccessTokens(ctx context.Context, tx pgx.Tx, oldID, newID string) error {
+	ok, err := pgHasDeviceAccessTokens(ctx, tx)
+	if err != nil || !ok {
+		return err
+	}
+	if _, err := tx.Exec(ctx,
+		`UPDATE access_tokens SET revoked = TRUE WHERE token_kind = 'device' AND client_id = $1`, newID); err != nil {
+		return fmt.Errorf("db: revoke the device tokens left on %s: %w", newID, err)
+	}
+	if _, err := tx.Exec(ctx,
+		`UPDATE access_tokens SET client_id = $1 WHERE token_kind = 'device' AND client_id = $2`, newID, oldID); err != nil {
+		return fmt.Errorf("db: move the device tokens of %s to %s: %w", oldID, newID, err)
 	}
 	return nil
 }
