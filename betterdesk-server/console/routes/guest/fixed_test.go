@@ -42,6 +42,43 @@ var fixedVectors = map[string]map[string]func(v *vector){
 	},
 }
 
+// fixedWhere are fixes for every vector a test matches, for a fix that
+// changes a whole kind of request.
+var fixedWhere = []struct {
+	bug   string
+	match func(v vector) bool
+	fix   func(v *vector)
+}{
+	// RV111: an account whose role is no guest admin takes back a link
+	// only after the list showed the link is not another account's. The
+	// lists of the vectors hold no link, so the delete goes on as before
+	// behind the call for the list; where the API server refuses the list,
+	// its refusal is the answer and nothing is deleted.
+	{"RV111", func(v vector) bool {
+		if v.Request.Method != "DELETE" || v.Request.Session == nil || v.API == nil {
+			return false
+		}
+		// The roles of the vectors that have guest.create and are no admin
+		role := v.Request.Session.User.Role
+		return role == "operator" || role == "guest_issuer"
+	}, listedFirst},
+}
+
+// listedFirst puts the call for the list in front of a delete.
+func listedFirst(v *vector) {
+	list := proxytest.Call{Method: "GET", URL: "/api/guest/access-links", Type: "application/json"}
+	if v.API.Status >= 200 && v.API.Status < 300 {
+		v.Calls = append([]proxytest.Call{list}, v.Calls...)
+		return
+	}
+	if len(v.Calls) == 0 {
+		// The delete never went out (a path the client refuses): the list
+		// was the first call, and its refusal is the answer
+		v.Status, v.Type, v.Body = v.API.Status, "application/json; charset=utf-8", v.API.Body
+	}
+	v.Calls, v.Revoked = []proxytest.Call{list}, nil
+}
+
 // created is the API server's stand-in answer to a new link in the GA4
 // vectors.
 const created = `{"id":"g1","token":"tok"}`

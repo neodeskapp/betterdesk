@@ -202,16 +202,82 @@ func bodyValue(r *http.Request, key string) (value any, defined bool) {
 	return value, true
 }
 
+// guestAdmin reports a role that sees and takes back the links of every
+// account, the roles the API server's guest handlers count as guest
+// admins.
+func guestAdmin(role string) bool {
+	return role == "admin" || role == "super_admin" || role == "global_admin"
+}
+
 // list answers GET /api/guest/access-links with the links that are still
-// good.
+// good. The console calls the API server as itself, which sees every
+// link; for an account whose role is no guest admin the list keeps only
+// the links whose created_by is the account's name.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
-	goapipath.ProxyToGo(h.api, w, r, http.MethodGet, goapipath.Fixed("/guest/access-links"))
+	user := kit.User(r)
+	if user == nil || guestAdmin(user.Role) {
+		goapipath.ProxyToGo(h.api, w, r, http.MethodGet, goapipath.Fixed("/guest/access-links"))
+		return
+	}
+	resp, err := h.api.Get(r.Context(), "/guest/access-links")
+	if err != nil {
+		h.failed(w, r, err)
+		return
+	}
+	data := resp.Data()
+	if body, ok := data.(*goapi.Object); ok && body != nil {
+		if grants, ok := body.Get("grants").([]any); ok {
+			mine := make([]any, 0, len(grants))
+			for _, grant := range grants {
+				if createdBy(grant) == user.Username {
+					mine = append(mine, grant)
+				}
+			}
+			body = body.Clone()
+			body.Set("grants", mine)
+			data = body
+		}
+	}
+	goapipath.WriteJSON(w, r, statusOf(resp), data)
+}
+
+// createdBy is the created_by of a link in the API server's list, "" when
+// it has none.
+func createdBy(grant any) string {
+	link, _ := grant.(*goapi.Object)
+	if link == nil {
+		return ""
+	}
+	name, _ := link.Get("created_by").(string)
+	return name
 }
 
 // revoke answers DELETE /api/guest/access-links/{id}. A link that was
-// taken back also ends the sessions that run on it.
+// taken back also ends the sessions that run on it. An account whose role
+// is no guest admin may take back only the links it created: for another
+// account's link the answer is 403 {"error":"forbidden"}, as the API
+// server's own rule gives it, and nothing is deleted. A link the list does
+// not hold goes on to the API server, which answers for it.
 func (h *handlers) revoke(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if user := kit.User(r); user != nil && !guestAdmin(user.Role) {
+		list, err := h.api.Get(r.Context(), "/guest/access-links")
+		if err != nil {
+			h.failed(w, r, err)
+			return
+		}
+		grants, _ := goapi.Dig(list.Data(), "grants").([]any)
+		for _, grant := range grants {
+			link, _ := grant.(*goapi.Object)
+			if link == nil || link.Get("id") != strings.TrimSpace(id) {
+				continue
+			}
+			if createdBy(grant) != user.Username {
+				kit.JSON(w, r, http.StatusForbidden, failure{Error: "forbidden"})
+				return
+			}
+		}
+	}
 	resp, err := h.api.Delete(r.Context(), "/guest/access-links/"+goapi.EncodeURIComponent(id))
 	if err != nil {
 		h.failed(w, r, err)

@@ -185,6 +185,12 @@ func TestVectors(t *testing.T) {
 				used[bug+" "+key] = true
 			}
 		}
+		for _, f := range fixedWhere {
+			if f.match(v) {
+				f.fix(&v)
+				used[f.bug+" where"] = true
+			}
+		}
 		w.scope, w.asked, w.revoked = v.Scope, nil, nil
 		rec, calls := w.Do(v.Request, v.API)
 		var problems []string
@@ -243,6 +249,11 @@ func TestVectors(t *testing.T) {
 	}
 	if failures > 20 {
 		t.Errorf("%d of %d vectors differ; the first 20 are shown", failures, len(vectors))
+	}
+	for _, f := range fixedWhere {
+		if !used[f.bug+" where"] {
+			t.Errorf("%s: no vector matches", f.bug)
+		}
 	}
 	for bug, fixes := range fixedVectors {
 		for key := range fixes {
