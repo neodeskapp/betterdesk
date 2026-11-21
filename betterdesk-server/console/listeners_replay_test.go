@@ -238,6 +238,13 @@ var replayEnvKeys = []string{"HTTPS_ENABLED", "HTTP_REDIRECT_HTTPS", "SSL_CERT_P
 // something else, by listener name (console, https, api).
 func newGoStack(t *testing.T, db *store.DB, scenario oracleScenario, certs *testCerts, held map[string]int) (*goStack, error) {
 	t.Helper()
+	return newGoStackWith(t, db, scenario, certs, held, nil)
+}
+
+// newGoStackWith is newGoStack with prepare called on the server before
+// it starts, when it is not nil.
+func newGoStackWith(t *testing.T, db *store.DB, scenario oracleScenario, certs *testCerts, held map[string]int, prepare func(*Server)) (*goStack, error) {
+	t.Helper()
 	for _, key := range replayEnvKeys {
 		if value, ok := scenario.Env[key]; ok {
 			if strings.HasPrefix(key, "SSL_") {
@@ -276,6 +283,9 @@ func newGoStack(t *testing.T, db *store.DB, scenario oracleScenario, certs *test
 		return nil, err
 	}
 	g.s = s
+	if prepare != nil {
+		prepare(s)
+	}
 	if err := s.Start(context.Background()); err != nil {
 		s.Stop()
 		return nil, err

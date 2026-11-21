@@ -44,6 +44,31 @@ type listeners struct {
 	addr         string
 	redirectAddr string
 	clientAPI    *listen.ClientAPI
+	// limits are the console listener's time limits; nil means
+	// defaultConsoleLimits.
+	limits *consoleLimits
+}
+
+// consoleLimits are the time limits of the listener that serves the
+// console (HTTP or HTTPS), besides the 15 seconds for the headers.
+type consoleLimits struct {
+	// idle closes a kept-alive connection that sends no next request.
+	idle      time.Duration
+	deadlines listen.Deadlines
+}
+
+// defaultConsoleLimits keeps an idle connection 5 seconds, as Node did. A
+// request body may pause for a minute and has to be complete after 5
+// minutes (Node's limit for a whole request) plus one second for every KB
+// it carries, so an upload of several hundred MB that keeps arriving at 1
+// KB/s or more passes. Every 64 KB of an answer may take a minute to be
+// read by the client, so downloads of any size pass as long as the client
+// reads.
+func defaultConsoleLimits() consoleLimits {
+	return consoleLimits{
+		idle:      5 * time.Second,
+		deadlines: listen.Deadlines{BodyStall: time.Minute, BodyGrace: 5 * time.Minute, BodyRate: 1 << 10, WriteStall: time.Minute},
+	}
 }
 
 // apiTLSOff are the RUSTDESK_API_TLS values that keep the client API port
@@ -224,11 +249,16 @@ func (s *Server) serve(ctx context.Context, port int, label string, h http.Handl
 		// The redirect listener had Node's default limits
 		ln = listen.PlainListener(ln)
 		srv.ReadHeaderTimeout, srv.ReadTimeout, srv.IdleTimeout = 60*time.Second, 300*time.Second, 5*time.Second
-		srv.MaxHeaderBytes = listen.MaxHeaderBytes
 		srv.DisableGeneralOptionsHandler = true
 		srv.ConnContext = listen.ConnContext
 	}
 	if label != "HTTP redirect" {
+		limits := defaultConsoleLimits()
+		if s.net.limits != nil {
+			limits = *s.net.limits
+		}
+		srv.IdleTimeout = limits.idle
+		srv.Handler = limits.deadlines.Wrap(h)
 		// A path with a broken percent escape gets the console's 400, not
 		// net/http's own
 		ln = listen.BrokenEscapes(ln, s.brokenEscape(), srv.ReadHeaderTimeout)

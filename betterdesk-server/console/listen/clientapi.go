@@ -30,6 +30,9 @@ const (
 	MaxHeaderBytes = 16<<10 - 4<<10
 	// jsonLimit is the JSON parser of the port in local mode: 64 KB.
 	jsonLimit = 64 << 10
+	// clientWriteStall is how long every 64 KB of an answer may take to
+	// reach a client that does not read.
+	clientWriteStall = time.Minute
 )
 
 // ClientAPIOptions configure the client API port.
@@ -59,6 +62,9 @@ type ClientAPIOptions struct {
 	TrustProxy httpx.TrustProxy
 	// Now is the clock of the rate limiters. nil means time.Now.
 	Now func() time.Time
+	// WriteStall is how long every 64 KB of an answer may take to reach
+	// the client (Deadlines.WriteStall); zero means a minute.
+	WriteStall time.Duration
 }
 
 // ClientAPI is the listener for RustDesk clients (API_PORT, 21121), facing
@@ -80,11 +86,16 @@ type ClientAPI struct {
 	proxy   bool
 	srv     *http.Server
 	addr    string
+	// writeStall is Deadlines.WriteStall of the port's server
+	writeStall time.Duration
 }
 
 // NewClientAPI builds the port's handler and registers its routes.
 func NewClientAPI(opts ClientAPIOptions) *ClientAPI {
-	c := &ClientAPI{router: kit.NewRouter(), proxy: opts.Proxy}
+	c := &ClientAPI{router: kit.NewRouter(), proxy: opts.Proxy, writeStall: opts.WriteStall}
+	if c.writeStall == 0 {
+		c.writeStall = clientWriteStall
+	}
 	d := *opts.Deps
 	d.Early = c.router
 	d.Router = kit.NewRouter()
@@ -218,7 +229,7 @@ func (c *ClientAPI) Start(ctx context.Context, host string, port int, cert *tls.
 	}
 	c.addr = ln.Addr().String()
 	c.srv = &http.Server{
-		Handler:                      c.handler,
+		Handler:                      Deadlines{WriteStall: c.writeStall}.Wrap(c.handler),
 		ReadHeaderTimeout:            clientRequestTimeout,
 		ReadTimeout:                  clientRequestTimeout,
 		IdleTimeout:                  clientIdleTimeout,
