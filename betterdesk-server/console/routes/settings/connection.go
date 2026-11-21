@@ -43,34 +43,46 @@ func (g *general) getConnectionMode(w http.ResponseWriter, r *http.Request) {
 	kit.OK(w, r, connectionData{ConnectionSettings: saved, Deployment: g.d.ServerInfo.DetectDeploymentSource(), Runtime: runtime})
 }
 
-// setConnectionMode answers PUT /api/settings/connection-mode. Unless the
-// server took the settings at once, the change goes into the caller's
-// restart transaction with the settings before it as the way back.
+// setConnectionMode answers PUT /api/settings/connection-mode. Where the
+// server takes the settings at once (a split Docker deployment) they go
+// to it. Otherwise the change goes into the caller's restart transaction
+// with the settings before it as the way back, and the compose file or
+// the systemd unit is written only once the transaction takes the change:
+// while another operator's change waits the answer is 409 and nothing is
+// written.
 func (g *general) setConnectionMode(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
-	previous, err := g.d.ServerInfo.GetConnectionMode(r.Context())
-	var write *serverinfo.ConnectionWrite
-	if err == nil {
-		write, err = g.d.ServerInfo.SetConnectionMode(r.Context(), serverinfo.ConnectionInput{
-			Mode:                    serverinfo.Field(body, "mode"),
-			P2PFallbackMs:           serverinfo.Field(body, "p2p_fallback_ms"),
-			SameNATRelay:            serverinfo.Field(body, "same_nat_relay"),
-			AllowSharedNATInitiator: serverinfo.Field(body, "allow_shared_nat_initiator"),
-			LoggedInOnlyInitiator:   serverinfo.Field(body, "logged_in_only_initiator"),
-			OperatorOnlyOutbound:    serverinfo.Field(body, "operator_only_outbound"),
-		})
+	input := serverinfo.ConnectionInput{
+		Mode:                    serverinfo.Field(body, "mode"),
+		P2PFallbackMs:           serverinfo.Field(body, "p2p_fallback_ms"),
+		SameNATRelay:            serverinfo.Field(body, "same_nat_relay"),
+		AllowSharedNATInitiator: serverinfo.Field(body, "allow_shared_nat_initiator"),
+		LoggedInOnlyInitiator:   serverinfo.Field(body, "logged_in_only_initiator"),
+		OperatorOnlyOutbound:    serverinfo.Field(body, "operator_only_outbound"),
 	}
+	var write *serverinfo.ConnectionWrite
 	var pending *restart.Public
-	if err == nil && write.Source != serverinfo.ConnectionSourceGoAPI {
-		var settings any
+	previous, err := g.d.ServerInfo.GetConnectionMode(r.Context())
+	var settings any
+	if err == nil {
 		settings, err = goapi.FromGo(previous.ConnectionMode)
-		if err == nil {
-			pending, err = g.d.Restart.RegisterChange(kit.UserID(r), restart.Change{
+	}
+	switch {
+	case err != nil:
+	case g.d.ServerInfo.IsDockerSplitDeployment():
+		write, err = g.d.ServerInfo.SetConnectionMode(r.Context(), input)
+	default:
+		pending, err = g.d.Restart.RegisterChangeAfter(kit.UserID(r), "connection-mode", func() (restart.Change, error) {
+			var writeErr error
+			if write, writeErr = g.d.ServerInfo.SetConnectionMode(r.Context(), input); writeErr != nil {
+				return restart.Change{}, writeErr
+			}
+			return restart.Change{
 				Key:      "connection-mode",
 				Label:    kit.T(r, "settings.connection_mode_title", nil),
 				Rollback: goapi.NewObject("type", "connection-mode", "settings", settings),
-			})
-		}
+			}, nil
+		})
 	}
 	if err == nil {
 		s := write.Settings
@@ -78,6 +90,7 @@ func (g *general) setConnectionMode(w http.ResponseWriter, r *http.Request) {
 			", operator_only_outbound=" + yn(s.OperatorOnlyOutbound) + " (" + write.Source + ")"
 		err = g.d.LogAction(r, "connection_mode_changed", details)
 	}
+	var transaction *restart.Error
 	switch {
 	case err == nil:
 		kit.JSON(w, r, http.StatusOK, answerMessage{
@@ -89,6 +102,8 @@ func (g *general) setConnectionMode(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "settings.connection_mode_not_configurable", nil))
 	case errors.Is(err, serverinfo.ErrComposeServerNotFound):
 		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "settings.connection_mode_compose_error", nil))
+	case errors.As(err, &transaction) && transaction.StatusCode() != http.StatusInternalServerError:
+		kit.Fail(w, r, transaction.StatusCode(), err.Error())
 	default:
 		g.log.Error("Set connection mode error:", err)
 		kit.Fail(w, r, http.StatusInternalServerError, messageOr(err, kit.T(r, "errors.server_error", nil)))

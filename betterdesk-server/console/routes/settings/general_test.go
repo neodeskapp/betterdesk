@@ -272,6 +272,47 @@ func TestAdvancedFileChain(t *testing.T) {
 	})
 }
 
+// TestConnectionModeWaitsForAnotherOperatorsChange: while the admin's
+// connection mode change waits for its restart, the super admin's save
+// answers 409 and leaves the compose file as the admin's save wrote it
+// (BUGS.md RV94).
+func TestConnectionModeWaitsForAnotherOperatorsChange(t *testing.T) {
+	if _, err := os.Stat("/etc/systemd/system/betterdesk-server.service"); err == nil {
+		t.Skip("this machine has the server's systemd unit")
+	}
+	s := newSite(t, nil, nil, nil)
+	compose := filepath.Join(filepath.Dir(s.Console), "no-compose", "docker-compose.yml")
+	if err := os.MkdirAll(filepath.Dir(compose), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(compose, []byte("services:\n  server:\n    image: betterdesk-server:local\n    environment:\n      - P2P_FIRST=Y\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res := s.As("admin").Do("PUT", "/api/settings/connection-mode", `{"mode":"relay_only"}`)
+	if res.Status != http.StatusOK || !strings.Contains(res.Body, `"restartRequired":{`) {
+		t.Fatalf("the admin's save: %d %s", res.Status, res.Body)
+	}
+	saved, err := os.ReadFile(compose)
+	if err != nil || !strings.Contains(string(saved), "ALWAYS_USE_RELAY=Y") {
+		t.Fatalf("the admin's save wrote %q (%v)", saved, err)
+	}
+	audits := len(s.AuditRows())
+	superAdmin := s.As("super_admin")
+	res = superAdmin.Do("PUT", "/api/settings/connection-mode", `{"mode":"p2p_first","p2p_fallback_ms":5000}`)
+	if res.Status != http.StatusConflict || res.Body != `{"success":false,"error":"restart_transaction_owned"}` {
+		t.Errorf("the super admin's save: %d %s", res.Status, res.Body)
+	}
+	if now, _ := os.ReadFile(compose); string(now) != string(saved) {
+		t.Errorf("the refused save changed the compose file:\n%s\nwas:\n%s", now, saved)
+	}
+	if len(s.AuditRows()) != audits {
+		t.Errorf("the refused save was audited: %s", lastAudit(t, s.World))
+	}
+	if res := superAdmin.Do("GET", "/api/settings/restart/pending", ""); res.Body != `{"success":true,"data":null}` {
+		t.Errorf("the super admin's transaction: %s", res.Body)
+	}
+}
+
 // Without a systemd unit or a compose file there is nothing to restart
 // with: confirming fails the transaction with no_restart. Both routes that
 // restart after one setting confirm the caller's transaction.
