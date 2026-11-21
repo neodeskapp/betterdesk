@@ -190,22 +190,28 @@ func (h *bdMgmtHub) Get(deviceID string) *bdMgmtSession {
 	return h.sessions[deviceID]
 }
 
-// Put stores a session, closing any previous one for the same device.
+// Put stores a session and closes any previous one for the same device.
+// The old socket's close handshake runs after the lock is released, so it
+// holds up no other caller of the hub.
 func (h *bdMgmtHub) Put(s *bdMgmtSession) {
 	h.mu.Lock()
-	defer h.mu.Unlock()
-	if old, ok := h.sessions[s.DeviceID]; ok {
+	old := h.sessions[s.DeviceID]
+	h.sessions[s.DeviceID] = s
+	h.mu.Unlock()
+	if old != nil && old != s {
 		old.Cancel()
 		old.Conn.Close(websocket.StatusGoingAway, "replaced")
 	}
-	h.sessions[s.DeviceID] = s
 }
 
-// Remove deletes a session.
-func (h *bdMgmtHub) Remove(deviceID string) {
+// Remove deletes the device's entry when it is still session s: the
+// cleanup of a replaced socket leaves its successor in place.
+func (h *bdMgmtHub) Remove(s *bdMgmtSession) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	delete(h.sessions, deviceID)
+	if h.sessions[s.DeviceID] == s {
+		delete(h.sessions, s.DeviceID)
+	}
 }
 
 // IsConnected checks if a BetterDesk desktop client is connected.
@@ -340,7 +346,7 @@ func (s *Server) handleBdMgmt(w http.ResponseWriter, r *http.Request) {
 	session.readLoop(s)
 
 	// Cleanup
-	mgmtHub.Remove(deviceID)
+	mgmtHub.Remove(session)
 	cancel()
 	conn.Close(websocket.StatusNormalClosure, "session ended")
 	log.Printf("[bd-mgmt] Device %s disconnected", deviceID)

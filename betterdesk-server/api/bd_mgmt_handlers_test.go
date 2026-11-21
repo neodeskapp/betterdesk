@@ -146,3 +146,51 @@ func TestBdMgmtWebSocketRequiresProof(t *testing.T) {
 	}
 	_ = conn.Close(websocket.StatusNormalClosure, "done")
 }
+
+// TestBdMgmtReconnectStaysConnected: when a desktop client opens a second
+// management socket, the first one's cleanup leaves the second in the hub,
+// so the device is listed and messages reach it (RV183).
+func TestBdMgmtReconnectStaysConnected(t *testing.T) {
+	f := newInternalFixture(t)
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.db.UpsertPeer(&db.Peer{ID: "BDMRV183", PK: pub, Status: "ONLINE"}); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	open := func() *websocket.Conn {
+		t.Helper()
+		conn, _, err := websocket.Dial(ctx, "ws://"+f.host+"/ws/bd-mgmt/BDMRV183", &websocket.DialOptions{
+			HTTPHeader: signedBdMgmtHeaders(t, priv, "BDMRV183"),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, _, err := conn.Read(ctx); err != nil { // welcome
+			t.Fatal(err)
+		}
+		return conn
+	}
+	first := open()
+	defer first.CloseNow()
+	second := open()
+	defer second.CloseNow()
+
+	// The first socket is closed as replaced; give its cleanup time to run.
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		if _, _, err := first.Read(ctx); err != nil {
+			break
+		}
+	}
+	time.Sleep(200 * time.Millisecond)
+	if !mgmtHub.IsConnected("BDMRV183") {
+		t.Fatal("the device is not listed while its second socket is open")
+	}
+	if a := f.overListener(t, http.MethodPost, "/api/bd/mgmt/BDMRV183/send", `{"type":"ping"}`, testOperatorKey); a.status != http.StatusOK {
+		t.Errorf("send to the reconnected device: %d %s, want 200", a.status, a.body)
+	}
+}
