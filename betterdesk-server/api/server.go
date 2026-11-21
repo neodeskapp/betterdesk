@@ -2012,6 +2012,16 @@ func writeInternalError(w http.ResponseWriter, err error, action string) {
 	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
 }
 
+// forwardedHeader is the value of a reverse proxy's X-Forwarded-* header,
+// "" unless the request comes from a trusted proxy (TRUST_PROXY and
+// TRUSTED_PROXIES): any client can send the header itself.
+func (s *Server) forwardedHeader(r *http.Request, name string) string {
+	if s.cfg == nil || !s.cfg.ShouldHonorForwardedHeaders(r.RemoteAddr) {
+		return ""
+	}
+	return r.Header.Get(name)
+}
+
 // remoteIP extracts the client IP from a request.
 // When TrustProxy is enabled and the direct peer is in TRUSTED_PROXIES,
 // respects X-Forwarded-For and X-Real-IP headers. Otherwise uses RemoteAddr.

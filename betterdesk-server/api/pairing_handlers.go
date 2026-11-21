@@ -202,7 +202,7 @@ func (s *Server) connectionEndpoints(r *http.Request) map[string]any {
 	}
 	scheme := "https"
 	if r != nil && r.TLS == nil {
-		if proto := strings.TrimSpace(r.Header.Get("X-Forwarded-Proto")); proto != "" {
+		if proto := strings.TrimSpace(s.forwardedHeader(r, "X-Forwarded-Proto")); proto != "" {
 			scheme = strings.ToLower(proto)
 		}
 	}
@@ -239,7 +239,7 @@ func (s *Server) publicHost(r *http.Request) string {
 		return ""
 	}
 	host := r.Host
-	if forwarded := r.Header.Get("X-Forwarded-Host"); forwarded != "" {
+	if forwarded := s.forwardedHeader(r, "X-Forwarded-Host"); forwarded != "" {
 		host = strings.TrimSpace(strings.Split(forwarded, ",")[0])
 	}
 	return stripHostPort(host)

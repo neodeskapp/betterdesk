@@ -1375,7 +1375,7 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 
 		// HTTPS enforcement
 		if s.cfg.ForceHTTPS && r.TLS == nil {
-			if r.Header.Get("X-Forwarded-Proto") != "https" {
+			if s.forwardedHeader(r, "X-Forwarded-Proto") != "https" {
 				writeJSON(w, http.StatusForbidden, map[string]string{"error": "HTTPS required"})
 				return
 			}
