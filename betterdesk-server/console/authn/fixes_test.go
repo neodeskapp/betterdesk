@@ -35,6 +35,7 @@ var scenarioFixes = []scenarioFix{
 	{"UM21", stopAtAccountLockouts},
 	{"AL4", maskNamesInSignInLogs},
 	{"AN6", logTheWrittenCredentialsPath},
+	{"RV117", stopAtOtherSpellings},
 }
 
 // fixScenario applies every fix to sc and counts the ones that changed it.
@@ -377,6 +378,34 @@ func strictSecrets(sc *scenarioVector) bool {
 		}
 	}
 	return changed
+}
+
+// stopAtOtherSpellings: a typed name that differs from an account's only
+// in letter case or spaces at the ends is refused, and a new directory
+// account is made under the name lower-cased and trimmed (RV117); Node
+// signed such a name in as a second account. A scenario is compared up to
+// its first sign-in with a name in another spelling than a seeded account
+// of the name has, and its rows at the end are not;
+// TestSignInRefusesAnotherSpellingOfAnAccount and
+// TestNewDirectoryAccountsAreLowerCase hold the new behaviour.
+func stopAtOtherSpellings(sc *scenarioVector) bool {
+	seeded := map[string]bool{}
+	for _, u := range sc.Seed.Users {
+		seeded[u.Username] = true
+	}
+	for i := range sc.Steps {
+		step := &sc.Steps[i]
+		if step.Fn != "authenticate" || len(step.Args) == 0 {
+			continue
+		}
+		var name string
+		if json.Unmarshal(step.Args[0], &name) != nil || seeded[name] || name == strings.ToLower(strings.TrimSpace(name)) {
+			continue
+		}
+		sc.Steps, sc.skipTables = sc.Steps[:i], true
+		return true
+	}
+	return false
 }
 
 // stopAtAccountLockouts: failed sign-ins lock an account for the address

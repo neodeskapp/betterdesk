@@ -57,6 +57,19 @@ func getUserByUsername(ctx context.Context, q store.Querier, username string) (*
 	return a, nil
 }
 
+// otherSpellingExists reports whether an account exists whose name is
+// username in other letter case or with other spaces at the ends. SQLite
+// folds the case of ASCII letters only.
+func otherSpellingExists(ctx context.Context, q store.Querier, username string) (bool, error) {
+	var n int64
+	err := q.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE LOWER(TRIM(username)) = LOWER(TRIM(?)) AND username <> ?`,
+		username, username).Scan(&n)
+	if err != nil {
+		return false, fmt.Errorf("look for another spelling of a user name: %w", err)
+	}
+	return n > 0, nil
+}
+
 // getUserByID returns the account with this id, or nil.
 func getUserByID(ctx context.Context, q store.Querier, id int64) (*Account, error) {
 	a, err := scanAccount(store.SelectRow(ctx, q, `SELECT `+accountColumns+` FROM users WHERE id = ?`, id))

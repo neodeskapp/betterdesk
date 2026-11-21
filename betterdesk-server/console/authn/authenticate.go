@@ -256,9 +256,13 @@ func roleText(role string, local *Account) string {
 // provisionLocalUserFromGo gives a user the signal server accepted a local
 // row, with the server's role (else "viewer") and provider. A local
 // account gets the hash of the password it signed in with, any other an
-// unusable hash.
+// unusable hash. A directory or single sign-on account is named as the
+// signal server names it: lower-cased and without spaces at the ends.
 func (s *Service) provisionLocalUserFromGo(ctx context.Context, username, password string, accept *goAccept, sso ssoStatus) (*Account, error) {
 	provider := inferAuthProvider(accept, sso)
+	if provider != providerLocal {
+		username = strings.ToLower(strings.TrimSpace(username))
+	}
 	role := accept.role
 	if role == "" {
 		role = "viewer"
@@ -360,9 +364,12 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 //     alone accepts the password, the outcome is the failure
 //     FailureUsernameCollision. A hash the password fits stays as it is,
 //     whatever its form.
+//   - A name that differs from an account's only in letter case or in
+//     spaces at the ends is refused.
 //   - An unknown user is refused, unless single sign-on is on or
 //     Settings.AutoCreate is set and the signal server accepts the
-//     credentials: then a local row is made.
+//     credentials: then a local row is made, for a directory or single
+//     sign-on account under the name lower-cased and trimmed.
 //
 // An account with the role "pro" is refused: with FailureProOnly when its
 // credentials were accepted, plainly otherwise. The outcome's user has
@@ -384,6 +391,16 @@ func (s *Service) Authenticate(ctx context.Context, username, password string) (
 		return Outcome{}, err
 	}
 	if user == nil {
+		// A directory matches names without regard to case: another
+		// spelling of an account would sign in as a second account.
+		other, err := otherSpellingExists(ctx, s.db, username)
+		if err != nil {
+			return Outcome{}, err
+		}
+		if other {
+			s.log.Info(fmt.Sprintf("[AUTH] Login failed: '%s' is another spelling of an existing account", logName(username)))
+			return Outcome{}, nil
+		}
 		return s.authenticateUnknown(ctx, username, password, sso)
 	}
 

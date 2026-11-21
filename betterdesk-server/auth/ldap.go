@@ -24,7 +24,7 @@ import (
 // Stored in server_config table with "ldap." prefix.
 type LDAPConfig struct {
 	Enabled        bool   `json:"enabled"`
-	Host           string `json:"host"`            // e.g. "ldap.example.com"
+	Host           string `json:"host"`             // e.g. "ldap.example.com"
 	Port           int    `json:"port"`             // 389 (LDAP), 636 (LDAPS)
 	UseTLS         bool   `json:"use_tls"`          // true = LDAPS (port 636)
 	StartTLS       bool   `json:"start_tls"`        // true = STARTTLS on plain port
@@ -48,12 +48,12 @@ type LDAPConfig struct {
 
 // LDAPResult represents the outcome of an LDAP authentication attempt.
 type LDAPResult struct {
-	Authenticated bool   // true if bind succeeded
-	Username      string // resolved username
-	DisplayName   string // from LDAP attribute
-	Email         string // from LDAP attribute
-	Role          string // mapped role from group membership
-	DN            string // full distinguished name
+	Authenticated bool     // true if bind succeeded
+	Username      string   // account name: the entry's id attribute, lower-cased and trimmed
+	DisplayName   string   // from LDAP attribute
+	Email         string   // from LDAP attribute
+	Role          string   // mapped role from group membership
+	DN            string   // full distinguished name
 	Groups        []string // list of group DNs the user belongs to
 }
 
@@ -189,7 +189,7 @@ func (p *LDAPProvider) authenticateDirectBind(conn *ldapv3.Conn, cfg *LDAPConfig
 
 	result := &LDAPResult{
 		Authenticated: true,
-		Username:      username,
+		Username:      directoryAccountName("", username),
 		DN:            dn,
 		Role:          cfg.DefaultRole,
 	}
@@ -219,25 +219,14 @@ func (p *LDAPProvider) authenticateBindSearch(conn *ldapv3.Conn, cfg *LDAPConfig
 	}
 	filter = strings.ReplaceAll(filter, "{{username}}", ldapv3.EscapeFilter(username))
 
-	attrID := cfg.UserAttrID
-	if attrID == "" {
-		attrID = "sAMAccountName"
-	}
-	attrEmail := cfg.UserAttrEmail
-	if attrEmail == "" {
-		attrEmail = "mail"
-	}
-	attrName := cfg.UserAttrName
-	if attrName == "" {
-		attrName = "displayName"
-	}
+	attrID, attrEmail, attrName := ldapUserAttributes(cfg)
 
 	searchReq := ldapv3.NewSearchRequest(
 		cfg.BaseDN,
 		ldapv3.ScopeWholeSubtree,
 		ldapv3.NeverDerefAliases,
-		1,    // size limit
-		10,   // time limit (seconds)
+		1,  // size limit
+		10, // time limit (seconds)
 		false,
 		filter,
 		[]string{"dn", attrID, attrEmail, attrName, "memberOf"},
@@ -265,7 +254,7 @@ func (p *LDAPProvider) authenticateBindSearch(conn *ldapv3.Conn, cfg *LDAPConfig
 
 	result := &LDAPResult{
 		Authenticated: true,
-		Username:      username,
+		Username:      directoryAccountName(entry.GetEqualFoldAttributeValue(attrID), username),
 		DisplayName:   entry.GetAttributeValue(attrName),
 		Email:         entry.GetAttributeValue(attrEmail),
 		DN:            userDN,
@@ -284,16 +273,37 @@ func (p *LDAPProvider) authenticateBindSearch(conn *ldapv3.Conn, cfg *LDAPConfig
 	return result, nil
 }
 
+// ldapUserAttributes returns the configured attributes of an entry's
+// account name, e-mail address and display name, or their defaults.
+func ldapUserAttributes(cfg *LDAPConfig) (id, email, name string) {
+	id, email, name = cfg.UserAttrID, cfg.UserAttrEmail, cfg.UserAttrName
+	if id == "" {
+		id = "sAMAccountName"
+	}
+	if email == "" {
+		email = "mail"
+	}
+	if name == "" {
+		name = "displayName"
+	}
+	return id, email, name
+}
+
+// directoryAccountName is the name of the account a directory entry signs
+// in as: the value of its id attribute, else the name as typed, both
+// lower-cased and without spaces at the ends. A directory matches names
+// without regard to case, so every spelling of a name is one account.
+func directoryAccountName(idValue, typed string) string {
+	name := strings.TrimSpace(idValue)
+	if name == "" {
+		name = strings.TrimSpace(typed)
+	}
+	return strings.ToLower(name)
+}
+
 // fetchUserAttributes reads attributes from the user's DN entry.
 func (p *LDAPProvider) fetchUserAttributes(conn *ldapv3.Conn, cfg *LDAPConfig, dn string, result *LDAPResult) {
-	attrEmail := cfg.UserAttrEmail
-	if attrEmail == "" {
-		attrEmail = "mail"
-	}
-	attrName := cfg.UserAttrName
-	if attrName == "" {
-		attrName = "displayName"
-	}
+	attrID, attrEmail, attrName := ldapUserAttributes(cfg)
 
 	searchReq := ldapv3.NewSearchRequest(
 		dn,
@@ -301,7 +311,7 @@ func (p *LDAPProvider) fetchUserAttributes(conn *ldapv3.Conn, cfg *LDAPConfig, d
 		ldapv3.NeverDerefAliases,
 		1, 5, false,
 		"(objectClass=*)",
-		[]string{attrEmail, attrName, "memberOf"},
+		[]string{attrID, attrEmail, attrName, "memberOf"},
 		nil,
 	)
 
@@ -312,6 +322,7 @@ func (p *LDAPProvider) fetchUserAttributes(conn *ldapv3.Conn, cfg *LDAPConfig, d
 	}
 	if len(sr.Entries) > 0 {
 		entry := sr.Entries[0]
+		result.Username = directoryAccountName(entry.GetEqualFoldAttributeValue(attrID), result.Username)
 		result.DisplayName = entry.GetAttributeValue(attrName)
 		result.Email = entry.GetAttributeValue(attrEmail)
 		memberOf := entry.GetAttributeValues("memberOf")
