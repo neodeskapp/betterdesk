@@ -45,6 +45,9 @@ type Options struct {
 	Now func() time.Time
 	// PingInterval overrides PingInterval (tests).
 	PingInterval time.Duration
+	// SessionCheck is how often an open socket reads its session again.
+	// Default 10 seconds.
+	SessionCheck time.Duration
 }
 
 // Scope decides which accounts get a message (DECISIONS A54). A message
@@ -81,6 +84,9 @@ func New(opts Options) *Service {
 	if opts.PingInterval <= 0 {
 		opts.PingInterval = PingInterval
 	}
+	if opts.SessionCheck <= 0 {
+		opts.SessionCheck = 10 * time.Second
+	}
 	return &Service{opts: opts, status: map[*ws.Conn]*session.User{}, panel: map[*ws.Conn]*session.User{}}
 }
 
@@ -92,7 +98,8 @@ func New(opts Options) *Service {
 // Unauthorized") whose role has a permission: device.view for the device
 // status, enrollment.approve for the panel events ("403 Forbidden"; "503
 // Service Unavailable" when the permission lookup fails). Messages the
-// browser sends are read and dropped.
+// browser sends are read and dropped. Every SessionCheck an open socket
+// reads its session again (watch).
 func (s *Service) Register(reg *ws.Registry, scope Scope) {
 	s.mu.Lock()
 	s.scope = scope
@@ -139,7 +146,64 @@ func (s *Service) serve(u *ws.Upgrade, label string, clients map[*ws.Conn]*sessi
 		s.mu.Unlock()
 	}()
 	conn.Heartbeat(s.opts.PingInterval)
+	stopWatch := s.watch(u, conn, clients, session.UserID(), permission)
+	defer stopWatch()
 	_ = conn.Discard()
+}
+
+// watch reads the session of an open socket every SessionCheck and closes
+// the socket (1008 "Session ended") once the account signed out, another
+// account holds the session, or its role lost the permission (a failed
+// lookup counts as lost). Otherwise the account of that read replaces the
+// socket's, so the messages follow its current role and scope. stop ends
+// the watch and waits for it.
+func (s *Service) watch(u *ws.Upgrade, conn *ws.Conn, clients map[*ws.Conn]*session.User, userID int64, permission string) (stop func()) {
+	done, stopped := make(chan struct{}), make(chan struct{})
+	go func() {
+		defer close(stopped)
+		tick := time.NewTicker(s.opts.SessionCheck)
+		defer tick.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-conn.Context().Done():
+				return
+			case <-tick.C:
+				user, ok := recheck(u, conn.Context(), userID, permission)
+				if !ok {
+					conn.Close(1008, "Session ended")
+					return
+				}
+				s.mu.Lock()
+				if _, open := clients[conn]; open {
+					clients[conn] = user
+				}
+				s.mu.Unlock()
+			}
+		}
+	}()
+	return func() {
+		close(done)
+		<-stopped
+	}
+}
+
+// recheck reads a socket's session again and runs the upgrade's checks
+// on it; user is the account of that read.
+func recheck(u *ws.Upgrade, parent context.Context, userID int64, permission string) (user *session.User, ok bool) {
+	ctx, cancel := context.WithTimeout(parent, 5*time.Second)
+	defer cancel()
+	check := *u
+	check.R = u.R.WithContext(ctx)
+	sn := check.Session()
+	if !sn.SignedIn() || sn.UserID() != userID {
+		return nil, false
+	}
+	if allowed, err := check.RoleHasPermission(sn.UserRole(), permission); err != nil || !allowed {
+		return nil, false
+	}
+	return sn.User(), true
 }
 
 // Clients counts the open sockets: device status and panel events.
