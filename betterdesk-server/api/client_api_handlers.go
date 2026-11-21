@@ -955,6 +955,10 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	} else {
 		s.rememberUnverifiedIdentity(deviceID, body)
 	}
+	// Telemetry (snapshots and command results) counts only when the device
+	// signed it: inside the verified envelope or in its own telemetry
+	// envelope. A heartbeat without either stores cpu, memory and disk.
+	telemetryVerified := envelopeVerified
 	if len(body.TelemetryEnvelope) > 0 {
 		decrypted, err := s.openTelemetryEnvelope(deviceID, body.TelemetryEnvelope)
 		if err != nil {
@@ -962,7 +966,11 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 			body.Telemetry = nil
 		} else {
 			body.Telemetry = decrypted.Payload
+			telemetryVerified = true
 		}
+	}
+	if !telemetryVerified {
+		body.Telemetry = nil
 	}
 	// Update peer status to ONLINE
 	_ = s.db.UpdatePeerStatus(deviceID, "ONLINE", clientIP, "heartbeat")
@@ -988,8 +996,12 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	resp := map[string]any{
 		"modified_at": serverModifiedAt,
 	}
-	if commands := s.telemetryCommandsForDevice(deviceID); len(commands) > 0 {
-		resp["telemetry_commands"] = commands
+	// Commands carry their arguments, so they go out only in the sealed
+	// answer to a verified heartbeat.
+	if envelopeVerified {
+		if commands := s.telemetryCommandsForDevice(deviceID); len(commands) > 0 {
+			resp["telemetry_commands"] = commands
+		}
 	}
 
 	// Request sysinfo if hostname is empty (never received)

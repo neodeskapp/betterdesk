@@ -119,11 +119,15 @@ func (s *Server) saveClientTelemetry(deviceID string, raw json.RawMessage) {
 			envelope.CollectedAt, envelope.Metrics)
 	}
 	for _, snapshot := range envelope.Snapshots {
-		s.saveTelemetrySnapshot(deviceID, snapshot.Kind, snapshot.SampleID,
-			snapshot.Status, snapshot.CollectedAt, snapshot.Data)
+		s.saveDeviceSnapshot(deviceID, snapshot)
+	}
+	var pending map[int64]bool
+	if len(envelope.Results) > 0 {
+		pending = s.pendingTelemetryCommandIDs(deviceID)
 	}
 	for _, result := range envelope.Results {
-		if result.ID <= 0 {
+		// A device completes only commands queued for it.
+		if result.ID <= 0 || !pending[result.ID] {
 			continue
 		}
 		var resultObject struct {
@@ -131,9 +135,7 @@ func (s *Server) saveClientTelemetry(deviceID string, raw json.RawMessage) {
 		}
 		if len(result.Result) > 0 && json.Unmarshal(result.Result, &resultObject) == nil &&
 			resultObject.Snapshot != nil {
-			snapshot := resultObject.Snapshot
-			s.saveTelemetrySnapshot(deviceID, snapshot.Kind, snapshot.SampleID,
-				snapshot.Status, snapshot.CollectedAt, snapshot.Data)
+			s.saveDeviceSnapshot(deviceID, *resultObject.Snapshot)
 		}
 		resultJSON, err := telemetryJSON(result.Result, 256*1024)
 		if err != nil {
@@ -150,6 +152,31 @@ func (s *Server) saveClientTelemetry(deviceID string, raw json.RawMessage) {
 				map[string]string{"error": err.Error()})
 		}
 	}
+}
+
+// saveDeviceSnapshot stores a snapshot a device sent about itself. The
+// verified identity is the server's record of a verified heartbeat, so a
+// device never writes it.
+func (s *Server) saveDeviceSnapshot(deviceID string, snapshot clientTelemetrySnapshot) {
+	if snapshot.Kind == db.VerifiedIdentityKind {
+		return
+	}
+	s.saveTelemetrySnapshot(deviceID, snapshot.Kind, snapshot.SampleID,
+		snapshot.Status, snapshot.CollectedAt, snapshot.Data)
+}
+
+// pendingTelemetryCommandIDs are the ids of the commands waiting for the
+// device's result: the ones the heartbeat hands out, and more.
+func (s *Server) pendingTelemetryCommandIDs(deviceID string) map[int64]bool {
+	commands, err := s.db.GetPendingTelemetryCommands(deviceID, 20)
+	if err != nil {
+		return nil
+	}
+	ids := make(map[int64]bool, len(commands))
+	for _, command := range commands {
+		ids[command.ID] = true
+	}
+	return ids
 }
 
 func (s *Server) telemetryCommandsForDevice(deviceID string) []queuedTelemetryCommand {
