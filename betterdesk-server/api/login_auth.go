@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/audit"
 	"github.com/unitronix/betterdesk-server/auth"
@@ -92,6 +93,24 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 			role := ldapResult.Role
 			if role == "" {
 				role = auth.RoleViewer
+			}
+
+			// The account is the one the directory entry names, not the
+			// typed spelling: a directory matches names without regard to
+			// case, so "Alice" signs in as alice and creates no second row.
+			if name := strings.TrimSpace(ldapResult.Username); name != "" && name != username {
+				username = name
+				if user, err = s.db.GetUser(username); err != nil {
+					return passwordLoginResult{Status: passwordLoginInternal}
+				}
+				// A local or single sign-on account of that name is never
+				// turned into a directory account by a sign-in.
+				if user != nil && user.AuthProvider != db.AuthProviderLDAP {
+					if s.auditLog != nil {
+						s.auditLog.Log(audit.ActionAuthLoginFailed, clientIP, username, map[string]string{"method": "ldap", "reason": "username_collision"})
+					}
+					return passwordLoginResult{Status: passwordLoginInvalid}
+				}
 			}
 
 			if user == nil {

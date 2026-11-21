@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/auth"
@@ -324,5 +325,44 @@ func TestHandleClientLoginLocalUserStillUsesLocalPassword(t *testing.T) {
 	}
 	if resp["type"] != "access_token" {
 		t.Fatalf("type = %#v, want access_token", resp["type"])
+	}
+}
+
+// TestLDAPSignInUsesTheDirectoryName: a directory sign-in acts as the
+// account the directory entry names, so another spelling of the name signs
+// in as that account and creates no second one; a local account of that
+// name is refused (RV117).
+func TestLDAPSignInUsesTheDirectoryName(t *testing.T) {
+	database := testSetupDB(t)
+	defer database.Close()
+	createLDAPTestUser(t, database, "alice", auth.RoleViewer)
+	if err := database.CreateUser(&db.User{Username: "carol", PasswordHash: "hash", Role: auth.RoleAdmin, AuthProvider: db.AuthProviderLocal}); err != nil {
+		t.Fatal(err)
+	}
+	srv := newClientLoginTestServer(database)
+	srv.ldapProvider = &mockLDAPProvider{
+		enabled: true,
+		fn: func(username, password string) (*auth.LDAPResult, error) {
+			// The directory matches names without regard to case.
+			return &auth.LDAPResult{Authenticated: true, Username: strings.ToLower(strings.TrimSpace(username)), Role: auth.RoleViewer}, nil
+		},
+	}
+
+	result := srv.authenticatePasswordLogin("Alice", "dir-pass", "127.0.0.1")
+	if result.Status != passwordLoginOK || result.User == nil || result.User.Username != "alice" {
+		t.Fatalf("sign-in as Alice: status %v user %+v, want the account alice", result.Status, result.User)
+	}
+	if u, _ := database.GetUser("Alice"); u != nil {
+		t.Errorf("a second account Alice was created: %+v", u)
+	}
+
+	if result := srv.authenticatePasswordLogin("Carol", "dir-pass", "127.0.0.1"); result.Status != passwordLoginInvalid {
+		t.Errorf("sign-in as Carol for the local account carol: status %v, want invalid", result.Status)
+	}
+	if u, _ := database.GetUser("Carol"); u != nil {
+		t.Errorf("an account Carol was created: %+v", u)
+	}
+	if u, _ := database.GetUser("carol"); u == nil || u.AuthProvider != db.AuthProviderLocal || u.Role != auth.RoleAdmin {
+		t.Errorf("the local account carol after the refused sign-in: %+v", u)
 	}
 }
