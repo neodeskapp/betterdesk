@@ -1125,7 +1125,8 @@ class RDClient {
     }
 
     async _applyRemoteClipboard(clipboards) {
-        if (this._viewOnly || this._clipboardDisabled) return;
+        // Decode only what will be written: the active tab, clipboard on
+        if (this._viewOnly || this._clipboardDisabled || !this._clipboardToLocalEnabled) return;
         const list = clipboards || [];
         if (!list.length) return;
 

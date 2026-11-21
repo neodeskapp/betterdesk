@@ -8,6 +8,8 @@
 // eslint-disable-next-line no-unused-vars
 class RDClipboard {
     static OWNER_FORMAT = 'dyn.com.rustdesk.owner';
+    /** Largest clipboard entry taken from the device, after decompression */
+    static MAX_BYTES = 16 * 1024 * 1024;
 
     static FORMAT = {
         Text: 0,
@@ -153,9 +155,10 @@ class RDClipboard {
         const needsDecompress = !!clipboard.compress || RDCompress.isZstdMagic(bytes);
         if (needsDecompress) {
             try {
-                bytes = await RDCompress.decompressZstd(bytes, { force: true });
+                bytes = await RDCompress.decompressZstd(bytes, { force: true, maxBytes: RDClipboard.MAX_BYTES });
             } catch (err) {
-                RDCompress.reportZstdUnavailable(err);
+                if (err && err.tooLarge) console.warn('[RDClipboard] Skipped a clipboard entry from the device:', err.message);
+                else RDCompress.reportZstdUnavailable(err);
                 return null;
             }
         }

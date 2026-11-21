@@ -22,7 +22,7 @@ const g: Loaded = loadScripts(
 		'file-connection.js',
 		'client.js'
 	],
-	['RDClient', 'RDFileConnection', 'RDCrypto', 'RDClipboard', 'nacl']
+	['RDClient', 'RDFileConnection', 'RDCrypto', 'RDClipboard', 'RDCompress', 'nacl']
 );
 const nacl = g.nacl;
 
@@ -303,6 +303,42 @@ describe('device clipboard', () => {
 		c.setDisableClipboard(false);
 		await c._applyRemoteClipboard([entry()]);
 		expect(write).toHaveBeenCalledOnce();
+	});
+
+	test('a background tab does not decode the device clipboard at all', async () => {
+		const c = await client();
+		const decode = vi.spyOn(g.RDClipboard, 'decodeEntries');
+		c._state = 'streaming';
+		c.setSessionActive(false);
+		await c._applyRemoteClipboard([entry()]);
+		expect(decode).not.toHaveBeenCalled();
+	});
+
+	test('a compressed entry is inflated in chunks and given up past 16 MB', async () => {
+		let pulled = 0;
+		// A zstd stream that would inflate to 64 MB, one 1 MB chunk per read
+		class Bomb {
+			writable = new WritableStream();
+			readable = new ReadableStream({
+				pull(ctl) {
+					if (pulled++ >= 64) ctl.close();
+					else ctl.enqueue(new Uint8Array(1 << 20));
+				}
+			});
+		}
+		vi.stubGlobal('DecompressionStream', Bomb);
+		const zstd = new Uint8Array([0x28, 0xb5, 0x2f, 0xfd, 1, 2, 3]);
+		try {
+			expect(await g.RDClipboard.decodeEntry({ content: zstd, compress: true, format: 0 })).toBeNull();
+			expect(pulled).toBeLessThan(20);
+			pulled = 0;
+			await expect(g.RDCompress.decompressZstd(zstd, { force: true, maxBytes: 4 << 20 })).rejects.toThrow(
+				/larger than/
+			);
+			expect(pulled).toBeLessThan(8);
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 });
 
