@@ -22,7 +22,7 @@ func TestConfigRoutesKeepSecrets(t *testing.T) {
 	secrets := []string{
 		"jwt_secret", "api_key", "telemetry_x25519_private", "ldap.bind_password",
 		"oidc.client_secret", "device_totp_secret_PEERAAA1", "device_public_key_PEERAAA1",
-		"pairing_code_abc", "mesh_share_abc",
+		"pairing_code_abc", "mesh_share_abc", "custom.private_pem", "smtp.Password",
 	}
 	for _, k := range secrets {
 		if err := database.SetConfig(k, "stored-"+k); err != nil {
