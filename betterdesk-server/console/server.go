@@ -360,8 +360,9 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 
 	s.jobs.Add("session cleanup", sessions.RunCleanup)
 	s.deps.Sockets = ws.New(ws.Options{
-		Session:    ws.SessionOf(sessions),
-		Permission: ws.PermissionOf(s.deps.Access),
+		Session:       ws.SessionOf(sessions),
+		Permission:    ws.PermissionOf(s.deps.Access),
+		SectionAccess: ws.SectionAccessOf(s.deps.Access),
 		Origins: ws.OriginPolicy{
 			Allowed:      ws.ParseAllowedOrigins(getenv("WS_ALLOWED_ORIGINS")),
 			AllowMissing: getenv("BD_ALLOW_MISSING_ORIGIN") == "true",

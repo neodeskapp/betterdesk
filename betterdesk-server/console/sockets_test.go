@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/servermgmt"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
@@ -47,6 +48,45 @@ func TestUpgradeGoesToTheSocketOrThePipeline(t *testing.T) {
 		if got := w.s.Deps().Sockets.Serves(r); got != want {
 			t.Errorf("an upgrade to %s goes to a socket: %v, want %v", path, got, want)
 		}
+	}
+}
+
+// RV89: the server terminal asks the account's panel access policy, so
+// the console hands its socket registry the policy lookup. An account
+// with write in server-management gets the terminal; one whose policy
+// lowers that section to read is refused at the upgrade.
+func TestServerTerminalFollowsThePanelAccessPolicy(t *testing.T) {
+	w := newWorld(t, setup{})
+	addr := strings.TrimPrefix(w.front.URL, "http://")
+	open := func(role string) (int, *wstest.Client) {
+		t.Helper()
+		a := w.agent().signIn(role)
+		var pairs []string
+		for name, value := range a.cookies {
+			pairs = append(pairs, name+"="+value)
+		}
+		c, res, err := wstest.Dial(addr, servermgmt.TerminalPath, http.Header{
+			"Cookie": {strings.Join(pairs, "; ")}, "Origin": {"http://" + addr},
+		})
+		if err != nil {
+			t.Fatalf("%s: dial: %v", role, err)
+		}
+		if c != nil {
+			return http.StatusSwitchingProtocols, c
+		}
+		return res.StatusCode, nil
+	}
+	status, c := open("server_admin")
+	if status != http.StatusSwitchingProtocols {
+		t.Fatalf("server_admin with write in server-management: %d, want the terminal", status)
+	}
+	c.Drop()
+	w.setSection("server_admin", "server-management", "read")
+	if status, c := open("server_admin"); status != http.StatusForbidden {
+		if c != nil {
+			c.Drop()
+		}
+		t.Errorf("server_admin with read in server-management: %d, want 403", status)
 	}
 }
 
