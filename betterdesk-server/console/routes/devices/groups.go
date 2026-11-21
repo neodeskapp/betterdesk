@@ -189,33 +189,39 @@ func (h *handlers) saveDeviceGroup(w http.ResponseWriter, r *http.Request) {
 	answer(w, r, http.StatusOK, withData{Success: true, Data: group})
 }
 
-// groupOpen reports whether the group's access list lets the account see
-// it. The roles that see every device see every group.
-func (h *handlers) groupOpen(r *http.Request, group *goapi.Object) bool {
-	return access.GroupAllowedForUser(devicegroups.ScopeGroup(group), h.groups.UserAccessContext(r.Context(), kit.User(r)))
+// groupRights is what the account may do with a stored device group, or
+// with a new one for nil (access.GroupRightsForUser, the rule of the
+// folders too).
+func (h *handlers) groupRights(r *http.Request, group *goapi.Object) (access.GroupRights, error) {
+	var g *access.DeviceGroup
+	if group != nil {
+		scoped := devicegroups.ScopeGroup(group)
+		g = &scoped
+	}
+	return h.d.Access.GroupRightsForUser(r.Context(), devicegroups.ScopeUser(kit.User(r)), g)
 }
 
 // groupSaveInScope reports whether the account may save the group of the
-// payload. A stored group must be open to the account. An account whose
-// device scope is limited changes no access list (a new group has none)
-// and makes no tag group: it neither turns a group into one nor changes
-// the tag of one, since either would widen its own scope. An account
-// without a limit saves any group that is open to it.
+// payload: it must be allowed to change the group (a new one when the
+// payload names none that is stored), and to change access lists when the
+// payload's lists differ from the stored ones (a new group has none). An
+// account that may not change access lists, one whose device scope is
+// limited, also makes no tag group: it neither turns a group into one nor
+// changes the tag of one, since either would widen its own scope.
 func (h *handlers) groupSaveInScope(r *http.Request, p devicegroups.GroupPayload) (bool, error) {
-	ctx := r.Context()
 	var stored *goapi.Object
 	if p.GUID != "" {
 		var err error
-		if stored, err = h.groups.DeviceGroupByGUID(ctx, p.GUID); err != nil {
+		if stored, err = h.groups.DeviceGroupByGUID(r.Context(), p.GUID); err != nil {
 			return false, err
 		}
-		if stored != nil && !h.groupOpen(r, stored) {
-			return false, nil
-		}
 	}
-	scope, err := h.groups.DeviceScopeForUser(ctx, kit.User(r), nil)
-	if err != nil || scope == nil {
-		return err == nil, err
+	rights, err := h.groupRights(r, stored)
+	if err != nil || !rights.Change {
+		return false, err
+	}
+	if rights.ChangeAccess {
+		return true, nil
 	}
 	var was access.DeviceGroup
 	if stored != nil {
@@ -294,7 +300,11 @@ func (h *handlers) deleteDeviceGroup(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "devices.folder_group_readonly")
 		return
 	}
-	if !h.groupOpen(r, group) {
+	if rights, err := h.groupRights(r, group); err != nil || !rights.Change {
+		if err != nil {
+			h.serverError(w, r, "Delete device group error:", err)
+			return
+		}
 		fail(w, r, http.StatusForbidden, "errors.forbidden")
 		return
 	}
