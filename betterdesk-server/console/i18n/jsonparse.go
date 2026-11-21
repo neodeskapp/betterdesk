@@ -392,6 +392,7 @@ func (p *jsonParser) parseObject() any {
 			}
 		case '}':
 			p.pos++
+			out.sortKeys()
 			return out
 		default:
 			p.failAt("Expected ',' or '}' after property value in JSON")

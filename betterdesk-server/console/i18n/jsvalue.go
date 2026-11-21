@@ -25,11 +25,19 @@ var undefined = undefinedType{}
 
 // Object is a JSON object that keeps its keys in the order JavaScript
 // lists them: array indexes ascending, then the other keys as inserted.
+//
+// An object is built by one goroutine and then only read, by many at once
+// (the loaded languages). Keys therefore never writes: the order of an
+// object with array indexes among its keys is worked out by sortKeys when
+// it is complete (the parser and clone call it), and worked out afresh on
+// every call to Keys when nothing called sortKeys.
 type Object struct {
 	m       map[string]any
 	order   []string
 	indexes int
-	sorted  []string
+	// sorted is the keys in JavaScript order, nil when sortKeys has not
+	// run since the last new key
+	sorted []string
 }
 
 // NewObject returns an empty object.
@@ -66,6 +74,19 @@ func (o *Object) Keys() []string {
 	if o.sorted != nil {
 		return o.sorted
 	}
+	return o.jsOrder()
+}
+
+// sortKeys works out the order Keys gives once, for an object that gets no
+// more keys.
+func (o *Object) sortKeys() {
+	if o.indexes > 0 && o.sorted == nil {
+		o.sorted = o.jsOrder()
+	}
+}
+
+// jsOrder is the keys with the array indexes first, ascending.
+func (o *Object) jsOrder() []string {
 	type indexed struct {
 		n   uint64
 		key string
@@ -85,8 +106,7 @@ func (o *Object) Keys() []string {
 	for _, e := range idx {
 		out = append(out, e.key)
 	}
-	o.sorted = append(out, rest...)
-	return o.sorted
+	return append(out, rest...)
 }
 
 // MarshalJSON writes the object as JSON.stringify would.
@@ -99,6 +119,7 @@ func (o *Object) clone() *Object {
 	for k, v := range o.m {
 		c.m[k] = v
 	}
+	c.sortKeys()
 	return c
 }
 
