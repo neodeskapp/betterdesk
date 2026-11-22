@@ -26,7 +26,7 @@ import (
 // either needs a proof made with the key it has.
 //
 // A device admitted by a template or by the proof of its key gets its
-// device token in the answer (authn.IssueServerDeviceToken), and so does a
+// device token in the answer (authn.IssueDeviceToken), and so does a
 // known device that proves its key and brings no device token of its own,
 // for example after "Issue a new token" ended its token. A device admitted
 // by an approval gets its token from the registration's status
@@ -125,7 +125,7 @@ func (h *handlers) register(w http.ResponseWriter, r *http.Request) {
 	_ = updateOnlineStatus(ctx, h.d.Store, jsbind.String(effective))
 	answer := registered{Success: true, DeviceID: effective, ServerTime: h.now().UnixMilli(), HeartbeatInterval: 15}
 	if issue && !callerOf(r).byDeviceToken {
-		token, err := h.d.Authn.IssueServerDeviceToken(ctx, effective, "Issued at the device registration")
+		token, err := h.d.Authn.IssueDeviceToken(ctx, effective, "Issued at the device registration")
 		if err != nil {
 			h.serverError(w, r, "Register error:", err, "Registration failed")
 			return

@@ -61,14 +61,13 @@ func TestABannedOrDeletedDeviceProvesNothing(t *testing.T) {
 		db = storetest.Prepare(t, db, storetest.GoServerFirst)
 		ctx := context.Background()
 		s, _, _ := testService(t, db, nil)
-		id := addUser(t, s, "admin", "pw", "admin", "local")
 		set := db.Pick("1", "TRUE")
 		mustExec(t, db, `INSERT INTO peers (id) VALUES ('dev-ok')`)
 		mustExec(t, db, `INSERT INTO peers (id, banned) VALUES ('dev-banned', `+set+`)`)
 		mustExec(t, db, `INSERT INTO peers (id, soft_deleted) VALUES ('dev-binned', `+set+`)`)
 		tokens := map[string]string{}
 		for _, device := range []string{"dev-ok", "dev-banned", "dev-binned", "dev-new"} {
-			token, err := s.IssueDeviceToken(ctx, id, device, "")
+			token, err := s.IssueDeviceToken(ctx, device, "test")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -101,8 +100,9 @@ func TestABannedOrDeletedDeviceProvesNothing(t *testing.T) {
 // TestServerDeletesAndBansEndDeviceTokens: a delete, soft or hard, and a
 // ban end the device's device tokens whichever port they come through,
 // since the signal server's own delete and ban revoke them in the shared
-// database. A restore or an unban gives none back; the tokens of accounts
-// and of other devices stay (BUGS RV231).
+// database: the ones in device_tokens and the ones an older console issued
+// in access_tokens. A restore or an unban gives none back; the tokens of
+// accounts and of other devices stay (BUGS RV231).
 func TestServerDeletesAndBansEndDeviceTokens(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		db = storetest.Prepare(t, db, storetest.GoServerFirst)
@@ -111,14 +111,17 @@ func TestServerDeletesAndBansEndDeviceTokens(t *testing.T) {
 		s, _, _ := testService(t, db, nil)
 		id := addUser(t, s, "admin", "pw", "admin", "local")
 		devices := []string{"dev-soft", "dev-hard", "dev-ban", "dev-other"}
-		tokens := map[string]string{}
+		tokens, older := map[string]string{}, map[string]string{}
 		for _, device := range devices {
 			mustExec(t, db, `INSERT INTO peers (id) VALUES (?)`, device)
-			token, err := s.IssueDeviceToken(ctx, id, device, "")
+			token, err := s.IssueDeviceToken(ctx, device, "test")
 			if err != nil {
 				t.Fatal(err)
 			}
 			tokens[device] = token
+			if older[device], err = s.issue(ctx, TokenKindDevice, id, device, "", "", store.DeviceTokenExpiry()); err != nil {
+				t.Fatal(err)
+			}
 		}
 		account, err := s.GenerateSignInToken(ctx, id, "dev-ban", "uuid-1", "")
 		if err != nil {
@@ -142,11 +145,13 @@ func TestServerDeletesAndBansEndDeviceTokens(t *testing.T) {
 
 		for _, device := range devices {
 			want := device == "dev-other"
-			if _, err := s.RequireDeviceToken(ctx, "Bearer "+tokens[device]); (err == nil) != want {
-				t.Errorf("device request of %s: %v, want through %v", device, err, want)
-			}
-			if ok, err := s.VerifyDeviceWSAuth(ctx, device, tokens[device]); ok != want || err != nil {
-				t.Errorf("device socket of %s: %v, %v; want %v", device, ok, err, want)
+			for _, token := range []string{tokens[device], older[device]} {
+				if _, err := s.RequireDeviceToken(ctx, "Bearer "+token); (err == nil) != want {
+					t.Errorf("device request of %s: %v, want through %v", device, err, want)
+				}
+				if ok, err := s.VerifyDeviceWSAuth(ctx, device, token); ok != want || err != nil {
+					t.Errorf("device socket of %s: %v, %v; want %v", device, ok, err, want)
+				}
 			}
 		}
 		if user, err := s.ValidateAccessToken(ctx, account); err != nil || user == nil {
@@ -168,11 +173,11 @@ func TestAChangeOfIDEndsTheDeviceTokens(t *testing.T) {
 		s, _, _ := testService(t, db, nil)
 		id := addUser(t, s, "admin", "pw", "admin", "local")
 		mustExec(t, db, `INSERT INTO peers (id) VALUES ('rename-old')`)
-		renamed, err := s.IssueDeviceToken(ctx, id, "rename-old", "")
+		renamed, err := s.IssueDeviceToken(ctx, "rename-old", "test")
 		if err != nil {
 			t.Fatal(err)
 		}
-		stale, err := s.IssueDeviceToken(ctx, id, "rename-new", "")
+		stale, err := s.IssueDeviceToken(ctx, "rename-new", "test")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -213,7 +218,7 @@ func TestDeviceTokensDoNotExpireByTime(t *testing.T) {
 		s.SetTokenExpiryDays("30")
 		id := addUser(t, s, "admin", "pw", "admin", "local")
 		mustExec(t, db, `INSERT INTO peers (id) VALUES ('old-device')`)
-		device, err := s.IssueDeviceToken(ctx, id, "old-device", "")
+		device, err := s.IssueDeviceToken(ctx, "old-device", "test")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -266,7 +271,7 @@ func TestABannedOrDeletedDeviceOpensNoSocketWithAnEnrollmentToken(t *testing.T) 
 	})
 }
 
-// Only a token the console issued for a device proves the device: an
+// Only a token issued for a device proves the device: an
 // account's sign-in token proves none, whatever client id it stored, and a
 // device token signs no account in. The revocations of an account's
 // tokens leave the device tokens alone; a new device token revokes the
@@ -285,7 +290,7 @@ func TestOnlyDeviceTokensProveADevice(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		device, err := s.IssueDeviceToken(ctx, id, "900100001", "")
+		device, err := s.IssueDeviceToken(ctx, "900100001", "test")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -325,7 +330,7 @@ func TestOnlyDeviceTokensProveADevice(t *testing.T) {
 		if _, err := s.RequireDeviceToken(ctx, "Bearer "+device); err != nil {
 			t.Errorf("the account's sign-out revoked the device token: %v", err)
 		}
-		again, err := s.IssueDeviceToken(ctx, id, "900100001", "")
+		again, err := s.IssueDeviceToken(ctx, "900100001", "test")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -335,7 +340,7 @@ func TestOnlyDeviceTokensProveADevice(t *testing.T) {
 		if _, err := s.RequireDeviceToken(ctx, "Bearer "+again); err != nil {
 			t.Errorf("the new device token: %v", err)
 		}
-		if _, err := s.IssueDeviceToken(ctx, id, "a b", ""); err == nil {
+		if _, err := s.IssueDeviceToken(ctx, "a b", "test"); err == nil {
 			t.Error("a device token for an id that is no device id")
 		}
 	})

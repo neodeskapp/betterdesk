@@ -2,7 +2,6 @@ package authn
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -11,11 +10,11 @@ import (
 )
 
 // Checks for requests and sockets that come from devices. A device proves
-// itself with a token: a device token issued for it, by the console
-// (IssueDeviceToken, in access_tokens) or by the API server or the console
-// at an enrollment, a pairing or a registration (device_tokens, created_by
-// "system"; IssueServerDeviceToken), or on the device sockets also an
-// enrollment token of the signal server. An account's sign-in token proves
+// itself with a token: a device token issued for it by the API server or
+// the console at an enrollment, a pairing, a registration or a join
+// (device_tokens, created_by "system"; IssueDeviceToken), one an older
+// console issued in access_tokens (token_kind "device"), or on the device
+// sockets also an enrollment token of the signal server. An account's sign-in token proves
 // no device, whatever client id it stored. Device tokens do not expire by
 // time. The header X-Device-Id names a device and proves
 // nothing. Neither token proves anything while the signal server holds
@@ -130,33 +129,6 @@ func (s *Service) ServerDeviceToken(ctx context.Context, token string) (string, 
 		return "", nil
 	}
 	return device, nil
-}
-
-// IssueServerDeviceToken issues a device token in device_tokens, the way
-// the API server issues one at an enrollment, for a device the console
-// admitted without an approver (an agent template, the proof of its key).
-// It ends the device tokens the device had, the console's and the server's.
-// The row keeps only the token's hash and its first eight characters; the
-// token does not expire by time. A database without the signal server's
-// device_tokens issues none: the token is "".
-func (s *Service) IssueServerDeviceToken(ctx context.Context, deviceID, note string) (string, error) {
-	if !IsDeviceID(deviceID) {
-		return "", fmt.Errorf("device token: %q is no device id", deviceID)
-	}
-	token, err := s.randomHex(32)
-	if err != nil {
-		return "", fmt.Errorf("device token: %w", err)
-	}
-	if err := revokeDeviceTokens(ctx, s.db, deviceID); err != nil {
-		return "", err
-	}
-	if err := createServerDeviceToken(ctx, s.db, deviceID, token, note); err != nil {
-		if missingTable(s.db, err) {
-			return "", nil
-		}
-		return "", err
-	}
-	return token, nil
 }
 
 // DeviceClaim is one place where a request can name the device it speaks

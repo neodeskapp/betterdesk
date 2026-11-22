@@ -45,9 +45,11 @@ func withCaller(r *http.Request, c *caller) *http.Request {
 }
 
 // requireDeviceAuth lets a request through with any live access token,
-// an account's or a device's, whoever it belongs to, and notes its use. A session does not count: the
-// browser takes a token from POST /api/auth/access-token first. A lookup
-// that fails is a refusal.
+// an account's or a device's, whoever it belongs to, and notes its use; a
+// device token in device_tokens counts as well, as the device it is bound
+// to (caller.deviceID). A session does not count: the browser takes a
+// token from POST /api/auth/access-token first. A lookup that fails is a
+// refusal.
 //
 //	401 {"error":"Missing or invalid Bearer access token"}
 func (h *handlers) requireDeviceAuth(next http.Handler) http.Handler {
@@ -62,6 +64,13 @@ func (h *handlers) requireDeviceAuth(next http.Handler) http.Handler {
 				}
 				if err == nil {
 					next.ServeHTTP(w, withCaller(r, &caller{token: row, user: user}))
+					return
+				}
+			}
+			if err == nil && row == nil {
+				var bound string
+				if bound, err = h.d.Authn.ServerDeviceToken(r.Context(), token); err == nil && deviceIDPattern(bound) {
+					next.ServeHTTP(w, withCaller(r, &caller{deviceID: bound, byDeviceToken: true}))
 					return
 				}
 			}

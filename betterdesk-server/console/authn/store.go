@@ -247,8 +247,8 @@ type AccessToken struct {
 	LastUsed   store.Time        `json:"last_used"`
 	IPAddress  nullText          `json:"ip_address"`
 	Revoked    store.Bool        `json:"revoked"`
-	// Kind is TokenKindDevice for a token the console issued for a device,
-	// TokenKindAccount for one an account's sign-in made.
+	// Kind is TokenKindDevice for a token an older console issued for a
+	// device, TokenKindAccount for one an account's sign-in made.
 	Kind nullText `json:"token_kind"`
 }
 

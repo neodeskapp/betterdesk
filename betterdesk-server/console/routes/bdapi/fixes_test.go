@@ -155,6 +155,7 @@ func TestOperatorLoginTakesOnlyADeviceID(t *testing.T) {
 // device token passes them and is no operator's sign-in (BUGS RV1).
 func TestOnlyADeviceTokenProvesADevice(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		storetest.GoServerMigrate(t, db)
 		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000", "LOGIN_RATE_LIMIT_MAX": "1000"}})
 		ctx := context.Background()
 		authn := w.Server.Deps().Authn
@@ -173,7 +174,7 @@ func TestOnlyADeviceTokenProvesADevice(t *testing.T) {
 			t.Fatalf("operator sign-in: %d %s", got.Status, got.Body)
 		}
 		operator := []string{"Authorization", "Bearer " + signedIn.Token}
-		device, err := authn.IssueDeviceToken(ctx, 5, "900100001", "")
+		device, err := authn.IssueDeviceToken(ctx, "900100001", "test")
 		if err != nil {
 			t.Fatal(err)
 		}

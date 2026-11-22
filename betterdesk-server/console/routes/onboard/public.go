@@ -221,8 +221,8 @@ type joinAnswer struct {
 // join answers POST /api/onboard/join with the body {code, device_id,
 // uuid, hostname, platform, version, public_key}: the client spends one
 // use of an invite, its device is approved with the invite's name and put
-// into its folder, and it gets how to reach the server and a device token
-// issued for the account that made the invite.
+// into its folder, and it gets how to reach the server and a device token,
+// which no account holds (authn.IssueDeviceToken).
 func (h *handlers) join(w http.ResponseWriter, r *http.Request) {
 	var body joinDevice
 	if err := kit.Bind(r, &body); err != nil {
@@ -284,7 +284,10 @@ func (h *handlers) join(w http.ResponseWriter, r *http.Request) {
 		appFail(w, r, http.StatusInternalServerError, "server_error", "")
 		return
 	}
-	token, err := h.d.Authn.IssueDeviceToken(ctx, creator, deviceID, kit.ClientIP(r))
+	token, err := h.d.Authn.IssueDeviceToken(ctx, deviceID, "Issued at a join with invite "+rec.ID)
+	if err == nil && token == "" {
+		err = errors.New("the database has no device_tokens")
+	}
 	if err != nil {
 		h.log.Error("Issue device token for joined device:", err)
 		appFail(w, r, http.StatusInternalServerError, "server_error", "")

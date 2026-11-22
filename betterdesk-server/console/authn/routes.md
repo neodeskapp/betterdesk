@@ -254,11 +254,13 @@ No second factor and no `pro` check on this path (kept defect S11).
 
 Every sign-in above gives an account's token, which proves no device
 whatever client id it stores (BUGS RV1). A device proves itself with a
-device token: `s.IssueDeviceToken(ctx, userID, deviceID, ip)`, which the
-console issues for a device an approver admitted (register-status), or one
-in device_tokens issued for the device (`created_by` "system": the API
-server's enrollment and pairing, `s.IssueServerDeviceToken` at
-`/api/bd/register`; `s.ServerDeviceToken` names its device). Such a token
+device token in device_tokens issued for the device (`created_by`
+"system", on behalf of no account): the API server's enrollment and
+pairing, or `s.IssueDeviceToken(ctx, deviceID, note)`, which the console
+issues for a device an approver admitted (register-status), at
+`/api/bd/register` and at a join (`s.ServerDeviceToken` names its device).
+A device token an older console issued in access_tokens (token_kind
+"device") passes too. Such a token
 signs no account in (`s.ValidateAccessToken` gives nil for it) and does not
 expire by time; a delete, a ban, a change of id and a new token for the
 device end it (`s.RevokeDeviceTokens` ends both kinds).

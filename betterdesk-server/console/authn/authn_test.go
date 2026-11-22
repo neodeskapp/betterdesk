@@ -291,7 +291,8 @@ func TestDeviceRequestChecks(t *testing.T) {
 		ctx := context.Background()
 		s, _, _ := testService(t, db, nil)
 		id := addUser(t, s, "operator", "pw", "operator", "local")
-		bound, _ := s.IssueDeviceToken(ctx, id, "device-a", "")
+		// Device tokens as an older console kept them in access_tokens
+		bound, _ := s.issue(ctx, TokenKindDevice, id, "device-a", "", "", store.DeviceTokenExpiry())
 		unbound, _ := s.issue(ctx, TokenKindDevice, id, "", "uuid-b", "", store.DeviceTokenExpiry())
 
 		// X-Device-Id alone is no credential.

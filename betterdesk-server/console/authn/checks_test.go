@@ -163,7 +163,8 @@ func TestTokensAreKeptAsTheirHashOnly(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		device, err := s.IssueDeviceToken(ctx, id, "900100001", "")
+		// A device token as an older console kept it in access_tokens
+		device, err := s.issue(ctx, TokenKindDevice, id, "900100001", "", "", store.DeviceTokenExpiry())
 		if err != nil {
 			t.Fatal(err)
 		}

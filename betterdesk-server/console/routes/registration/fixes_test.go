@@ -201,12 +201,14 @@ func TestApprovalSaysWhenTheFolderFailed(t *testing.T) {
 }
 
 // An approved registration gives its device a device token: the first
-// status request after the approval carries it, issued on behalf of the
-// approver and kept only as its hash, and the device routes take it;
+// status request after the approval carries it, issued in device_tokens on
+// behalf of no account (L146) and kept only as its hash, and the device
+// routes take it;
 // later status requests carry "". A ban through the enrollment queue
 // revokes it (BUGS RV1).
 func TestApprovalGivesTheDeviceADeviceTokenOnce(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		storetest.GoServerMigrate(t, db)
 		api := routetest.NewAPI()
 		api.Fallback = func(c routetest.Call) routetest.Reply {
 			if path, _, _ := strings.Cut(c.Target, "?"); path == "/api/enrollment/reject/900100031" {
@@ -253,13 +255,12 @@ func TestApprovalGivesTheDeviceADeviceTokenOnce(t *testing.T) {
 			t.Errorf("the second status carries %q", again)
 		}
 		hash := store.HashAccessToken(token)
-		var kind, client, stored string
-		var user int64
-		if err := db.QueryRow(ctx, "SELECT token_kind, client_id, user_id FROM access_tokens WHERE token_hash = ?", hash).Scan(&kind, &client, &user); err != nil {
+		var peer, tokenStatus, createdBy, stored string
+		if err := db.QueryRow(ctx, "SELECT peer_id, status, created_by FROM device_tokens WHERE token_hash = ?", hash).Scan(&peer, &tokenStatus, &createdBy); err != nil {
 			t.Fatal(err)
 		}
-		if kind != "device" || client != "900100031" || user != routetest.RoleIDs["admin"] {
-			t.Errorf("token row: kind %q, client %q, user %d", kind, client, user)
+		if peer != "900100031" || tokenStatus != "active" || createdBy != "system" {
+			t.Errorf("token row: device %q, status %q, created_by %q", peer, tokenStatus, createdBy)
 		}
 		if err := db.QueryRow(ctx, "SELECT access_token FROM pending_registrations WHERE id = 1").Scan(&stored); err != nil || stored != store.StoredAccessToken(hash) {
 			t.Errorf("the registration keeps %q (%v), want the hash", stored, err)
@@ -284,6 +285,46 @@ func TestApprovalGivesTheDeviceADeviceTokenOnce(t *testing.T) {
 		}
 		if got := heartbeat(); got.Status != http.StatusUnauthorized {
 			t.Errorf("heartbeat after the ban: %d %s", got.Status, got.Body)
+		}
+	})
+}
+
+// The device token of an approved registration is held by no account:
+// deleting the account that approved the device leaves the token working
+// (BUGS L146, DECISIONS A171).
+func TestDeletingTheApproverEndsNoDeviceToken(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
+		w := routetest.New(t, routetest.Options{DB: db})
+		ctx := context.Background()
+		if _, err := db.Exec(ctx, "INSERT INTO pending_registrations (id, device_id, status) VALUES (1, '900100041', 'pending')"); err != nil {
+			t.Fatal(err)
+		}
+		if got := w.As("admin").Do(http.MethodPut, "/api/registrations/1/approve", `{}`); got.Status != http.StatusOK {
+			t.Fatalf("approval: %d %s", got.Status, got.Body)
+		}
+		device := w.SignedOut()
+		got := device.Do(http.MethodGet, "/api/bd/register-status?device_id=900100041", "")
+		var answer struct {
+			Config struct {
+				AccessToken string `json:"access_token"`
+			} `json:"config"`
+		}
+		if err := json.Unmarshal([]byte(got.Body), &answer); err != nil || len(answer.Config.AccessToken) != 64 {
+			t.Fatalf("status: %d %s", got.Status, got.Body)
+		}
+		bearer := []string{"Authorization", "Bearer " + answer.Config.AccessToken}
+		heartbeat := func() routetest.Answer {
+			return device.Do(http.MethodPost, "/api/bd/heartbeat", `{"device_id":"900100041"}`, bearer...)
+		}
+		if got := heartbeat(); got.Status == http.StatusUnauthorized || got.Status == http.StatusForbidden {
+			t.Fatalf("heartbeat with the delivered token: %d %s", got.Status, got.Body)
+		}
+		if _, err := db.Exec(ctx, "DELETE FROM users WHERE id = ?", routetest.RoleIDs["admin"]); err != nil {
+			t.Fatal(err)
+		}
+		if got := heartbeat(); got.Status == http.StatusUnauthorized || got.Status == http.StatusForbidden {
+			t.Errorf("heartbeat after the approver's account was deleted: %d %s, want the token to work", got.Status, got.Body)
 		}
 	})
 }

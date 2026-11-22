@@ -32,10 +32,10 @@
 //
 // The RustDesk client API signs in with access tokens
 // (GenerateSignInToken, IssueAccessToken, ValidateAccessToken). Devices
-// prove themselves with a device token issued for them: the console's
-// (IssueDeviceToken, in access_tokens) or one in the signal server's
-// device_tokens (issued by the API server at an enrollment or a pairing,
-// or by the console with IssueServerDeviceToken), both checked by
+// prove themselves with a device token issued for them in the signal
+// server's device_tokens, on behalf of no account (by the API server at an
+// enrollment or a pairing, or by the console with IssueDeviceToken), or one
+// an older console issued in access_tokens, both checked by
 // RequireDeviceToken; on the device sockets also with an enrollment token
 // of the signal server (VerifyDeviceWSAuth). Device tokens do not expire
 // by time. Accounts' tokens and device tokens never stand in for each

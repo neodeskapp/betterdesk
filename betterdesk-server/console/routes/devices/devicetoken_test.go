@@ -15,11 +15,12 @@ import (
 // It needs device.edit; an unknown device is 404 (L45).
 func TestIssueANewDeviceToken(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		storetest.GoServerMigrate(t, db)
 		w, api := world(t, db, nil, nil)
 		ctx := context.Background()
 		authn := w.Server.Deps().Authn
 		api.On("GET /api/peers/dev-reissue", 200, `{"id":"dev-reissue","hostname":"h"}`)
-		token, err := authn.IssueDeviceToken(ctx, 1, "dev-reissue", "")
+		token, err := authn.IssueDeviceToken(ctx, "dev-reissue", "test")
 		if err != nil {
 			t.Fatal(err)
 		}

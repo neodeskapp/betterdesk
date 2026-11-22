@@ -281,6 +281,74 @@ func TestMigrateMakesEarlierTokensAccountTokens(t *testing.T) {
 	})
 }
 
+// The live device tokens an older console kept in access_tokens, on behalf
+// of the account that admitted the device, move into the signal server's
+// device_tokens, so deleting that account ends none of them (L146). A
+// revoked device token and an account's token stay; a database without
+// device_tokens keeps its rows; a second start changes nothing.
+func TestMigrateMovesDeviceTokensOutOfAccessTokens(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		mustMigrate(t, db)
+		user := insertUser(t, db, "approver")
+		insert := `INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, revoked, token_kind) VALUES (?, ?, ?, ?, ?, ?, ?)`
+		expiry := store.DeviceTokenExpiryText(db.Dialect())
+		for _, row := range []struct {
+			name, kind, device string
+			revoked            bool
+		}{{"device-live", "device", "900100001", false}, {"device-revoked", "device", "900100002", true}, {"account-live", "account", "900100003", false}} {
+			var revoked any = row.revoked
+			if db.Dialect() == store.SQLite {
+				revoked = 0
+				if row.revoked {
+					revoked = 1
+				}
+			}
+			hash := store.HashAccessToken(row.name)
+			mustExec(t, db, insert, store.StoredAccessToken(hash), hash, user, row.device, expiry, revoked, row.kind)
+		}
+		count := func(query string, args ...any) int {
+			t.Helper()
+			var n int
+			if err := db.QueryRow(ctx, query, args...).Scan(&n); err != nil {
+				t.Fatal(err)
+			}
+			return n
+		}
+		mustMigrate(t, db)
+		if n := count(`SELECT COUNT(*) FROM access_tokens`); n != 3 {
+			t.Fatalf("without device_tokens the migration left %d of 3 access tokens", n)
+		}
+
+		storetest.GoServerMigrate(t, db)
+		for run := 1; run <= 2; run++ {
+			mustMigrate(t, db)
+			var peer, status, createdBy string
+			var maxUses int
+			err := db.QueryRow(ctx, `SELECT peer_id, status, created_by, max_uses FROM device_tokens WHERE token_hash = ?`,
+				store.HashAccessToken("device-live")).Scan(&peer, &status, &createdBy, &maxUses)
+			if err != nil || peer != "900100001" || status != "active" || createdBy != "system" || maxUses != 0 {
+				t.Errorf("run %d: device_tokens row of the live device token: %q %q %q %d (%v)", run, peer, status, createdBy, maxUses, err)
+			}
+			if n := count(`SELECT COUNT(*) FROM device_tokens`); n != 1 {
+				t.Errorf("run %d: device_tokens holds %d rows, want 1", run, n)
+			}
+			if n := count(`SELECT COUNT(*) FROM access_tokens WHERE token_hash = ?`, store.HashAccessToken("device-live")); n != 0 {
+				t.Errorf("run %d: the live device token is still in access_tokens", run)
+			}
+			for _, kept := range []string{"device-revoked", "account-live"} {
+				if n := count(`SELECT COUNT(*) FROM access_tokens WHERE token_hash = ?`, store.HashAccessToken(kept)); n != 1 {
+					t.Errorf("run %d: %s left access_tokens", run, kept)
+				}
+			}
+		}
+		mustExec(t, db, `DELETE FROM users WHERE id = ?`, user)
+		if n := count(`SELECT COUNT(*) FROM device_tokens WHERE token_hash = ? AND status = 'active'`, store.HashAccessToken("device-live")); n != 1 {
+			t.Error("deleting the approver's account ended the moved device token")
+		}
+	})
+}
+
 // Device tokens issued with the lifetime of a sign-in get the expiry of a
 // device token at the next start: device tokens do not expire by time. A
 // revoked device token and an account's token keep theirs (L44).
