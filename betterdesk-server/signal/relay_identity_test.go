@@ -41,6 +41,20 @@ func TestRelayAdvertisedToTargetFallsBackForOldClients(t *testing.T) {
 	}
 }
 
+// L233: check_port() adds 21117 to a bare host, so a relay on another port
+// keeps its port; without it the peer dials 21117 and never pairs.
+func TestRelayAdvertisedToTargetKeepsAPortOtherThanTheDefault(t *testing.T) {
+	target := &peer.Entry{ID: "TGT3"}
+	for _, relay := range []string{"127.0.0.1:24117", "desk.example.com:31117", "[2001:db8::7]:24117"} {
+		if got := relayAdvertisedToTarget(target, relay); got != relay {
+			t.Errorf("relay %q went to the target as %q", relay, got)
+		}
+	}
+	if got := relayAdvertisedToTarget(target, "[2001:db8::7]:21117"); got != "2001:db8::7" {
+		t.Errorf("relay [2001:db8::7]:21117 went to the target as %q, want the bare host", got)
+	}
+}
+
 // The reported relay is stored verbatim: the peer validates incoming relay
 // requests against its own value, so rewriting it makes the peer drop them.
 // A peer reporting the API port works because that port also speaks relay

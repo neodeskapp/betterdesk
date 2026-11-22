@@ -2295,24 +2295,28 @@ func (s *Server) handleLocalAddr(msg *pb.LocalAddr, raddr *net.UDPAddr) {
 // server ... was not offered by this peer").
 //
 // So the peer's own value wins when we know it. When we do not, send the bare
-// host without a port: check_port() normalises both sides to RELAY_PORT, so a
-// portless value matches a client configured as either `host` or `host:21117`.
-// Production confirms this shape pairs — the peer that repeatedly established
-// sessions reported `85.14.70.12` with no port, while the one we sent
-// `85.14.70.12:21117` to never answered.
+// host for a relay on RELAY_PORT (21117): check_port() normalises both sides
+// to RELAY_PORT, so a portless value matches a client configured as either
+// `host` or `host:21117`. Production confirms this shape pairs — the peer that
+// repeatedly established sessions reported `85.14.70.12` with no port, while
+// the one we sent `85.14.70.12:21117` to never answered. A relay on another
+// port keeps it: check_port() would add 21117 to the bare host and the peer
+// would dial a port where no relay of this server listens.
 func relayAdvertisedToTarget(target *peer.Entry, fallback string) string {
 	if target != nil {
 		if reported := strings.TrimSpace(target.RelayServer); reported != "" {
 			return reported
 		}
 	}
-	// Drop the port so the peer's own check_port() decides, which is what a
-	// portless `relay-server` in its config produces.
-	if host, _, err := net.SplitHostPort(fallback); err == nil && host != "" {
+	if host, port, err := net.SplitHostPort(fallback); err == nil && host != "" && port == clientRelayPort {
 		return host
 	}
 	return fallback
 }
+
+// clientRelayPort is RELAY_PORT of RustDesk clients, the port check_port()
+// adds to a relay address without one.
+const clientRelayPort = "21117"
 
 // handleIceCandidate relays a WebRTC trickle-ICE candidate from one peer to
 // another. Recent RustDesk clients exchange candidates through the rendezvous
