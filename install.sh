@@ -56,7 +56,7 @@ RELEASE_CHANNEL=""
 # An image tag given (--version, BETTERDESK_VERSION) pins it; without one
 # the install runs latest, the newest release (DECISIONS A163)
 BETTERDESK_VERSION_GIVEN="${BETTERDESK_VERSION:-}"
-BETTERDESK_VERSION="${BETTERDESK_VERSION:-3.6.1}"
+BETTERDESK_VERSION="${BETTERDESK_VERSION:-3.6.2}"
 BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/${BETTERDESK_REPO}/${BETTERDESK_BRANCH}}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/betterdesk}"
 INSTALL_MODE="docker"

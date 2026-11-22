@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   BetterDesk Console Manager v3.6.1 (Docker)
+#   BetterDesk Console Manager v3.6.2 (Docker)
 #
 #   Installs, updates and removes BetterDesk on Docker: one container that
 #   runs the published image ghcr.io/neodeskapp/betterdesk (signal,
@@ -20,7 +20,7 @@ fi
 
 set -Eeuo pipefail
 
-VERSION="3.6.1"
+VERSION="3.6.2"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)"
 
 # Settings: flags win over these variables, which win over the defaults
