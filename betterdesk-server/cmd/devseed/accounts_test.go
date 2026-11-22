@@ -123,7 +123,7 @@ func TestAccountsMakesOneAccountPerRoleAndTheDeviceTokens(t *testing.T) {
 			if user, err := svc.ValidateAccessToken(ctx, token); user != nil || err != nil {
 				t.Errorf("%s signs %+v in (%v)", k.File, user, err)
 			}
-			if owner, client, _, kind, at := row(k.File, token); owner != 1 || client != k.DeviceID || kind != authn.TokenKindDevice || !at.Equal(week) {
+			if owner, client, _, kind, at := row(k.File, token); owner != 1 || client != k.DeviceID || kind != authn.TokenKindDevice || !at.Equal(store.DeviceTokenExpiry()) {
 				t.Errorf("%s: owner %d, device %s, kind %s, expires %v", k.File, owner, client, kind, at)
 			}
 		}
