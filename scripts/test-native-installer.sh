@@ -324,6 +324,21 @@ FAKE_MIGRATE
     if grep -q "/dev/null" "$calls"; then
         fail "the binary check still backs up /dev/null"
     fi
+
+    # L71: with the installed binary's migrate command the menu uses it
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<FAKE_SERVER
+#!/usr/bin/env bash
+# Stands in for the binary: migrate -mode sqlite2pg|pg2sqlite (its commands)
+printf 'server %s\n' "\$*" >> "$calls"
+exit 0
+FAKE_SERVER
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    printf 'old' > "$dst"
+    run_menu 1 $'\n\ny'
+    grep -qxF -- "server migrate -mode rust2go -src $src -dst $dst -overwrite" "$calls" \
+        || fail "the menu did not use the server's migrate command: $(cat "$calls")"
+    if grep -q -- '^-mode' "$calls"; then fail "the menu ran the separate migrate tool beside the server's command"; fi
+    rm -f "$RUSTDESK_PATH/betterdesk-server"
 )
 
 # RV81: the install's switch to PostgreSQL moves the whole SQLite install
@@ -405,6 +420,24 @@ FAKE_MIGRATE
         || fail "after a failed move the install still uses PostgreSQL ($USE_POSTGRESQL, $POSTGRESQL_URI)"
     grep -qxF "DB_URL=$src" "$env" && grep -qx "DB_TYPE=sqlite" "$env" && grep -qx "DATABASE_URL=" "$env" \
         || fail "after a failed move .env does not point at the SQLite file: $(cat "$env")"
+
+    # L71: the installed binary's migrate command moves the data; the
+    # separate tool of an older release is not used
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<FAKE_SERVER
+#!/usr/bin/env bash
+# Stands in for the binary: migrate -mode sqlite2pg|pg2sqlite (its commands)
+printf 'server %s\n' "\$*" >> "$calls"
+[ "\${2:-}" = -h ] && { printf 'Usage of migrate:\n  -mode string\n  -overwrite\n' >&2; exit 2; }
+exit 0
+FAKE_SERVER
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    run_switch 0 true true ""
+    grep -qxF -- "server migrate -mode sqlite2pg -src $src -dst $uri -overwrite" "$calls" \
+        || fail "the switch did not move the data with the server's migrate command: $(cat "$calls")"
+    grep -qxF -- "server migrate -mode backup -src $src" "$calls" || fail "the switch made no backup with the migrate command: $(cat "$calls")"
+    if grep -q -- '^-mode' "$calls"; then fail "the separate migrate tool ran beside the server's command: $(cat "$calls")"; fi
+    [ "$USE_POSTGRESQL" = true ] || fail "after a move with the migrate command the install does not use PostgreSQL"
+    rm -f "$RUSTDESK_PATH/betterdesk-server"
 )
 
 # L31: the one-line installer clones and downloads from the fork.

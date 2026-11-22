@@ -5186,8 +5186,25 @@ function Do-ToggleProtocol {
 # Database Migration Functions
 #===============================================================================
 
-# Get-MigrateBin returns the path of the migration tool, or $null.
+# True when the binary carries the migrate command (sqlite2pg, pg2sqlite,
+# rust2go, nodejs2go and backup of a SQLite file), which replaces the
+# separate migrate tool of older releases.
+function Test-BinaryMigrates {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'migrate -mode sqlite2pg' -SimpleMatch -Quiet)
+}
+
+# The installed binary's migrate command with the arguments given.
+function Invoke-ServerMigrate {
+    & (Get-ServerBinaryPath) migrate @args
+}
+
+# Get-MigrateBin returns the migration tool: the installed binary's migrate
+# command (Invoke-ServerMigrate), else the path of the separate tool of an
+# older release, or $null.
 function Get-MigrateBin {
+    if (Test-BinaryMigrates) { return "Invoke-ServerMigrate" }
     $searchPaths = @(
         (Join-Path $script:ScriptDir "betterdesk-server\tools\migrate\migrate.exe"),
         (Join-Path $script:ScriptDir "tools\migrate\migrate.exe"),
@@ -5224,14 +5241,14 @@ function Do-MigrateDatabase {
 
     $migrateBin = Get-MigrateBin
     if (-not $migrateBin) {
-        Print-Error "Migration binary not found!"
-        Print-Info "Expected at: $(Join-Path $script:ScriptDir 'betterdesk-server\tools\migrate\migrate.exe')"
-        Print-Info "Build it with: cd betterdesk-server; go build -o tools\migrate\migrate.exe ./tools/migrate/"
+        Print-Error "No migration tool: $(Get-ServerBinaryPath) has no migrate command"
+        Print-Info "Update first (-Update): the server's own migrate command moves the database"
         Press-Enter
         return
     }
 
-    Print-Info "Migration binary: $migrateBin"
+    if ($migrateBin -eq "Invoke-ServerMigrate") { Print-Info "Migration tool: $(Get-ServerBinaryPath) migrate" }
+    else { Print-Info "Migration binary: $migrateBin" }
     Write-Host ""
     $items = @(
         "Rust -> Go`tLegacy Rust hbbs database to Go server",

@@ -816,6 +816,37 @@ function Test-ReleaseSignatureOnWindows {
     Remove-Item -Recurse -Force $dir
 }
 
+# L71: the installed binary's migrate command moves the database; the
+# separate tool of an older release is the fallback.
+function Test-MigrateCommand {
+    $dir = New-TestInstall
+    $probe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ... migrate -mode sqlite2pg|pg2sqlite|rust2go ...'
+    if (-not (Test-BinaryMigrates -Path $probe)) { Fail 'a binary with the migrate command is taken for an older one' }
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ...'
+    if (Test-BinaryMigrates -Path $probe) { Fail 'an older binary is taken for one with the migrate command' }
+
+    function Get-ServerBinaryPath { 'fake-server' }
+    function Test-BinaryMigrates { param($Path) $true }
+    function fake-server { $script:serverCalls += ($args -join ' '); $global:LASTEXITCODE = 0 }
+    $script:serverCalls = @()
+    $src = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
+    Set-Content -Path $src -Value 'db'
+    Set-Content -Path (Join-Path $script:CONSOLE_PATH '.env') -Value @('SESSION_SECRET=kept')
+    $uri = 'postgres://u:p@h/db?sslmode=disable'
+    $script:USE_POSTGRESQL = $true
+    $script:POSTGRESQL_URI = $uri
+    $script:AUTO_MODE = $true
+    if ((Get-MigrateBin) -ne 'Invoke-ServerMigrate') { Fail "the migrate tool is $(Get-MigrateBin), not the server's command" }
+    Migrate-SQLiteToPostgreSQL *> $null
+    if ($script:serverCalls -notcontains "migrate -mode sqlite2pg -src $src -dst $uri") { Fail "the switch ran the server as: $($script:serverCalls -join '; ')" }
+    if ($script:serverCalls -notcontains "migrate -mode backup -src $src") { Fail "the switch made no backup with the migrate command: $($script:serverCalls -join '; ')" }
+    if ((Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne $uri) { Fail "after the move .env does not point at PostgreSQL: $(Get-Content (Join-Path $script:CONSOLE_PATH '.env'))" }
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -835,6 +866,7 @@ Test-CertificateFromTheBinary
 Test-SecretsAreRandom
 Test-DatabaseUrlOnly
 Test-ReleaseSignatureOnWindows
+Test-MigrateCommand
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

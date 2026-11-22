@@ -3728,9 +3728,12 @@ migrate_sqlite_to_postgresql() {
         return 0
     fi
     
-    # Find migration binary
+    # The installed binary's migrate command, else the separate tool of an
+    # older release
     local migrate_bin=""
-    if [ -f "$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64" ]; then
+    if binary_migrates; then
+        migrate_bin=server_migrate
+    elif [ -f "$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64" ]; then
         migrate_bin="$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64"
     elif [ -f "$SCRIPT_DIR/tools/migrate/migrate-linux-amd64" ]; then
         migrate_bin="$SCRIPT_DIR/tools/migrate/migrate-linux-amd64"
@@ -3759,8 +3762,8 @@ migrate_sqlite_to_postgresql() {
         return 0
     fi
     
-    chmod +x "$migrate_bin"
-    
+    [ "$migrate_bin" = server_migrate ] || chmod +x "$migrate_bin"
+
     # Verify binary supports -mode flag (in case of outdated binary). The
     # help is read whole first: grep -q on a pipe can end the tool early
     local migrate_help
@@ -4429,6 +4432,19 @@ env_database_type() {
     else
         echo sqlite
     fi
+}
+
+# binary_migrates [BIN]: true when the binary carries the migrate command
+# (sqlite2pg, pg2sqlite, rust2go, nodejs2go and backup of a SQLite file),
+# which replaces the separate migrate tool of older releases.
+binary_migrates() {
+    local bin="${1:-$(server_binary_path)}"
+    [ -x "$bin" ] && grep -a -q -F 'migrate -mode sqlite2pg' "$bin" 2>/dev/null
+}
+
+# server_migrate ARGS...: the installed binary's migrate command.
+server_migrate() {
+    "$(server_binary_path)" migrate "$@"
 }
 
 # binary_reads_database_url [BIN]: true when the binary takes its database
@@ -7767,9 +7783,9 @@ do_migrate_database() {
     echo -e "${WHITE}${BOLD}══════════ DATABASE MIGRATION ══════════${NC}"
     echo ""
 
-    # Locate migration binary
+    # The installed binary's migrate command, else the separate tool of an
+    # older release
     local migrate_bin=""
-    local arch=$(uname -m)
     local search_paths=(
         "$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64"
         "$SCRIPT_DIR/tools/migrate/migrate-linux-amd64"
@@ -7777,7 +7793,9 @@ do_migrate_database() {
         "/usr/local/bin/betterdesk-migrate"
     )
 
+    binary_migrates && migrate_bin=server_migrate
     for p in "${search_paths[@]}"; do
+        [ -z "$migrate_bin" ] || break
         if [ -f "$p" ] && [ -x "$p" ]; then
             migrate_bin="$p"
             break
@@ -7796,14 +7814,17 @@ do_migrate_database() {
     fi
 
     if [ -z "$migrate_bin" ]; then
-        print_error "Migration binary not found!"
-        print_info "Expected at: $SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64"
-        print_info "Build it with: cd betterdesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
+        print_error "No migration tool: $(server_binary_path) has no migrate command"
+        print_info "Update first (sudo $(basename "$MANAGER_COMMAND") --update): the server's own migrate command moves the database"
         press_enter
         return
     fi
 
-    print_info "Migration binary: $migrate_bin"
+    if [ "$migrate_bin" = server_migrate ]; then
+        print_info "Migration tool: $(server_binary_path) migrate"
+    else
+        print_info "Migration binary: $migrate_bin"
+    fi
     echo ""
     local _menu_items=(
         $'Rust -> Go\tMigrate legacy Rust hbbs database to the Go server'
