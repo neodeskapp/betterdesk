@@ -622,5 +622,9 @@ something that exists (`matrixRouteParams`, seeded devices are `900100001`
 to `900100020`). Writes always get IDs that do not exist. `matrixQueries`
 gives a GET route a query where its default order changes by the minute
 (`GET /api/devices` is sorted by last contact; the matrix asks for
-`sortBy=id`). The marks set by hand for matrix routes are there too, each
+`sortBy=id`). `matrixHeaders` gives a request headers of its own where
+the answer would otherwise depend on the machine (`GET
+/api/server-management/resources` is asked for uncompressed: its size, and
+so whether the console compresses it, follows the machine's disks and
+addresses). The marks set by hand for matrix routes are there too, each
 with its reason.

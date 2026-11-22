@@ -2,7 +2,10 @@
  "id": "GET /api/server-management/resources",
  "request": {
   "method": "GET",
-  "path": "/api/server-management/resources"
+  "path": "/api/server-management/resources",
+  "notes": [
+   "header Accept-Encoding: identity"
+  ]
  },
  "recordings": 2,
  "answers": [

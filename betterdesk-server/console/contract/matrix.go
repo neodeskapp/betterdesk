@@ -172,6 +172,12 @@ func (e MatrixEntry) request() Request {
 	if len(e.Body) > 0 {
 		r.Body, r.ContentType = e.Body, "application/json"
 	}
+	if headers := matrixHeaders[e.ID]; len(headers) > 0 {
+		r.Header = http.Header{}
+		for name, value := range headers {
+			r.Header.Set(name, value)
+		}
+	}
 	return r
 }
 
@@ -180,6 +186,12 @@ func (e MatrixEntry) slot() *slot {
 	if len(e.Body) > 0 {
 		info.Body = map[string]any{}
 	}
+	headers := make([]string, 0, len(matrixHeaders[e.ID]))
+	for name, value := range matrixHeaders[e.ID] {
+		headers = append(headers, "header "+name+": "+value)
+	}
+	sort.Strings(headers)
+	info.Notes = append(info.Notes, headers...)
 	sl := newSlot("matrix", e.Route.Group, e.slug(), e.ID, info)
 	sl.method, sl.target = e.Method, e.Path
 	sl.rec.Volatile = matrixVolatile[e.ID]
