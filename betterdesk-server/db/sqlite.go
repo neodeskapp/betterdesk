@@ -49,8 +49,18 @@ func (s *SQLiteDB) Close() error {
 	return s.db.Close()
 }
 
-// Migrate creates all required tables if they don't exist.
+// Migrate creates all required tables if they don't exist, then gives
+// directory accounts the name their directory signs them in under.
 func (s *SQLiteDB) Migrate() error {
+	if err := s.migrateSchema(); err != nil {
+		return err
+	}
+	return s.lowerCaseDirectoryAccounts()
+}
+
+// migrateSchema creates the tables, adds the columns later versions added
+// and runs the one-time data fixes that went with them.
+func (s *SQLiteDB) migrateSchema() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
