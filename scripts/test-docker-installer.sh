@@ -358,6 +358,23 @@ test_failed_first_install_resumes() (
     rm -rf "$TEST_DIR"
 )
 
+# Running the script again with the same image and the same settings
+# leaves the running container alone; a changed .env makes it again.
+test_rerun_without_changes_keeps_the_container() (
+    load
+    (COMMAND=install; do_install) > /dev/null 2>&1 || fail "the install failed"
+    : > "$CALLS"
+    local out
+    out=$( (COMMAND=install; do_install) 2>&1 ) || fail "the second run failed: $out"
+    printf '%s' "$out" | grep -q 'up to date' || fail "the second run does not say BetterDesk is up to date: $out"
+    if grep -q 'compose stop' "$CALLS"; then fail "the second run stopped the container: $(cat "$CALLS")"; fi
+    env_set TRUST_PROXY 1
+    : > "$CALLS"
+    out=$( (COMMAND=install; do_install) 2>&1 ) || fail "the run after a change of .env failed: $out"
+    grep -q 'compose up -d --remove-orphans' "$CALLS" || fail "a changed .env did not reach the container"
+    rm -rf "$TEST_DIR"
+)
+
 test_fresh_install
 test_update_goes_back_when_unhealthy
 test_update_keeps_compose_edits
@@ -370,5 +387,6 @@ test_postgres_switch_moves_the_data
 test_postgres_declined_keeps_sqlite
 test_postgres_failed_move_keeps_sqlite
 test_failed_first_install_resumes
+test_rerun_without_changes_keeps_the_container
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"

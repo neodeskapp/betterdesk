@@ -227,6 +227,25 @@ compose() {
     (cd "$BETTERDESK_DIR" && docker compose "$@")
 }
 
+# compose_quiet ARGS...: docker compose without its progress lines; they
+# are shown when it fails
+compose_quiet() {
+    local out
+    if ! out=$(compose "$@" 2>&1); then
+        printf '%s\n' "$out" >&2
+        return 1
+    fi
+}
+
+# settings_fingerprint: a hash of what the container is made from: the
+# compose files and .env
+settings_fingerprint() {
+    cat "$(compose_file)" "$BETTERDESK_DIR/docker-compose.override.yml" "$(env_file)" 2>/dev/null | sha256sum | cut -d' ' -f1
+}
+
+# remember_applied: the settings the running container was made from
+remember_applied() { settings_fingerprint > "$BETTERDESK_DIR/.applied.sha256"; }
+
 # env_get KEY: the value of KEY in .env, empty when it has none
 env_get() {
     local file
@@ -724,7 +743,7 @@ do_install() {
     fi
     step "Starting BetterDesk"
     export ADMIN_PASSWORD
-    compose up -d --remove-orphans >/dev/null \
+    compose_quiet up -d --remove-orphans \
         || die "docker compose up failed (output above)." "Its log: cd $BETTERDESK_DIR && docker compose logs betterdesk"
     if ! wait_healthy; then
         local log
@@ -732,6 +751,7 @@ do_install() {
         die "BetterDesk did not get healthy within ${HEALTH_TIMEOUT}s." "Its log is in $log" \
             "Follow it: cd $BETTERDESK_DIR && docker compose logs -f betterdesk"
     fi
+    remember_applied
     ok "BetterDesk runs ($((SECONDS - started))s)"
     print_summary first
 }
@@ -747,13 +767,12 @@ do_update() {
     check_internet
     write_settings
     write_compose_file
-    local old_image new_image old_hash new_hash backup log
+    local old_image new_image applied backup log
     old_image=$(container_image_id)
     pull_image
     new_image=$(image_id "$(image_ref)")
-    old_hash=$(docker container inspect -f '{{index .Config.Labels "com.docker.compose.config-hash"}}' "$CONTAINER" 2>/dev/null || true)
-    new_hash=$(compose config --hash betterdesk 2>/dev/null | awk '{print $2}' || true)
-    if [ -n "$old_image" ] && [ "$old_image" = "$new_image" ] && [ -n "$old_hash" ] && [ "$old_hash" = "$new_hash" ] \
+    applied=$(cat "$BETTERDESK_DIR/.applied.sha256" 2>/dev/null || true)
+    if [ -n "$old_image" ] && [ "$old_image" = "$new_image" ] && [ "$applied" = "$(settings_fingerprint)" ] \
         && container_running && wait_healthy; then
         ok "BetterDesk is up to date: $(server_version)"
         print_summary
@@ -765,8 +784,9 @@ do_update() {
     backup=$(backup_volumes)
     ok "Backup: $backup"
     step "Starting $(image_ref)"
-    compose up -d --remove-orphans >/dev/null || true
+    compose_quiet up -d --remove-orphans || true
     if wait_healthy; then
+        remember_applied
         ok "Updated: $(server_version)"
         print_summary
         return 0
@@ -777,7 +797,7 @@ do_update() {
     if [ -n "$old_image" ] && [ "$old_image" != "$new_image" ]; then
         step "Going back to the previous image"
         docker tag "$old_image" "$(image_ref)"
-        compose up -d --force-recreate betterdesk >/dev/null || true
+        compose_quiet up -d --force-recreate betterdesk || true
         if wait_healthy; then
             die "The update failed; BetterDesk runs the previous version again: $(server_version)" \
                 "The failed start's log: $log" "The data before the update: $backup"
@@ -786,7 +806,7 @@ do_update() {
     step "Putting the data of the backup back"
     compose stop -t 10 betterdesk >/dev/null 2>&1 || true
     restore_volumes "$backup" || true
-    compose up -d --force-recreate betterdesk >/dev/null || true
+    compose_quiet up -d --force-recreate betterdesk || true
     if wait_healthy; then
         die "The update failed; BetterDesk runs again with the data from before the update." \
             "The failed start's log: $log"
@@ -1009,8 +1029,9 @@ do_set_config() {
     docker run --rm --user "$(id -u):$(id -g)" --entrypoint /usr/local/bin/betterdesk-server \
         -v "$BETTERDESK_DIR:/cfg" -e BETTERDESK_ENV_FILE=/cfg/.env \
         "$(image_ref)" config set "${MANAGED_CONFIG_CHANGES[@]}" || die "The settings were refused (output above)."
-    compose up -d >/dev/null
-    wait_healthy || die "BetterDesk did not get healthy after the change." "Its log: cd $BETTERDESK_DIR && docker compose logs betterdesk"
+    compose_quiet up -d || die "docker compose up failed (output above)."
+    wait_healthy || die "BetterDesk did not get healthy after the change."
+    remember_applied "Its log: cd $BETTERDESK_DIR && docker compose logs betterdesk"
     ok "Settings applied"
 }
 
@@ -1050,7 +1071,7 @@ do_repair_permissions() {
 
 do_rescue() {
     do_repair_permissions
-    compose up -d >/dev/null || true
+    compose_quiet up -d || true
     if wait_healthy; then ok "BetterDesk runs"; else warn "BetterDesk is not healthy; see the diagnostics below."; fi
     do_diagnose
 }
@@ -1124,7 +1145,7 @@ back_to_sqlite() {
     env_unset DB_TYPE
     env_unset COMPOSE_PROFILES
     compose --profile postgres stop -t 10 postgres >/dev/null 2>&1 || true
-    compose up -d betterdesk >/dev/null 2>&1 || true
+    compose_quiet up -d betterdesk || true
     wait_healthy || warn "BetterDesk on SQLite did not answer either; its log: cd $BETTERDESK_DIR && docker compose logs betterdesk"
     die "$@"
 }
@@ -1172,7 +1193,7 @@ do_postgres() {
     ok "Backup: $backup"
 
     step "Starting PostgreSQL"
-    compose --profile postgres up -d postgres >/dev/null || back_to_sqlite "PostgreSQL did not start; the install stays on SQLite." \
+    compose_quiet --profile postgres up -d postgres || back_to_sqlite "PostgreSQL did not start; the install stays on SQLite." \
         "Its log: cd $BETTERDESK_DIR && docker compose logs postgres"
     wait_postgres || back_to_sqlite "PostgreSQL did not get ready within a minute; the install stays on SQLite." \
         "Its log: cd $BETTERDESK_DIR && docker compose logs postgres"
@@ -1194,13 +1215,14 @@ do_postgres() {
     env_set COMPOSE_PROFILES postgres
     env_set DB_TYPE postgres
     env_set DATABASE_URL "$(postgres_url "$pass")"
-    compose up -d >/dev/null || true
+    compose_quiet up -d || true
     if ! wait_healthy; then
         local log
         log=$(save_failed_log)
         back_to_sqlite "BetterDesk did not get healthy on PostgreSQL; it runs on SQLite again with its data as it was." \
             "The failed start's log: $log"
     fi
+    remember_applied
     ok "BetterDesk runs on PostgreSQL. The SQLite file stays in the volume $DATA_VOLUME; the backup is $backup."
     print_summary
 }
