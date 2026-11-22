@@ -15,9 +15,9 @@ import (
 	"unicode/utf8"
 )
 
-// addressVector is one line of a file that testdata/nodeoracle/addresses.js
-// wrote: an address with what nodemailer normalizes it to, or the hash over
-// the results of one block of the code point sweep.
+// addressVector is one line of an address recording such as
+// testdata/addresses.json.gz: an address with what nodemailer normalizes it
+// to, or the hash over the results of one block of the code point sweep.
 type addressVector struct {
 	In     *string `json:"in"`
 	Out    string  `json:"out"`
@@ -53,7 +53,8 @@ func readLines(t testing.TB, file string, each func(line []byte)) {
 }
 
 // sweepTemplates puts a character into the places of an address where the
-// handling differs. Keep in step with TEMPLATES in addresses.js.
+// handling differs: the templates the sweep of the recording used, in its
+// order.
 var sweepTemplates = []func(c string) string{
 	func(c string) string { return "a@" + c + ".de" },
 	func(c string) string { return "a@x" + c + "y.de" },
@@ -124,8 +125,8 @@ func replayAddresses(t *testing.T, file string) (addresses, blocks int) {
 
 // TestNodeAddressVectors replays what nodemailer's address normalization
 // returned: for every code point in ten places of an address (compared by a
-// hash per 4096 code points) and for the addresses of
-// testdata/nodeoracle/addresses.js in full.
+// hash per 4096 code points) and for the recorded addresses in full
+// (testdata/README.md).
 func TestNodeAddressVectors(t *testing.T) {
 	addresses, blocks := replayAddresses(t, "testdata/addresses.json.gz")
 	if blocks != 0x110000/sweepBlockSize || addresses < 10000 {
@@ -167,16 +168,4 @@ func TestALongDomainIsNotMapped(t *testing.T) {
 	if m.EnvelopeFrom != "alerts@"+marks || len(m.EnvelopeTo) != 2 {
 		t.Fatalf("envelope from %d bytes, %d recipients", len(m.EnvelopeFrom), len(m.EnvelopeTo))
 	}
-}
-
-// TestExtraAddressVectors replays a second file of address vectors, named
-// by the environment variable MESSAGE_ADDRESS_VECTORS (see
-// testdata/nodeoracle/README.md).
-func TestExtraAddressVectors(t *testing.T) {
-	file := os.Getenv("MESSAGE_ADDRESS_VECTORS")
-	if file == "" {
-		t.Skip("MESSAGE_ADDRESS_VECTORS is not set")
-	}
-	addresses, blocks := replayAddresses(t, file)
-	t.Logf("%d addresses, %d sweep blocks", addresses, blocks)
 }

@@ -18,9 +18,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 )
 
-// The vectors in testdata were recorded by the scripts in
-// testdata/nodeoracle from the Node console's own modules on Node 22. Each
-// holds an input and what the Node function answered for it.
+// The vectors in testdata were recorded from the Node console's own
+// modules on Node 22 (testdata/README.md). Each holds an input and what
+// the Node function answered for it.
 
 // loadVectors reads testdata/<name>.json.gz into v.
 func loadVectors(t testing.TB, name string, v any) {

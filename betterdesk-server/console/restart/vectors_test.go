@@ -22,7 +22,7 @@ import (
 
 // The vectors are lives of a restart transaction as
 // services/restartCoordinator.js of the Node console lived them
-// (testdata/nodeoracle/restart.js): per step the call, what it returned
+// (testdata/vectors.json.gz): per step the call, what it returned
 // or threw, the transaction file afterwards, what it asked of the other
 // services, and whether it scheduled the end of the process.
 

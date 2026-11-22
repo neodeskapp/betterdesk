@@ -121,22 +121,11 @@ func show(list []Address) string {
 }
 
 // TestNodeVectors replays what nodemailer's address parser returned for the
-// inputs of testdata/nodeoracle/addressparser.js.
+// inputs of testdata/addressparser.json (testdata/README.md).
 func TestNodeVectors(t *testing.T) {
 	count := replay(t, "testdata/addressparser.json")
 	if count < 20000 {
 		t.Fatalf("only %d vectors in testdata/addressparser.json, the file is incomplete", count)
 	}
 	t.Logf("%d vectors", count)
-}
-
-// TestExtraNodeVectors replays a second file of vectors, named by the
-// environment variable ADDRESSPARSER_VECTORS. It is how inputs the fuzzer
-// found are checked against the Node module (see testdata/nodeoracle/README.md).
-func TestExtraNodeVectors(t *testing.T) {
-	file := os.Getenv("ADDRESSPARSER_VECTORS")
-	if file == "" {
-		t.Skip("ADDRESSPARSER_VECTORS is not set")
-	}
-	t.Logf("%d vectors", replay(t, file))
 }

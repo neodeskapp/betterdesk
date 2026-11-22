@@ -111,7 +111,7 @@ func (w *world) options() Options {
 var pickedHeaders = []string{"x-api-key", "x-username", "x-role", "origin", "sec-websocket-protocol", "sec-websocket-version", "cookie", "authorization"}
 
 // api is the made-up API server of the oracle: the tunnel of a target
-// echoes, closes, drops or refuses as gateway.js has it.
+// echoes, closes, drops or refuses as it did for the recording.
 func (w *world) api(rw http.ResponseWriter, r *http.Request) {
 	w.mu.Lock()
 	w.seq++

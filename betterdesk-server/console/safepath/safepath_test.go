@@ -61,7 +61,7 @@ type vector struct {
 }
 
 // TestNodeVectors replays what lib/safePath.js answered for about 1,400
-// calls on the same tree (testdata/nodeoracle/vectors.js): the same
+// calls on the same tree (testdata/vectors.json): the same
 // result, or the same error.
 func TestNodeVectors(t *testing.T) {
 	raw, err := os.ReadFile("testdata/vectors.json")

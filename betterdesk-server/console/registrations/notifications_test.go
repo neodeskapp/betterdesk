@@ -13,8 +13,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/httpx"
 )
 
-// notificationVectors is what testdata/nodeoracle/notifications.js
-// recorded from services/registrationNotifications.js. A value
+// notificationVectors is testdata/notifications.json, recorded from
+// services/registrationNotifications.js (testdata/README.md). A value
 // {"$undefined": true} stands for undefined, {"$date": text} for a Date
 // (the times of PostgreSQL rows).
 type notificationVectors struct {

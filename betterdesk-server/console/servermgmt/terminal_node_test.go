@@ -24,8 +24,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
 
-// nodeTerminal is testdata/node_terminal_<mode>.json, written by
-// testdata/nodeoracle/terminal.js from the old serverTerminalProxy.js.
+// nodeTerminal is testdata/node_terminal_<mode>.json, recorded from the
+// old serverTerminalProxy.js (testdata/README.md).
 type nodeTerminal struct {
 	Mode     string `json:"mode"`
 	Refusals []struct {

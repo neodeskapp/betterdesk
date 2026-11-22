@@ -294,7 +294,7 @@ var knownRedirect = map[string]func(t *testing.T, got []reply, closed bool) stri
 
 // loadRedirectOracle is listen/testdata/node_redirect.json: the plain
 // port of upstream 3.5.264's server.js (audit H5) with different public
-// hosts, recorded by listen/testdata/nodeoracle/redirect.js.
+// hosts, recorded from the old console (listen/testdata/README.md).
 var loadRedirectOracle = sync.OnceValues(func() (*oracleFile, error) {
 	raw, err := os.ReadFile(filepath.Join("listen", "testdata", "node_redirect.json"))
 	if err != nil {

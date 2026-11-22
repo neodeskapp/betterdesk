@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"os"
 	"slices"
 	"strings"
 	"testing"
@@ -14,8 +13,9 @@ import (
 	"unicode/utf8"
 )
 
-// messageVector is one mail of a file that testdata/nodeoracle/message.js
-// wrote, with what nodemailer handed to the transport for it.
+// messageVector is one mail of a message recording such as
+// testdata/message.json.gz, with what nodemailer handed to the transport
+// for it.
 type messageVector struct {
 	// the mail as sendMail got it; a key that is missing was undefined
 	From    *string         `json:"from"`
@@ -392,8 +392,8 @@ func replayMessages(t *testing.T, file string) vectorCounts {
 	return n
 }
 
-// TestNodeMessageVectors replays the mails of
-// testdata/nodeoracle/message.js: for each one Build gets the same mail,
+// TestNodeMessageVectors replays the mails of testdata/message.json.gz
+// (testdata/README.md): for each one Build gets the same mail,
 // time and random bytes as nodemailer and has to give the same envelope,
 // Message-ID and message bytes, or the same error. Where nodemailer folded
 // a header in front of white space other than a space or a tab, the
@@ -406,14 +406,4 @@ func TestNodeMessageVectors(t *testing.T) {
 		t.Fatalf("testdata/message.json.gz is incomplete: %+v", n)
 	}
 	t.Logf("%+v", n)
-}
-
-// TestExtraMessageVectors replays a second file of vectors, named by the
-// environment variable MESSAGE_VECTORS (see testdata/nodeoracle/README.md).
-func TestExtraMessageVectors(t *testing.T) {
-	file := os.Getenv("MESSAGE_VECTORS")
-	if file == "" {
-		t.Skip("MESSAGE_VECTORS is not set")
-	}
-	t.Logf("%+v", replayMessages(t, file))
 }

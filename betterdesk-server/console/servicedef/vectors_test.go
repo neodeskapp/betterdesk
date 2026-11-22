@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-// The vectors were written from the Node console by
-// testdata/nodeoracle/sanitize.js.
+// The vectors were recorded from the Node console (testdata/sanitize.json,
+// see testdata/README.md).
 type vectors struct {
 	Text []struct {
 		Fn     string          `json:"fn"`

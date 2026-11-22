@@ -17,7 +17,7 @@ import (
 )
 
 // TestSessions replays the sessions recorded with the real nodemailer
-// (testdata/sessions.json, made by testdata/nodeoracle/record_sessions.js).
+// (testdata/sessions.json, see testdata/README.md).
 // For every scenario the Go sink plays the same server side, and the test
 // compares
 //   - everything the client sent: each command line in order, the bytes

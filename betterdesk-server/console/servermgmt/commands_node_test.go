@@ -13,9 +13,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 )
 
-// nodeCommands is testdata/node_commands.json, written by
-// testdata/nodeoracle/commands.js from the old serverManagement.js with
-// child_process replaced.
+// nodeCommands is testdata/node_commands.json, recorded from the old
+// serverManagement.js with child_process replaced (testdata/README.md).
 type nodeCommands struct {
 	Disks []struct {
 		Platform string `json:"platform"`

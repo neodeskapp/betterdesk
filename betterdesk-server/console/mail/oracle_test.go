@@ -23,10 +23,10 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// The recordings in testdata were made by testdata/nodeoracle/mail.js: the
-// Node console's emailService and smtpSettingsHandlers on the real database
-// adapter, with nodemailer replaced by a stub, and the real nodemailer
-// asked what it would do with each set of options.
+// The recordings in testdata (testdata/README.md) hold the Node console's
+// emailService and smtpSettingsHandlers on the real database adapter,
+// with nodemailer replaced by a stub, and the real nodemailer asked what
+// it would do with each set of options.
 
 type oracleProbe struct {
 	Crash   string `json:"crash"`
@@ -158,7 +158,8 @@ func bindValue(t testing.TB, text string) jsbind.Value {
 	return jsbind.Of(body.Get("v"))
 }
 
-// dumpValue writes a value as dump() of the oracle's lib.js does.
+// dumpValue writes a value as the recordings wrote it: JSON plus the words
+// undefined, NaN, -0 and Infinity.
 func dumpValue(v value) string {
 	switch v.kind {
 	case kindUndefined:

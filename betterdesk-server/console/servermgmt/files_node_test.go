@@ -19,8 +19,8 @@ import (
 	"unicode/utf16"
 )
 
-// nodeFiles is testdata/node_files.json, written by
-// testdata/nodeoracle/files.js from the old console's serverManagement.js.
+// nodeFiles is testdata/node_files.json, recorded from the old console's
+// serverManagement.js (testdata/README.md).
 type nodeFiles struct {
 	Tree      [][]any `json:"tree"`
 	Scenarios []struct {

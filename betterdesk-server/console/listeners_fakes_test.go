@@ -18,7 +18,7 @@ import (
 )
 
 // echoAPI is the scripted API server of the recording
-// (listen/testdata/nodeoracle/lib.js startUpstream), written again in Go:
+// (listen/testdata/README.md), written again in Go:
 // requests with an X-Oracle header get an echo of what arrived, others
 // have their connection closed.
 type echoAPI struct {
