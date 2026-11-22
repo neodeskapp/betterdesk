@@ -117,3 +117,45 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 		t.Errorf("the report of s1 as the admin: %d %s", got.Status, got.Body)
 	}
 }
+
+// TestWorkReportsOfAnotherAccountNeedUserEdit: an account without
+// user.edit files the work report of its own sessions and of sessions whose
+// operator names no account (the console's web client, a desktop client's
+// id), but not of a session whose operator is another account: 403 before
+// the report reaches the API server. user.edit files for others (L49).
+func TestWorkReportsOfAnotherAccountNeedUserEdit(t *testing.T) {
+	api := routetest.NewAPI()
+	for id, operator := range map[string]string{
+		"s-own":        `"operator_id":"e2e_operator"`,
+		"s-own-name":   `"operator_id":"123456789","operator_name":"e2e_operator"`,
+		"s-other":      `"operator_id":"e2e_viewer"`,
+		"s-other-name": `"operator_id":"987654321","operator_name":"e2e_admin"`,
+		"s-web":        `"operator_id":"panel-web-remote"`,
+	} {
+		api.On("GET /api/billing/sessions/"+id, 200, `{"session":{"id":"`+id+`","device_id":"b",`+operator+`,"status":"pending_report"},"device":{"id":"b"}}`)
+		api.On("POST /api/billing/sessions/"+id+"/report", 200, `{"ok":"true"}`)
+	}
+	run := func(w *routetest.World, role, id string, status int, body string) {
+		t.Helper()
+		api.Calls()
+		got := w.As(role).Do("POST", "/api/panel/billing/sessions/"+id+"/report", `{"summary":"done"}`)
+		if got.Status != status || got.Body != body {
+			t.Errorf("the report of %s as %s: %d %s\nwant %d %s", id, role, got.Status, got.Body, status, body)
+		}
+		reached := slices.ContainsFunc(api.Calls(), func(call string) bool { return strings.HasPrefix(call, "POST ") })
+		if reached != (status == 200) {
+			t.Errorf("the report of %s as %s reached the API server: %v", id, role, reached)
+		}
+	}
+	const filed, refused = `{"ok":"true"}`, `{"success":false,"error":"errors.no_permission"}`
+	w := routetest.New(t, routetest.Options{API: api})
+	for _, id := range []string{"s-own", "s-own-name", "s-web"} {
+		run(w, "operator", id, 200, filed)
+	}
+	for _, id := range []string{"s-other", "s-other-name"} {
+		run(w, "operator", id, 403, refused)
+		run(w, "global_admin", id, 200, filed)
+	}
+	granted := routetest.New(t, routetest.Options{API: api, Roles: routetest.Overrides{"operator": {"user.edit": true}}})
+	run(granted, "operator", "s-other", 200, filed)
+}

@@ -3,6 +3,7 @@ package commercialization
 import (
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/access"
@@ -27,6 +28,8 @@ import (
 //	the two exports                   403: the files cannot be cut to the scope
 //
 // An account without a limit gets the API server's answers as they are.
+// Without user.edit an account files no work report of a session whose
+// operator is another account, with a limit or without (reportInScope).
 
 // sessionsLookup is how many of the newest sessions are read to find
 // sessions by id: the most the API server lists at once.
@@ -196,15 +199,24 @@ func (h *handlers) deviceInScope(pattern string) http.HandlerFunc {
 	})
 }
 
-// reportInScope is passBody for the work report of a session, refused
-// for an account with a limit unless the API server knows the session and
-// its device is in the scope. Whether the session still takes a report is
-// the API server's to answer.
+// reportInScope is passBody for the work report of a session. An account
+// without user.edit files no report of a session whose operator is
+// another account (othersSession), and an account with a limit only that
+// of a session of a device in its scope, which the API server has to
+// know. The session is looked up only for those checks. Whether the
+// session still takes a report is the API server's to answer.
 func (h *handlers) reportInScope(pattern string) http.HandlerFunc {
 	plain := h.passBody(http.MethodPost, pattern)
-	return h.scoped(plain, func(w http.ResponseWriter, r *http.Request, scope *access.DeviceScope) {
-		if _, err := goapipath.PathOf(r, pattern)(); err != nil {
-			// the path is refused with 400 before any call
+	return func(w http.ResponseWriter, r *http.Request) {
+		scope, err := h.scope(r)
+		if err != nil {
+			h.log.Error("Billing device scope error:", err)
+			kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+			return
+		}
+		forOthers := kit.HasPermission(r, "user.edit")
+		if _, err := goapipath.PathOf(r, pattern)(); err != nil || scope.Unlimited() && forOthers {
+			// a refused path is answered 400 before any call
 			plain(w, r)
 			return
 		}
@@ -214,12 +226,46 @@ func (h *handlers) reportInScope(pattern string) http.HandlerFunc {
 			goapipath.WriteJSON(w, r, status, data)
 			return
 		}
-		if session == nil || !scope.Has(session.DeviceID()) {
+		if !scope.Unlimited() && (session == nil || !scope.Has(session.DeviceID())) {
 			outOfScope(w, r)
 			return
 		}
+		if session != nil && !forOthers {
+			other, err := h.othersSession(r, session)
+			if err != nil {
+				h.log.Error("Work report operator lookup error:", err)
+				kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+				return
+			}
+			if other {
+				kit.Fail(w, r, http.StatusForbidden, kit.T(r, "errors.no_permission", nil))
+				return
+			}
+		}
 		plain(w, r)
-	})
+	}
+}
+
+// othersSession reports whether the operator of a billing session is
+// another account than the caller's: its operator_name or operator_id is
+// not the caller's name but the name of another account of the console.
+// A session whose operator names no account (the console's web client, a
+// desktop client's id) is nobody's in particular.
+func (h *handlers) othersSession(r *http.Request, session *goapi.BillingSession) (bool, error) {
+	me := kit.User(r).Username
+	names := []string{text(session.Session, "operator_name"), text(session.Session, "operator_id")}
+	if slices.Contains(names, me) {
+		return false, nil
+	}
+	for _, name := range names {
+		if name == "" {
+			continue
+		}
+		if found, err := accountNamed(r.Context(), h.d.Store, name); err != nil || found {
+			return found, err
+		}
+	}
+	return false, nil
 }
 
 // exportInScope is export, refused for an account with a limit.
