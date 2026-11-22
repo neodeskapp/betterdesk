@@ -253,7 +253,7 @@ while [[ $# -gt 0 ]]; do
             echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
-            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/betterdesk.sh | sudo bash"
+            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh | sudo bash"
             echo "Later:                     sudo betterdesk (menu), sudo betterdesk --update, sudo betterdesk --uninstall"
             exit 0
             ;;
@@ -3857,8 +3857,8 @@ release_asset_name() {
 }
 
 # Where the release files are: RELEASE_BASE_URL, else the newest release
-# (stable channel, branch main) or the "dev" pre-release (development
-# channel, branch dev) of UPDATE_GITHUB_OWNER/UPDATE_GITHUB_REPO.
+# (stable channel, UPDATE_GITHUB_BRANCH main) or the "dev" pre-release
+# (development channel, dev) of UPDATE_GITHUB_OWNER/UPDATE_GITHUB_REPO.
 release_base_url() {
     if [ -n "${RELEASE_BASE_URL:-}" ]; then
         printf '%s\n' "${RELEASE_BASE_URL%/}"
@@ -5509,14 +5509,14 @@ UPDATE_GITHUB_OWNER_GIVEN="${UPDATE_GITHUB_OWNER:-}"
 UPDATE_GITHUB_REPO_GIVEN="${UPDATE_GITHUB_REPO:-}"
 UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-trybetterdesk}"
 UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-betterdesk}"
-# A channel given to the installer (install.sh passes the branch it
-# installed) wins over .env and is written into it
+# A channel given to the installer (--channel, or install.sh's --channel)
+# wins over .env and is written into it. UPDATE_GITHUB_BRANCH holds the
+# channel's id, main for stable and dev for development, not a git branch.
 UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"
 UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
 # The branch the installer itself comes from for the betterdesk command:
-# the repository's default branch, dev (its main branch still holds
-# upstream's older installer). The release channel above is separate.
-INSTALLER_REF="${INSTALLER_REF:-dev}"
+# the repository's branch, main. The release channel above is separate.
+INSTALLER_REF="${INSTALLER_REF:-main}"
 
 # save_given_update_channel: the channel the installer was given goes into
 # .env, where the server's updater reads it
@@ -5558,7 +5558,7 @@ write_update_github_branch_to_env() {
     UPDATE_GITHUB_BRANCH="$branch"
     UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH_GIVEN:+$branch}"
     export UPDATE_GITHUB_BRANCH
-    print_success "Update channel saved (GitHub branch: $branch)"
+    print_success "Update channel saved: $branch"
     return 0
 }
 
@@ -5573,11 +5573,11 @@ switch_update_channel() {
         return
     fi
     read_update_github_branch_from_env
-    print_info "Current GitHub branch: $UPDATE_GITHUB_BRANCH"
+    print_info "Current update channel: $UPDATE_GITHUB_BRANCH"
     echo ""
     local _menu_items=(
-        $'Stable (main)\tProduction releases from the main branch'
-        $'Development (dev)\tLatest work-in-progress from the dev branch'
+        $'Stable (main)\tReleases from version tags'
+        $'Development (dev)\tThe newest build of the main branch'
         $'Back\tReturn without changes'
     )
     local _menu_returns=( main dev 0 )

@@ -19,10 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout development branch
+      - name: Checkout main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: dev
+          ref: main
           fetch-depth: 0
 
       - name: Set up Python
@@ -36,7 +36,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/watch_rustdesk_upstream.py --write
 
-      - name: Commit last_seen manifest updates on dev
+      - name: Commit last_seen manifest updates on main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -56,5 +56,4 @@ jobs:
           Thanks: INSOLVE (Honorary); Marco Jakobs (@jacotec); MyNameisStitch (@MyNameisStitch); Redspin (@playerumpknow); muopc (@muopc)
           EOF
           )"
-          # The branch by its full name: the dev release has a tag named dev
-          git push origin HEAD:refs/heads/dev
+          git push origin HEAD:refs/heads/main

@@ -928,8 +928,8 @@ function Invoke-ServerCommand {
 }
 
 # Where the release files are: RELEASE_BASE_URL, else the newest release
-# (stable channel, branch main) or the "dev" pre-release (development
-# channel, branch dev).
+# (stable channel, UPDATE_GITHUB_BRANCH main) or the "dev" pre-release
+# (development channel, dev).
 function Get-ReleaseBaseUrl {
     if ($env:RELEASE_BASE_URL) { return $env:RELEASE_BASE_URL.TrimEnd('/') }
     $releases = "https://github.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/releases"
@@ -3298,13 +3298,14 @@ $script:UPDATE_GITHUB_REPO_GIVEN = "$env:UPDATE_GITHUB_REPO"
 $script:UPDATE_GITHUB_OWNER = if ($env:UPDATE_GITHUB_OWNER) { $env:UPDATE_GITHUB_OWNER } else { "trybetterdesk" }
 $script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_REPO } else { "betterdesk" }
 # A channel given to the installer (-Channel, else UPDATE_GITHUB_BRANCH) wins
-# over .env and is written into it
+# over .env and is written into it. UPDATE_GITHUB_BRANCH holds the channel's
+# id, main for stable and dev for development, not a git branch.
 $script:UPDATE_GITHUB_BRANCH_GIVEN = if ($Channel -eq "dev") { "dev" } elseif ($Channel -eq "stable") { "main" } elseif ($env:UPDATE_GITHUB_BRANCH) { $env:UPDATE_GITHUB_BRANCH } else { "" }
 $script:UPDATE_GITHUB_BRANCH = if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { $script:UPDATE_GITHUB_BRANCH_GIVEN } else { "main" }
 # The branch the installer itself comes from for its copy in the install
-# folder: the repository's default branch, dev (its main branch still holds
-# upstream's older installer). The release channel above is separate.
-$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "dev" }
+# folder: the repository's branch, main. The release channel above is
+# separate.
+$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "main" }
 
 function Read-UpdateGitHubBranchFromEnv {
     if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { return }
@@ -3347,7 +3348,7 @@ function Write-UpdateGitHubBranchToEnv {
     $script:UPDATE_GITHUB_BRANCH = $Branch
     if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { $script:UPDATE_GITHUB_BRANCH_GIVEN = $Branch }
     $env:UPDATE_GITHUB_BRANCH = $Branch
-    Print-Success "Update channel saved (GitHub branch: $Branch)"
+    Print-Success "Update channel saved: $Branch"
     return $true
 }
 
@@ -3362,11 +3363,11 @@ function Switch-UpdateChannel {
         return
     }
     Read-UpdateGitHubBranchFromEnv
-    Print-Info "Current GitHub branch: $($script:UPDATE_GITHUB_BRANCH)"
+    Print-Info "Current update channel: $($script:UPDATE_GITHUB_BRANCH)"
     Write-Host ""
     $items = @(
-        "Stable (main)`tProduction releases from the main branch",
-        "Development (dev)`tLatest work-in-progress from the dev branch",
+        "Stable (main)`tReleases from version tags",
+        "Development (dev)`tThe newest build of the main branch",
         "Back`tReturn without changes"
     )
     $returns = @("main", "dev", "0")

@@ -22,7 +22,7 @@
 # Usage (MACVLAN_IPV4 and RELAY_SERVERS can also go into .env):
 #   export MACVLAN_IPV4=192.168.1.51
 #   export RELAY_SERVERS=${MACVLAN_IPV4}:21117
-#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/docker-compose.quick.single.macvlan.yml -o docker-compose.yml
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/docker-compose.quick.single.macvlan.yml -o docker-compose.yml
 #   docker compose up -d
 #
 # Web console: http://MACVLAN_IPV4:5000

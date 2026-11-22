@@ -3,7 +3,7 @@
 # =============================================================================
 # Builds Go server binary for Linux (amd64, arm64) and Windows (amd64), and
 # the migration tool for Linux (amd64).
-# Triggers on main/dev pushes, version tag pushes (v*) or manual dispatch.
+# Triggers on main pushes, version tag pushes (v*) or manual dispatch.
 # Every run keeps the binaries with their manifests as artifacts of the run.
 # Nothing is attached to a GitHub Release: release-go.yml is the only
 # workflow that publishes binaries there, with the web console built in and
@@ -14,7 +14,7 @@ name: Build & Release Go Server
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     tags: ['v*']
 
   workflow_dispatch:

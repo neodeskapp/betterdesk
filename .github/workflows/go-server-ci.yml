@@ -3,7 +3,7 @@ name: Go Server CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'betterdesk-server/**'
       - 'web-ui/**'

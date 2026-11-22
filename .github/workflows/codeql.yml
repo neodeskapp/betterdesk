@@ -1,7 +1,7 @@
 name: CodeQL
 
 # Advanced CodeQL workflow. GitHub "default setup" already scans on push
-# (runs appear as "Push on dev"). Uploading SARIF from this advanced workflow
+# (runs appear as "Push on main"). Uploading SARIF from this advanced workflow
 # fails with: "CodeQL analyses from advanced configurations cannot be processed
 # when the default setup is enabled". Keep this file for scheduled / manual
 # advanced scans after default setup is disabled in repo Settings → Code security.

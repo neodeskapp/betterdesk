@@ -28,7 +28,7 @@ BETTERDESK_DIR="${BETTERDESK_DIR:-/opt/betterdesk/docker}"
 # The image the compose file runs (a mirror goes into docker-compose.override.yml)
 BETTERDESK_IMAGE="ghcr.io/trybetterdesk/betterdesk"
 BETTERDESK_IMAGE_TAG_SET="${BETTERDESK_IMAGE_TAG:-}"
-BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/trybetterdesk/betterdesk/${BETTERDESK_BRANCH:-dev}}"
+BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/trybetterdesk/betterdesk/${BETTERDESK_BRANCH:-main}}"
 RELAY_SERVERS_SET="${RELAY_SERVERS:-}"
 RELAY_MODE="${RELAY_MODE:-auto}"
 CONSOLE_PORT_SET="${BETTERDESK_CONSOLE_PORT:-}"

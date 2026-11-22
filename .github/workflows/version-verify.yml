@@ -2,7 +2,7 @@ name: Version Verify
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'VERSION'
       - 'betterdesk-server/VERSION'
@@ -17,7 +17,7 @@ on:
       - 'betterdesk-server/cmd/repotool/**'
       - '.github/workflows/version-verify.yml'
   pull_request:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'VERSION'
       - 'betterdesk-server/VERSION'

@@ -4,7 +4,7 @@
 
 ## Target branch
 
-- [ ] This pull request targets `dev`, unless it is an explicitly approved `dev` → `main` release.
+- [ ] This pull request targets `main`.
 
 ## Security and provenance
 

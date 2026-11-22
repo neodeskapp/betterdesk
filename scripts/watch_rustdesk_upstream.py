@@ -224,7 +224,7 @@ New **{title_component}** release needs a BetterDesk compatibility review.
 
 ### Checklist
 
-Follow [`{checklist_doc}`](https://github.com/{this_repo}/blob/dev/{checklist_doc}) end-to-end (manual lab + code review). Record findings in [`{audit_doc}`](https://github.com/{this_repo}/blob/dev/{audit_doc}).
+Follow [`{checklist_doc}`](https://github.com/{this_repo}/blob/main/{checklist_doc}) end-to-end (manual lab + code review). Record findings in [`{audit_doc}`](https://github.com/{this_repo}/blob/main/{audit_doc}).
 
 - [ ] Bootstrap / deploy string / deep-link / no public fallback
 - [ ] RegisterPk / enrollment modes
