@@ -244,8 +244,6 @@ export class RDClient {
 	_recorder?: MediaRecorder | null;
 	_recordedChunks?: Blob[];
 	_recordingStartTime?: number;
-	/** Never set: the cursor-ready callback reads it (see _startSession) */
-	declare canvas: HTMLCanvasElement | undefined;
 
 	constructor(canvas: HTMLCanvasElement, opts: RDClientOptions = { deviceId: '' }) {
 		if (!canvas) throw new Error('Canvas element required');
@@ -556,10 +554,11 @@ export class RDClient {
 				}
 			});
 			this.conn.on('relay:error', (e) => {
-				const message = errorField(e, 'message');
-				this._handleDisconnect('Relay error: ' + String(message), {
+				// A WebSocket error event carries no message
+				const message = String(errorField(e, 'message') || 'the relay connection failed');
+				this._handleDisconnect('Relay error: ' + message, {
 					source: 'relay-error',
-					error: message ? String(message) : String(e)
+					error: message
 				});
 			});
 
@@ -1437,6 +1436,20 @@ export class RDClient {
 			this._emit('peer_encoding', this._peerEncoding);
 			return;
 		}
+		// The format of the device's sound, sent before its first audio frame
+		if (misc.audioFormat) {
+			if (!this.opts.disableAudio && RDAudio.isSupported()) {
+				this.audio
+					.configure({
+						sampleRate: Number(misc.audioFormat.sampleRate) || undefined,
+						channels: Number(misc.audioFormat.channels) || undefined
+					})
+					.catch(() => {
+						this._emit('log', 'Audio init failed');
+					});
+			}
+			return;
+		}
 	}
 
 	// ---- Session Management ----
@@ -1481,7 +1494,7 @@ export class RDClient {
 
 		// Signal CSS when remote cursor data is available (hide local crosshair)
 		this.renderer.onCursorReady = (ready) => {
-			const container = this.canvas?.parentElement;
+			const container = this.renderer.canvas.parentElement;
 			if (container) {
 				container.classList.toggle('has-remote-cursor', !!ready);
 			}
@@ -1935,6 +1948,19 @@ export class RDClient {
 		try {
 			const canvas = this.renderer.canvas;
 			const stream = canvas.captureStream(15); // 15fps recording
+
+			// The device's sound: the volume node plays into the recording as well
+			const audioCtx = this.audio.audioCtx;
+			if (audioCtx && audioCtx.state === 'running' && this.audio.gainNode) {
+				try {
+					const sound = audioCtx.createMediaStreamDestination();
+					this.audio.gainNode.connect(sound);
+					const track = sound.stream.getAudioTracks()[0];
+					if (track) stream.addTrack(track);
+				} catch {
+					// The recording goes on without sound
+				}
+			}
 
 			let mimeType = 'video/webm;codecs=vp9,opus';
 			if (!MediaRecorder.isTypeSupported(mimeType)) {

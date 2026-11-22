@@ -10,6 +10,7 @@ import { RDClient } from '../../../src/lib/remote/client/client.ts';
 import { RDClipboard } from '../../../src/lib/remote/client/clipboard.ts';
 import { RDCompress } from '../../../src/lib/remote/client/compress.ts';
 import { RDFileConnection } from '../../../src/lib/remote/client/file-connection.ts';
+import { LoginResponse } from '../../../src/lib/remote/client/generated/protos.ts';
 import { RemoteTargetSession } from '../../../src/lib/remote/client/remote-target.ts';
 
 const g = { RDClient, RDFileConnection, RDClipboard, RDCompress };
@@ -364,6 +365,42 @@ describe('device clipboard', () => {
 	});
 });
 
+describe('RDP and VNC gateway socket', () => {
+	/** A browser WebSocket's binary delivery: a Blob unless binaryType asks for an ArrayBuffer */
+	class GatewaySocket {
+		static last: GatewaySocket | null = null;
+		binaryType: BinaryType = 'blob';
+		onopen: (() => void) | null = null;
+		onmessage: ((ev: { data: unknown }) => void) | null = null;
+		onerror: (() => void) | null = null;
+		onclose: (() => void) | null = null;
+		readyState = 1;
+		constructor() {
+			GatewaySocket.last = this;
+		}
+		send() {}
+		close() {}
+		binary(text: string) {
+			// ASCII as bytes of this realm (jsdom's TextEncoder gives Node's)
+			const bytes = Uint8Array.from(text, (c) => c.charCodeAt(0));
+			this.onmessage?.({ data: this.binaryType === 'arraybuffer' ? bytes.buffer : new Blob([bytes]) });
+		}
+	}
+
+	test('reads the instructions the gateway sends as binary messages', async () => {
+		vi.stubGlobal('WebSocket', Object.assign(GatewaySocket, { OPEN: 1 }));
+		try {
+			const s = new RemoteTargetSession(document.createElement('canvas'), { deviceId: 'target-1' });
+			await s.authenticate('pw');
+			GatewaySocket.last!.binary('5.ready,4.abcd;');
+			expect(s.state).toBe('streaming');
+			s.disconnect();
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+});
+
 describe('RDP and VNC clipboard', () => {
 	const Session = RemoteTargetSession;
 
@@ -421,5 +458,53 @@ describe('a second factor on the file transfer session', () => {
 		expect(fileSend).toHaveBeenCalledWith('123456');
 		expect(mainSend).not.toHaveBeenCalled();
 		expect(c.state).toBe('streaming');
+	});
+});
+
+describe('the file transfer session asks for a second factor', () => {
+	async function fileLogin() {
+		const proto: Proto = (await client()).proto;
+		const f = new g.RDFileConnection({ deviceId: '900100012', proto });
+		f.conn.sendRelay = () => {};
+		const seen: string[] = [];
+		for (const ev of ['2fa_required', '2fa_error', 'login_error']) f.on(ev, () => seen.push(ev));
+		let outcome = 'pending';
+		const login = (f._waitForLogin('pw') as Promise<void>).then(
+			() => (outcome = 'signed in'),
+			(e: Error) => (outcome = e.message)
+		);
+		return { f, seen, login, outcome: () => outcome };
+	}
+
+	test('a device that asks for the verification code gets the code prompt, not a login error', async () => {
+		const t = await fileLogin();
+		t.f._handleLoginResponse(LoginResponse.fromObject({ error: 'Please enter the verification code' }));
+		await Promise.resolve();
+		expect(t.seen).toEqual(['2fa_required']);
+		expect(t.outcome()).toBe('pending');
+	});
+
+	test('the login waits while the operator types the code, then for the answer to it', async () => {
+		vi.useFakeTimers();
+		try {
+			const t = await fileLogin();
+			t.f._handleLoginResponse(LoginResponse.fromObject({ error: '2FA Required' }));
+			await vi.advanceTimersByTimeAsync(120_000);
+			expect(t.outcome()).toBe('pending');
+			t.f.submit2FA('123456');
+			await vi.advanceTimersByTimeAsync(29_000);
+			expect(t.outcome()).toBe('pending');
+			t.f._handleLoginResponse(LoginResponse.fromObject({}));
+			await t.login;
+			expect(t.outcome()).toBe('signed in');
+
+			const silent = await fileLogin();
+			silent.f._handleLoginResponse(LoginResponse.fromObject({ error: '2FA Required' }));
+			silent.f.submit2FA('123456');
+			await vi.advanceTimersByTimeAsync(30_000);
+			expect(silent.outcome()).toBe('File transfer login timeout (30s)');
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

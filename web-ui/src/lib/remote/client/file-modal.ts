@@ -165,7 +165,8 @@ export class FileTransferModal {
 	_selectedLocal: LocalEntry | null;
 	_selectedRemote: FileSheetEntry | null;
 	_transferMeta: Map<number, FileSheetTransferMeta>;
-	_wiredSessionId: string | null;
+	/** The clients the sheet listens to; each is wired once and counts only while the sheet shows its session */
+	_wiredClients: WeakSet<FileSheetClient>;
 	_remoteReady: boolean;
 	_pendingNativePaths: string[] | null;
 	_contextMenu: HTMLDivElement | null;
@@ -182,7 +183,7 @@ export class FileTransferModal {
 		this._selectedLocal = null;
 		this._selectedRemote = null;
 		this._transferMeta = new Map();
-		this._wiredSessionId = null;
+		this._wiredClients = new WeakSet();
 		this._remoteReady = false;
 		this._pendingNativePaths = null;
 		this._contextMenu = null;
@@ -521,6 +522,19 @@ export class FileTransferModal {
 		this._syncLocalLayout();
 	}
 
+	/** The remote toolbar shows only what the session's transfer can do (CDAP and mesh lack some) */
+	_syncRemoteActions(): void {
+		const ft = this._session?.client?.fileTransfer;
+		if (!this._el || !ft) return;
+		part(this._el, '.ft-remote-new-folder').style.display = typeof ft.createDir === 'function' ? '' : 'none';
+		part(this._el, '.ft-remote-hidden').style.display = typeof ft.setShowHidden === 'function' ? '' : 'none';
+	}
+
+	/** Whether the transfer fetches whole folders here: into a folder on the desktop, as a ZIP archive in a browser */
+	_canDownloadFolder(ft: FileSheetTransfer): boolean {
+		return typeof (LocalFiles.isDesktopBridge() ? ft.downloadFolder : ft.downloadFolderAsZip) === 'function';
+	}
+
 	_updateRemoteHiddenButton(): void {
 		const btn = this._el && this._el.querySelector('.ft-remote-hidden');
 		const ft = this._session && this._session.client && this._session.client.fileTransfer;
@@ -579,10 +593,8 @@ export class FileTransferModal {
 		part(this._el, '.ft-remote-path').textContent = '';
 		this._renderRemoteLoading(t('remote.file_connecting', 'Connecting file transfer session…'));
 		this._updateRemoteHiddenButton();
-		if (this._wiredSessionId !== session.deviceId) {
-			this._wireClient(session);
-			this._wiredSessionId = session.deviceId;
-		}
+		this._wireClient(session);
+		this._syncRemoteActions();
 		this._syncSaveDownloadHook();
 		const ft = session.client.fileTransfer;
 		if (ft && typeof ft.enable === 'function' && !ft.enabled) {
@@ -622,39 +634,46 @@ export class FileTransferModal {
 
 	_wireClient(session: FileSheetSession): void {
 		const client = session.client;
-		if (!client) return;
-		client.on('file_browsing', () => {
+		if (!client || this._wiredClients.has(client)) return;
+		this._wiredClients.add(client);
+		// Another session's events (the sheet moved on to it) leave the sheet alone
+		const on = <T>(event: string, fn: (data: T) => void): void => {
+			client.on(event, (data: T) => {
+				if (this._session?.client === client) fn(data);
+			});
+		};
+		on('file_browsing', () => {
 			this._remoteEntries = [];
 			this._renderRemoteLoading(t('remote.file_loading', 'Loading…'));
 			this._setDropzoneEnabled(false);
 		});
-		client.on('file_connecting', () => {
+		on('file_connecting', () => {
 			if (!this._remoteEntries.length) {
 				this._renderRemoteLoading(t('remote.file_connecting', 'Connecting file transfer session…'));
 			}
 			this._setDropzoneEnabled(false);
 		});
-		client.on('file_connect_error', (data: FileSheetConnectErrorEvent) => {
+		on('file_connect_error', (data: FileSheetConnectErrorEvent) => {
 			this._renderRemoteError(
 				data.error || t('remote.file_connect_failed', 'Could not open file transfer session')
 			);
 			this._setDropzoneEnabled(false);
 		});
 		// The file transfer session signs in on its own; a device with 2FA asks again
-		client.on('file_2fa_required', () => {
+		on('file_2fa_required', () => {
 			this._renderRemoteTfa('');
 			this._setDropzoneEnabled(false);
 		});
-		client.on('file_2fa_error', (error: unknown) => {
+		on('file_2fa_error', (error: unknown) => {
 			this._renderRemoteTfa(String(error || t('remote.2fa_invalid', 'Enter a valid 6-digit code')));
 		});
-		client.on('file_login_error', (error: unknown) => {
+		on('file_login_error', (error: unknown) => {
 			this._renderRemoteError(
 				String(error || t('remote.file_connect_failed', 'Could not open file transfer session'))
 			);
 			this._setDropzoneEnabled(false);
 		});
-		client.on('file_dir', (data: FileSheetDirEvent) => {
+		on('file_dir', (data: FileSheetDirEvent) => {
 			this._remoteEntries = data.entries || [];
 			this._selectedRemote = null;
 			part(this._el, '.ft-remote-path').textContent = data.path || '/';
@@ -663,29 +682,29 @@ export class FileTransferModal {
 			this._updateDropzoneTarget();
 			this._updateRemoteHiddenButton();
 		});
-		client.on('file_browse_timeout', () => {
+		on('file_browse_timeout', () => {
 			this._renderRemoteError(t('remote.file_timeout', 'Remote device did not respond.'));
 			this._setDropzoneEnabled(false);
 		});
-		client.on('file_transfer_start', (data: FileSheetTransferEvent) => {
+		on('file_transfer_start', (data: FileSheetTransferEvent) => {
 			this._addTransfer(data);
 		});
-		client.on('file_transfer_progress', (data: FileSheetTransferEvent) => {
+		on('file_transfer_progress', (data: FileSheetTransferEvent) => {
 			this._updateTransfer(data);
 		});
-		client.on('file_transfer_complete', (data: FileSheetTransferEvent) => {
+		on('file_transfer_complete', (data: FileSheetTransferEvent) => {
 			this._completeTransfer(data);
 		});
-		client.on('file_transfer_error', (data: FileSheetTransferEvent) => {
+		on('file_transfer_error', (data: FileSheetTransferEvent) => {
 			this._errorTransfer(data);
 		});
-		client.on('file_transfer_cancelled', (data: FileSheetTransferEvent) => {
+		on('file_transfer_cancelled', (data: FileSheetTransferEvent) => {
 			this._removeTransfer(data.id);
 		});
-		client.on('file_transfer_overwrite_prompt', (data: FileSheetTransferEvent) => {
+		on('file_transfer_overwrite_prompt', (data: FileSheetTransferEvent) => {
 			this._showOverwriteDialog(data);
 		});
-		client.on('file_action', () => {
+		on('file_action', () => {
 			setTimeout(() => {
 				const ft = this._session && this._session.client && this._session.client.fileTransfer;
 				if (ft) ft.browseDir(ft.currentPath || '');
@@ -955,6 +974,8 @@ export class FileTransferModal {
 			menu.appendChild(btn);
 		};
 
+		// Only what the session's transfer can do (CDAP and mesh lack some)
+		const transfer = this._session?.client?.fileTransfer;
 		if (entry.isDir) {
 			addItem(t('remote.file_open', 'Open'), 'folder_open', () => {
 				const ft = this._session?.client?.fileTransfer;
@@ -963,20 +984,26 @@ export class FileTransferModal {
 				const next = base ? base.replace(/[\\/]+$/, '') + sep + entry.name : entry.name;
 				ft?.browseDir(next);
 			});
-			addItem(t('remote.file_download_folder', 'Download folder'), 'folder_zip', () => {
-				this._downloadRemoteFolder(entry);
-			});
+			if (transfer && this._canDownloadFolder(transfer)) {
+				addItem(t('remote.file_download_folder', 'Download folder'), 'folder_zip', () => {
+					this._downloadRemoteFolder(entry);
+				});
+			}
 		} else {
 			addItem(t('remote.file_download', 'Download'), 'download', () => {
 				this._downloadRemoteEntry(entry);
 			});
 		}
-		addItem(t('remote.file_rename', 'Rename'), 'drive_file_rename_outline', () => {
-			this._remoteRename(entry);
-		});
-		addItem(t('actions.delete', 'Delete'), 'delete_outline', () => {
-			this._remoteDelete(entry);
-		});
+		if (typeof transfer?.rename === 'function') {
+			addItem(t('remote.file_rename', 'Rename'), 'drive_file_rename_outline', () => {
+				this._remoteRename(entry);
+			});
+		}
+		if (typeof (entry.isDir ? transfer?.removeDir : transfer?.removeFile) === 'function') {
+			addItem(t('actions.delete', 'Delete'), 'delete_outline', () => {
+				this._remoteDelete(entry);
+			});
+		}
 
 		getOverlayHost().appendChild(menu);
 		this._contextMenu = menu;
@@ -1065,9 +1092,11 @@ export class FileTransferModal {
 						this._renderLocalList();
 					});
 			});
-			addItem(t('remote.file_upload_folder', 'Upload folder'), 'drive_folder_upload', () => {
-				this._uploadLocalFolder(entry);
-			});
+			if (typeof this._session?.client?.fileTransfer?.uploadFolder === 'function') {
+				addItem(t('remote.file_upload_folder', 'Upload folder'), 'drive_folder_upload', () => {
+					this._uploadLocalFolder(entry);
+				});
+			}
 		} else {
 			addItem(t('remote.file_upload', 'Upload'), 'upload', () => {
 				this._uploadLocalEntry(entry);

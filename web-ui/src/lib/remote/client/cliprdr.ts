@@ -13,7 +13,6 @@ import type {
 	CliprdrServerFormatList,
 	MessageInit
 } from './generated/protos.ts';
-import { RDInput } from './input.ts';
 import { LocalFiles } from './local-files.ts';
 import { debugInfo, debugLog as consoleLog } from './log.ts';
 import { page, tauriInvoke } from './page.ts';
@@ -28,15 +27,12 @@ const CB_RESPONSE_FAIL = 0x2;
 const FILECONTENTS_SIZE = 0x1;
 const FILECONTENTS_RANGE = 0x2;
 
-/** What RDCliprdr uses of the client's input (RDInput); the optional members are not on RDInput */
+/** What RDCliprdr uses of the client's input (RDInput) */
 export interface RDCliprdrInput {
 	canvas: HTMLCanvasElement;
-	onPotentialFileDragOut?: () => void;
-	_sendSyntheticMouseUp?: (button: number) => void;
-	sendCtrlC?: () => void;
-	sendCtrlV?: () => void;
-	setMouseSuppressed?: (suppressed: boolean) => void;
-	clickAtCanvas?: (x: number, y: number) => void;
+	sendCtrlV(): void;
+	setMouseSuppressed(suppressed: boolean): void;
+	clickAtCanvas(x: number, y: number): void;
 }
 
 /** A request to the peer waiting for its FormatDataResponse or FileContentsResponse */
@@ -75,11 +71,9 @@ export interface RDCliprdrClient {
 	_cliprdrSuppressOutboundUntil?: number;
 	_cliprdrPeerFdId?: number;
 	_cliprdrPeerFcId?: number;
-	_cliprdrDragOutConverting?: boolean;
 	_cliprdrOleDragIntent?: boolean;
 	_cliprdrOleDragWhenReady?: boolean;
 	_cliprdrOleDragStarting?: boolean;
-	_cliprdrDragOutTimer?: ReturnType<typeof setTimeout> | null;
 	_cliprdrPollTimer?: ReturnType<typeof setInterval> | null;
 	_cliprdrSyncInFlight?: boolean;
 	_cliprdrFormatListAckResolve?: (() => void) | null;
@@ -271,12 +265,7 @@ export const RDCliprdr = {
 		client._cliprdrSuppressOutboundUntil = 0;
 		client._cliprdrPeerFdId = RDCliprdr.FILEDESCRIPTOR_FORMAT_ID;
 		client._cliprdrPeerFcId = RDCliprdr.FILECONTENTS_FORMAT_ID;
-		client._cliprdrDragOutConverting = false;
 		client._cliprdrOleDragIntent = false;
-		if (client._cliprdrDragOutTimer) {
-			clearTimeout(client._cliprdrDragOutTimer);
-			client._cliprdrDragOutTimer = null;
-		}
 		try {
 			client._cliprdrFormatNames = await desktopInvoke('desktop_clipboard_format_names');
 		} catch {
@@ -284,81 +273,9 @@ export const RDCliprdr = {
 		}
 		client._sendPeerMessage(client.proto.buildCliprdrMonitorReady());
 		RDCliprdr.startPolling(client);
-
-		// Remote Explorer drag never updates Cliprdr by itself — when the
-		// operator drags toward the window edge we Ctrl+C on the remote so
-		// FormatList arrives and we can start a local OLE drag-out.
-		if (client.input) {
-			client.input.onPotentialFileDragOut = () => {
-				RDCliprdr._beginDragOutConversion(client);
-			};
-		}
-	},
-
-	/**
-	 * Convert a stuck remote Explorer file-drag into Cliprdr + local OLE drag.
-	 * RustDesk only advertises files via clipboard FormatList (Copy), not OLE.
-	 */
-	_beginDragOutConversion(client: RDCliprdrClient | null | undefined): void {
-		if (!RDCliprdr.isSupported() || !client) return;
-		if (client._state !== 'streaming' || client.viewOnly) return;
-		if (client._cliprdrDragOutConverting || client._cliprdrReceiving) return;
-		if (client._cliprdrOleDragStarting) return;
-
-		client._cliprdrDragOutConverting = true;
-		client._cliprdrOleDragIntent = true;
-		client._cliprdrOleDragWhenReady = true;
-
-		// End remote Explorer drag only — do not freeze local input for seconds.
-		// Full mouse suppress happens once file FormatList arrives.
-		if (client.input && typeof client.input._sendSyntheticMouseUp === 'function') {
-			client.input._sendSyntheticMouseUp(RDInput.MOUSE_BUTTON_LEFT);
-		}
-		try {
-			void desktopInvoke('desktop_clipboard_prepare_ole_drag');
-		} catch {
-			/* ignore */
-		}
-
-		debugInfo('[RDCliprdr] remote Explorer drag → Ctrl+C for local drop; keep mouse button held');
-
-		if (client._cliprdrDragOutTimer) {
-			clearTimeout(client._cliprdrDragOutTimer);
-		}
-		setTimeout(() => {
-			if (!client._cliprdrDragOutConverting) return;
-			if (client.input && typeof client.input.sendCtrlC === 'function') {
-				client.input.sendCtrlC();
-			}
-		}, 60);
-
-		client._cliprdrDragOutTimer = setTimeout(() => {
-			client._cliprdrDragOutTimer = null;
-			if (!client._cliprdrDragOutConverting) return;
-			if (client._cliprdrReceiving || client._cliprdrOleDragStarting) return;
-			client._cliprdrDragOutConverting = false;
-			client._cliprdrOleDragIntent = false;
-			client._cliprdrOleDragWhenReady = false;
-			RDCliprdr._disarmOleDrag(client);
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
-				client.input.setMouseSuppressed(false);
-			}
-			console.warn(
-				'[RDCliprdr] no file clipboard after drag-out conversion — use Copy/Paste or File transfer'
-			);
-		}, 2000);
-	},
-
-	_clearDragOutConversion(client: RDCliprdrClient | null | undefined, restoreMouse: boolean): void {
-		if (!client) return;
-		client._cliprdrDragOutConverting = false;
-		if (client._cliprdrDragOutTimer) {
-			clearTimeout(client._cliprdrDragOutTimer);
-			client._cliprdrDragOutTimer = null;
-		}
-		if (restoreMouse && client.input && typeof client.input.setMouseSuppressed === 'function') {
-			client.input.setMouseSuppressed(false);
-		}
+		// Files come from the device only when the operator copies them there
+		// (the device then sends its FormatList); the viewer never presses
+		// Ctrl+C on the device by itself, also not for a drag out of the screen
 	},
 
 	stopPolling(client: RDCliprdrClient | null | undefined): void {
@@ -519,7 +436,7 @@ export const RDCliprdr = {
 					});
 				if (client._state !== 'streaming' || client.viewOnly) return;
 
-				if (position && typeof client.input.clickAtCanvas === 'function') {
+				if (position) {
 					const mapped = RDCliprdr._mapDropPositionToCanvas(client, position);
 					if (mapped) {
 						debugLog('auto-paste: click at canvas', mapped.x, mapped.y);
@@ -529,10 +446,8 @@ export const RDCliprdr = {
 						});
 					}
 				}
-				if (typeof client.input.sendCtrlV === 'function') {
-					debugLog('auto-paste: sending synthetic Ctrl+V after drop');
-					client.input.sendCtrlV();
-				}
+				debugLog('auto-paste: sending synthetic Ctrl+V after drop');
+				client.input.sendCtrlV();
 			} catch (err) {
 				console.warn('[RDCliprdr] auto-paste after drop failed:', err);
 			}
@@ -659,11 +574,6 @@ export const RDCliprdr = {
 		}
 		if (fdId == null || fcId == null) {
 			debugLog('inbound FormatList has no file formats');
-			if (client._cliprdrDragOutConverting) {
-				RDCliprdr._clearDragOutConversion(client, true);
-				client._cliprdrOleDragIntent = false;
-				client._cliprdrOleDragWhenReady = false;
-			}
 			return;
 		}
 
@@ -671,17 +581,13 @@ export const RDCliprdr = {
 		client._cliprdrPeerFcId = fcId;
 		client._sendPeerMessage(client.proto.buildCliprdrFormatListResponse(CB_RESPONSE_OK));
 
-		// Drag-out: either we just converted Explorer-drag→Ctrl+C, or FormatList
-		// arrived while local LBUTTON is still down.
-		let dragIntent = !!client._cliprdrDragOutConverting;
-		if (!dragIntent) {
-			try {
-				dragIntent = !!(await desktopInvoke('desktop_clipboard_lbutton_down'));
-			} catch {
-				dragIntent = false;
-			}
+		// Drag-out: the FormatList arrived while the local left button is still down
+		let dragIntent: boolean;
+		try {
+			dragIntent = !!(await desktopInvoke('desktop_clipboard_lbutton_down'));
+		} catch {
+			dragIntent = false;
 		}
-		RDCliprdr._clearDragOutConversion(client, false);
 		client._cliprdrOleDragIntent = dragIntent;
 		client._cliprdrOleDragWhenReady = false;
 		RDCliprdr._disarmOleDrag(client);
@@ -690,7 +596,7 @@ export const RDCliprdr = {
 			client._cliprdrReceiving = true;
 			suppressOutbound(client, OUTBOUND_SUPPRESS_MS);
 			if (dragIntent) {
-				if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+				if (client.input) {
 					client.input.setMouseSuppressed(true);
 				}
 				try {
@@ -711,7 +617,7 @@ export const RDCliprdr = {
 			}
 			RDCliprdr._disarmOleDrag(client);
 			client._cliprdrOleDragIntent = false;
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+			if (client.input) {
 				client.input.setMouseSuppressed(false);
 			}
 		} finally {
@@ -762,7 +668,7 @@ export const RDCliprdr = {
 				return;
 			}
 			// Stop forwarding mouse to remote so the cursor can leave the window.
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+			if (client.input) {
 				client.input.setMouseSuppressed(true);
 			}
 			debugInfo('[RDCliprdr] starting OLE drag-out with', paths.length, 'path(s)');
@@ -772,7 +678,7 @@ export const RDCliprdr = {
 			console.warn('[RDCliprdr] OLE drag-out failed:', err);
 		} finally {
 			client._cliprdrOleDragStarting = false;
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+			if (client.input) {
 				client.input.setMouseSuppressed(false);
 			}
 		}
@@ -852,7 +758,7 @@ export const RDCliprdr = {
 			// Download finished but nothing to drag — restore local mouse.
 			client._cliprdrOleDragIntent = false;
 			RDCliprdr._disarmOleDrag(client);
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+			if (client.input) {
 				client.input.setMouseSuppressed(false);
 			}
 		}

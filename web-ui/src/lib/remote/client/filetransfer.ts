@@ -163,6 +163,8 @@ export interface RDDownloadTransfer extends RDTransferBase {
 	type: 'download';
 	remoteFileName: string;
 	receivedBytes: number;
+	/** The bytes the desktop file holds: received bytes still in the write batch are not in it */
+	savedBytes: number;
 	/** The received blocks; null while they stream to the desktop file */
 	blocks: Uint8Array[] | null;
 	streamDownload: boolean;
@@ -175,6 +177,8 @@ export interface RDDownloadTransfer extends RDTransferBase {
 	localDir: string | null;
 	absolutePath: string | null;
 	writeChain: Promise<unknown>;
+	/** The blocks and the done of the device, applied one after the other in the order they came */
+	receiveChain: Promise<void>;
 	_writeBatch?: Uint8Array[];
 	_writeBatchLen?: number;
 	_lastProgressEmit?: number;
@@ -422,6 +426,8 @@ export class RDFileTransfer {
 	_activeFolderJob: RDFolderJob | null;
 	_browseTimeout?: ReturnType<typeof setTimeout> | null;
 	_browseTimedOut?: boolean;
+	/** The folder the sheet's own listing (browseDir) waits for, as _normalizeRemotePathKey writes it */
+	_browsePending?: string | null;
 	/**
 	 * Set by the file sheet: saves a finished browser download into the
 	 * chosen local folder; false (or a promise of false) falls back to the
@@ -684,20 +690,11 @@ export class RDFileTransfer {
 		transfer.stallTimer = setTimeout(() => {
 			const t = this._transfers.get(id);
 			if (!t || t.status !== 'pending') return;
-			t.status = 'error';
-			t.resumable =
+			const resumable =
 				(t.type === 'upload' && (t.sentBytes || 0) > 0) ||
 				(t.type === 'download' && (t.receivedBytes || 0) > 0);
-			if (!t.resumable) {
-				this._transfers.delete(id);
-			}
-			this._emit('file_transfer_error', {
-				id: id,
-				fileName: t.fileName,
-				error: 'Remote did not start transfer',
-				resumable: t.resumable,
-				type: t.type
-			} satisfies RDFileTransferErrorEvent);
+			// As any failure: the folder job waiting for the file goes on, a desktop file is closed
+			this._failTransfer(id, 'Remote did not start transfer', { resumable });
 		}, this.TRANSFER_STALL_MS);
 	}
 
@@ -813,10 +810,18 @@ export class RDFileTransfer {
 						this._armTransferTimeout(id);
 					};
 					if (transfer.streamDownload && transfer.localPath) {
-						LocalFiles.beginDownload({
-							absolutePath: transfer.localPath,
-							appendOffset: transfer.receivedBytes || 0
-						})
+						const localPath = transfer.localPath;
+						// Once the writes on their way are done, the device sends the rest from where the file ends
+						transfer.writeChain
+							.then(() => {
+								transfer._writeBatch = [];
+								transfer._writeBatchLen = 0;
+								transfer.receivedBytes = transfer.savedBytes;
+								return LocalFiles.beginDownload({
+									absolutePath: localPath,
+									appendOffset: transfer.savedBytes
+								});
+							})
 							.then((result) => {
 								if (!result || !answerField(result, 'started') || !answerField(result, 'handle')) {
 									this._failTransfer(id, 'Download cancelled');
@@ -852,6 +857,7 @@ export class RDFileTransfer {
 		const dir = path != null ? path : '';
 		const run = (): void => {
 			debugLog('[FileTransfer] browseDir:', JSON.stringify(dir));
+			this._browsePending = this._normalizeRemotePathKey(dir);
 			this._sendMessageSafe(this._proto.buildReadDir(dir, this._showHidden));
 			this._emit('file_browsing', { path: dir } satisfies RDFileBrowseEvent);
 			if (this._browseTimeout) clearTimeout(this._browseTimeout);
@@ -918,6 +924,7 @@ export class RDFileTransfer {
 			remoteFileName: fileEntry.name,
 			fileSize: Number(fileEntry.size || 0),
 			receivedBytes: 0,
+			savedBytes: 0,
 			blocks: this._supportsStreamDownload() && !options.forceBuffer ? null : [],
 			streamDownload: this._supportsStreamDownload() && !options.forceBuffer,
 			captureBlob: !!options.captureBlob,
@@ -929,6 +936,7 @@ export class RDFileTransfer {
 			absolutePath: options.absolutePath || null,
 			folderJobId: options.folderJobId || null,
 			writeChain: Promise.resolve(),
+			receiveChain: Promise.resolve(),
 			startTime: Date.now(),
 			status: 'pending',
 			fileNum: 0,
@@ -1000,13 +1008,15 @@ export class RDFileTransfer {
 			return Promise.reject(new Error('Remote-to-remote browser transfer is limited to 256 MB per file'));
 		}
 		return new Promise((resolve, reject) => {
-			this.downloadFile(remotePath, fileEntry, {
+			const id = this.downloadFile(remotePath, fileEntry, {
 				forceBuffer: true,
 				captureBlob: true,
 				silent: true,
 				captureResolve: resolve,
 				captureReject: reject
 			});
+			// No transfer started, so nothing would ever call back
+			if (id < 0) reject(new Error('File transfer not enabled'));
 		});
 	}
 
@@ -1119,8 +1129,11 @@ export class RDFileTransfer {
 			fileName: transfer.fileName,
 			folderJobId: transfer.folderJobId || null
 		} satisfies RDFileTransferCancelledEvent);
-		if (transfer.folderJobId) {
-			this._onChildTransferSettled(transfer.folderJobId, id, false);
+		// The folder job waiting for this file goes on (it stops when it was cancelled itself)
+		if (typeof transfer._folderWait === 'function') {
+			const resolve = transfer._folderWait;
+			transfer._folderWait = null;
+			resolve(false);
 		}
 	}
 
@@ -1407,17 +1420,6 @@ export class RDFileTransfer {
 			}
 			transfer._folderWait = resolve;
 		});
-	}
-
-	_onChildTransferSettled(folderJobId: number, childId: number, ok: boolean): void {
-		const job = this._activeFolderJob;
-		if (!job || job.id !== folderJobId) return;
-		const transfer = this._transfers.get(childId);
-		if (transfer && typeof transfer._folderWait === 'function') {
-			const resolve = transfer._folderWait;
-			transfer._folderWait = null;
-			resolve(ok);
-		}
 	}
 
 	async _runFolderUpload(job: RDFolderUploadJob): Promise<void> {
@@ -1801,11 +1803,14 @@ export class RDFileTransfer {
 		});
 
 		const pathKey = this._normalizeRemotePathKey(dir.path || '');
+		// The sheet's listing of this folder, or of the home folder (the device answers with its path)
+		const forSheet =
+			this._browsePending != null && (this._browsePending === pathKey || this._browsePending === '');
 		let pending: RDPendingDirRead | null | undefined = null;
 		if (this._pendingDirReads.has(pathKey)) {
 			pending = this._pendingDirReads.get(pathKey);
 			this._pendingDirReads.delete(pathKey);
-		} else if (this._pendingDirReads.size === 1) {
+		} else if (!forSheet && this._pendingDirReads.size === 1) {
 			// Peers may return a slightly different path string — match the sole pending read.
 			const onlyKey = this._pendingDirReads.keys().next().value ?? '';
 			pending = this._pendingDirReads.get(onlyKey);
@@ -1817,6 +1822,7 @@ export class RDFileTransfer {
 			return;
 		}
 
+		this._browsePending = null;
 		this._currentPath = dir.path || '';
 		this._entries = entries;
 		this._emit('file_dir', {
@@ -2039,7 +2045,9 @@ export class RDFileTransfer {
 				merged.set(part, off);
 				off += part.length;
 			}
-			return LocalFiles.writeDownload(transfer.downloadHandle, merged);
+			return LocalFiles.writeDownload(transfer.downloadHandle, merged).then(() => {
+				transfer.savedBytes += total;
+			});
 		};
 
 		const maybeEmitProgress = (force: boolean): void => {
@@ -2087,15 +2095,22 @@ export class RDFileTransfer {
 		};
 
 		const raw = block.data;
-		if (block.compressed && raw && raw.length) {
-			this._decompressBlock(raw)
-				.then(applyBlock)
-				.catch((err: unknown) => {
+		const compressed = !!(block.compressed && raw && raw.length);
+		// A compressed block takes a while to inflate: the blocks after it wait, so the file keeps their order
+		const active = () => this._transfers.get(id) === transfer && transfer.status !== 'error';
+		transfer.receiveChain = transfer.receiveChain.then(async () => {
+			if (!active()) return;
+			let data = raw;
+			if (compressed) {
+				try {
+					data = await this._decompressBlock(raw);
+				} catch (err) {
 					this._failTransfer(id, 'Failed to decompress block: ' + (errorMessage(err) || String(err)));
-				});
-			return;
-		}
-		applyBlock(raw);
+					return;
+				}
+			}
+			if (active()) applyBlock(data);
+		});
 	}
 
 	/**
@@ -2112,7 +2127,20 @@ export class RDFileTransfer {
 		const id = Number(done.id);
 		const transfer = this._transfers.get(id);
 		if (!transfer) return;
+		if (transfer.type === 'download') {
+			// The done follows the last block: it waits until every block before it is applied
+			transfer.receiveChain = transfer.receiveChain.then(() => {
+				if (this._transfers.get(id) === transfer && transfer.status !== 'error')
+					this._finishTransfer(transfer);
+			});
+			return;
+		}
+		this._finishTransfer(transfer);
+	}
 
+	/** The device's done of a transfer: save a download, report the transfer complete */
+	_finishTransfer(transfer: RDTransfer): void {
+		const id = transfer.id;
 		this._clearTransferTimeout(id);
 		transfer.status = 'complete';
 		const elapsed = (Date.now() - transfer.startTime) / 1000;
@@ -2184,7 +2212,9 @@ export class RDFileTransfer {
 								merged.set(part, off);
 								off += part.length;
 							}
-							return LocalFiles.writeDownload(transfer.downloadHandle, merged);
+							return LocalFiles.writeDownload(transfer.downloadHandle, merged).then(() => {
+								transfer.savedBytes += total;
+							});
 						}
 						return null;
 					})
@@ -2211,7 +2241,20 @@ export class RDFileTransfer {
 					phase: 'saving'
 				} satisfies RDFileTransferProgressEvent);
 			}
-			this._triggerDownload(transfer);
+			// Complete once the file is saved; a failed save already reported its error
+			void this._triggerDownload(transfer).then((saved) => {
+				if (saved) {
+					finishComplete();
+					return;
+				}
+				if (typeof transfer._folderWait === 'function') {
+					const resolve = transfer._folderWait;
+					transfer._folderWait = null;
+					resolve(false);
+				}
+				this._transfers.delete(id);
+			});
+			return;
 		}
 
 		finishComplete();
@@ -2484,21 +2527,23 @@ export class RDFileTransfer {
 	}
 
 	/**
-	 * Assemble received blocks into a Blob and trigger download
+	 * Assemble received blocks into a Blob and save it. Resolves false when
+	 * the save failed, after its file_transfer_error.
 	 */
-	_triggerDownload(transfer: RDDownloadTransfer): void {
-		if (transfer.streamDownload) return;
+	_triggerDownload(transfer: RDDownloadTransfer): Promise<boolean> {
+		if (transfer.streamDownload) return Promise.resolve(true);
 		const blocks = transfer.blocks || [];
 
 		try {
 			const blob = new Blob(blobParts(blocks), { type: 'application/octet-stream' });
-			void this._saveBlob(transfer.id, transfer.fileName, blob);
+			return this._saveBlob(transfer.id, transfer.fileName, blob);
 		} catch (err) {
 			this._emit('file_transfer_error', {
 				id: transfer.id,
 				fileName: transfer.fileName,
 				error: 'Failed to save file: ' + (errorMessage(err) || 'unknown error')
 			} satisfies RDFileTransferErrorEvent);
+			return Promise.resolve(false);
 		}
 	}
 

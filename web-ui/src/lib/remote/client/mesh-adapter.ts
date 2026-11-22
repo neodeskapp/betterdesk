@@ -30,6 +30,8 @@ export class MeshSession {
 	_desktop: BetterViewer | null;
 	_deviceId: string;
 	_active: boolean;
+	/** disconnect() is closing the desktop viewer: its own close events are not passed on */
+	_closing: boolean;
 	/** Made by connect() */
 	declare fileTransfer?: MeshFileTransfer;
 
@@ -42,6 +44,7 @@ export class MeshSession {
 		this._desktop = null;
 		this._deviceId = opts.deviceId || '';
 		this._active = true;
+		this._closing = false;
 	}
 
 	on(event: string, fn: MeshSessionListener): void {
@@ -62,6 +65,7 @@ export class MeshSession {
 
 	_bindDesktop(desktop: BetterViewer): void {
 		desktop.on('state', (s: string) => {
+			if (this._closing) return;
 			this._state = s;
 			this._emit('state', s);
 		});
@@ -73,6 +77,7 @@ export class MeshSession {
 			this._onStreaming();
 		});
 		desktop.on('disconnected', (reason: unknown) => {
+			if (this._closing) return;
 			this._emit('disconnected', reason);
 		});
 		desktop.on('videoFrame', (f: unknown) => {
@@ -164,15 +169,23 @@ export class MeshSession {
 		}
 	}
 
+	/** End the session; it says so once, also when the desktop viewer or the socket's close said it first */
 	disconnect(): void {
+		const announced = this._state === 'disconnected';
 		if (this.fileTransfer && typeof this.fileTransfer.disable === 'function') {
 			this.fileTransfer.disable();
 		}
-		if (this._desktop) {
-			this._desktop.disconnect();
-			this._desktop = null;
+		this._closing = true;
+		try {
+			if (this._desktop) {
+				this._desktop.disconnect();
+				this._desktop = null;
+			}
+		} finally {
+			this._closing = false;
 		}
 		if (this._ws) {
+			this._ws.onclose = null;
 			try {
 				this._ws.close();
 			} catch {
@@ -180,6 +193,7 @@ export class MeshSession {
 			}
 			this._ws = null;
 		}
+		if (announced) return;
 		this._state = 'disconnected';
 		this._emit('state', 'disconnected');
 		this._emit('disconnected');

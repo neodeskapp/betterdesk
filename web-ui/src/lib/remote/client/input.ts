@@ -58,6 +58,8 @@ export class RDInput {
 	_composing: boolean;
 	/** Physical codes suppressed while awaiting compositionend */
 	_deadCodes: Set<string>;
+	/** While set, mouse moves, presses and the wheel go nowhere: a local file drag is under way */
+	_mouseSuppressed: boolean;
 
 	/**
 	 * @param canvas - The canvas element to capture events from
@@ -95,6 +97,8 @@ export class RDInput {
 
 		this._composing = false;
 		this._deadCodes = new Set();
+
+		this._mouseSuppressed = false;
 	}
 
 	/**
@@ -201,7 +205,7 @@ export class RDInput {
 	}
 
 	_handleMouseMove(e: MouseEvent): void {
-		if (!this.enabled) return;
+		if (!this.enabled || this._mouseSuppressed) return;
 
 		const now = performance.now();
 		if (now - this._lastMouseSendTime < this._mouseThrottleMs) return;
@@ -221,7 +225,7 @@ export class RDInput {
 	}
 
 	_handleMouseDown(e: MouseEvent): void {
-		if (!this.enabled) return;
+		if (!this.enabled || this._mouseSuppressed) return;
 		e.preventDefault();
 		this.canvas.focus();
 
@@ -286,6 +290,50 @@ export class RDInput {
 		});
 	}
 
+	/** Stop or resume sending mouse moves, presses and the wheel (a button held on the device is still let go) */
+	setMouseSuppressed(suppressed: boolean): void {
+		this._mouseSuppressed = !!suppressed;
+	}
+
+	/** A left click on the device at a point of the canvas (CSS pixels from its top left corner) */
+	clickAtCanvas(x: number, y: number): void {
+		if (!this.enabled) return;
+		const pos = this.renderer.canvasToRemote(x, y);
+		if (pos.x < 0 || pos.y < 0 || pos.x > this.renderer.remoteWidth || pos.y > this.renderer.remoteHeight) {
+			return;
+		}
+		const left = RDInput.MOUSE_BUTTON_LEFT << 3;
+		this.sendMessage({
+			mouseEvent: { mask: RDInput.MOUSE_TYPE_DOWN | left, x: pos.x, y: pos.y, modifiers: [] }
+		});
+		this.sendMessage({
+			mouseEvent: { mask: RDInput.MOUSE_TYPE_UP | left, x: pos.x, y: pos.y, modifiers: [] }
+		});
+	}
+
+	/** Paste on the device (Ctrl+V) */
+	sendCtrlV(): void {
+		this._pressWithCtrl('KeyV', 'v');
+	}
+
+	/** Press and let go of a key with Ctrl held, as the keyboard would send it */
+	_pressWithCtrl(code: string, key: string): void {
+		if (!this.enabled) return;
+		const ctrlHeld = this.pressedKeys.has('ControlLeft') || this.pressedKeys.has('ControlRight');
+		if (!ctrlHeld) {
+			this.pressedKeys.set('ControlLeft', { key: 'Control' });
+			this._sendKeyForCode('ControlLeft', 'Control', true, false, null);
+		}
+		this.pressedKeys.set(code, { key });
+		this._sendKeyForCode(code, key, true, false, null);
+		this.pressedKeys.delete(code);
+		this._sendKeyForCode(code, key, false, false, null);
+		if (!ctrlHeld) {
+			this.pressedKeys.delete('ControlLeft');
+			this._sendKeyForCode('ControlLeft', 'Control', false, false, null);
+		}
+	}
+
 	/** Send a release for every button still held on the device */
 	_releaseAllButtons(): void {
 		for (const [button, pos] of this._buttonsDown) {
@@ -297,7 +345,7 @@ export class RDInput {
 	}
 
 	_handleWheel(e: WheelEvent): void {
-		if (!this.enabled) return;
+		if (!this.enabled || this._mouseSuppressed) return;
 		e.preventDefault();
 
 		const delta = this._normalizeWheelDelta(e);

@@ -244,6 +244,29 @@ describe('remote viewer with a mesh session', () => {
 		for (const call of keyListeners) expect(remove).toHaveBeenCalledWith(...call);
 	});
 
+	test.each([
+		['the operator ends it', (ms: InstanceType<typeof g.MeshSession>) => ms.disconnect()],
+		['the relay closes the socket', () => FakeSocket.made[0]!.onclose?.()]
+	])('a mesh session says once that it ended: %s', async (_how, end) => {
+		FakeSocket.made = [];
+		vi.stubGlobal('WebSocket', FakeSocket);
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => ({ ok: true, json: async () => ({ browser_url: '/ws/mesh/relay' }) }))
+		);
+		const ms = new g.MeshSession(document.createElement('canvas'), { deviceId: 'mesh01' });
+		const said: string[] = [];
+		ms.on('state', (st: string) => said.push('state ' + st));
+		ms.on('disconnected', () => said.push('disconnected'));
+		await ms.connect();
+		FakeSocket.made[0]!.receive('c');
+		said.length = 0;
+		end(ms);
+		// The socket's own close event comes after
+		FakeSocket.made[0]!.onclose?.();
+		expect(said).toEqual(['state disconnected', 'disconnected']);
+	});
+
 	test('a listener that throws does not stop the mesh client or the desktop viewer', () => {
 		const err = vi.spyOn(console, 'error').mockImplementation(() => {});
 		const bv = new g.BetterViewer(document.createElement('canvas'), {});
@@ -312,6 +335,44 @@ describe('mesh file transfer', () => {
 		expect(joined).toEqual(bytes);
 		expect(JSON.parse(sent.at(-1) as string)).toEqual({ action: 'uploaddone', reqid: start.reqid });
 		expect(events.find(([ev]) => ev === 'file_transfer_complete')?.[1]).toEqual({ id, type: 'upload' });
+	});
+});
+
+describe('mesh file download', () => {
+	async function downloading() {
+		const sent: unknown[] = [];
+		const events: [string, Record<string, unknown>][] = [];
+		const ft = new MeshFileTransfer('mesh01', (ev: string, data: Record<string, unknown>) =>
+			events.push([ev, data])
+		);
+		ft._ws = { readyState: WebSocket.OPEN, send: (d: unknown) => sent.push(d) } as unknown as WebSocket;
+		ft._relayReady = true;
+		ft.enable();
+		const id = ft.downloadFile('/tmp', { name: 'a.bin', size: 8 });
+		await vi.waitFor(() => expect(sent).toHaveLength(1));
+		return { ft, events, id };
+	}
+
+	test('shows its progress in the file sheet while it runs', async () => {
+		const d = await downloading();
+		d.ft._onBinary(new Uint8Array([0, 1, 2, 3, 4]));
+		const progress = d.events.filter(([ev]) => ev === 'file_transfer_progress').map(([, data]) => data);
+		expect(progress).toEqual([{ id: d.id, transferred: 4, fileSize: 8, percent: 50 }]);
+	});
+
+	test('goes into the folder chosen in the file sheet', async () => {
+		const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+		const d = await downloading();
+		const saved: [string, string][] = [];
+		d.ft._saveDownload = async (name: string, blob: Blob) => {
+			saved.push([name, await blob.text()]);
+			return true;
+		};
+		d.ft._onBinary(new Uint8Array([0, 0x61, 0x62, 0x63, 0x64]));
+		d.ft._onBinary(new Uint8Array([0, 0x65, 0x66, 0x67, 0x68]));
+		await vi.waitFor(() => expect(d.events.some(([ev]) => ev === 'file_transfer_complete')).toBe(true));
+		expect(saved).toEqual([['a.bin', 'abcdefgh']]);
+		expect(click).not.toHaveBeenCalled();
 	});
 });
 

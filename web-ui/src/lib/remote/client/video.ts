@@ -91,6 +91,8 @@ export class RDVideo {
 	_jmuxer: JMuxer | null;
 	/** Hidden video element for JMuxer */
 	_videoEl: HTMLVideoElement | null;
+	/** Removes the listeners of the hidden video element when it is let go */
+	_videoElListeners: AbortController | null;
 	/** RAF id for video-to-canvas sync */
 	_syncRafId: number;
 	/** Whether JMuxer video has started playing */
@@ -151,6 +153,7 @@ export class RDVideo {
 		this.fallbackMode = false;
 		this._jmuxer = null;
 		this._videoEl = null;
+		this._videoElListeners = null;
 		this._syncRafId = 0;
 		this._videoPlaying = false;
 		this._feedTimestamps = [];
@@ -455,28 +458,47 @@ export class RDVideo {
 		this._pendingFeedsMax = 45;
 		this._jmuxerReady = false;
 
-		videoEl.addEventListener('error', (e) => {
-			const me = this._videoEl?.error;
-			console.error(
-				'[RDVideo] Video element error: code=' +
-					(me ? me.code : '?') +
-					' message=' +
-					(me ? me.message : e.type)
-			);
-		});
+		const listeners = new AbortController();
+		this._videoElListeners = listeners;
+		const own = { signal: listeners.signal };
+		videoEl.addEventListener(
+			'error',
+			(e) => {
+				const me = videoEl.error;
+				console.error(
+					'[RDVideo] Video element error: code=' +
+						(me ? me.code : '?') +
+						' message=' +
+						(me ? me.message : e.type)
+				);
+			},
+			own
+		);
 
 		// Monitor stalled/waiting states for automatic recovery
-		videoEl.addEventListener('stalled', () => {
-			debugLog('[RDVideo] Video stalled, recovering...');
-			this._recoverVideo();
-		});
-		videoEl.addEventListener('waiting', () => {
-			this._recoverVideo();
-		});
-		videoEl.addEventListener('ended', () => {
-			debugLog('[RDVideo] Video ended unexpectedly, recovering...');
-			this._recoverVideo();
-		});
+		videoEl.addEventListener(
+			'stalled',
+			() => {
+				debugLog('[RDVideo] Video stalled, recovering...');
+				this._recoverVideo();
+			},
+			own
+		);
+		videoEl.addEventListener(
+			'waiting',
+			() => {
+				this._recoverVideo();
+			},
+			own
+		);
+		videoEl.addEventListener(
+			'ended',
+			() => {
+				debugLog('[RDVideo] Video ended unexpectedly, recovering...');
+				this._recoverVideo();
+			},
+			own
+		);
 
 		// Create JMuxer instance
 		this._jmuxer = new JMuxer({
@@ -487,7 +509,8 @@ export class RDVideo {
 			// 60fps target; that causes queue growth and visible stalls on
 			// tablet browsers.
 			fps: RDVideo.isSupported() ? 60 : 30,
-			clearBuffer: false, // We manage buffer trimming in _startHealthCheck
+			// JMuxer removes played video every 10 seconds (keeping 30 seconds before the last keyframe)
+			clearBuffer: true,
 			debug: false,
 			onReady: () => {
 				debugLog('[RDVideo] JMuxer ready, buffered frames:', this._pendingFeeds?.length);
@@ -757,7 +780,9 @@ export class RDVideo {
 			this._jmuxer = null;
 		}
 
-		// Remove old video element
+		// Remove old video element; emptying its source fires an error that is ours
+		this._videoElListeners?.abort();
+		this._videoElListeners = null;
 		if (this._videoEl && this._videoEl.parentNode) {
 			this._videoEl.pause();
 			this._videoEl.removeAttribute('src');
@@ -893,7 +918,8 @@ export class RDVideo {
 	 * Annex-B formatted NAL units (with 00 00 00 01 start codes).
 	 */
 	_decodeFallback(frameData: RDVideoChunk): void {
-		if (!frameData.data || frameData.data.length === 0) {
+		// JMuxer plays H.264 only: frames of another codec are dropped
+		if (!frameData.data || frameData.data.length === 0 || this.currentCodec !== 'h264') {
 			this.droppedFrames++;
 			return;
 		}
@@ -1281,7 +1307,9 @@ export class RDVideo {
 			this._jmuxer = null;
 		}
 
-		// Remove hidden video element
+		// Remove hidden video element; emptying its source fires an error that is ours
+		this._videoElListeners?.abort();
+		this._videoElListeners = null;
 		if (this._videoEl) {
 			this._videoEl.pause();
 			this._videoEl.src = '';

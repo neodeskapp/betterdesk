@@ -139,6 +139,8 @@ export class RemoteTargetSession {
 		const id = encodeURIComponent(this.opts.deviceId || '');
 		const scheme = location.protocol === 'https:' ? 'wss:' : 'ws:';
 		const socket = new WebSocket(`${scheme}//${location.host}/ws/remote-target/${id}`);
+		// Binary messages come as bytes the decoder below reads, not as Blobs
+		socket.binaryType = 'arraybuffer';
 		this.socket = socket;
 		socket.onopen = () => {
 			this._send('select', String(page().__capabilities?.remote_protocol || 'rdp'));
@@ -151,7 +153,7 @@ export class RemoteTargetSession {
 		};
 		socket.onmessage = (event: MessageEvent<unknown>) => {
 			const data = event.data;
-			// TextDecoder takes bytes only: a message of another type (a Blob) is not read
+			// TextDecoder takes bytes only
 			if (typeof data !== 'string' && !(data instanceof ArrayBuffer || ArrayBuffer.isView(data))) return;
 			const text = typeof data === 'string' ? data : new TextDecoder().decode(data);
 			try {

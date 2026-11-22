@@ -303,12 +303,13 @@ function initMicrophone(session: CDAPAudioSession): void {
 			}
 		})
 		.then((stream) => {
-			session._micStream = stream;
 			const audioCtx = session.audioCtx;
-			// The session ended while the browser asked for the microphone:
-			// fails into the catch below as reading from the closed context did
-			if (!audioCtx)
-				throw new TypeError("Cannot read properties of null (reading 'createMediaStreamSource')");
+			// The session ended while the browser asked for the microphone: let it go at once
+			if (!session.connected || !audioCtx) {
+				stream.getTracks().forEach((t) => t.stop());
+				return;
+			}
+			session._micStream = stream;
 			const source = audioCtx.createMediaStreamSource(stream);
 
 			// Use ScriptProcessorNode (wide compatibility)
