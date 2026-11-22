@@ -121,6 +121,7 @@
     "login_failed": "Error de inicio de sesión. Verifique sus credenciales.",
     "invalid_credentials": "Nombre de usuario o contraseña inválidos.",
     "username_collision": "Ya existe una cuenta local con este nombre de usuario. Inicie sesión con su contraseña local o pida a un administrador que renombre o elimine la cuenta en conflicto.",
+    "sso_username_collision": "Este nombre pertenece a una cuenta que inicia sesión con contraseña o mediante el directorio, por lo que el inicio de sesión único no puede iniciar su sesión. Consulte a un administrador.",
     "pro_only_account": "Esta cuenta es solo para el cliente de escritorio RustDesk. Use la aplicación RustDesk para iniciar sesión.",
     "too_many_attempts": "Demasiados intentos de inicio de sesión. Inténtalo de nuevo más tarde.",
     "totp_temporarily_unavailable": "La verificación en dos pasos no está disponible temporalmente. Inténtalo de nuevo en breve.",

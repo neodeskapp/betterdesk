@@ -133,6 +133,7 @@
     "oidc_no_account": "Votre compte est introuvable et l'inscription automatique est désactivée.",
     "invalid_credentials": "Nom d'utilisateur ou mot de passe invalide.",
     "username_collision": "Ein lokales Konto mit diesem Benutzernamen existiert bereits. Melden Sie sich mit Ihrem lokalen Passwort an, oder bitten Sie einen Administrator, das kollidierende Konto umzubenennen oder zu entfernen.",
+    "sso_username_collision": "Ce nom appartient à un compte qui se connecte avec un mot de passe ou via l'annuaire, l'authentification unique ne peut donc pas vous connecter. Contactez un administrateur.",
     "pro_only_account": "Ce compte est réservé au client de bureau RustDesk. Veuillez utiliser l'application RustDesk pour vous connecter.",
     "too_many_attempts": "Trop de tentatives de connexion. Veuillez réessayer plus tard.",
     "totp_temporarily_unavailable": "La vérification à deux facteurs est temporairement indisponible. Réessayez dans un instant.",

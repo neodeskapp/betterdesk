@@ -121,6 +121,7 @@
     "login_failed": "Inloggen mislukt. Controleer uw inloggegevens.",
     "invalid_credentials": "Ongeldige gebruikersnaam of wachtwoord.",
     "username_collision": "Er bestaat al een lokaal account met deze gebruikersnaam. Log in met uw lokale wachtwoord of vraag een beheerder om het conflicterende account te hernoemen of te verwijderen.",
+    "sso_username_collision": "Deze naam hoort bij een account dat zich aanmeldt met een wachtwoord of via de directory, dus eenmalige aanmelding kan u niet aanmelden. Neem contact op met een beheerder.",
     "fill_all_fields": "Vul alle velden in",
     "logout_confirm": "Weet u zeker dat u wilt uitloggen?",
     "change_password": "Wachtwoord wijzigen",

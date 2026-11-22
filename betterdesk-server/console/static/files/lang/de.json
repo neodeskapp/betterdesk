@@ -121,6 +121,7 @@
     "login_failed": "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.",
     "invalid_credentials": "Ungültiger Benutzername oder Passwort.",
     "username_collision": "Ein lokales Konto mit diesem Benutzernamen existiert bereits. Melden Sie sich mit Ihrem lokalen Passwort an, oder bitten Sie einen Administrator, das kollidierende Konto umzubenennen oder zu entfernen.",
+    "sso_username_collision": "Dieser Name gehört zu einem Konto, das sich mit einem Passwort oder über das Verzeichnis anmeldet, daher kann Single Sign-On Sie nicht anmelden. Wenden Sie sich an einen Administrator.",
     "pro_only_account": "Dieses Konto ist nur fuer den RustDesk-Desktopclient vorgesehen. Bitte verwenden Sie die RustDesk-App zum Anmelden.",
     "too_many_attempts": "Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut.",
     "totp_temporarily_unavailable": "Die Zwei-Faktor-Bestätigung ist vorübergehend nicht verfügbar. Bitte gleich noch einmal versuchen.",

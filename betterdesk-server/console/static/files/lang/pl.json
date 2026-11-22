@@ -129,6 +129,7 @@
     "oidc_no_account": "Twoje konto nie zostało znalezione, a automatyczna rejestracja jest wyłączona.",
     "invalid_credentials": "Nieprawidłowa nazwa użytkownika lub hasło.",
     "username_collision": "Lokalne konto o tej nazwie już istnieje. Zaloguj się lokalnym hasłem lub poproś administratora o zmianę nazwy albo usunięcie konfliktowego konta.",
+    "sso_username_collision": "Ta nazwa należy do konta, które loguje się hasłem lub przez katalog, więc logowanie jednokrotne nie może Cię zalogować. Skontaktuj się z administratorem.",
     "pro_only_account": "To konto jest przeznaczone wyłącznie dla klienta RustDesk. Użyj aplikacji RustDesk, aby się zalogować.",
     "too_many_attempts": "Zbyt wiele prób logowania. Spróbuj ponownie później.",
     "totp_temporarily_unavailable": "Weryfikacja dwuetapowa jest tymczasowo niedostępna. Spróbuj ponownie za chwilę.",
