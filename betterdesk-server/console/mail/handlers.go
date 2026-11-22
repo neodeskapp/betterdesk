@@ -110,9 +110,11 @@ func bodyValue(body middleware.JSONObject, name string) value {
 // required" for a host that is missing, blank or another empty value,
 // else "Invalid <member>"; then a save without a sender is answered "SMTP
 // sender is required" and one of more than 998 characters "SMTP sender is
-// too long", and a save that would keep the stored password for
-// another host, port or user is answered "SMTP password is required when
-// the host, port or user changes". What is stored:
+// too long", a save that would keep the stored password for another
+// host, port or user is answered "SMTP password is required when the
+// host, port or user changes", and one that would keep it while it turns
+// the certificate check off "SMTP password is required when tlsVerify is
+// turned off". What is stored:
 //
 //	host         text, without the white space around it
 //	port         a whole number from 1 to 65535, or text of its digits,
@@ -121,7 +123,8 @@ func bodyValue(body middleware.JSONObject, name string) value {
 //	user         text; "" when missing or null
 //	pass         text, "" for none; when missing, null or "********",
 //	             the password stored so far when host, port and user
-//	             are the stored ones, else ""
+//	             are the stored ones and the certificate check stays on
+//	             or was off, else ""
 //	from         text that is not blank, of at most 998 characters
 //	alert_email  plain addresses separated by commas (PlainAddressList),
 //	             without the white space around them; "" when missing or
@@ -136,7 +139,7 @@ func (s *Service) PutSMTPSettings(ctx context.Context, body middleware.JSONObjec
 	if err != nil {
 		return serverError(failed, err)
 	}
-	config, refused := nextConfig(body, existing)
+	config, refused := nextConfig(body, existing, s.opts.TLSVerify)
 	if refused != "" {
 		return Answer{Status: http.StatusBadRequest, Body: errorBody{Error: refused}}
 	}
@@ -155,9 +158,10 @@ func (s *Service) PutSMTPSettings(ctx context.Context, body middleware.JSONObjec
 }
 
 // nextConfig is the configuration to store for a request, given what is
-// stored so far (any JSON value, or undefined), or the reason the request
-// is refused.
-func nextConfig(body middleware.JSONObject, existing value) (config value, refused string) {
+// stored so far (any JSON value, or undefined) and whether the console
+// checks the certificate of settings that do not say (Options.TLSVerify),
+// or the reason the request is refused.
+func nextConfig(body middleware.JSONObject, existing value, defaultVerify bool) (config value, refused string) {
 	host := bodyValue(body, "host")
 	switch {
 	case host.kind == kindString && jsbind.Trim(host.str) != "":
@@ -200,15 +204,19 @@ func nextConfig(body middleware.JSONObject, existing value) (config value, refus
 		return undefined, "SMTP sender is too long"
 	}
 	// The password stays what it was for the mask or no password member at
-	// all, but only for the server and the account it was given for: it is
-	// never sent to another host, port or user. An empty password removes
-	// it.
+	// all, but only for the server and the account it was given for, with
+	// the server's certificate checked as before: it is never sent to
+	// another host, port or user, or to a server whose certificate is no
+	// longer checked. An empty password removes it.
 	pass := stringValue(texts["pass"])
 	if sent := bodyValue(body, "pass"); sent.kind != kindString || sent.str == MaskedPass {
 		pass = stringValue("")
 		if kept := existing.member("pass"); kept.truthy() {
 			if !sameAccount(existing, jsbind.Trim(host.str), port, texts["user"]) {
 				return undefined, passwordRequired
+			}
+			if verifies(existing.member("tlsVerify"), defaultVerify) && !verifies(tlsVerify, defaultVerify) {
+				return undefined, passwordRequiredUnverified
 			}
 			pass = kept
 		}
@@ -235,6 +243,20 @@ const maxFromLength = 998
 // passwordRequired refuses a save that keeps the stored password while it
 // changes the host, the port or the user.
 const passwordRequired = "SMTP password is required when the host, port or user changes"
+
+// passwordRequiredUnverified refuses a save that keeps the stored password
+// while it turns the certificate check off.
+const passwordRequiredUnverified = "SMTP password is required when tlsVerify is turned off"
+
+// verifies is whether settings with this tlsVerify member check the mail
+// server's certificate: the flag when it is one, else the console's
+// default (Service.tlsVerify).
+func verifies(tlsVerify value, defaultVerify bool) bool {
+	if tlsVerify.kind == kindBool {
+		return tlsVerify.flag
+	}
+	return defaultVerify
+}
 
 // sameAccount reports whether the stored configuration has the host, the
 // port and the user of a save. A port the stored row does not have is 587,

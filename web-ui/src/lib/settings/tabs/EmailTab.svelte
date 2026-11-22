@@ -72,7 +72,9 @@
 		id: 'email-smtp-form',
 		initial: toValues(null),
 		submit: async (v) => {
-			// Without a sign-in an empty user name goes out, which the server reads as "no sign-in"
+			// Without a sign-in an empty user name goes out, which the server reads as "no sign-in".
+			// The certificate check has no switch here: the saved one goes back as it was.
+			const tlsVerify = config?.tlsVerify;
 			await saveSmtp({
 				host: v.host.trim(),
 				port: Number(v.port) || 587,
@@ -80,7 +82,8 @@
 				user: v.auth ? v.user.trim() : '',
 				pass: v.auth ? v.pass : '',
 				from: v.from.trim(),
-				alert_email: v.alert_email.trim()
+				alert_email: v.alert_email.trim(),
+				...(tlsVerify === undefined ? {} : { tlsVerify })
 			});
 			config = await getSmtp();
 			testResult = null;
