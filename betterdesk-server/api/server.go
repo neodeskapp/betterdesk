@@ -2295,6 +2295,21 @@ func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 		s.metrics.PeersUDP.Store(int64(peerStats.UDP))
 		s.metrics.PeersTCP.Store(int64(peerStats.TCP))
 		s.metrics.PeersWS.Store(int64(peerStats.WS))
+		banned := int64(peerStats.Banned)
+		if n, err := s.db.GetBannedPeerCount(); err == nil {
+			banned = int64(n)
+		}
+		s.metrics.PeersBanned.Store(banned)
+		s.metrics.TotalRegistrations.Store(s.peers.TotalRegistrations())
+		s.metrics.TotalExpired.Store(s.peers.TotalExpired())
+	}
+
+	if s.bwLimiter != nil {
+		s.metrics.ThrottleHits.Store(s.bwLimiter.Stats().ThrottleHits)
+	}
+
+	if s.auditLog != nil {
+		s.metrics.AuditEvents.Store(s.auditLog.Logged())
 	}
 
 	if s.relay != nil {

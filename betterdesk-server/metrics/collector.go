@@ -19,7 +19,6 @@ type Collector struct {
 	TotalRegistrations atomic.Int64
 	TotalExpired       atomic.Int64
 	TotalRelaySessions atomic.Int64
-	TotalBytesRelayed  atomic.Int64
 	ThrottleHits       atomic.Int64
 	AuditEvents        atomic.Int64
 
@@ -96,8 +95,6 @@ func (c *Collector) WritePrometheus(w io.Writer) {
 		c.RelayActiveSessions.Load())
 	writeCounter(w, "betterdesk_relay_sessions_total", "Total relay sessions",
 		c.TotalRelaySessions.Load())
-	writeCounter(w, "betterdesk_relay_bytes_total", "Total bytes relayed",
-		c.TotalBytesRelayed.Load())
 	writeCounter(w, "betterdesk_bandwidth_throttle_hits_total", "Bandwidth throttle events",
 		c.ThrottleHits.Load())
 

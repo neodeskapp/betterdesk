@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -88,11 +89,13 @@ type Event struct {
 // database; without one it maintains a ring buffer of recent events. It
 // optionally writes to a file.
 type Logger struct {
-	mu       sync.RWMutex
-	events   []Event
-	maxSize  int // ring buffer capacity
-	cursor   int // next write position
-	total    int64
+	mu      sync.RWMutex
+	events  []Event
+	maxSize int // ring buffer capacity
+	cursor  int // next write position
+	total   int64
+	// logged counts every event Log took since start, for the metrics
+	logged   atomic.Int64
 	file     *os.File
 	filePath string
 
@@ -144,6 +147,7 @@ func (l *Logger) Log(action Action, actor, target string, details map[string]str
 		Details:   details,
 	}
 
+	l.logged.Add(1)
 	stored := l.enqueue(event)
 
 	l.mu.Lock()
@@ -262,6 +266,13 @@ func (l *Logger) Total() int64 {
 		log.Printf("[audit] counting the server events: %v", err)
 	}
 	return total
+}
+
+// Logged returns the number of events logged since start, whether they
+// were stored or not. It only grows, unlike Total, which the retention
+// lowers.
+func (l *Logger) Logged() int64 {
+	return l.logged.Load()
 }
 
 // Close stores what is queued, stops the writer and closes the audit log
