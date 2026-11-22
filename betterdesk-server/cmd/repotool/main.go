@@ -42,6 +42,10 @@ var commands = map[string]command{
 		about: "check docs/CONNECTION_PORTS.md against the ports in the code",
 		run:   checkPortDocs,
 	},
+	"check-js": {
+		about: "fail on tracked JavaScript outside .github/javascript-allowlist.txt",
+		run:   checkJS,
+	},
 	"i18n-check": {
 		about: "audit the translation files [--system ID] [--json] [--verbose]",
 		run:   i18nCheck,
