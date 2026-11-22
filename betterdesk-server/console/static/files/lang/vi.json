@@ -1447,7 +1447,7 @@
       "general_title": "Những gì máy khách nhận lúc này",
       "general_note": "Các địa chỉ máy khách RustDesk đang nhận từ máy chủ này: trong thiết lập máy khách, mã QR và lệnh cài đặt.",
       "src_page": "Đặt trên trang này",
-      "src_overview": "Đặt trong thiết lập máy khách ở trang tổng quan",
+      "src_env": "Từ {name} trong môi trường của máy chủ",
       "src_auto": "Tự động phát hiện",
       "local_warning": "Các địa chỉ này chỉ dùng được trên máy tính này. Máy tính và điện thoại khác không truy cập được. Hãy nhập địa chỉ máy chủ trong phần Điểm cuối client công khai.",
       "preview_title": "Xem trước",

@@ -6674,7 +6674,7 @@
         "preview_note": "依本頁選項顯示的主控台。儲存後生效。",
         "preview_title": "預覽",
         "src_auto": "自動偵測",
-        "src_overview": "在總覽的用戶端設定中設定",
+        "src_env": "來自伺服器環境中的 {name}",
         "src_page": "在本頁設定",
         "state_title": "目前狀態",
         "your_2fa": "你的雙重驗證登入"
@@ -14494,7 +14494,7 @@
         "preview_note": "依本頁選項顯示的主控台。儲存後生效。",
         "preview_title": "預覽",
         "src_auto": "自動偵測",
-        "src_overview": "在總覽的用戶端設定中設定",
+        "src_env": "來自伺服器環境中的 {name}",
         "src_page": "在本頁設定",
         "state_title": "目前狀態",
         "your_2fa": "你的雙重驗證登入"

@@ -190,6 +190,7 @@ func IsPhoneUnreachableHost(host string) bool {
 
 // The values of EndpointSources.
 const (
+	SourceSaved     = "saved"
 	SourceEnv       = "env"
 	SourceQuery     = "query"
 	SourcePanelHost = "panel_host"
@@ -199,12 +200,13 @@ const (
 	SourceDerived   = "derived"
 )
 
-// EndpointSources says where each address came from: "env" for a public
-// endpoint setting, "query" for the host a caller asked for, "panel_host"
-// for PANEL_PUBLIC_HOST, "config" for the host of the configured API
-// address, "request" for the request's own host, "default" for localhost.
-// The API address is "derived" when it was built from a host that is a
-// public endpoint setting.
+// EndpointSources says where each address came from: "saved" for a public
+// endpoint setting saved in the console, "env" for one the environment or
+// the console's env file sets, "query" for the host a caller asked for,
+// "panel_host" for PANEL_PUBLIC_HOST, "config" for the host of the
+// configured API address, "request" for the request's own host, "default"
+// for localhost. The API address is "derived" when it was built from a
+// host that is a public endpoint setting.
 type EndpointSources struct {
 	Host  string `json:"host"`
 	Relay string `json:"relay"`
@@ -228,8 +230,7 @@ func (r ResolvedEndpoints) Endpoints() Endpoints {
 	return Endpoints{Host: r.Host, Relay: r.Relay, API: r.API}
 }
 
-// ReadPanelPublicHost returns PANEL_PUBLIC_HOST: from the environment,
-// else the public endpoints file, else the console's env file.
+// ReadPanelPublicHost returns PANEL_PUBLIC_HOST (ReadPanelPublicHostValue).
 func (s *Service) ReadPanelPublicHost() string {
 	return s.ReadPanelPublicHostValue()
 }
@@ -245,12 +246,13 @@ func isMachineLocalHost(host string) bool {
 	return !strings.Contains(h, ".")
 }
 
-// clientFacingHost picks the host and names its source. The host of the
-// console's own API address gives way to the request's host when no
-// client elsewhere can reach it (isMachineLocalHost).
-func (s *Service) clientFacingHost(req *RequestHost, queryHost string, public PublicEndpoints, panelHost string) (host, source string) {
+// clientFacingHost picks the host and names its source. idSource is where
+// the public server ID setting comes from. The host of the console's own
+// API address gives way to the request's host when no client elsewhere can
+// reach it (isMachineLocalHost).
+func (s *Service) clientFacingHost(req *RequestHost, queryHost string, public PublicEndpoints, idSource, panelHost string) (host, source string) {
 	if public.PublicServerID != "" {
-		return public.PublicServerID, SourceEnv
+		return public.PublicServerID, idSource
 	}
 	if queryHost != "" {
 		if normalized := NormalizeServerHost(queryHost); normalized.Valid {
@@ -282,7 +284,8 @@ func (s *Service) clientFacingHost(req *RequestHost, queryHost string, public Pu
 // reaches, the host of the request, "localhost". req may be nil.
 func (s *Service) ResolveClientFacingHost(req *RequestHost, queryHost string) string {
 	settings := s.readPublicEnv()
-	host, _ := s.clientFacingHost(req, queryHost, settings.endpoints(), settings.get(PanelPublicHostKey))
+	public, from := settings.endpoints()
+	host, _ := s.clientFacingHost(req, queryHost, public, from.id, settings.panelHost())
 	return host
 }
 
@@ -292,8 +295,8 @@ func (s *Service) ResolveClientFacingHost(req *RequestHost, queryHost string) st
 // a port (RelayEndpointForHost).
 func (s *Service) ResolveRustDeskEndpoints(req *RequestHost, queryHost string) ResolvedEndpoints {
 	settings := s.readPublicEnv()
-	public := settings.endpoints()
-	host, hostSource := s.clientFacingHost(req, queryHost, public, settings.get(PanelPublicHostKey))
+	public, from := settings.endpoints()
+	host, hostSource := s.clientFacingHost(req, queryHost, public, from.id, settings.panelHost())
 
 	relay := host
 	out := ResolvedEndpoints{
@@ -302,15 +305,15 @@ func (s *Service) ResolveRustDeskEndpoints(req *RequestHost, queryHost string) R
 		EnvOverrideActive: IsEnvOverrideActive(public),
 	}
 	if public.PublicRelayServer != "" {
-		relay, out.Sources.Relay = public.PublicRelayServer, SourceEnv
+		relay, out.Sources.Relay = public.PublicRelayServer, from.relay
 	}
 	out.Relay = s.RelayEndpointForHost(relay, "")
 	switch {
 	case public.PublicAPIURL != "":
-		out.API, out.Sources.API = public.PublicAPIURL, SourceEnv
+		out.API, out.Sources.API = public.PublicAPIURL, from.api
 	default:
 		out.API = s.APIURLForHost(host, s.DefaultUseHTTPS())
-		if hostSource == SourceEnv {
+		if hostSource == SourceEnv || hostSource == SourceSaved {
 			out.Sources.API = SourceDerived
 		}
 	}

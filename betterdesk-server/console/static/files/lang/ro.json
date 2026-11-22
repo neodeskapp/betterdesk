@@ -1447,7 +1447,7 @@
       "general_title": "Ce primesc acum clienții",
       "general_note": "Adresele pe care clienții RustDesk le primesc acum de la acest server: în configurarea clientului, codurile QR și comenzile de instalare.",
       "src_page": "Setat pe această pagină",
-      "src_overview": "Setat în configurarea clientului din prezentare generală",
+      "src_env": "Din {name} în mediul serverului",
       "src_auto": "Detectat automat",
       "local_warning": "Aceste adrese funcționează doar pe acest computer. Alte computere și telefoane nu le pot accesa. Introduceți adresa serverului la Endpoint-uri publice client.",
       "preview_title": "Previzualizare",

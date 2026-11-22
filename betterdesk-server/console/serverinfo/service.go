@@ -146,11 +146,9 @@ type Service struct {
 	goKey   string
 	goKeyAt int64 // Unix milliseconds
 
-	// envMu guards the values saved over the process environment and the
-	// mark of the one-time copy into the public endpoints file.
+	// envMu guards the values saved over the process environment.
 	envMu    sync.Mutex
 	envSaved map[string]*string
-	migrated bool
 
 	// fileMu lets one request at a time rewrite the env files, the systemd
 	// unit or the compose file, and keeps readers of those files out

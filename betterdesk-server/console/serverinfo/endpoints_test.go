@@ -158,18 +158,20 @@ func TestReadPublicEndpointsAgainstNode(t *testing.T) {
 	atLeast(t, "read", len(v.Read), 700)
 	base := t.TempDir()
 	m := &mismatches{t: t}
-	migrated, intended := 0, 0
+	migrated, intended, compared := 0, 0, 0
 	for i, c := range v.Read {
 		label := "case " + strconv.Itoa(i)
 		durable := c.Durable
 		if c.Options.NoDataDir {
 			durable = textOrDir{}
 		}
-		// Files with quotes or comments read otherwise (BUGS L86)
-		if dotenvText(durable.Text) || dotenvText(c.Legacy.Text) {
+		// Files with quotes or comments read otherwise (BUGS L86), and a
+		// saved value wins over the environment (L87)
+		if dotenvText(durable.Text) || dotenvText(c.Legacy.Text) || savedOverEnv(c.Env, durable) {
 			intended++
 			continue
 		}
+		compared++
 		st := stageEndpoints(t, filepath.Join(base, strconv.Itoa(i)), c.Durable, c.Legacy, c.Options.NoDataDir)
 		s := New(Options{DataDir: st.dataDir, EnvPath: st.envPath, Getenv: envMap(c.Env), Logger: &recordingLogger{}})
 
@@ -182,22 +184,30 @@ func TestReadPublicEndpointsAgainstNode(t *testing.T) {
 		if got := s.GetPublicEndpointSettings(); got != c.Settings {
 			m.errorf("%s: settings again %+v, Node answers %+v", label, got, c.Settings)
 		}
-		st.check(t, m, label, c.After)
-		if !c.Durable.Exists && c.After.Durable != nil {
+		// Node copied the environment into the public endpoints file at
+		// the first read, making its folder; the console reads the same
+		// values without the copy (BUGS L87)
+		copied := nodeCopiedIntoDurable(c.Env, durable, c.Legacy)
+		if copied {
 			migrated++
+		} else {
+			st.check(t, m, label, c.After)
 		}
 
-		// The copy into the durable file happens once per process.
+		// Without the public endpoints file the environment and the
+		// console's env file are read.
 		if err := os.RemoveAll(st.durablePath); err != nil {
 			t.Fatal(err)
 		}
 		if got := s.ReadPublicEndpointEnv(); got != c.Second {
 			m.errorf("%s: settings after the file went %+v, Node answers %+v", label, got, c.Second)
 		}
-		st.check(t, m, label+" (second read)", c.AfterSecond)
+		if !copied {
+			st.check(t, m, label+" (second read)", c.AfterSecond)
+		}
 	}
-	if migrated < 50 || intended > len(v.Read)/2 {
-		t.Fatalf("only %d cases copied into the durable file, %d read otherwise on purpose", migrated, intended)
+	if migrated < 50 || compared < len(v.Read)/3 || intended == 0 {
+		t.Fatalf("%d cases compared (%d that Node copied into the durable file), %d read otherwise on purpose", compared, migrated, intended)
 	}
 }
 
@@ -245,7 +255,10 @@ func TestWritePublicEndpointsAgainstNode(t *testing.T) {
 				m.errorf("%s: stored %+v, Node stored %+v", label, got, *c.Out)
 			}
 		}
-		if read := s.ReadPublicEndpointEnv(); read != c.Read {
+		// A refused save leaves a saved value in force over the
+		// environment (BUGS L87)
+		stored := c.Err == nil && c.Out != nil && *c.Out != (PublicEndpoints{})
+		if read := s.ReadPublicEndpointEnv(); read != c.Read && (stored || !savedOverEnv(c.Env, durable)) {
 			m.errorf("%s: reads back %+v, Node reads %+v", label, read, c.Read)
 		}
 		for _, key := range durableKeys {
@@ -253,9 +266,15 @@ func TestWritePublicEndpointsAgainstNode(t *testing.T) {
 				m.errorf("%s: environment %s = %q, Node has %q", label, key, got, c.EnvAfter[key])
 			}
 		}
-		st.check(t, m, label, c.After)
+		// Node's read after a save that stored no value copied the
+		// environment into the public endpoints file (BUGS L87)
+		if stored || !(envSets(c.Env, durableKeys...) || fileSets(c.Legacy, durableKeys...)) {
+			st.check(t, m, label, c.After)
+		} else {
+			intended++
+		}
 	}
-	if written < 300 || refused < 100 || intended > len(v.Write)/2 {
+	if written < 300 || refused < 100 || intended == 0 {
 		t.Fatalf("%d writes, %d refusals and %d cases that differ on purpose: too few", written, refused, intended)
 	}
 }

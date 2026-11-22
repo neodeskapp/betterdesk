@@ -210,8 +210,10 @@ func TestResolveEndpointsAgainstNode(t *testing.T) {
 	for i, c := range v.Resolve {
 		label := "case " + strconv.Itoa(i)
 		m := ipv6.mismatches(all, c.Cfg, c.Env, c.Durable, c.Legacy, c.Headers, c.QueryHost)
-		// Files with quotes or comments read otherwise (BUGS L86)
-		if dotenvText(c.Durable.Text) || dotenvText(c.Legacy.Text) {
+		// Files with quotes or comments read otherwise (BUGS L86), and a
+		// value saved in the public endpoints file wins over the
+		// environment and is named saved (L87)
+		if dotenvText(c.Durable.Text) || dotenvText(c.Legacy.Text) || fileSets(c.Durable, endpointKeys...) {
 			intended++
 			continue
 		}
@@ -252,11 +254,15 @@ func TestResolveEndpointsAgainstNode(t *testing.T) {
 		if got := s.ReadPanelPublicHost(); got != c.Panel {
 			m.errorf("%s: panel host %q, Node answers %q", label, got, c.Panel)
 		}
-		st.check(t, m, label, c.After)
+		// Node copied the environment into the public endpoints file at
+		// the first read; the console reads the same without the copy
+		if !nodeCopiedIntoDurable(c.Env, c.Durable, c.Legacy) {
+			st.check(t, m, label, c.After)
+		}
 		sources[c.Endpoints.Sources.Host]++
 		sources["api:"+c.Endpoints.Sources.API]++
 	}
-	if intended > len(v.Resolve)/2 {
+	if intended == 0 || intended > len(v.Resolve)/2 {
 		t.Errorf("%d of %d cases differ on purpose", intended, len(v.Resolve))
 	}
 	if si2 < 100 {

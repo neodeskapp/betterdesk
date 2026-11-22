@@ -1441,7 +1441,7 @@
       "general_title": "O que os clientes recebem agora",
       "general_note": "Os endereços que os clientes RustDesk recebem agora deste servidor: na configuração do cliente, nos códigos QR e nos comandos de instalação.",
       "src_page": "Definido nesta página",
-      "src_overview": "Definido na configuração do cliente da visão geral",
+      "src_env": "De {name} no ambiente do servidor",
       "src_auto": "Detetado automaticamente",
       "local_warning": "Estes endereços só funcionam neste computador. Outros computadores e telemóveis não os alcançam. Introduza o endereço do servidor em «Endpoints públicos do cliente».",
       "preview_title": "Pré-visualização",

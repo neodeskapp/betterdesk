@@ -1445,7 +1445,7 @@
       "general_title": "Ce que reçoivent les clients",
       "general_note": "Les adresses que les clients RustDesk reçoivent actuellement de ce serveur : dans la configuration client, les QR codes et les commandes d'installation.",
       "src_page": "Défini sur cette page",
-      "src_overview": "Défini dans la configuration client de la vue d'ensemble",
+      "src_env": "Depuis {name} dans l'environnement du serveur",
       "src_auto": "Détecté automatiquement",
       "local_warning": "Ces adresses ne fonctionnent que sur cet ordinateur. Les autres ordinateurs et téléphones ne peuvent pas les joindre. Saisissez l'adresse du serveur sous « Points de terminaison clients publics ».",
       "preview_title": "Aperçu",
