@@ -387,6 +387,32 @@ test_channel_and_download_errors() (
     rm -rf "$TEST_DIR"
 )
 
+# L141: the installer runs piped from curl, takes no answers from a pipe,
+# and leaves the betterdesk command behind for updates and the uninstall.
+test_one_command_install() (
+    local out
+    # main runs: it asks for root, or as root it looks for an install
+    out=$(cd "$(mktemp -d)" && timeout 60 bash -s -- --check-permissions < "$SCRIPT_ROOT/betterdesk.sh" 2>&1 || true)
+    case "$out" in
+        *"requires root"*|*"Detecting installation"*) ;;
+        *) fail "betterdesk.sh piped into bash did not start: $out" ;;
+    esac
+    load
+    AUTO_MODE=false
+    default_to_auto_without_terminal < /dev/null
+    [ "$AUTO_MODE" = true ] || fail "without a terminal the installer would ask questions"
+    out=$( (press_enter; confirm "Go on?" && echo yes || echo no) < /dev/null 2>/dev/null)
+    case "$out" in
+        *no) ;;
+        *) fail "without a terminal a question did not take its default: $out" ;;
+    esac
+    MANAGER_COMMAND="$TEST_DIR/sbin/betterdesk"
+    install_manager_command >/dev/null
+    [ -x "$MANAGER_COMMAND" ] || fail "no betterdesk command was left behind"
+    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/betterdesk.sh" || fail "the betterdesk command is not this installer"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -402,4 +428,5 @@ test_console_home_copies_no_console_files
 test_releases_come_from_the_fork
 test_update_keeps_the_admins_ports
 test_channel_and_download_errors
+test_one_command_install
 echo "Go installer unit checks passed"

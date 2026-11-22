@@ -45,6 +45,8 @@ VERSION="3.5.270"
 # Bump when installer control-flow changes must apply mid-session after Update (#219).
 BETTERDESK_SH_REVISION="20260725-console-start-306"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# This file; empty when the script is piped into bash
+BETTERDESK_SELF="${BASH_SOURCE[0]:-}"
 # Preserve argv before shift — used to re-exec after installer self-update (#219).
 BETTERDESK_ORIG_ARGV=("$@")
 
@@ -279,6 +281,8 @@ STORE_ADMIN_CREDENTIALS="${STORE_ADMIN_CREDENTIALS:-false}"
 # binary by rename and keeps the old one as betterdesk-server.prev.
 SERVER_SERVICE="betterdesk-server"
 SERVER_UNIT="/etc/systemd/system/betterdesk-server.service"
+# This installer as a command, for updates and the uninstall later.
+MANAGER_COMMAND="/usr/local/sbin/betterdesk"
 SERVICE_USER="betterdesk"
 # What the installs with the Node.js console had besides the server: the
 # console's unit (disabled and kept for one release after the upgrade), the
@@ -512,17 +516,51 @@ configure_management() {
     esac
 }
 
+# Without a terminal (piped from curl, cron, CI) nothing waits for a key,
+# and a question without an answer (end of input) takes its default.
 press_enter() {
+    [ -t 0 ] || return 0
     echo ""
     echo -e "${CYAN}Press Enter to continue...${NC}"
-    read -r
+    read -r || true
 }
 
 confirm() {
     local prompt="${1:-Continue?}"
     echo -e "${YELLOW}${prompt} [y/N]${NC} "
-    read -r response
+    read -r response || return 1
     [[ "$response" =~ ^[TtYy]$ ]]
+}
+
+# default_to_auto_without_terminal: a run without a terminal installs or
+# updates without questions, as --auto does.
+default_to_auto_without_terminal() {
+    if [ "$AUTO_MODE" != true ] && [ ! -t 0 ]; then
+        AUTO_MODE=true
+        print_info "No terminal: installing or updating without questions (--auto)"
+    fi
+}
+
+# install_manager_command: this installer as the command betterdesk, for
+# updates, repairs and the uninstall later. Run from the command itself
+# (an update), it takes the newest one of the update channel; piped from
+# curl, it fetches itself from the same place.
+install_manager_command() {
+    local self="$BETTERDESK_SELF" tmp
+    tmp=$(mktemp) || return 0
+    if [ -n "$self" ] && [ -f "$self" ] && [ "$(readlink -f "$self")" != "$(readlink -f "$MANAGER_COMMAND" 2>/dev/null)" ]; then
+        cp "$self" "$tmp"
+    elif ! curl -fsSL --retry 2 --connect-timeout 20 -o "$tmp" \
+        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${UPDATE_GITHUB_BRANCH}/betterdesk.sh" \
+        || ! grep -q '^BETTERDESK_SH_REVISION=' "$tmp"; then
+        rm -f "$tmp"
+        [ -x "$MANAGER_COMMAND" ] || print_warning "Could not save the betterdesk command; run this installer again for updates"
+        return 0
+    fi
+    mkdir -p "$(dirname "$MANAGER_COMMAND")"
+    install -m 0755 "$tmp" "$MANAGER_COMMAND" && print_info "Manage this install with: sudo $(basename "$MANAGER_COMMAND")"
+    rm -f "$tmp"
+    return 0
 }
 
 #===============================================================================
@@ -4851,6 +4889,7 @@ update_go_install() {
     else
         print_success "Updated to $(timeout 10 "$bin" -version 2>/dev/null)"
     fi
+    install_manager_command
 }
 
 # Shows the admin's first password after a fresh install.
@@ -5040,6 +5079,8 @@ do_install() {
             do_configure_ssl
         fi
     fi
+
+    [ "$install_ok" = true ] && install_manager_command
 
     if [ "$AUTO_MODE" = false ]; then
         press_enter
@@ -7600,6 +7641,8 @@ main() {
     echo ""
     sleep 1
 
+    default_to_auto_without_terminal
+
     if [ "$CHECK_CAPABILITIES" = true ] || [ "$REPAIR_PERMISSIONS" = true ] \
         || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
         local management_rc=0
@@ -7716,8 +7759,9 @@ main() {
     done
 }
 
-# Run only when executed directly; this also lets installer tests source the
+# Run only when executed directly or piped into bash (curl ... | sudo bash,
+# where BASH_SOURCE is empty); this also lets installer tests source the
 # bounded command helpers without starting the interactive manager.
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+if [[ "${BASH_SOURCE[0]:-$0}" == "$0" ]]; then
     main "$@"
 fi
