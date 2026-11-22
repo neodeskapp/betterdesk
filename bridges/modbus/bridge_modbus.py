@@ -170,13 +170,15 @@ class ModbusBridge:
         )
 
     async def _write_register(self, reg: dict, value: Any) -> Any:
+        """Writes a command's value; raises when the device refuses it, so
+        the command is answered with an error."""
         unit = self.mcfg.get("unit_id", 1)
         rtype = reg.get("type", "holding")
         addr = reg["address"]
 
         if rtype == "coil":
             result = await self.client.write_coil(addr, bool(value), device_id=unit)
-            return bool(value) if not result.isError() else None
+            written: Any = bool(value)
         else:
             regs = encode_value(
                 float(value),
@@ -185,7 +187,10 @@ class ModbusBridge:
                 reg.get("offset", 0.0),
             )
             result = await self.client.write_registers(addr, regs, device_id=unit)
-            return float(value) if not result.isError() else None
+            written = float(value)
+        if result.isError():
+            raise RuntimeError(f"the device refused the write to {rtype} {addr}: {result}")
+        return written
 
     # ── Poll loop ─────────────────────────────────────────────────
 

@@ -1,10 +1,10 @@
 """Runs one of the reference bridges in bridges/ against a stand-in target.
 
 The Modbus bridge talks to a real Modbus TCP server (pymodbus) started here
-on the config's host and port. The SNMP agent and the polled HTTP APIs
-answer from memory, so the test needs neither. The CDAP side (the Python
-SDK, the bridge's widgets, values, commands, alerts and its webhook server)
-runs as shipped.
+on the config's host and port, the REST bridge to the HTTP server the test
+points its config at. The SNMP agent answers from memory, so the test needs
+none. The CDAP side (the Python SDK, the bridge's widgets, values,
+commands, alerts and its webhook server) runs as shipped.
 
     python3 bridge_harness.py <modbus|snmp|rest-webhook> <bridge script> <config.json>
 """
@@ -81,30 +81,11 @@ def fake_snmp(module: Any, config: dict) -> None:
     module.SNMPBridge._snmp_get = get
 
 
-# ── REST: the example config's two APIs ───────────────────────────────
-
-REST_ANSWERS: dict[str, Any] = {
-    "weather_temp": {"main": {"temp": -3.5}},
-    "ha_light": {"state": "on"},
-}
+def no_target(module: Any, config: dict) -> None:
+    pass
 
 
-def fake_rest(module: Any, config: dict) -> None:
-    async def poll(self: Any, src: dict) -> Any:
-        data = REST_ANSWERS[src["widget_id"]]
-        path = src.get("jmespath", "")
-        return module.extract_path(data, path) if path else data
-
-    async def write(self: Any, src: dict, *args: Any) -> Any:
-        value = args[-1]
-        REST_ANSWERS[src["widget_id"]] = {"state": "on" if value else "off"}
-        return value
-
-    module.RESTBridge._poll_source = poll
-    module.RESTBridge._write_source = write
-
-
-TARGETS = {"modbus": modbus_device, "snmp": fake_snmp, "rest-webhook": fake_rest}
+TARGETS = {"modbus": modbus_device, "snmp": fake_snmp, "rest-webhook": no_target}
 
 
 def main() -> None:

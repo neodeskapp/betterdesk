@@ -132,7 +132,8 @@ class RESTBridge:
             return extract_path(data, path) if path else data
 
     async def _write_source(self, src: dict, action: str, value: Any) -> Any:
-        """Write command back to REST API."""
+        """Write command back to REST API; raises when the API refuses it, so
+        the command is answered with an error."""
         url = src["write_url"]
 
         # Resolve {action} placeholder for HA-style services
@@ -146,8 +147,7 @@ class RESTBridge:
 
         async with self._session.request(method, url, headers=headers, json=body) as resp:
             if resp.status >= 400:
-                logger.warning("Write HTTP %d to %s", resp.status, url)
-                return None
+                raise RuntimeError(f"HTTP {resp.status} from {url}")
             return value
 
     async def _poll_loop(self) -> None:

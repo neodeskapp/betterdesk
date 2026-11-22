@@ -254,6 +254,13 @@ func (r *sdkRun) command(deviceID, widgetID, action string, value any) string {
 // events (the audit log the console shows) and fails unless it is ok.
 func (r *sdkRun) answered(commandID string) {
 	r.t.Helper()
+	r.answeredWith(commandID, "ok")
+}
+
+// answeredWith waits for the device's answer to a command and fails unless
+// it has the status want.
+func (r *sdkRun) answeredWith(commandID, want string) {
+	r.t.Helper()
 	status := ""
 	r.waitFor("the answer to "+commandID, func() bool {
 		for _, e := range r.audit.RecentByAction("cdap_command_response", 100) {
@@ -264,8 +271,8 @@ func (r *sdkRun) answered(commandID string) {
 		}
 		return false
 	})
-	if status != "ok" {
-		r.t.Fatalf("the answer to %s has status %q, want ok%s", commandID, status, r.report())
+	if status != want {
+		r.t.Fatalf("the answer to %s has status %q, want %s%s", commandID, status, want, r.report())
 	}
 }
 
@@ -544,8 +551,8 @@ func freePort(t *testing.T) int {
 }
 
 // TestModbusBridge runs the Modbus bridge with its example config, and a
-// float32 register added, against a Modbus TCP server (pymodbus) on a free
-// port.
+// float32 register and a coil the device does not have added, against a
+// Modbus TCP server (pymodbus) on a free port.
 func TestModbusBridge(t *testing.T) {
 	py := python(t, "websockets", "pymodbus")
 	port := freePort(t)
@@ -560,13 +567,15 @@ func TestModbusBridge(t *testing.T) {
 		cfg["registers"] = append(registers, map[string]any{
 			"widget_id": "flow", "label": "Flow", "type": "holding", "address": 20, "count": 2,
 			"data_type": "float32", "scale": 1, "widget": "slider", "min": 0, "max": 10, "readonly": false,
+		}, map[string]any{
+			"widget_id": "relay_9", "label": "Relay 9", "type": "coil", "address": 500, "widget": "toggle", "readonly": false,
 		})
 	})
 	m := r.registered(id)
 	if m.Device.Type != "scada" || m.Device.Name != "Modbus Bridge" || m.Bridge.Name != "modbus" {
 		t.Fatalf("device %+v bridge %+v", m.Device, m.Bridge)
 	}
-	widgetsAre(t, m, "temperature", "humidity", "relay_1", "setpoint", "flow")
+	widgetsAre(t, m, "temperature", "humidity", "relay_1", "setpoint", "flow", "relay_9")
 
 	r.hasValue(id, "temperature", 21.5)
 	r.hasValue(id, "humidity", 45.5)
@@ -591,6 +600,13 @@ func TestModbusBridge(t *testing.T) {
 	}
 	if t.Failed() {
 		t.FailNow()
+	}
+
+	// The device refuses a write to a coil it does not have: the answer
+	// says so and the switch stays as it was.
+	r.answeredWith(r.command(id, "relay_9", "set", true), "error")
+	if v, _ := r.value(id, "relay_9"); v != false {
+		t.Fatalf("relay 9 shows %v after a refused write%s", v, r.report())
 	}
 
 	r.sent("auth", "register", "bulk_update", "command_response")
@@ -619,31 +635,96 @@ func TestSNMPBridge(t *testing.T) {
 	r.noErrors()
 }
 
+// restAPIs answers the REST bridge's polls and writes in place of the
+// weather API and Home Assistant: the light switches with its turn_on and
+// turn_off services, and the garage door's service refuses every write.
+func restAPIs(t *testing.T) string {
+	t.Helper()
+	var mu sync.Mutex
+	light := "on"
+	answer := func(w http.ResponseWriter, v any) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(v)
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /weather", func(w http.ResponseWriter, r *http.Request) {
+		answer(w, map[string]any{"main": map[string]any{"temp": -3.5}})
+	})
+	mux.HandleFunc("GET /api/states/light.living_room", func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		answer(w, map[string]any{"state": light})
+	})
+	mux.HandleFunc("POST /api/services/light/{action}", func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		switch r.PathValue("action") {
+		case "turn_on":
+			light = "on"
+		case "turn_off":
+			light = "off"
+		default:
+			http.Error(w, "unknown service", http.StatusBadRequest)
+			return
+		}
+		answer(w, []any{})
+	})
+	mux.HandleFunc("GET /api/states/cover.garage", func(w http.ResponseWriter, r *http.Request) {
+		answer(w, map[string]any{"state": "off"})
+	})
+	mux.HandleFunc("POST /api/services/cover/{action}", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "the door is locked", http.StatusInternalServerError)
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	return srv.URL
+}
+
 // TestRESTBridge runs the REST and webhook bridge with its example config,
-// its webhook on a free port.
+// its sources pointed at restAPIs with a garage door added, and its webhook
+// on a free port.
 func TestRESTBridge(t *testing.T) {
 	py := python(t, "websockets", "aiohttp")
 	port := freePort(t)
+	apis := restAPIs(t)
 
 	r := newSDKRun(t)
 	id := r.startBridge(py, "rest-webhook", "bridge_rest.py", func(cfg map[string]any) {
 		httpCfg, _ := cfg["http"].(map[string]any)
-		if httpCfg == nil {
-			t.Fatal("the example config has no http block")
+		sources, _ := cfg["sources"].([]any)
+		if httpCfg == nil || len(sources) != 2 {
+			t.Fatal("the example config has no http block or not its two sources")
 		}
 		httpCfg["webhook_port"] = port
+		weather, _ := sources[0].(map[string]any)
+		light, _ := sources[1].(map[string]any)
+		weather["url"] = apis + "/weather"
+		light["url"] = apis + "/api/states/light.living_room"
+		light["write_url"] = apis + "/api/services/light/{action}"
+		cfg["sources"] = append(sources, map[string]any{
+			"widget_id": "garage", "label": "Garage door", "url": apis + "/api/states/cover.garage",
+			"jmespath": "state", "widget": "toggle", "write_url": apis + "/api/services/cover/{action}",
+			"on_action": "open_cover", "off_action": "close_cover",
+		})
 	})
 	m := r.registered(id)
 	if m.Device.Type != "iot" || m.Device.Name != "REST Bridge" || m.Bridge.Name != "rest" {
 		t.Fatalf("device %+v bridge %+v", m.Device, m.Bridge)
 	}
-	widgetsAre(t, m, "weather_temp", "ha_light", "doorbell")
+	widgetsAre(t, m, "weather_temp", "ha_light", "garage", "doorbell")
 
 	r.hasValue(id, "weather_temp", -3.5)
 	r.hasValue(id, "ha_light", true)
+	r.hasValue(id, "garage", false)
 
 	r.answered(r.command(id, "ha_light", "set", false))
 	r.hasValue(id, "ha_light", false)
+
+	// The API refuses the write: the answer says so and the door stays shut.
+	r.answeredWith(r.command(id, "garage", "set", true), "error")
+	if v, _ := r.value(id, "garage"); v != false {
+		t.Fatalf("the garage door shows %v after a refused write%s", v, r.report())
+	}
 
 	url := fmt.Sprintf("http://127.0.0.1:%d/webhook", port)
 	r.waitFor("the webhook", func() bool {
