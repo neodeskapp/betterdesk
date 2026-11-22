@@ -177,8 +177,6 @@ func TestRoutesNeedServerConfig(t *testing.T) {
 		routes := [][2]string{
 			{"GET", "/api/server-management/info"}, {"GET", "/api/server-management/resources"},
 			{"GET", "/api/server-management/files?path=/"}, {"GET", "/api/server-management/files/read?path=x"},
-			{"POST", "/api/server-management/files/write"}, {"POST", "/api/server-management/files/mkdir"},
-			{"POST", "/api/server-management/files/rename"}, {"POST", "/api/server-management/files/delete"},
 			{"GET", "/api/server-management/services"}, {"POST", "/api/server-management/services/hbbs/status"},
 		}
 		cookies := map[string]string{"": ""}
@@ -206,25 +204,19 @@ func TestRoutesNeedServerConfig(t *testing.T) {
 	})
 }
 
-// A file round trip as admin: every change is in the audit log with the
-// user, the details and the client's address as TRUST_PROXY gives it:
-// with no proxy trusted, the connection's address, whatever
-// X-Forwarded-For says.
-func TestFileRoutes(t *testing.T) {
+// The file browser only lists and reads (A194). An admin reads and lists
+// a file, and a crafted request to write, make a folder, rename or delete
+// finds no route: 404, the tree as it was, no audit entry.
+func TestFilesAreReadOnly(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		s := newSite(t, db)
 		admin := s.signIn("admin")
 		base := s.root + "/server"
-		post := func(path, body string) map[string]any {
-			t.Helper()
-			rec := s.call(admin, "POST", "/api/server-management/files/"+path, body, "X-Forwarded-For", " 198.51.100.9 , 10.0.0.1")
-			return decode(t, rec.Body.String())
+		if err := os.Mkdir(base+"/d", 0o755); err != nil {
+			t.Fatal(err)
 		}
-		if got := post("mkdir", `{"path":"`+base+`/d"}`); got["success"] != true || got["path"] != base+"/d" {
-			t.Errorf("mkdir %v", got)
-		}
-		if got := post("write", `{"path":"`+base+`/d/a.txt","content":"héllo"}`); got["size"] != 6.0 {
-			t.Errorf("write %v", got)
+		if err := os.WriteFile(base+"/d/a.txt", []byte("héllo"), 0o644); err != nil {
+			t.Fatal(err)
 		}
 		rec := s.call(admin, "GET", "/api/server-management/files/read?path="+base+"/d/a.txt", "")
 		if got := decode(t, rec.Body.String()); got["content"] != "héllo" || got["isBinary"] != false || got["truncated"] != false || got["mode"] != 420.0 && runtime.GOOS != "windows" {
@@ -235,23 +227,30 @@ func TestFileRoutes(t *testing.T) {
 		if list["cwd"] != base+"/d" || list["path"] != base+"/d" || list["parent"] != base || len(list["entries"].([]any)) != 1 || !reflect.DeepEqual(list["entries"], list["items"]) {
 			t.Errorf("list %v", list)
 		}
-		if got := post("rename", `{"from":"`+base+`/d/a.txt","to":"`+base+`/b.txt"}`); got["from"] != base+"/d/a.txt" || got["to"] != base+"/b.txt" {
-			t.Errorf("rename %v", got)
+		for path, body := range map[string]string{
+			"write":  `{"path":"` + base + `/d/a.txt","content":"changed"}`,
+			"mkdir":  `{"path":"` + base + `/e"}`,
+			"rename": `{"from":"` + base + `/d/a.txt","to":"` + base + `/b.txt"}`,
+			"delete": `{"path":"` + base + `/d"}`,
+		} {
+			if rec := s.call(admin, "POST", "/api/server-management/files/"+path, body); rec.Code != 404 {
+				t.Errorf("%s: %d %s, want 404", path, rec.Code, rec.Body.String())
+			}
 		}
-		if got := post("delete", `{"path":"`+base+`/d"}`); got["path"] != base+"/d" {
-			t.Errorf("delete %v", got)
+		if data, err := os.ReadFile(base + "/d/a.txt"); err != nil || string(data) != "héllo" {
+			t.Errorf("the file after the refused writes: %q %v", data, err)
 		}
-		want := [][4]string{
-			{"1", "server_file_mkdir", "path=" + base + "/d", "203.0.113.7"},
-			{"1", "server_file_write", "path=" + base + "/d/a.txt bytes=6", "203.0.113.7"},
-			{"1", "server_file_rename", "from=" + base + "/d/a.txt to=" + base + "/b.txt", "203.0.113.7"},
-			{"1", "server_file_delete", "path=" + base + "/d", "203.0.113.7"},
+		for _, gone := range []string{base + "/e", base + "/b.txt"} {
+			if _, err := os.Stat(gone); err == nil {
+				t.Errorf("%s was made", gone)
+			}
 		}
-		if got := audits(t, db); !reflect.DeepEqual(got, want) {
-			t.Errorf("audits\n got %v\nwant %v", got, want)
+		if got := audits(t, db); len(got) != 0 {
+			t.Errorf("audits %v", got)
 		}
-		if _, err := os.Stat(base + "/b.txt"); err != nil {
-			t.Errorf("renamed file: %v", err)
+		info := decode(t, s.call(admin, "GET", "/api/server-management/info", "").Body.String())
+		if _, ok := info["mutableFileRoots"]; ok {
+			t.Errorf("info names folders that can be changed: %v", info["mutableFileRoots"])
 		}
 	})
 }
@@ -263,18 +262,6 @@ func TestBodyChecks(t *testing.T) {
 	s := newSite(t, db)
 	admin := s.signIn("admin")
 	cases := []struct{ method, path, body, want string }{
-		{"POST", "/api/server-management/files/write", `{"path":"x"}`, `{"success":false,"error":"path_and_content_required"}`},
-		{"POST", "/api/server-management/files/write", `{"path":5,"content":"x"}`, `{"success":false,"error":"path_and_content_required"}`},
-		{"POST", "/api/server-management/files/write", `{"path":"","content":"x"}`, `{"success":false,"error":"Path is required"}`},
-		{"POST", "/api/server-management/files/write", `{"path":"/etc/x","content":"x"}`, `{"success":false,"error":"Path outside allowed directory roots"}`},
-		{"POST", "/api/server-management/files/write", `{"path":"` + s.root + `/home/x","content":"x"}`, `{"success":false,"error":"Path outside allowed directory roots"}`},
-		{"POST", "/api/server-management/files/mkdir", `{"path":""}`, `{"success":false,"error":"path_required"}`},
-		{"POST", "/api/server-management/files/mkdir", `{"path":true}`, `{"success":false,"error":"path_required"}`},
-		{"POST", "/api/server-management/files/delete", `{}`, `{"success":false,"error":"path_required"}`},
-		{"POST", "/api/server-management/files/delete", `{"path":["x"]}`, `{"success":false,"error":"path_required"}`},
-		{"POST", "/api/server-management/files/rename", `{"from":"a"}`, `{"success":false,"error":"from_and_to_required"}`},
-		{"POST", "/api/server-management/files/rename", `{"from":"a","to":{}}`, `{"success":false,"error":"from_and_to_required"}`},
-		{"POST", "/api/server-management/files/rename", `{"from":1,"to":"b"}`, `{"success":false,"error":"from_and_to_required"}`},
 		{"GET", "/api/server-management/files/read", "", `{"success":false,"error":"Path is required"}`},
 		{"GET", "/api/server-management/files", "", `{"success":false,"error":"Path outside allowed directory roots"}`},
 		{"GET", "/api/server-management/files?path[x]=1", "", `{"success":false,"error":"ENOENT: no such file or directory, stat '` + s.root + `/console/[object Object]'"}`},
@@ -290,9 +277,6 @@ func TestBodyChecks(t *testing.T) {
 	}
 	if len(s.run.calls) != 0 || len(audits(t, db)) != 0 {
 		t.Errorf("a refused request ran %q or wrote %v", s.run.calls, audits(t, db))
-	}
-	if entries, _ := os.ReadDir(s.root + "/home"); len(entries) != 0 {
-		t.Errorf("a refused write left %v", entries)
 	}
 }
 
@@ -380,8 +364,8 @@ func TestInfo(t *testing.T) {
 		}
 	}
 	want := []any{s.root + "/server", s.root + "/console", s.root + "/home", s.root + "/log", s.root + "/tmp"}
-	if !reflect.DeepEqual(got["fileRoots"], want) || !reflect.DeepEqual(got["mutableFileRoots"], want[:2]) {
-		t.Errorf("roots %v %v", got["fileRoots"], got["mutableFileRoots"])
+	if !reflect.DeepEqual(got["fileRoots"], want) {
+		t.Errorf("roots %v", got["fileRoots"])
 	}
 
 	// The server's folder as the update routes name it: RUSTDESK_PATH, as
@@ -390,8 +374,8 @@ func TestInfo(t *testing.T) {
 	for value, folder := range map[string]string{s.root + "/rd": s.root + "/rd", "": "/opt/betterdesk"} {
 		s.env["RUSTDESK_PATH"] = value
 		got := decode(t, s.call(s.signIn("admin"), "GET", "/api/server-management/info", "").Body.String())
-		if read, write := got["fileRoots"].([]any), got["mutableFileRoots"].([]any); read[0] != folder || write[0] != folder {
-			t.Errorf("RUSTDESK_PATH %q: roots %v %v", value, read, write)
+		if read := got["fileRoots"].([]any); read[0] != folder {
+			t.Errorf("RUSTDESK_PATH %q: roots %v", value, read)
 		}
 	}
 }

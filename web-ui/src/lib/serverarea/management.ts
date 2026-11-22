@@ -165,12 +165,6 @@ export function upFrom(cwd: string): string {
 	return trimmed.replace(/[/\\][^/\\]*$/, '') || sep;
 }
 
-/** Whether files can be changed under a root: true, false, or null when the server doesn't say */
-export function rootWritable(root: string, mutable: readonly string[] | null): boolean | null {
-	if (!mutable) return null;
-	return mutable.some((m) => root === m || root.startsWith(m.replace(/\/+$/, '') + '/'));
-}
-
 export function countEntries(entries: readonly Pick<FileEntry, 'type' | 'isSymlink' | 'isDirectory'>[]): {
 	folders: number;
 	files: number;

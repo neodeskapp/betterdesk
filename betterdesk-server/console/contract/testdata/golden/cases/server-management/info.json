@@ -141,10 +141,6 @@
       "/tmp",
       "/var/tmp"
      ],
-     "mutableFileRoots": [
-      "/opt/rustdesk",
-      "/repo/web-nodejs"
-     ],
      "nodeVersion": "<volatile>",
      "pid": 0,
      "platform": "linux",

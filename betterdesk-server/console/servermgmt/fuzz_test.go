@@ -3,7 +3,6 @@
 package servermgmt
 
 import (
-	"errors"
 	"math"
 	"os"
 	"path/filepath"
@@ -13,14 +12,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/safepath"
 )
 
-var errFuzzStop = errors.New("fuzz: no change")
-
-// FuzzFilePaths sends any path to every file operation of a tree with
+// FuzzFilePaths sends any path to the list and the read of a tree with
 // links into and out of the folders. Whatever the path, a list or a read
-// that succeeds names a path inside a folder the browser may read, and a
-// change reaches the file system (the guard, which stops it here) only
-// for paths inside a folder it may change. A path outside never gets
-// that far.
+// that succeeds names a path inside a folder the browser may read.
 func FuzzFilePaths(f *testing.F) {
 	root := f.TempDir()
 	mk := func(rel string) string {
@@ -43,14 +37,7 @@ func FuzzFilePaths(f *testing.F) {
 		}
 	}
 	env := map[string]string{"BETTERDESK_PATH": server, "BETTERDESK_CONSOLE_PATH": console, "HOME": home, "TMPDIR": home}
-	var changed []string
-	s := New(Options{
-		Getenv: func(k string) string { return env[k] }, WorkDir: console, GOOS: "linux", LogDir: home, TempDirs: []string{home},
-		beforeChange: func(paths ...string) error {
-			changed = append(changed, paths...)
-			return errFuzzStop
-		},
-	})
+	s := New(Options{Getenv: func(k string) string { return env[k] }, WorkDir: console, GOOS: "linux", LogDir: home, TempDirs: []string{home}})
 	inside := func(p string, roots []string) bool {
 		for _, r := range roots {
 			if safepath.IsInsideRoot(p, r) {
@@ -62,28 +49,18 @@ func FuzzFilePaths(f *testing.F) {
 	for _, seed := range []string{"", "/", ".", "..", "a.txt", "../server/a.txt", server + "/a.txt", server + "/out/secret.txt", server + "/out-file",
 		server + "/in/b.txt", server + "/../outside/secret.txt", outside, "up/outside/secret.txt", server + "/dangling", server + "/loop", server + "/a.txt\x00",
 		server + "//sub/./b.txt", server + "x", "~", server + "/new/../new.txt", "\\..\\outside"} {
-		f.Add(seed, seed)
+		f.Add(seed)
 	}
-	f.Fuzz(func(t *testing.T, p, q string) {
-		if !utf8.ValidString(p) || !utf8.ValidString(q) {
+	f.Fuzz(func(t *testing.T, p string) {
+		if !utf8.ValidString(p) {
 			return
 		}
-		read, write := s.ReadRoots(), s.WriteRoots()
+		read := s.ReadRoots()
 		if l, err := s.ListDirectory(p); err == nil && !inside(l.Path, read) {
 			t.Fatalf("listed %q (%q) outside the folders", l.Path, p)
 		}
 		if r, err := s.ReadFilePreview(p); err == nil && !inside(r.Path, read) {
 			t.Fatalf("read %q (%q) outside the folders", r.Path, p)
-		}
-		changed = nil
-		_, _ = s.WriteFile(p, "x")
-		_, _ = s.MakeDirectory(p)
-		_, _ = s.DeletePath(p)
-		_, _ = s.RenamePath(p, q)
-		for _, c := range changed {
-			if c == "/" || !inside(c, write) {
-				t.Fatalf("a change of %q (%q, %q) got through the checks", c, p, q)
-			}
 		}
 	})
 }

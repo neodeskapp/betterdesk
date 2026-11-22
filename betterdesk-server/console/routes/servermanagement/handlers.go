@@ -19,15 +19,14 @@ import (
 // runtime of the console, Go's here, and pid this process (spec
 // updater-installers 4.6).
 type infoAnswer struct {
-	Success          bool          `json:"success"`
-	Platform         string        `json:"platform"`
-	Arch             string        `json:"arch"`
-	NodeVersion      string        `json:"nodeVersion"`
-	PID              int           `json:"pid"`
-	FileRoots        []string      `json:"fileRoots"`
-	MutableFileRoots []string      `json:"mutableFileRoots"`
-	Server           *serverStatus `json:"server"`
-	Beta             bool          `json:"beta"`
+	Success     bool          `json:"success"`
+	Platform    string        `json:"platform"`
+	Arch        string        `json:"arch"`
+	NodeVersion string        `json:"nodeVersion"`
+	PID         int           `json:"pid"`
+	FileRoots   []string      `json:"fileRoots"`
+	Server      *serverStatus `json:"server"`
+	Beta        bool          `json:"beta"`
 }
 
 // serverStatus is what the API server's health says of it.
@@ -40,7 +39,7 @@ type serverStatus struct {
 func (h *handlers) info(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, infoAnswer{
 		Success: true, Platform: h.svc.Platform(), Arch: servermgmt.Arch(), NodeVersion: runtime.Version(),
-		PID: os.Getpid(), FileRoots: h.svc.ReadRoots(), MutableFileRoots: h.svc.WriteRoots(),
+		PID: os.Getpid(), FileRoots: h.svc.ReadRoots(),
 		Server: serverFromHealth(h.d.Backend.GetHealth(r.Context())), Beta: true,
 	})
 }
@@ -157,90 +156,6 @@ func (h *handlers) read(w http.ResponseWriter, r *http.Request) {
 		Success bool `json:"success"`
 		*servermgmt.Preview
 	}{true, preview})
-}
-
-func (h *handlers) write(w http.ResponseWriter, r *http.Request) {
-	body := kit.Body(r)
-	p, pathOK := body.String("path")
-	content, contentOK := body.String("content")
-	if !pathOK || !contentOK {
-		kit.Fail(w, r, http.StatusBadRequest, "path_and_content_required")
-		return
-	}
-	written, err := h.svc.WriteFile(p, content)
-	if err != nil {
-		fail(w, r, http.StatusBadRequest, err, "write_failed")
-		return
-	}
-	h.audit(r, "server_file_write", "path="+written.Path+" bytes="+strconv.Itoa(written.Size))
-	kit.JSON(w, r, http.StatusOK, struct {
-		Success bool `json:"success"`
-		*servermgmt.Written
-	}{true, written})
-}
-
-// pathParam is req.body.path when it is text that is not empty (the old
-// route took (req.body && req.body.path) or the empty text).
-func pathParam(r *http.Request) (string, bool) {
-	p, ok := kit.Body(r).String("path")
-	return p, ok && p != ""
-}
-
-func (h *handlers) mkdir(w http.ResponseWriter, r *http.Request) {
-	p, ok := pathParam(r)
-	if !ok {
-		kit.Fail(w, r, http.StatusBadRequest, "path_required")
-		return
-	}
-	made, err := h.svc.MakeDirectory(p)
-	if err != nil {
-		fail(w, r, http.StatusBadRequest, err, "mkdir_failed")
-		return
-	}
-	h.audit(r, "server_file_mkdir", "path="+made.Path)
-	pathAnswer(w, r, made)
-}
-
-func (h *handlers) rename(w http.ResponseWriter, r *http.Request) {
-	body := kit.Body(r)
-	from, fromOK := body.String("from")
-	to, toOK := body.String("to")
-	if !fromOK || !toOK {
-		kit.Fail(w, r, http.StatusBadRequest, "from_and_to_required")
-		return
-	}
-	renamed, err := h.svc.RenamePath(from, to)
-	if err != nil {
-		fail(w, r, http.StatusBadRequest, err, "rename_failed")
-		return
-	}
-	h.audit(r, "server_file_rename", "from="+renamed.From+" to="+renamed.To)
-	kit.JSON(w, r, http.StatusOK, struct {
-		Success bool `json:"success"`
-		*servermgmt.Renamed
-	}{true, renamed})
-}
-
-func (h *handlers) delete(w http.ResponseWriter, r *http.Request) {
-	p, ok := pathParam(r)
-	if !ok {
-		kit.Fail(w, r, http.StatusBadRequest, "path_required")
-		return
-	}
-	deleted, err := h.svc.DeletePath(p)
-	if err != nil {
-		fail(w, r, http.StatusBadRequest, err, "delete_failed")
-		return
-	}
-	h.audit(r, "server_file_delete", "path="+deleted.Path)
-	pathAnswer(w, r, deleted)
-}
-
-func pathAnswer(w http.ResponseWriter, r *http.Request, p *servermgmt.PathResult) {
-	kit.JSON(w, r, http.StatusOK, struct {
-		Success bool `json:"success"`
-		*servermgmt.PathResult
-	}{true, p})
 }
 
 // service is one entry of the service list, with the state and status

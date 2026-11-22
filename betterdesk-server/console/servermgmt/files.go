@@ -7,7 +7,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -17,8 +16,7 @@ import (
 
 // The file browser's limits.
 const (
-	// FileMaxBytes is the largest file the browser opens for editing and
-	// the most a write may hold: 8 MiB.
+	// FileMaxBytes is the largest file the browser opens: 8 MiB.
 	FileMaxBytes = 8 * 1024 * 1024
 	// ReadPreviewBytes is how much of a file a read returns: 256 KiB.
 	ReadPreviewBytes = 256 * 1024
@@ -30,9 +28,6 @@ var (
 	ErrNotDirectory   = errors.New("Not a directory")
 	ErrNotRegularFile = errors.New("Not a regular file")
 	ErrFileTooLarge   = errors.New("File too large for inline edit (>8 MB)")
-	ErrContentTooBig  = errors.New("Content exceeds 8 MB limit")
-	ErrDeleteRoot     = errors.New("Refusing to delete filesystem root")
-	ErrChangeRoot     = errors.New("Refusing to move or delete an allowed directory root")
 )
 
 // within checks a path the browser got against folders, the way
@@ -176,217 +171,6 @@ func (s *Service) ReadFilePreview(p string) (*Preview, error) {
 		preview.Content = decodeUTF8(buf)
 	}
 	return preview, nil
-}
-
-// Written is what a write wrote: the path and the size in bytes.
-type Written struct {
-	Path string `json:"path"`
-	Size int    `json:"size"`
-}
-
-// WriteFile writes content as UTF-8 to a file the browser may change,
-// creating it or replacing what it held. A link, also one that points
-// nowhere, is not written through, and a FIFO, a socket or a device is not
-// opened: ErrNotRegularFile. A folder fails at the open.
-func (s *Service) WriteFile(p, content string) (*Written, error) {
-	abs, err := s.within(p, s.WriteRoots())
-	if err != nil {
-		return nil, err
-	}
-	if len(content) > FileMaxBytes {
-		return nil, ErrContentTooBig
-	}
-	if st, err := os.Lstat(abs); err == nil && !st.Mode().IsRegular() && !st.IsDir() {
-		return nil, ErrNotRegularFile
-	}
-	if err := s.guard(abs); err != nil {
-		return nil, err
-	}
-	f, err := openForWrite(abs)
-	if err != nil {
-		return nil, fileError(err, "open", abs)
-	}
-	_, err = f.WriteString(content)
-	if closeErr := f.Close(); err == nil {
-		err = closeErr
-	}
-	if err != nil {
-		return nil, fileError(err, "write", "")
-	}
-	return &Written{Path: abs, Size: len(content)}, nil
-}
-
-// PathResult names the path an operation acted on.
-type PathResult struct {
-	Path string `json:"path"`
-}
-
-// driveRoot is the root of a Windows drive, which a delete refuses.
-var driveRoot = regexp.MustCompile(`^[A-Za-z]:\\?$`)
-
-// DeletePath removes a file, or a folder with everything in it, that the
-// browser may change. The root of the file system is refused, and so is a
-// folder the browser may change itself or one that holds such a folder
-// (ErrChangeRoot). A link is removed itself; what it points to stays.
-func (s *Service) DeletePath(p string) (*PathResult, error) {
-	roots := s.WriteRoots()
-	abs, err := s.within(p, roots)
-	if err != nil {
-		return nil, err
-	}
-	if abs == "/" || driveRoot.MatchString(abs) {
-		return nil, ErrDeleteRoot
-	}
-	target, err := s.entry(p, roots)
-	if err != nil {
-		return nil, err
-	}
-	st, err := os.Lstat(target)
-	if err != nil {
-		return nil, fileError(err, "lstat", target)
-	}
-	if err := s.guard(target); err != nil {
-		return nil, err
-	}
-	if st.IsDir() {
-		if err := removeAll(target); err != nil {
-			return nil, err
-		}
-	} else if err := unlink(target); err != nil {
-		return nil, fileError(err, "unlink", target)
-	}
-	return &PathResult{Path: target}, nil
-}
-
-// entry is the path a delete or rename acts on: the last name of p as it
-// is, in its folder with the links resolved, which has to be one the
-// browser may change. So a link is acted on itself, and a link outside
-// the folders that points into one is refused. A root itself, or a folder
-// that holds one, is ErrChangeRoot.
-func (s *Service) entry(p string, roots []string) (string, error) {
-	abs := s.resolve(p)
-	if s.holdsRoot(abs, roots) {
-		return "", ErrChangeRoot
-	}
-	parent, err := s.within(filepath.Dir(abs), roots)
-	if err != nil {
-		return "", err
-	}
-	target := filepath.Join(parent, filepath.Base(abs))
-	if s.holdsRoot(target, roots) {
-		return "", ErrChangeRoot
-	}
-	return target, nil
-}
-
-// holdsRoot reports whether path is one of roots (absolute, as WriteRoots
-// lists them) or a folder they lie in, with each root taken as written and
-// with its links resolved.
-func (s *Service) holdsRoot(path string, roots []string) bool {
-	for _, root := range roots {
-		forms := []string{root}
-		if real, err := filepath.EvalSymlinks(root); err == nil {
-			forms = append(forms, real)
-		}
-		for _, r := range forms {
-			if s.inside(r, path) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// inside reports whether path is dir or lies below it, in any letter case
-// on Windows.
-func (s *Service) inside(path, dir string) bool {
-	if s.windows() {
-		path, dir = strings.ToLower(path), strings.ToLower(dir)
-	}
-	sep := string(filepath.Separator)
-	return path == dir || strings.HasPrefix(path, strings.TrimSuffix(dir, sep)+sep)
-}
-
-// MakeDirectory makes one folder the browser may change; its parent must
-// exist.
-func (s *Service) MakeDirectory(p string) (*PathResult, error) {
-	abs, err := s.within(p, s.WriteRoots())
-	if err != nil {
-		return nil, err
-	}
-	if err := s.guard(abs); err != nil {
-		return nil, err
-	}
-	if err := os.Mkdir(abs, 0o777); err != nil {
-		return nil, fileError(err, "mkdir", abs)
-	}
-	return &PathResult{Path: abs}, nil
-}
-
-// Renamed is what a rename moved.
-type Renamed struct {
-	From string `json:"from"`
-	To   string `json:"to"`
-}
-
-// RenamePath moves a file or folder; both paths must be ones the browser
-// may change. What is at the new path is replaced as rename(2) does. A
-// link is moved itself, and a folder the browser may change, or one that
-// holds such a folder, is neither moved nor replaced (ErrChangeRoot).
-func (s *Service) RenamePath(from, to string) (*Renamed, error) {
-	roots := s.WriteRoots()
-	if _, err := s.within(from, roots); err != nil {
-		return nil, err
-	}
-	if _, err := s.within(to, roots); err != nil {
-		return nil, err
-	}
-	a, err := s.entry(from, roots)
-	if err != nil {
-		return nil, err
-	}
-	b, err := s.entry(to, roots)
-	if err != nil {
-		return nil, err
-	}
-	if err := s.guard(a, b); err != nil {
-		return nil, err
-	}
-	if err := rename(a, b); err != nil {
-		return nil, fileError(err, "rename", a, b)
-	}
-	return &Renamed{From: a, To: b}, nil
-}
-
-// guard passes the paths of a change to the test hook, when there is one.
-func (s *Service) guard(paths ...string) error {
-	if s.opts.beforeChange == nil {
-		return nil
-	}
-	return s.opts.beforeChange(paths...)
-}
-
-// removeAll is fs.rmSync(path, {recursive: true}): the folder and all in
-// it. A failure names the call and the entry it failed on.
-func removeAll(path string) error {
-	err := os.RemoveAll(path)
-	if err == nil {
-		return nil
-	}
-	var pe *os.PathError
-	if errors.As(err, &pe) {
-		call := "rm"
-		switch pe.Op {
-		case "unlinkat", "unlink", "remove":
-			call = "unlink"
-		case "rmdir":
-			call = "rmdir"
-		case "open", "openfdat":
-			call = "scandir"
-		}
-		return fileError(pe.Err, call, pe.Path)
-	}
-	return err
 }
 
 // isoTime is the toISOString() of a file time as Node gave it: the

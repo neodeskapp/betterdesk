@@ -1,13 +1,14 @@
 // Package servermgmt is the server management of the console (beta): what
 // the machine the console runs on looks like (processor, memory, disks,
-// network), a file browser confined to a list of folders, and the control
-// of BetterDesk's system services. It opens no shell.
+// network), a file browser confined to a list of folders that reads and
+// changes nothing, and the control of BetterDesk's system services. It
+// opens no shell.
 //
 // Everything here acts on the machine with the rights of the console's
 // account. The routes let only accounts with the permission server.config
-// in, and every path the file browser gets goes through the
-// folder lists (see Roots) before anything is opened, written, moved or
-// removed; service names and actions go through fixed allow lists.
+// in, and every path the file browser gets goes through the folder list
+// (see ReadRoots) before anything is opened; service names and actions go
+// through fixed allow lists.
 package servermgmt
 
 import (
@@ -26,8 +27,8 @@ type Options struct {
 	// BETTERDESK_PATH, RUSTDESK_DIR and RUSTDESK_PATH (the server's folder,
 	// default /opt/betterdesk or C:\BetterDesk),
 	// BETTERDESK_CONSOLE_PATH (the console's folder, default WorkDir),
-	// BETTERDESK_FILE_ALLOWED_ROOTS and BETTERDESK_MUTABLE_ROOTS (more
-	// folders to read and to change, separated by commas), HOME and
+	// BETTERDESK_FILE_ALLOWED_ROOTS (more folders to read, separated by
+	// commas), HOME and
 	// USERPROFILE, and TMPDIR, TMP and TEMP (the temp folder). Default
 	// os.Getenv.
 	Getenv func(string) string
@@ -64,10 +65,6 @@ type Options struct {
 
 	// host reads the machine; tests give a made-up one.
 	host func() hostReading
-	// beforeChange sees every path the file browser is about to write,
-	// create, move or remove, after all checks. Tests use it to stop a
-	// change outside their folder; nil lets everything through.
-	beforeChange func(paths ...string) error
 }
 
 // Service is the server management of one console process.

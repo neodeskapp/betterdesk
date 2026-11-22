@@ -27,17 +27,6 @@ func (s *Service) ReadRoots() []string {
 	return roots.list
 }
 
-// WriteRoots are the folders the file browser may change
-// (getMutableFileRoots): the server's and the console's folder, then
-// BETTERDESK_MUTABLE_ROOTS.
-func (s *Service) WriteRoots() []string {
-	roots := newRootSet()
-	roots.add(s.serverPath())
-	roots.add(s.consolePath())
-	s.addListed(roots, "BETTERDESK_MUTABLE_ROOTS")
-	return roots.list
-}
-
 // serverPath is the server's folder by the rule of the update and
 // management routes (managedconfig.Config.Paths): BETTERDESK_PATH,
 // RUSTDESK_DIR or RUSTDESK_PATH, else /opt/betterdesk, on Windows

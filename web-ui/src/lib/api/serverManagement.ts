@@ -1,14 +1,14 @@
 /**
  * Server management (routes/server-management.routes.js): the machine that
- * runs the console, its files and BetterDesk's system services. Every call
- * needs server.config.
+ * runs the console, its files (to list and read only) and BetterDesk's
+ * system services. Every call needs server.config.
  *
  * These routes answer `{ success: true, ...fields }` without a data
  * envelope; errors are `{ success: false, error }` with 400 or 500.
  */
 
 import * as v from 'valibot';
-import { api, Ok } from './client.ts';
+import { api } from './client.ts';
 
 /* Fields that are always there in the output, whatever the server leaves out */
 const Str = v.pipe(
@@ -39,8 +39,6 @@ export const ServerInfo = v.looseObject({
 	nodeVersion: Str,
 	pid: Num,
 	fileRoots: Strings,
-	/** Folders where files can be changed; null when the server does not say */
-	mutableFileRoots: v.optional(v.nullable(v.array(v.string())), null),
 	/** The BetterDesk (Go) server; null when it did not answer */
 	server: v.optional(
 		v.nullable(
@@ -155,22 +153,6 @@ export type FileContent = v.InferOutput<typeof FileContent>;
 
 export function readFile(path: string) {
 	return api(FileContent, '/api/server-management/files/read', { query: { path } });
-}
-
-export function writeFile(path: string, content: string) {
-	return api(Ok, '/api/server-management/files/write', { method: 'POST', body: { path, content } });
-}
-
-export function makeFolder(path: string) {
-	return api(Ok, '/api/server-management/files/mkdir', { method: 'POST', body: { path } });
-}
-
-export function renamePath(from: string, to: string) {
-	return api(Ok, '/api/server-management/files/rename', { method: 'POST', body: { from, to } });
-}
-
-export function deletePath(path: string) {
-	return api(Ok, '/api/server-management/files/delete', { method: 'POST', body: { path } });
 }
 
 /* ── Services ── */
