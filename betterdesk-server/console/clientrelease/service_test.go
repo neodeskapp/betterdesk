@@ -30,21 +30,48 @@ type fakeGitHub struct {
 	hits  map[string]int
 	// redirect sends asset downloads to another address.
 	redirect string
+	// prereleases, when set, are the fork's releases, newest first, and
+	// /releases/latest answers 404 as GitHub does while a repository has
+	// no stable release. The one tagged filesTag carries the files.
+	prereleases []map[string]any
+	filesTag    string
 }
 
 func newFakeGitHub(t *testing.T, files map[string][]byte) *fakeGitHub {
 	t.Helper()
 	f := &fakeGitHub{files: files, hits: map[string]int{}}
+	assets := func() []map[string]any {
+		out := []map[string]any{}
+		for name, data := range f.files {
+			out = append(out, map[string]any{"name": name, "size": len(data), "browser_download_url": f.srv.URL + "/download/" + name})
+		}
+		return out
+	}
 	f.srv = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		f.hits[r.URL.Path]++
 		f.mu.Unlock()
 		if r.URL.Path == "/repos/trybetterdesk/betterdesk-client/releases/latest" {
-			assets := []map[string]any{}
-			for name, data := range f.files {
-				assets = append(assets, map[string]any{"name": name, "size": len(data), "browser_download_url": f.srv.URL + "/download/" + name})
+			if f.prereleases != nil {
+				http.NotFound(w, r)
+				return
 			}
-			_ = json.NewEncoder(w).Encode(map[string]any{"tag_name": "1.4.6-dev.3", "assets": assets})
+			_ = json.NewEncoder(w).Encode(map[string]any{"tag_name": "1.4.6-dev.3", "assets": assets()})
+			return
+		}
+		if r.URL.Path == "/repos/trybetterdesk/betterdesk-client/releases" && f.prereleases != nil {
+			list := []map[string]any{}
+			for _, p := range f.prereleases {
+				entry := map[string]any{"assets": []map[string]any{}}
+				for k, v := range p {
+					entry[k] = v
+				}
+				if entry["tag_name"] == f.filesTag {
+					entry["assets"] = assets()
+				}
+				list = append(list, entry)
+			}
+			_ = json.NewEncoder(w).Encode(list)
 			return
 		}
 		if name, ok := strings.CutPrefix(r.URL.Path, "/download/"); ok {
@@ -186,6 +213,44 @@ func TestSignedReleaseIsOfferedAndEachPackageDownloadedOnce(t *testing.T) {
 	}
 	if st := s.Status(ctx); !st.Verified || st.Tag != "1.4.6-dev.3" || st.Source != "github" || st.Error != "" {
 		t.Fatalf("status %+v", st)
+	}
+}
+
+// While the fork has published only pre-releases, the newest one that is
+// no draft and whose tag can name a folder is used, as the installers do.
+func TestNewestPrereleaseServesWhileThereIsNoStableRelease(t *testing.T) {
+	pub, priv := newKey(t)
+	gh := newFakeGitHub(t, signedRelease(priv, packages()))
+	gh.filesTag = "desktop-v1.5.0-rc.1"
+	gh.prereleases = []map[string]any{
+		{"tag_name": "desktop-v1.6.0-rc.1", "draft": true, "prerelease": true},
+		{"tag_name": "desktop/v1.5.1-rc.1", "draft": false, "prerelease": true},
+		{"tag_name": "desktop-v1.5.0-rc.1", "draft": false, "prerelease": true},
+		{"tag_name": "desktop-v1.4.0-rc.2", "draft": false, "prerelease": true},
+	}
+	s := newService(t, gh, pub, nil)
+	ctx := context.Background()
+
+	f, offer, err := s.Open(ctx, KindSupport, "linux", "x64", "tar.gz")
+	if err != nil {
+		t.Fatalf("no package from the newest pre-release: %v (status %+v)", err, s.Status(ctx))
+	}
+	if text := readAll(t, f); text != "portable tar" || offer.Version != "1.4.6-dev.3" {
+		t.Fatalf("package %q %+v", text, offer)
+	}
+	if st := s.Status(ctx); st.Tag != "desktop-v1.5.0-rc.1" || !st.Verified || st.Error != "" {
+		t.Fatalf("status %+v", st)
+	}
+
+	// No release of any kind
+	empty := newFakeGitHub(t, signedRelease(priv, packages()))
+	empty.prereleases = []map[string]any{}
+	s = newService(t, empty, pub, nil)
+	if _, err := s.Offers(ctx, KindJoin); !errors.Is(err, ErrUnavailable) {
+		t.Fatalf("offers without any release: %v", err)
+	}
+	if st := s.Status(ctx); !strings.Contains(st.Error, "no published release") {
+		t.Fatalf("status without any release %+v", st)
 	}
 }
 

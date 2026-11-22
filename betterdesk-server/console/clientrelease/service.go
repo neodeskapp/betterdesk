@@ -2,7 +2,8 @@
 // support codes hand out. The server takes them from the releases of the
 // client fork (BETTERDESK_CLIENT_REPO, trybetterdesk/betterdesk-client
 // when unset; BETTERDESK_CLIENT_RELEASE_TAG picks a release, else the
-// latest), checks the release's SHA256SUMS against its ed25519 signature
+// latest, else the newest pre-release while the fork has no stable
+// release), checks the release's SHA256SUMS against its ed25519 signature
 // (SHA256SUMS.sig, keys.go), downloads each package the first time it is
 // asked for, checks its SHA-256 against SHA256SUMS and keeps it in the
 // data folder (client-releases/<tag>/). A release without a valid
@@ -52,8 +53,9 @@ const (
 	refreshAfter = 6 * time.Hour
 	retryAfter   = 5 * time.Minute
 	// The largest files read.
-	maxMetadata = 1 << 20
-	maxPackage  = 1 << 30
+	maxMetadata    = 1 << 20
+	maxReleaseList = 8 << 20
+	maxPackage     = 1 << 30
 	// downloadTimeout bounds one package download.
 	downloadTimeout = 15 * time.Minute
 )
@@ -371,13 +373,9 @@ func (s *Service) fetchGitHub(ctx context.Context) (*release, error) {
 	if !regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`).MatchString(repo) {
 		return nil, fmt.Errorf("%s %q is no owner/name", EnvRepo, repo)
 	}
-	endpoint := s.opts.APIBase + "/repos/" + repo + "/releases/latest"
-	if tag := strings.TrimSpace(s.opts.Getenv(EnvTag)); tag != "" {
-		endpoint = s.opts.APIBase + "/repos/" + repo + "/releases/tags/" + url.PathEscape(tag)
-	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	raw, err := s.get(ctx, endpoint, maxMetadata, true)
+	raw, err := s.readRelease(ctx, repo)
 	if err != nil {
 		return nil, fmt.Errorf("read the release: %w", err)
 	}
@@ -420,6 +418,49 @@ func (s *Service) fetchGitHub(ctx context.Context) (*release, error) {
 	}
 	return rel, nil
 }
+
+// readRelease reads the JSON of the release to use: the tag EnvTag names,
+// else the latest release, else, while the fork has published no stable
+// release (GitHub answers 404 for latest), the newest pre-release that is
+// no draft and whose tag can name a folder.
+func (s *Service) readRelease(ctx context.Context, repo string) ([]byte, error) {
+	base := s.opts.APIBase + "/repos/" + repo + "/releases"
+	if tag := strings.TrimSpace(s.opts.Getenv(EnvTag)); tag != "" {
+		return s.get(ctx, base+"/tags/"+url.PathEscape(tag), maxMetadata, true)
+	}
+	raw, err := s.get(ctx, base+"/latest", maxMetadata, true)
+	var status *statusError
+	if !errors.As(err, &status) || status.code != http.StatusNotFound {
+		return raw, err
+	}
+	list, err := s.get(ctx, base+"?per_page=20", maxReleaseList, true)
+	if err != nil {
+		return nil, err
+	}
+	var releases []json.RawMessage
+	if err := json.Unmarshal(list, &releases); err != nil {
+		return nil, fmt.Errorf("the release list: %w", err)
+	}
+	for _, r := range releases {
+		var head struct {
+			TagName    string `json:"tag_name"`
+			Draft      bool   `json:"draft"`
+			Prerelease bool   `json:"prerelease"`
+		}
+		if json.Unmarshal(r, &head) == nil && !head.Draft && head.Prerelease && tagPattern.MatchString(head.TagName) {
+			return r, nil
+		}
+	}
+	return nil, fmt.Errorf("%s has no published release or pre-release", repo)
+}
+
+// statusError is an answer other than 200.
+type statusError struct {
+	url  string
+	code int
+}
+
+func (e *statusError) Error() string { return fmt.Sprintf("%s answered %d", e.url, e.code) }
 
 // checkedRelease reads SHA256SUMS after its signature verified. With
 // signed false a missing signature is allowed (a folder).
@@ -511,7 +552,7 @@ func (s *Service) request(ctx context.Context, rawURL string, api bool) (*http.R
 	}
 	if resp.StatusCode != http.StatusOK {
 		resp.Body.Close()
-		return nil, fmt.Errorf("%s answered %d", u.Redacted(), resp.StatusCode)
+		return nil, &statusError{url: u.Redacted(), code: resp.StatusCode}
 	}
 	return resp, nil
 }

@@ -1774,6 +1774,10 @@ export class RDFileTransfer {
 	 * Handle directory listing response
 	 */
 	_handleDir(dir: FileDirectory): void {
+		// The device answers a download with the job's files under the job's
+		// id (for one file the file itself); that is no folder listing
+		if (dir.id && this._transfers.has(Number(dir.id))) return;
+
 		// Clear browse timeout — we got a response
 		if (this._browseTimeout) {
 			clearTimeout(this._browseTimeout);
@@ -1801,10 +1805,6 @@ export class RDFileTransfer {
 			if (!a.isDir && b.isDir) return 1;
 			return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
 		});
-
-		// The device answers a send request with the job's files under the
-		// transfer's id (folder listings come with id 0): not a folder to show
-		if (dir.id && this._transfers.has(Number(dir.id))) return;
 
 		const pathKey = this._normalizeRemotePathKey(dir.path || '');
 		// The sheet's listing of this folder, or of the home folder (the device answers with its path)
