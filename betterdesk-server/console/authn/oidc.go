@@ -153,6 +153,12 @@ func (s *Service) UserByID(ctx context.Context, userID int64) (*Account, error) 
 	return getUserByID(ctx, s.db, userID)
 }
 
+// IsExternalAccount reports whether the account signs in through the
+// directory or single sign-on: it has no password of the console's.
+func IsExternalAccount(user *Account) bool {
+	return user != nil && isExternalAuthProvider(user.AuthProvider.String)
+}
+
 // UserByUsername returns the account with exactly this name, or nil.
 func (s *Service) UserByUsername(ctx context.Context, username string) (*Account, error) {
 	return getUserByUsername(ctx, s.db, username)

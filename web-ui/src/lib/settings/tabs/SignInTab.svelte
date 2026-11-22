@@ -16,7 +16,7 @@
 		getEnrollment,
 		getLdap,
 		getOidc,
-		getTotpEnabled,
+		getTotpStatus,
 		getTwoFactorPolicy,
 		renewRecoveryCodes,
 		saveClientSessions,
@@ -144,6 +144,8 @@
 	type TotpView = 'loading' | 'error' | 'off' | 'on' | 'setup' | 'codes' | 'disable' | 'renew';
 	let totpView = $state<TotpView>('loading');
 	let totpOn = $state<boolean | null>(null);
+	/** Turning it off asks the password, or a current code where the account has none here */
+	let disableWithCode = $state(false);
 	let totpError = $state('');
 	let totpNote = $state<Line>(NO_LINE);
 	let setup = $state.raw<{ qrCode: string; secret: string } | null>(null);
@@ -162,7 +164,9 @@
 	async function loadTotp() {
 		totpView = 'loading';
 		try {
-			totpOn = await getTotpEnabled();
+			const status = await getTotpStatus();
+			totpOn = status.enabled;
+			disableWithCode = status.disableWith === 'code';
 			totpView = totpOn ? 'on' : 'off';
 		} catch (err) {
 			totpError = errText(err);
@@ -262,7 +266,7 @@
 		}
 		totpBusy = true;
 		try {
-			await disableTotp(disablePassword);
+			await disableTotp(disableWithCode ? { code: disablePassword.trim() } : { password: disablePassword });
 			disablePassword = '';
 			await loadTotp();
 			totpNote = { message: t('settings.totp_disabled_success'), tone: 'ok' };
@@ -800,17 +804,33 @@
 						{:else if totpView === 'disable'}
 							<form class="totp-form" onsubmit={confirmDisable} novalidate>
 								<Notice tone="warning" message={t('settings.totp_disable_warning')} />
-								<Field id="totp-disable-password" label={t('settings.current_password')}>
-									{#snippet children(f)}
-										<Input
-											{...f}
-											type="password"
-											autocomplete="current-password"
-											bind:element={disableEl}
-											bind:value={disablePassword}
-										/>
-									{/snippet}
-								</Field>
+								{#if disableWithCode}
+									<Field id="totp-disable-code" label={t('auth.totp_code')} width="short">
+										{#snippet children(f)}
+											<Input
+												{...f}
+												inputmode="numeric"
+												pattern="[0-9]{6}"
+												maxlength={6}
+												autocomplete="one-time-code"
+												bind:element={disableEl}
+												bind:value={disablePassword}
+											/>
+										{/snippet}
+									</Field>
+								{:else}
+									<Field id="totp-disable-password" label={t('settings.current_password')}>
+										{#snippet children(f)}
+											<Input
+												{...f}
+												type="password"
+												autocomplete="current-password"
+												bind:element={disableEl}
+												bind:value={disablePassword}
+											/>
+										{/snippet}
+									</Field>
+								{/if}
 								<div class="inline-controls">
 									<Button type="submit" variant="danger-quiet" busy={totpBusy}
 										>{t('settings.signin.totp_turn_off')}</Button

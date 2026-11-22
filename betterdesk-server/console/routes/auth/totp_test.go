@@ -319,7 +319,7 @@ func TestTwoFactorEnrolment(t *testing.T) {
 		}
 		want(t, "status signed out", a.get("/api/auth/totp/status"), http.StatusUnauthorized, notSignedIn)
 		a.signIn("alice")
-		const off, on = `{"success":true,"enabled":false}`, `{"success":true,"enabled":true}`
+		const off, on = `{"success":true,"enabled":false,"disable_with":"password"}`, `{"success":true,"enabled":true,"disable_with":"password"}`
 		want(t, "status before", a.get("/api/auth/totp/status"), http.StatusOK, off)
 		want(t, "enable before set-up", a.post("/api/auth/totp/enable", `{"code":"123456"}`), http.StatusBadRequest, `{"success":false,"error":"TOTP not set up"}`)
 

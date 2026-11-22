@@ -218,9 +218,23 @@ export function changePassword(currentPassword: string, newPassword: string, con
 	});
 }
 
+export interface TotpStatus {
+	enabled: boolean;
+	/** What turns it off: the password, or a current code where the account has no password here */
+	disableWith: 'password' | 'code';
+}
+
+export async function getTotpStatus(signal?: AbortSignal): Promise<TotpStatus> {
+	const out = await api(
+		v.looseObject({ enabled: BoolLike, disable_with: v.optional(v.nullable(v.string())) }),
+		'/api/auth/totp/status',
+		{ signal }
+	);
+	return { enabled: out.enabled === true, disableWith: out.disable_with === 'code' ? 'code' : 'password' };
+}
+
 export async function getTotpEnabled(signal?: AbortSignal): Promise<boolean> {
-	const out = await api(v.looseObject({ enabled: BoolLike }), '/api/auth/totp/status', { signal });
-	return out.enabled === true;
+	return (await getTotpStatus(signal)).enabled;
 }
 
 export const TotpSetup = v.looseObject({ qrCode: Text, secret: Text });
@@ -248,8 +262,9 @@ export async function renewRecoveryCodes(code: string): Promise<string[]> {
 	return out.recoveryCodes ?? [];
 }
 
-export function disableTotp(password: string) {
-	return api(Ok, '/api/auth/totp/disable', { method: 'POST', body: { password } });
+/** A local account sends its password, a directory or single sign-on account a current code */
+export function disableTotp(proof: { password: string } | { code: string }) {
+	return api(Ok, '/api/auth/totp/disable', { method: 'POST', body: proof });
 }
 
 /** Settings › Sign-in: whether every local account must have two-factor sign-in */
