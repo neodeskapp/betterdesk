@@ -128,6 +128,16 @@ function trust(t: RelayClient, d: Device) {
 }
 
 describe('device identity and encryption (main session)', () => {
+	// A RustDesk device sends its SignedId only when the relay request asks for
+	// a secure connection; without the flag its first message is the plaintext
+	// password prompt, which the client refuses.
+	test('the relay request asks the device for a secure connection', async () => {
+		const c = await client();
+		const request = c.proto.buildRequestRelay('900100012', 'uuid', 'relay.example', 'key');
+		const onWire = c.proto.decodeRendezvous(c.proto.serializeRendezvous(request));
+		expect(onWire.requestRelay?.secure).toBe(true);
+	});
+
 	test('a device that proves its identity gets the session key and its encrypted password prompt shows', async () => {
 		const t = await relayClient();
 		const d = device(t.c.proto);

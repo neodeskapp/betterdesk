@@ -370,7 +370,9 @@ export class RDProtocol {
 				uuid: uuid,
 				relayServer: relayServer || '',
 				licenceKey: serverKey || '',
-				secure: false,
+				// The device sends its SignedId only when asked for a secure
+				// connection, and the client accepts nothing else first.
+				secure: true,
 				connType: ct,
 				token: ''
 			}
