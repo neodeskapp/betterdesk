@@ -16,9 +16,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/ssrfguard/guardtest"
 )
 
-// testdata/vectors.jsonl.gz was recorded by testdata/nodeoracle/gen.js
-// from web-nodejs/lib/ssrfGuard.js and Node's URL parser. Every line is
-// one call and its answer; the tests replay them all.
+// testdata/vectors.jsonl.gz was recorded from web-nodejs/lib/ssrfGuard.js
+// and Node's URL parser. Every line is one call and its answer; the tests
+// replay them all.
 
 type vectorScenario struct {
 	Name    string   `json:"name"`

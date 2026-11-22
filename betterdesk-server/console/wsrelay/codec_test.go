@@ -18,7 +18,7 @@ import (
 	pb "github.com/unitronix/betterdesk-server/proto"
 )
 
-// codecRecording is testdata/node_codec.json (nodeoracle/codec.js).
+// codecRecording is testdata/node_codec.json, recorded from the old service.
 type codecRecording struct {
 	Peer   string `json:"peer"`
 	Max    int    `json:"max"`
