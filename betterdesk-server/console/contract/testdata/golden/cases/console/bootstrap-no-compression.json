@@ -1906,16 +1906,6 @@
          "countId": null,
          "external": false,
          "group": "Server",
-         "href": "/server-management?tab=terminal",
-         "keywords": "shell console ssh",
-         "page": "server-management:terminal",
-         "text": "Terminal"
-        },
-        {
-         "core": false,
-         "countId": null,
-         "external": false,
-         "group": "Server",
          "href": "/server-management?tab=files",
          "keywords": "file browser",
          "page": "server-management:files",

@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -149,20 +148,6 @@ func treeSnapshot(t *testing.T, base string) []any {
 
 var isoFormat = regexp.MustCompile(`^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$`)
 
-// onlyBelow is a change guard for tests: a change outside dir fails the
-// test and does not happen, whatever a broken check let through.
-func onlyBelow(t *testing.T, dir string) func(paths ...string) error {
-	return func(paths ...string) error {
-		for _, p := range paths {
-			if p != dir && !strings.HasPrefix(p, dir+string(filepath.Separator)) {
-				t.Errorf("a change outside the test's folder got through the checks: %s", p)
-				return fmt.Errorf("test guard: %s is outside %s", p, dir)
-			}
-		}
-		return nil
-	}
-}
-
 // normalize makes a result comparable with the recording: {B} for the
 // base, the fixed folders by their real names, a file's time by its
 // format, a folder's size and the test's own user and group ids as the
@@ -219,27 +204,11 @@ type fileChange struct {
 	// the base)
 	err    string
 	result func(recorded any) any
-	// unchanged: the step changes nothing now, so the tree stays as it was
-	// before it
-	unchanged bool
-	// drop, keep and add edit the recorded tree of this step and of every
-	// later one: the entries at or below a dropped path go, those at or
-	// below a kept path come back as they were before the scenario's first
-	// step, and the added entries come in
-	drop, keep []string
-	add        [][]any
 }
 
 // fileChanges are the steps of the recording where the Go file browser
 // differs on purpose, by scenario and step:
 //
-//   - SM5: a write does not go through a link, also not one that points
-//     nowhere (the recording created server/nothing, and outside/planted.txt
-//     outside every folder) or to itself.
-//   - SM6: a delete or rename acts on a link itself, not on the folder it
-//     points to (the recording removed server/sub through link-in, and
-//     moved it), and the server's folder itself is neither removed nor
-//     moved.
 //   - SM13: without BETTERDESK_PATH, RUSTDESK_DIR and RUSTDESK_PATH the
 //     server's folder is /opt/betterdesk, as for the update and management
 //     routes, not /opt/rustdesk.
@@ -252,24 +221,6 @@ var fileChanges = map[string]map[int]fileChange{
 	"roots, temp folder from TMP":  {0: {bug: "SM13", result: serverDefault}},
 	"roots, temp folder from TEMP": {0: {bug: "SM13", result: serverDefault}},
 	"roots, temp folder /":         {0: {bug: "SM13", result: serverDefault}},
-	"writes": {
-		17: {bug: "SM5", err: "Not a regular file", drop: []string{"server/nothing"}},
-		18: {bug: "SM5", err: "Not a regular file", drop: []string{"outside/planted.txt"}},
-		19: {bug: "SM5", err: "Not a regular file"},
-		38: {bug: "SM5", result: writesListing},
-	},
-	"deletes": {
-		2:  {bug: "SM6", result: answer(map[string]any{"path": "{B}/server/link-in"}), drop: []string{"server/link-in"}, keep: []string{"server/sub"}},
-		3:  {bug: "SM6", err: "ENOENT: no such file or directory, lstat '{B}/server/link-in'"},
-		18: {bug: "SM6", err: ErrChangeRoot.Error(), unchanged: true},
-	},
-	"renames": {
-		11: {
-			bug: "SM6", result: answer(map[string]any{"from": "{B}/server/link-in", "to": "{B}/server/link-in-renamed"}),
-			drop: []string{"server/link-in", "server/link-in-renamed"}, keep: []string{"server/sub"}, add: [][]any{{"server/link-in-renamed", "link", "sub"}},
-		},
-		20: {bug: "SM6", err: ErrChangeRoot.Error(), unchanged: true},
-	},
 }
 
 // answer is a change's answer that does not depend on the recorded one.
@@ -292,82 +243,20 @@ func serverDefault(recorded any) any {
 	return out
 }
 
-// writesListing is the list of the server's folder at the end of the
-// writes: server/nothing was never made, and dangling-out still points
-// nowhere, so it is listed as a link (the old console left it out once it
-// pointed out of the folder).
-func writesListing(recorded any) any {
-	out := maps.Clone(recorded.(map[string]any))
-	var items []any
-	for _, item := range out["items"].([]any) {
-		entry := item.(map[string]any)
-		switch entry["name"] {
-		case "nothing":
-			continue
-		case "dangling":
-			link := maps.Clone(entry)
-			link["name"], link["path"], link["size"] = "dangling-out", "{B}/server/dangling-out", float64(len("../outside/planted.txt"))
-			items = append(items, item, link)
-			continue
-		}
-		items = append(items, item)
-	}
-	out["items"] = items
-	return out
-}
-
-// below reports whether a tree entry's path is p or lies below it.
-func below(entry []any, p string) bool {
-	name := entry[0].(string)
-	return name == p || strings.HasPrefix(name, p+"/")
-}
-
-// editTree applies the edits of the changes so far to a recorded tree,
-// and keeps the snapshot's order: by path, part by part.
-func editTree(recorded any, start []any, changes []fileChange) []any {
-	var tree [][]any
-	for _, e := range recorded.([]any) {
-		tree = append(tree, e.([]any))
-	}
-	for _, c := range changes {
-		for _, p := range append(append([]string(nil), c.drop...), c.keep...) {
-			var kept [][]any
-			for _, e := range tree {
-				if !below(e, p) {
-					kept = append(kept, e)
-				}
-			}
-			tree = kept
-		}
-		for _, p := range c.keep {
-			for _, e := range start {
-				if below(e.([]any), p) {
-					tree = append(tree, e.([]any))
-				}
-			}
-		}
-		tree = append(tree, c.add...)
-	}
-	sort.SliceStable(tree, func(i, j int) bool {
-		a, b := strings.Split(tree[i][0].(string), "/"), strings.Split(tree[j][0].(string), "/")
-		for k := 0; k < len(a) && k < len(b); k++ {
-			if a[k] != b[k] {
-				return a[k] < b[k]
-			}
-		}
-		return len(a) < len(b)
-	})
-	out := make([]any, len(tree))
-	for i, e := range tree {
-		out[i] = e
-	}
-	return out
-}
+// changeOps are the calls of the recording that changed files. The file
+// browser only lists and reads (A194), so they are not replayed, and the
+// folder lists hold only the folders it may read. The scenarios in
+// changeScenarios were about changes, and their lists and reads look at
+// what the changes made, so none of their steps is replayed.
+var (
+	changeOps       = map[string]bool{"write": true, "mkdir": true, "rename": true, "delete": true}
+	changeScenarios = map[string]bool{"writes": true, "folders": true, "renames": true, "deletes": true, "the filesystem root writable": true}
+)
 
 // TestNodeFileVectors replays every call the oracle made of the old
-// serverManagement.js on the same tree and the same environment: folder
-// lists, list, read, write, mkdir, rename and delete must answer the same
-// values and errors and leave the same tree, except where fileChanges
+// serverManagement.js on the same tree and the same environment but the
+// changes (changeOps): folder lists, list and read must answer the same
+// values and errors and leave the tree as it was, except where fileChanges
 // says otherwise.
 func TestNodeFileVectors(t *testing.T) {
 	raw, err := os.ReadFile("testdata/node_files.json")
@@ -381,6 +270,9 @@ func TestNodeFileVectors(t *testing.T) {
 	uid, gid := float64(os.Getuid()), float64(os.Getgid())
 	steps := 0
 	for _, sc := range rec.Scenarios {
+		if changeScenarios[sc.Name] {
+			continue
+		}
 		t.Run(sc.Name, func(t *testing.T) {
 			// The tree in b, the folders every install may read in sys. The
 			// folder's name must not hold a comma, which separates folders
@@ -414,23 +306,25 @@ func TestNodeFileVectors(t *testing.T) {
 			s := New(Options{
 				Getenv: func(k string) string { return env[k] }, WorkDir: real(sc.Cwd), GOOS: "linux",
 				LogDir: sys + "/var/log", TempDirs: []string{sys + "/tmp", sys + "/var/tmp"},
-				beforeChange: onlyBelow(t, base),
 			})
-			start := normalize(treeSnapshot(t, base), base, sys, uid, gid).([]any)
-			var changes []fileChange
-			var lastTree any = start
+			start := normalize(treeSnapshot(t, base), base, sys, uid, gid)
 			for i, step := range sc.Steps {
+				if changeOps[step.Op] {
+					continue
+				}
 				steps++
 				change, changed := fileChanges[sc.Name][i]
 				wantErr, wantResult := step.Error, step.Result
 				if changed {
-					changes = append(changes, change)
 					if change.err != "" {
 						wantErr, wantResult = change.err, nil
 					}
 					if change.result != nil {
 						wantErr, wantResult = "", change.result(step.Result)
 					}
+				}
+				if step.Op == "roots" {
+					wantResult = map[string]any{"read": wantResult.(map[string]any)["read"]}
 				}
 				args := make([]string, len(step.Args))
 				for j, a := range step.Args {
@@ -439,20 +333,12 @@ func TestNodeFileVectors(t *testing.T) {
 				var result any
 				switch step.Op {
 				case "roots":
-					result = map[string]any{"read": s.ReadRoots(), "write": s.WriteRoots()}
+					result = map[string]any{"read": s.ReadRoots()}
 					err = nil
 				case "list":
 					result, err = s.ListDirectory(args[0])
 				case "read":
 					result, err = s.ReadFilePreview(args[0])
-				case "write":
-					result, err = s.WriteFile(args[0], args[1])
-				case "mkdir":
-					result, err = s.MakeDirectory(args[0])
-				case "rename":
-					result, err = s.RenamePath(args[0], args[1])
-				case "delete":
-					result, err = s.DeletePath(args[0])
 				default:
 					t.Fatalf("unknown op %s", step.Op)
 				}
@@ -480,26 +366,15 @@ func TestNodeFileVectors(t *testing.T) {
 						t.Errorf("%s:\n got %.1500s\nwant %.1500s", where, gb, wb)
 					}
 				}
-				if step.Tree != nil {
-					want := step.Tree
-					switch {
-					case changed && change.unchanged:
-						want = lastTree
-					case len(changes) > 0:
-						want = editTree(step.Tree, start, changes)
-					}
-					lastTree = want
-					got := normalize(treeSnapshot(t, base), base, sys, uid, gid)
-					if !reflect.DeepEqual(got, want) {
-						gb, _ := json.Marshal(got)
-						wb, _ := json.Marshal(want)
-						t.Errorf("%s: tree\n got %.3000s\nwant %.3000s", where, gb, wb)
-					}
-				}
+			}
+			if got := normalize(treeSnapshot(t, base), base, sys, uid, gid); !reflect.DeepEqual(got, start) {
+				gb, _ := json.Marshal(got)
+				wb, _ := json.Marshal(start)
+				t.Errorf("the tree changed\n got %.3000s\nwant %.3000s", gb, wb)
 			}
 		})
 	}
-	if steps < 250 {
+	if steps < 140 {
 		t.Errorf("only %d steps replayed", steps)
 	}
 }

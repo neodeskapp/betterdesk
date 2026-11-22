@@ -443,16 +443,6 @@
 				"countId": null
 			},
 			{
-				"page": "server-management:terminal",
-				"href": "/server-management?tab=terminal",
-				"text": "Terminal",
-				"group": "Server",
-				"core": false,
-				"keywords": "shell console ssh",
-				"external": false,
-				"countId": null
-			},
-			{
 				"page": "server-management:files",
 				"href": "/server-management?tab=files",
 				"text": "Files",

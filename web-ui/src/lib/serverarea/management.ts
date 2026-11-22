@@ -12,7 +12,7 @@ import type { FileEntry, Sample, ServerPart, Service } from '#lib/api/serverMana
 
 /* ── Tabs ── */
 
-export const TABS = ['overview', 'terminal', 'files', 'services'] as const;
+export const TABS = ['overview', 'files', 'services'] as const;
 export type Tab = (typeof TABS)[number];
 
 /** ?tab= as the server reads it: unknown or missing is the overview */
@@ -21,10 +21,14 @@ export function tabFrom(value: string | null | undefined): Tab {
 	return (TABS as readonly string[]).includes(v) ? (v as Tab) : 'overview';
 }
 
+/** ?tab= of a tab the page no longer has: the page answers not found */
+export function tabGone(value: string | null | undefined): boolean {
+	return String(value ?? '').toLowerCase() === 'terminal';
+}
+
 /** Title key per tab, as the navigation names them */
 export const TAB_TITLE: Record<Tab, string> = {
 	overview: 'nav.server_status',
-	terminal: 'server_mgmt.tab_terminal',
 	files: 'server_mgmt.tab_files',
 	services: 'server_mgmt.tab_services'
 };
@@ -159,12 +163,6 @@ export function upFrom(cwd: string): string {
 	const sep = sepOf(cwd);
 	const trimmed = cwd.replace(/[\\/]+$/, '');
 	return trimmed.replace(/[/\\][^/\\]*$/, '') || sep;
-}
-
-/** Whether files can be changed under a root: true, false, or null when the server doesn't say */
-export function rootWritable(root: string, mutable: readonly string[] | null): boolean | null {
-	if (!mutable) return null;
-	return mutable.some((m) => root === m || root.startsWith(m.replace(/\/+$/, '') + '/'));
 }
 
 export function countEntries(entries: readonly Pick<FileEntry, 'type' | 'isSymlink' | 'isDirectory'>[]): {

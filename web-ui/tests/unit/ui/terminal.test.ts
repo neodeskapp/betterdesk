@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { flushSync } from 'svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import Terminal from '../../../src/lib/ui/Terminal.svelte';
-import { meshAdapter, shellAdapter, socketUrl, type TerminalSession } from '../../../src/lib/ui/terminal.ts';
+import { cdapAdapter, meshAdapter, socketUrl, type TerminalSession } from '../../../src/lib/ui/terminal.ts';
 
 type KeyHandler = (e: KeyboardEvent) => boolean;
 
@@ -146,8 +146,8 @@ async function openShell() {
 	const user = userEvent.setup();
 	const view = render(Terminal, {
 		label: 'Shell',
-		url: '/ws/server-management/terminal',
-		adapter: shellAdapter()
+		url: '/api/cdap/devices/dev1/terminal',
+		adapter: cdapAdapter()
 	});
 	await waitFor(() => expect(sockets).toHaveLength(1));
 	return { user, view, socket: sockets[0]! };
@@ -158,18 +158,18 @@ describe('Terminal', () => {
 		const { socket } = await openShell();
 		expect(xt.instances).toHaveLength(1);
 		expect(term().options).toMatchObject({ convertEol: false, theme: { background: '#111414' } });
-		expect(socket.url).toBe(`ws://${location.host}/ws/server-management/terminal`);
+		expect(socket.url).toBe(`ws://${location.host}/api/cdap/devices/dev1/terminal`);
 		expect(status()).toHaveTextContent('Connecting…');
 		socket.accept();
-		expect(socket.sentJson()).toEqual([{ type: 'init', cols: 80, rows: 24 }]);
+		expect(socket.sentJson()).toEqual([{ cols: 80, rows: 24 }]);
 		expect(screen.getByRole('region', { name: 'Shell' })).toContainElement(term().textarea);
 	});
 
 	test('shows the ready message, writes output and sends what the user types', async () => {
 		const { socket } = await openShell();
 		socket.accept();
-		socket.receive({ type: 'ready', user: 'root', platform: 'linux', pty_available: true });
-		expect(status()).toHaveTextContent('Connected as root on linux.');
+		socket.receive({ type: 'ready' });
+		expect(status()).toHaveTextContent('Connected');
 		socket.receive({ type: 'output', data: 'hello\r\n' });
 		expect(term().written).toContain('hello\r\n');
 
@@ -184,14 +184,14 @@ describe('Terminal', () => {
 	test('a closed socket shows Disconnected and Reconnect opens a new one', async () => {
 		const { user, socket } = await openShell();
 		socket.accept();
-		socket.receive({ type: 'ready', user: 'root', platform: 'linux', pty_available: true });
+		socket.receive({ type: 'ready' });
 		expect(screen.queryByRole('button', { name: 'Reconnect' })).toBeNull();
 
 		socket.close();
 		expect(status()).toHaveTextContent('Disconnected');
 		// Input after the end goes nowhere
 		term().emitData('x');
-		expect(socket.sentJson().map((m) => m.type)).toEqual(['init']);
+		expect(socket.sentJson()).toEqual([{ cols: 80, rows: 24 }]);
 
 		await user.click(screen.getByRole('button', { name: 'Reconnect' }));
 		await waitFor(() => expect(sockets).toHaveLength(2));
@@ -201,7 +201,7 @@ describe('Terminal', () => {
 		expect(term().textarea).toHaveFocus();
 		const next = sockets[1]!;
 		next.accept();
-		next.receive({ type: 'ready', user: 'root', platform: 'linux', pty_available: true });
+		next.receive({ type: 'ready' });
 		// The old socket's late messages don't reach the screen
 		socket.receive({ type: 'output', data: 'stale' });
 		expect(term().written).not.toContain('stale');
@@ -215,22 +215,6 @@ describe('Terminal', () => {
 		expect(status()).toHaveTextContent('Lost the connection to the terminal.');
 		expect(status().querySelector('.status')).toHaveClass('is-danger');
 		expect(screen.getByRole('button', { name: 'Reconnect' })).toBeInTheDocument();
-	});
-
-	test('a shell that ends right away says why', async () => {
-		const { socket } = await openShell();
-		socket.accept();
-		socket.receive({
-			type: 'ready',
-			user: 'node',
-			platform: 'linux',
-			shell: '/bin/bash',
-			pty_available: true
-		});
-		socket.receive({ type: 'output', data: 'execvp(3) failed.: No such file or directory' });
-		socket.receive({ type: 'end', code: 1 });
-		expect(status()).toHaveTextContent("the shell /bin/bash isn't installed");
-		expect(socket.readyState).toBe(3);
 	});
 
 	test('unmounting closes the socket and disposes xterm', async () => {

@@ -1,14 +1,14 @@
 // Package servermgmt is the server management of the console (beta): what
 // the machine the console runs on looks like (processor, memory, disks,
-// network), a file browser confined to a list of folders, the control of
-// BetterDesk's system services, and a terminal: a shell on the machine in
-// the browser (/ws/server-management/terminal).
+// network), a file browser confined to a list of folders that reads and
+// changes nothing, and the control of BetterDesk's system services. It
+// opens no shell.
 //
 // Everything here acts on the machine with the rights of the console's
-// account. The routes and the socket let only accounts with the permission
-// server.config in, and every path the file browser gets goes through the
-// folder lists (see Roots) before anything is opened, written, moved or
-// removed; service names and actions go through fixed allow lists.
+// account. The routes let only accounts with the permission server.config
+// in, and every path the file browser gets goes through the folder list
+// (see ReadRoots) before anything is opened; service names and actions go
+// through fixed allow lists.
 package servermgmt
 
 import (
@@ -18,7 +18,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -28,11 +27,10 @@ type Options struct {
 	// BETTERDESK_PATH, RUSTDESK_DIR and RUSTDESK_PATH (the server's folder,
 	// default /opt/betterdesk or C:\BetterDesk),
 	// BETTERDESK_CONSOLE_PATH (the console's folder, default WorkDir),
-	// BETTERDESK_FILE_ALLOWED_ROOTS and BETTERDESK_MUTABLE_ROOTS (more
-	// folders to read and to change, separated by commas), HOME and
-	// USERPROFILE, TMPDIR, TMP and TEMP (the temp folder), and for the
-	// terminal BETTERDESK_TERMINAL_USER, SERVER_MANAGEMENT_USER, SHELL,
-	// COMSPEC and LANG. Default os.Getenv.
+	// BETTERDESK_FILE_ALLOWED_ROOTS (more folders to read, separated by
+	// commas), HOME and
+	// USERPROFILE, and TMPDIR, TMP and TEMP (the temp folder). Default
+	// os.Getenv.
 	Getenv func(string) string
 	// WorkDir is the folder relative paths are taken from, and the
 	// console's folder when BETTERDESK_CONSOLE_PATH is not set. The old
@@ -64,30 +62,15 @@ type Options struct {
 	// Started is when the process started, for its uptime. Default: when
 	// New was called.
 	Started time.Time
-	// Terminal configures the terminal socket (terminal.go).
-	Terminal TerminalOptions
 
 	// host reads the machine; tests give a made-up one.
 	host func() hostReading
-	// beforeChange sees every path the file browser is about to write,
-	// create, move or remove, after all checks. Tests use it to stop a
-	// change outside their folder; nil lets everything through.
-	beforeChange func(paths ...string) error
 }
 
 // Service is the server management of one console process.
 type Service struct {
 	opts Options
 	host *Host
-
-	ptyOnce sync.Once
-	ptyOK   bool
-
-	// termMu guards the terminals with a shell (by session id) and the
-	// number of the last terminal opened
-	termMu    sync.Mutex
-	terminals map[string]*terminal
-	nextTerm  int64
 }
 
 // New returns the service.
@@ -119,9 +102,8 @@ func New(opts Options) *Service {
 	if opts.host == nil {
 		opts.host = readHost
 	}
-	s := &Service{opts: opts, terminals: map[string]*terminal{}}
+	s := &Service{opts: opts}
 	s.host = &Host{read: opts.host, now: opts.Now}
-	s.opts.Terminal = s.terminalDefaults(opts.Terminal)
 	return s
 }
 

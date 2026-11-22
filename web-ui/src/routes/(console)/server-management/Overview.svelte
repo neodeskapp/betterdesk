@@ -30,7 +30,6 @@
 		type ServerState
 	} from '#lib/serverarea/management.ts';
 	import { around } from '#lib/serverarea/text.ts';
-	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Chart from '#lib/ui/Chart.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
@@ -317,14 +316,6 @@
 					<dd><Version version={nodeVersion} /></dd>
 					<dt>{t('server_mgmt.info_process_id')}</dt>
 					<dd><ValueCopy value={info?.pid} copy={false} /></dd>
-					<dt>{t('server_mgmt.info_pty_available')}</dt>
-					<dd>
-						{#if info}<BooleanStatus
-								value={info.ptyAvailable}
-								on={t('server_mgmt.pty_yes')}
-								off={t('server_mgmt.pty_no')}
-							/>{:else}<Empty />{/if}
-					</dd>
 				</dl>
 			</Disclosure>
 		{/if}

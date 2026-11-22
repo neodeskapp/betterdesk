@@ -73,7 +73,7 @@ FROM alpine:3.22
 LABEL maintainer="trybetterdesk"
 LABEL description="BetterDesk — server and web console in one process"
 LABEL org.opencontainers.image.source="https://github.com/trybetterdesk/betterdesk"
-LABEL version="3.5.278"
+LABEL version="3.5.279"
 
 # Runtime packages (retry for transient DNS failures). sqlite stays for the
 # admin credential bootstrap, which counts users with the sqlite3 CLI.

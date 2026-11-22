@@ -417,22 +417,14 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		CanAccess:    s.deps.DeviceGroups.UserCanAccessDevice,
 		FeaturesOff:  s.deps.Access.ClientFeaturesOff,
 	})
-	// Server management and its terminal. Relative paths and the console's
-	// folder are CONSOLE_DIR, the old console's working directory. A
+	// Server management. Relative paths and the console's folder are
+	// CONSOLE_DIR, the old console's working directory. A
 	// restart of this process's own service is its exit under a supervisor
 	// (A30, spec updater-installers 4.6).
 	s.deps.ServerMgmt = servermgmt.New(servermgmt.Options{
 		Getenv: getenv, WorkDir: cfg.ConsoleDir,
 		RestartSelf: func() bool {
 			return s.deps.Restart.ExitLater(2*time.Second, "[SERVER-MGMT] Restarting after a restart of the server from server management...")
-		},
-		Terminal: servermgmt.TerminalOptions{
-			Audit: func(ctx context.Context, userID int64, action, details, ip string) {
-				if err := audit.Write(ctx, userID, action, details, ip); err != nil {
-					logging.Logf("console", "WARN: [srv-term] audit log failed: %v", err)
-				}
-			},
-			ClientIP: cfg.TrustProxy.ClientIP,
 		},
 	})
 	// The rest of the old console's start sequence: the hourly clean-up,

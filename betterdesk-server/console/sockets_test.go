@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/servermgmt"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
@@ -51,42 +50,31 @@ func TestUpgradeGoesToTheSocketOrThePipeline(t *testing.T) {
 	}
 }
 
-// RV89: the server terminal asks the account's panel access policy, so
-// the console hands its socket registry the policy lookup. An account
-// with write in server-management gets the terminal; one whose policy
-// lowers that section to read is refused at the upgrade.
-func TestServerTerminalFollowsThePanelAccessPolicy(t *testing.T) {
+// TestServerTerminalIsGone: the console has no server terminal (A194).
+// An upgrade to its old address, even by an admin with a session and the
+// right Origin, passes the pipeline like any unknown path and ends in its
+// 404; no shell starts.
+func TestServerTerminalIsGone(t *testing.T) {
 	w := newWorld(t, setup{})
 	addr := strings.TrimPrefix(w.front.URL, "http://")
-	open := func(role string) (int, *wstest.Client) {
-		t.Helper()
-		a := w.agent().signIn(role)
-		var pairs []string
-		for name, value := range a.cookies {
-			pairs = append(pairs, name+"="+value)
-		}
-		c, res, err := wstest.Dial(addr, servermgmt.TerminalPath, http.Header{
-			"Cookie": {strings.Join(pairs, "; ")}, "Origin": {"http://" + addr},
-		})
-		if err != nil {
-			t.Fatalf("%s: dial: %v", role, err)
-		}
-		if c != nil {
-			return http.StatusSwitchingProtocols, c
-		}
-		return res.StatusCode, nil
+	c, res, err := wstest.Dial(addr, "/ws/server-management/terminal", http.Header{
+		"Cookie": {w.agent().signIn("server_admin").cookieHeader()}, "Origin": {"http://" + addr},
+	})
+	if err != nil {
+		t.Fatalf("dial: %v", err)
 	}
-	status, c := open("server_admin")
-	if status != http.StatusSwitchingProtocols {
-		t.Fatalf("server_admin with write in server-management: %d, want the terminal", status)
+	if c != nil {
+		c.Drop()
+		t.Fatal("the old terminal address opened a socket")
 	}
-	c.Drop()
-	w.setSection("server_admin", "server-management", "read")
-	if status, c := open("server_admin"); status != http.StatusForbidden {
-		if c != nil {
-			c.Drop()
-		}
-		t.Errorf("server_admin with read in server-management: %d, want 403", status)
+	if res.StatusCode != http.StatusNotFound {
+		t.Errorf("an upgrade to the old terminal: %d, want the 404", res.StatusCode)
+	}
+	r := httptest.NewRequest("GET", "/ws/server-management/terminal", nil)
+	r.Header.Set("Upgrade", "websocket")
+	r.Header.Set("Connection", "Upgrade")
+	if w.s.Deps().Sockets.Serves(r) {
+		t.Error("a socket takes the old terminal's address")
 	}
 }
 

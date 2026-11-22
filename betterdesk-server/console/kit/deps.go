@@ -146,9 +146,8 @@ type Deps struct {
 	// tokens.
 	RemoteRelay *remoterelay.Service
 	// ServerMgmt is the server management: the machine's resources (also
-	// read by the server attestation), the file browser, the system
-	// services and the terminal socket (services/serverManagement.js,
-	// services/serverTerminalProxy.js).
+	// read by the server attestation), the file browser and the system
+	// services (services/serverManagement.js).
 	ServerMgmt *servermgmt.Service
 }
 
