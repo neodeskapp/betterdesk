@@ -12,6 +12,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -519,28 +521,35 @@ func goOutput(dir string, args ...string) (string, error) {
 	return string(out), nil
 }
 
-// shardRuns are the go test calls of a shard's parts: one per part of a
-// cut package, and one for the whole packages, the longest first (go
-// test starts them in that order).
-func shardRuns(parts []shardPart) [][]string {
+// shardRuns are the go arguments of a shard's calls: one go test per part
+// of a cut package, and one for the whole packages, the longest first (go
+// test starts them in that order). Together they run about one test
+// binary per CPU: the whole packages get the CPUs the parts leave (-p),
+// at least one, unless goFlags set -p.
+func shardRuns(parts []shardPart, goFlags []string, cpus int) [][]string {
+	base := append([]string{"test", "-json"}, goFlags...)
 	var whole []string
 	var runs [][]string
 	for _, p := range parts {
 		if a := p.args(); len(a) > 0 {
-			runs = append(runs, append(append([]string{}, a...), p.pkg))
+			runs = append(runs, append(append(append([]string{}, base...), a...), p.pkg))
 		} else {
 			whole = append(whole, p.pkg)
 		}
 	}
 	if len(whole) > 0 {
-		runs = append(runs, whole)
+		args := append([]string{}, base...)
+		if !slices.ContainsFunc(goFlags, func(a string) bool { return a == "-p" || strings.HasPrefix(a, "-p=") }) {
+			args = append(args, "-p", strconv.Itoa(max(1, cpus-len(runs))))
+		}
+		runs = append(runs, append(args, whole...))
 	}
 	return runs
 }
 
 // runShard runs the go test calls of a shard side by side.
 func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Writer) int {
-	runs := shardRuns(parts)
+	runs := shardRuns(parts, f.goFlags, runtime.NumCPU())
 	module, err := goOutput(dir, "list", "-m")
 	if err != nil {
 		fmt.Fprintln(stderr, "test-shards run:", err)
@@ -550,8 +559,7 @@ func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Wr
 	out.annotate = os.Getenv("GITHUB_ACTIONS") == "true"
 	var wg sync.WaitGroup
 	failed := make([]bool, len(runs))
-	for i, r := range runs {
-		args := append(append([]string{"test", "-json"}, f.goFlags...), r...)
+	for i, args := range runs {
 		cmd := exec.Command("go", args...)
 		cmd.Dir = dir
 		cmd.Stderr = stderr

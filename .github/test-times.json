@@ -522,6 +522,12 @@
       },
       "./console/authn": {
         "seconds": 506.2,
+        "subtests": {
+          "TestScenarios": {
+            "postgres": 62.6,
+            "sqlite": 111.5
+          }
+        },
         "tests": {
           "FuzzOIDCRedirect": 0.1,
           "FuzzRecoveryCode": 0,
@@ -662,6 +668,12 @@
       },
       "./console/branding": {
         "seconds": 201.7,
+        "subtests": {
+          "TestOracleStore": {
+            "postgres": 37.9,
+            "sqlite": 64.0
+          }
+        },
         "tests": {
           "FuzzBrandingSettings": 10.7,
           "FuzzBrandingURL": 6.8,
@@ -1432,6 +1444,14 @@
       },
       "./console/routes/users": {
         "seconds": 558.5,
+        "subtests": {
+          "TestNodeAnswers": {
+            "postgres": 76.9,
+            "postgres-go": 77.0,
+            "sqlite": 170.1,
+            "sqlite-go": 84.9
+          }
+        },
         "tests": {
           "FuzzRequestValues": 0,
           "TestCannotChangeAnAccountAboveYourRole": 7.1,
@@ -2404,6 +2424,12 @@
       },
       "./console/authn": {
         "seconds": 382,
+        "subtests": {
+          "TestScenarios": {
+            "postgres": 0.0,
+            "sqlite": 104.1
+          }
+        },
         "tests": {
           "FuzzOIDCRedirect": 0.1,
           "FuzzRecoveryCode": 0,
@@ -3200,6 +3226,14 @@
       },
       "./console/routes/users": {
         "seconds": 400.5,
+        "subtests": {
+          "TestNodeAnswers": {
+            "postgres": 0.0,
+            "postgres-go": 0.0,
+            "sqlite": 161.3,
+            "sqlite-go": 108.2
+          }
+        },
         "tests": {
           "FuzzRequestValues": 0,
           "TestCannotChangeAnAccountAboveYourRole": 5.5,

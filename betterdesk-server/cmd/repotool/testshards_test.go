@@ -109,8 +109,34 @@ func TestPlanDealsLongestFirstToTheEmptiestShard(t *testing.T) {
 		t.Errorf("shard seconds %v and %v, want 155 and 150", s0, s1)
 	}
 	// One go test for the whole packages, which starts them in that order
-	if runs := shardRuns(shards[0]); !reflect.DeepEqual(runs, [][]string{want[0]}) {
-		t.Errorf("go test runs %q", runs)
+	wantRun := append([]string{"test", "-json", "-race", "-p", "4"}, want[0]...)
+	if runs := shardRuns(shards[0], []string{"-race"}, 4); !reflect.DeepEqual(runs, [][]string{wantRun}) {
+		t.Errorf("go test runs %q, want %q", runs, wantRun)
+	}
+}
+
+func TestShardRunsShareTheCPUs(t *testing.T) {
+	parts := []shardPart{
+		{pkg: "./big", seconds: 200, split: true, names: []string{"TestA"}},
+		{pkg: "./users", seconds: 150, split: true, test: "TestLong", names: []string{"sqlite"}},
+		{pkg: "./a", seconds: 100},
+		{pkg: "./b", seconds: 50},
+	}
+	want := [][]string{
+		{"test", "-json", "-race", "-run", "^(TestA)$", "./big"},
+		{"test", "-json", "-race", "-run", "^TestLong$/^(sqlite)$", "./users"},
+		// Two CPUs are left for the whole packages
+		{"test", "-json", "-race", "-p", "2", "./a", "./b"},
+	}
+	if runs := shardRuns(parts, []string{"-race"}, 4); !reflect.DeepEqual(runs, want) {
+		t.Errorf("go test runs %q, want %q", runs, want)
+	}
+	// Never fewer than one, and a -p of the caller stays
+	if runs := shardRuns(parts, nil, 2); runs[2][3] != "1" {
+		t.Errorf("whole packages run with %q", runs[2])
+	}
+	if runs := shardRuns(parts, []string{"-p=8"}, 4); !reflect.DeepEqual(runs[2], []string{"test", "-json", "-p=8", "./a", "./b"}) {
+		t.Errorf("whole packages run with %q", runs[2])
 	}
 }
 
