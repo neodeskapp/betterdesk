@@ -120,7 +120,7 @@ func TestShapeOfEveryVariant(t *testing.T) {
 			t.Errorf("the signal server's peers table exists = %v, want %v", got, want)
 		}
 		tables := shape.Tables()
-		wantTables := map[storetest.Origin]int{storetest.ConsoleFirst: 55, storetest.NodeFirst: 56, storetest.GoServerFirst: 87}[origin]
+		wantTables := map[storetest.Origin]int{storetest.ConsoleFirst: 55, storetest.NodeFirst: 56, storetest.GoServerFirst: 89}[origin]
 		if len(tables) != wantTables || !sortedStrings(tables) {
 			t.Errorf("%d tables (sorted %v), want %d", len(tables), sortedStrings(tables), wantTables)
 		}
