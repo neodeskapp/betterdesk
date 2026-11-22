@@ -20,15 +20,15 @@ const user = (over: Record<string, unknown> = {}) =>
 	v.parse(ConsoleUser, { id: 5, username: 'anna', role: 'operator', email: 'anna@example.invalid', ...over });
 
 describe('roles a person may give (canAssignUserRole on the server)', () => {
-	test('super admins and the old admin name give every role, global admins three, everyone else none', () => {
+	test('super admins and the old admin name give every role, global admins four, everyone else none', () => {
 		expect(assignableRoles('super_admin')).toContain('super_admin');
 		expect(assignableRoles('admin')).toEqual(assignableRoles('super_admin'));
-		expect(assignableRoles('global_admin')).toEqual(['viewer', 'operator', 'pro']);
-		for (const r of ['server_admin', 'operator', 'viewer', 'pro', '', null, undefined]) {
+		expect(assignableRoles('global_admin')).toEqual(['viewer', 'guest_issuer', 'operator', 'pro']);
+		for (const r of ['server_admin', 'operator', 'viewer', 'pro', 'guest_issuer', '', null, undefined]) {
 			expect(assignableRoles(r)).toEqual([]);
 		}
-		// guest_issuer is never offered: the server never assigns it from the console
-		expect(assignableRoles('super_admin')).not.toContain('guest_issuer');
+		// guest_issuer goes to whoever may give viewer (BUGS L108)
+		expect(assignableRoles('super_admin')).toContain('guest_issuer');
 	});
 
 	test('who may edit, reset or delete an account: its own, a role the editor may give, guest issuers for global admins', () => {
@@ -45,7 +45,7 @@ describe('roles a person may give (canAssignUserRole on the server)', () => {
 	test('a role the editor may not give stays visible and locked, so the current role is clear', () => {
 		const target = user({ role: 'server_admin' });
 		const choices = roleChoices('global_admin', target);
-		expect(choices.map((c) => c.role)).toEqual(['viewer', 'operator', 'server_admin', 'pro']);
+		expect(choices.map((c) => c.role)).toEqual(['viewer', 'guest_issuer', 'operator', 'server_admin', 'pro']);
 		expect(choices.find((c) => c.role === 'server_admin')?.disabled).toBe(true);
 		expect(choices.find((c) => c.role === 'viewer')?.disabled).toBe(false);
 	});

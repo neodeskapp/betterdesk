@@ -17,10 +17,10 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// The roles an account can be given here. guest_issuer is not one of them.
+// The roles an account can be given here.
 var assignableRoles = map[string]bool{
 	"super_admin": true, "admin": true, "server_admin": true, "global_admin": true,
-	"operator": true, "viewer": true, "pro": true,
+	"operator": true, "viewer": true, "pro": true, "guest_issuer": true,
 }
 
 // validRole is VALID_USER_ROLES.has(role).
@@ -28,17 +28,15 @@ func validRole(v jsbind.Value) bool { return v.IsString() && assignableRoles[v.S
 
 // canAssignRole is canAssignUserRole: whether the caller may change an
 // account of the target role (access.MayChangeAccount). The super admin
-// roles may give any role, global_admin operator, viewer and pro, nobody
-// else any. guest_issuer, which global_admin also looks after, is no role
-// an account is given here (validRole).
+// roles may give any role, global_admin operator, viewer, pro and
+// guest_issuer, nobody else any.
 func canAssignRole(caller, target string) bool {
 	return access.MayChangeAccount(0, caller, access.PolicyUser{Role: target})
 }
 
 // mayChange reports whether the caller may change, reset or delete an
 // account, its user groups included (access.MayChangeAccount): its own,
-// or one whose role the caller could give. global_admin also looks after
-// guest_issuer accounts.
+// or one whose role the caller could give.
 func mayChange(r *http.Request, target *account) bool {
 	return access.MayChangeAccount(kit.UserID(r), callerRole(r), access.PolicyUser{ID: target.ID.V, Role: target.role()})
 }

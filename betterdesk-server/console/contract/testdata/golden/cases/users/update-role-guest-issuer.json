@@ -78,7 +78,7 @@
     "global_admin",
     "admin"
    ],
-   "status": 400,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -99,11 +99,30 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid role",
-     "success": false
+     "data": {
+      "auth_provider": "local",
+      "created_at": "<volatile>",
+      "email": "viewer@example.invalid",
+      "folder_ids": [],
+      "id": 3,
+      "last_login": "",
+      "peer_grants": [],
+      "role": "guest_issuer",
+      "strategy_guid": "",
+      "totp_enabled": false,
+      "user_groups": [],
+      "username": "demo_viewer"
+     },
+     "success": true
     }
    }
   }
