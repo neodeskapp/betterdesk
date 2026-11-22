@@ -386,6 +386,10 @@
 	.preview:focus {
 		outline: none;
 	}
+	/* Scrolled to after Generate: its heading and buttons stay clear of the top bar */
+	.preview {
+		scroll-margin-top: calc(var(--topbar-h) + var(--space-4));
+	}
 	.saved-type,
 	.saved-by {
 		display: block;

@@ -155,7 +155,10 @@ for (const role of ROLES) {
 				await expect(sheet.getByRole('combobox')).toHaveCount(0);
 				await expect(sheet.locator('[data-access^="group:"]')).toHaveCount(0);
 				await expect(sheet.locator('.sheet-footer button')).toHaveText(['Close']);
-				await expect(feature('client_actions')).toContainText('Always off');
+				// A162: no Client actions row (nothing was behind it); Tunnel stands for port forwarding too
+				await expect(feature('tunnel')).toContainText('Now:');
+				await expect(feature('client_actions')).toHaveCount(0);
+				await expect(feature('port_forwarding')).toHaveCount(0);
 				await expectNoAxeViolations(page);
 				await page.keyboard.press('Escape');
 				await expect(sheet).toBeHidden();
@@ -170,8 +173,8 @@ for (const role of ROLES) {
 				await expect(section('group:core').getByRole('combobox')).toBeVisible();
 				await expect(section('devices').getByRole('combobox')).toBeVisible();
 				await expect(feature('tunnel').getByRole('combobox')).toBeVisible();
-				await expect(feature('client_actions').getByRole('combobox')).toHaveCount(0);
-				await expect(feature('client_actions')).toContainText('Always off');
+				await expect(feature('client_actions')).toHaveCount(0);
+				await expect(feature('port_forwarding')).toHaveCount(0);
 				await expectNoAxeViolations(page);
 				await page.keyboard.press('Escape');
 				await expect(sheet).toBeHidden();
@@ -253,6 +256,13 @@ for (const role of ROLES) {
 			await page.goto(`${UI}/organizations`);
 			const me = await who(page);
 			const can = (p: string) => me.isSuperAdmin || me.permissions.includes(p);
+			if (!can('user.view')) {
+				// A39: reading organizations needs user.view
+				await expect(noAccess(page)).toBeVisible();
+				await expectNoAxeViolations(page);
+				expect((await page.request.get('/api/panel/org')).status()).toBe(403);
+				return;
+			}
 			await expect(page.getByRole('heading', { level: 1, name: 'Organizations' })).toBeVisible();
 			await expect(page.getByRole('button', { name: 'Create organization' })).toHaveCount(
 				can('org.create') ? 1 : 0
@@ -297,7 +307,9 @@ for (const role of ROLES) {
 				can('org.edit') ? 1 : 0
 			);
 			await page.getByRole('tab', { name: 'Settings' }).click();
-			await expect(page.getByRole('button', { name: 'Save settings' })).toHaveCount(can('org.edit') ? 1 : 0);
+			// A154: the stored settings are read-only; connection rules are on the Policies page
+			await expect(page.getByRole('link', { name: 'Open Policies' })).toBeVisible();
+			await expect(page.getByRole('button', { name: 'Save settings' })).toHaveCount(0);
 			await expect(page.getByRole('button', { name: 'Delete organization…' })).toHaveCount(
 				can('org.delete') ? 1 : 0
 			);

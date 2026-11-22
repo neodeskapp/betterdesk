@@ -50,6 +50,7 @@
 	let { orgId }: { orgId: string } = $props();
 
 	const canEdit = can('org.edit');
+	const canPasswords = can('org.manage_devices');
 	const uid = $props.id();
 
 	/** A contact as the form edits it: tags as the text in their field, a key for the row */
@@ -129,7 +130,8 @@
 		try {
 			const [ab, creds] = await Promise.all([
 				getAddressBook(orgId),
-				listPeerCredentials(orgId).catch(() => null) // not readable here: shown as unknown
+				// The stored password flags need org.manage_devices; without it they show as unknown
+				canPasswords ? listPeerCredentials(orgId).catch(() => null) : Promise.resolve(null)
 			]);
 			const book = parseBook(ab.data);
 			bookExtra = book.extra;
