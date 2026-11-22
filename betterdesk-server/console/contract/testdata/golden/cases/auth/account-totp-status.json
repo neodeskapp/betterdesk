@@ -37,6 +37,7 @@
    "body": {
     "kind": "json",
     "json": {
+     "disable_with": "password",
      "enabled": false,
      "success": true
     }
