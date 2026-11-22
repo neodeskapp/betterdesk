@@ -1,0 +1,46 @@
+{
+ "id": "onboard/install-script",
+ "request": {
+  "method": "GET",
+  "path": "/join/{secret:invite_code}/install.sh",
+  "notes": [
+   "no CSRF token",
+   "no cookies"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "text/x-shellscript; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "20",
+    "ratelimit-policy": "20;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/x-shellscript",
+    "length": 1402,
+    "sha256": "a0995787a0f79b323240ae14a4aedb303dc65ab13ad950ddd845481e7db2fb59",
+    "head": "#!/bin/sh\n# Installs BetterDesk and joins it to <base> with an invite.\n# The script works as long as the invite does.\nset -eu\n\nBASE='<base>'\nCODE='{secret:invite_code}'\n\nif [ \"$(id -u)\" != \"0\" ]; then\n\techo \"Run this as root: curl -fsSL '$BASE/join/$CODE/install.sh' | sudo sh\" >&2\n\texit 1\nfi\n\ncase \""
+   }
+  }
+ ]
+}
