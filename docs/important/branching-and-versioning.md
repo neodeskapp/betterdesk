@@ -42,7 +42,6 @@ Every automated bump updates these together:
 - `betterdesk-server/VERSION` and `betterdesk-server/internal/productversion/VERSION` (Go `go:embed` + builds)
 - `betterdesk.sh`, `betterdesk.ps1`, `betterdesk-docker.sh`, `install.sh`
 - `CHANGELOG.md` (moves `[Unreleased]` → new section)
-- `README.md` (version badge)
 
 **Tier 2 (Docker)**
 
