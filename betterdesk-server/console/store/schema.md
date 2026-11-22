@@ -23,7 +23,8 @@ look in JSON as it did from Node.
   definition Node used.
 - It runs the data fixes that came with those columns: token hashes, bundle
   slugs, bundle product types, and the two default groups. It keeps every
-  access token as its hash only (BUGS RV128).
+  access token as its hash only (BUGS RV128) and deletes the scheduled
+  backup's network share login (BUGS L123).
 - It only adds, with two exceptions on PostgreSQL. No column or table is
   dropped or renamed, and no table is rebuilt. `agent_bundles.product_type`
   gets `SET NOT NULL` and `SET DEFAULT`, see below, and
@@ -252,6 +253,7 @@ release created both tables with the column, so this concerns 2.x files only.
 | `seed device_groups` | Inserts the group `Default` (note `Default device group`, random guid) | the table has no row | after `seed user_groups` | after `seed user_groups` | 727-733, 4947-4951 |
 | `widen alert_rules.condition_value` | Changes the column to `double precision`, then sets every limit to the shortest number that names its four bytes, the value Node and the Go console read (0.1, where the cast alone gives 0.10000000149011612); NaN and the infinities stay. Logs `Migration: widened alert_rules.condition_value to double precision`. Not in Node (BUGS AE4); a Node console started on the wider column reads the same limits | the column is `real` | no step | last step | |
 | `keep access tokens as their hash` | Every row whose `token` holds the token itself gets `token_hash` = the SHA-256 of that token and `token` = `sha256 ` and that hash, so a copy of the database holds no token. Logs `Migration: kept N access tokens as their hash only`. Not in Node (BUGS RV128): the console writes its rows that way, and a Node console after a rollback still finds them by the hash | `token` is not empty and does not start with `sha256 `; runs at every start | last step | last step | |
+| `drop the backup share login` | Deletes the setting `scheduled_backup_smb`, the scheduled backup's network share login with its password in clear, and logs `Migration: deleted the scheduled backup's network share login`. Not in Node (BUGS L123, DECISIONS A155): the console has no share login any more, and nothing writes the setting | the setting is there; runs at every start | last step | last step | |
 
 The slug rules are those of `web-nodejs/services/agentBundleService.js`
 (`slugifyName`, `allocateUniqueSlug`); `SlugifyBundleName` and
@@ -351,6 +353,8 @@ PostgreSQL; `users.totp_secret` is `NOT NULL` in Go's PostgreSQL shape.
 - `access_tokens.token_kind` is not in Node (BUGS RV1).
 - Access tokens are kept as their hash only: Migrate rewrites `token` of
   every row that holds the token itself (BUGS RV128).
+- The scheduled backup's network share login (`scheduled_backup_smb` in
+  `settings`) is deleted (BUGS L123).
 - SQLite: the second `CREATE TABLE IF NOT EXISTS branding_profiles` (697) is
   left out. It could never do anything.
 

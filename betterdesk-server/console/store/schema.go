@@ -246,7 +246,7 @@ func sqliteSteps() []step {
 	)...)
 	s = append(s, seedDefaultGroup("user_groups", "Default user group"), seedDefaultGroup("device_groups", "Default device group"))
 	s = append(s, accessTokenHashes())
-	s = append(s, accessTokenKind(), accessTokensAsHashes())
+	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin())
 	return s
 }
 
@@ -331,7 +331,7 @@ func postgresSteps() []step {
 	s = append(s, createTable("user_avatars"))
 	s = append(s, addColumns(lenient, "settings", "updated_at", "TIMESTAMPTZ DEFAULT NOW()")...)
 	s = append(s, widenConditionValue())
-	s = append(s, accessTokenKind(), accessTokensAsHashes())
+	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin())
 	return s
 }
 
@@ -384,6 +384,27 @@ func accessTokensAsHashes() step {
 			}
 			if len(plain) > 0 {
 				logging.Logf(logComponent, "Migration: kept %d access tokens as their hash only", len(plain))
+			}
+			return nil
+		},
+	}
+}
+
+// dropBackupShareLogin deletes the scheduled backup's network share
+// login, the setting scheduled_backup_smb, which held the share's password
+// in clear (BUGS L123). The console no longer has the login: a backup goes
+// to a folder, where the operating system mounts a share (DECISIONS A155),
+// and nothing writes the setting again.
+func dropBackupShareLogin() step {
+	return step{
+		name: "drop the backup share login",
+		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+			res, err := tx.Exec(ctx, `DELETE FROM settings WHERE key = 'scheduled_backup_smb'`)
+			if err != nil {
+				return err
+			}
+			if n, err := res.RowsAffected(); err == nil && n > 0 {
+				logging.Logf(logComponent, "Migration: deleted the scheduled backup's network share login")
 			}
 			return nil
 		},

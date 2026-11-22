@@ -86,12 +86,16 @@ func SnapshotJSON(snapshot *goapi.Object) ([]byte, error) { return indentJSON(sn
 
 // passwordMembers are the settings rows that hold a password in clear:
 // JSON text of an object, by key, with the member that is the password.
-// The mail settings (package mail) and the scheduled backup's SMB share
-// (package scheduledbackup).
+// The mail settings (package mail).
 var passwordMembers = map[string]string{
-	"smtp_config":          "pass",
-	"scheduled_backup_smb": "password",
+	"smtp_config": "pass",
 }
+
+// shareLoginSetting is the scheduled backup's network share login of
+// older consoles, with its password in clear. The console has no such
+// login any more (DECISIONS A155) and a migration deletes the setting
+// (BUGS L123); a restore of an older backup or settings file leaves it out.
+const shareLoginSetting = "scheduled_backup_smb"
 
 // dropPasswords takes the password out of each setting of a snapshot
 // that holds one. A snapshot is a file people download and keep; the
@@ -205,8 +209,8 @@ type SnapshotOptions struct {
 // warning:
 //
 //   - settings: every key is written as it is in the snapshot, the mail
-//     settings and the SMB share with the stored password when they
-//     bring none;
+//     settings with the stored password when they bring none; an older
+//     snapshot's network share login (shareLoginSetting) is left out;
 //   - branding: through the branding service, which cleans the values;
 //   - users (only when asked, and only a non-empty list): every account is
 //     replaced (restoreUsers), the sign-in tokens of the accounts whose
@@ -226,6 +230,9 @@ func (s *Service) RestoreBackup(ctx context.Context, data any, o SnapshotOptions
 	if settings := prop(cons, "settings"); o.Settings && truthy(settings) {
 		err := func() error {
 			for _, e := range settingEntries(settings) {
+				if e.key == shareLoginSetting {
+					continue
+				}
 				value, err := keepPassword(ctx, db, e.key, e.value)
 				if err != nil {
 					return err

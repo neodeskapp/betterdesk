@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"context"
 	"sort"
 	"strings"
 	"testing"
@@ -139,4 +140,36 @@ func TestStoretestMigratedDatabases(t *testing.T) {
 	if !ran[store.SQLite] {
 		t.Error("EachMigrated did not run on SQLite")
 	}
+}
+
+// The scheduled backup's network share login, with its password in clear,
+// is deleted at the start, once, and the other settings stay (L123).
+func TestMigrateDeletesTheBackupShareLogin(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		mustMigrate(t, db)
+		mustExec(t, db, `INSERT INTO settings (key, value) VALUES ('scheduled_backup_smb', '{"host":"nas","share":"b","password":"hunter2"}'), ('scheduled_backup_config', '{"enabled":true}')`)
+		out := captureLog(t, func() { mustMigrate(t, db) })
+		if !strings.HasSuffix(strings.TrimSuffix(out, "\n"), "[DB] Migration: deleted the scheduled backup's network share login") {
+			t.Errorf("Migrate logged %q", out)
+		}
+		var keys []string
+		rows, err := db.Query(context.Background(), `SELECT key FROM settings ORDER BY key`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for rows.Next() {
+			var k string
+			if err := rows.Scan(&k); err != nil {
+				t.Fatal(err)
+			}
+			keys = append(keys, k)
+		}
+		rows.Close()
+		if strings.Join(keys, ",") != "scheduled_backup_config" {
+			t.Errorf("settings after Migrate: %v", keys)
+		}
+		if again := captureLog(t, func() { mustMigrate(t, db) }); again != "" {
+			t.Errorf("a second Migrate logged %q", again)
+		}
+	})
 }
