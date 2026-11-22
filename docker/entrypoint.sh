@@ -7,6 +7,8 @@ set -e
 # shellcheck source=/dev/null
 . /ensure-app-user.sh
 ensure_betterdesk_user
+# shellcheck source=docker/dsn.sh
+. /docker/dsn.sh
 
 echo "========================================"
 echo "  BetterDesk"
@@ -99,11 +101,11 @@ fi
 
 # The server's database: DB_URL, the SQLite path or the postgres:// URI. A
 # separate auth.db of an older install (AUTH_DB_PATH) is imported into it at
-# the first start.
+# the first start. Log lines name the database without its credentials.
 if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
     if [ -n "${DATABASE_URL}" ]; then
         export DB_URL="${DATABASE_URL}"
-        echo "Database:     PostgreSQL (${DATABASE_URL%%@*}@***)"
+        echo "Database:     PostgreSQL ($(dsn_for_log "$DATABASE_URL"))"
     else
         echo "WARNING: DB_TYPE=postgres but DATABASE_URL not set — falling back to SQLite"
         export DB_URL="/opt/rustdesk/db_v2.sqlite3"
@@ -111,16 +113,15 @@ if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
 else
     export DB_URL="${DB_PATH:-/opt/rustdesk/db_v2.sqlite3}"
     export AUTH_DB_PATH="${AUTH_DB_PATH:-/app/data/auth.db}"
-    echo "Database:     SQLite (${DB_URL})"
+    echo "Database:     SQLite ($(dsn_for_log "$DB_URL"))"
 fi
 
 # Wait for PostgreSQL if configured
 if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
     if [ -n "${DATABASE_URL}" ]; then
         echo "Waiting for PostgreSQL..."
-        PG_HOST=$(echo "$DATABASE_URL" | sed -n 's|.*@\([^:/]*\).*|\1|p')
-        PG_PORT=$(echo "$DATABASE_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
-        PG_PORT=${PG_PORT:-5432}
+        PG_HOST=$(dsn_host "$DATABASE_URL")
+        PG_PORT=$(dsn_port "$DATABASE_URL")
         RETRIES=0
         MAX_RETRIES=30
         while [ "$RETRIES" -lt "$MAX_RETRIES" ]; do

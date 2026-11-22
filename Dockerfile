@@ -79,6 +79,7 @@ ENV BETTERDESK_IMAGE_VERSION=${BETTERDESK_IMAGE_VERSION}
 
 COPY docker/ensure-app-user.sh /ensure-app-user.sh
 COPY docker/entrypoint.sh /entrypoint.sh
+COPY docker/dsn.sh /docker/dsn.sh
 COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.sh
 COPY docker/show-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
 RUN chmod +x /ensure-app-user.sh /entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials

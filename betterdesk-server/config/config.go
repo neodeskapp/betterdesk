@@ -907,13 +907,12 @@ func (c *Config) CDAPTLSRequiredEnabled() bool {
 	return c.CDAPTLSRequired && c.HasTLSCert()
 }
 
-// RedactedDBPath returns a loggable form of DBPath with credentials removed.
+// RedactedDBPath returns a loggable form of DBPath without credentials.
 //
-// GHSA-qxwx-jg77-5v67: the startup banner printed DBPath verbatim, so a
-// PostgreSQL DSN leaked the database password into container logs on every
-// start. Only the scheme, user, host, port and database name are kept; the
-// password is replaced with "xxxxx". SQLite file paths contain no credentials
-// and are returned unchanged.
+// The startup banner prints it (GHSA-qxwx-jg77-5v67). A PostgreSQL DSN keeps
+// its scheme, host, port, database name and query options; the user name and
+// the password go, in the user part and in the query. SQLite file paths
+// contain no credentials and are returned unchanged.
 func RedactedDBPath(dsn string) string {
 	if dsn == "" {
 		return ""
@@ -927,23 +926,17 @@ func RedactedDBPath(dsn string) string {
 		// Unparseable: avoid echoing anything that might contain a secret.
 		return "<unparseable database DSN>"
 	}
-	if parsed.User != nil {
-		if _, hasPassword := parsed.User.Password(); hasPassword {
-			username := parsed.User.Username()
-			parsed.User = url.UserPassword(username, "xxxxx")
-		}
-	}
-	// Query strings can also carry credentials (e.g. password=).
+	parsed.User = nil
 	if parsed.RawQuery != "" {
 		query := parsed.Query()
-		redacted := false
-		for _, key := range []string{"password", "passwd", "pwd"} {
+		removed := false
+		for _, key := range []string{"user", "password", "passwd", "pwd"} {
 			if query.Has(key) {
-				query.Set(key, "xxxxx")
-				redacted = true
+				query.Del(key)
+				removed = true
 			}
 		}
-		if redacted {
+		if removed {
 			parsed.RawQuery = query.Encode()
 		}
 	}

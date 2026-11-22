@@ -18,19 +18,25 @@ func TestRedactedDBPathHidesPassword(t *testing.T) {
 			name:       "postgres dsn with password",
 			dsn:        "postgres://bdesk:S3cr3tP@ss@postgres:5432/betterdesk?sslmode=disable",
 			wantSecret: "S3cr3tP@ss",
-			mustKeep:   []string{"postgres://", "bdesk", "postgres:", "5432", "betterdesk", "sslmode=disable"},
+			mustKeep:   []string{"postgres://", "postgres:", "5432", "betterdesk", "sslmode=disable"},
 		},
 		{
 			name:       "postgres dsn without password",
 			dsn:        "postgres://bdesk@db:5432/betterdesk",
 			wantSecret: "",
-			mustKeep:   []string{"bdesk", "db", "5432"},
+			mustKeep:   []string{"db", "5432"},
 		},
 		{
 			name:       "password in query string",
 			dsn:        "postgres://bdesk@db:5432/betterdesk?password=Hunter2",
 			wantSecret: "Hunter2",
-			mustKeep:   []string{"bdesk", "betterdesk"},
+			mustKeep:   []string{"betterdesk"},
+		},
+		{
+			name:       "user in query string",
+			dsn:        "postgres://db:5432/betterdesk?user=bdesk&password=Hunter2",
+			wantSecret: "Hunter2",
+			mustKeep:   []string{"db", "betterdesk"},
 		},
 	}
 
@@ -39,6 +45,10 @@ func TestRedactedDBPathHidesPassword(t *testing.T) {
 			got := RedactedDBPath(tc.dsn)
 			if tc.wantSecret != "" && strings.Contains(got, tc.wantSecret) {
 				t.Fatalf("redacted DSN still contains the password: %q", got)
+			}
+			// L34: no part of the credentials, the user name included
+			if strings.Contains(got, "bdesk") {
+				t.Fatalf("redacted DSN still names the user: %q", got)
 			}
 			for _, keep := range tc.mustKeep {
 				if !strings.Contains(got, keep) {
