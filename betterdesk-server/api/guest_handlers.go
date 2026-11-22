@@ -51,7 +51,11 @@ func (s *Server) handleGuestAccessCreate(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	}
-	token, grant, err := s.guestAccessStore().Create(body.PeerIDs, username, body.TTLMinutes, body.ViewOnly, body.Label, body.MaxUses)
+	var creatorID int64
+	if account, err := s.db.GetUser(username); err == nil && account != nil {
+		creatorID = account.ID
+	}
+	token, grant, err := s.guestAccessStore().Create(body.PeerIDs, username, creatorID, body.TTLMinutes, body.ViewOnly, body.Label, body.MaxUses)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return

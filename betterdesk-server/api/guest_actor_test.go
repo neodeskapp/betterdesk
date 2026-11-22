@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/unitronix/betterdesk-server/db"
 )
 
 // TestGuestLinksBelongToTheActingAccount: a guest link records the account
@@ -41,5 +42,39 @@ func TestGuestLinksBelongToTheActingAccount(t *testing.T) {
 	}
 	if status, body := callAs(t, srv, asAlice, http.MethodDelete, "/api/guest/access-links/"+link.ID, ""); status != http.StatusOK {
 		t.Errorf("an operator acting for alice revokes her link: %d %s, want 200", status, body)
+	}
+}
+
+// TestGuestLinksKeepTheCreatorsAccountID: a guest link keeps the id of the
+// account it was made for, and its validation names it (created_by_id), so
+// the console holds a guest's session to that account's client features
+// (L164). A creator the server has no account for gives none.
+func TestGuestLinksKeepTheCreatorsAccountID(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	anna := &db.User{Username: "anna", PasswordHash: "x", Role: auth.RoleOperator}
+	if err := database.CreateUser(anna); err != nil || anna.ID == 0 {
+		t.Fatalf("CreateUser: %v (id %d)", err, anna.ID)
+	}
+	for _, c := range []struct {
+		actor string
+		want  int64
+	}{{"anna", anna.ID}, {"nobody", 0}} {
+		as := consoleBridge
+		as.Actor = c.actor
+		status, body := callAs(t, srv, as, http.MethodPost, "/api/guest/access-links", `{"peer_ids":["PEERAAA1"],"ttl_minutes":30}`)
+		var link struct {
+			Token string `json:"token"`
+		}
+		if err := json.Unmarshal([]byte(body), &link); status != http.StatusCreated || err != nil || link.Token == "" {
+			t.Fatalf("create a guest link for %s: %d %s", c.actor, status, body)
+		}
+		_, body = callAs(t, srv, as, http.MethodGet, "/api/guest/access-links/validate?token="+link.Token, "")
+		var grant struct {
+			Valid       bool  `json:"valid"`
+			CreatedByID int64 `json:"created_by_id"`
+		}
+		if err := json.Unmarshal([]byte(body), &grant); err != nil || !grant.Valid || grant.CreatedByID != c.want {
+			t.Errorf("validation of %s's link: %s, want created_by_id %d", c.actor, body, c.want)
+		}
 	}
 }
