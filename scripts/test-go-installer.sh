@@ -550,6 +550,46 @@ test_apt_source_failure_goes_on() (
     case "$out" in *"apt-get update failed for a package source"*) ;; *) fail "the failing package source is not said: $out" ;; esac
 )
 
+# L73: the installers' backup is the server's own (a consistent database
+# copy, PostgreSQL too, the env file, the console's data and certificates)
+# plus the server's keys; a binary without the backup command, or one whose
+# backup fails, gets a copy of the SQLite file as before.
+test_backup_uses_the_servers_backup() (
+    load
+    print_info() { echo "$1"; }
+    print_warning() { echo "$1"; }
+    print_success() { echo "$1"; }
+    BACKUP_DIR="$TEST_DIR/backups"
+    DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
+    printf 'sqlite file\n' > "$DB_PATH"
+    printf 'private key\n' > "$RUSTDESK_PATH/id_ed25519"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<FAKE
+#!/bin/bash
+# Stands in for the binary: upgrade-env --from FILE, backup [--out DIR] (its commands)
+printf '%s|%s\n' "\$*" "\$BETTERDESK_ENV_FILE" > "$TEST_DIR/args"
+[ -f "$TEST_DIR/backup-fails" ] && { echo "open PostgreSQL: refused" >&2; exit 1; }
+printf 'archive\n' > "\$3/betterdesk-full-backup.zip"
+echo "\$3/betterdesk-full-backup.zip"
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    local out list
+    out=$(do_backup_silent 2>&1) || fail "the backup failed: $out"
+    [ "$(cut -d'|' -f2 "$TEST_DIR/args")" = "$CONSOLE_PATH/.env" ] || fail "the server's backup did not get the env file: $(cat "$TEST_DIR/args")"
+    case "$(cut -d'|' -f1 "$TEST_DIR/args")" in "backup --out $BACKUP_DIR/betterdesk_backup_"*) ;; *) fail "the server's backup ran as: $(cat "$TEST_DIR/args")" ;; esac
+    list=$(tar -tzf "$BACKUP_DIR"/betterdesk_backup_*.tar.gz)
+    case "$list" in *betterdesk-full-backup.zip*) ;; *) fail "the backup has no archive of the server: $list" ;; esac
+    case "$list" in *id_ed25519*) ;; *) fail "the backup has no server key: $list" ;; esac
+    case "$list" in *db_v2.sqlite3*) fail "the backup copied the live SQLite file beside the server's backup: $list" ;; esac
+
+    rm -f "$BACKUP_DIR"/*.tar.gz
+    touch "$TEST_DIR/backup-fails"
+    out=$(do_backup_silent 2>&1) || fail "the backup with a failing server backup failed: $out"
+    case "$out" in *"betterdesk-server backup failed"*) ;; *) fail "the failed server backup is not said: $out" ;; esac
+    tar -tzf "$BACKUP_DIR"/betterdesk_backup_*.tar.gz | grep -q 'db_v2.sqlite3$' || fail "without the server's backup the database file is not in the backup"
+    rm -rf "$TEST_DIR"
+)
+
 # A fresh install from the one-liner without --channel takes the stable
 # channel, and while the repository has no stable release it installs the
 # development build, says so and keeps that channel. A channel given
@@ -1019,6 +1059,7 @@ test_channel_and_download_errors
 test_one_command_install
 test_runs_without_term
 test_apt_source_failure_goes_on
+test_backup_uses_the_servers_backup
 test_no_stable_release_installs_dev
 test_rerun_updates_and_forgets_the_password
 test_panel_public_host

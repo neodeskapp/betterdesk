@@ -4449,6 +4449,13 @@ binary_migrates() {
     [ -x "$bin" ] && grep -a -q -F 'migrate -mode sqlite2pg' "$bin" 2>/dev/null
 }
 
+# binary_backs_up [BIN]: true when the binary carries the backup command
+# (the console's full backup, also of PostgreSQL, while the server runs).
+binary_backs_up() {
+    local bin="${1:-$(server_binary_path)}"
+    [ -x "$bin" ] && grep -a -q -F 'backup [--out DIR]' "$bin" 2>/dev/null
+}
+
 # server_migrate ARGS...: the installed binary's migrate command.
 server_migrate() {
     "$(server_binary_path)" migrate "$@"
@@ -6061,11 +6068,22 @@ do_backup_silent() {
     mkdir -p "$backup_path"
     
     print_step "Creating backup: $backup_name"
-    
-    # Backup database
-    if [ -f "$DB_PATH" ]; then
-        cp "$DB_PATH" "$backup_path/"
-        print_info "  - Database"
+
+    # The server's own backup: a consistent copy of the database (SQLite or
+    # PostgreSQL), the env file, the console's data and its certificates,
+    # also while the server runs. An older binary has none: the SQLite file
+    # is copied as it is
+    local archive=""
+    if binary_backs_up && archive=$(server_cmd backup --out "$backup_path" 2>>"$LOG_FILE"); then
+        print_info "  - Database, settings and the console's data ($(basename "$archive"))"
+    else
+        if binary_backs_up; then
+            print_warning "betterdesk-server backup failed (its message is in $LOG_FILE); the backup holds a copy of the database file instead"
+        fi
+        if [ -f "$DB_PATH" ]; then
+            cp "$DB_PATH" "$backup_path/"
+            print_info "  - Database"
+        fi
     fi
     
     # Backup keys

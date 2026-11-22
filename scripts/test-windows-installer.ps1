@@ -847,6 +847,57 @@ function Test-MigrateCommand {
     Remove-Item -Recurse -Force $dir
 }
 
+# L73: the installer's backup is the server's own (database, PostgreSQL
+# too, settings, the console's data) plus the keys; without the backup
+# command, or when it fails, the SQLite file is copied as before.
+function Test-BackupUsesTheServersBackup {
+    $dir = New-TestInstall
+    $probe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ... backup [--out DIR] [--db DSN] ...'
+    if (-not (Test-BinaryBacksUp -Path $probe)) { Fail 'a binary with the backup command is taken for an older one' }
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ...'
+    if (Test-BinaryBacksUp -Path $probe) { Fail 'an older binary is taken for one with the backup command' }
+
+    # The installer's own Do-BackupSilent (an earlier check stands one in)
+    $real = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq 'Do-BackupSilent' }, $false) | Select-Object -First 1
+    . ([scriptblock]::Create($real.Extent.Text))
+    $script:BACKUP_DIR = Join-Path $dir 'backups'
+    $script:DB_PATH = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
+    Set-Content -Path $script:DB_PATH -Value 'sqlite file'
+    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'id_ed25519') -Value 'private key'
+    function Get-ZipNames([string]$Path) {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $z = [System.IO.Compression.ZipFile]::OpenRead($Path)
+        try { return @($z.Entries | ForEach-Object { $_.Name }) } finally { $z.Dispose() }
+    }
+    function Test-BinaryBacksUp { param($Path) $true }
+    function Invoke-ServerCommand {
+        param([string[]]$Arguments, $InputText, $Binary)
+        $script:backupArgs = $Arguments
+        if ($script:backupFails) { return 1 }
+        Set-Content -Path (Join-Path $Arguments[2] 'betterdesk-full-backup.zip') -Value 'archive'
+        return 0
+    }
+    $script:backupFails = $false
+    Do-BackupSilent *> $null
+    $zip = @(Get-ChildItem -Path $script:BACKUP_DIR -Filter '*.zip')[0]
+    if (-not $zip) { Fail 'no backup was made' }
+    else {
+        if ($script:backupArgs[0] -ne 'backup' -or $script:backupArgs[1] -ne '--out' -or $script:backupArgs[2] -notlike (Join-Path $script:BACKUP_DIR 'betterdesk_backup_*')) { Fail "the server's backup ran as: $($script:backupArgs -join ' ')" }
+        $names = Get-ZipNames $zip.FullName
+        if ($names -notcontains 'betterdesk-full-backup.zip' -or $names -notcontains 'id_ed25519') { Fail "the backup holds: $($names -join ', ')" }
+        if ($names -contains 'db_v2.sqlite3') { Fail 'the backup copied the live SQLite file beside the server backup' }
+        Remove-Item -Force $zip.FullName
+    }
+    $script:backupFails = $true
+    $out = (Do-BackupSilent 6>&1 | Out-String -Width 4096)
+    if ($out -notmatch 'betterdesk-server backup failed') { Fail "a failed server backup is not said: $out" }
+    $zip = @(Get-ChildItem -Path $script:BACKUP_DIR -Filter '*.zip')[0]
+    $names = Get-ZipNames $zip.FullName
+    if ($names -notcontains 'db_v2.sqlite3') { Fail "without the server backup the database file is not in the backup: $($names -join ', ')" }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -867,6 +918,7 @@ Test-SecretsAreRandom
 Test-DatabaseUrlOnly
 Test-ReleaseSignatureOnWindows
 Test-MigrateCommand
+Test-BackupUsesTheServersBackup
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

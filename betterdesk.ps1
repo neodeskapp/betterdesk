@@ -3606,9 +3606,18 @@ function Do-BackupSilent {
     New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
     
     Print-Step "Creating backup: $backupName"
-    
-    # Backup database
-    if (Test-Path $script:DB_PATH) {
+
+    # The server's own backup: a consistent copy of the database (SQLite or
+    # PostgreSQL), the env file, the console's data and its certificates,
+    # also while the server runs. An older binary has none: the SQLite file
+    # is copied as it is
+    $serverBackup = $false
+    if (Test-BinaryBacksUp) {
+        $serverBackup = ((Invoke-ServerCommand -Arguments @("backup", "--out", $backupPath)) -eq 0)
+        if ($serverBackup) { Print-Info "  - Database, settings and the console's data" }
+        else { Print-Warning "betterdesk-server backup failed (output above); the backup holds a copy of the database file instead" }
+    }
+    if (-not $serverBackup -and (Test-Path $script:DB_PATH)) {
         Copy-Item -Path $script:DB_PATH -Destination $backupPath
         Print-Info "  - Database"
     }
@@ -5193,6 +5202,14 @@ function Test-BinaryMigrates {
     param([string]$Path = (Get-ServerBinaryPath))
     if (-not $Path -or -not (Test-Path $Path)) { return $false }
     return [bool](Select-String -Path $Path -Pattern 'migrate -mode sqlite2pg' -SimpleMatch -Quiet)
+}
+
+# True when the binary carries the backup command (the console's full
+# backup, also of PostgreSQL, while the server runs).
+function Test-BinaryBacksUp {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'backup [--out DIR]' -SimpleMatch -Quiet)
 }
 
 # The installed binary's migrate command with the arguments given.
