@@ -270,8 +270,9 @@ export class RDRenderer {
 		if (!this._renderLoopActive) return;
 
 		if (this._pendingFrame) {
-			// Count FPS only for genuinely new frames from the peer
-			if ('_isNew' in this._pendingFrame && this._pendingFrame._isNew) {
+			// Count FPS only for genuinely new frames from the peer: every WebCodecs frame is one,
+			// a JMuxer frame only when video was fed since the last one
+			if (!('_isNew' in this._pendingFrame) || this._pendingFrame._isNew) {
 				this._fpsCount++;
 			}
 			this._renderFrame(this._pendingFrame);
