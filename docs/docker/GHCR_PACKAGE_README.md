@@ -7,14 +7,14 @@ This is the **recommended** BetterDesk Docker deployment. One container runs one
 ## Quick start
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/docker-compose.quick.single.yml -o docker-compose.yml
 docker compose pull && docker compose up -d
 ```
 
 Or use the one-line installer (defaults to this image):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/install.sh | sudo bash
 ```
 
 ## Update

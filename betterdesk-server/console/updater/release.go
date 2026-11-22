@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -31,6 +32,9 @@ type Release struct {
 	Asset     *ManifestFile
 	AssetURL  string
 	AssetSize int64
+	// Note says which release the stable channel took while the
+	// repository has no stable release; empty otherwise.
+	Note string
 }
 
 type githubRelease struct {
@@ -54,13 +58,47 @@ var reTag = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$`)
 
 // releasePath is where the API keeps the channel's release: the newest
 // release that is not a pre-release for stable, the pre-release tagged
-// "dev" for development.
+// "dev" for development. While there is no stable release, the stable
+// channel takes stableFallback's release.
 func releasePath(owner, repo, branch string) string {
 	base := "/repos/" + url.PathEscape(owner) + "/" + url.PathEscape(repo) + "/releases/"
 	if branch == BranchDevelopment {
 		return base + "tags/dev"
 	}
 	return base + "latest"
+}
+
+// stableFallback is the release the stable channel takes while the
+// repository has no stable release (DECISIONS A183): the newest published
+// pre-release other than the rolling "dev" one (a release candidate of a
+// v* tag with a suffix, built from the stable branch), else the
+// development build. It returns the release's answer, the branch its
+// manifest names, and a note that says which release it is.
+func (s *Service) stableFallback(ctx context.Context, owner, repo string, bypassCache bool) ([]byte, string, string, error) {
+	base := "/repos/" + url.PathEscape(owner) + "/" + url.PathEscape(repo) + "/releases"
+	body, err := s.gh.apiGet(ctx, base+"?per_page=50", bypassCache)
+	if err != nil {
+		return nil, "", "", err
+	}
+	var list []json.RawMessage
+	if err := json.Unmarshal(body, &list); err != nil {
+		return nil, "", "", errors.New("Invalid JSON from GitHub API")
+	}
+	for _, raw := range list {
+		var r struct {
+			TagName    string `json:"tag_name"`
+			Draft      bool   `json:"draft"`
+			Prerelease bool   `json:"prerelease"`
+		}
+		if json.Unmarshal(raw, &r) == nil && !r.Draft && r.Prerelease && r.TagName != "dev" {
+			return raw, BranchStable, "no stable release yet: the newest pre-release " + r.TagName, nil
+		}
+	}
+	body, err = s.gh.apiGet(ctx, base+"/tags/dev", bypassCache)
+	if err != nil {
+		return nil, "", "", err
+	}
+	return body, BranchDevelopment, "no stable release or pre-release yet: the development build", nil
 }
 
 // lookupRelease finds the channel's release, downloads its manifest and
@@ -72,7 +110,12 @@ func (s *Service) lookupRelease(ctx context.Context, tag string, bypassCache boo
 	if tag != "" {
 		path = "/repos/" + url.PathEscape(owner) + "/" + url.PathEscape(repo) + "/releases/tags/" + url.PathEscape(tag)
 	}
+	manifestBranch, note := branch, ""
 	body, err := s.gh.apiGet(ctx, path, bypassCache)
+	var notFound *GitHubError
+	if tag == "" && branch != BranchDevelopment && errors.As(err, &notFound) && notFound.Status == http.StatusNotFound {
+		body, manifestBranch, note, err = s.stableFallback(ctx, owner, repo, bypassCache)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +126,7 @@ func (s *Service) lookupRelease(ctx context.Context, tag string, bypassCache boo
 	if !reTag.MatchString(gr.TagName) || gr.Draft {
 		return nil, fmt.Errorf("GitHub release %q is not a published release", gr.TagName)
 	}
-	rel := &Release{Tag: gr.TagName, Name: gr.Name, PublishedAt: gr.PublishedAt, Author: gr.Author.Login}
+	rel := &Release{Tag: gr.TagName, Name: gr.Name, PublishedAt: gr.PublishedAt, Author: gr.Author.Login, Note: note}
 	assets := map[string]githubAsset{}
 	for _, a := range gr.Assets {
 		if _, dup := assets[a.Name]; !dup {
@@ -102,7 +145,7 @@ func (s *Service) lookupRelease(ctx context.Context, tag string, bypassCache boo
 	if _, err := s.gh.download(ctx, manifestAsset.URL, file("manifest.json"), maxManifestBytes, &buf); err != nil {
 		return nil, err
 	}
-	manifest, err := ParseManifest(buf.Bytes(), ManifestRules{Owner: owner, Repo: repo, Branch: branch})
+	manifest, err := ParseManifest(buf.Bytes(), ManifestRules{Owner: owner, Repo: repo, Branch: manifestBranch})
 	if err != nil {
 		return nil, err
 	}

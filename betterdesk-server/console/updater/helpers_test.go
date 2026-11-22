@@ -34,6 +34,8 @@ type fakeGitHub struct {
 	routes   map[string]func(*http.Request) *http.Response
 	requests []string
 	headers  []http.Header
+	// listed is the API's list of releases, newest first
+	listed []json.RawMessage
 }
 
 func newFakeGitHub() *fakeGitHub {
@@ -62,6 +64,17 @@ func (f *fakeGitHub) on(key string, fn func(*http.Request) *http.Response) {
 	f.routes[key] = fn
 }
 
+// list puts a release at the top of the API's list of releases.
+func (f *fakeGitHub) list(release json.RawMessage) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.listed = append([]json.RawMessage{release}, f.listed...)
+	listed, _ := json.Marshal(f.listed)
+	f.routes["GET https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50"] = func(*http.Request) *http.Response {
+		return respond(200, string(listed), nil)
+	}
+}
+
 func (f *fakeGitHub) count(prefix string) int {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -88,10 +101,13 @@ func redirect(location string) *http.Response {
 // testRelease is a release the fake GitHub serves.
 type testRelease struct {
 	tag, version, commit, branch string
-	binaries                     map[string][]byte
-	manifest                     *Manifest
-	manifestText                 []byte
-	signature                    []byte
+	// prerelease marks a release of the stable channel published as a
+	// pre-release (a release candidate): it is not the latest release
+	prerelease   bool
+	binaries     map[string][]byte
+	manifest     *Manifest
+	manifestText []byte
+	signature    []byte
 }
 
 // binaryFor is the content of a fake binary: a shell script that prints
@@ -164,10 +180,13 @@ func (f *fakeGitHub) serve(r *testRelease) {
 		f.on("GET "+target, func(*http.Request) *http.Response { return respond(200, string(content), nil) })
 	}
 	release, _ := json.Marshal(map[string]any{
-		"tag_name": r.tag, "name": "BetterDesk " + r.version + "\nnotes", "draft": false, "prerelease": r.branch == BranchDevelopment,
+		"tag_name": r.tag, "name": "BetterDesk " + r.version + "\nnotes", "draft": false, "prerelease": r.prerelease || r.branch == BranchDevelopment,
 		"published_at": "2026-11-18T10:00:00Z", "author": map[string]string{"login": "unitronix"}, "assets": assets,
 	})
-	f.on("GET https://api.github.com"+path, func(*http.Request) *http.Response { return respond(200, string(release), nil) })
+	if !r.prerelease {
+		f.on("GET https://api.github.com"+path, func(*http.Request) *http.Response { return respond(200, string(release), nil) })
+	}
+	f.list(release)
 	if r.tag != "dev" {
 		f.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/releases/tags/"+r.tag, func(*http.Request) *http.Response { return respond(200, string(release), nil) })
 	}

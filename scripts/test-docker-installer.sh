@@ -211,6 +211,8 @@ test_fresh_install_on_postgres() (
     [ "$(env_get DATABASE_URL)" = "postgres://betterdesk:${pass}@postgres:5432/betterdesk?sslmode=disable" ] \
         || fail "DATABASE_URL is $(env_get DATABASE_URL)"
     [ "$(env_get COMPOSE_PROFILES)" = postgres ] || fail "the postgres service is not on"
+    # L70: the address alone names the database
+    if grep -q '^DB_TYPE=' "$BETTERDESK_DIR/.env"; then fail "the settings name the database type besides DATABASE_URL"; fi
     if printf '%s' "$out" | grep -qF "$pass"; then fail "the PostgreSQL password was printed"; fi
     grep -qE '^  postgres:' "$BETTERDESK_DIR/docker-compose.yml" || fail "the compose file has no postgres service"
     rm -rf "$TEST_DIR"
@@ -280,6 +282,24 @@ test_uninstall_says_what_it_leaves() (
     rm -rf "$TEST_DIR"
 )
 
+# L206: --purge of an install on PostgreSQL dumps the database before the
+# volumes go: only BetterDesk stops for the backup, the postgres service
+# keeps running for pg_dump.
+test_purge_dumps_postgres_first() (
+    load
+    mgr 'USE_POSTGRES=true; COMMAND=install; do_install' > /dev/null 2>&1 || fail "the PostgreSQL install failed"
+    : > "$CALLS"
+    local out stop dump down
+    out=$(mgr 'PURGE=true; ASSUME_YES=true; do_uninstall' 2>&1) || fail "--purge --yes failed: $out"
+    if grep -qx 'compose stop -t 30' "$CALLS"; then fail "--purge stopped the postgres service before its dump: $(cat "$CALLS")"; fi
+    stop=$(grep -n '^compose stop -t 30 betterdesk$' "$CALLS" | head -n 1 | cut -d: -f1)
+    dump=$(grep -n '^compose exec -T postgres pg_dump' "$CALLS" | head -n 1 | cut -d: -f1)
+    down=$(grep -n 'down -v' "$CALLS" | head -n 1 | cut -d: -f1)
+    { [ -n "$stop" ] && [ -n "$dump" ] && [ -n "$down" ] && [ "$stop" -lt "$dump" ] && [ "$dump" -lt "$down" ]; } \
+        || fail "--purge did not stop BetterDesk, dump PostgreSQL and then delete the volumes, in that order: $(cat "$CALLS")"
+    rm -rf "$TEST_DIR"
+)
+
 # --help names every option the script takes.
 test_help_lists_every_option() (
     local opt help
@@ -297,9 +317,13 @@ test_postgres_switch_moves_the_data() (
     load
     mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
     env_set COMPOSE_PROFILES guacd
+    # An older .env names its type
+    env_set DB_TYPE sqlite
     : > "$CALLS"
     local out pass stop_line run_line
     out=$(mgr 'ASSUME_YES=true; do_postgres' 2>&1) || fail "the switch failed: $out"
+    # L70: the address alone names the database
+    if grep -q '^DB_TYPE=' "$BETTERDESK_DIR/.env"; then fail "after the switch .env still names a type: $(grep '^DB_TYPE=' "$BETTERDESK_DIR/.env")"; fi
     pass=$(env_get POSTGRES_PASSWORD)
     [ "${#pass}" -ge 32 ] || fail "no PostgreSQL password made"
     [ "$(env_get DATABASE_URL)" = "postgres://betterdesk:${pass}@postgres:5432/betterdesk?sslmode=disable" ] \
@@ -380,6 +404,46 @@ test_rerun_without_changes_keeps_the_container() (
     rm -rf "$TEST_DIR"
 )
 
+# install.sh's Docker path runs betterdesk-docker.sh in the compose folder
+# of the install folder with the options it was given (a split install is
+# taken over with --adopt), and its uninstall runs it for the same folder.
+test_install_sh_runs_the_manager() (
+    local dir
+    dir=$(mktemp -d)
+    # install_sh ARGS...: install.sh's main with ARGS; the download of the
+    # manager gives a stand-in that records how it ran
+    install_sh() {
+        (
+            INSTALL_DIR="$dir/opt"
+            BETTERDESK_RAW_BASE="https://raw.githubusercontent.com/example/fork/dev"
+            # shellcheck disable=SC1091
+            source "$SCRIPT_ROOT/install.sh"
+            require_root() { :; }
+            configure_firewall() { :; }
+            fetch_url_to_file() {
+                printf '#!/bin/sh\n# BETTERDESK_DOCKER_SOURCED stand-in\nprintf "%%s\\n" "$*" > "%s/manager-args"\nprintf "%%s\\n" "$ADMIN_PASSWORD|$BETTERDESK_RAW_BASE" > "%s/manager-env"\n' "$dir" "$dir" > "$2"
+            }
+            main
+        ) > "$dir/out" 2>&1
+    }
+    ADMIN_PASSWORD='Docker-Admin-1' install_sh || fail "install.sh's Docker path failed: $(cat "$dir/out")"
+    [ -x "$dir/opt/docker/betterdesk-docker.sh" ] || fail "the manager is not in the compose folder"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto" ] \
+        || fail "the manager ran as: $(cat "$dir/manager-args")"
+    [ "$(cat "$dir/manager-env")" = "Docker-Admin-1|https://raw.githubusercontent.com/example/fork/dev" ] \
+        || fail "the manager did not get the admin password and the branch's files: $(cat "$dir/manager-env")"
+    install_sh --relay-servers 203.0.113.9 --version 3.6.0 --skip-docker-install || fail "install.sh with options failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay 203.0.113.9 --tag 3.6.0 --no-install-docker" ] \
+        || fail "the manager ran with the options as: $(cat "$dir/manager-args")"
+    printf 'BETTERDESK_DOCKER_LAYOUT=split\n' > "$dir/opt/docker/.env"
+    install_sh || fail "install.sh on a split install failed: $(cat "$dir/out")"
+    case "$(cat "$dir/manager-args")" in *" --adopt"*) ;; *) fail "a split install is not taken over: $(cat "$dir/manager-args")" ;; esac
+    install_sh --uninstall --purge || fail "install.sh's uninstall failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "uninstall --dir $dir/opt/docker --purge --yes" ] \
+        || fail "the uninstall ran the manager as: $(cat "$dir/manager-args")"
+    rm -rf "$dir"
+)
+
 test_fresh_install
 test_update_goes_back_when_unhealthy
 test_update_keeps_compose_edits
@@ -387,11 +451,13 @@ test_fresh_install_on_postgres
 test_foreign_install_is_left_alone
 test_errors_say_what_to_do
 test_uninstall_says_what_it_leaves
+test_purge_dumps_postgres_first
 test_help_lists_every_option
 test_postgres_switch_moves_the_data
 test_postgres_declined_keeps_sqlite
 test_postgres_failed_move_keeps_sqlite
 test_failed_first_install_resumes
 test_rerun_without_changes_keeps_the_container
+test_install_sh_runs_the_manager
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"

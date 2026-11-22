@@ -65,6 +65,9 @@ func (c CLI) Update(ctx context.Context, args []string) int {
 	}
 	c.say("Running: %s %s (%s)", Product, s.opts.Version, orUnknown(s.opts.Commit))
 	c.say("Release: %s %s (%s), tag %s", Product, result.LatestVersion, prefix7(result.RemoteSHA), result.ReleaseTag)
+	if result.note != "" {
+		c.say("Note: %s", result.note)
+	}
 	switch {
 	case result.Signature.Verified:
 		c.say("Signature: verified")

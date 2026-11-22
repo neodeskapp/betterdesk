@@ -268,7 +268,7 @@ If you already run the legacy **two-container** quick-start (`betterdesk-server`
 cd /opt/betterdesk/docker   # or your compose directory
 docker compose down
 
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/docker-compose.quick.single.yml -o docker-compose.yml
 
 # Keep BETTERDESK_IMAGE_TAG / RELAY_SERVERS from your existing .env
 docker compose --env-file .env pull

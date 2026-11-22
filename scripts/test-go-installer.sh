@@ -27,6 +27,13 @@ load() {
     print_info() { :; }
 }
 
+# fake_current_binary: an installed binary that checks release signatures
+# itself (it names verify-release in its help), as this release's does.
+fake_current_binary() {
+    printf '#!/bin/sh\n# verify-release --manifest FILE (the commands it has)\nexit 0\n' > "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+}
+
 # The units an install with the Node.js console has (betterdesk.sh 3.5.221).
 write_node_era_units() {
     cat > "$SERVER_UNIT" <<'UNIT'
@@ -212,10 +219,98 @@ FAKE
     merge_console_env true >/dev/null
     grep -qx 'INIT_ADMIN_PASS=Fresh-Admin-Pass-1' "$CONSOLE_PATH/.env" \
         || fail "a fresh .env has no INIT_ADMIN_PASS of the admin password: $(grep -c INIT_ADMIN_PASS "$CONSOLE_PATH/.env") lines"
-    grep -qx "DB_URL=$RUSTDESK_PATH/db_v2.sqlite3" "$CONSOLE_PATH/.env" || fail "DB_URL of a fresh SQLite install"
+    # The binary stands in for an older one, which reads DB_URL
+    grep -qx "DB_URL=$RUSTDESK_PATH/db_v2.sqlite3" "$CONSOLE_PATH/.env" || fail "DB_URL of a fresh SQLite install on an older binary"
     # L65: a fresh install starts in Managed; .env is only the first
     # default, a mode saved in the console wins
     grep -qx 'ENROLLMENT_MODE=managed' "$CONSOLE_PATH/.env" || fail "a fresh .env does not start in Managed"
+    rm -rf "$TEST_DIR"
+)
+
+# database_lines FILE: the lines of an env file that name the database.
+database_lines() {
+    grep -E '^(DATABASE_URL|DB_URL|DB_TYPE|DB_PATH)=' "$1" | tr '\n' ' '
+}
+
+# L70: the installer writes the database once, as DATABASE_URL, for a
+# binary that reads it; older env files are read as the server reads them.
+test_database_url_only() (
+    load
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+#!/bin/bash
+# Stands in for the binary: upgrade-env --from FILE (the commands it has),
+# and the server's warning "Remove DB_TYPE to use DATABASE_URL". env merge
+# writes the template's lines, or appends those the file lacks
+if [ "$1 $2" = "env merge" ]; then
+    case " $* " in *" --fresh "*) : > "$4" ;; esac
+    grep -q '^DEFAULT_ADMIN_PASSWORD=' "$4" 2>/dev/null || printf 'DEFAULT_ADMIN_PASSWORD=%s\n' "$BD_SUBST_DEFAULT_ADMIN_PASSWORD" >> "$4"
+    grep -q '^DATABASE_URL=' "$4" 2>/dev/null || printf 'DATABASE_URL=%s\n' "$BD_SUBST_DATABASE_URL" >> "$4"
+    echo '{"success":true,"mode":"merge","added":[]}'
+fi
+exit 0
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    ADMIN_PASSWORD='Database-Url-Pass-1'
+    USE_POSTGRESQL=false
+    merge_console_env true >/dev/null
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=$RUSTDESK_PATH/db_v2.sqlite3 " ] \
+        || fail "a fresh SQLite install names its database as: $(database_lines "$CONSOLE_PATH/.env")"
+    local pg='postgres://bd:p&w|d@127.0.0.1:5432/bd?sslmode=disable'
+    rm -f "$CONSOLE_PATH/.env"
+    USE_POSTGRESQL=true
+    POSTGRESQL_URI="$pg"
+    merge_console_env true >/dev/null
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=$pg " ] \
+        || fail "a fresh PostgreSQL install names its database as: $(database_lines "$CONSOLE_PATH/.env")"
+
+    # A move between databases leaves DATABASE_URL alone, also in an older
+    # file (one without its last line end)
+    printf 'SESSION_SECRET=kept\nDB_TYPE=sqlite\nDB_PATH=/old/db.sqlite3\nDATABASE_URL=\nDB_URL=/old/db.sqlite3' > "$CONSOLE_PATH/.env"
+    use_database_in_env postgres "$pg"
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=$pg " ] \
+        || fail "the move to PostgreSQL names the database as: $(database_lines "$CONSOLE_PATH/.env")"
+    grep -qx 'SESSION_SECRET=kept' "$CONSOLE_PATH/.env" || fail "the move lost another line of .env"
+    use_database_in_env sqlite /data/db_v2.sqlite3
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=/data/db_v2.sqlite3 " ] \
+        || fail "the move back to SQLite names the database as: $(database_lines "$CONSOLE_PATH/.env")"
+
+    # An update keeps an older file as it is, and preserves its database
+    printf 'DB_TYPE=postgres\nDATABASE_URL=%s\nDB_URL=%s\n' "$pg" "$pg" > "$CONSOLE_PATH/.env"
+    USE_POSTGRESQL=false
+    POSTGRESQL_URI=""
+    preserve_database_config
+    [ "$USE_POSTGRESQL" = true ] && [ "$POSTGRESQL_URI" = "$pg" ] || fail "an older PostgreSQL install is not seen as one"
+    merge_console_env false >/dev/null
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DB_TYPE=postgres DATABASE_URL=$pg DB_URL=$pg " ] \
+        || fail "an update changed an older file's database: $(database_lines "$CONSOLE_PATH/.env")"
+    # A file of this installer names PostgreSQL by its address alone
+    printf 'DATABASE_URL=%s\n' "$pg" > "$CONSOLE_PATH/.env"
+    USE_POSTGRESQL=false
+    preserve_database_config
+    [ "$USE_POSTGRESQL" = true ] && [ "$POSTGRESQL_URI" = "$pg" ] || fail "DATABASE_URL alone is not seen as PostgreSQL"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    USE_POSTGRESQL=false
+    merge_console_env false >/dev/null
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=$RUSTDESK_PATH/db_v2.sqlite3 " ] \
+        || fail "an update of a file that names no database writes: $(database_lines "$CONSOLE_PATH/.env")"
+
+    # Read as the server reads them (envvar.DatabaseFrom)
+    local file="$TEST_DIR/read.env" want text
+    while IFS='|' read -r want text; do
+        printf '%b' "$text" > "$file"
+        [ "$(env_database_type "$file") $(env_database_url "$file")" = "$want" ] \
+            || fail "$text is read as '$(env_database_type "$file") $(env_database_url "$file")', want '$want'"
+    done <<'CASES'
+postgres postgres://a@h/d|DB_TYPE=postgres\nDATABASE_URL=postgres://a@h/d\nDB_URL=postgres://a@h/d\n
+sqlite /old/db|DB_TYPE=sqlite\nDATABASE_URL=\nDB_URL=/old/db\n
+sqlite /old/db|DB_TYPE=sqlite\nDATABASE_URL=postgres://a@h/d\nDB_URL=/old/db\n
+sqlite |DB_TYPE=SQLite\nDATABASE_URL=postgres://a@h/d\nDB_URL=postgresql://a@h/d\n
+postgres postgresql://a@h/d|DATABASE_URL=postgresql://a@h/d\n
+postgres postgres://a@h/d|DATABASE_URL=\nDB_URL=postgres://a@h/d\n
+sqlite /srv/db.sqlite3|DATABASE_URL=sqlite:///srv/db.sqlite3\nDB_URL=/other\n
+sqlite /srv/db.sqlite3|DATABASE_URL=SQLite:/srv/db.sqlite3\n
+sqlite |SESSION_SECRET=x\n
+CASES
     rm -rf "$TEST_DIR"
 )
 
@@ -264,6 +359,7 @@ test_update_channel_before_server_update() (
     SERVER_BINARY_FILE=""
     FROM_SOURCE=false
     unset RELEASE_BASE_URL
+    fake_current_binary
     server_cmd() {
         grep '^UPDATE_GITHUB_BRANCH=' "$CONSOLE_PATH/.env" > "$TEST_DIR/seen"
         return 1
@@ -410,6 +506,230 @@ test_one_command_install() (
     install_manager_command >/dev/null
     [ -x "$MANAGER_COMMAND" ] || fail "no betterdesk command was left behind"
     cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/betterdesk.sh" || fail "the betterdesk command is not this installer"
+    # Piped from curl, it fetches itself from the repository's default
+    # branch, whatever the release channel: main holds upstream's older
+    # installer
+    rm -f "$MANAGER_COMMAND"
+    BETTERDESK_SELF=""
+    UPDATE_GITHUB_BRANCH=main
+    curl() {
+        local a prev="" dest=""
+        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
+        printf '%s\n' "${!#}" > "$TEST_DIR/fetched"
+        cp "$SCRIPT_ROOT/betterdesk.sh" "$dest"
+    }
+    install_manager_command >/dev/null
+    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/betterdesk.sh" ] \
+        || fail "the betterdesk command came from $(cat "$TEST_DIR/fetched")"
+    unset -f curl
+    rm -rf "$TEST_DIR"
+)
+
+# L201: a run without a terminal or TERM (cloud-init, CI, ssh host cmd)
+# gets past the header instead of stopping at clear under set -e.
+test_runs_without_term() (
+    load
+    local out
+    # A shell of its own: set -e is in force there as in a run of the script
+    out=$(env -u TERM bash -c 'script=$1; set --; source "$script"; print_header; echo "after the header"' \
+        test "$SCRIPT_ROOT/betterdesk.sh" 2>&1 < /dev/null) || true
+    case "$out" in *"after the header"*) ;; *) fail "the header stopped a run without TERM: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# L207: a package source that fails in apt-get update (a third-party
+# repository, a mirror in sync) does not stop the install: the packages are
+# installed from the lists there are, and the run says so.
+test_apt_source_failure_goes_on() (
+    local out
+    out=$(bash -c 'script=$1; set --; source "$script"
+        LOG_FILE=/dev/null
+        apt-get() { if [ "$1" = update ]; then echo "E: Failed to fetch https://packages.example.org/Packages.xz" >&2; return 100; fi; echo "apt-get $*"; }
+        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/betterdesk.sh" 2>&1 < /dev/null) || true
+    case "$out" in *"apt-get install -y -qq sqlite3"*"after the dependencies"*) ;; *) fail "a failing package source stopped the install: $out" ;; esac
+    case "$out" in *"apt-get update failed for a package source"*) ;; *) fail "the failing package source is not said: $out" ;; esac
+)
+
+# L73: the installers' backup is the server's own (a consistent database
+# copy, PostgreSQL too, the env file, the console's data and certificates)
+# plus the server's keys; a binary without the backup command, or one whose
+# backup fails, gets a copy of the SQLite file as before.
+test_backup_uses_the_servers_backup() (
+    load
+    print_info() { echo "$1"; }
+    print_warning() { echo "$1"; }
+    print_success() { echo "$1"; }
+    BACKUP_DIR="$TEST_DIR/backups"
+    DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
+    printf 'sqlite file\n' > "$DB_PATH"
+    printf 'private key\n' > "$RUSTDESK_PATH/id_ed25519"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<FAKE
+#!/bin/bash
+# Stands in for the binary: upgrade-env --from FILE, backup [--out DIR] (its commands)
+printf '%s|%s\n' "\$*" "\$BETTERDESK_ENV_FILE" > "$TEST_DIR/args"
+[ -f "$TEST_DIR/backup-fails" ] && { echo "open PostgreSQL: refused" >&2; exit 1; }
+printf 'archive\n' > "\$3/betterdesk-full-backup.zip"
+echo "\$3/betterdesk-full-backup.zip"
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    local out list
+    out=$(do_backup_silent 2>&1) || fail "the backup failed: $out"
+    [ "$(cut -d'|' -f2 "$TEST_DIR/args")" = "$CONSOLE_PATH/.env" ] || fail "the server's backup did not get the env file: $(cat "$TEST_DIR/args")"
+    case "$(cut -d'|' -f1 "$TEST_DIR/args")" in "backup --out $BACKUP_DIR/betterdesk_backup_"*) ;; *) fail "the server's backup ran as: $(cat "$TEST_DIR/args")" ;; esac
+    list=$(tar -tzf "$BACKUP_DIR"/betterdesk_backup_*.tar.gz)
+    case "$list" in *betterdesk-full-backup.zip*) ;; *) fail "the backup has no archive of the server: $list" ;; esac
+    case "$list" in *id_ed25519*) ;; *) fail "the backup has no server key: $list" ;; esac
+    case "$list" in *db_v2.sqlite3*) fail "the backup copied the live SQLite file beside the server's backup: $list" ;; esac
+
+    rm -f "$BACKUP_DIR"/*.tar.gz
+    touch "$TEST_DIR/backup-fails"
+    out=$(do_backup_silent 2>&1) || fail "the backup with a failing server backup failed: $out"
+    case "$out" in *"betterdesk-server backup failed"*) ;; *) fail "the failed server backup is not said: $out" ;; esac
+    tar -tzf "$BACKUP_DIR"/betterdesk_backup_*.tar.gz | grep -q 'db_v2.sqlite3$' || fail "without the server's backup the database file is not in the backup"
+    rm -rf "$TEST_DIR"
+)
+
+# workflow_step NAME|ID: the run script of a step of release-go.yml, as
+# bash runs it (the block below its run: |, without the YAML indent)
+workflow_step() {
+    awk -v want="$1" '
+        /^      - (id|name): / { inside = (index($0, want) > 0); next }
+        inside && /^        run: \|/ { body = 1; next }
+        body && /^          / { print substr($0, 11); next }
+        body && !/^[[:space:]]*$/ { exit }
+        body { print "" }
+    ' "$SCRIPT_ROOT/.github/workflows/release-go.yml"
+}
+
+# L210 (A183): release-go.yml publishes a v* tag with a suffix
+# (v3.6.0-rc.1) as a GitHub pre-release, never the latest release; a
+# version without one is the latest release.
+test_release_workflow_publishes_candidates_as_prereleases() (
+    local dir version plan publish
+    dir=$(mktemp -d)
+    plan=$(workflow_step 'id: plan' | sed 's/\${{ inputs.channel }}//')
+    publish=$(workflow_step 'name: Publish')
+    [ -n "$plan" ] && [ -n "$publish" ] || fail "release-go.yml has no plan or Publish step"
+    for version in 3.6.0-rc.1 3.6.0; do
+        mkdir -p "$dir/$version/betterdesk-server/internal/productversion" "$dir/$version/dist"
+        printf '%s\n' "$version" > "$dir/$version/betterdesk-server/internal/productversion/VERSION"
+        touch "$dir/$version/dist/betterdesk-server-linux-amd64" "$dir/$version/dist/manifest.json" "$dir/$version/dist/SHA256SUMS"
+        (
+            cd "$dir/$version"
+            SERVER_DIR=betterdesk-server GITHUB_REF_TYPE=tag GITHUB_REF_NAME="v$version" GITHUB_OUTPUT="$dir/$version/out" \
+                bash -c "$plan" >/dev/null
+            # The outputs reach the Publish step as its env does
+            export GH_LOG="$dir/$version/gh"
+            gh() { printf '%s\n' "$*" >> "$GH_LOG"; [ "$1 $2" != "release view" ]; }
+            export -f gh
+            TAG=$(sed -n 's/^tag=//p' out) VERSION=$(sed -n 's/^version=//p' out) PRERELEASE=$(sed -n 's/^prerelease=//p' out) \
+                GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 bash -c "$publish"
+        ) || fail "the release steps failed for $version"
+    done
+    grep -q -- '^release create v3.6.0-rc.1 .*--prerelease' "$dir/3.6.0-rc.1/gh" || fail "v3.6.0-rc.1 is not made a pre-release: $(cat "$dir/3.6.0-rc.1/gh")"
+    if grep -q -- '--latest' "$dir/3.6.0-rc.1/gh"; then fail "v3.6.0-rc.1 is marked the latest release: $(cat "$dir/3.6.0-rc.1/gh")"; fi
+    grep -q -- '^release edit v3.6.0 --draft=false --latest$' "$dir/3.6.0/gh" || fail "v3.6.0 is not the latest release: $(cat "$dir/3.6.0/gh")"
+    if grep -q -- '--prerelease' "$dir/3.6.0/gh"; then fail "v3.6.0 is made a pre-release: $(cat "$dir/3.6.0/gh")"; fi
+    rm -rf "$dir"
+)
+
+# L210 (A183): while the repository has no stable release, the stable
+# channel installs the newest pre-release that is not the rolling dev one
+# (a release candidate), also with --channel stable or the channel saved in
+# .env, and stays on the stable channel; the run says which release it took.
+test_no_stable_release_installs_the_newest_prerelease() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO RELEASE_BASE_URL
+    load
+    print_info() { echo "$1"; }
+    print_warning() { echo "$1"; }
+    print_error() { echo "$1"; }
+    release_asset_name() { echo betterdesk-server-linux-amd64; }
+    SKIP_VERIFY=true
+    # curl: no stable release; the list of releases, newest first: the dev
+    # pre-release, a draft, two release candidates
+    curl() {
+        local a prev="" dest="" url="${!#}"
+        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
+        case "$url" in
+            https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50)
+                printf '[\n  {\n    "url": "x",\n    "author": {"login": "bot"},\n    "tag_name": "dev",\n    "draft": false,\n    "prerelease": true,\n    "assets": [{"name": "manifest.json"}]\n  },\n'
+                printf '  {"tag_name": "v3.7.0-rc.1", "draft": true, "prerelease": true, "assets": []},\n'
+                printf '  {"tag_name": "v3.6.0-rc.2", "name": "BetterDesk 3.6.0-rc.2", "draft": false, "prerelease": true, "assets": []},\n'
+                printf '  {"tag_name": "v3.6.0-rc.1", "draft": false, "prerelease": true, "assets": []}\n]\n' ;;
+            */releases/download/v3.6.0-rc.2/SHA256SUMS)
+                printf '%s  betterdesk-server-linux-amd64\n' "$(printf 'candidate\n' | sha256sum | cut -d' ' -f1)" > "$dest"
+                printf '200' ;;
+            */releases/download/v3.6.0-rc.2/betterdesk-server-linux-amd64) printf 'candidate\n' > "$dest"; printf '200' ;;
+            *) printf '404' ;;
+        esac
+    }
+    local given
+    for given in "" main saved; do
+        rm -f "$TEST_DIR/betterdesk-server" "$CONSOLE_PATH/.env"
+        unset UPDATE_GITHUB_BRANCH_GIVEN
+        UPDATE_GITHUB_BRANCH=main
+        case "$given" in
+            main) UPDATE_GITHUB_BRANCH_GIVEN=main ;;
+            saved) printf 'UPDATE_GITHUB_BRANCH=main\n' > "$CONSOLE_PATH/.env" ;;
+        esac
+        download_release_binary "$TEST_DIR" > "$TEST_DIR/out" 2>&1 || fail "no stable release and the candidate was not installed ($given): $(cat "$TEST_DIR/out")"
+        [ "$(cat "$TEST_DIR/betterdesk-server")" = candidate ] || fail "the newest pre-release is not staged ($given)"
+        grep -q 'no stable release yet: installing the newest pre-release v3.6.0-rc.2' "$TEST_DIR/out" \
+            || fail "the run does not say which release it took ($given): $(cat "$TEST_DIR/out")"
+        [ "$UPDATE_GITHUB_BRANCH" = main ] || fail "the install left the stable channel for $UPDATE_GITHUB_BRANCH ($given)"
+    done
+    rm -rf "$TEST_DIR"
+)
+
+# A fresh install from the one-liner without --channel takes the stable
+# channel, and while the repository has no stable release and no
+# pre-release it installs the development build, says so and keeps that
+# channel. A channel given (--channel stable) or saved in .env gets no
+# fallback but the error.
+test_no_stable_release_installs_dev() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO RELEASE_BASE_URL
+    load
+    print_info() { echo "$1"; }
+    print_warning() { echo "$1"; }
+    print_error() { echo "$1"; }
+    release_asset_name() { echo betterdesk-server-linux-amd64; }
+    unset UPDATE_GITHUB_BRANCH_GIVEN
+    UPDATE_GITHUB_BRANCH=main
+    SKIP_VERIFY=true
+    # curl: no stable release, a development build
+    curl() {
+        local a prev="" dest="" url="${!#}"
+        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
+        case "$url" in
+            */releases/latest/download/*) printf '404' ;;
+            */releases/download/dev/SHA256SUMS)
+                printf '%s  betterdesk-server-linux-amd64\n' "$(printf 'dev build\n' | sha256sum | cut -d' ' -f1)" > "$dest"
+                printf '200' ;;
+            */releases/download/dev/betterdesk-server-linux-amd64) printf 'dev build\n' > "$dest"; printf '200' ;;
+            *) printf '404' ;;
+        esac
+    }
+    download_release_binary "$TEST_DIR" > "$TEST_DIR/out" 2>&1 || fail "no stable release and no fallback: $(cat "$TEST_DIR/out")"
+    [ -f "$TEST_DIR/betterdesk-server" ] || fail "the development build is not staged"
+    grep -q 'no stable release or pre-release yet: installing the development build' "$TEST_DIR/out" || fail "the fallback is not said: $(cat "$TEST_DIR/out")"
+    grep -q -- '--update --channel stable' "$TEST_DIR/out" || fail "the fallback does not say how to go back to stable: $(cat "$TEST_DIR/out")"
+    [ "$UPDATE_GITHUB_BRANCH" = dev ] && [ "$UPDATE_GITHUB_BRANCH_GIVEN" = dev ] \
+        || fail "the fallback does not keep the development channel ($UPDATE_GITHUB_BRANCH, given ${UPDATE_GITHUB_BRANCH_GIVEN:-none})"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    save_given_update_channel
+    grep -qx 'UPDATE_GITHUB_BRANCH=dev' "$CONSOLE_PATH/.env" || fail "the development channel does not reach .env"
+
+    local out
+    rm -f "$TEST_DIR/betterdesk-server"
+    UPDATE_GITHUB_BRANCH=main
+    UPDATE_GITHUB_BRANCH_GIVEN=main
+    out=$(download_release_binary "$TEST_DIR" 2>&1) && fail "--channel stable installed the development build: $out"
+    case "$out" in *"no stable release yet"*"--channel dev"*) ;; *) fail "--channel stable without a release says: $out" ;; esac
+    case "$out" in *"installing the development build"*) fail "--channel stable fell back: $out" ;; esac
+    unset UPDATE_GITHUB_BRANCH_GIVEN
+    printf 'UPDATE_GITHUB_BRANCH=main\n' > "$CONSOLE_PATH/.env"
+    out=$(download_release_binary "$TEST_DIR" 2>&1) && fail "the channel saved in .env fell back: $out"
     rm -rf "$TEST_DIR"
 )
 
@@ -528,6 +848,7 @@ test_update_asks_the_fork() (
     SERVER_BINARY_FILE=""
     FROM_SOURCE=false
     unset RELEASE_BASE_URL
+    fake_current_binary
     server_cmd() { printf '%s/%s\n' "${UPDATE_GITHUB_OWNER:-}" "${UPDATE_GITHUB_REPO:-}" > "$TEST_DIR/seen"; return 1; }
     printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
     update_go_install >/dev/null 2>&1 || true
@@ -604,6 +925,214 @@ test_port_taken_by_another_program() (
     rm -rf "$TEST_DIR"
 )
 
+# write_release DIR BRANCH: a release folder for BRANCH (main or dev) with
+# two binaries, SHA256SUMS, and manifest.json as release-manifest writes it
+# (json.MarshalIndent), its files out of order. RELEASE_COMMIT is the commit.
+RELEASE_COMMIT=0123456789abcdef0123456789abcdef01234567
+write_release() {
+    local dir="$1" branch="$2" channel=stable amd arm
+    [ "$branch" = dev ] && channel=development
+    mkdir -p "$dir"
+    [ -f "$dir/betterdesk-server-linux-amd64" ] || printf 'the new amd64 server\n' > "$dir/betterdesk-server-linux-amd64"
+    printf 'the new arm64 server\n' > "$dir/betterdesk-server-linux-arm64"
+    amd=$(sha256sum "$dir/betterdesk-server-linux-amd64" | cut -d' ' -f1)
+    arm=$(sha256sum "$dir/betterdesk-server-linux-arm64" | cut -d' ' -f1)
+    cat > "$dir/manifest.json" <<JSON
+{
+  "schema_version": 1,
+  "product": "betterdesk-server",
+  "version": "3.6.0",
+  "channel": "$channel",
+  "created": "2026-11-22T10:00:00Z",
+  "owner": "trybetterdesk",
+  "repo": "betterdesk",
+  "branch": "$branch",
+  "sha": "$RELEASE_COMMIT",
+  "files": [
+    {
+      "path": "betterdesk-server-linux-arm64",
+      "sha256": "$arm",
+      "size": 21,
+      "os": "linux",
+      "arch": "arm64"
+    },
+    {
+      "path": "betterdesk-server-linux-amd64",
+      "sha256": "$amd",
+      "size": 21,
+      "os": "linux",
+      "arch": "amd64"
+    }
+  ]
+}
+JSON
+    printf '%s  betterdesk-server-linux-amd64\n%s  betterdesk-server-linux-arm64\n' "$amd" "$arm" > "$dir/SHA256SUMS"
+}
+
+# sign_release DIR KEY BRANCH: manifest.sig with KEY over the text the
+# release workflow signs (updater.CanonicalPayload), written out here.
+sign_release() {
+    local dir="$1" amd arm
+    amd=$(sha256sum "$dir/betterdesk-server-linux-amd64" | cut -d' ' -f1)
+    arm=$(sha256sum "$dir/betterdesk-server-linux-arm64" | cut -d' ' -f1)
+    printf 'betterdesk-update-manifest-v1\nowner=trybetterdesk\nrepo=betterdesk\nbranch=%s\nsha=%s\nfiles=2\n%s  betterdesk-server-linux-amd64\n%s  betterdesk-server-linux-arm64\n' \
+        "$3" "$RELEASE_COMMIT" "$amd" "$arm" > "$dir/.payload"
+    openssl pkeyutl -sign -inkey "$2" -rawin -in "$dir/.payload" -out "$dir/.sig" 2>/dev/null || fail "openssl could not sign"
+    { base64 -w0 "$dir/.sig"; echo; } > "$dir/manifest.sig"
+    rm -f "$dir/.payload" "$dir/.sig"
+}
+
+# A152: a downloaded binary is installed only when the release's manifest
+# carries a valid signature of the release key and names that binary for
+# the channel. The installed betterdesk-server checks it when it has
+# verify-release, else openssl with the key in the script; an openssl that
+# cannot check ed25519 is said plainly and the SHA-256 check stays.
+test_release_signature() (
+    load
+    if ! command -v openssl >/dev/null || ! openssl pkeyutl -help 2>&1 | grep -q -- -rawin; then
+        echo "skipped: no OpenSSL 3"
+        exit 0
+    fi
+    local rel="$TEST_DIR/release" asset=betterdesk-server-linux-amd64 out rc
+    openssl genpkey -algorithm ed25519 -out "$TEST_DIR/key.pem" 2>/dev/null
+    openssl genpkey -algorithm ed25519 -out "$TEST_DIR/other.pem" 2>/dev/null
+    RELEASE_PUBLIC_KEY_PEM=$(openssl pkey -in "$TEST_DIR/key.pem" -pubout 2>/dev/null)
+    print_error() { echo "$1"; }
+    print_success() { echo "$1"; }
+    # check BRANCH: verify_release_files' status and output
+    check() { rc=0; out=$(verify_release_files "$rel" "$asset" "$1" 2>&1) || rc=$?; }
+
+    write_release "$rel" main
+    sign_release "$rel" "$TEST_DIR/key.pem" main
+    check main
+    [ "$rc" = 0 ] || fail "a release signed with the release key was refused ($rc): $out"
+    case "$out" in *openssl*) ;; *) fail "the check does not say openssl checked it: $out" ;; esac
+    check dev
+    [ "$rc" = 1 ] || fail "a stable release passed for the development channel ($rc): $out"
+
+    printf 'another server\n' > "$rel/$asset"
+    check main
+    [ "$rc" = 1 ] || fail "a binary the manifest does not name passed ($rc): $out"
+    rm -f "$rel/$asset"
+    write_release "$rel" main
+    sign_release "$rel" "$TEST_DIR/key.pem" main
+    sed -i "s/$RELEASE_COMMIT/fedcba9876543210fedcba9876543210fedcba98/" "$rel/manifest.json"
+    check main
+    [ "$rc" = 1 ] || fail "a manifest changed after signing passed ($rc): $out"
+    write_release "$rel" main
+    sign_release "$rel" "$TEST_DIR/other.pem" main
+    check main
+    [ "$rc" = 1 ] || fail "a release signed with another key passed ($rc): $out"
+    rm -f "$rel/manifest.sig"
+    check main
+    [ "$rc" = 1 ] || fail "a release without manifest.sig passed ($rc): $out"
+    write_release "$rel" dev
+    sign_release "$rel" "$TEST_DIR/key.pem" dev
+    check dev
+    [ "$rc" = 0 ] || fail "a development release signed with the release key was refused ($rc): $out"
+
+    # OpenSSL 1.1 checks no ed25519 signature over raw data
+    openssl() { if [ "$1 ${2:-}" = "pkeyutl -help" ]; then echo "Usage: pkeyutl [options] -in file -inkey file"; else echo "OpenSSL 1.1.1w  11 Sep 2023"; fi; }
+    rc=0
+    verify_release_files "$rel" "$asset" dev > "$TEST_DIR/out" 2>&1 || rc=$?
+    unset -f openssl
+    [ "$rc" = 2 ] || fail "an openssl without ed25519 gave $rc: $(cat "$TEST_DIR/out")"
+    case "$RELEASE_CHECK_PROBLEM" in *"OpenSSL 1.1.1w"*) ;; *) fail "the reason names no OpenSSL version: $RELEASE_CHECK_PROBLEM" ;; esac
+
+    # An installed binary with verify-release checks the release itself,
+    # with the release key it carries
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+#!/bin/sh
+# Stands in for the binary: verify-release --manifest FILE (the commands it has)
+printf '%s\n' "$*" > "$(dirname "$0")/verify-args"
+if [ -f "$(dirname "$0")/refuse" ]; then
+    echo "betterdesk-server verify-release: the signature of the manifest does not verify against the release key" >&2
+    exit 1
+fi
+echo "verified: betterdesk-server 3.6.0 (0123456), $7"
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    sign_release "$rel" "$TEST_DIR/other.pem" dev
+    check dev
+    [ "$rc" = 0 ] || fail "the installed binary's check was not used ($rc): $out"
+    [ "$(cat "$RUSTDESK_PATH/verify-args")" = "verify-release --manifest $rel/manifest.json --signature $rel/manifest.sig --name $asset $rel/$asset" ] \
+        || fail "verify-release ran as: $(cat "$RUSTDESK_PATH/verify-args")"
+    case "$out" in *"installed betterdesk-server"*"3.6.0"*) ;; *) fail "the check does not say who checked it: $out" ;; esac
+    check main
+    [ "$rc" = 1 ] || fail "the installed binary's check let another channel's release pass ($rc): $out"
+    touch "$RUSTDESK_PATH/refuse"
+    check dev
+    [ "$rc" = 1 ] || fail "a release the installed binary refused passed ($rc): $out"
+    case "$out" in *"does not verify"*) ;; *) fail "the refusal does not say why: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# A152: the download checks SHA256SUMS and the signature, installs nothing
+# when one fails and says so; --skip-verify skips both.
+test_download_checks_the_signature() (
+    load
+    if ! command -v openssl >/dev/null || ! openssl pkeyutl -help 2>&1 | grep -q -- -rawin; then
+        echo "skipped: no OpenSSL 3"
+        exit 0
+    fi
+    local rel="$TEST_DIR/release" out
+    openssl genpkey -algorithm ed25519 -out "$TEST_DIR/key.pem" 2>/dev/null
+    RELEASE_PUBLIC_KEY_PEM=$(openssl pkey -in "$TEST_DIR/key.pem" -pubout 2>/dev/null)
+    print_info() { echo "$1"; }
+    print_error() { echo "$1"; }
+    print_warning() { echo "$1"; }
+    release_asset_name() { echo betterdesk-server-linux-amd64; }
+    write_release "$rel" main
+    sign_release "$rel" "$TEST_DIR/key.pem" main
+    unset UPDATE_GITHUB_BRANCH_GIVEN RELEASE_BASE_URL
+    UPDATE_GITHUB_BRANCH=main
+    # curl: the stable release's files are the ones in $rel
+    curl() {
+        local a prev="" dest="" url="${!#}"
+        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
+        if [ -f "$rel/${url##*/}" ]; then cp "$rel/${url##*/}" "$dest"; printf '200'; else printf '404'; fi
+    }
+    mkdir -p "$TEST_DIR/stage"
+    out=$(download_release_binary "$TEST_DIR/stage" 2>&1) || fail "a signed release was not installed: $out"
+    [ -f "$TEST_DIR/stage/betterdesk-server" ] || fail "the checked binary is not staged"
+    case "$out" in *"SHA-256"*"signature checked"*) ;; *) fail "the download does not say what it checked: $out" ;; esac
+
+    rm -rf "$TEST_DIR/stage" && mkdir -p "$TEST_DIR/stage"
+    rm -f "$rel/manifest.sig"
+    if out=$(download_release_binary "$TEST_DIR/stage" 2>&1); then fail "a release without a signature was installed: $out"; fi
+    [ ! -f "$TEST_DIR/stage/betterdesk-server" ] || fail "a binary without a signature is staged"
+    case "$out" in *"no signed manifest"*"--skip-verify"*) ;; *) fail "the refusal does not say what to do: $out" ;; esac
+    SKIP_VERIFY=true
+    out=$(download_release_binary "$TEST_DIR/stage" 2>&1) || fail "--skip-verify did not install: $out"
+    case "$out" in *"checks skipped (--skip-verify)"*) ;; *) fail "--skip-verify does not say what it skipped: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# A152: an update of an install whose binary is older than the release key
+# (no verify-release) goes through this installer's own download and
+# check, from the repository .env names, instead of the old updater, which
+# would take a release without checking its signature.
+test_older_binary_updates_through_the_installer() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO
+    load
+    do_backup_silent() { :; }
+    print_step() { :; }
+    print_error() { :; }
+    SERVER_BINARY_FILE=""
+    FROM_SOURCE=false
+    unset RELEASE_BASE_URL
+    printf '#!/bin/sh\n# upgrade-env --from FILE (an older binary)\n' > "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    printf 'UPDATE_GITHUB_OWNER=acme\nUPDATE_GITHUB_REPO=desk\n' > "$CONSOLE_PATH/.env"
+    server_cmd() { echo "server's updater" > "$TEST_DIR/seen"; return 1; }
+    curl() { printf '%s\n' "${!#}" >> "$TEST_DIR/urls"; printf '000'; }
+    update_go_install >/dev/null 2>&1 || true
+    [ ! -e "$TEST_DIR/seen" ] || fail "the older binary's updater ran"
+    grep -q '^https://github.com/acme/desk/releases/' "$TEST_DIR/urls" \
+        || fail "the installer's download did not ask the repository of .env: $(cat "$TEST_DIR/urls" 2>/dev/null)"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -611,6 +1140,7 @@ test_write_server_unit
 test_node_era_detection
 test_kill_stale_processes
 test_fresh_env_admin_password
+test_database_url_only
 test_update_channel_in_env
 test_update_channel_before_server_update
 test_update_channel_kept_without_one
@@ -620,6 +1150,12 @@ test_releases_come_from_the_fork
 test_update_keeps_the_admins_ports
 test_channel_and_download_errors
 test_one_command_install
+test_runs_without_term
+test_apt_source_failure_goes_on
+test_backup_uses_the_servers_backup
+test_release_workflow_publishes_candidates_as_prereleases
+test_no_stable_release_installs_the_newest_prerelease
+test_no_stable_release_installs_dev
 test_rerun_updates_and_forgets_the_password
 test_panel_public_host
 test_install_summary
@@ -628,4 +1164,7 @@ test_update_asks_the_fork
 test_firewall_ports
 test_self_signed_keeps_the_client_api_on_http
 test_port_taken_by_another_program
+test_release_signature
+test_download_checks_the_signature
+test_older_binary_updates_through_the_installer
 echo "Go installer unit checks passed"

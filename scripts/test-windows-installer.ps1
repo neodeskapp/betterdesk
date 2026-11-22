@@ -454,10 +454,20 @@ function Test-ChannelAndDownloadErrors {
     $script:UPDATE_GITHUB_BRANCH = 'main'
     Remove-Item -Force $envFile
     function script:Invoke-WebRequest { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
-    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String)
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String -Width 4096)
     if ($out -notmatch 'no stable release' -or $out -notmatch '-Channel dev' -or $out -notmatch '-Binary') { Fail "a missing stable release says: $out" }
+    # Without a channel given or saved, no stable release yet: the
+    # development build, its channel kept; a given channel gets the error
+    if ($out -notmatch 'installing the development build' -or $out -notmatch '-Update -Channel stable') { Fail "no stable release does not fall back to the development build: $out" }
+    if ($script:UPDATE_GITHUB_BRANCH -ne 'dev' -or $script:UPDATE_GITHUB_BRANCH_GIVEN -ne 'dev') { Fail "the fallback does not keep the development channel: $($script:UPDATE_GITHUB_BRANCH)" }
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = 'main'
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String -Width 4096)
+    if ($out -match 'installing the development build' -or $out -notmatch 'no stable release yet') { Fail "-Channel stable without a release says: $out" }
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
     function script:Invoke-WebRequest { throw [System.Net.WebException]::new('The remote name could not be resolved: github.com') }
-    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String)
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String -Width 4096)
     if ($out -notmatch 'Could not reach' -or $out -notmatch '-Binary') { Fail "a download without network says: $out" }
     Remove-Item function:Invoke-WebRequest -ErrorAction SilentlyContinue
     $script:UPDATE_GITHUB_BRANCH = 'main'
@@ -552,6 +562,8 @@ function Test-UpdateAsksTheFork {
     $script:UPDATE_GITHUB_OWNER_GIVEN, $script:UPDATE_GITHUB_REPO_GIVEN = '', ''
     function script:Invoke-ServerCommand { param([string[]]$Arguments, $InputText, $Binary) $script:seenRepo = "$env:UPDATE_GITHUB_OWNER/$env:UPDATE_GITHUB_REPO"; return 1 }
     function script:Do-BackupSilent { }
+    # The installed binary checks release signatures, so its updater runs
+    function Test-BinaryVerifiesReleases { param($Path) $true }
     $script:BINARY_FILE = ''
     $script:FROM_SOURCE = $false
     $envFile = Join-Path $script:CONSOLE_PATH '.env'
@@ -629,6 +641,311 @@ function Test-SecretsAreRandom {
     if ((Get-Content $installer -Raw) -match 'Get-Random -Count') { Fail 'the installer still draws secrets with Get-Random -Count' }
 }
 
+# L70: for a binary that reads DATABASE_URL the installer names the
+# database there alone; an older binary gets DB_TYPE and DB_URL as it reads
+# them, and older .env files are read as the server reads them.
+function Test-DatabaseUrlOnly {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    function Get-DatabaseLines { (@(Get-Content $envFile | Where-Object { $_ -match '^(DATABASE_URL|DB_URL|DB_TYPE|DB_PATH)=' }) -join ' ') }
+
+    # The binary says by its warning text whether it reads DATABASE_URL
+    $exe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $exe -Value 'upgrade-env --from FILE ... Remove DB_TYPE to use DATABASE_URL ...'
+    if (-not (Test-BinaryReadsDatabaseUrl -Path $exe)) { Fail 'a binary with the DATABASE_URL warning is taken for an older one' }
+    Set-Content -Path $exe -Value 'upgrade-env --from FILE ...'
+    if (Test-BinaryReadsDatabaseUrl -Path $exe) { Fail 'an older binary is taken for one that reads DATABASE_URL' }
+
+    function Get-ServerBinaryPath { 'fake-server' }
+    function Test-BinaryHasSubcommands { param($Path) $true }
+    function Test-BinaryReadsDatabaseUrl { param($Path) $true }
+    function fake-server {
+        if ($args[0] -eq 'env' -and $args[1] -eq 'merge') {
+            $target = $args[3]
+            if ($args -contains '--fresh') { Set-Content -Path $target -Value @() }
+            foreach ($pair in @(@('DEFAULT_ADMIN_PASSWORD', $env:BD_SUBST_DEFAULT_ADMIN_PASSWORD), @('DATABASE_URL', $env:BD_SUBST_DATABASE_URL))) {
+                if (-not (Get-Content $target | Where-Object { $_ -like "$($pair[0])=*" })) { Add-Content -Path $target -Value "$($pair[0])=$($pair[1])" }
+            }
+            Write-Output '{"success":true}'
+        }
+        $global:LASTEXITCODE = 0
+    }
+    $sqlite = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
+    $uri = 'postgres://bd:p&w|d@127.0.0.1:5432/bd?sslmode=disable'
+    $env:ADMIN_PASSWORD = 'Database-Url-Pass-1'
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    Merge-ConsoleEnv -FreshInstall $true *> $null
+    if ((Get-DatabaseLines) -ne "DATABASE_URL=$sqlite") { Fail "a fresh SQLite install names its database as: $(Get-DatabaseLines)" }
+    Remove-Item -Force $envFile
+    $script:USE_POSTGRESQL = $true
+    $script:POSTGRESQL_URI = $uri
+    Merge-ConsoleEnv -FreshInstall $true *> $null
+    if ((Get-DatabaseLines) -ne "DATABASE_URL=$uri") { Fail "a fresh PostgreSQL install names its database as: $(Get-DatabaseLines)" }
+    $env:ADMIN_PASSWORD = $null
+
+    # A move between databases leaves DATABASE_URL alone, also in an older file
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'DB_TYPE=sqlite', 'DB_PATH=C:\old\db.sqlite3', 'DATABASE_URL=', 'DB_URL=C:\old\db.sqlite3')
+    Use-DatabaseInEnv -Type postgres -Address $uri
+    if ((Get-DatabaseLines) -ne "DATABASE_URL=$uri") { Fail "the move to PostgreSQL names the database as: $(Get-DatabaseLines)" }
+    if ((Get-ConsoleEnvValue -Key 'SESSION_SECRET') -ne 'kept') { Fail 'the move lost another line of .env' }
+    Use-SQLiteInstall 'C:\data\db_v2.sqlite3'
+    if ((Get-DatabaseLines) -ne 'DATABASE_URL=C:\data\db_v2.sqlite3') { Fail "the move back to SQLite names the database as: $(Get-DatabaseLines)" }
+
+    # An update keeps an older file as it is and keeps it on PostgreSQL; a
+    # file of this installer names PostgreSQL by its address alone
+    Set-Content -Path $envFile -Value @('DB_TYPE=postgres', "DATABASE_URL=$uri", "DB_URL=$uri")
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    Preserve-DatabaseConfig *> $null
+    if (-not $script:USE_POSTGRESQL -or $script:POSTGRESQL_URI -ne $uri) { Fail 'an older PostgreSQL install is not seen as one' }
+    Merge-ConsoleEnv -FreshInstall $false *> $null
+    if ((Get-DatabaseLines) -ne "DB_TYPE=postgres DATABASE_URL=$uri DB_URL=$uri") { Fail "an update changed an older file's database: $(Get-DatabaseLines)" }
+    Set-Content -Path $envFile -Value @("DATABASE_URL=$uri")
+    $script:USE_POSTGRESQL = $false
+    Preserve-DatabaseConfig *> $null
+    if (-not $script:USE_POSTGRESQL -or $script:POSTGRESQL_URI -ne $uri) { Fail 'DATABASE_URL alone is not seen as PostgreSQL' }
+
+    # Read as the server reads them (envvar.DatabaseFrom)
+    foreach ($case in @(
+            @('postgres postgres://a@h/d', @('DB_TYPE=postgres', 'DATABASE_URL=postgres://a@h/d', 'DB_URL=postgres://a@h/d')),
+            @('sqlite C:\old\db', @('DB_TYPE=sqlite', 'DATABASE_URL=', 'DB_URL=C:\old\db')),
+            @('sqlite C:\old\db', @('DB_TYPE=sqlite', 'DATABASE_URL=postgres://a@h/d', 'DB_URL=C:\old\db')),
+            @('sqlite ', @('DB_TYPE=SQLite', 'DATABASE_URL=postgres://a@h/d', 'DB_URL=postgresql://a@h/d')),
+            @('postgres postgresql://a@h/d', @('DATABASE_URL=postgresql://a@h/d')),
+            @('postgres postgres://a@h/d', @('DATABASE_URL=', 'DB_URL=postgres://a@h/d')),
+            @('sqlite C:\srv\db.sqlite3', @('DATABASE_URL=sqlite://C:\srv\db.sqlite3', 'DB_URL=C:\other')),
+            @('sqlite ', @('SESSION_SECRET=x')))) {
+        Set-Content -Path $envFile -Value $case[1]
+        $got = "$(Get-EnvDatabaseType) $(Get-EnvDatabaseUrl)"
+        if ($got -ne $case[0]) { Fail "$($case[1] -join ' ') is read as '$got', want '$($case[0])'" }
+    }
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    Remove-Item -Recurse -Force $dir
+}
+
+# A152: a download is checked against the release's signed manifest by the
+# installed betterdesk-server (verify-release). A first install has no tool
+# for the signature on Windows: it says plainly that the signature is
+# checked from the second install on, and keeps the SHA-256 check. An
+# update of a binary older than the release key goes through this download,
+# not the old updater.
+function Test-ReleaseSignatureOnWindows {
+    $dir = New-TestInstall
+    $asset = 'betterdesk-server-windows-amd64.exe'
+    $rel = Join-Path $dir 'release'
+    $stage = Join-Path $dir 'stage'
+    New-Item -ItemType Directory -Path $rel, $stage -Force | Out-Null
+    Set-Content -Path (Join-Path $rel $asset) -Value 'the new server'
+    $sum = (Get-FileHash -Path (Join-Path $rel $asset) -Algorithm SHA256).Hash.ToLower()
+    Set-Content -Path (Join-Path $rel 'SHA256SUMS') -Value "$sum  $asset"
+    Set-Content -Path (Join-Path $rel 'manifest.json') -Value @('{', '  "owner": "trybetterdesk",', '  "branch": "main",', '  "files": []', '}')
+    Set-Content -Path (Join-Path $rel 'manifest.sig') -Value 'c2lnbmF0dXJl'
+    function Invoke-WebRequest {
+        param($Uri, $OutFile, [switch]$UseBasicParsing, $ErrorAction)
+        $name = ($Uri -split '/')[-1]
+        $script:downloads += $name
+        $from = Join-Path $rel $name
+        if (-not (Test-Path $from)) { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+        Copy-Item -Path $from -Destination $OutFile -Force
+    }
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $script:SKIP_VERIFY = $false
+
+    # The installed binary says by its help whether it checks signatures
+    $probe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ... verify-release --manifest FILE --signature FILE ...'
+    if (-not (Test-BinaryVerifiesReleases -Path $probe)) { Fail 'a binary with verify-release is taken for an older one' }
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ...'
+    if (Test-BinaryVerifiesReleases -Path $probe) { Fail 'an older binary is taken for one that checks signatures' }
+
+    # A first install: no installed binary
+    $script:downloads = @()
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
+    if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "a first install with a matching SHA-256 installed nothing: $out" }
+    if ($out -notmatch 'checked from the second install on') { Fail "a first install does not say when the signature is checked: $out" }
+    if ($script:downloads -contains 'manifest.sig') { Fail 'a first install fetched a signature it cannot check' }
+
+    # An installed binary with verify-release checks the download
+    function Get-ServerBinaryPath { 'fake-verify' }
+    function Test-BinaryVerifiesReleases { param($Path) $Path -eq 'fake-verify' }
+    function fake-verify {
+        $script:verifyArgs = @($args | ForEach-Object { "$_" })
+        if ($script:refuse) { Write-Output 'betterdesk-server verify-release: the signature of the manifest does not verify against the release key'; $global:LASTEXITCODE = 1; return }
+        Write-Output "verified: betterdesk-server 3.6.0 (0123456), $($args[6])"
+        $global:LASTEXITCODE = 0
+    }
+    $script:refuse = $false
+    Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
+    if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "a release the installed binary checked was not installed: $out" }
+    $want = "verify-release --manifest $(Join-Path $stage 'manifest.json') --signature $(Join-Path $stage 'manifest.sig') --name $asset $(Join-Path $stage $asset)"
+    if (($script:verifyArgs -join ' ') -ne $want) { Fail "verify-release ran as: $($script:verifyArgs -join ' ')" }
+    if ($out -notmatch 'checked by the installed betterdesk-server') { Fail "the download does not say who checked the signature: $out" }
+    $script:refuse = $true
+    Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
+    if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail 'a release the installed binary refused was installed' }
+    if ($out -notmatch 'does not verify' -or $out -notmatch '-SkipVerify') { Fail "the refusal does not say why and what to do: $out" }
+    $script:refuse = $false
+    $script:UPDATE_GITHUB_BRANCH = 'dev'
+    Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
+    if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail "a stable release was installed for the development channel: $out" }
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    Remove-Item -Force (Join-Path $rel 'manifest.sig')
+    Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
+    if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail 'a release without a signature was installed' }
+    if ($out -notmatch 'no signed manifest') { Fail "a release without a signature says: $out" }
+
+    # An update of an older binary does not run its updater
+    function Test-BinaryVerifiesReleases { param($Path) $false }
+    function Do-BackupSilent { }
+    function Invoke-ServerCommand { param([string[]]$Arguments, $InputText, $Binary) $script:updaterRan = $true; return 1 }
+    function Get-StagedServerBinary { $script:ownDownload = $true; $script:STAGED_SERVER_DIR = Join-Path $dir 'staged'; return $false }
+    $script:updaterRan = $false
+    $script:ownDownload = $false
+    $script:BINARY_FILE = ''
+    $script:FROM_SOURCE = $false
+    Update-GoInstall *> $null
+    if ($script:updaterRan) { Fail "the older binary's updater ran" }
+    if (-not $script:ownDownload) { Fail "the update of an older binary did not download and check the release itself" }
+    Remove-Item -Recurse -Force $dir
+}
+
+# L210 (A183): while the repository has no stable release, the stable
+# channel installs the newest pre-release that is not the rolling dev one,
+# also with -Channel stable, and says which release it took; the
+# development build only when there is no pre-release either.
+function Test-NoStableReleaseTakesTheNewestPrerelease {
+    $dir = New-TestInstall
+    $asset = 'betterdesk-server-windows-amd64.exe'
+    $rel = Join-Path $dir 'rc2'
+    New-Item -ItemType Directory -Path $rel -Force | Out-Null
+    Set-Content -Path (Join-Path $rel $asset) -Value 'candidate'
+    $sum = (Get-FileHash -Path (Join-Path $rel $asset) -Algorithm SHA256).Hash.ToLower()
+    Set-Content -Path (Join-Path $rel 'SHA256SUMS') -Value "$sum  $asset"
+    $script:releases = @(
+        [pscustomobject]@{ tag_name = 'dev'; draft = $false; prerelease = $true },
+        [pscustomobject]@{ tag_name = 'v3.7.0-rc.1'; draft = $true; prerelease = $true },
+        [pscustomobject]@{ tag_name = 'v3.6.0-rc.2'; draft = $false; prerelease = $true },
+        [pscustomobject]@{ tag_name = 'v3.6.0-rc.1'; draft = $false; prerelease = $true })
+    function Invoke-RestMethod { param($Uri, $Headers, [switch]$UseBasicParsing, $ErrorAction) if ($Uri -ne 'https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50') { throw "unexpected $Uri" }; return $script:releases }
+    function Invoke-WebRequest {
+        param($Uri, $OutFile, [switch]$UseBasicParsing, $ErrorAction)
+        if ($Uri -notlike 'https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0-rc.2/*') { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+        Copy-Item -Path (Join-Path $rel (($Uri -split '/')[-1])) -Destination $OutFile -Force
+    }
+    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'trybetterdesk', 'betterdesk'
+    $script:SKIP_VERIFY = $true
+    foreach ($given in @('', 'main')) {
+        $stage = Join-Path $dir "stage-$given"
+        New-Item -ItemType Directory -Path $stage -Force | Out-Null
+        $script:UPDATE_GITHUB_BRANCH_GIVEN = $given
+        $script:UPDATE_GITHUB_BRANCH = 'main'
+        $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
+        if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "the newest pre-release was not installed (given '$given'): $out" }
+        if ($out -notmatch 'no stable release yet: installing the newest pre-release v3\.6\.0-rc\.2') { Fail "the install does not say which release it took: $out" }
+        if ($script:UPDATE_GITHUB_BRANCH -ne 'main') { Fail "the install left the stable channel for $($script:UPDATE_GITHUB_BRANCH)" }
+    }
+    # Without a pre-release: the development build
+    $script:releases = @([pscustomobject]@{ tag_name = 'dev'; draft = $false; prerelease = $true })
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $out = (Get-ReleaseBinary -Dir (Join-Path $dir 'stage-') 6>&1 | Out-String -Width 4096)
+    if ($out -notmatch 'no stable release or pre-release yet: installing the development build') { Fail "without a pre-release the install does not take the development build: $out" }
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $env:UPDATE_GITHUB_BRANCH = $null
+    $script:SKIP_VERIFY = $false
+    Remove-Item -Recurse -Force $dir
+}
+
+# L71: the installed binary's migrate command moves the database; the
+# separate tool of an older release is the fallback.
+function Test-MigrateCommand {
+    $dir = New-TestInstall
+    $probe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ... migrate -mode sqlite2pg|pg2sqlite|rust2go ...'
+    if (-not (Test-BinaryMigrates -Path $probe)) { Fail 'a binary with the migrate command is taken for an older one' }
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ...'
+    if (Test-BinaryMigrates -Path $probe) { Fail 'an older binary is taken for one with the migrate command' }
+
+    function Get-ServerBinaryPath { 'fake-server' }
+    function Test-BinaryMigrates { param($Path) $true }
+    function fake-server { $script:serverCalls += ($args -join ' '); $global:LASTEXITCODE = 0 }
+    $script:serverCalls = @()
+    $src = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
+    Set-Content -Path $src -Value 'db'
+    Set-Content -Path (Join-Path $script:CONSOLE_PATH '.env') -Value @('SESSION_SECRET=kept')
+    $uri = 'postgres://u:p@h/db?sslmode=disable'
+    $script:USE_POSTGRESQL = $true
+    $script:POSTGRESQL_URI = $uri
+    $script:AUTO_MODE = $true
+    if ((Get-MigrateBin) -ne 'Invoke-ServerMigrate') { Fail "the migrate tool is $(Get-MigrateBin), not the server's command" }
+    Migrate-SQLiteToPostgreSQL *> $null
+    if ($script:serverCalls -notcontains "migrate -mode sqlite2pg -src $src -dst $uri") { Fail "the switch ran the server as: $($script:serverCalls -join '; ')" }
+    if ($script:serverCalls -notcontains "migrate -mode backup -src $src") { Fail "the switch made no backup with the migrate command: $($script:serverCalls -join '; ')" }
+    if ((Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne $uri) { Fail "after the move .env does not point at PostgreSQL: $(Get-Content (Join-Path $script:CONSOLE_PATH '.env'))" }
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    Remove-Item -Recurse -Force $dir
+}
+
+# L73: the installer's backup is the server's own (database, PostgreSQL
+# too, settings, the console's data) plus the keys; without the backup
+# command, or when it fails, the SQLite file is copied as before.
+function Test-BackupUsesTheServersBackup {
+    $dir = New-TestInstall
+    $probe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ... backup [--out DIR] [--db DSN] ...'
+    if (-not (Test-BinaryBacksUp -Path $probe)) { Fail 'a binary with the backup command is taken for an older one' }
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ...'
+    if (Test-BinaryBacksUp -Path $probe) { Fail 'an older binary is taken for one with the backup command' }
+
+    # The installer's own Do-BackupSilent (an earlier check stands one in)
+    $real = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq 'Do-BackupSilent' }, $false) | Select-Object -First 1
+    . ([scriptblock]::Create($real.Extent.Text))
+    $script:BACKUP_DIR = Join-Path $dir 'backups'
+    $script:DB_PATH = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
+    Set-Content -Path $script:DB_PATH -Value 'sqlite file'
+    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'id_ed25519') -Value 'private key'
+    function Get-ZipNames([string]$Path) {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $z = [System.IO.Compression.ZipFile]::OpenRead($Path)
+        try { return @($z.Entries | ForEach-Object { $_.Name }) } finally { $z.Dispose() }
+    }
+    function Test-BinaryBacksUp { param($Path) $true }
+    function Invoke-ServerCommand {
+        param([string[]]$Arguments, $InputText, $Binary)
+        $script:backupArgs = $Arguments
+        if ($script:backupFails) { return 1 }
+        Set-Content -Path (Join-Path $Arguments[2] 'betterdesk-full-backup.zip') -Value 'archive'
+        return 0
+    }
+    $script:backupFails = $false
+    Do-BackupSilent *> $null
+    $zip = @(Get-ChildItem -Path $script:BACKUP_DIR -Filter '*.zip')[0]
+    if (-not $zip) { Fail 'no backup was made' }
+    else {
+        if ($script:backupArgs[0] -ne 'backup' -or $script:backupArgs[1] -ne '--out' -or $script:backupArgs[2] -notlike (Join-Path $script:BACKUP_DIR 'betterdesk_backup_*')) { Fail "the server's backup ran as: $($script:backupArgs -join ' ')" }
+        $names = Get-ZipNames $zip.FullName
+        if ($names -notcontains 'betterdesk-full-backup.zip' -or $names -notcontains 'id_ed25519') { Fail "the backup holds: $($names -join ', ')" }
+        if ($names -contains 'db_v2.sqlite3') { Fail 'the backup copied the live SQLite file beside the server backup' }
+        Remove-Item -Force $zip.FullName
+    }
+    $script:backupFails = $true
+    $out = (Do-BackupSilent 6>&1 | Out-String -Width 4096)
+    if ($out -notmatch 'betterdesk-server backup failed') { Fail "a failed server backup is not said: $out" }
+    $zip = @(Get-ChildItem -Path $script:BACKUP_DIR -Filter '*.zip')[0]
+    $names = Get-ZipNames $zip.FullName
+    if ($names -notcontains 'db_v2.sqlite3') { Fail "without the server backup the database file is not in the backup: $($names -join ', ')" }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -646,6 +963,11 @@ Test-UpdateAsksTheFork
 Test-FirewallPorts
 Test-CertificateFromTheBinary
 Test-SecretsAreRandom
+Test-DatabaseUrlOnly
+Test-ReleaseSignatureOnWindows
+Test-NoStableReleaseTakesTheNewestPrerelease
+Test-MigrateCommand
+Test-BackupUsesTheServersBackup
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

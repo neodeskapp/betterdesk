@@ -8,7 +8,8 @@
 #     - Fresh installation: one service, betterdesk-server, that serves the
 #       signal and relay server, the API and the web console
 #     - Minimal installation (the same server with its web console off)
-#     - Update an installation (release binaries checked by SHA-256)
+#     - Update an installation (release binaries checked by SHA-256 and the
+#       release signature)
 #     - Upgrade an install with the Node.js console in place, and roll it back
 #     - Repair/fix issues (enhanced with graceful shutdown)
 #     - Validate installation
@@ -16,7 +17,7 @@
 #     - Reset admin password
 #     - Build & deploy server (rebuild Go binary with rollback)
 #     - Full diagnostics
-#     - SHA256 binary verification
+#     - SHA-256 and signature checks of release binaries
 #     - Auto mode (non-interactive)
 #     - Enhanced service management with health verification
 #     - Port conflict detection
@@ -67,6 +68,12 @@ CLEANUP_NODE_MODE=false
 # checkout (--from-source), else the release of the update channel.
 SERVER_BINARY_FILE="${SERVER_BINARY_FILE:-}"
 FROM_SOURCE=false
+# The release key (DECISIONS A152): the public half of the ed25519 key
+# that signs each release's manifest. A binary with verify-release carries
+# the same key; without one, openssl checks a download with this copy.
+RELEASE_PUBLIC_KEY_PEM='-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAiwissiXvSjeFFsG8SdKEZq11uAtRLWCrD7Ky1vfY2n4=
+-----END PUBLIC KEY-----'
 
 # Relay server selection mode:
 #   auto   - detect public IP (default, best for internet-facing servers)
@@ -205,7 +212,8 @@ while [[ $# -gt 0 ]]; do
             echo "                   after an upgrade"
             echo "  --binary FILE    Install this betterdesk-server binary instead of the release"
             echo "  --channel C      Release channel: 'stable' (default, the newest release) or"
-            echo "                   'dev' (the development build); kept for later updates"
+            echo "                   'dev' (the development build); kept for later updates. Without"
+            echo "                   it, a repository with no stable release yet installs 'dev'"
             echo "  --from-source    Build betterdesk-server from this checkout (needs Go, and"
             echo "                   Node.js unless web-ui/build exists)"
             echo "  --uninstall      Stop and remove the service, after a backup; the data stays,"
@@ -214,7 +222,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --check-permissions  Report panel/update/config/restart capabilities"
             echo "  --repair-permissions Repair BetterDesk ownership and service access"
             echo "  --set-config K=V Apply an allowlisted .env setting (repeatable)"
-            echo "  --skip-verify    Skip SHA256 verification of binaries"
+            echo "  --skip-verify    Skip the SHA-256 and signature checks of a downloaded binary"
             echo "  --minimal        Install the server with its web console off"
             echo "  --postgresql     Use PostgreSQL instead of SQLite"
             echo "  --pg-uri URI     PostgreSQL connection URI (implies --postgresql)"
@@ -237,14 +245,15 @@ while [[ $# -gt 0 ]]; do
             echo "  ADMIN_PASSWORD=...      Set custom admin password (default: auto-generated)"
             echo "  UPDATE_GITHUB_BRANCH=main|dev  Update channel: stable (main) or development (dev)"
             echo "  UPDATE_GITHUB_OWNER=... / UPDATE_GITHUB_REPO=...  Repository the releases come from"
-            echo "  RELEASE_BASE_URL=...    Folder URL with the release files (SHA256SUMS and binaries)"
+            echo "  RELEASE_BASE_URL=...    Folder URL with the release files (SHA256SUMS, manifest.json,"
+            echo "                          manifest.sig and the binaries)"
             echo "  SSL_DOMAIN=...          Host name for the self-signed certificate and the console's address"
             echo "  RUSTDESK_PATH=... / CONSOLE_PATH=... / BACKUP_DIR=...  Install folders"
             echo "                          (default /opt/betterdesk, /opt/BetterDeskConsole, /opt/rustdesk-backups)"
             echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
-            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh | sudo bash"
+            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/betterdesk.sh | sudo bash"
             echo "Later:                     sudo betterdesk (menu), sudo betterdesk --update, sudo betterdesk --uninstall"
             exit 0
             ;;
@@ -362,7 +371,9 @@ log() {
 }
 
 print_header() {
-    clear
+    # Without a terminal (cloud-init, CI, a pipe) or without TERM, clear
+    # fails; the run goes on
+    if [ -t 1 ]; then clear 2>/dev/null || true; fi
     echo -e "${CYAN}"
     echo "╔══════════════════════════════════════════════════════════════════╗"
     echo "║                                                                  ║"
@@ -559,15 +570,15 @@ default_to_auto_without_terminal() {
 
 # install_manager_command: this installer as the command betterdesk, for
 # updates, repairs and the uninstall later. Run from the command itself
-# (an update), it takes the newest one of the update channel; piped from
-# curl, it fetches itself from the same place.
+# (an update), it takes the newest one of INSTALLER_REF; piped from curl,
+# it fetches itself from the same place.
 install_manager_command() {
     local self="$BETTERDESK_SELF" tmp
     tmp=$(mktemp) || return 0
     if [ -n "$self" ] && [ -f "$self" ] && [ "$(readlink -f "$self")" != "$(readlink -f "$MANAGER_COMMAND" 2>/dev/null)" ]; then
         cp "$self" "$tmp"
     elif ! curl -fsSL --retry 2 --connect-timeout 20 -o "$tmp" \
-        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${UPDATE_GITHUB_BRANCH}/betterdesk.sh" \
+        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${INSTALLER_REF}/betterdesk.sh" \
         || ! grep -q '^BETTERDESK_SH_REVISION=' "$tmp"; then
         rm -f "$tmp"
         [ -x "$MANAGER_COMMAND" ] || print_warning "Could not save the betterdesk command; run this installer again for updates"
@@ -2432,16 +2443,9 @@ detect_installation() {
         fi
         
         # Check database (SQLite file or PostgreSQL connection)
-        local detected_db_type="sqlite"
-        if [ -f "$CONSOLE_PATH/.env" ]; then
-            detected_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-            detected_db_type="${detected_db_type:-sqlite}"
-        fi
-
-        if [ "$detected_db_type" = "postgres" ]; then
-            # PostgreSQL: check via systemd service config or .env
+        if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
             local pg_uri
-            pg_uri=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+            pg_uri=$(env_database_url "$CONSOLE_PATH/.env")
             if [ -n "$pg_uri" ]; then
                 if PGCONNECT_TIMEOUT=3 psql "$pg_uri" -c "SELECT 1" &>/dev/null 2>&1; then
                     DATABASE_OK=true
@@ -2498,15 +2502,11 @@ detect_installation() {
 # to prevent switching from PostgreSQL to SQLite
 preserve_database_config() {
     if [ -f "$CONSOLE_PATH/.env" ]; then
-        local existing_db_type existing_db_url
-        existing_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-        existing_db_url=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
-        
-        if [ "$existing_db_type" = "postgres" ] && [ -n "$existing_db_url" ]; then
+        if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
             USE_POSTGRESQL="true"
-            POSTGRESQL_URI="$existing_db_url"
+            POSTGRESQL_URI=$(env_database_url "$CONSOLE_PATH/.env")
             print_info "Preserving PostgreSQL configuration from existing .env"
-        elif [ "$existing_db_type" = "sqlite" ]; then
+        else
             USE_POSTGRESQL="false"
             POSTGRESQL_URI=""
             print_info "Preserving SQLite configuration from existing .env"
@@ -2541,6 +2541,8 @@ merge_console_env() {
     if [ "$USE_POSTGRESQL" = "true" ] && [ -n "$POSTGRESQL_URI" ]; then
         db_type="postgres"
         database_url="$POSTGRESQL_URI"
+    else
+        database_url="$RUSTDESK_PATH/db_v2.sqlite3"
     fi
 
     if [ "$fresh_install" = "true" ]; then
@@ -2590,13 +2592,13 @@ merge_console_env() {
         return 1
     fi
 
-    # The server's database: DB_URL (the old units passed it as -db)
-    if ! grep -q '^DB_URL=' "$env_file"; then
-        if [ "$db_type" = "postgres" ]; then
-            printf 'DB_URL=%s\n' "$database_url" >> "$env_file"
-        else
-            printf 'DB_URL=%s\n' "$RUSTDESK_PATH/db_v2.sqlite3" >> "$env_file"
-        fi
+    # The server's database is DATABASE_URL (the template's, filled above).
+    # A file that names none gets it; an older binary reads DB_URL instead
+    # (its template still writes DB_TYPE), which the old units passed as -db
+    if ! binary_reads_database_url "$bin"; then
+        grep -q '^DB_URL=' "$env_file" || printf 'DB_URL=%s\n' "$database_url" >> "$env_file"
+    elif [ -z "$(env_database_url "$env_file")" ]; then
+        use_database_in_env "$db_type" "$database_url"
     fi
     # The server makes the first admin before the console starts, and the
     # console keeps an admin it did not make: both take the same password
@@ -2827,14 +2829,9 @@ print_status() {
     echo -e "  Console:      ${CYAN}$CONSOLE_PATH${NC}"
     
     # Show database type and path/URI
-    local diag_db_type="sqlite"
-    if [ -f "$CONSOLE_PATH/.env" ]; then
-        diag_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-        diag_db_type="${diag_db_type:-sqlite}"
-    fi
-    if [ "$diag_db_type" = "postgres" ]; then
+    if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
         local diag_pg_uri
-        diag_pg_uri=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+        diag_pg_uri=$(env_database_url "$CONSOLE_PATH/.env")
         # Mask password in URI for display
         local diag_pg_display
         diag_pg_display=$(echo "$diag_pg_uri" | sed 's|://[^:]*:[^@]*@|://***:***@|')
@@ -3535,12 +3532,19 @@ compile_go_server() {
 # Installation Functions
 #===============================================================================
 
+# apt_update: the package lists. A source that fails (a third-party
+# repository, a mirror in sync) stops nothing: the packages come from the
+# lists that are there, and apt-get install says when one is missing.
+apt_update() {
+    apt-get update -qq || print_warning "apt-get update failed for a package source (output above); installing from the package lists there are"
+}
+
 install_dependencies() {
     print_step "Installing dependencies..."
     
     # The server is one static binary; the installer needs only these
     if command -v apt-get &> /dev/null; then
-        apt-get update -qq
+        apt_update
         apt-get install -y -qq sqlite3 curl wget openssl ca-certificates iproute2 lsof
     elif command -v dnf &> /dev/null; then
         dnf install -y -q sqlite curl wget openssl ca-certificates iproute lsof
@@ -3569,7 +3573,7 @@ install_postgresql() {
     fi
     
     if command -v apt-get &> /dev/null; then
-        apt-get update -qq
+        apt_update
         apt-get install -y -qq postgresql postgresql-contrib
     elif command -v dnf &> /dev/null; then
         dnf install -y -q postgresql-server postgresql
@@ -3731,9 +3735,12 @@ migrate_sqlite_to_postgresql() {
         return 0
     fi
     
-    # Find migration binary
+    # The installed binary's migrate command, else the separate tool of an
+    # older release
     local migrate_bin=""
-    if [ -f "$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64" ]; then
+    if binary_migrates; then
+        migrate_bin=server_migrate
+    elif [ -f "$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64" ]; then
         migrate_bin="$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64"
     elif [ -f "$SCRIPT_DIR/tools/migrate/migrate-linux-amd64" ]; then
         migrate_bin="$SCRIPT_DIR/tools/migrate/migrate-linux-amd64"
@@ -3762,8 +3769,8 @@ migrate_sqlite_to_postgresql() {
         return 0
     fi
     
-    chmod +x "$migrate_bin"
-    
+    [ "$migrate_bin" = server_migrate ] || chmod +x "$migrate_bin"
+
     # Verify binary supports -mode flag (in case of outdated binary). The
     # help is read whole first: grep -q on a pipe can end the tool early
     local migrate_help
@@ -3804,18 +3811,27 @@ migrate_sqlite_to_postgresql() {
 }
 
 # use_database_in_env postgres URI | sqlite PATH: points the console's .env
-# (DB_TYPE, DATABASE_URL, DB_URL) at the database the server is to use.
+# at the database the server is to use: DATABASE_URL alone, its type from
+# the scheme; the DB_TYPE, DB_URL and DB_PATH of an older install go. For
+# an installed binary that reads only DB_URL and DB_TYPE, those are written
+# as it reads them.
 use_database_in_env() {
-    local env_file="$CONSOLE_PATH/.env" key url=""
+    local env_file="$CONSOLE_PATH/.env" key url="" current=true
     [ -f "$env_file" ] || return 0
     [ "$1" = postgres ] && url="$2"
+    binary_reads_database_url || current=false
     # The lines are written anew instead of edited with sed, so an address
     # with & or | in it stays as it is
     for key in DB_TYPE DATABASE_URL DB_URL; do
         _remove_env_line "$env_file" "$key"
     done
+    [ "$current" = true ] && _remove_env_line "$env_file" DB_PATH
     [ -z "$(tail -c1 "$env_file")" ] || echo >> "$env_file"
-    printf 'DB_TYPE=%s\nDATABASE_URL=%s\nDB_URL=%s\n' "$1" "$url" "$2" >> "$env_file"
+    if [ "$current" = true ]; then
+        printf 'DATABASE_URL=%s\n' "$2" >> "$env_file"
+    else
+        printf 'DB_TYPE=%s\nDATABASE_URL=%s\nDB_URL=%s\n' "$1" "$url" "$2" >> "$env_file"
+    fi
 }
 
 # keep_sqlite_install PATH: the install stays on its SQLite file after the
@@ -3856,22 +3872,76 @@ release_base_url() {
     fi
 }
 
+# fetch_release_file BASE NAME DEST: downloads BASE/NAME to DEST and prints
+# the HTTP status (000 when the server was not reached).
+fetch_release_file() {
+    local code progress=(-sS)
+    [ "$2" != SHA256SUMS ] && [ "${2#manifest}" = "$2" ] && [ -t 1 ] && progress=(--progress-bar)
+    code=$(curl -L --retry 3 --connect-timeout 20 "${progress[@]}" -o "$3" -w '%{http_code}' "$1/$2" 2>/dev/null) || true
+    printf '%s\n' "${code:-000}"
+}
+
+# newest_prerelease_tag: the tag of the newest published pre-release of
+# UPDATE_GITHUB_OWNER/UPDATE_GITHUB_REPO other than the rolling "dev" one;
+# empty when there is none or the API does not answer. GitHub lists the
+# releases newest first, each with tag_name, then draft, then prerelease.
+newest_prerelease_tag() {
+    curl -fsSL --retry 2 --connect-timeout 20 -H 'Accept: application/vnd.github+json' \
+        "https://api.github.com/repos/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/releases?per_page=50" 2>/dev/null \
+        | tr -d '\r\n' \
+        | grep -oE '"(tag_name|draft|prerelease)"[[:space:]]*:[[:space:]]*("[^"]*"|true|false)' \
+        | sed -E 's/^"([a-z_]+)"[[:space:]]*:[[:space:]]*"?([^"]*)"?$/\1 \2/' \
+        | awk '$1 == "tag_name" { tag = $2; draft = "" }
+               $1 == "draft" { draft = $2 }
+               $1 == "prerelease" && $2 == "true" && draft == "false" && tag != "dev" && tag ~ /^[A-Za-z0-9][A-Za-z0-9._-]*$/ { print tag; exit }' \
+        || true
+}
+
 # download_release_binary DIR: the release binary for this machine into
-# DIR/betterdesk-server, checked against the release's SHA256SUMS.
+# DIR/betterdesk-server, checked against the release's SHA256SUMS and the
+# signature of its manifest (verify_release_files). While the repository
+# has no stable release, the stable channel takes the newest pre-release,
+# and the development build when there is none and no channel was given or
+# saved.
 download_release_binary() {
-    local dir="$1" asset base expected actual
+    local dir="$1" asset base expected actual code
     asset=$(release_asset_name) || {
         print_error "There is no release binary for $(uname -m); use --from-source"
         return 1
     }
     read_update_github_branch_from_env
+    # The repository given to the installer, else the one .env names
+    [ -n "${UPDATE_GITHUB_OWNER_GIVEN:-}" ] || UPDATE_GITHUB_OWNER=$(env_file_value "${CONSOLE_PATH:-}/.env" UPDATE_GITHUB_OWNER | grep . || printf '%s\n' "$UPDATE_GITHUB_OWNER")
+    [ -n "${UPDATE_GITHUB_REPO_GIVEN:-}" ] || UPDATE_GITHUB_REPO=$(env_file_value "${CONSOLE_PATH:-}/.env" UPDATE_GITHUB_REPO | grep . || printf '%s\n' "$UPDATE_GITHUB_REPO")
     base=$(release_base_url)
     print_info "Downloading $asset ($UPDATE_GITHUB_BRANCH channel) from $base"
-    local code
-    code=$(curl -sSL --retry 3 --connect-timeout 20 -o "$dir/SHA256SUMS" -w '%{http_code}' "$base/SHA256SUMS" 2>/dev/null) || true
+    code=$(fetch_release_file "$base" SHA256SUMS "$dir/SHA256SUMS")
+    # No stable release yet: the newest pre-release (a release candidate of
+    # the stable channel), else, with no channel given or saved, the
+    # development build and its channel for later updates (DECISIONS A183)
+    local prerelease=""
+    if [ "$code" = 404 ] && [ -z "${RELEASE_BASE_URL:-}" ] && [ "$UPDATE_GITHUB_BRANCH" != dev ]; then
+        prerelease=$(newest_prerelease_tag)
+    fi
+    if [ -n "$prerelease" ]; then
+        print_warning "${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO} has no stable release yet: installing the newest pre-release $prerelease"
+        base="https://github.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/releases/download/$prerelease"
+        print_info "Downloading $asset ($prerelease) from $base"
+        code=$(fetch_release_file "$base" SHA256SUMS "$dir/SHA256SUMS")
+    elif [ "$code" = 404 ] && [ -z "${RELEASE_BASE_URL:-}" ] && [ "$UPDATE_GITHUB_BRANCH" != dev ] \
+        && [ -z "${UPDATE_GITHUB_BRANCH_GIVEN:-}" ] && [ -z "$(env_file_value "${CONSOLE_PATH:-}/.env" UPDATE_GITHUB_BRANCH)" ]; then
+        print_warning "${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO} has no stable release or pre-release yet: installing the development build (--channel dev) instead"
+        print_info "Updates follow the development channel; once a stable release is out: sudo $(basename "$MANAGER_COMMAND") --update --channel stable"
+        UPDATE_GITHUB_BRANCH=dev
+        UPDATE_GITHUB_BRANCH_GIVEN=dev
+        export UPDATE_GITHUB_BRANCH
+        base=$(release_base_url)
+        print_info "Downloading $asset (dev channel) from $base"
+        code=$(fetch_release_file "$base" SHA256SUMS "$dir/SHA256SUMS")
+    fi
     case "$code" in
         200) ;;
-        000|"")
+        000)
             print_error "Could not reach $base"
             print_info "Check this server's internet access and DNS (a proxy goes in HTTPS_PROXY),"
             print_info "or install offline: download the binary elsewhere and run with --binary FILE"
@@ -3892,16 +3962,15 @@ download_release_binary() {
             return 1
             ;;
     esac
-    local progress=(-s)
-    [ -t 1 ] && progress=(--progress-bar)
-    if ! curl -fSL --retry 3 --connect-timeout 20 "${progress[@]}" -o "$dir/$asset" "$base/$asset"; then
-        print_error "Could not download $base/$asset"
+    code=$(fetch_release_file "$base" "$asset" "$dir/$asset")
+    if [ "$code" != 200 ]; then
+        print_error "Could not download $base/$asset (HTTP $code)"
         return 1
     fi
     expected=$(awk -v name="$asset" '$2 == name || $2 == "*" name { print tolower($1); exit }' "$dir/SHA256SUMS")
     actual=$(sha256sum "$dir/$asset" | awk '{ print $1 }')
     if [ "$SKIP_VERIFY" = true ]; then
-        print_warning "SHA-256 check skipped (--skip-verify)"
+        print_warning "SHA-256 and signature checks skipped (--skip-verify)"
     elif [ -z "$expected" ]; then
         print_error "SHA256SUMS of the release does not list $asset"
         return 1
@@ -3910,8 +3979,154 @@ download_release_binary() {
         return 1
     else
         print_success "SHA-256 of $asset matches the release"
+        local name rc=0
+        for name in manifest.json manifest.sig; do
+            code=$(fetch_release_file "$base" "$name" "$dir/$name")
+            if [ "$code" != 200 ]; then
+                rm -f -- "${dir:?}/${name:?}"
+                if [ "$code" != 404 ]; then
+                    print_error "Could not download $base/$name (HTTP $code); try again later"
+                    return 1
+                fi
+            fi
+        done
+        verify_release_files "$dir" "$asset" "$UPDATE_GITHUB_BRANCH" || rc=$?
+        case "$rc" in
+            0) ;;
+            2)
+                print_warning "The release signature cannot be checked on this machine: $RELEASE_CHECK_PROBLEM."
+                print_warning "The binary is checked by its SHA-256 over HTTPS only. From the next update on,"
+                print_warning "the installed betterdesk-server checks the signature itself."
+                ;;
+            *)
+                print_info "Nothing was installed. A release signed with another key (a fork's) installs with --skip-verify"
+                return 1
+                ;;
+        esac
     fi
     mv -f "$dir/$asset" "$dir/betterdesk-server"
+}
+
+# binary_verifies_releases [BIN]: true when the binary checks a release's
+# signature itself, with the release key it carries (verify-release).
+binary_verifies_releases() {
+    local bin="${1:-$(server_binary_path)}"
+    [ -x "$bin" ] && grep -a -q -F 'verify-release --manifest FILE' "$bin" 2>/dev/null
+}
+
+# manifest_field MANIFEST KEY CHARS: the value of the field KEY of
+# manifest.json, when the file has it once and the value is made of CHARS
+# (an extended regular expression); fails otherwise.
+manifest_field() {
+    local values
+    values=$(tr -d '\r\n' < "$1" | grep -oE "\"$2\"[[:space:]]*:[[:space:]]*\"$3\"" \
+        | sed -E 's/^.*:[[:space:]]*"//; s/"$//') || return 1
+    [ -n "$values" ] && [ "$(printf '%s\n' "$values" | wc -l)" -eq 1 ] || return 1
+    printf '%s\n' "$values"
+}
+
+# release_payload MANIFEST: the text the release signature covers, made
+# from manifest.json as the server makes it (updater.CanonicalPayload): the
+# owner, repository, branch and commit, and each binary's SHA-256 and name,
+# sorted by name. Fails when manifest.json has a field it cannot read.
+release_payload() {
+    local manifest="$1" owner repo branch sha files count paths
+    owner=$(manifest_field "$manifest" owner '[A-Za-z0-9_.-]+') || return 1
+    repo=$(manifest_field "$manifest" repo '[A-Za-z0-9_.-]+') || return 1
+    branch=$(manifest_field "$manifest" branch '[A-Za-z0-9_./-]+') || return 1
+    sha=$(manifest_field "$manifest" sha '[0-9a-f]{40}') || return 1
+    files=$(tr -d '\r\n' < "$manifest" \
+        | grep -oE '"path"[[:space:]]*:[[:space:]]*"[a-z0-9.-]+"[[:space:]]*,[[:space:]]*"sha256"[[:space:]]*:[[:space:]]*"[0-9a-f]{64}"' \
+        | sed -E 's/^"path"[[:space:]]*:[[:space:]]*"([^"]*)".*"([0-9a-f]{64})"$/\2  \1/' \
+        | LC_ALL=C sort -s -k2,2) || return 1
+    count=$(printf '%s\n' "$files" | grep -c .) || true
+    paths=$(tr -d '\r\n' < "$manifest" | grep -oE '"path"[[:space:]]*:' | wc -l)
+    [ "$count" -gt 0 ] && [ "$count" -eq "$paths" ] || return 1
+    printf 'betterdesk-update-manifest-v1\nowner=%s\nrepo=%s\nbranch=%s\nsha=%s\nfiles=%s\n%s\n' \
+        "$owner" "$repo" "$branch" "$sha" "$count" "$files"
+}
+
+# ensure_openssl: openssl, installed with the package manager when missing.
+ensure_openssl() {
+    command -v openssl >/dev/null 2>&1 && return 0
+    print_info "Installing openssl to check the release signature..."
+    if command -v apt-get >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openssl >/dev/null 2>&1 \
+            || { apt-get update -qq >/dev/null 2>&1 && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openssl >/dev/null 2>&1; }
+    elif command -v dnf >/dev/null 2>&1; then
+        dnf install -y -q openssl >/dev/null 2>&1
+    elif command -v yum >/dev/null 2>&1; then
+        yum install -y -q openssl >/dev/null 2>&1
+    elif command -v pacman >/dev/null 2>&1; then
+        pacman -Sy --noconfirm openssl >/dev/null 2>&1
+    fi
+    command -v openssl >/dev/null 2>&1
+}
+
+# verify_release_files DIR ASSET BRANCH: DIR/ASSET is a binary the signed
+# manifest of the release (DIR/manifest.json and DIR/manifest.sig) names,
+# and the release is of the channel's BRANCH. The installed binary checks
+# it when it can (verify-release, with the release key it carries), else
+# openssl with RELEASE_PUBLIC_KEY_PEM. Returns 0 when checked, 1 when
+# refused, 2 when this machine cannot check an ed25519 signature
+# (RELEASE_CHECK_PROBLEM says why).
+verify_release_files() {
+    local dir="$1" asset="$2" branch="$3" installed out rc=0 work sum
+    RELEASE_CHECK_PROBLEM=""
+    installed=$(server_binary_path)
+    if [ ! -s "$dir/manifest.json" ] || [ ! -s "$dir/manifest.sig" ]; then
+        print_error "The release has no signed manifest (manifest.json and manifest.sig), so $asset is not installed"
+        return 1
+    fi
+    if binary_verifies_releases "$installed"; then
+        out=$("$installed" verify-release --manifest "$dir/manifest.json" --signature "$dir/manifest.sig" \
+            --name "$asset" "$dir/$asset" 2>&1) || rc=$?
+        case "$rc" in
+            0)
+                if [ "$(manifest_field "$dir/manifest.json" branch '[A-Za-z0-9_./-]+' || true)" != "$branch" ]; then
+                    print_error "The release is not one of the $branch channel, so $asset is not installed"
+                    return 1
+                fi
+                print_success "Release signature checked by the installed betterdesk-server (${out#verified: })"
+                return 0
+                ;;
+            1)
+                print_error "The installed betterdesk-server refused the release: ${out#betterdesk-server verify-release: }"
+                return 1
+                ;;
+        esac
+    fi
+    if ! ensure_openssl; then
+        RELEASE_CHECK_PROBLEM="openssl is missing and could not be installed"
+        return 2
+    fi
+    if ! openssl pkeyutl -help 2>&1 | grep -q -- '-rawin'; then
+        RELEASE_CHECK_PROBLEM="$(openssl version 2>/dev/null | cut -d' ' -f1-2) checks no ed25519 signatures (OpenSSL 3 does)"
+        return 2
+    fi
+    work=$(mktemp -d) || return 1
+    printf '%s\n' "$RELEASE_PUBLIC_KEY_PEM" > "$work/key.pem"
+    rc=0
+    if ! release_payload "$dir/manifest.json" > "$work/payload"; then
+        print_error "manifest.json of the release has fields this installer cannot read, so $asset is not installed"
+        rc=1
+    elif ! tr -d '[:space:]' < "$dir/manifest.sig" | base64 -d > "$work/sig" 2>/dev/null \
+        || ! openssl pkeyutl -verify -pubin -inkey "$work/key.pem" -rawin -in "$work/payload" -sigfile "$work/sig" >/dev/null 2>&1; then
+        print_error "The release signature does not verify against the release key, so $asset is not installed"
+        rc=1
+    elif ! grep -qx "branch=$branch" "$work/payload"; then
+        print_error "The release is not one of the $branch channel, so $asset is not installed"
+        rc=1
+    else
+        sum=$(sha256sum "$dir/$asset" | awk '{ print $1 }')
+        if ! grep -qxF "$sum  $asset" "$work/payload"; then
+            print_error "$asset is not the binary the release's signed manifest names, so it is not installed"
+            rc=1
+        fi
+    fi
+    rm -rf -- "${work:?}"
+    [ "$rc" -eq 0 ] && print_success "Release signature checked against the release key (openssl)"
+    return "$rc"
 }
 
 # build_server_from_source DEST: builds betterdesk-server from this checkout,
@@ -4210,6 +4425,76 @@ env_file_value() {
     { grep -m1 "^$2=" "$1" 2>/dev/null || true; } | cut -d= -f2- | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
 }
 
+# is_postgres_url ADDRESS: true for a postgres:// or postgresql:// address.
+is_postgres_url() {
+    case "${1,,}" in
+        postgres://*|postgresql://*) return 0 ;;
+    esac
+    return 1
+}
+
+# env_database_url FILE: the database the server opens with this env file,
+# read as the server reads it: DATABASE_URL, a postgres:// address or the
+# SQLite file (sqlite:// before it allowed), else DB_URL of an older
+# install. DB_TYPE=sqlite of an older install keeps it on SQLite where
+# DATABASE_URL still names PostgreSQL. Empty when the file names none: the
+# server then opens db_v2.sqlite3 in its folder.
+env_database_url() {
+    local url legacy type
+    url=$(env_file_value "$1" DATABASE_URL)
+    legacy=$(env_file_value "$1" DB_URL)
+    type=$(env_file_value "$1" DB_TYPE)
+    if [ -n "$url" ] && is_postgres_url "$url" && [ "${type,,}" = sqlite ]; then
+        url=""
+        is_postgres_url "$legacy" && legacy=""
+    fi
+    url="${url:-$legacy}"
+    if ! is_postgres_url "$url"; then
+        case "${url,,}" in
+            sqlite://*) url="${url:9}" ;;
+            sqlite:*) url="${url:7}" ;;
+        esac
+    fi
+    printf '%s\n' "$url"
+}
+
+# env_database_type FILE: postgres when the server opens PostgreSQL with
+# this env file, else sqlite.
+env_database_type() {
+    if is_postgres_url "$(env_database_url "$1")"; then
+        echo postgres
+    else
+        echo sqlite
+    fi
+}
+
+# binary_migrates [BIN]: true when the binary carries the migrate command
+# (sqlite2pg, pg2sqlite, rust2go, nodejs2go and backup of a SQLite file),
+# which replaces the separate migrate tool of older releases.
+binary_migrates() {
+    local bin="${1:-$(server_binary_path)}"
+    [ -x "$bin" ] && grep -a -q -F 'migrate -mode sqlite2pg' "$bin" 2>/dev/null
+}
+
+# binary_backs_up [BIN]: true when the binary carries the backup command
+# (the console's full backup, also of PostgreSQL, while the server runs).
+binary_backs_up() {
+    local bin="${1:-$(server_binary_path)}"
+    [ -x "$bin" ] && grep -a -q -F 'backup [--out DIR]' "$bin" 2>/dev/null
+}
+
+# server_migrate ARGS...: the installed binary's migrate command.
+server_migrate() {
+    "$(server_binary_path)" migrate "$@"
+}
+
+# binary_reads_database_url [BIN]: true when the binary takes its database
+# from DATABASE_URL; older ones read DB_URL and DB_TYPE only.
+binary_reads_database_url() {
+    local bin="${1:-$(server_binary_path)}"
+    [ -f "$bin" ] && grep -a -q -F 'Remove DB_TYPE to use DATABASE_URL' "$bin" 2>/dev/null
+}
+
 # unit_environment UNIT: the KEY=VALUE pairs of a unit's Environment= lines,
 # one per line, with systemd's quotes and its $$ and %% escapes undone.
 unit_environment() {
@@ -4354,14 +4639,10 @@ setup_services() {
 
     # The database settings from an existing .env, so a reinstall keeps
     # PostgreSQL
-    if [ "$USE_POSTGRESQL" != "true" ] && [ -f "$CONSOLE_PATH/.env" ]; then
-        if [ "$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)" = "postgres" ]; then
-            POSTGRESQL_URI=$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)
-            if [ -n "$POSTGRESQL_URI" ]; then
-                USE_POSTGRESQL="true"
-                print_info "Recovered PostgreSQL config from existing .env"
-            fi
-        fi
+    if [ "$USE_POSTGRESQL" != "true" ] && [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
+        POSTGRESQL_URI=$(env_database_url "$CONSOLE_PATH/.env")
+        USE_POSTGRESQL="true"
+        print_info "Recovered PostgreSQL config from existing .env"
     fi
 
     # Relay address: RELAY_SERVERS, else the mode (auto = public IP, local =
@@ -4614,7 +4895,7 @@ upgrade_backup() {
         echo "from=$(timeout 10 "${old_bin:-$(server_binary_path)}" -version 2>/dev/null || echo unknown)"
         echo "rustdesk_path=$RUSTDESK_PATH"
         echo "console_path=$CONSOLE_PATH"
-        echo "db_type=$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)"
+        echo "db_type=$(env_database_type "$CONSOLE_PATH/.env")"
         echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     } > "$dir/manifest.txt"
 }
@@ -4623,10 +4904,9 @@ upgrade_backup() {
 # are stopped: SQLite with .backup (and auth.db), PostgreSQL with pg_dump
 # when it is installed.
 upgrade_snapshot_database() {
-    local dir="$1" db_type db_url
-    db_type=$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)
-    if [ "$db_type" = "postgres" ]; then
-        db_url=$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)
+    local dir="$1" db_url
+    if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
+        db_url=$(env_database_url "$CONSOLE_PATH/.env")
         if command -v pg_dump &>/dev/null && [ -n "$db_url" ]; then
             if pg_dump -Fc -f "$dir/postgres.dump" "$db_url" 2>"$dir/pg_dump.log"; then
                 print_info "  PostgreSQL snapshot: $dir/postgres.dump"
@@ -4852,7 +5132,7 @@ rollback_go_upgrade() {
             cp -a "$backup/db_v2.sqlite3" "$DB_PATH"
             [ -f "$backup/auth.db" ] && cp -a "$backup/auth.db" "$CONSOLE_PATH/data/auth.db"
         else
-            pg_restore --clean --if-exists -d "$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)" "$backup/postgres.dump" \
+            pg_restore --clean --if-exists -d "$(env_database_url "$CONSOLE_PATH/.env")" "$backup/postgres.dump" \
                 || print_warning "pg_restore reported errors"
         fi
         print_info "Database restored from $backup"
@@ -4916,7 +5196,11 @@ update_go_install() {
     # The server's updater reads the channel from .env
     save_given_update_channel
 
-    if [ -n "$SERVER_BINARY_FILE" ] || [ "$FROM_SOURCE" = true ] || [ -n "${RELEASE_BASE_URL:-}" ]; then
+    # An installed binary without verify-release is older than the release
+    # key, and its updater would take a release without checking the
+    # signature: this installer downloads and checks the release itself
+    if [ -n "$SERVER_BINARY_FILE" ] || [ "$FROM_SOURCE" = true ] || [ -n "${RELEASE_BASE_URL:-}" ] \
+        || ! binary_verifies_releases "$bin"; then
         obtain_server_binary || { rm -rf "${STAGED_SERVER_DIR:-}"; return 1; }
         systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
         wait_for_service_stop "$SERVER_SERVICE" 15 || true
@@ -4924,8 +5208,9 @@ update_go_install() {
         rm -rf "$STAGED_SERVER_DIR"
     else
         # The server's own updater: the release of the channel, its manifest
-        # signature and SHA-256 checked, the old binary kept as .prev
-        print_step "Installing the newest release with betterdesk-server update..."
+        # signature (with the release key the installed binary carries) and
+        # SHA-256 checked, the old binary kept as .prev
+        print_step "Installing the newest release with betterdesk-server update (it checks the release signature)..."
         # The repository goes to the updater: an installed binary may have
         # an older default
         local owner repo
@@ -5228,6 +5513,10 @@ UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-betterdesk}"
 # installed) wins over .env and is written into it
 UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"
 UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
+# The branch the installer itself comes from for the betterdesk command:
+# the repository's default branch, dev (its main branch still holds
+# upstream's older installer). The release channel above is separate.
+INSTALLER_REF="${INSTALLER_REF:-dev}"
 
 # save_given_update_channel: the channel the installer was given goes into
 # .env, where the server's updater reads it
@@ -5385,7 +5674,7 @@ do_update() {
             $'Back\tReturn to the main menu'
         )
         local _menu_returns=( 1 2 0 )
-        menu_choose "Update" "Releases are checked by SHA-256 before they replace the binary"
+        menu_choose "Update" "Releases are checked by SHA-256 and their signature before they replace the binary"
         case "${MENU_CHOICE:-1}" in
             0) return 0 ;;
             2) switch_update_channel; return 0 ;;
@@ -5478,7 +5767,7 @@ repair_binaries() {
 # file's integrity.
 repair_database() {
     print_step "Checking the database..."
-    if [ "$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)" = "postgres" ]; then
+    if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
         print_info "PostgreSQL: betterdesk-server migrates its tables at start"
         return 0
     fi
@@ -5624,15 +5913,9 @@ do_validate() {
     
     # Check database
     echo -n "  Database: "
-    local validate_db_type="sqlite"
-    if [ -f "$CONSOLE_PATH/.env" ]; then
-        validate_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-        validate_db_type="${validate_db_type:-sqlite}"
-    fi
-
-    if [ "$validate_db_type" = "postgres" ]; then
+    if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
         local pg_uri
-        pg_uri=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+        pg_uri=$(env_database_url "$CONSOLE_PATH/.env")
         if [ -n "$pg_uri" ] && PGCONNECT_TIMEOUT=3 psql "$pg_uri" -c "SELECT 1" &>/dev/null 2>&1; then
             echo -e "${GREEN}✓ PostgreSQL${NC}"
             # Check tables in PostgreSQL
@@ -5812,11 +6095,22 @@ do_backup_silent() {
     mkdir -p "$backup_path"
     
     print_step "Creating backup: $backup_name"
-    
-    # Backup database
-    if [ -f "$DB_PATH" ]; then
-        cp "$DB_PATH" "$backup_path/"
-        print_info "  - Database"
+
+    # The server's own backup: a consistent copy of the database (SQLite or
+    # PostgreSQL), the env file, the console's data and its certificates,
+    # also while the server runs. An older binary has none: the SQLite file
+    # is copied as it is
+    local archive=""
+    if binary_backs_up && archive=$(server_cmd backup --out "$backup_path" 2>>"$LOG_FILE"); then
+        print_info "  - Database, settings and the console's data ($(basename "$archive"))"
+    else
+        if binary_backs_up; then
+            print_warning "betterdesk-server backup failed (its message is in $LOG_FILE); the backup holds a copy of the database file instead"
+        fi
+        if [ -f "$DB_PATH" ]; then
+            cp "$DB_PATH" "$backup_path/"
+            print_info "  - Database"
+        fi
     fi
     
     # Backup keys
@@ -6325,16 +6619,14 @@ do_diagnostics() {
     echo -e "${WHITE}${BOLD}═══ Database statistics ═══${NC}"
     echo ""
     
-    # Determine the active database type the SAME way the rest of the script does:
-    # read DB_TYPE from the console .env first (source of truth), and only fall back
-    # to SQLite file detection. This prevents a stale db_v2.sqlite3 left over from a
-    # previous install from masking an active PostgreSQL backend.
-    local diag_db_type="sqlite"
-    local diag_pg_uri=""
-    if [ -f "$CONSOLE_PATH/.env" ]; then
-        diag_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-        diag_db_type="${diag_db_type:-sqlite}"
-        diag_pg_uri=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+    # The database the server opens with the console's .env (DATABASE_URL,
+    # or DB_URL and DB_TYPE of an older install), and only then a SQLite
+    # file: a stale db_v2.sqlite3 of an earlier install does not hide
+    # PostgreSQL.
+    local diag_db_type diag_pg_uri=""
+    diag_db_type=$(env_database_type "$CONSOLE_PATH/.env")
+    if [ "$diag_db_type" = postgres ]; then
+        diag_pg_uri=$(env_database_url "$CONSOLE_PATH/.env")
     fi
     # The Go server may also carry the DSN in its systemd unit (-db postgres://...)
     if [ "$diag_db_type" != "postgres" ] && [ -f /etc/systemd/system/betterdesk-server.service ]; then
@@ -7543,9 +7835,9 @@ do_migrate_database() {
     echo -e "${WHITE}${BOLD}══════════ DATABASE MIGRATION ══════════${NC}"
     echo ""
 
-    # Locate migration binary
+    # The installed binary's migrate command, else the separate tool of an
+    # older release
     local migrate_bin=""
-    local arch=$(uname -m)
     local search_paths=(
         "$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64"
         "$SCRIPT_DIR/tools/migrate/migrate-linux-amd64"
@@ -7553,7 +7845,9 @@ do_migrate_database() {
         "/usr/local/bin/betterdesk-migrate"
     )
 
+    binary_migrates && migrate_bin=server_migrate
     for p in "${search_paths[@]}"; do
+        [ -z "$migrate_bin" ] || break
         if [ -f "$p" ] && [ -x "$p" ]; then
             migrate_bin="$p"
             break
@@ -7572,14 +7866,17 @@ do_migrate_database() {
     fi
 
     if [ -z "$migrate_bin" ]; then
-        print_error "Migration binary not found!"
-        print_info "Expected at: $SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64"
-        print_info "Build it with: cd betterdesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
+        print_error "No migration tool: $(server_binary_path) has no migrate command"
+        print_info "Update first (sudo $(basename "$MANAGER_COMMAND") --update): the server's own migrate command moves the database"
         press_enter
         return
     fi
 
-    print_info "Migration binary: $migrate_bin"
+    if [ "$migrate_bin" = server_migrate ]; then
+        print_info "Migration tool: $(server_binary_path) migrate"
+    else
+        print_info "Migration binary: $migrate_bin"
+    fi
     echo ""
     local _menu_items=(
         $'Rust -> Go\tMigrate legacy Rust hbbs database to the Go server'
@@ -7701,7 +7998,7 @@ do_migrate_database() {
             # The install's own database: the server stops for the copy and
             # starts again on the new database
             local own_pg=false
-            [ -f "$CONSOLE_PATH/.env" ] && [ "$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)" = "$pg_uri" ] \
+            [ -f "$CONSOLE_PATH/.env" ] && [ "$(env_database_url "$CONSOLE_PATH/.env")" = "$pg_uri" ] \
                 && [ "$dst_db" = "$RUSTDESK_PATH/db_v2.sqlite3" ] && own_pg=true
             [ "$own_pg" = true ] && systemctl stop "$SERVER_SERVICE" 2>/dev/null
 
@@ -7937,7 +8234,7 @@ auto_action() {
     elif is_node_era_install; then
         echo upgrade
     elif is_go_only_install && [ -x "$(server_binary_path)" ] && [ -f "$CONSOLE_PATH/.env" ] \
-        && { [ "$USE_POSTGRESQL" != true ] || [ "$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)" = postgres ]; }; then
+        && { [ "$USE_POSTGRESQL" != true ] || [ "$(env_database_type "$CONSOLE_PATH/.env")" = postgres ]; }; then
         echo update
     elif [ "$MINIMAL_MODE" = true ]; then
         echo minimal

@@ -28,7 +28,7 @@ BETTERDESK_DIR="${BETTERDESK_DIR:-/opt/betterdesk/docker}"
 # The image the compose file runs (a mirror goes into docker-compose.override.yml)
 BETTERDESK_IMAGE="ghcr.io/trybetterdesk/betterdesk"
 BETTERDESK_IMAGE_TAG_SET="${BETTERDESK_IMAGE_TAG:-}"
-BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/trybetterdesk/betterdesk/${BETTERDESK_BRANCH:-main}}"
+BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/trybetterdesk/betterdesk/${BETTERDESK_BRANCH:-dev}}"
 RELAY_SERVERS_SET="${RELAY_SERVERS:-}"
 RELAY_MODE="${RELAY_MODE:-auto}"
 CONSOLE_PORT_SET="${BETTERDESK_CONSOLE_PORT:-}"
@@ -717,6 +717,13 @@ new_secret() {
 # postgres_url PASSWORD: the server's address of the postgres service
 postgres_url() { printf 'postgres://betterdesk:%s@postgres:5432/betterdesk?sslmode=disable\n' "$1"; }
 
+# use_database ADDRESS: the server's database in .env, DATABASE_URL alone
+# (the type follows from the address); the DB_TYPE of an older .env goes
+use_database() {
+    env_unset DB_TYPE
+    env_set DATABASE_URL "$1"
+}
+
 # postgres_settings: the settings of the postgres service with a new
 # password (kept when .env has one)
 postgres_settings() {
@@ -725,8 +732,7 @@ postgres_settings() {
     [ -n "$pass" ] || pass=$(new_secret 24)
     env_set POSTGRES_PASSWORD "$pass"
     profile_on postgres
-    env_set DB_TYPE postgres
-    env_set DATABASE_URL "$(postgres_url "$pass")"
+    use_database "$(postgres_url "$pass")"
 }
 
 do_install() {
@@ -1027,7 +1033,8 @@ do_uninstall() {
             [ "$answer" = delete ] || die "Nothing was deleted."
         fi
         step "Backing up the data before it is deleted"
-        compose stop -t 30 >/dev/null 2>&1 || true
+        # BetterDesk stops; the postgres service runs on for its dump
+        compose stop -t 30 betterdesk >/dev/null 2>&1 || true
         file=$(backup_volumes)
         ok "Backup: $file"
         compose_quiet --profile postgres --profile guacd down -v --remove-orphans
@@ -1237,8 +1244,7 @@ do_postgres() {
 
     step "Starting BetterDesk on PostgreSQL"
     profile_on postgres
-    env_set DB_TYPE postgres
-    env_set DATABASE_URL "$(postgres_url "$pass")"
+    use_database "$(postgres_url "$pass")"
     compose_quiet up -d || true
     if ! wait_healthy; then
         local log

@@ -8,7 +8,8 @@
       - Fresh installation: one service, BetterDeskServer, that serves the
         signal and relay server, the API and the web console
       - Minimal installation (the same server with its web console off)
-      - Update an installation (release binaries checked by SHA-256)
+      - Update an installation (release binaries checked by SHA-256 and,
+        from the second install on, the release signature)
       - Upgrade an install with the Node.js console in place, and roll it back
       - Repair/fix issues (enhanced with graceful shutdown)
       - Validate installation
@@ -16,7 +17,7 @@
       - Reset admin password
       - Build & deploy server (rebuild Go binary with rollback)
       - Full diagnostics
-      - SHA256 binary verification
+      - SHA-256 and signature checks of release binaries
       - Auto mode (non-interactive)
       - Enhanced service management with health verification
       - Port conflict detection
@@ -38,7 +39,7 @@
     With -Uninstall, also remove installation data and keys
 
 .PARAMETER SkipVerify
-    Skip SHA256 verification of binaries
+    Skip the SHA-256 and signature checks of a downloaded binary
 
 .PARAMETER Update
     Update without questions. An install with the Node.js console is upgraded
@@ -60,7 +61,8 @@
 
 .PARAMETER Channel
     Release channel: 'stable' (default, the newest release) or 'dev' (the
-    development build). The install keeps it for later updates.
+    development build). The install keeps it for later updates. Without
+    it, a repository with no stable release yet installs 'dev'.
 
 .PARAMETER Protocol
     Set protocol mode: 'http' or 'https'
@@ -657,7 +659,7 @@ function Merge-ConsoleEnv {
 
     $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
     $dbType = "sqlite"
-    $databaseUrl = ""
+    $databaseUrl = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
     if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
         $dbType = "postgres"
         $databaseUrl = $script:POSTGRESQL_URI
@@ -720,10 +722,14 @@ function Merge-ConsoleEnv {
         return $false
     }
 
-    # The server's database: DB_URL (the old services passed it in their environment)
-    if (-not (Get-ConsoleEnvValue -Key "DB_URL")) {
-        if ($dbType -eq "postgres") { Set-ConsoleEnvValue -Key "DB_URL" -Value $databaseUrl }
-        else { Set-ConsoleEnvValue -Key "DB_URL" -Value $subst.DB_PATH }
+    # The server's database is DATABASE_URL (the template's, filled above).
+    # A file that names none gets it; an older binary reads DB_URL instead
+    # (its template still writes DB_TYPE), which the old services passed in
+    # their environment
+    if (-not (Test-BinaryReadsDatabaseUrl -Path $bin)) {
+        if (-not (Get-ConsoleEnvValue -Key "DB_URL")) { Set-ConsoleEnvValue -Key "DB_URL" -Value $databaseUrl }
+    } elseif (-not (Get-EnvDatabaseUrl)) {
+        Use-DatabaseInEnv -Type $dbType -Address $databaseUrl
     }
     # The server makes the first admin before the console starts, and the
     # console keeps an admin it did not make: both take the same password
@@ -768,6 +774,61 @@ function Get-ConsoleEnvValue {
         if ($line -match "^$([regex]::Escape($Key))=(.*)$") { return $Matches[1].Trim() }
     }
     return ""
+}
+
+# True for a postgres:// or postgresql:// address.
+function Test-PostgresUrl {
+    param([string]$Address)
+    return [bool]($Address -match '^(?i)postgres(ql)?://')
+}
+
+# The database the server opens with the console's .env, read as the
+# server reads it: DATABASE_URL, a postgres:// address or the SQLite file
+# (sqlite:// before it allowed), else DB_URL of an older install.
+# DB_TYPE=sqlite of an older install keeps it on SQLite where DATABASE_URL
+# still names PostgreSQL. "" when .env names none: the server then opens
+# db_v2.sqlite3 in its folder.
+function Get-EnvDatabaseUrl {
+    $url = Get-ConsoleEnvValue -Key "DATABASE_URL"
+    $legacy = Get-ConsoleEnvValue -Key "DB_URL"
+    if ($url -and (Test-PostgresUrl $url) -and (Get-ConsoleEnvValue -Key "DB_TYPE") -eq "sqlite") {
+        $url = ""
+        if (Test-PostgresUrl $legacy) { $legacy = "" }
+    }
+    if (-not $url) { $url = $legacy }
+    if (-not (Test-PostgresUrl $url)) { $url = $url -replace '^(?i)sqlite:(//)?', '' }
+    return $url
+}
+
+# "postgres" when the server opens PostgreSQL with the console's .env,
+# else "sqlite".
+function Get-EnvDatabaseType {
+    if (Test-PostgresUrl (Get-EnvDatabaseUrl)) { return "postgres" }
+    return "sqlite"
+}
+
+# True when the binary takes its database from DATABASE_URL; older ones
+# read DB_URL and DB_TYPE only.
+function Test-BinaryReadsDatabaseUrl {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'Remove DB_TYPE to use DATABASE_URL' -SimpleMatch -Quiet)
+}
+
+# Points the console's .env at the database the server is to use:
+# DATABASE_URL alone, its type from the scheme; the DB_TYPE, DB_URL and
+# DB_PATH of an older install go. For an installed binary that reads only
+# DB_URL and DB_TYPE, those are written as it reads them.
+function Use-DatabaseInEnv {
+    param([ValidateSet('postgres', 'sqlite')][string]$Type, [string]$Address)
+    if (Test-BinaryReadsDatabaseUrl) {
+        Remove-ConsoleEnvValue -Keys @("DB_TYPE", "DB_URL", "DB_PATH")
+        Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $Address
+    } else {
+        Set-ConsoleEnvValue -Key "DB_TYPE" -Value $Type
+        Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $(if ($Type -eq "postgres") { $Address } else { "" })
+        Set-ConsoleEnvValue -Key "DB_URL" -Value $Address
+    }
 }
 #===============================================================================
 # The server with its web console: binary, console folder, service
@@ -872,12 +933,30 @@ function Invoke-ServerCommand {
 function Get-ReleaseBaseUrl {
     if ($env:RELEASE_BASE_URL) { return $env:RELEASE_BASE_URL.TrimEnd('/') }
     $releases = "https://github.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/releases"
+    if ($script:RELEASE_TAG) { return "$releases/download/$($script:RELEASE_TAG)" }
     if ($script:UPDATE_GITHUB_BRANCH -eq "dev") { return "$releases/download/dev" }
     return "$releases/latest/download"
 }
 
+# The tag of the newest published pre-release of the repository other than
+# the rolling "dev" one, or "" when there is none or the API does not
+# answer. GitHub lists the releases newest first.
+function Get-NewestPrereleaseTag {
+    try {
+        $list = Invoke-RestMethod -Uri "https://api.github.com/repos/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/releases?per_page=50" -Headers @{ Accept = "application/vnd.github+json" } -UseBasicParsing -ErrorAction Stop
+    } catch {
+        return ""
+    }
+    foreach ($r in @($list)) {
+        if (-not $r.draft -and $r.prerelease -and $r.tag_name -ne "dev" -and "$($r.tag_name)" -match '^[A-Za-z0-9][A-Za-z0-9._-]*$') { return [string]$r.tag_name }
+    }
+    return ""
+}
+
 # Downloads the release binary for this machine into $Dir, checked against
-# the release's SHA256SUMS. Returns the path or $null.
+# the release's SHA256SUMS and, when the installed binary can check it
+# (verify-release), the signature of the release's manifest. Returns the
+# path or $null.
 function Get-ReleaseBinary {
     param([string]$Dir)
     $asset = "betterdesk-server-windows-amd64.exe"
@@ -886,18 +965,53 @@ function Get-ReleaseBinary {
         return $null
     }
     Read-UpdateGitHubBranchFromEnv
-    $base = Get-ReleaseBaseUrl
-    Print-Info "Downloading $asset ($($script:UPDATE_GITHUB_BRANCH) channel) from $base"
+    # The repository given to the installer, else the one .env names
+    if (-not $script:UPDATE_GITHUB_OWNER_GIVEN -and (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER")) { $script:UPDATE_GITHUB_OWNER = Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER" }
+    if (-not $script:UPDATE_GITHUB_REPO_GIVEN -and (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_REPO")) { $script:UPDATE_GITHUB_REPO = Get-ConsoleEnvValue -Key "UPDATE_GITHUB_REPO" }
     $sums = Join-Path $Dir "SHA256SUMS"
     $file = Join-Path $Dir $asset
-    try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -Uri "$base/SHA256SUMS" -OutFile $sums -UseBasicParsing -ErrorAction Stop
-        Invoke-WebRequest -Uri "$base/$asset" -OutFile $file -UseBasicParsing -ErrorAction Stop
-    } catch {
+    $status = 0
+    $failure = $null
+    $fallback = -not $env:RELEASE_BASE_URL -and -not $script:UPDATE_GITHUB_BRANCH_GIVEN -and -not (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_BRANCH")
+    $askedForPrerelease = $false
+    $script:RELEASE_TAG = ""
+    while ($true) {
+        $base = Get-ReleaseBaseUrl
+        Print-Info "Downloading $asset ($($script:UPDATE_GITHUB_BRANCH) channel) from $base"
         $status = 0
-        if ($_.Exception.Response) { try { $status = [int]$_.Exception.Response.StatusCode } catch { $status = 0 } }
-        if (-not $status -and "$($_.Exception.Message)" -match '\b404\b') { $status = 404 }
+        $failure = $null
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest -Uri "$base/SHA256SUMS" -OutFile $sums -UseBasicParsing -ErrorAction Stop
+            Invoke-WebRequest -Uri "$base/$asset" -OutFile $file -UseBasicParsing -ErrorAction Stop
+        } catch {
+            $failure = $_
+            if ($_.Exception.Response) { try { $status = [int]$_.Exception.Response.StatusCode } catch { $status = 0 } }
+            if (-not $status -and "$($_.Exception.Message)" -match '\b404\b') { $status = 404 }
+        }
+        # No stable release yet: the newest pre-release (a release candidate
+        # of the stable channel), else, with no channel given or saved, the
+        # development build and its channel for later updates (DECISIONS A183)
+        if ($failure -and $status -eq 404 -and -not $env:RELEASE_BASE_URL -and $script:UPDATE_GITHUB_BRANCH -ne "dev" -and -not $askedForPrerelease) {
+            $askedForPrerelease = $true
+            $prerelease = Get-NewestPrereleaseTag
+            if ($prerelease) {
+                Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release yet: installing the newest pre-release $prerelease"
+                $script:RELEASE_TAG = $prerelease
+                continue
+            }
+        }
+        if ($failure -and $status -eq 404 -and $fallback -and -not $script:RELEASE_TAG -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
+            Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release or pre-release yet: installing the development build (-Channel dev) instead"
+            Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1')' -Update -Channel stable"
+            $script:UPDATE_GITHUB_BRANCH = "dev"
+            $script:UPDATE_GITHUB_BRANCH_GIVEN = "dev"
+            $env:UPDATE_GITHUB_BRANCH = "dev"
+            continue
+        }
+        break
+    }
+    if ($failure) {
         if ($status -eq 404 -and -not $env:RELEASE_BASE_URL -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
             Print-Error "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release yet"
             Print-Info "Install the development build with -Channel dev, or a binary you have with -Binary FILE"
@@ -905,7 +1019,7 @@ function Get-ReleaseBinary {
             Print-Error "There is no release at $base"
             Print-Info "Install a binary you have with -Binary FILE"
         } elseif (-not $status) {
-            Print-Error "Could not reach ${base}: $($_.Exception.Message)"
+            Print-Error "Could not reach ${base}: $($failure.Exception.Message)"
             Print-Info "Check this machine's internet access, DNS and proxy settings,"
             Print-Info "or install offline: download the binary elsewhere and run with -Binary FILE"
         } else {
@@ -920,7 +1034,7 @@ function Get-ReleaseBinary {
     }
     $actual = (Get-FileHash -Path $file -Algorithm SHA256).Hash.ToLower()
     if ($script:SKIP_VERIFY) {
-        Print-Warning "SHA-256 check skipped (-SkipVerify)"
+        Print-Warning "SHA-256 and signature checks skipped (-SkipVerify)"
     } elseif (-not $expected) {
         Print-Error "SHA256SUMS of the release does not list $asset"
         return $null
@@ -929,10 +1043,62 @@ function Get-ReleaseBinary {
         return $null
     } else {
         Print-Success "SHA-256 of $asset matches the release"
+        if (-not (Test-ReleaseSignature -Dir $Dir -Base $base -Asset $asset)) {
+            Print-Info "Nothing was installed. A release signed with another key (a fork's) installs with -SkipVerify"
+            return $null
+        }
     }
     $target = Join-Path $Dir "betterdesk-server.exe"
     Move-Item -Path $file -Destination $target -Force
     return $target
+}
+
+# True when the binary checks a release's signature itself, with the
+# release key it carries (verify-release).
+function Test-BinaryVerifiesReleases {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'verify-release --manifest FILE' -SimpleMatch -Quiet)
+}
+
+# Checks the downloaded $Dir\$Asset against the signed manifest of the
+# release at $Base with the installed betterdesk-server (verify-release).
+# Windows has no tool for an ed25519 signature before the server is
+# installed, so a first install (or one of a binary older than the release
+# key) says so and keeps the SHA-256 check over HTTPS. Returns $false when
+# the release is refused.
+function Test-ReleaseSignature {
+    param([string]$Dir, [string]$Base, [string]$Asset)
+    $installed = Get-ServerBinaryPath
+    if (-not (Test-BinaryVerifiesReleases -Path $installed)) {
+        Print-Warning "The release signature is checked from the second install on: this install checks the binary's SHA-256 over HTTPS only."
+        Print-Info "Windows has no tool for the signature before betterdesk-server is installed; from the next update on, the installed betterdesk-server checks it."
+        return $true
+    }
+    $manifest = Join-Path $Dir "manifest.json"
+    $signature = Join-Path $Dir "manifest.sig"
+    foreach ($name in @("manifest.json", "manifest.sig")) {
+        try {
+            Invoke-WebRequest -Uri "$Base/$name" -OutFile (Join-Path $Dir $name) -UseBasicParsing -ErrorAction Stop
+        } catch {
+            Print-Error "The release has no signed manifest ($name could not be downloaded), so $Asset is not installed"
+            return $false
+        }
+    }
+    $output = @(& $installed verify-release --manifest $manifest --signature $signature --name $Asset (Join-Path $Dir $Asset) 2>&1 | ForEach-Object { "$_" })
+    $code = $LASTEXITCODE
+    if ($code -eq 0) {
+        $branch = ""
+        if ((Get-Content $manifest -Raw) -match '"branch"\s*:\s*"([A-Za-z0-9_./-]+)"') { $branch = $Matches[1] }
+        if ($branch -ne $script:UPDATE_GITHUB_BRANCH) {
+            Print-Error "The release is not one of the $($script:UPDATE_GITHUB_BRANCH) channel, so $Asset is not installed"
+            return $false
+        }
+        Print-Success "Release signature checked by the installed betterdesk-server ($((($output -join ' ') -replace '^verified: ', '')))"
+        return $true
+    }
+    Print-Error "The installed betterdesk-server refused the release: $((($output -join ' ') -replace '^betterdesk-server verify-release: ', ''))"
+    return $false
 }
 
 # A checked binary for this machine from -Binary, -FromSource or the
@@ -1366,15 +1532,15 @@ function Invoke-GoUpgrade {
     Print-Step "[3/8] Stopping $($script:CONSOLE_SERVICE) and $($script:SERVER_SERVICE)..."
     Stop-AllServices
     $dbFile = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
-    if ((Get-ConsoleEnvValue -Key "DB_TYPE") -ne "postgres" -and (Test-Path $dbFile)) {
+    if ((Get-EnvDatabaseType) -ne "postgres" -and (Test-Path $dbFile)) {
         Copy-Item -Path $dbFile -Destination (Join-Path $backup "db_v2.sqlite3") -Force
         foreach ($side in @("-wal", "-shm")) {
             if (Test-Path "$dbFile$side") { Copy-Item -Path "$dbFile$side" -Destination (Join-Path $backup "db_v2.sqlite3$side") -Force }
         }
-    } elseif ((Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres") {
+    } elseif ((Get-EnvDatabaseType) -eq "postgres") {
         $pgDump = Get-Command pg_dump -ErrorAction SilentlyContinue
         if ($pgDump) {
-            & $pgDump.Source -Fc -f (Join-Path $backup "postgres.dump") (Get-ConsoleEnvValue -Key "DATABASE_URL") 2>$null
+            & $pgDump.Source -Fc -f (Join-Path $backup "postgres.dump") (Get-EnvDatabaseUrl) 2>$null
         } else {
             Print-Warning "pg_dump is not installed: there is no database snapshot"
         }
@@ -1597,7 +1763,11 @@ function Update-GoInstall {
     Print-Info "Creating backup before update..."
     Do-BackupSilent
 
-    if ($script:BINARY_FILE -or $script:FROM_SOURCE -or $env:RELEASE_BASE_URL) {
+    # An installed binary without verify-release is older than the release
+    # key, and its updater would take a release without checking the
+    # signature: this installer downloads the release itself and says what
+    # it checked
+    if ($script:BINARY_FILE -or $script:FROM_SOURCE -or $env:RELEASE_BASE_URL -or -not (Test-BinaryVerifiesReleases -Path $serverExe)) {
         if (-not (Get-StagedServerBinary)) {
             Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
             return $false
@@ -1608,9 +1778,10 @@ function Update-GoInstall {
         if (-not $installed) { Start-ServerService; return $false }
     } else {
         # The server's own updater: the release of the channel, its manifest
-        # signature and SHA-256 checked; the running exe is renamed aside and
-        # the old one kept as .prev
-        Print-Step "Installing the newest release with betterdesk-server update..."
+        # signature (with the release key the installed binary carries) and
+        # SHA-256 checked; the running exe is renamed aside and the old one
+        # kept as .prev
+        Print-Step "Installing the newest release with betterdesk-server update (it checks the release signature)..."
         # The repository goes to the updater: an installed binary may have
         # an older default
         $owner = if ($script:UPDATE_GITHUB_OWNER_GIVEN) { $script:UPDATE_GITHUB_OWNER_GIVEN } else { Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER" }
@@ -1813,13 +1984,10 @@ function Setup-Services {
 
     # The database settings from an existing .env, so a reinstall keeps
     # PostgreSQL
-    if (-not $script:USE_POSTGRESQL -and (Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres") {
-        $url = Get-ConsoleEnvValue -Key "DATABASE_URL"
-        if ($url) {
-            $script:USE_POSTGRESQL = $true
-            $script:POSTGRESQL_URI = $url
-            Print-Info "Recovered PostgreSQL config from existing .env"
-        }
+    if (-not $script:USE_POSTGRESQL -and (Get-EnvDatabaseType) -eq "postgres") {
+        $script:USE_POSTGRESQL = $true
+        $script:POSTGRESQL_URI = Get-EnvDatabaseUrl
+        Print-Info "Recovered PostgreSQL config from existing .env"
     }
 
     # Relay address: RELAY_SERVERS, else the mode (auto = public IP, local =
@@ -1965,7 +2133,7 @@ function Do-Update {
             "Back`tReturn to the main menu"
         )
         $returns = @("1", "2", "0")
-        Invoke-MenuChoose -Title "Update" -Subtitle "Releases are checked by SHA-256 before they replace the binary" -Items $items -Returns $returns
+        Invoke-MenuChoose -Title "Update" -Subtitle "Releases are checked by SHA-256 and their signature before they replace the binary" -Items $items -Returns $returns
         switch ($script:MENU_CHOICE) {
             "0" { return $true }
             "2" { Switch-UpdateChannel; return $true }
@@ -2143,14 +2311,14 @@ function Remove-FirstAdminPassword {
 
 # This script as C:\BetterDesk\betterdesk.ps1, for updates, repairs and the
 # uninstall later. Run from that copy (an update), it takes the newest one
-# of the update channel; run from Invoke-Expression, it fetches itself.
+# of INSTALLER_REF; run from Invoke-Expression, it fetches itself.
 function Install-ManagerScript {
     $target = Join-Path $script:RUSTDESK_PATH "betterdesk.ps1"
     try {
         if ($script:SELF_PATH -and (Test-Path $script:SELF_PATH) -and ((Resolve-Path $script:SELF_PATH).Path -ne $target)) {
             Copy-Item -Path $script:SELF_PATH -Destination $target -Force -ErrorAction Stop
         } else {
-            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:UPDATE_GITHUB_BRANCH)/betterdesk.ps1"
+            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:INSTALLER_REF)/betterdesk.ps1"
             $tmp = "$target.download"
             Invoke-WebRequest -Uri $url -OutFile $tmp -UseBasicParsing -ErrorAction Stop
             if (-not (Select-String -Path $tmp -Pattern 'function Install-ManagerScript' -SimpleMatch -Quiet)) { throw "not the installer" }
@@ -2258,16 +2426,7 @@ function Detect-Installation {
     }
     
     # Check database (SQLite file or PostgreSQL)
-    $detectedDbType = "sqlite"
-    $envFile = Join-Path $script:CONSOLE_PATH ".env"
-    if (Test-Path $envFile) {
-        $dbTypeLine = Select-String -Path $envFile -Pattern '^DB_TYPE=' -SimpleMatch | Select-Object -First 1
-        if ($dbTypeLine) {
-            $detectedDbType = ($dbTypeLine.Line -split '=', 2)[1].Trim()
-        }
-    }
-
-    if ($detectedDbType -eq "postgres") {
+    if ((Get-EnvDatabaseType) -eq "postgres") {
         # PostgreSQL: we trust the config -- full validation is done by Do-Validate
         $script:DATABASE_OK = $true
     } elseif (Test-Path "$script:RUSTDESK_PATH\db_v2.sqlite3") {
@@ -2323,19 +2482,11 @@ function Preserve-DatabaseConfig {
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
     
     if (Test-Path $envFile) {
-        # Read existing DB_TYPE
-        $dbTypeLine = Select-String -Path $envFile -Pattern '^DB_TYPE=' -SimpleMatch | Select-Object -First 1
-        $existingDbType = if ($dbTypeLine) { ($dbTypeLine.Line -split '=', 2)[1].Trim() } else { "" }
-        
-        # Read existing DATABASE_URL
-        $dbUrlLine = Select-String -Path $envFile -Pattern '^DATABASE_URL=' -SimpleMatch | Select-Object -First 1
-        $existingDbUrl = if ($dbUrlLine) { ($dbUrlLine.Line -split '=', 2)[1].Trim() } else { "" }
-        
-        if ($existingDbType -eq "postgres" -and $existingDbUrl) {
+        if ((Get-EnvDatabaseType) -eq "postgres") {
             $script:USE_POSTGRESQL = $true
-            $script:POSTGRESQL_URI = $existingDbUrl
+            $script:POSTGRESQL_URI = Get-EnvDatabaseUrl
             Print-Info "Preserving PostgreSQL configuration from existing .env"
-        } elseif ($existingDbType -eq "sqlite") {
+        } else {
             $script:USE_POSTGRESQL = $false
             $script:POSTGRESQL_URI = ""
             Print-Info "Preserving SQLite configuration from existing .env"
@@ -2723,9 +2874,7 @@ function Migrate-SQLiteToPostgreSQL {
     Print-Step "Moving the SQLite install to PostgreSQL..."
     & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -eq 0) {
-        Set-ConsoleEnvValue -Key "DB_TYPE" -Value "postgres"
-        Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $script:POSTGRESQL_URI
-        Set-ConsoleEnvValue -Key "DB_URL" -Value $script:POSTGRESQL_URI
+        Use-DatabaseInEnv -Type postgres -Address $script:POSTGRESQL_URI
         Print-Success "The install now runs on PostgreSQL"
     } else {
         Print-Warning "The move to PostgreSQL failed (output above): the server keeps using $sqliteDb"
@@ -2739,9 +2888,7 @@ function Use-SQLiteInstall {
     param([string]$Path)
     $script:USE_POSTGRESQL = $false
     $script:POSTGRESQL_URI = ""
-    Set-ConsoleEnvValue -Key "DB_TYPE" -Value "sqlite"
-    Set-ConsoleEnvValue -Key "DATABASE_URL" -Value ""
-    Set-ConsoleEnvValue -Key "DB_URL" -Value $Path
+    Use-DatabaseInEnv -Type sqlite -Address $Path
 }
 
 function Set-ConsoleEnvValue {
@@ -2761,6 +2908,19 @@ function Set-ConsoleEnvValue {
     if (-not $found) { $updated += "$Key=$Value" }
     # UTF-8 without BOM: the console reads the first key literally
     [System.IO.File]::WriteAllLines($envFile, [string[]]$updated, (New-Object System.Text.UTF8Encoding($false)))
+}
+
+# Removes the lines that set any of $Keys from the console's .env.
+function Remove-ConsoleEnvValue {
+    param([string[]]$Keys)
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (-not (Test-Path $envFile)) { return }
+    $pattern = '^\s*(' + (($Keys | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')='
+    $lines = @(Get-Content $envFile -ErrorAction SilentlyContinue)
+    $kept = @($lines | Where-Object { $_ -notmatch $pattern })
+    if ($kept.Count -ne $lines.Count) {
+        [System.IO.File]::WriteAllLines($envFile, [string[]]$kept, (New-Object System.Text.UTF8Encoding($false)))
+    }
 }
 
 # Install-FlaskConsole removed in v2.3.0 - Flask support deprecated
@@ -3141,6 +3301,10 @@ $script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_R
 # over .env and is written into it
 $script:UPDATE_GITHUB_BRANCH_GIVEN = if ($Channel -eq "dev") { "dev" } elseif ($Channel -eq "stable") { "main" } elseif ($env:UPDATE_GITHUB_BRANCH) { $env:UPDATE_GITHUB_BRANCH } else { "" }
 $script:UPDATE_GITHUB_BRANCH = if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { $script:UPDATE_GITHUB_BRANCH_GIVEN } else { "main" }
+# The branch the installer itself comes from for its copy in the install
+# folder: the repository's default branch, dev (its main branch still holds
+# upstream's older installer). The release channel above is separate.
+$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "dev" }
 
 function Read-UpdateGitHubBranchFromEnv {
     if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { return }
@@ -3314,13 +3478,7 @@ function Do-Validate {
     
     # Check database (SQLite or PostgreSQL)
     Write-Host "  Database: " -NoNewline
-    $valDbType = "sqlite"
-    $envFilePath = Join-Path $script:CONSOLE_PATH ".env"
-    if (Test-Path $envFilePath) {
-        $dbLine = Select-String -Path $envFilePath -Pattern '^DB_TYPE=' -SimpleMatch | Select-Object -First 1
-        if ($dbLine) { $valDbType = ($dbLine.Line -split '=', 2)[1].Trim() }
-    }
-    if ($valDbType -eq "postgres") {
+    if ((Get-EnvDatabaseType) -eq "postgres") {
         Write-Host "[OK] (PostgreSQL)" -ForegroundColor Green
     } elseif (Test-Path $script:DB_PATH) {
         Write-Host "[OK] (SQLite)" -ForegroundColor Green
@@ -3476,9 +3634,18 @@ function Do-BackupSilent {
     New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
     
     Print-Step "Creating backup: $backupName"
-    
-    # Backup database
-    if (Test-Path $script:DB_PATH) {
+
+    # The server's own backup: a consistent copy of the database (SQLite or
+    # PostgreSQL), the env file, the console's data and its certificates,
+    # also while the server runs. An older binary has none: the SQLite file
+    # is copied as it is
+    $serverBackup = $false
+    if (Test-BinaryBacksUp) {
+        $serverBackup = ((Invoke-ServerCommand -Arguments @("backup", "--out", $backupPath)) -eq 0)
+        if ($serverBackup) { Print-Info "  - Database, settings and the console's data" }
+        else { Print-Warning "betterdesk-server backup failed (output above); the backup holds a copy of the database file instead" }
+    }
+    if (-not $serverBackup -and (Test-Path $script:DB_PATH)) {
         Copy-Item -Path $script:DB_PATH -Destination $backupPath
         Print-Info "  - Database"
     }
@@ -5056,8 +5223,33 @@ function Do-ToggleProtocol {
 # Database Migration Functions
 #===============================================================================
 
-# Get-MigrateBin returns the path of the migration tool, or $null.
+# True when the binary carries the migrate command (sqlite2pg, pg2sqlite,
+# rust2go, nodejs2go and backup of a SQLite file), which replaces the
+# separate migrate tool of older releases.
+function Test-BinaryMigrates {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'migrate -mode sqlite2pg' -SimpleMatch -Quiet)
+}
+
+# True when the binary carries the backup command (the console's full
+# backup, also of PostgreSQL, while the server runs).
+function Test-BinaryBacksUp {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'backup [--out DIR]' -SimpleMatch -Quiet)
+}
+
+# The installed binary's migrate command with the arguments given.
+function Invoke-ServerMigrate {
+    & (Get-ServerBinaryPath) migrate @args
+}
+
+# Get-MigrateBin returns the migration tool: the installed binary's migrate
+# command (Invoke-ServerMigrate), else the path of the separate tool of an
+# older release, or $null.
 function Get-MigrateBin {
+    if (Test-BinaryMigrates) { return "Invoke-ServerMigrate" }
     $searchPaths = @(
         (Join-Path $script:ScriptDir "betterdesk-server\tools\migrate\migrate.exe"),
         (Join-Path $script:ScriptDir "tools\migrate\migrate.exe"),
@@ -5094,14 +5286,14 @@ function Do-MigrateDatabase {
 
     $migrateBin = Get-MigrateBin
     if (-not $migrateBin) {
-        Print-Error "Migration binary not found!"
-        Print-Info "Expected at: $(Join-Path $script:ScriptDir 'betterdesk-server\tools\migrate\migrate.exe')"
-        Print-Info "Build it with: cd betterdesk-server; go build -o tools\migrate\migrate.exe ./tools/migrate/"
+        Print-Error "No migration tool: $(Get-ServerBinaryPath) has no migrate command"
+        Print-Info "Update first (-Update): the server's own migrate command moves the database"
         Press-Enter
         return
     }
 
-    Print-Info "Migration binary: $migrateBin"
+    if ($migrateBin -eq "Invoke-ServerMigrate") { Print-Info "Migration tool: $(Get-ServerBinaryPath) migrate" }
+    else { Print-Info "Migration binary: $migrateBin" }
     Write-Host ""
     $items = @(
         "Rust -> Go`tLegacy Rust hbbs database to Go server",
@@ -5190,9 +5382,7 @@ function Do-MigrateDatabase {
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "SQLite -> PostgreSQL migration completed successfully!"
                 if ($ownDb) {
-                    Set-ConsoleEnvValue -Key "DB_TYPE" -Value "postgres"
-                    Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $pgUri
-                    Set-ConsoleEnvValue -Key "DB_URL" -Value $pgUri
+                    Use-DatabaseInEnv -Type postgres -Address $pgUri
                     Print-Success "The install now runs on PostgreSQL"
                 }
             } else {
@@ -5226,7 +5416,7 @@ function Do-MigrateDatabase {
 
             # The install's own database: the server stops for the copy and
             # starts again on the new database
-            $ownPg = ((Get-ConsoleEnvValue -Key "DATABASE_URL") -eq $pgUri) -and ($dstDb -eq (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"))
+            $ownPg = ((Get-EnvDatabaseUrl) -eq $pgUri) -and ($dstDb -eq (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"))
             if ($ownPg) { Stop-ServerService }
 
             Print-Step "Running PostgreSQL -> SQLite migration..."
@@ -5315,7 +5505,7 @@ function Get-AutoAction {
     if ($script:UNINSTALL_MODE) { return "uninstall" }
     if (Test-NodeEraInstall) { return "upgrade" }
     if ((Test-GoOnlyInstall) -and (Test-Path (Get-ServerBinaryPath)) -and (Test-Path (Join-Path $script:CONSOLE_PATH ".env")) -and
-        (-not $script:USE_POSTGRESQL -or (Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres")) { return "update" }
+        (-not $script:USE_POSTGRESQL -or (Get-EnvDatabaseType) -eq "postgres")) { return "update" }
     if ($script:MINIMAL_MODE) { return "minimal" }
     return "install"
 }
