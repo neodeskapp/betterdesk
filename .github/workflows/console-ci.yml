@@ -6,7 +6,7 @@ name: Console CI
 
 on:
   push:
-    branches: [main, ci-fix-test]
+    branches: [main]
     paths:
       - 'betterdesk-server/**'
       - 'web-ui/**'
