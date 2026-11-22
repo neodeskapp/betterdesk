@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -31,8 +32,10 @@ import (
 // for an account (signal.Server.PanelProofFor), which the web client's
 // bridge presents.
 // While the console runs, the signal server takes the client features of
-// accounts from it through setFeatures (signal.Server.SetControllerFeatures).
-func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof func(userID int64) []byte, setFeatures func(signal.ControllerFeatures), requestRestart func()) (func(), error) {
+// accounts from it through setFeatures (signal.Server.SetControllerFeatures),
+// and answers the clients' HttpProxyRequest with the handler of its client
+// API port when it has one (setAPIProxy, signal.Server.SetAPIProxy).
+func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof func(userID int64) []byte, setFeatures func(signal.ControllerFeatures), setAPIProxy func(http.Handler), requestRestart func()) (func(), error) {
 	ccfg, err := consoleconfig.LoadEnv()
 	if err != nil {
 		return nil, fmt.Errorf("console configuration: %w", err)
@@ -82,7 +85,11 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		return nil, err
 	}
 	setFeatures(srv.Deps().Access.ClientFeaturesOff)
+	if clientAPI := srv.ClientAPI(); clientAPI != nil {
+		setAPIProxy(clientAPI.Handler())
+	}
 	return func() {
+		setAPIProxy(apiSrv.ListenerHandler())
 		setFeatures(nil)
 		srv.Stop()
 		_ = sdb.Close()
