@@ -308,16 +308,13 @@ func TestWithoutTheSettingsTable(t *testing.T) {
 		t.Errorf("load: %s", got.Body)
 	}
 
-	// When the file cannot be written either, the save fails
-	if runtime.GOOS == "windows" || os.Getuid() == 0 {
-		// A folder in the way does it for every user
-		if err := os.RemoveAll(filepath.Join(w.DataDir, "desktop-layouts")); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(filepath.Join(w.DataDir, "desktop-layouts"), []byte("in the way"), 0o600); err != nil {
-			t.Fatal(err)
-		}
-	} else if err := os.Chmod(filepath.Join(w.DataDir, "desktop-layouts"), 0o500); err != nil {
+	// When the file cannot be written either, the save fails. A file where
+	// the folder should be does it for every user; a read-only folder would
+	// not stop a non-root user from rewriting the file already in it.
+	if err := os.RemoveAll(filepath.Join(w.DataDir, "desktop-layouts")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(w.DataDir, "desktop-layouts"), []byte("in the way"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if got := admin.Do("POST", "/api/desktop/layout", `{"widgets":[]}`); got.Status != 500 || got.Body != `{"success":false,"error":"Failed to save layout"}` {
