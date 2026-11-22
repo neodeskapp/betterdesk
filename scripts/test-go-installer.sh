@@ -467,6 +467,50 @@ test_panel_public_host() (
     rm -rf "$TEST_DIR"
 )
 
+# L149: the end of an install names the console's address, the first
+# sign-in, the client settings with the whole key, the log, the settings
+# file and the commands for update and uninstall, and shows no password.
+test_install_summary() (
+    load
+    printf 'PANEL_PUBLIC_HOST=desk.example.org\nHTTPS_ENABLED=true\nHTTPS_PORT=5443\nCONSOLE_PORT=5000\nDEFAULT_ADMIN_PASSWORD=\n' > "$CONSOLE_PATH/.env"
+    printf 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=\n' > "$RUSTDESK_PATH/id_ed25519.pub"
+    ADMIN_PASSWORD='Summary-Pass-1'
+    local out
+    out=$(print_install_summary 2>&1)
+    for want in "https://desk.example.org:5443" "admin" "ID server" "desk.example.org" \
+        "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=" "journalctl -u betterdesk-server" "$CONSOLE_PATH/.env" \
+        "betterdesk --update" "betterdesk --uninstall"; do
+        case "$out" in *"$want"*) ;; *) fail "the summary does not name $want: $out" ;; esac
+    done
+    case "$out" in *Summary-Pass-1*) fail "the summary shows the password" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# L149: the uninstall says what it leaves on the machine, and --purge
+# removes the data and the betterdesk command too.
+test_uninstall_says_what_stays() (
+    load
+    systemctl() { :; }
+    do_backup_silent() { :; }
+    print_header() { :; }
+    AUTO_MODE=true
+    UNINSTALL_MODE=true
+    MANAGER_COMMAND="$TEST_DIR/sbin/betterdesk"
+    mkdir -p "$TEST_DIR/sbin" && printf '#!/bin/sh\n' > "$MANAGER_COMMAND" && chmod +x "$MANAGER_COMMAND"
+    printf 'DB_TYPE=sqlite\n' > "$CONSOLE_PATH/.env"
+    local out
+    out=$(do_uninstall 2>&1)
+    for want in "Left on this machine" "$RUSTDESK_PATH" "$CONSOLE_PATH" "--purge" "$MANAGER_COMMAND"; do
+        case "$out" in *"$want"*) ;; *) fail "the uninstall does not name $want: $out" ;; esac
+    done
+    [ -d "$RUSTDESK_PATH" ] && [ -d "$CONSOLE_PATH" ] || fail "the uninstall without --purge removed the data"
+    PURGE_MODE=true
+    do_uninstall >/dev/null 2>&1
+    [ ! -e "$RUSTDESK_PATH" ] && [ ! -e "$CONSOLE_PATH" ] && [ ! -e "$MANAGER_COMMAND" ] \
+        || fail "--purge left $(ls -d "$RUSTDESK_PATH" "$CONSOLE_PATH" "$MANAGER_COMMAND" 2>/dev/null | tr '\n' ' ')"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -485,4 +529,6 @@ test_channel_and_download_errors
 test_one_command_install
 test_rerun_updates_and_forgets_the_password
 test_panel_public_host
+test_install_summary
+test_uninstall_says_what_stays
 echo "Go installer unit checks passed"

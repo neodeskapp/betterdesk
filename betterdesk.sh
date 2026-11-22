@@ -208,8 +208,9 @@ while [[ $# -gt 0 ]]; do
             echo "                   'dev' (the development build); kept for later updates"
             echo "  --from-source    Build betterdesk-server from this checkout (needs Go, and"
             echo "                   Node.js unless web-ui/build exists)"
-            echo "  --uninstall      Stop services and remove the native installation"
-            echo "  --purge          With --uninstall, also remove data and keys"
+            echo "  --uninstall      Stop and remove the service, after a backup; the data stays,"
+            echo "                   and the end lists what is left on the machine"
+            echo "  --purge          With --uninstall, also remove the data, keys and the betterdesk command"
             echo "  --check-permissions  Report panel/update/config/restart capabilities"
             echo "  --repair-permissions Repair BetterDesk ownership and service access"
             echo "  --set-config K=V Apply an allowlisted .env setting (repeatable)"
@@ -4970,6 +4971,62 @@ start_services() {
     start_services_with_verification
 }
 
+# print_install_summary: what the admin needs after an install, and no
+# password: the console's address, the first sign-in, what RustDesk
+# clients are given, the log, the settings file and the commands for
+# later.
+print_install_summary() {
+    local env_file="$CONSOLE_PATH/.env" cmd host key console http_port https_port
+    local id_server relay_server signal relay
+    cmd=$(basename "$MANAGER_COMMAND")
+    host=$(env_file_value "$env_file" PANEL_PUBLIC_HOST)
+    [ -n "$host" ] || host=$(get_public_ip)
+    key=$(cat "$RUSTDESK_PATH/id_ed25519.pub" 2>/dev/null || true)
+    http_port=$(resolve_panel_http_port)
+    https_port=$(resolve_panel_https_port)
+    if [ "$MINIMAL_MODE" = true ] || [ "$http_port" = 0 ]; then
+        console="off (set CONSOLE_PORT in $env_file to turn it on)"
+    elif [ "$(read_effective_console_setting HTTPS_ENABLED false | tr '[:upper:]' '[:lower:]')" = "true" ]; then
+        console="https://$host:$https_port  (http://$host:$http_port leads there)"
+    else
+        console="http://$host:$http_port"
+    fi
+    signal=$(signal_port)
+    relay=$(relay_port)
+    id_server="$host"
+    [ "$signal" = 21116 ] || id_server="$host:$signal"
+    relay_server="$host"
+    [ "$relay" = 21117 ] || relay_server="$host:$relay"
+
+    echo ""
+    echo -e "${GREEN}${BOLD}BetterDesk is installed${NC}"
+    echo ""
+    echo -e "  Web console:   ${WHITE}$console${NC}"
+    local subject="" issuer=""
+    if [ -f "$RUSTDESK_PATH/ssl/betterdesk.crt" ]; then
+        subject=$(openssl x509 -in "$RUSTDESK_PATH/ssl/betterdesk.crt" -noout -subject 2>/dev/null | sed 's/^subject=//')
+        issuer=$(openssl x509 -in "$RUSTDESK_PATH/ssl/betterdesk.crt" -noout -issuer 2>/dev/null | sed 's/^issuer=//')
+    fi
+    if [ -n "$subject" ] && [ "$subject" = "$issuer" ]; then
+        echo "                 The certificate is self-signed, so the browser warns once."
+    fi
+    if [ "${FRESH_CONSOLE_ENV:-false}" = true ]; then
+        echo "  First sign-in: user admin, with the password shown above (it is not shown again)"
+    else
+        echo "  Sign in:       user admin; forgot the password? sudo $cmd --reset-password"
+    fi
+    echo "  RustDesk clients (Settings > Network > ID/Relay server):"
+    echo -e "    ID server:     ${WHITE}$id_server${NC}"
+    echo -e "    Relay server:  ${WHITE}$relay_server${NC}"
+    echo -e "    API server:    ${WHITE}http://$host:${GO_API_PORT:-21114}${NC}"
+    echo -e "    Key:           ${WHITE}$key${NC}"
+    echo "  Log:           sudo journalctl -u betterdesk-server -f"
+    echo "  Settings:      $env_file (then: sudo systemctl restart betterdesk-server)"
+    echo "  Update:        sudo $cmd --update"
+    echo "  Uninstall:     sudo $cmd --uninstall"
+    echo ""
+}
+
 # forget_first_admin_password: once the server has started and made the
 # admin, .env and its kept copies hold no admin password any more (the
 # server reads DEFAULT_ADMIN_PASSWORD and INIT_ADMIN_PASS only to make the
@@ -5078,42 +5135,7 @@ do_install() {
     fi
     echo ""
 
-    local server_ip
-    server_ip=$(get_public_ip)
-    local public_key=""
-    if [ -f "$RUSTDESK_PATH/id_ed25519.pub" ]; then
-        public_key=$(cat "$RUSTDESK_PATH/id_ed25519.pub")
-    fi
-
-    local db_type_info="SQLite"
-    if [ "$USE_POSTGRESQL" = "true" ]; then
-        db_type_info="PostgreSQL"
-    fi
-
-    local tls_status="Disabled"
-    if [ -f "$RUSTDESK_PATH/ssl/betterdesk.crt" ] && [ -f "$RUSTDESK_PATH/ssl/betterdesk.key" ]; then
-        tls_status="Self-signed (auto-generated)"
-    fi
-
-    local panel_url="off (minimal installation)"
-    if [ "$MINIMAL_MODE" != true ]; then
-        if [ "$(read_effective_console_setting HTTPS_ENABLED false | tr '[:upper:]' '[:lower:]')" = "true" ]; then
-            panel_url="https://$server_ip:$(resolve_panel_https_port)"
-        else
-            panel_url="http://$server_ip:$(resolve_panel_http_port)"
-        fi
-    fi
-
-    echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║              INSTALLATION INFO                             ║${NC}"
-    echo -e "${CYAN}╠════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${CYAN}║  Panel Web:     ${WHITE}$panel_url${CYAN}                        ║${NC}"
-    echo -e "${CYAN}║  API Port:      ${WHITE}$API_PORT${CYAN}                                     ║${NC}"
-    echo -e "${CYAN}║  Server ID:     ${WHITE}$server_ip${CYAN}                                    ║${NC}"
-    echo -e "${CYAN}║  Database:      ${WHITE}$db_type_info${CYAN}                                 ║${NC}"
-    echo -e "${CYAN}║  TLS:           ${WHITE}$tls_status${CYAN}                                   ║${NC}"
-    echo -e "${CYAN}║  Key:           ${WHITE}${public_key:0:20}...${CYAN}                          ║${NC}"
-    echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
+    print_install_summary
 
     # Offer TLS configuration for fresh installs
     if [ "$install_ok" = true ] && [ "$AUTO_MODE" = false ] && [ "$MINIMAL_MODE" != true ]; then
@@ -6615,7 +6637,25 @@ do_uninstall() {
         print_info "Preserved console data: $CONSOLE_PATH"
     fi
     
+    if [ "$PURGE_MODE" = true ]; then
+        rm -f "$MANAGER_COMMAND"
+    fi
+
     print_success "BetterDesk has been uninstalled"
+    local left=()
+    [ -d "$RUSTDESK_PATH" ] && left+=("$RUSTDESK_PATH: the database, the server's keys and certificates")
+    [ -d "$CONSOLE_PATH" ] && left+=("$CONSOLE_PATH: the settings (.env) and the console's data")
+    [ -d "$BACKUP_DIR" ] && left+=("$BACKUP_DIR: the backups")
+    id "$SERVICE_USER" &>/dev/null && left+=("the system user $SERVICE_USER (sudo userdel $SERVICE_USER)")
+    [ "$USE_POSTGRESQL" = true ] && left+=("the PostgreSQL database and PostgreSQL itself")
+    left+=("the firewall rules for the BetterDesk ports")
+    [ -x "$MANAGER_COMMAND" ] && left+=("the command $MANAGER_COMMAND, to install again")
+    echo ""
+    echo "Left on this machine:"
+    printf '  %s\n' "${left[@]}"
+    if [ "$PURGE_MODE" != true ] && { [ -d "$RUSTDESK_PATH" ] || [ -d "$CONSOLE_PATH" ]; }; then
+        echo "Remove the data too with: sudo $(basename "$MANAGER_COMMAND") --uninstall --purge"
+    fi
     press_enter
 }
 
@@ -7728,6 +7768,10 @@ main() {
         do_update
         exit $?
     fi
+
+    # --uninstall asks nothing: it makes a backup and keeps the data unless
+    # --purge is given
+    [ "$UNINSTALL_MODE" = true ] && AUTO_MODE=true
 
     if [ "$RESET_PASSWORD_MODE" = true ]; then
         AUTO_MODE=true
