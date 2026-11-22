@@ -26,6 +26,7 @@ import {
 	type ViewerData
 } from '#lib/api/remote.ts';
 import { getDevice } from '#lib/api/devices.ts';
+import { takeDevicePassword } from '#lib/api/onboard.ts';
 import { isGuestMode, isRemoteTarget, isViewOnlyGuest, peerAllowed, transportOf } from './access.ts';
 import { isMobileViewer } from './capabilities.ts';
 import {
@@ -519,7 +520,17 @@ export class Viewer {
 				.loadPeerPassword(s.deviceId)
 				.catch(() => '');
 			const org = this.data.mockRemote ? Promise.resolve('') : getConnectPassword(s.deviceId);
-			void Promise.all([local, org]).then(([mine, theirs]) => {
+			const handed = this.data.mockRemote ? Promise.resolve('') : takeDevicePassword(s.deviceId);
+			void Promise.all([local, org, handed]).then(([mine, theirs, support]) => {
+				// A quick support session's password, which the person's app handed to this
+				// supporter, is sent at once and never stored in this browser
+				if (support) {
+					s.password = support;
+					s.remember = false;
+					s.rememberedPassword = '';
+					this.authenticate(s);
+					return;
+				}
 				// The organisation's password wins and stays out of this browser unless Remember is ticked
 				if (theirs) {
 					s.password = theirs;

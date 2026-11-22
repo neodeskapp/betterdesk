@@ -65,6 +65,7 @@ vi.mock('../../../src/lib/api/remote.ts', () => ({
 	getPendingBillingSession: vi.fn(async () => null),
 	submitWorkReport: vi.fn()
 }));
+vi.mock('../../../src/lib/api/onboard.ts', () => ({ takeDevicePassword: vi.fn(async () => '') }));
 /** Device passwords remembered in this browser */
 const remembered = vi.hoisted(() => new Map<string, string>());
 vi.mock('../../../src/lib/remote/secure-store.ts', () => ({
@@ -78,6 +79,7 @@ vi.mock('../../../src/lib/remote/secure-store.ts', () => ({
 const { Viewer } = await import('../../../src/lib/remote/viewer.svelte.ts');
 const remoteApi = await import('../../../src/lib/api/remote.ts');
 const devicesApi = await import('../../../src/lib/api/devices.ts');
+const onboardApi = await import('../../../src/lib/api/onboard.ts');
 type ViewerData = ConstructorParameters<typeof Viewer>[0]['data'];
 
 function data(extra: Partial<ViewerData> = {}): ViewerData {
@@ -161,6 +163,20 @@ describe('remote viewer sessions', () => {
 		const { s, c } = setup();
 		c.emit('password_required');
 		await vi.waitFor(() => expect(s.password).toBe('org-pw'));
+		expect(s.remember).toBe(false);
+		c.emit('login_success');
+		await vi.waitFor(() => expect(remembered.has('900100012')).toBe(false));
+	});
+
+	test("a quick support session's password is sent at once and never stored in the browser", async () => {
+		remembered.clear();
+		remembered.set('900100012', 'old-pw');
+		vi.mocked(remoteApi.getConnectPassword).mockResolvedValueOnce('org-pw');
+		vi.mocked(onboardApi.takeDevicePassword).mockResolvedValueOnce('qs-pw');
+		const { s, c } = setup();
+		c.emit('password_required');
+		await vi.waitFor(() => expect(c.authenticate).toHaveBeenCalledWith('qs-pw'));
+		expect(onboardApi.takeDevicePassword).toHaveBeenCalledWith('900100012');
 		expect(s.remember).toBe(false);
 		c.emit('login_success');
 		await vi.waitFor(() => expect(remembered.has('900100012')).toBe(false));
