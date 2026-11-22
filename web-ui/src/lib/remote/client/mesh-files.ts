@@ -446,10 +446,6 @@ export class MeshFileTransfer {
 			.catch(() => {});
 	}
 
-	rename(): void {
-		/* not supported by BetterCore files */
-	}
-
 	downloadFile(remotePath: string, fileEntry: MeshRemoteFile): number {
 		if (!this._enabled) return -1;
 		const id = this._nextId++;

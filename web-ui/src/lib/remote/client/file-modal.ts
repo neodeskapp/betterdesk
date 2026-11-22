@@ -522,6 +522,19 @@ export class FileTransferModal {
 		this._syncLocalLayout();
 	}
 
+	/** The remote toolbar shows only what the session's transfer can do (CDAP and mesh lack some) */
+	_syncRemoteActions(): void {
+		const ft = this._session?.client?.fileTransfer;
+		if (!this._el || !ft) return;
+		part(this._el, '.ft-remote-new-folder').style.display = typeof ft.createDir === 'function' ? '' : 'none';
+		part(this._el, '.ft-remote-hidden').style.display = typeof ft.setShowHidden === 'function' ? '' : 'none';
+	}
+
+	/** Whether the transfer fetches whole folders here: into a folder on the desktop, as a ZIP archive in a browser */
+	_canDownloadFolder(ft: FileSheetTransfer): boolean {
+		return typeof (LocalFiles.isDesktopBridge() ? ft.downloadFolder : ft.downloadFolderAsZip) === 'function';
+	}
+
 	_updateRemoteHiddenButton(): void {
 		const btn = this._el && this._el.querySelector('.ft-remote-hidden');
 		const ft = this._session && this._session.client && this._session.client.fileTransfer;
@@ -581,6 +594,7 @@ export class FileTransferModal {
 		this._renderRemoteLoading(t('remote.file_connecting', 'Connecting file transfer session…'));
 		this._updateRemoteHiddenButton();
 		this._wireClient(session);
+		this._syncRemoteActions();
 		this._syncSaveDownloadHook();
 		const ft = session.client.fileTransfer;
 		if (ft && typeof ft.enable === 'function' && !ft.enabled) {
@@ -960,6 +974,8 @@ export class FileTransferModal {
 			menu.appendChild(btn);
 		};
 
+		// Only what the session's transfer can do (CDAP and mesh lack some)
+		const transfer = this._session?.client?.fileTransfer;
 		if (entry.isDir) {
 			addItem(t('remote.file_open', 'Open'), 'folder_open', () => {
 				const ft = this._session?.client?.fileTransfer;
@@ -968,20 +984,26 @@ export class FileTransferModal {
 				const next = base ? base.replace(/[\\/]+$/, '') + sep + entry.name : entry.name;
 				ft?.browseDir(next);
 			});
-			addItem(t('remote.file_download_folder', 'Download folder'), 'folder_zip', () => {
-				this._downloadRemoteFolder(entry);
-			});
+			if (transfer && this._canDownloadFolder(transfer)) {
+				addItem(t('remote.file_download_folder', 'Download folder'), 'folder_zip', () => {
+					this._downloadRemoteFolder(entry);
+				});
+			}
 		} else {
 			addItem(t('remote.file_download', 'Download'), 'download', () => {
 				this._downloadRemoteEntry(entry);
 			});
 		}
-		addItem(t('remote.file_rename', 'Rename'), 'drive_file_rename_outline', () => {
-			this._remoteRename(entry);
-		});
-		addItem(t('actions.delete', 'Delete'), 'delete_outline', () => {
-			this._remoteDelete(entry);
-		});
+		if (typeof transfer?.rename === 'function') {
+			addItem(t('remote.file_rename', 'Rename'), 'drive_file_rename_outline', () => {
+				this._remoteRename(entry);
+			});
+		}
+		if (typeof (entry.isDir ? transfer?.removeDir : transfer?.removeFile) === 'function') {
+			addItem(t('actions.delete', 'Delete'), 'delete_outline', () => {
+				this._remoteDelete(entry);
+			});
+		}
 
 		getOverlayHost().appendChild(menu);
 		this._contextMenu = menu;
@@ -1070,9 +1092,11 @@ export class FileTransferModal {
 						this._renderLocalList();
 					});
 			});
-			addItem(t('remote.file_upload_folder', 'Upload folder'), 'drive_folder_upload', () => {
-				this._uploadLocalFolder(entry);
-			});
+			if (typeof this._session?.client?.fileTransfer?.uploadFolder === 'function') {
+				addItem(t('remote.file_upload_folder', 'Upload folder'), 'drive_folder_upload', () => {
+					this._uploadLocalFolder(entry);
+				});
+			}
 		} else {
 			addItem(t('remote.file_upload', 'Upload'), 'upload', () => {
 				this._uploadLocalEntry(entry);
