@@ -67,7 +67,7 @@ Older docs and installers may still mention Flask consoles, `hbbs-patch/`, or a 
 
 1. Work on **`dev`** by default (see branching docs).
 2. Run `betterdesk-server` → `go test ./...` (+ `govulncheck`); `web-ui` → `npm run check` and `npm test`.
-3. Keep locale keys in sync across all `betterdesk-server/console/static/files/lang/*.json` files (`npm run i18n:check`).
+3. Keep locale keys in sync across all `betterdesk-server/console/static/files/lang/*.json` files (`go run ./cmd/repotool i18n-check --system console` in `betterdesk-server`).
 
 ---
 

@@ -14,7 +14,7 @@ on:
       - 'CHANGELOG.md'
       - 'Dockerfile*'
       - 'docker/**'
-      - 'scripts/bump-version.js'
+      - 'betterdesk-server/cmd/repotool/**'
       - '.github/workflows/version-verify.yml'
   pull_request:
     branches: [main, dev]
@@ -29,7 +29,7 @@ on:
       - 'CHANGELOG.md'
       - 'Dockerfile*'
       - 'docker/**'
-      - 'scripts/bump-version.js'
+      - 'betterdesk-server/cmd/repotool/**'
       - '.github/workflows/version-verify.yml'
 
 permissions:
@@ -45,8 +45,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          node-version: '24'
+          go-version-file: betterdesk-server/go.mod
+          cache-dependency-path: betterdesk-server/go.sum
       - name: Verify product version parity
-        run: node scripts/bump-version.js --verify
+        working-directory: betterdesk-server
+        run: go run ./cmd/repotool bump-version --verify

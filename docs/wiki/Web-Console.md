@@ -208,7 +208,7 @@ The console supports **26 languages** (including EN, PL, DE, FR, ES, JA, ZH, ZH-
 2. Translate all values (keep keys as-is)
 3. Update the `meta` section with language info
 4. Add the code to `knownLanguages` in `betterdesk-server/console/i18n/bundle.go`; the console loads only the languages listed there
-5. Run `npm run i18n:check` from the repository root, then rebuild `betterdesk-server`
+5. Run `go run ./cmd/repotool i18n-check --system console` in `betterdesk-server`, then rebuild `betterdesk-server`
 
 See the [Contributing Translations](https://github.com/UNITRONIX/BetterDesk/blob/main/docs/development/CONTRIBUTING_TRANSLATIONS.md) guide for details.
 

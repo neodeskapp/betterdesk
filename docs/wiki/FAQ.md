@@ -281,7 +281,7 @@ See [[CDAP]] for the full protocol specification.
 1. Copy `betterdesk-server/console/static/files/lang/en.json` to `{code}.json` in the same folder
 2. Translate all values
 3. Add the code to `knownLanguages` in `betterdesk-server/console/i18n/bundle.go`; the console loads only the languages listed there
-4. Run `npm run i18n:check` from the repository root, then rebuild `betterdesk-server` (the language files are built into the binary)
+4. Run `go run ./cmd/repotool i18n-check --system console` in `betterdesk-server`, then rebuild `betterdesk-server` (the language files are built into the binary)
 
 ### Where do I report bugs?
 

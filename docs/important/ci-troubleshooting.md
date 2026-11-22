@@ -6,7 +6,7 @@ Quick map of CI workflows, common failures, and local commands that mirror branc
 
 | Workflow | What it enforces | Local mirror |
 |---|---|---|
-| **Version Verify** | Tier 1/2 files match `VERSION` | `node scripts/bump-version.js --verify` |
+| **Version Verify** | Tier 1/2 files match `VERSION` | `go -C betterdesk-server run ./cmd/repotool bump-version --verify` |
 | **Secret Scan** | Gitleaks + operator fingerprint ban | `gitleaks detect --source . --config .gitleaks.toml` and `bash scripts/check-no-sensitive-paths.sh` |
 | **Go Server CI** | `go vet`, race tests, `govulncheck`, the release build with the web app embedded (server and web console) | `cd betterdesk-server && go vet ./... && go test -race -count=1 ./...` |
 | **Web UI CI** | `npm ci`, high+ audit, lint, type check, Vitest, build (the web app) | `cd web-ui && npx -y npm@11.6.2 ci && npm run lint && npm run check && npm test && npm run build` |
@@ -27,8 +27,8 @@ Merges to `main` add tag + release + server binary builds. This is expected; fai
 Version drift in installer scripts. Fix:
 
 ```bash
-node scripts/bump-version.js --sync
-node scripts/bump-version.js --verify
+go -C betterdesk-server run ./cmd/repotool bump-version --sync
+go -C betterdesk-server run ./cmd/repotool bump-version --verify
 ```
 
 ### Secret Scan — `leaks found`
@@ -71,7 +71,7 @@ Concurrent pushes to `dev`. Workflow retries with `git pull --rebase`. If it per
 See [PRE_RELEASE_CHECKLIST.md](../PRE_RELEASE_CHECKLIST.md). Minimum before opening the release PR:
 
 ```bash
-node scripts/bump-version.js --verify
+go -C betterdesk-server run ./cmd/repotool bump-version --verify
 (cd betterdesk-server && go vet ./... && go test -race -count=1 ./...)
 (cd web-ui && npx -y npm@11.6.2 ci && npm run check && npm test)
 gitleaks detect --source . --config .gitleaks.toml

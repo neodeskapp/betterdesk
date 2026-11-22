@@ -1,7 +1,7 @@
 # BetterDesk connection ports — operator cheat sheet
 
 **This is the single source of truth for ports.** Every other document, installer note and
-firewall snippet must agree with the table below; `scripts/check-port-docs.js` fails CI when
+firewall snippet must agree with the table below; `repotool check-port-docs` fails CI when
 they drift apart.
 
 Applies to: host + short-code pairing, desktop clients, Web Remote, and the console panel.
@@ -198,7 +198,7 @@ Windows equivalent of steps 1-2: `powershell -File scripts/check-connection-port
 
 ## 8. Keeping this document true
 
-`scripts/check-port-docs.js` parses the port constants from
+`repotool check-port-docs` (`betterdesk-server/cmd/repotool`) parses the port constants from
 `betterdesk-server/config/constants.go` and `betterdesk-server/console/config/config.go`, compares them with
 the table above, and also fails when a document reintroduces `21120` as a live port. It runs
 in CI, so a port change cannot ship with a stale cheat sheet.
