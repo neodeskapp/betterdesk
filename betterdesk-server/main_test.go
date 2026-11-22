@@ -239,3 +239,27 @@ func TestReloadKeepsPanelEnrollmentModeOverEnvironmentDefault(t *testing.T) {
 		t.Fatalf("enrollment mode after reload = %q, want the panel's %q", cfg.EnrollmentMode, config.EnrollmentModeLocked)
 	}
 }
+
+// TestBlocklistOfTheStartHoldsTheStoredBans: the blocklist main starts
+// with has the bans kept in the database, such as a revoked device's
+// (L127).
+func TestBlocklistOfTheStartHoldsTheStoredBans(t *testing.T) {
+	database, err := db.OpenSQLite(filepath.Join(t.TempDir(), "db_v2.sqlite3"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	if err := database.Migrate(); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SaveBlocklistEntry(&db.BlocklistEntry{Kind: "id", Value: "123456789", Reason: "revoked via panel"}); err != nil {
+		t.Fatal(err)
+	}
+	blocklist, err := openBlocklist("", database)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !blocklist.IsIDBlocked("123456789") {
+		t.Fatal("the stored ban is not in the blocklist of the start")
+	}
+}

@@ -1392,6 +1392,16 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Revocation: the device ID goes on the blocklist first, which keeps it
+	// in the database, so the ban survives a restart also after a hard
+	// delete. A ban that cannot be stored leaves the device as it is.
+	if revoke && s.blocklist != nil {
+		if err := s.blocklist.BlockID(id, "revoked via panel"); err != nil {
+			writeInternalError(w, err, "RevokePeer")
+			return
+		}
+	}
+
 	var err error
 	if hard {
 		err = s.db.HardDeletePeer(id)
@@ -1414,11 +1424,6 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 
 	// Remove from memory (closes TCP/WS connections — Phase 3.9).
 	s.peers.Remove(id)
-
-	// Revocation: add device ID to blocklist to prevent re-registration.
-	if revoke && s.blocklist != nil {
-		s.blocklist.BlockID(id, "revoked via panel")
-	}
 
 	// CDAP revocation: send revoke message and disconnect CDAP device.
 	if revoke && s.cdapGw != nil {
@@ -1444,7 +1449,9 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 			}
 			s.peers.Remove(lid)
 			if revoke && s.blocklist != nil {
-				s.blocklist.BlockID(lid, "revoked via cascade")
+				if err := s.blocklist.BlockID(lid, "revoked via cascade"); err != nil {
+					log.Printf("[API] RevokePeer: the ban of linked device %s was not stored: %v", lid, err)
+				}
 			}
 			if revoke && s.cdapGw != nil {
 				s.cdapGw.SendRevoke(r.Context(), lid, "revoked via cascade")
@@ -2000,13 +2007,23 @@ func (s *Server) handleAddBlocklist(w http.ResponseWriter, r *http.Request) {
 
 	switch body.Type {
 	case "ip":
-		s.blocklist.BlockIP(body.Value, body.Reason)
+		if err := s.blocklist.BlockIP(body.Value, body.Reason); err != nil {
+			writeInternalError(w, err, "BlockIP")
+			return
+		}
 	case "id":
-		s.blocklist.BlockID(body.Value, body.Reason)
+		if err := s.blocklist.BlockID(body.Value, body.Reason); err != nil {
+			writeInternalError(w, err, "BlockID")
+			return
+		}
 	case "cidr":
-		if err := s.blocklist.BlockCIDR(body.Value, body.Reason); err != nil {
+		if _, _, err := net.ParseCIDR(body.Value); err != nil {
 			log.Printf("[API] Invalid CIDR %s: %v", body.Value, err)
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid CIDR notation"})
+			return
+		}
+		if err := s.blocklist.BlockCIDR(body.Value, body.Reason); err != nil {
+			writeInternalError(w, err, "BlockCIDR")
 			return
 		}
 	default:

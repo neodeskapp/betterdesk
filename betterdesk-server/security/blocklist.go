@@ -1,9 +1,12 @@
 // Package security provides IP/ID blocklist management for the BetterDesk server.
 // Supports loading from files, runtime additions, and both IP and ID blocking.
+// Runtime additions are kept in the database (UseStore), so they survive a
+// restart.
 package security
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net"
 	"net/netip"
@@ -11,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/unitronix/betterdesk-server/db"
 )
 
 // BlockType identifies what kind of entry is blocked.
@@ -38,6 +43,15 @@ type Blocklist struct {
 	ids      map[string]*BlockEntry // Device ID matches
 	networks []*networkEntry        // CIDR network matches
 	filePath string                 // Path to blocklist file (optional)
+	store    Store                  // Keeps the runtime additions (optional)
+}
+
+// Store keeps the entries added at run time (BlockIP, BlockID,
+// BlockCIDR) and drops the removed ones; db.Database is one.
+type Store interface {
+	SaveBlocklistEntry(e *db.BlocklistEntry) error
+	DeleteBlocklistEntry(kind, value string) error
+	ListBlocklistEntries() ([]*db.BlocklistEntry, error)
 }
 
 type networkEntry struct {
@@ -129,6 +143,56 @@ func (b *Blocklist) LoadFromFile(path string) error {
 	return scanner.Err()
 }
 
+// UseStore adds the entries store keeps and from then on writes every
+// entry added or removed at run time to it. A stored entry that is no
+// valid network is left out with a log line.
+func (b *Blocklist) UseStore(store Store) error {
+	entries, err := store.ListBlocklistEntries()
+	if err != nil {
+		return fmt.Errorf("blocklist: load the stored entries: %w", err)
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.store = store
+	for _, e := range entries {
+		entry := &BlockEntry{Value: e.Value, Type: BlockType(e.Kind), Reason: e.Reason, CreatedAt: e.CreatedAt}
+		switch entry.Type {
+		case BlockIP:
+			b.ips[ipKey(e.Value)] = entry
+		case BlockID:
+			b.ids[e.Value] = entry
+		case BlockNet:
+			_, ipNet, err := net.ParseCIDR(e.Value)
+			if err != nil {
+				log.Printf("[blocklist] Stored CIDR %q left out: %v", e.Value, err)
+				continue
+			}
+			b.networks = append(b.networks, &networkEntry{net: ipNet, entry: entry})
+		}
+	}
+	return nil
+}
+
+// keep writes a runtime addition to the store, when there is one. The
+// caller holds b.mu.
+func (b *Blocklist) keep(e *BlockEntry) error {
+	if b.store == nil {
+		return nil
+	}
+	return b.store.SaveBlocklistEntry(&db.BlocklistEntry{Kind: string(e.Type), Value: e.Value, Reason: e.Reason, CreatedAt: e.CreatedAt})
+}
+
+// drop removes an entry from the store, when there is one. A failure is
+// logged: the entry is gone until the next start. The caller holds b.mu.
+func (b *Blocklist) drop(t BlockType, value string) {
+	if b.store == nil {
+		return
+	}
+	if err := b.store.DeleteBlocklistEntry(string(t), value); err != nil {
+		log.Printf("[blocklist] %s %s stays in the database: %v", t, value, err)
+	}
+}
+
 // IsIPBlocked checks if an IP address is blocked (exact or CIDR match).
 func (b *Blocklist) IsIPBlocked(ipStr string) bool {
 	b.mu.RLock()
@@ -167,31 +231,48 @@ func (b *Blocklist) IsIDBlocked(id string) bool {
 	return ok
 }
 
-// BlockIP adds an IP to the blocklist at runtime.
-func (b *Blocklist) BlockIP(ip, reason string) {
+// BlockIP adds an IP to the blocklist at runtime and to the store. When
+// the store fails, the IP is not blocked.
+func (b *Blocklist) BlockIP(ip, reason string) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.ips[ipKey(ip)] = &BlockEntry{
+	entry := &BlockEntry{
 		Value:     ip,
 		Type:      BlockIP,
 		Reason:    reason,
 		CreatedAt: time.Now(),
 	}
+	if err := b.keep(entry); err != nil {
+		return err
+	}
+	// The same address in another spelling is the same entry
+	if old, ok := b.ips[ipKey(ip)]; ok && old.Value != ip {
+		b.drop(BlockIP, old.Value)
+	}
+	b.ips[ipKey(ip)] = entry
+	return nil
 }
 
-// BlockID adds a device ID to the blocklist at runtime.
-func (b *Blocklist) BlockID(id, reason string) {
+// BlockID adds a device ID to the blocklist at runtime and to the store.
+// When the store fails, the ID is not blocked.
+func (b *Blocklist) BlockID(id, reason string) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.ids[id] = &BlockEntry{
+	entry := &BlockEntry{
 		Value:     id,
 		Type:      BlockID,
 		Reason:    reason,
 		CreatedAt: time.Now(),
 	}
+	if err := b.keep(entry); err != nil {
+		return err
+	}
+	b.ids[id] = entry
+	return nil
 }
 
-// BlockCIDR adds a CIDR network to the blocklist at runtime.
+// BlockCIDR adds a CIDR network to the blocklist at runtime and to the
+// store. When the store fails, the network is not blocked.
 func (b *Blocklist) BlockCIDR(cidr, reason string) error {
 	_, ipNet, err := net.ParseCIDR(cidr)
 	if err != nil {
@@ -200,15 +281,16 @@ func (b *Blocklist) BlockCIDR(cidr, reason string) error {
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.networks = append(b.networks, &networkEntry{
-		net: ipNet,
-		entry: &BlockEntry{
-			Value:     cidr,
-			Type:      BlockNet,
-			Reason:    reason,
-			CreatedAt: time.Now(),
-		},
-	})
+	entry := &BlockEntry{
+		Value:     cidr,
+		Type:      BlockNet,
+		Reason:    reason,
+		CreatedAt: time.Now(),
+	}
+	if err := b.keep(entry); err != nil {
+		return err
+	}
+	b.networks = append(b.networks, &networkEntry{net: ipNet, entry: entry})
 	return nil
 }
 
@@ -216,8 +298,9 @@ func (b *Blocklist) BlockCIDR(cidr, reason string) error {
 func (b *Blocklist) UnblockIP(ip string) bool {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	if _, ok := b.ips[ipKey(ip)]; ok {
+	if e, ok := b.ips[ipKey(ip)]; ok {
 		delete(b.ips, ipKey(ip))
+		b.drop(BlockIP, e.Value)
 		return true
 	}
 	return false
@@ -229,6 +312,7 @@ func (b *Blocklist) UnblockID(id string) bool {
 	defer b.mu.Unlock()
 	if _, ok := b.ids[id]; ok {
 		delete(b.ids, id)
+		b.drop(BlockID, id)
 		return true
 	}
 	return false
@@ -241,6 +325,7 @@ func (b *Blocklist) UnblockCIDR(cidr string) bool {
 	for i, ne := range b.networks {
 		if ne.entry.Value == cidr {
 			b.networks = append(b.networks[:i], b.networks[i+1:]...)
+			b.drop(BlockNet, cidr)
 			return true
 		}
 	}

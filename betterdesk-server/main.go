@@ -300,11 +300,9 @@ func main() {
 	}
 
 	// Initialize security modules
-	blocklist := security.NewBlocklist()
-	if cfg.BlocklistFile != "" {
-		if err := blocklist.LoadFromFile(cfg.BlocklistFile); err != nil {
-			log.Printf("WARN: Failed to load blocklist from %s: %v", cfg.BlocklistFile, err)
-		}
+	blocklist, err := openBlocklist(cfg.BlocklistFile, database)
+	if err != nil {
+		log.Fatalf("Blocklist: %v", err)
 	}
 
 	ipLimiter := ratelimit.NewIPLimiter(
@@ -712,6 +710,23 @@ func applyEnrollmentMode(cfg *config.Config, database db.Database) (string, erro
 		}
 	}
 	return source, nil
+}
+
+// openBlocklist is the blocklist of the start: the entries of the file,
+// when one is named, and the ones kept in the database, where what is
+// blocked at run time (an admin's block, Revoke device) goes from then on;
+// without them a revoked device could come back after a restart.
+func openBlocklist(file string, database db.Database) (*security.Blocklist, error) {
+	blocklist := security.NewBlocklist()
+	if file != "" {
+		if err := blocklist.LoadFromFile(file); err != nil {
+			log.Printf("WARN: Failed to load blocklist from %s: %v", file, err)
+		}
+	}
+	if err := blocklist.UseStore(database); err != nil {
+		return nil, err
+	}
+	return blocklist, nil
 }
 
 // runAvailabilityHistoryCleanup deletes expired peer_availability_events when

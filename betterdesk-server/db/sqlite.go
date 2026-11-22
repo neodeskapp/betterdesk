@@ -677,6 +677,7 @@ func (s *SQLiteDB) Migrate() error {
 			UNIQUE(target_type, target_key)
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_strategy_assignments_strategy ON strategy_assignments(strategy_guid)`,
+		sqliteBlocklistTable,
 	}
 
 	for _, stmt := range statements {
