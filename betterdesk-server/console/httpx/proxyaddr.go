@@ -13,11 +13,11 @@ import (
 // TrustProxy decides which hops in front of the console may speak for the
 // client. It follows the TRUST_PROXY setting of the console:
 //
-//	unset, false, 0, no, off   trust nobody: the socket address is the client
-//	true, 1, yes, y, on        trust one hop
-//	a number n                 trust n hops
+//	unset, false, 0, no, n, off  trust nobody: the socket address is the client
+//	true, 1, yes, y, on          trust one hop
+//	a number n                   trust n hops
 //	loopback, linklocal, uniquelocal, addresses or CIDR ranges, comma separated
-//	                           trust hops whose address is in the list
+//	                             trust hops whose address is in the list
 type TrustProxy struct {
 	hops int
 	nets []*net.IPNet
@@ -33,7 +33,7 @@ var namedRanges = map[string][]string{
 func ParseTrustProxy(raw string) (TrustProxy, error) {
 	trimmed := strings.TrimSpace(raw)
 	switch strings.ToLower(trimmed) {
-	case "", "false", "0", "no", "off":
+	case "", "false", "0", "no", "n", "off":
 		return TrustProxy{}, nil
 	case "true", "1", "yes", "y", "on":
 		return TrustProxy{hops: 1}, nil

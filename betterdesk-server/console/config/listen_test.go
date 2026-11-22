@@ -2,7 +2,7 @@ package config
 
 import "testing"
 
-// The listener settings as config/config.js read them.
+// The listener settings, with the switches read as on/off values (L84).
 func TestListenerSettings(t *testing.T) {
 	cfg, err := load(env(nil), machine())
 	if err != nil {
@@ -17,7 +17,7 @@ func TestListenerSettings(t *testing.T) {
 	}
 
 	cfg, err = load(env(map[string]string{
-		"HTTPS_PORT": "8443x", "HTTP_REDIRECT_HTTPS": "yes", "SSL_CERT_PATH": "/c.pem", "SSL_KEY_PATH": "/k.pem",
+		"HTTPS_PORT": "8443x", "HTTP_REDIRECT_HTTPS": "no", "SSL_CERT_PATH": "/c.pem", "SSL_KEY_PATH": "/k.pem",
 		"SSL_CA_PATH": "/ca.pem", "API_HOST": "10.0.0.1", "RUSTDESK_API_PROXY": "FALSE", "RUSTDESK_API_TLS": "Off",
 	}), machine())
 	if err != nil {
@@ -26,13 +26,13 @@ func TestListenerSettings(t *testing.T) {
 	if cfg.HTTPSPort != 8443 || cfg.HTTPRedirect || cfg.CertFile != "/c.pem" || cfg.KeyFile != "/k.pem" || cfg.CAFile != "/ca.pem" {
 		t.Errorf("TLS settings: port %d, redirect %v, files %q %q %q", cfg.HTTPSPort, cfg.HTTPRedirect, cfg.CertFile, cfg.KeyFile, cfg.CAFile)
 	}
-	if cfg.ClientAPIHost != "10.0.0.1" || cfg.ClientAPIProxy || cfg.ClientAPITLS != "off" {
+	if cfg.ClientAPIHost != "10.0.0.1" || cfg.ClientAPIProxy || cfg.ClientAPITLS != "false" {
 		t.Errorf("client API settings: host %q, proxy %v, tls %q", cfg.ClientAPIHost, cfg.ClientAPIProxy, cfg.ClientAPITLS)
 	}
 	for _, c := range []struct {
 		value string
 		want  bool
-	}{{"true", true}, {"TRUE", true}, {"false", false}, {"0", false}, {"1", false}, {" true", false}} {
+	}{{"true", true}, {"TRUE", true}, {"false", false}, {"0", false}, {"1", true}, {" true", true}, {"yes", true}, {"enabled", false}} {
 		cfg, _ := load(env(map[string]string{"HTTP_REDIRECT_HTTPS": c.value, "RUSTDESK_API_PROXY": c.value}), machine())
 		if cfg.HTTPRedirect != c.want || cfg.ClientAPIProxy != c.want {
 			t.Errorf("%q: redirect %v, proxy %v, want %v", c.value, cfg.HTTPRedirect, cfg.ClientAPIProxy, c.want)

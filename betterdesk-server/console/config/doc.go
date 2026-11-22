@@ -6,11 +6,11 @@
 //	Variable                 Default               Meaning
 //	CONSOLE_PORT             5000                  Port the Go console listens on. 0: the Go console does not start.
 //	HOST                     127.0.0.1             Address the console listens on.
-//	CONSOLE_DEBUG_ROUTING    (off)                 "1" adds GET /__bd/routing for the contract suite.
-//	TRUST_PROXY              (off)                 Which proxies may speak for the client: false, true, a hop count,
+//	CONSOLE_DEBUG_ROUTING    (off)                 On adds GET /__bd/routing for the contract suite.
+//	TRUST_PROXY              (off)                 Which proxies may speak for the client: off, on (one hop), a hop count,
 //	                                               loopback, linklocal, uniquelocal, addresses or ranges.
 //	NODE_ENV                 development           "production" hides error detail and reads the web app's files once.
-//	DOCKER                   (off)                 "true", or a /.dockerenv file, means a container: default folders
+//	DOCKER                   (off)                 On, or a /.dockerenv file, means a container: default folders
 //	                                               are /app and /app/data.
 //	CONSOLE_DIR              (searched)            Folder that holds the console's state: its .env and data/. Searched
 //	                                               in this order for a .env, or the lang/en.json an install of the Node
@@ -27,25 +27,25 @@
 //	WEB_UI_DIR               (the build in the     A build of the web app on disk, for development. Without it the
 //	                         binary)               console serves the build in the binary (cmd/embed-webui); a binary
 //	                                               built without that step has no web app.
-//	HTTPS_ENABLED            false                 "true" in any letter case: cookies are called betterdesk.sid and __csrf
+//	HTTPS_ENABLED            off                   On: cookies are called betterdesk.sid and __csrf
 //	                                               and are Secure, the security headers are those of HTTPS. With a
 //	                                               certificate the console listens with TLS on HTTPS_PORT; without one
 //	                                               it stays on plain HTTP and keeps all of that (package listen).
 //	HTTPS_PORT               5443                  Port of the TLS listener in HTTPS mode. Below 1024 without the right
 //	                                               to bind it: 5443 (CONSOLE_PORT likewise becomes 5000).
-//	HTTP_REDIRECT_HTTPS      true                  "true" in any letter case: in HTTPS mode CONSOLE_PORT answers every
+//	HTTP_REDIRECT_HTTPS      on                    On: in HTTPS mode CONSOLE_PORT answers every
 //	                                               request with 307 to the same target on HTTPS_PORT.
 //	SSL_CERT_PATH            (none)                Certificate (PEM) of the console and the client API port.
 //	SSL_KEY_PATH             (none)                Its private key. Both or neither.
 //	SSL_CA_PATH              (none)                Optional bundle of the certificates that issued it, for the chain.
-//	HSTS_ENABLED             (auto)                true, 1, on: always send Strict-Transport-Security in HTTPS mode.
-//	                                               false, 0, off: never. Otherwise only without self-signed certificates.
-//	ALLOW_SELF_SIGNED_CERTS  false                 "true" turns the automatic HSTS off. It does not touch mail.
-//	SMTP_TLS_VERIFY          true                  "false" in any letter case: the mail server's certificate is not checked
+//	HSTS_ENABLED             (auto)                On: always send Strict-Transport-Security in HTTPS mode.
+//	                                               Off: never. Otherwise only without self-signed certificates.
+//	ALLOW_SELF_SIGNED_CERTS  off                   On turns the automatic HSTS off. It does not touch mail.
+//	SMTP_TLS_VERIFY          on                    Off: the mail server's certificate is not checked
 //	                                               when the saved SMTP settings have no tlsVerify of their own.
-//	SMTP_REQUIRE_TLS         true                  "false" in any letter case: the SMTP login may go out without TLS, for
+//	SMTP_REQUIRE_TLS         on                    Off: the SMTP login may go out without TLS, for
 //	                                               a mail server on a trusted network that offers no STARTTLS.
-//	HTTP_REDIRECT_HTTPS      true                  "true" in any letter case: the link to the console in a mail
+//	HTTP_REDIRECT_HTTPS      on                    On: the link to the console in a mail
 //	                                               starts with https, else with http. Nothing is redirected by it.
 //	DEFAULT_LANGUAGE         en                    Language of a request that names none.
 //	DEVICE_SCOPE_DEFAULT     open                  "restricted" hides devices nobody was given from non-admin roles.
@@ -58,14 +58,14 @@
 //	GO_API_PORT              port of the API       Port of the server's API in the API address given to clients. Without
 //	                         address, else 21114   a port in the address: 443 for https, 80 for any other scheme.
 //	API_PORT                 21121                 The client API port.
-//	API_ENABLED              true                  "true" in any letter case: the console listens on the client API port
+//	API_ENABLED              on                    On: the console listens on the client API port
 //	                                               and reports it as the port clients sign in on. Set to the empty text
 //	                                               it is off (LoadEnv; Load counts empty as unset).
 //	API_HOST                 0.0.0.0               Address of the client API port.
-//	RUSTDESK_API_PROXY       true                  "true" in any letter case: the client API port passes the client API
+//	RUSTDESK_API_PROXY       on                    On: the client API port passes the client API
 //	                                               on to the server's API; otherwise it answers it from the console's
 //	                                               routes. Set to the empty text it is off, as API_ENABLED.
-//	RUSTDESK_API_TLS         auto                  false, 0, off, http: the client API port stays on plain HTTP. Any other
+//	RUSTDESK_API_TLS         auto                  Off or http: the client API port stays on plain HTTP. Any other
 //	                                               value: TLS when the certificate loads, whatever HTTPS_ENABLED says.
 //	KEYS_PATH                (searched)            Folder the server writes its keys to. Else RUSTDESK_DIR, else
 //	(or RUSTDESK_DIR,                              RUSTDESK_PATH, else /opt/rustdesk in a container, else the first of
@@ -80,7 +80,7 @@
 //	WS_HBBR_PORT             21117
 //	BETTERDESK_CLIENT_GENERATOR_MODE  download     "embedded" builds the support client from source on this machine
 //	                                               instead of using the downloaded templates.
-//	AGENT_BUILD_WORKER       (on)                  "off" keeps the support client build worker from starting.
+//	AGENT_BUILD_WORKER       (on)                  Off keeps the support client build worker from starting.
 //	AGENT_BUILD_POLL_MS      5000                  How often the build worker looks for a queued build. Zero, a
 //	                                               negative number or no number: every millisecond.
 //	AGENT_BUILD_COOLDOWN_MS  1000                  Pause after a build. Zero, negative or no number: none.
@@ -96,6 +96,12 @@
 // BETTERDESK_CLIENT_GITHUB_ACTIONS, BETTERDESK_CLIENT_BUILD_WORKFLOW,
 // BETTERDESK_CLIENT_BUILD_TIMEOUT_MS and the toolchain paths of the local
 // builder (package generator).
+//
+// On and off are 1/0, true/false, yes/no, y/n and on/off in any letter
+// case, with space around them, as the server reads its own switches
+// (envvar.Switch). Another value leaves a switch that is on by default
+// on, except HTTP_REDIRECT_HTTPS, API_ENABLED and RUSTDESK_API_PROXY,
+// which only an on value keeps on once they are set.
 //
 // The numbers are read as the old console read them: digits up to the
 // first other character, and the default for zero or no number. Two files

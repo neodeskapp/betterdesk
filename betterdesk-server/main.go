@@ -1122,57 +1122,14 @@ func isFile(path string) bool {
 	return err == nil && !st.IsDir()
 }
 
+// parseFlags is configure on the command line. It prints the version and
+// exits for -version, and ends the start on a configuration it refuses.
 func parseFlags() *config.Config {
-	cfg := config.DefaultConfig()
-
-	flag.IntVar(&cfg.SignalPort, "port", cfg.SignalPort, "Signal server port (UDP+TCP)")
-	flag.IntVar(&cfg.RelayPort, "relay-port", cfg.RelayPort, "Relay server port (TCP)")
-	flag.IntVar(&cfg.APIPort, "api-port", cfg.APIPort, "HTTP API port")
-	flag.StringVar(&cfg.Mode, "mode", cfg.Mode, "Server mode: all, the only mode (signal, relay, API and console in one process)")
-	flag.StringVar(&cfg.DBPath, "db", cfg.DBPath, "Database DSN: SQLite path or postgres://... URI")
-	flag.StringVar(&cfg.KeyFile, "key-file", cfg.KeyFile, "Ed25519 key file path (without extension)")
-	flag.StringVar(&cfg.RelayServers, "relay-servers", cfg.RelayServers, "Comma-separated relay server addresses")
-	flag.StringVar(&cfg.RendezvousServers, "rendezvous-servers", cfg.RendezvousServers, "Comma-separated rendezvous server addresses")
-	flag.StringVar(&cfg.Mask, "mask", cfg.Mask, "LAN mask (e.g. 192.168.0.0/24)")
-	flag.BoolVar(&cfg.AlwaysUseRelay, "always-relay", cfg.AlwaysUseRelay, "Always use relay (skip hole punching)")
-	flag.StringVar(&cfg.BlocklistFile, "blocklist", cfg.BlocklistFile, "Path to blocklist file (IP/ID/CIDR entries)")
-	flag.StringVar(&cfg.AuditLogFile, "audit-log", cfg.AuditLogFile, "Path to audit log file (JSON lines)")
-	flag.StringVar(&cfg.TLSCertFile, "tls-cert", cfg.TLSCertFile, "Path to TLS certificate file")
-	flag.StringVar(&cfg.TLSKeyFile, "tls-key", cfg.TLSKeyFile, "Path to TLS key file")
-	flag.StringVar(&cfg.LogFormat, "log-format", cfg.LogFormat, "Log format: text (default) or json")
-	flag.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "Log level: error, warn, info (default), debug")
-	flag.IntVar(&cfg.AdminPort, "admin-port", cfg.AdminPort, "TCP admin interface port (0 = disabled)")
-	flag.StringVar(&cfg.JWTSecret, "jwt-secret", cfg.JWTSecret, "JWT signing secret (auto-generated if empty)")
-	flag.IntVar(&cfg.JWTExpiry, "jwt-expiry", cfg.JWTExpiry, "JWT token expiry in hours (default 24)")
-	flag.BoolVar(&runSQLiteAuthConsolidation, "migrate-sqlite-auth", false, "Safely consolidate legacy auth.db into the selected SQLite DB, then exit")
-	flag.BoolVar(&sqliteAuthConsolidationDryRun, "migrate-sqlite-auth-dry-run", false, "Validate legacy auth.db consolidation without modifying databases")
-	flag.StringVar(&sqliteAuthConsolidationBackupDir, "migrate-sqlite-auth-backup-dir", "", "Directory for SQLite auth consolidation backups")
-	flag.StringVar(&sqliteAuthConsolidationRollback, "rollback-sqlite-auth", "", "Restore the selected SQLite DB from a consolidation snapshot, then exit")
-	flag.StringVar(&cfg.AdminPassword, "admin-password", cfg.AdminPassword, "Password for admin TCP interface")
-	flag.BoolVar(&cfg.ForceHTTPS, "force-https", cfg.ForceHTTPS, "Reject non-TLS API requests")
-	flag.BoolVar(&cfg.TrustProxy, "trust-proxy", cfg.TrustProxy, "Trust X-Forwarded-For/X-Real-IP headers from reverse proxy (requires --trusted-proxies)")
-	trustedProxiesFlag := flag.String("trusted-proxies", "", "Comma-separated CIDR/IP allowlist of reverse proxies that may set X-Forwarded-* (required with --trust-proxy)")
-	flag.IntVar(&cfg.RelayMaxConnsIP, "relay-max-conns-ip", cfg.RelayMaxConnsIP, "Max relay connections per IP (0 = unlimited)")
-	flag.IntVar(&cfg.SignalRateLimitPerIP, "signal-rate-limit-per-ip", cfg.SignalRateLimitPerIP, "Max signal registrations per IP per minute (0 = unlimited; raise for large NAT deployments — issue #122)")
-	flag.BoolVar(&cfg.SameNATRelay, "same-nat-relay", cfg.SameNATRelay, "Auto-fallback to relay when both peers share the same public IP (avoids NAT hairpin failures — issue #121)")
-	flag.BoolVar(&cfg.AllowSharedNATInitiator, "allow-shared-nat-initiator", cfg.AllowSharedNATInitiator, "Allow PunchHole/RequestRelay when multiple live peers share the initiator public IP without token/udp_port (synthetic shared-nat-initiator — issue #399; default off)")
-	flag.BoolVar(&cfg.LoggedInOnlyInitiator, "logged-in-only-initiator", cfg.LoggedInOnlyInitiator, "Require a valid BetterDesk client login token for stock PunchHole/RequestRelay initiators (issue #414; default off)")
-	flag.BoolVar(&cfg.OperatorOnlyOutbound, "operator-only-outbound", cfg.OperatorOnlyOutbound, "Require a valid Admin/Operator client session for stock PunchHole/RequestRelay initiators (issue #425; default off)")
-	flag.BoolVar(&cfg.P2PFirst, "p2p-first", cfg.P2PFirst, "Wait for the target's hole punch before answering the initiator so direct P2P can succeed (issue #157; disable to always answer immediately)")
-	flag.IntVar(&cfg.P2PFallbackMs, "p2p-fallback-ms", cfg.P2PFallbackMs, "Grace period (ms) to wait for the target's PunchHoleSent before sending the relay fallback response (only with --p2p-first)")
-	flag.StringVar(&cfg.InitAdminUser, "init-admin-user", cfg.InitAdminUser, "Initial admin username (default: admin)")
-	flag.StringVar(&cfg.InitAdminPass, "init-admin-pass", cfg.InitAdminPass, "Initial admin password (auto-generated if empty)")
-	flag.BoolVar(&cfg.TLSSignal, "tls-signal", cfg.TLSSignal, "Enable TLS on signal TCP/WS ports (requires --tls-cert and --tls-key)")
-	flag.BoolVar(&cfg.TLSRelay, "tls-relay", cfg.TLSRelay, "Enable TLS on relay TCP/WS ports (requires --tls-cert and --tls-key)")
-	flag.BoolVar(&cfg.TLSApi, "tls-api", cfg.TLSApi, "Enable TLS on HTTP API port (requires --tls-cert and --tls-key)")
-	flag.IntVar(&cfg.CDAPPort, "cdap-port", cfg.CDAPPort, "CDAP WebSocket gateway port (default 21122)")
-	flag.BoolVar(&cfg.CDAPEnabled, "cdap", cfg.CDAPEnabled, "Enable CDAP gateway for custom devices")
-	flag.BoolVar(&cfg.CDAPTLS, "tls-cdap", cfg.CDAPTLS, "Enable TLS on CDAP gateway port (requires --tls-cert and --tls-key)")
-
-	showVersion := flag.Bool("version", false, "Show version and exit")
-	flag.Parse()
-
-	if *showVersion {
+	cfg, showVersion, err := configure(flag.CommandLine, os.Args[1:])
+	if err != nil {
+		log.Fatal(err)
+	}
+	if showVersion {
 		// The updater reads this line from a binary it is about to install.
 		if Commit != "" {
 			fmt.Printf("betterdesk-server %s (built %s, commit %s)\n", Version, BuildDate, Commit)
@@ -1181,27 +1138,86 @@ func parseFlags() *config.Config {
 		}
 		os.Exit(0)
 	}
+	return cfg
+}
 
-	// Override with environment variables
-	cfg.LoadEnv()
-	cfg.AuthDBPath = resolveAuthDBPath(cfg.AuthDBPath, cfg.DBPath)
+// configure reads the server's configuration: the defaults, then the
+// flags in args, then the environment, which wins over the flags.
+// showVersion is set for -version, and the configuration is then the
+// defaults with the flags.
+func configure(fs *flag.FlagSet, args []string) (cfg *config.Config, showVersion bool, err error) {
+	cfg = config.DefaultConfig()
 
-	// CLI --trusted-proxies overrides env when set (LoadEnv already applied TRUSTED_PROXIES).
+	fs.IntVar(&cfg.SignalPort, "port", cfg.SignalPort, "Signal server port (UDP+TCP)")
+	fs.IntVar(&cfg.RelayPort, "relay-port", cfg.RelayPort, "Relay server port (TCP)")
+	fs.IntVar(&cfg.APIPort, "api-port", cfg.APIPort, "HTTP API port")
+	fs.StringVar(&cfg.Mode, "mode", cfg.Mode, "Server mode: all, the only mode (signal, relay, API and console in one process)")
+	fs.StringVar(&cfg.DBPath, "db", cfg.DBPath, "Database DSN: SQLite path or postgres://... URI")
+	fs.StringVar(&cfg.KeyFile, "key-file", cfg.KeyFile, "Ed25519 key file path (without extension)")
+	fs.StringVar(&cfg.RelayServers, "relay-servers", cfg.RelayServers, "Comma-separated relay server addresses")
+	fs.StringVar(&cfg.RendezvousServers, "rendezvous-servers", cfg.RendezvousServers, "Comma-separated rendezvous server addresses")
+	fs.StringVar(&cfg.Mask, "mask", cfg.Mask, "LAN mask (e.g. 192.168.0.0/24)")
+	switchVar(fs, &cfg.AlwaysUseRelay, "always-relay", "Always use relay (skip hole punching)")
+	fs.StringVar(&cfg.BlocklistFile, "blocklist", cfg.BlocklistFile, "Path to blocklist file (IP/ID/CIDR entries)")
+	fs.StringVar(&cfg.AuditLogFile, "audit-log", cfg.AuditLogFile, "Path to audit log file (JSON lines)")
+	fs.StringVar(&cfg.TLSCertFile, "tls-cert", cfg.TLSCertFile, "Path to TLS certificate file")
+	fs.StringVar(&cfg.TLSKeyFile, "tls-key", cfg.TLSKeyFile, "Path to TLS key file")
+	fs.StringVar(&cfg.LogFormat, "log-format", cfg.LogFormat, "Log format: text (default) or json")
+	fs.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "Log level: error, warn, info (default), debug")
+	fs.IntVar(&cfg.AdminPort, "admin-port", cfg.AdminPort, "TCP admin interface port (0 = disabled)")
+	fs.StringVar(&cfg.JWTSecret, "jwt-secret", cfg.JWTSecret, "JWT signing secret (auto-generated if empty)")
+	fs.IntVar(&cfg.JWTExpiry, "jwt-expiry", cfg.JWTExpiry, "JWT token expiry in hours (default 24)")
+	switchVar(fs, &runSQLiteAuthConsolidation, "migrate-sqlite-auth", "Safely consolidate legacy auth.db into the selected SQLite DB, then exit")
+	switchVar(fs, &sqliteAuthConsolidationDryRun, "migrate-sqlite-auth-dry-run", "Validate legacy auth.db consolidation without modifying databases")
+	fs.StringVar(&sqliteAuthConsolidationBackupDir, "migrate-sqlite-auth-backup-dir", "", "Directory for SQLite auth consolidation backups")
+	fs.StringVar(&sqliteAuthConsolidationRollback, "rollback-sqlite-auth", "", "Restore the selected SQLite DB from a consolidation snapshot, then exit")
+	fs.StringVar(&cfg.AdminPassword, "admin-password", cfg.AdminPassword, "Password for admin TCP interface")
+	switchVar(fs, &cfg.ForceHTTPS, "force-https", "Reject non-TLS API requests")
+	switchVar(fs, &cfg.TrustProxy, "trust-proxy", "Trust X-Forwarded-For/X-Real-IP headers from reverse proxy (requires --trusted-proxies)")
+	trustedProxiesFlag := fs.String("trusted-proxies", "", "Comma-separated CIDR/IP allowlist of reverse proxies that may set X-Forwarded-* (required with --trust-proxy)")
+	fs.IntVar(&cfg.RelayMaxConnsIP, "relay-max-conns-ip", cfg.RelayMaxConnsIP, "Max relay connections per IP (0 = unlimited)")
+	fs.IntVar(&cfg.SignalRateLimitPerIP, "signal-rate-limit-per-ip", cfg.SignalRateLimitPerIP, "Max signal registrations per IP per minute (0 = unlimited; raise for large NAT deployments — issue #122)")
+	switchVar(fs, &cfg.SameNATRelay, "same-nat-relay", "Auto-fallback to relay when both peers share the same public IP (avoids NAT hairpin failures — issue #121)")
+	switchVar(fs, &cfg.AllowSharedNATInitiator, "allow-shared-nat-initiator", "Allow PunchHole/RequestRelay when multiple live peers share the initiator public IP without token/udp_port (synthetic shared-nat-initiator — issue #399; default off)")
+	switchVar(fs, &cfg.LoggedInOnlyInitiator, "logged-in-only-initiator", "Require a valid BetterDesk client login token for stock PunchHole/RequestRelay initiators (issue #414; default off)")
+	switchVar(fs, &cfg.OperatorOnlyOutbound, "operator-only-outbound", "Require a valid Admin/Operator client session for stock PunchHole/RequestRelay initiators (issue #425; default off)")
+	switchVar(fs, &cfg.P2PFirst, "p2p-first", "Wait for the target's hole punch before answering the initiator so direct P2P can succeed (issue #157; disable to always answer immediately)")
+	fs.IntVar(&cfg.P2PFallbackMs, "p2p-fallback-ms", cfg.P2PFallbackMs, "Grace period (ms) to wait for the target's PunchHoleSent before sending the relay fallback response (only with --p2p-first)")
+	fs.StringVar(&cfg.InitAdminUser, "init-admin-user", cfg.InitAdminUser, "Initial admin username (default: admin)")
+	fs.StringVar(&cfg.InitAdminPass, "init-admin-pass", cfg.InitAdminPass, "Initial admin password (auto-generated if empty)")
+	switchVar(fs, &cfg.TLSSignal, "tls-signal", "Enable TLS on signal TCP/WS ports (requires --tls-cert and --tls-key)")
+	switchVar(fs, &cfg.TLSRelay, "tls-relay", "Enable TLS on relay TCP/WS ports (requires --tls-cert and --tls-key)")
+	switchVar(fs, &cfg.TLSApi, "tls-api", "Enable TLS on HTTP API port (requires --tls-cert and --tls-key)")
+	fs.IntVar(&cfg.CDAPPort, "cdap-port", cfg.CDAPPort, "CDAP WebSocket gateway port (default 21122)")
+	switchVar(fs, &cfg.CDAPEnabled, "cdap", "Enable CDAP gateway for custom devices")
+	switchVar(fs, &cfg.CDAPTLS, "tls-cdap", "Enable TLS on CDAP gateway port (requires --tls-cert and --tls-key)")
+
+	version := fs.Bool("version", false, "Show version and exit")
+	if err := fs.Parse(args); err != nil {
+		return nil, false, err
+	}
+	if *version {
+		return cfg, true, nil
+	}
 	if *trustedProxiesFlag != "" {
 		nets, err := config.ParseTrustedProxies(*trustedProxiesFlag)
 		if err != nil {
-			log.Fatalf("Invalid --trusted-proxies: %v", err)
+			return nil, false, fmt.Errorf("invalid --trusted-proxies: %w", err)
 		}
 		cfg.TrustedProxies = nets
 	}
+
+	// The environment wins over the flags, TRUSTED_PROXIES included
+	cfg.LoadEnv()
+	cfg.AuthDBPath = resolveAuthDBPath(cfg.AuthDBPath, cfg.DBPath)
 	cfg.WarnProxyTrustMisconfig()
 
 	cfg.Mode = strings.ToLower(cfg.Mode)
 	if err := checkMode(cfg.Mode); err != nil {
-		log.Fatal(err)
+		return nil, false, err
 	}
 
-	return cfg
+	return cfg, false, nil
 }
 
 // checkMode says why a server mode cannot start, nil for "all". The relay

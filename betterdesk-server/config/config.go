@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 )
 
 // Enrollment mode constants for Dual Key System.
@@ -174,7 +176,7 @@ type Config struct {
 
 	// CDAP Gateway
 	CDAPPort        int  // WebSocket gateway port (default 21122)
-	CDAPEnabled     bool // Enable CDAP gateway (default false)
+	CDAPEnabled     bool // Enable CDAP gateway (default true)
 	CDAPTLS         bool // Enable TLS on CDAP port
 	CDAPTLSRequired bool // Reject plaintext connections on the CDAP port
 	CDAPRateLimit   int  // Max requests per minute per IP (default 30)
@@ -322,6 +324,22 @@ func DefaultConfig() *Config {
 	}
 }
 
+// readSwitch sets *field from the on/off variable name when it holds an
+// on/off value (envvar.Switch), so a variable also turns off what a flag
+// turned on. Another value is logged and leaves the field as it is.
+func readSwitch(name string, field *bool) {
+	value := os.Getenv(name)
+	if strings.TrimSpace(value) == "" {
+		return
+	}
+	on, ok := envvar.Switch(value)
+	if !ok {
+		log.Printf("[config] %s=%q is not an on/off value (%s): it stays %v", name, value, envvar.SwitchValues, *field)
+		return
+	}
+	*field = on
+}
+
 // LoadEnv overrides config values from environment variables.
 // Environment variables take precedence over CLI flags.
 func (c *Config) LoadEnv() {
@@ -377,14 +395,7 @@ func (c *Config) LoadEnv() {
 	if v := os.Getenv("MASK"); v != "" {
 		c.Mask = v
 	}
-	if v := os.Getenv("ALWAYS_USE_RELAY"); v != "" {
-		switch strings.ToUpper(strings.TrimSpace(v)) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			connection.AlwaysUseRelay = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			connection.AlwaysUseRelay = false
-		}
-	}
+	readSwitch("ALWAYS_USE_RELAY", &connection.AlwaysUseRelay)
 	if v := os.Getenv("BLOCKLIST_FILE"); v != "" {
 		c.BlocklistFile = v
 	}
@@ -437,14 +448,7 @@ func (c *Config) LoadEnv() {
 			c.ClientSessionExpiryDays = n
 		}
 	}
-	if v := os.Getenv("CLIENT_SESSION_SLIDING"); v != "" {
-		switch strings.ToUpper(strings.TrimSpace(v)) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			c.ClientSessionSliding = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			c.ClientSessionSliding = false
-		}
-	}
+	readSwitch("CLIENT_SESSION_SLIDING", &c.ClientSessionSliding)
 	if v := os.Getenv("CLIENT_SESSION_MAX_DAYS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			c.ClientSessionMaxDays = n
@@ -453,11 +457,11 @@ func (c *Config) LoadEnv() {
 	if v := os.Getenv("ADMIN_PASSWORD"); v != "" {
 		c.AdminPassword = v
 	}
-	if strings.ToUpper(os.Getenv("FORCE_HTTPS")) == "Y" {
-		c.ForceHTTPS = true
-	}
-	if strings.ToUpper(os.Getenv("TRUST_PROXY")) == "Y" {
-		c.TrustProxy = true
+	readSwitch("FORCE_HTTPS", &c.ForceHTTPS)
+	// TRUST_PROXY also holds the console's hop counts and address lists
+	// (console/httpx), which leave the server's switch as it is
+	if on, ok := envvar.Switch(os.Getenv("TRUST_PROXY")); ok {
+		c.TrustProxy = on
 	}
 	if v := os.Getenv("TRUSTED_PROXIES"); v != "" {
 		nets, err := ParseTrustedProxies(v)
@@ -491,72 +495,30 @@ func (c *Config) LoadEnv() {
 			c.SignalRateLimitPerIP = n
 		}
 	}
-	if v := strings.ToUpper(strings.TrimSpace(os.Getenv("ALLOW_LEGACY_OUTBOUND"))); v != "" {
-		switch v {
-		case "Y", "YES", "1", "TRUE", "ON":
-			c.AllowLegacyOutbound = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			c.AllowLegacyOutbound = false
-		}
-	}
+	readSwitch("ALLOW_LEGACY_OUTBOUND", &c.AllowLegacyOutbound)
 	// Issue #121: when both peers share the same public IP, the LAN
 	// hole-punch path requires NAT hairpinning, which many consumer
 	// routers (and most cellular gateways) silently drop.  Enabled by
 	// default; set SAME_NAT_RELAY=N to fall back to the legacy LAN-exchange
 	// behavior.
-	if v := os.Getenv("SAME_NAT_RELAY"); v != "" {
-		switch strings.ToUpper(v) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			connection.SameNATRelay = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			connection.SameNATRelay = false
-		}
-	}
+	readSwitch("SAME_NAT_RELAY", &connection.SameNATRelay)
 	// Issue #399: allow PunchHole/RequestRelay from shared public IPs with
 	// multiple live peers when stock clients cannot prove initiator identity
 	// (no token / udp_port). Default off — preserves #302 enrollment gate.
-	if v := os.Getenv("ALLOW_SHARED_NAT_INITIATOR"); v != "" {
-		switch strings.ToUpper(v) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			connection.AllowSharedNATInitiator = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			connection.AllowSharedNATInitiator = false
-		}
-	}
+	readSwitch("ALLOW_SHARED_NAT_INITIATOR", &connection.AllowSharedNATInitiator)
 	// Issue #414: require a valid BetterDesk client login token for stock
 	// PunchHole/RequestRelay initiators. The console's web client, which
 	// proves itself to the signal server, remains allowed.
-	if v := os.Getenv("LOGGED_IN_ONLY_INITIATOR"); v != "" {
-		switch strings.ToUpper(strings.TrimSpace(v)) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			connection.LoggedInOnlyInitiator = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			connection.LoggedInOnlyInitiator = false
-		}
-	}
+	readSwitch("LOGGED_IN_ONLY_INITIATOR", &connection.LoggedInOnlyInitiator)
 	// Issue #425: require a valid client session belonging to a user with
 	// device.connect permission for stock PunchHole/RequestRelay initiators.
 	// The console's web client, which proves itself to the signal server,
 	// remains the authenticated Web Remote exception.
-	if v := os.Getenv("OPERATOR_ONLY_OUTBOUND"); v != "" {
-		switch strings.ToUpper(strings.TrimSpace(v)) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			connection.OperatorOnlyOutbound = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			connection.OperatorOnlyOutbound = false
-		}
-	}
+	readSwitch("OPERATOR_ONLY_OUTBOUND", &connection.OperatorOnlyOutbound)
 	// Issue #157: P2P-first hole punching. Enabled by default so direct
 	// connections are attempted before relay. Set P2P_FIRST=N to restore the
 	// legacy behavior of answering the initiator immediately (always relay).
-	if v := os.Getenv("P2P_FIRST"); v != "" {
-		switch strings.ToUpper(v) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			connection.P2PFirst = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			connection.P2PFirst = false
-		}
-	}
+	readSwitch("P2P_FIRST", &connection.P2PFirst)
 	if v := os.Getenv("P2P_FALLBACK_MS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
 			connection.P2PFallbackMs = n
@@ -583,18 +545,10 @@ func (c *Config) LoadEnv() {
 	if v := os.Getenv("METRICS_IP_ALLOWLIST"); v != "" {
 		c.MetricsAllowlist = v
 	}
-	if strings.ToUpper(os.Getenv("METRICS_PUBLIC")) == "Y" || strings.ToUpper(os.Getenv("METRICS_PUBLIC")) == "YES" || os.Getenv("METRICS_PUBLIC") == "1" || strings.ToUpper(os.Getenv("METRICS_PUBLIC")) == "TRUE" {
-		c.MetricsPublic = true
-	}
-	if strings.ToUpper(os.Getenv("TLS_SIGNAL")) == "Y" {
-		c.TLSSignal = true
-	}
-	if strings.ToUpper(os.Getenv("TLS_RELAY")) == "Y" {
-		c.TLSRelay = true
-	}
-	if strings.ToUpper(os.Getenv("TLS_API")) == "Y" {
-		c.TLSApi = true
-	}
+	readSwitch("METRICS_PUBLIC", &c.MetricsPublic)
+	readSwitch("TLS_SIGNAL", &c.TLSSignal)
+	readSwitch("TLS_RELAY", &c.TLSRelay)
+	readSwitch("TLS_API", &c.TLSApi)
 	if v := os.Getenv("ENROLLMENT_MODE"); v != "" {
 		mode := strings.ToLower(v)
 		if mode == "open" || mode == "managed" || mode == "locked" {
@@ -608,16 +562,12 @@ func (c *Config) LoadEnv() {
 			c.CDAPPort = n
 		}
 	}
-	if v := strings.ToUpper(os.Getenv("CDAP_ENABLED")); v == "N" || v == "NO" || v == "FALSE" || v == "0" {
-		c.CDAPEnabled = false
-	} else if v == "Y" || v == "YES" || v == "TRUE" || v == "1" {
-		c.CDAPEnabled = true
-	}
-	if strings.ToUpper(os.Getenv("CDAP_TLS")) == "Y" {
-		c.CDAPTLS = true
-	}
-	if v := strings.ToUpper(os.Getenv("CDAP_TLS_REQUIRED")); v == "Y" || v == "YES" || v == "TRUE" || v == "1" {
-		c.CDAPTLSRequired = true
+	readSwitch("CDAP_ENABLED", &c.CDAPEnabled)
+	readSwitch("CDAP_TLS", &c.CDAPTLS)
+	// Required TLS turns TLS on; turning the requirement off leaves
+	// CDAP_TLS as it is
+	readSwitch("CDAP_TLS_REQUIRED", &c.CDAPTLSRequired)
+	if c.CDAPTLSRequired {
 		c.CDAPTLS = true
 	}
 	if v := os.Getenv("CDAP_RATE_LIMIT"); v != "" {
@@ -625,11 +575,7 @@ func (c *Config) LoadEnv() {
 			c.CDAPRateLimit = n
 		}
 	}
-	if v := strings.ToUpper(os.Getenv("MESH_ENABLED")); v == "N" || v == "NO" || v == "FALSE" || v == "0" {
-		c.MeshCentralEnabled = false
-	} else if v == "Y" || v == "YES" || v == "TRUE" || v == "1" {
-		c.MeshCentralEnabled = true
-	}
+	readSwitch("MESH_ENABLED", &c.MeshCentralEnabled)
 	if v := os.Getenv("MESH_CORE_VERSION"); v != "" {
 		c.MeshCoreVersion = v
 	}
@@ -655,35 +601,14 @@ func (c *Config) LoadEnv() {
 			c.BillingMaxClockSkewMS = n
 		}
 	}
-	if v := os.Getenv("BILLING_REQUIRE_SYNCED_CLOCK"); v != "" {
-		switch strings.ToUpper(v) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			c.BillingRequireSyncedClock = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			c.BillingRequireSyncedClock = false
-		}
-	}
-	if v := os.Getenv("BILLING_TRUST_OS_NTP"); v != "" {
-		switch strings.ToUpper(v) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			c.BillingTrustOSNTP = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			c.BillingTrustOSNTP = false
-		}
-	}
+	readSwitch("BILLING_REQUIRE_SYNCED_CLOCK", &c.BillingRequireSyncedClock)
+	readSwitch("BILLING_TRUST_OS_NTP", &c.BillingTrustOSNTP)
 	if v := os.Getenv("BILLING_ROUNDING_MINUTES"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			c.BillingRoundingMinutes = n
 		}
 	}
-	if v := os.Getenv("BILLING_REQUIRE_WORK_REPORT"); v != "" {
-		switch strings.ToUpper(v) {
-		case "Y", "YES", "1", "TRUE", "ON":
-			c.BillingRequireWorkReport = true
-		case "N", "NO", "0", "FALSE", "OFF":
-			c.BillingRequireWorkReport = false
-		}
-	}
+	readSwitch("BILLING_REQUIRE_WORK_REPORT", &c.BillingRequireWorkReport)
 	if v := strings.TrimSpace(os.Getenv("BILLING_TIMEZONE")); v != "" {
 		if _, err := time.LoadLocation(v); err == nil {
 			c.BillingTimezone = v
