@@ -35,7 +35,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode/utf16"
 
 	"github.com/google/uuid"
 
@@ -422,10 +421,6 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 		user.Email = *body.Email
 	}
 	if body.Password != nil && *body.Password != "" {
-		if problem := orgPasswordProblem(*body.Password); problem != "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
-			return
-		}
 		hash, err := auth.HashPassword(*body.Password)
 		if err != nil {
 			http.Error(w, `{"error":"password hashing failed"}`, http.StatusInternalServerError)
@@ -752,19 +747,6 @@ var orgLoginDummyHash = sync.OnceValue(func() string {
 	}
 	return hash
 })
-
-// orgPasswordProblem says what is wrong with a new password of an
-// organization account, "" when nothing: the server's rule of 8 to 128
-// characters, counted in UTF-16 units as the console counts them.
-func orgPasswordProblem(password string) string {
-	switch n := len(utf16.Encode([]rune(password))); {
-	case n < 8:
-		return "Password must be at least 8 characters"
-	case n > 128:
-		return "Password must be at most 128 characters"
-	}
-	return ""
-}
 
 // POST /api/org/login
 func (s *Server) handleOrgLogin(w http.ResponseWriter, r *http.Request) {

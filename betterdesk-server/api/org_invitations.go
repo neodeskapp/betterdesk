@@ -125,8 +125,8 @@ func (s *Server) handleRedeemOrgInvitation(w http.ResponseWriter, r *http.Reques
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "A username has 3 to 64 characters: letters, numbers and . _ @ - only."})
 		return
 	}
-	if problem := orgPasswordProblem(body.Password); problem != "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
+	if err := auth.CheckNewPassword(body.Password); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 	hash, err := auth.HashPassword(body.Password)
