@@ -315,6 +315,44 @@ describe('mesh file transfer', () => {
 	});
 });
 
+describe('mesh file download', () => {
+	async function downloading() {
+		const sent: unknown[] = [];
+		const events: [string, Record<string, unknown>][] = [];
+		const ft = new MeshFileTransfer('mesh01', (ev: string, data: Record<string, unknown>) =>
+			events.push([ev, data])
+		);
+		ft._ws = { readyState: WebSocket.OPEN, send: (d: unknown) => sent.push(d) } as unknown as WebSocket;
+		ft._relayReady = true;
+		ft.enable();
+		const id = ft.downloadFile('/tmp', { name: 'a.bin', size: 8 });
+		await vi.waitFor(() => expect(sent).toHaveLength(1));
+		return { ft, events, id };
+	}
+
+	test('shows its progress in the file sheet while it runs', async () => {
+		const d = await downloading();
+		d.ft._onBinary(new Uint8Array([0, 1, 2, 3, 4]));
+		const progress = d.events.filter(([ev]) => ev === 'file_transfer_progress').map(([, data]) => data);
+		expect(progress).toEqual([{ id: d.id, transferred: 4, fileSize: 8, percent: 50 }]);
+	});
+
+	test('goes into the folder chosen in the file sheet', async () => {
+		const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+		const d = await downloading();
+		const saved: [string, string][] = [];
+		d.ft._saveDownload = async (name: string, blob: Blob) => {
+			saved.push([name, await blob.text()]);
+			return true;
+		};
+		d.ft._onBinary(new Uint8Array([0, 0x61, 0x62, 0x63, 0x64]));
+		d.ft._onBinary(new Uint8Array([0, 0x65, 0x66, 0x67, 0x68]));
+		await vi.waitFor(() => expect(d.events.some(([ev]) => ev === 'file_transfer_complete')).toBe(true));
+		expect(saved).toEqual([['a.bin', 'abcdefgh']]);
+		expect(click).not.toHaveBeenCalled();
+	});
+});
+
 describe('file sheet: a second factor for the file transfer session', () => {
 	const f = { FileTransferModal };
 

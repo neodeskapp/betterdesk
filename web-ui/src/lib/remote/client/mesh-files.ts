@@ -50,7 +50,8 @@ export interface MeshFileEvents {
 	file_dir: { path: string; entries: MeshFileEntry[] };
 	error: { message: unknown };
 	file_transfer_start: { id: number; type: 'download' | 'upload'; fileName: string; fileSize: number };
-	file_transfer_progress: { id: number; received: number; total: number };
+	/** The fields the file sheet reads */
+	file_transfer_progress: { id: number; transferred: number; fileSize: number; percent: number };
 	file_transfer_complete: { id: number; type: 'download' | 'upload' };
 	file_transfer_error: { id: number; error: unknown };
 	file_transfer_cancelled: { id: number };
@@ -150,6 +151,11 @@ export class MeshFileTransfer {
 	_connecting: Promise<void> | null;
 	_relayReady: boolean;
 	_protocolSent: boolean;
+	/**
+	 * Set by the file sheet: saves a finished download into the chosen local
+	 * folder; false (or a promise of false) leaves it to the browser
+	 */
+	_saveDownload: ((fileName: string, blob: Blob) => unknown) | null;
 
 	constructor(deviceId: string, emit?: MeshFileEmit | null) {
 		this._deviceId = deviceId;
@@ -166,6 +172,7 @@ export class MeshFileTransfer {
 		this._connecting = null;
 		this._relayReady = false;
 		this._protocolSent = false;
+		this._saveDownload = null;
 	}
 
 	enable(): void {
@@ -306,8 +313,9 @@ export class MeshFileTransfer {
 				t.chunks.push(buf.slice(off));
 				this._emit('file_transfer_progress', {
 					id: id,
-					received: t.receivedBytes,
-					total: t.fileSize
+					transferred: t.receivedBytes,
+					fileSize: t.fileSize,
+					percent: t.fileSize > 0 ? Math.min(100, Math.round((t.receivedBytes / t.fileSize) * 100)) : 0
 				});
 				if (t.fileSize > 0 && t.receivedBytes >= t.fileSize) {
 					this._finishDownload(id);
@@ -483,15 +491,35 @@ export class MeshFileTransfer {
 	_finishDownload(id: number): void {
 		const t = this._transfers.get(id);
 		if (!t || t.type !== 'download') return;
-		const blob = new Blob(t.chunks);
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = t.fileName;
-		a.click();
-		URL.revokeObjectURL(url);
-		this._emit('file_transfer_complete', { id: id, type: 'download' });
 		this._transfers.delete(id);
+		const blob = new Blob(t.chunks);
+		const browserDownload = (): void => {
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = t.fileName;
+			a.click();
+			URL.revokeObjectURL(url);
+		};
+		// Into the folder chosen in the file sheet when its hook takes the file, else the browser's download
+		const save = this._saveDownload;
+		if (typeof save !== 'function') {
+			browserDownload();
+			this._emit('file_transfer_complete', { id: id, type: 'download' });
+			return;
+		}
+		Promise.resolve()
+			.then(() => save(t.fileName, blob))
+			.then((savedToFolder) => {
+				if (!savedToFolder) browserDownload();
+				this._emit('file_transfer_complete', { id: id, type: 'download' });
+			})
+			.catch((err: unknown) => {
+				this._emit('file_transfer_error', {
+					id: id,
+					error: 'Failed to save file: ' + (errorMessage(err) || 'unknown error')
+				});
+			});
 	}
 
 	uploadFile(file: File, remotePath: string): number {
