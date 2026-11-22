@@ -17,8 +17,9 @@ import (
 // routes fixed, each with the behaviour the fix changed.
 
 // TestGroupWritesKeepTheScope: an account whose device scope is limited
-// changes and deletes only the device groups open to it, sets or changes
-// no access list and makes no tag group, with either writer; each refusal
+// changes only the device groups open to it, deletes none with an access
+// list (L47), sets or changes no access list and makes no tag group, with
+// either writer; each refusal
 // is 403 before anything is written here or on the API server, and the
 // account still may not see device C afterwards. The admin and an
 // operator who sees every device do all of it (BUGS RV59).
@@ -100,8 +101,9 @@ func TestGroupWritesKeepTheScope(t *testing.T) {
 					t.Errorf("%s as operator (console writer %v): %d %s, want 200", body, node, got.Status, got.Body)
 				}
 			}
-			if got := operator.Do("DELETE", "/api/device-groups/g-ops", ""); got.Status != http.StatusOK {
-				t.Errorf("delete of a group open to the operator (console writer %v): %d %s", node, got.Status, got.Body)
+			// g-ops has an access list, so deleting it needs user.edit (L47)
+			if got := operator.Do("DELETE", "/api/device-groups/g-ops", ""); got.Status != http.StatusForbidden || got.Body != forbidden {
+				t.Errorf("delete of a group with a list open to the operator (console writer %v): %d %s", node, got.Status, got.Body)
 			}
 			admin := w.As("admin")
 			if got := admin.Do("POST", "/api/device-groups", `{"guid":"g-viewer","name":"Viewer only","allowed_users":"e2e_viewer, e2e_operator"}`); got.Status != http.StatusOK {

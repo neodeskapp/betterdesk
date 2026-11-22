@@ -88,9 +88,12 @@ var fixedSteps = []fixedStep{
 	{"node", "223 GET /api/devices/C1003/groups as admin", "DGR5, UM33, RV59, RV25"},
 	{"node", "237 GET /api/devices/A1001/groups as admin", "DGR5, RV59, RV25"},
 	{"node", "356 GET /api/devices/C1003/groups as viewer", "DGR5, RV59, RV25"},
-	// The audit log after the steps of DE5, DE6, DGR2, DGR5, UM33 and
-	// RV59
-	{"node", "459 audit", "DE5, DE6, DGR2, DGR5, UM33, RV59"},
+	// The operator may not delete g-ops, whose access list names it: a
+	// group with an access list goes only with user.edit (L47).
+	{"node", "178 DELETE /api/device-groups/g-ops {} as operator", "L47"},
+	// The audit log after the steps of DE5, DE6, DGR2, DGR5, UM33, RV59
+	// and L47
+	{"node", "459 audit", "DE5, DE6, DGR2, DGR5, UM33, RV59, L47"},
 	// The scope check does not take bulk-delete for a device id: no lookup
 	// of a device of that name, and the made-up server's bulk-delete device
 	// outside the operator's scope no longer refuses the bulk delete before
