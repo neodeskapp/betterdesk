@@ -159,6 +159,24 @@ services:
       retries: 3
       start_period: 45s
 
+  # guacd for RDP and VNC targets in the browser (the profile "guacd": put
+  # COMPOSE_PROFILES=guacd into .env, or postgres,guacd with PostgreSQL). It
+  # shares the betterdesk container's network, because the server talks to
+  # guacd only on loopback (GUACD_ADDRESS, 127.0.0.1:4822).
+  guacd:
+    image: guacamole/guacd:1.5.5
+    container_name: betterdesk-guacd
+    profiles:
+      - guacd
+    network_mode: "service:betterdesk"
+    depends_on:
+      - betterdesk
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
   # PostgreSQL instead of SQLite (the profile "postgres"; betterdesk-docker.sh
   # sets it up). By hand, in .env next to this file:
   #   COMPOSE_PROFILES=postgres

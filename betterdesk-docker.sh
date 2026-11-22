@@ -287,6 +287,23 @@ env_unset() {
     mv "$tmp" "$file"
 }
 
+# profile_on NAME, profile_off NAME: an optional service of the compose
+# file (postgres, guacd) on or off in COMPOSE_PROFILES, the others kept
+profile_on() {
+    local list
+    list=$(env_get COMPOSE_PROFILES)
+    case ",$list," in
+        *",$1,"*) return 0 ;;
+    esac
+    env_set COMPOSE_PROFILES "${list:+$list,}$1"
+}
+
+profile_off() {
+    local list
+    list=$(env_get COMPOSE_PROFILES | tr ',' '\n' | grep -vx "$1" | paste -sd, - || true)
+    if [ -n "$list" ]; then env_set COMPOSE_PROFILES "$list"; else env_unset COMPOSE_PROFILES; fi
+}
+
 image_tag() {
     local tag
     tag="${BETTERDESK_IMAGE_TAG_SET:-$(env_get BETTERDESK_IMAGE_TAG)}"
@@ -707,7 +724,7 @@ postgres_settings() {
     pass=$(env_get POSTGRES_PASSWORD)
     [ -n "$pass" ] || pass=$(new_secret 24)
     env_set POSTGRES_PASSWORD "$pass"
-    env_set COMPOSE_PROFILES postgres
+    profile_on postgres
     env_set DB_TYPE postgres
     env_set DATABASE_URL "$(postgres_url "$pass")"
 }
@@ -1013,11 +1030,11 @@ do_uninstall() {
         compose stop -t 30 >/dev/null 2>&1 || true
         file=$(backup_volumes)
         ok "Backup: $file"
-        compose_quiet --profile postgres down -v --remove-orphans
+        compose_quiet --profile postgres --profile guacd down -v --remove-orphans
         docker volume rm "$DATA_VOLUME" "$CONSOLE_VOLUME" "$PG_VOLUME" >/dev/null 2>&1 || true
         ok "BetterDesk's containers and volumes are removed."
     else
-        compose_quiet --profile postgres down --remove-orphans
+        compose_quiet --profile postgres --profile guacd down --remove-orphans
         ok "BetterDesk's containers are removed."
         say "Left on this machine:"
         say "  volumes:  $DATA_VOLUME (database, server key), $CONSOLE_VOLUME$(docker volume inspect "$PG_VOLUME" >/dev/null 2>&1 && printf ', %s' "$PG_VOLUME" || true)"
@@ -1148,7 +1165,7 @@ wait_postgres() {
 back_to_sqlite() {
     env_unset DATABASE_URL
     env_unset DB_TYPE
-    env_unset COMPOSE_PROFILES
+    profile_off postgres
     compose --profile postgres stop -t 10 postgres >/dev/null 2>&1 || true
     compose_quiet up -d betterdesk || true
     wait_healthy || warn "BetterDesk on SQLite did not answer either; its log: cd $BETTERDESK_DIR && docker compose logs betterdesk"
@@ -1217,7 +1234,7 @@ do_postgres() {
     printf '%s\n' "$out" | grep -E 'Migration complete|Backup created' || true
 
     step "Starting BetterDesk on PostgreSQL"
-    env_set COMPOSE_PROFILES postgres
+    profile_on postgres
     env_set DB_TYPE postgres
     env_set DATABASE_URL "$(postgres_url "$pass")"
     compose_quiet up -d || true

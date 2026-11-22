@@ -296,6 +296,7 @@ test_help_lists_every_option() (
 test_postgres_switch_moves_the_data() (
     load
     mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
+    env_set COMPOSE_PROFILES guacd
     : > "$CALLS"
     local out pass stop_line run_line
     out=$(mgr 'ASSUME_YES=true; do_postgres' 2>&1) || fail "the switch failed: $out"
@@ -303,7 +304,7 @@ test_postgres_switch_moves_the_data() (
     [ "${#pass}" -ge 32 ] || fail "no PostgreSQL password made"
     [ "$(env_get DATABASE_URL)" = "postgres://betterdesk:${pass}@postgres:5432/betterdesk?sslmode=disable" ] \
         || fail "DATABASE_URL after the switch: $(env_get DATABASE_URL)"
-    [ "$(env_get COMPOSE_PROFILES)" = postgres ] || fail "the postgres service is not on after the switch"
+    [ "$(env_get COMPOSE_PROFILES)" = guacd,postgres ] || fail "COMPOSE_PROFILES after the switch: $(env_get COMPOSE_PROFILES)"
     grep -q 'compose run --rm --no-deps -T --user 10001:10001 --entrypoint sh betterdesk -c exec /usr/local/bin/betterdesk-migrate -mode sqlite2pg -src /opt/rustdesk/db_v2.sqlite3' "$CALLS" \
         || fail "the data was not moved with sqlite2pg: $(cat "$CALLS")"
     [ "$(cat "$TEST_DIR/run-env")" = "$(env_get DATABASE_URL)" ] || fail "the tool did not get the address in its environment"

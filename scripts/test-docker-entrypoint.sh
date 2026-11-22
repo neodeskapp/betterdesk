@@ -179,6 +179,18 @@ test_bootstrap_keeps_a_replaced_first_password_away() (
     rm -rf "$dir"
 )
 
+# L83: the container makes the remote target vault key at its first start
+# and keeps it in the data volume; guacd is an optional service in the
+# container's own network (the server only talks to guacd on loopback).
+test_remote_targets_work_out_of_the_box() (
+    local ep="$SCRIPT_ROOT/docker/entrypoint.sh" quick="$SCRIPT_ROOT/docker-compose.quick.single.yml"
+    grep -q 'VAULT_KEY_FILE="/opt/rustdesk/.remote_target_vault_key"' "$ep" || fail "the entrypoint keeps no vault key in the volume"
+    grep -q 'export REMOTE_TARGET_VAULT_KEY' "$ep" || fail "the entrypoint does not pass the vault key to the server"
+    if grep -nE '^[^#]*echo.*\$\{?REMOTE_TARGET_VAULT_KEY' "$ep"; then fail "the entrypoint prints the vault key"; fi
+    sed -n '/^  guacd:/,/^  [a-z]/p' "$quick" | grep -q 'network_mode: "service:betterdesk"' || fail "guacd does not share the container's network"
+    sed -n '/^  guacd:/,/^  [a-z]/p' "$quick" | grep -qE '^ +- guacd$' || fail "guacd is not an optional service (profile guacd)"
+)
+
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
@@ -190,4 +202,5 @@ test_healthcheck_follows_tls
 test_image_binary_knows_its_build
 test_credentials_hint_names_the_service
 test_bootstrap_keeps_a_replaced_first_password_away
+test_remote_targets_work_out_of_the_box
 echo "Docker entrypoint checks passed"

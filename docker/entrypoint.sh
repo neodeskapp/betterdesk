@@ -48,6 +48,19 @@ elif [ -n "${API_KEY:-}" ] && ! file_exists_as_betterdesk "$API_KEY_FILE"; then
     echo "API key from env → $API_KEY_FILE"
 fi
 
+# Key of the vault that holds the passwords of RDP and VNC targets: made at
+# the first start and kept in the data volume, unless REMOTE_TARGET_VAULT_KEY
+# is set
+VAULT_KEY_FILE="/opt/rustdesk/.remote_target_vault_key"
+if [ -z "${REMOTE_TARGET_VAULT_KEY:-}" ]; then
+    if ! file_exists_as_betterdesk "$VAULT_KEY_FILE"; then
+        write_as_betterdesk "$VAULT_KEY_FILE" "$(openssl rand -hex 32)"
+        echo "Made the remote target vault key → $VAULT_KEY_FILE"
+    fi
+    REMOTE_TARGET_VAULT_KEY=$(su-exec betterdesk cat "$VAULT_KEY_FILE")
+fi
+export REMOTE_TARGET_VAULT_KEY
+
 # Default enrollment policy. The server stores the mode of its first start
 # and keeps the one saved in the console from then on; ENROLLMENT_MODE is
 # only that first default (ENROLLMENT_MODE_ENV_OVERRIDE=Y forces it at
