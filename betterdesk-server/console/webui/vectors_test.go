@@ -15,8 +15,8 @@ import (
 )
 
 // testdata/vectors.json.gz and routes_vectors.json.gz hold inputs with what
-// the Node console's own code and packages answer for them (written by
-// .ui-rework/go/tools/webui/gen-webui-vectors.js): accepts, qs, encodeurl,
+// the Node console's own code and packages answered for them (a fixed
+// record made while it still existed): accepts, qs, encodeurl,
 // decodeURI, path.extname, send's mime table, range-parser, and the helpers
 // of lib/webUi.js.
 

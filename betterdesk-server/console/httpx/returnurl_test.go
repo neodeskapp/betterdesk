@@ -37,8 +37,8 @@ func short(s string) string {
 }
 
 // Every input with the answer Node's safeReturnPath gave for it
-// (testdata/returnurl_vectors.json, written by
-// .ui-rework/go/tools/webui/gen-returnurl-vectors.js).
+// (testdata/returnurl_vectors.json, a fixed record made while the Node
+// console still existed).
 func TestSafeReturnPathMatchesNode(t *testing.T) {
 	vectors := loadVectors(t, "returnurl_vectors.json")
 	if len(vectors) < 3000 {

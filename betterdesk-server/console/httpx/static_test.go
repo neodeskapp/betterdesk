@@ -21,9 +21,9 @@ import (
 	"time"
 )
 
-// The vectors in testdata/static/vectors.json were recorded from
-// express.static (serve-static 1.16.3, send 0.19.2) by
-// .ui-rework/go/tools/vectors/static.js.
+// The vectors in testdata/static/vectors.json are a fixed record of
+// express.static (serve-static 1.16.3, send 0.19.2), made while the Node
+// console still existed.
 type staticVector struct {
 	ID      string      `json:"id"`
 	Method  string      `json:"method"`
