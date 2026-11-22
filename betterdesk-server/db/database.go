@@ -392,49 +392,16 @@ type AccessPolicy struct {
 	UpdatedBy         string `json:"updated_by,omitempty"` // Admin/operator who last changed the policy
 }
 
-// OrgRole constants
+// Organization roles as rows hold them. The routes give every new account,
+// membership and invitation OrgRoleUser; the other roles are in rows
+// stored earlier, where they still widen what an organization sign-in
+// reads (the member list, the invitations).
 const (
 	OrgRoleOwner    = "owner"
 	OrgRoleAdmin    = "admin"
 	OrgRoleOperator = "operator"
 	OrgRoleUser     = "user"
 )
-
-// OrgRoleLevel returns the numeric privilege level for an org-scoped role.
-// Higher = more privileges. Used for role boundary enforcement.
-func OrgRoleLevel(role string) int {
-	switch role {
-	case OrgRoleOwner:
-		return 40
-	case OrgRoleAdmin:
-		return 30
-	case OrgRoleOperator:
-		return 20
-	case OrgRoleUser:
-		return 10
-	default:
-		return 0
-	}
-}
-
-// OrgCanAssignRole checks whether a caller with callerOrgRole may assign targetOrgRole.
-// Owner → any; Admin → operator, user; Operator/User → none.
-func OrgCanAssignRole(callerOrgRole, targetOrgRole string) bool {
-	switch callerOrgRole {
-	case OrgRoleOwner:
-		// Owner can assign admin, operator, user (not another owner — handled in API)
-		return targetOrgRole == OrgRoleAdmin || targetOrgRole == OrgRoleOperator || targetOrgRole == OrgRoleUser
-	case OrgRoleAdmin:
-		return targetOrgRole == OrgRoleOperator || targetOrgRole == OrgRoleUser
-	default:
-		return false
-	}
-}
-
-// ValidOrgRole returns true if the given string is a recognized org role.
-func ValidOrgRole(r string) bool {
-	return r == OrgRoleOwner || r == OrgRoleAdmin || r == OrgRoleOperator || r == OrgRoleUser
-}
 
 // AuditConnection records a remote-control session event reported by a RustDesk client.
 // Mirrors the Node.js console's audit_connections table for API-port consolidation.

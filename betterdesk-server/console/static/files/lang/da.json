@@ -4614,6 +4614,7 @@
     "session_settings_note": "Gemmes med organisationen, men serveren anvender dem endnu ikke på forbindelser. De regler, enhederne følger, angives under Politikker.",
     "policies_link": "Åbn Politikker",
     "raw_settings_note": "Alle værdier, der er gemt for organisationen, også politikker angivet under Politikker.",
+    "connection_rules_note": "De regler, enhederne følger, når nogen opretter forbindelse til dem, angives under Politikker.",
     "no_settings": "Ingen indstillinger gemt endnu.",
     "users_count_one": "{count} bruger",
     "users_count_other": "{count} brugere",

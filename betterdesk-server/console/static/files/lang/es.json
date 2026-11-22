@@ -4608,6 +4608,7 @@
     "session_settings_note": "Se guardan con esta organización, pero el servidor aún no los aplica a las conexiones. Las reglas que siguen los dispositivos se configuran en Políticas.",
     "policies_link": "Abrir Políticas",
     "raw_settings_note": "Todos los valores guardados para esta organización, incluidas las políticas de la página Políticas.",
+    "connection_rules_note": "Las reglas que siguen los dispositivos cuando alguien se conecta a ellos se definen en Directivas.",
     "no_settings": "Todavía no hay ajustes guardados.",
     "users_count_one": "{count} usuario",
     "users_count_other": "{count} usuarios",

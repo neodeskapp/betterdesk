@@ -87,13 +87,8 @@ export function listOrgUsers(id: string, signal?: AbortSignal): Promise<OrgUser[
 }
 
 /** Needs org.manage_users: a new account that belongs to this organization */
-export function createOrgUser(id: string, body: { username: string; password: string; role: string }) {
+export function createOrgUser(id: string, body: { username: string; password: string }) {
 	return api(Any, `${base(id)}/users`, { method: 'POST', body });
-}
-
-/** Needs org.manage_users */
-export function setOrgUserRole(id: string, uid: string, role: string) {
-	return api(Any, `${base(id)}/users/${enc(uid)}`, { method: 'PUT', body: { role } });
 }
 
 /** Needs org.manage_users */
@@ -114,8 +109,8 @@ export function listAvailableUsers(id: string, signal?: AbortSignal): Promise<Se
 }
 
 /** Link a server account (Go user id). Needs org.manage_users */
-export function addOrgMember(id: string, userId: number, role: string) {
-	return api(Any, `${base(id)}/members`, { method: 'POST', body: { user_id: userId, role } });
+export function addOrgMember(id: string, userId: number) {
+	return api(Any, `${base(id)}/members`, { method: 'POST', body: { user_id: userId } });
 }
 
 /* ── Invitations ── */
@@ -136,10 +131,7 @@ export function listInvitations(id: string, signal?: AbortSignal): Promise<OrgIn
 }
 
 /** Needs org.manage_users */
-export function createInvitation(
-	id: string,
-	body: { email: string; role: string; expires_in_hours: number }
-) {
+export function createInvitation(id: string, body: { email: string; expires_in_hours: number }) {
 	return api(Any, `${base(id)}/invite`, { method: 'POST', body });
 }
 
@@ -217,11 +209,6 @@ export type OrgSetting = v.InferOutput<typeof OrgSetting>;
 
 export function listOrgSettings(id: string, signal?: AbortSignal): Promise<OrgSetting[]> {
 	return api(listOf('settings', OrgSetting), `${base(id)}/settings`, { signal });
-}
-
-/** One key per call. Needs org.edit */
-export function saveOrgSetting(id: string, key: string, value: string) {
-	return api(Any, `${base(id)}/settings`, { method: 'PUT', body: { key, value } });
 }
 
 /* ── Shared address book ── */

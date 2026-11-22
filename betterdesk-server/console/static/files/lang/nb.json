@@ -4614,6 +4614,7 @@
     "session_settings_note": "Lagres med organisasjonen, men serveren bruker dem ikke på tilkoblinger ennå. Reglene enhetene følger, angis under Retningslinjer.",
     "policies_link": "Åpne Retningslinjer",
     "raw_settings_note": "Alle verdier som er lagret for organisasjonen, også retningslinjer fra siden Retningslinjer.",
+    "connection_rules_note": "Reglene enhetene følger når noen kobler til dem, angis under Retningslinjer.",
     "no_settings": "Ingen innstillinger lagret ennå.",
     "users_count_one": "{count} bruker",
     "users_count_other": "{count} brukere",

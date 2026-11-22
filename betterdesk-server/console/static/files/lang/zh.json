@@ -4719,6 +4719,7 @@
     "session_settings_note": "会与此组织一起保存，但服务器目前还不会应用到连接。设备遵循的规则在“策略”页设置。",
     "policies_link": "打开策略",
     "raw_settings_note": "此组织已保存的所有值，包括在“策略”页设置的策略。",
+    "connection_rules_note": "设备在有人连接时遵循的规则在“策略”中设置。",
     "no_settings": "尚未保存任何设置。",
     "users_count_one": "{count} 个用户",
     "users_count_other": "{count} 个用户",

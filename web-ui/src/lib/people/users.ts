@@ -158,9 +158,6 @@ export function availableOrgs<O extends { id: string }>(all: readonly O[], membe
 	return all.filter((o) => !ids.has(String(o.id)));
 }
 
-/** The roles inside an organization, lowest first ("user" is shown as Member) */
-export const ORG_ROLES = ['user', 'operator', 'admin', 'owner'] as const;
-
 /** Run `fn` over items, at most `limit` at a time (counts per row without flooding the server) */
 export async function eachLimited<T>(
 	items: readonly T[],

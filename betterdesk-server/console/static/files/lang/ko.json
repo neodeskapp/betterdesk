@@ -4608,6 +4608,7 @@
     "session_settings_note": "이 조직에 저장되지만 서버는 아직 연결에 적용하지 않습니다. 장치가 따르는 규칙은 정책에서 설정합니다.",
     "policies_link": "정책 열기",
     "raw_settings_note": "이 조직에 저장된 모든 값입니다. 정책 페이지에서 설정한 정책도 포함됩니다.",
+    "connection_rules_note": "누군가 연결할 때 장치가 따르는 규칙은 정책에서 설정합니다.",
     "no_settings": "아직 저장된 설정이 없습니다.",
     "users_count_one": "사용자 {count}명",
     "users_count_other": "사용자 {count}명",

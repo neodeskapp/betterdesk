@@ -1,7 +1,7 @@
 <!--
-  The organizations an account belongs to, with its role in each. With
-  org.manage_users the sheet also removes it from one and adds it to
-  another (organization and role). Without, it only lists them.
+  The organizations an account belongs to. With org.manage_users the sheet
+  also removes it from one and adds it to another. Without, it only lists
+  them.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -14,8 +14,7 @@
 		type UserOrg
 	} from '#lib/api/users.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { orgRoleLabel } from '#lib/people/orgs.ts';
-	import { availableOrgs, ORG_ROLES } from '#lib/people/users.ts';
+	import { availableOrgs } from '#lib/people/users.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -26,7 +25,6 @@
 	import Select from '#lib/ui/Select.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
 	import States from '#lib/ui/States.svelte';
-	import Tag from '#lib/ui/Tag.svelte';
 
 	interface Props {
 		user: ConsoleUser;
@@ -49,10 +47,8 @@
 	let sheet = $state<HTMLElement | null>(null);
 
 	let pickOrg = $state('');
-	let pickRole = $state<string>('user');
 
 	const available = $derived(orgs ? availableOrgs(all, orgs) : []);
-	const roleOptions = $derived(ORG_ROLES.map((r) => ({ value: r as string, label: orgRoleLabel(r, t) })));
 
 	async function load() {
 		loadError = '';
@@ -111,7 +107,7 @@
 		const org = all.find((o) => o.id === pickOrg);
 		if (!org) return;
 		void run(
-			() => addUserToOrg(user.id, org.id, pickRole).then(() => undefined),
+			() => addUserToOrg(user.id, org.id).then(() => undefined),
 			t('users.org_added_named', { org: org.name })
 		);
 	}
@@ -140,9 +136,6 @@
 		{:else if orgs && orgs.length}
 			<RowList>
 				{#each orgs as org (org.id)}
-					{#snippet roleTag()}<span class="sr-only">{t('organizations.org_role')}: </span><Tag
-							label={orgRoleLabel(org.role, t)}
-						/>{/snippet}
 					{#snippet remover()}<Button
 							size="sm"
 							variant="danger-quiet"
@@ -150,11 +143,7 @@
 							onclick={() => remove(org)}
 							>{t('actions.remove')}<span class="sr-only"> {org.name}</span></Button
 						>{/snippet}
-					<ListRow
-						title={org.name}
-						sub={org.role ? roleTag : undefined}
-						actions={canManage ? remover : undefined}
-					/>
+					<ListRow title={org.name} actions={canManage ? remover : undefined} />
 				{/each}
 			</RowList>
 		{:else}
@@ -178,11 +167,6 @@
 								options={available.map((o) => ({ value: o.id, label: o.name }))}
 								bind:value={pickOrg}
 							/>
-						{/snippet}
-					</Field>
-					<Field label={t('organizations.org_role')}>
-						{#snippet children(f)}
-							<Select {...f} width="medium" options={roleOptions} bind:value={pickRole} />
 						{/snippet}
 					</Field>
 					<div><Button type="submit" {busy}>{t('users.add_to_org_button')}</Button></div>

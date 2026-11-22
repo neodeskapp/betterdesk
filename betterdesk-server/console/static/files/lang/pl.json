@@ -4737,6 +4737,7 @@
     "session_settings_note": "Zapisywane z organizacją, ale serwer jeszcze nie stosuje ich do połączeń. Reguły, których przestrzegają urządzenia, ustawia się w Zasadach.",
     "policies_link": "Otwórz Zasady",
     "raw_settings_note": "Wszystkie wartości zapisane dla tej organizacji, także zasady ustawione na stronie Zasady.",
+    "connection_rules_note": "Reguły, których urządzenia przestrzegają przy połączeniu, ustawia się w Zasadach.",
     "no_settings": "Brak zapisanych ustawień.",
     "users_count_one": "{count} użytkownik",
     "users_count_other": "Liczba użytkowników: {count}",

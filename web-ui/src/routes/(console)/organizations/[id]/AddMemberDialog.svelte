@@ -1,14 +1,12 @@
 <!--
   Add someone to the organization: a new account that exists only here
-  (username, password, role), or an existing server account (who, role).
-  Two ways, picked with tabs at the top of the dialog.
+  (username, password), or an existing server account. Two ways, picked
+  with tabs at the top of the dialog.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { addOrgMember, createOrgUser, listAvailableUsers, type ServerUser } from '#lib/api/orgs.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { orgRoleLabel } from '#lib/people/orgs.ts';
-	import { ORG_ROLES } from '#lib/people/users.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -33,7 +31,6 @@
 		);
 	});
 
-	const roleOptions = $derived(ORG_ROLES.map((r) => ({ value: r as string, label: orgRoleLabel(r, t) })));
 	function serverRole(r: string): string {
 		const key = `users.role_${r}`;
 		return t(key) === key ? r : t(key);
@@ -44,7 +41,7 @@
 	]);
 
 	const form = createForm({
-		initial: { username: '', password: '', role: 'user', userId: '', existingRole: 'user' },
+		initial: { username: '', password: '', userId: '' },
 		validate: (v) => {
 			if (mode === 'create') {
 				const missing = t('organizations.username_password_required');
@@ -57,10 +54,10 @@
 		},
 		submit: async (v) => {
 			if (mode === 'create') {
-				await createOrgUser(orgId, { username: v.username.trim(), password: v.password, role: v.role });
+				await createOrgUser(orgId, { username: v.username.trim(), password: v.password });
 				toast.success(t('organizations.user_added'));
 			} else {
-				await addOrgMember(orgId, Number.parseInt(v.userId, 10), v.existingRole);
+				await addOrgMember(orgId, Number.parseInt(v.userId, 10));
 				toast.success(t('organizations.user_linked'));
 			}
 			onsaved();
@@ -104,20 +101,10 @@
 								/>
 							{/snippet}
 						</Field>
-						<Field label={t('organizations.role')}>
-							{#snippet children(f)}
-								<Select {...f} width="medium" options={roleOptions} bind:value={form.values.role} />
-							{/snippet}
-						</Field>
 					{:else if available.length}
 						<Field label={t('organizations.select_user')} error={form.errors.userId}>
 							{#snippet children(f)}
 								<Select {...f} width="host" options={userOptions} bind:value={form.values.userId} />
-							{/snippet}
-						</Field>
-						<Field label={t('organizations.org_role')} hint={t('organizations.link_user_hint')}>
-							{#snippet children(f)}
-								<Select {...f} width="medium" options={roleOptions} bind:value={form.values.existingRole} />
 							{/snippet}
 						</Field>
 					{:else}

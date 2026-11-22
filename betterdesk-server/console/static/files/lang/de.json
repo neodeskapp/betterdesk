@@ -4608,6 +4608,7 @@
     "session_settings_note": "Werden mit dieser Organisation gespeichert, aber der Server wendet sie noch nicht auf Verbindungen an. Die Regeln, denen die Geräte folgen, legen Sie unter Richtlinien fest.",
     "policies_link": "Richtlinien öffnen",
     "raw_settings_note": "Alle Werte, die für diese Organisation gespeichert sind, auch die Richtlinien von der Seite Richtlinien.",
+    "connection_rules_note": "Die Regeln, denen Geräte bei einer Verbindung folgen, legen Sie unter Richtlinien fest.",
     "no_settings": "Noch keine Einstellungen gespeichert.",
     "users_count_one": "{count} Benutzer",
     "users_count_other": "{count} Benutzer",

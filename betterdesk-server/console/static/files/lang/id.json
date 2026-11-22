@@ -4614,6 +4614,7 @@
     "session_settings_note": "Disimpan bersama organisasi ini, tetapi server belum menerapkannya pada koneksi. Aturan yang diikuti perangkat diatur di Kebijakan.",
     "policies_link": "Buka Kebijakan",
     "raw_settings_note": "Semua nilai yang disimpan untuk organisasi ini, termasuk kebijakan dari halaman Kebijakan.",
+    "connection_rules_note": "Aturan yang diikuti perangkat saat seseorang terhubung ke perangkat itu diatur di Kebijakan.",
     "no_settings": "Belum ada pengaturan yang disimpan.",
     "users_count_one": "{count} pengguna",
     "users_count_other": "{count} pengguna",

@@ -64,7 +64,7 @@ func TestAssignUserToOrgAcceptsNumericOrgID(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&orgUser); err != nil {
 		t.Fatal(err)
 	}
-	if orgUser.OrgID != "42" || orgUser.ServerUserID != user.ID || orgUser.Role != "operator" {
+	if orgUser.OrgID != "42" || orgUser.ServerUserID != user.ID || orgUser.Role != db.OrgRoleUser {
 		t.Fatalf("unexpected org user: %+v", orgUser)
 	}
 }

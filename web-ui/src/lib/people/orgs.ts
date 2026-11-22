@@ -1,22 +1,11 @@
 /**
- * The organization pages' rules without a DOM: labels, the slug a name
- * suggests, the stored settings the Settings tab edits, the shared
- * address book (parse, edit as rows, check the JSON), open invitations and
- * the support packages that belong to an organization.
+ * The organization pages' rules without a DOM: the slug a name suggests,
+ * the shared address book (parse, edit as rows, check the JSON), open
+ * invitations and the support packages that belong to an organization.
  */
 
-import type { Contract, OrgInvitation, OrgSetting } from '#lib/api/orgs.ts';
+import type { Contract, OrgInvitation } from '#lib/api/orgs.ts';
 import { parseDate } from '#lib/i18n/format.ts';
-
-type T = (key: string, params?: Record<string, string | number>) => string;
-
-/** A role inside an organization ("user" reads as Member); unknown roles as they are */
-export function orgRoleLabel(role: string, t: T): string {
-	if (!role) return '';
-	const key = `organizations.role_${role}`;
-	const text = t(key);
-	return text === key ? role : text;
-}
 
 /** "Harbor Logistics GmbH" → "harbor-logistics-gmbh" (at most 64 characters) */
 export function slugify(name: string): string {
@@ -25,52 +14,6 @@ export function slugify(name: string): string {
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-|-$/g, '')
 		.substring(0, 64);
-}
-
-/* ── Stored settings (Settings tab) ── */
-
-export interface OrgSessionSettings {
-	connection_policy: string;
-	allow_file_transfer: boolean;
-	allow_clipboard: boolean;
-	max_session_duration_min: number;
-}
-
-export const CONNECTION_POLICIES = ['unattended', 'attended', 'ask_always'] as const;
-
-export const SETTING_DEFAULTS: OrgSessionSettings = {
-	connection_policy: 'unattended',
-	allow_file_transfer: true,
-	allow_clipboard: true,
-	max_session_duration_min: 120
-};
-
-/** The four settings the tab edits, from the stored key/value rows (missing keys take the defaults) */
-export function readSessionSettings(rows: readonly OrgSetting[]): OrgSessionSettings {
-	const out = { ...SETTING_DEFAULTS };
-	for (const { key, value } of rows) {
-		if (key === 'connection_policy' && value) out.connection_policy = value;
-		else if (key === 'allow_file_transfer') out.allow_file_transfer = String(value) !== 'false';
-		else if (key === 'allow_clipboard') out.allow_clipboard = String(value) !== 'false';
-		else if (key === 'max_session_duration_min') {
-			const n = Number.parseInt(value, 10);
-			out.max_session_duration_min = Number.isFinite(n) ? n : SETTING_DEFAULTS.max_session_duration_min;
-		}
-	}
-	return out;
-}
-
-/** The key/value pairs the server stores, in the old order */
-export function sessionSettingRows(s: OrgSessionSettings): [string, string][] {
-	return [
-		['connection_policy', s.connection_policy || SETTING_DEFAULTS.connection_policy],
-		['allow_file_transfer', s.allow_file_transfer ? 'true' : 'false'],
-		['allow_clipboard', s.allow_clipboard ? 'true' : 'false'],
-		[
-			'max_session_duration_min',
-			String(Number.isFinite(s.max_session_duration_min) ? s.max_session_duration_min : 120)
-		]
-	];
 }
 
 /* ── Invitations ── */

@@ -4741,6 +4741,7 @@
     "session_settings_note": "Enregistrés avec cette organisation, mais le serveur ne les applique pas encore aux connexions. Les règles suivies par les appareils se définissent dans Stratégies.",
     "policies_link": "Ouvrir Stratégies",
     "raw_settings_note": "Toutes les valeurs enregistrées pour cette organisation, y compris les stratégies de la page Stratégies.",
+    "connection_rules_note": "Les règles que suivent les appareils lors d'une connexion se règlent dans Stratégies.",
     "no_settings": "Aucun paramètre enregistré pour l'instant.",
     "users_count_one": "{count} utilisateur",
     "users_count_other": "{count} utilisateurs",

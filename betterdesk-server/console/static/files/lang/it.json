@@ -4608,6 +4608,7 @@
     "session_settings_note": "Salvate con questa organizzazione, ma il server non le applica ancora alle connessioni. Le regole seguite dai dispositivi si impostano in Criteri.",
     "policies_link": "Apri Criteri",
     "raw_settings_note": "Tutti i valori salvati per questa organizzazione, compresi i criteri della pagina Criteri.",
+    "connection_rules_note": "Le regole che i dispositivi seguono quando qualcuno si connette si impostano in Criteri.",
     "no_settings": "Nessuna impostazione salvata.",
     "users_count_one": "{count} utente",
     "users_count_other": "{count} utenti",

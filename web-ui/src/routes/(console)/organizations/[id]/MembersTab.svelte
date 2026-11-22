@@ -6,16 +6,13 @@
 <script lang="ts">
 	import { removeOrgUser, type OrgInvitation, type OrgUser } from '#lib/api/orgs.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { orgRoleLabel } from '#lib/people/orgs.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
-	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Table from '#lib/ui/Table.svelte';
-	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import User from '#lib/ui/User.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
@@ -25,7 +22,6 @@
 	import { ICONS } from '#lib/util/display.ts';
 	import AddMemberDialog from './AddMemberDialog.svelte';
 	import InviteDialog from './InviteDialog.svelte';
-	import MemberRoleDialog from './MemberRoleDialog.svelte';
 
 	interface Props {
 		orgId: string;
@@ -45,7 +41,6 @@
 
 	let adding = $state(false);
 	let inviting = $state(false);
-	let roleFor = $state.raw<OrgUser | null>(null);
 
 	async function remove(m: OrgUser) {
 		const ok = await confirm({
@@ -73,7 +68,6 @@
 			sortValue: (m) => m.username.toLowerCase()
 		},
 		{ id: 'email', label: t('organizations.email'), cell: emailCell },
-		{ id: 'role', label: t('organizations.role'), cell: roleCell, sortValue: (m) => m.role },
 		{
 			id: 'last_login',
 			label: t('organizations.last_login'),
@@ -96,7 +90,6 @@
 	const inviteColumns = $derived<Column<OrgInvitation>[]>([
 		{ id: 'token', label: t('organizations.token'), cell: tokenCell },
 		{ id: 'email', label: t('organizations.email'), cell: inviteEmailCell },
-		{ id: 'role', label: t('organizations.role'), cell: inviteRoleCell },
 		{
 			id: 'expires',
 			label: t('organizations.expires'),
@@ -111,16 +104,11 @@
 			>{m.display_name}</span
 		>{/if}{/snippet}
 {#snippet emailCell(m: OrgUser)}{#if m.email}{m.email}{:else}<Empty />{/if}{/snippet}
-{#snippet roleCell(m: OrgUser)}<Tag label={orgRoleLabel(m.role, t)} />{/snippet}
 {#snippet lastCell(m: OrgUser)}<Time value={m.last_login} empty={t('users.never')} />{/snippet}
 {#snippet memberMenu(m: OrgUser)}<MenuButton
 		kebab
 		label={t('organizations.actions_for', { name: m.username })}
 	>
-		<MenuItem class="act-role" icon={ICONS.edit} onselect={() => (roleFor = m)}
-			>{t('organizations.edit_role')}</MenuItem
-		>
-		<MenuDivider />
 		<MenuItem class="act-remove" icon={ICONS.unlink} danger onselect={() => void remove(m)}
 			>{t('organizations.remove_from_org')}</MenuItem
 		>
@@ -131,7 +119,6 @@
 		copy={false}
 	/>{/snippet}
 {#snippet inviteEmailCell(i: OrgInvitation)}{#if i.email}{i.email}{:else}<Empty />{/if}{/snippet}
-{#snippet inviteRoleCell(i: OrgInvitation)}<Tag label={orgRoleLabel(i.role, t)} />{/snippet}
 {#snippet expiresCell(i: OrgInvitation)}<Time value={i.expires_at} relative={false} />{/snippet}
 {#snippet usedCell(i: OrgInvitation)}<Time value={i.used_at} empty={t('organizations.not_used')} />{/snippet}
 
@@ -203,17 +190,6 @@
 		onsaved={() => {
 			inviting = false;
 			oninvitations();
-		}}
-	/>
-{/if}
-{#if roleFor}
-	<MemberRoleDialog
-		{orgId}
-		member={roleFor}
-		onclose={() => (roleFor = null)}
-		onsaved={() => {
-			roleFor = null;
-			onmembers();
 		}}
 	/>
 {/if}

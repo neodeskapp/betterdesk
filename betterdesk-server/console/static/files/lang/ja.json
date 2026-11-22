@@ -4608,6 +4608,7 @@
     "session_settings_note": "この組織に保存されますが、サーバーはまだ接続に適用しません。デバイスが従うルールはポリシーで設定します。",
     "policies_link": "ポリシーを開く",
     "raw_settings_note": "この組織に保存されたすべての値。ポリシー ページで設定したポリシーも含みます。",
+    "connection_rules_note": "接続時にデバイスが従うルールは、ポリシーで設定します。",
     "no_settings": "保存された設定はまだありません。",
     "users_count_one": "ユーザー {count} 人",
     "users_count_other": "ユーザー {count} 人",

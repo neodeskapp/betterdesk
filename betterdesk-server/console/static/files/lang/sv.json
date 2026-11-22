@@ -4614,6 +4614,7 @@
     "session_settings_note": "Sparas med organisationen, men servern tillämpar dem inte på anslutningar än. Reglerna som enheterna följer ställs in under Policyer.",
     "policies_link": "Öppna Policyer",
     "raw_settings_note": "Alla värden som sparats för organisationen, även policyer från sidan Policyer.",
+    "connection_rules_note": "Reglerna som enheterna följer när någon ansluter till dem ställs in under Policyer.",
     "no_settings": "Inga inställningar sparade än.",
     "users_count_one": "{count} användare",
     "users_count_other": "{count} användare",

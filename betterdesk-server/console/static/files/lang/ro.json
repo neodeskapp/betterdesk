@@ -4614,6 +4614,7 @@
     "session_settings_note": "Se salvează cu această organizație, dar serverul nu le aplică încă la conexiuni. Regulile pe care le urmează dispozitivele se setează în Politici.",
     "policies_link": "Deschide Politici",
     "raw_settings_note": "Toate valorile salvate pentru această organizație, inclusiv politicile din pagina Politici.",
+    "connection_rules_note": "Regulile pe care le urmează dispozitivele la conectare se setează la Politici.",
     "no_settings": "Nu există încă setări salvate.",
     "users_count_one": "{count} utilizator",
     "users_count_other": "Utilizatori: {count}",

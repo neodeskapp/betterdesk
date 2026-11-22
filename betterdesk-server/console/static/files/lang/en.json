@@ -4798,6 +4798,7 @@
         "session_settings_note": "Saved with this organization, but the server does not apply them to connections yet. The rules that devices follow are set under Policies.",
         "policies_link": "Open Policies",
         "raw_settings_note": "Every value saved for this organization, including policies set on the Policies page.",
+        "connection_rules_note": "The rules devices follow when someone connects to them are set under Policies.",
         "no_settings": "No settings stored yet.",
         "users_count_one": "{count} user",
         "users_count_other": "{count} users",

@@ -4614,6 +4614,7 @@
     "session_settings_note": "Tallennetaan organisaatiolle, mutta palvelin ei vielä käytä niitä yhteyksiin. Laitteiden noudattamat säännöt asetetaan kohdassa Käytännöt.",
     "policies_link": "Avaa Käytännöt",
     "raw_settings_note": "Kaikki organisaatiolle tallennetut arvot, myös Käytännöt-sivulla asetetut käytännöt.",
+    "connection_rules_note": "Säännöt, joita laitteet noudattavat yhteyden aikana, asetetaan kohdassa Käytännöt.",
     "no_settings": "Asetuksia ei ole vielä tallennettu.",
     "users_count_one": "{count} käyttäjä",
     "users_count_other": "{count} käyttäjää",

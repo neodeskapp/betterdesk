@@ -4614,6 +4614,7 @@
     "session_settings_note": "A szervezettel együtt mentődnek, de a szerver még nem alkalmazza őket a kapcsolatokra. Az eszközök által követett szabályokat a Házirendek oldalon állíthatja be.",
     "policies_link": "Házirendek megnyitása",
     "raw_settings_note": "A szervezethez mentett összes érték, a Házirendek oldalon beállított házirendekkel együtt.",
+    "connection_rules_note": "Az eszközök által kapcsolódáskor követett szabályokat a Házirendek alatt lehet beállítani.",
     "no_settings": "Még nincs mentett beállítás.",
     "users_count_one": "{count} felhasználó",
     "users_count_other": "{count} felhasználó",

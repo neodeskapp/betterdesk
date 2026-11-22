@@ -292,12 +292,13 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// An organization role changes nothing, so a role in the body is not
+	// read: the account gets the default role.
 	var body struct {
 		Username    string `json:"username"`
 		DisplayName string `json:"display_name"`
 		Email       string `json:"email"`
 		Password    string `json:"password"`
-		Role        string `json:"role"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
@@ -308,29 +309,6 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 	if body.Username == "" || body.Password == "" {
 		http.Error(w, `{"error":"username and password are required"}`, http.StatusBadRequest)
 		return
-	}
-	if body.Role == "" {
-		body.Role = db.OrgRoleUser
-	}
-	if !db.ValidOrgRole(body.Role) {
-		http.Error(w, `{"error":"invalid role (owner, admin, operator, user)"}`, http.StatusBadRequest)
-		return
-	}
-
-	// Org role boundary: check caller's authority within this org.
-	callerRole := getRoleFromCtx(r)
-
-	// Super/global admins can assign any org role.
-	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerOrgUser := s.callerOrgUser(r, orgID)
-		if callerOrgUser == nil {
-			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
-			return
-		}
-		if !db.OrgCanAssignRole(callerOrgUser.Role, body.Role) {
-			http.Error(w, `{"error":"cannot assign a role higher than your org-level authority"}`, http.StatusForbidden)
-			return
-		}
 	}
 
 	// Check duplicate
@@ -353,7 +331,7 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		DisplayName:  body.DisplayName,
 		Email:        body.Email,
 		PasswordHash: string(hash),
-		Role:         body.Role,
+		Role:         db.OrgRoleUser,
 		CreatedAt:    time.Now().UTC(),
 	}
 
@@ -415,10 +393,10 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A role in the body is not read: the stored role stays as it is.
 	var body struct {
 		DisplayName *string `json:"display_name"`
 		Email       *string `json:"email"`
-		Role        *string `json:"role"`
 		Password    *string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -432,41 +410,6 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 	if body.Email != nil {
 		user.Email = *body.Email
 	}
-	if body.Role != nil {
-		if !db.ValidOrgRole(*body.Role) {
-			http.Error(w, `{"error":"invalid role"}`, http.StatusBadRequest)
-			return
-		}
-
-		// Self-modification block: cannot change own org role.
-		if self := s.callerOrgUser(r, user.OrgID); self != nil && self.ID == user.ID {
-			http.Error(w, `{"error":"cannot modify your own org role"}`, http.StatusForbidden)
-			return
-		}
-
-		// Org role boundary: check caller's authority.
-		callerRole := getRoleFromCtx(r)
-		if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-			callerOrgUser := s.callerOrgUser(r, user.OrgID)
-			if callerOrgUser == nil {
-				http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
-				return
-			}
-			// Cannot promote higher than own org role.
-			if !db.OrgCanAssignRole(callerOrgUser.Role, *body.Role) {
-				http.Error(w, `{"error":"cannot assign a role higher than your org-level authority"}`, http.StatusForbidden)
-				return
-			}
-			// Cannot demote someone at or above own level.
-			if db.OrgRoleLevel(user.Role) >= db.OrgRoleLevel(callerOrgUser.Role) {
-				http.Error(w, `{"error":"cannot modify a user at or above your org-level authority"}`, http.StatusForbidden)
-				return
-			}
-		}
-
-		user.Role = *body.Role
-	}
-
 	if err := s.db.UpdateOrgUser(user); err != nil {
 		log.Printf("[org] UpdateOrgUser error: %v", err)
 		http.Error(w, `{"error":"failed to update user"}`, http.StatusInternalServerError)
@@ -592,17 +535,14 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// A role in the body is not read: an invitation has the default role.
 	var body struct {
 		Email     string `json:"email"`
-		Role      string `json:"role"`
 		ExpiresIn int    `json:"expires_in_hours"` // default 72 hours
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
 		return
-	}
-	if body.Role == "" {
-		body.Role = db.OrgRoleUser
 	}
 	if body.ExpiresIn <= 0 {
 		body.ExpiresIn = 72
@@ -620,7 +560,7 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 		OrgID:     orgID,
 		Token:     token,
 		Email:     body.Email,
-		Role:      body.Role,
+		Role:      db.OrgRoleUser,
 		ExpiresAt: time.Now().UTC().Add(time.Duration(body.ExpiresIn) * time.Hour),
 	}
 
@@ -671,6 +611,17 @@ func (s *Server) handleListOrgSettings(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"settings": settings})
 }
 
+// retiredOrgSettings are the connection settings an organization once
+// stored (connection policy, file transfer, clipboard, session length).
+// Nothing applied them; connection rules come from the policies and the
+// client feature switches. Values stored before stay readable.
+var retiredOrgSettings = map[string]bool{
+	"connection_policy":        true,
+	"allow_file_transfer":      true,
+	"allow_clipboard":          true,
+	"max_session_duration_min": true,
+}
+
 // PUT /api/org/{id}/settings
 func (s *Server) handleSetOrgSetting(w http.ResponseWriter, r *http.Request) {
 	orgID := r.PathValue("id")
@@ -685,6 +636,10 @@ func (s *Server) handleSetOrgSetting(w http.ResponseWriter, r *http.Request) {
 	}
 	if body.Key == "" {
 		http.Error(w, `{"error":"key is required"}`, http.StatusBadRequest)
+		return
+	}
+	if retiredOrgSettings[body.Key] {
+		http.Error(w, `{"error":"this setting is no longer stored"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -1072,9 +1027,9 @@ func (s *Server) handleLinkUserToOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A role in the body is not read: the membership gets the default role.
 	var body struct {
-		UserID int64  `json:"user_id"`
-		Role   string `json:"role"`
+		UserID int64 `json:"user_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
@@ -1085,31 +1040,9 @@ func (s *Server) handleLinkUserToOrg(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"user_id is required"}`, http.StatusBadRequest)
 		return
 	}
-	if body.Role == "" {
-		body.Role = db.OrgRoleUser
-	}
-	if !db.ValidOrgRole(body.Role) {
-		http.Error(w, `{"error":"invalid role (owner, admin, operator, user)"}`, http.StatusBadRequest)
-		return
-	}
-
-	// Org role boundary: check caller's authority within this org.
-	callerRole := getRoleFromCtx(r)
-
-	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerOrgUser := s.callerOrgUser(r, orgID)
-		if callerOrgUser == nil {
-			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
-			return
-		}
-		if !db.OrgCanAssignRole(callerOrgUser.Role, body.Role) {
-			http.Error(w, `{"error":"cannot assign a role higher than your org-level authority"}`, http.StatusForbidden)
-			return
-		}
-	}
 
 	// Link user
-	orgUser, err := s.db.LinkUserToOrg(orgID, body.UserID, body.Role)
+	orgUser, err := s.db.LinkUserToOrg(orgID, body.UserID, db.OrgRoleUser)
 	if err != nil {
 		log.Printf("[org] LinkUserToOrg error: %v", err)
 		if strings.Contains(err.Error(), "already linked") {
@@ -1133,7 +1066,7 @@ func (s *Server) handleLinkUserToOrg(w http.ResponseWriter, r *http.Request) {
 		s.auditLog.Log("org_user_linked", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
 			"org_id":  orgID,
 			"user_id": fmt.Sprintf("%d", body.UserID),
-			"role":    body.Role,
+			"role":    db.OrgRoleUser,
 		})
 	}
 
@@ -1293,9 +1226,9 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A role in the body is not read: the membership gets the default role.
 	var body struct {
 		OrgID orgIDInput `json:"org_id"`
-		Role  string     `json:"role"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
@@ -1307,14 +1240,6 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"org_id is required"}`, http.StatusBadRequest)
 		return
 	}
-	if body.Role == "" {
-		body.Role = db.OrgRoleUser
-	}
-	if !db.ValidOrgRole(body.Role) {
-		http.Error(w, `{"error":"invalid role (owner, admin, operator, user)"}`, http.StatusBadRequest)
-		return
-	}
-
 	// Verify org exists
 	org, _ := s.db.GetOrganization(orgID)
 	if org == nil {
@@ -1331,13 +1256,9 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
 			return
 		}
-		if !db.OrgCanAssignRole(callerOrgUser.Role, body.Role) {
-			http.Error(w, `{"error":"cannot assign a role higher than your org-level authority"}`, http.StatusForbidden)
-			return
-		}
 	}
 
-	orgUser, err := s.db.LinkUserToOrg(orgID, userID, body.Role)
+	orgUser, err := s.db.LinkUserToOrg(orgID, userID, db.OrgRoleUser)
 	if err != nil {
 		log.Printf("[org] LinkUserToOrg (from users) error: %v", err)
 		if strings.Contains(err.Error(), "already linked") {
@@ -1357,7 +1278,7 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 		s.auditLog.Log("user_org_assigned", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
 			"user_id": userIDStr,
 			"org_id":  orgID,
-			"role":    body.Role,
+			"role":    db.OrgRoleUser,
 		})
 	}
 

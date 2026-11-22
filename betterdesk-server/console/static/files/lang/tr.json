@@ -4614,6 +4614,7 @@
     "session_settings_note": "Bu kuruluşla kaydedilir, ancak sunucu bunları henüz bağlantılara uygulamaz. Cihazların uyduğu kurallar İlkeler sayfasında ayarlanır.",
     "policies_link": "İlkeleri aç",
     "raw_settings_note": "Bu kuruluş için kaydedilen tüm değerler, İlkeler sayfasında ayarlanan ilkeler dahil.",
+    "connection_rules_note": "Biri bağlandığında cihazların uyduğu kurallar İlkeler altında ayarlanır.",
     "no_settings": "Henüz kayıtlı ayar yok.",
     "users_count_one": "{count} kullanıcı",
     "users_count_other": "{count} kullanıcı",

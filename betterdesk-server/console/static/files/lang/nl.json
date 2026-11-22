@@ -4608,6 +4608,7 @@
     "session_settings_note": "Worden bij deze organisatie opgeslagen, maar de server past ze nog niet toe op verbindingen. De regels die apparaten volgen stelt u in bij Beleid.",
     "policies_link": "Beleid openen",
     "raw_settings_note": "Alle waarden die voor deze organisatie zijn opgeslagen, ook het beleid van de pagina Beleid.",
+    "connection_rules_note": "De regels die apparaten volgen als iemand verbinding maakt, stelt u in bij Beleid.",
     "no_settings": "Nog geen instellingen opgeslagen.",
     "users_count_one": "{count} gebruiker",
     "users_count_other": "{count} gebruikers",

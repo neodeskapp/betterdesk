@@ -4608,6 +4608,7 @@
     "session_settings_note": "Ukládají se k této organizaci, ale server je na připojení zatím nepoužívá. Pravidla, kterými se zařízení řídí, se nastavují v Zásadách.",
     "policies_link": "Otevřít Zásady",
     "raw_settings_note": "Všechny hodnoty uložené pro tuto organizaci, včetně zásad nastavených v Zásadách.",
+    "connection_rules_note": "Pravidla, kterými se zařízení řídí při připojení, se nastavují v Zásadách.",
     "no_settings": "Zatím nejsou uložena žádná nastavení.",
     "users_count_one": "{count} uživatel",
     "users_count_other": "Počet uživatelů: {count}",

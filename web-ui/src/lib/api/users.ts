@@ -156,10 +156,10 @@ export async function listUserOrgs(id: number | string, signal?: AbortSignal): P
 }
 
 /** Needs org.manage_users */
-export function addUserToOrg(id: number | string, orgId: string, role: string) {
+export function addUserToOrg(id: number | string, orgId: string) {
 	return request(`/api/users/${encodeURIComponent(String(id))}/organizations`, {
 		method: 'POST',
-		body: { org_id: orgId, role }
+		body: { org_id: orgId }
 	});
 }
 

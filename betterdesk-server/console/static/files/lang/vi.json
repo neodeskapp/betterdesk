@@ -4614,6 +4614,7 @@
     "session_settings_note": "Được lưu cùng tổ chức này, nhưng máy chủ chưa áp dụng cho các kết nối. Các quy tắc thiết bị tuân theo được đặt trong Chính sách.",
     "policies_link": "Mở Chính sách",
     "raw_settings_note": "Mọi giá trị đã lưu cho tổ chức này, kể cả chính sách đặt ở trang Chính sách.",
+    "connection_rules_note": "Các quy tắc thiết bị tuân theo khi có người kết nối được đặt trong Chính sách.",
     "no_settings": "Chưa có cài đặt nào được lưu.",
     "users_count_one": "{count} người dùng",
     "users_count_other": "{count} người dùng",

@@ -4741,6 +4741,7 @@
     "session_settings_note": "會與此組織一起儲存，但伺服器目前還不會套用到連線。裝置遵循的規則在「原則」頁設定。",
     "policies_link": "開啟原則",
     "raw_settings_note": "此組織已儲存的所有值，包括在「原則」頁設定的原則。",
+    "connection_rules_note": "設備在有人連線時遵循的規則在「原則」中設定。",
     "no_settings": "尚未儲存任何設定。",
     "users_count_one": "{count} 位使用者",
     "users_count_other": "{count} 位使用者",
