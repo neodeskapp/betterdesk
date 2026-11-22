@@ -1078,6 +1078,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		return
 	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole")
+	permissions := s.sessionPermissions(msg.GetToken(), raddr)
 
 	target := s.peers.Get(targetID)
 
@@ -1143,7 +1144,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		s.shouldForceRelayForPeers(initiatorID, targetID) ||
 		s.requiresRelayOnlyCompatibility(targetID) {
 		log.Printf("[signal] PunchHole: force relay for %s", targetID)
-		s.sendRelayResponse(target, raddr, msg, relayServer, initiatorID)
+		s.sendRelayResponse(target, raddr, msg, relayServer, initiatorID, permissions)
 		return
 	}
 
@@ -1153,7 +1154,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 	if sameNetwork && target.ConnType != peer.ConnWS {
 		pending, started := s.beginLANExchange(
 			targetID, target, initiatorID, raddr, peer.ConnUDP,
-			relayServer, msg.SocketAddrV6,
+			relayServer, msg.SocketAddrV6, permissions,
 		)
 		if started {
 			return
@@ -1179,7 +1180,8 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 				SocketAddrV6: msg.SocketAddrV6,
 				// Recent clients negotiate a WebRTC transport; the offer must reach
 				// the peer verbatim or two new peers cannot establish a session.
-				WebrtcSdpOffer: msg.WebrtcSdpOffer,
+				WebrtcSdpOffer:     msg.WebrtcSdpOffer,
+				ControlPermissions: permissions,
 			},
 		},
 	}
@@ -1299,6 +1301,7 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 		return s.punchHoleUnauthorizedResponse()
 	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole")
+	permissions := s.sessionPermissions(msg.GetToken(), raddr)
 
 	target := s.peers.Get(targetID)
 	if target == nil || target.IsExpired(config.RegTimeout) {
@@ -1407,7 +1410,7 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 	if sameNetwork && initiatorHint != peer.ConnWS && target.ConnType != peer.ConnWS {
 		pending, started := s.beginLANExchange(
 			targetID, target, initiatorID, raddr, peer.ConnTCP,
-			relayServer, msg.SocketAddrV6,
+			relayServer, msg.SocketAddrV6, permissions,
 		)
 		if started {
 			return nil
@@ -1426,14 +1429,15 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 	punchHole := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_PunchHole{
 			PunchHole: &pb.PunchHole{
-				SocketAddr:     crypto.EncodeAddr(advertisedAddr),
-				RelayServer:    relayServer,
-				NatType:        msg.NatType,
-				UdpPort:        msg.UdpPort,
-				ForceRelay:     msg.ForceRelay,
-				UpnpPort:       msg.UpnpPort,
-				SocketAddrV6:   msg.SocketAddrV6,
-				WebrtcSdpOffer: msg.WebrtcSdpOffer,
+				SocketAddr:         crypto.EncodeAddr(advertisedAddr),
+				RelayServer:        relayServer,
+				NatType:            msg.NatType,
+				UdpPort:            msg.UdpPort,
+				ForceRelay:         msg.ForceRelay,
+				UpnpPort:           msg.UpnpPort,
+				SocketAddrV6:       msg.SocketAddrV6,
+				WebrtcSdpOffer:     msg.WebrtcSdpOffer,
+				ControlPermissions: permissions,
 			},
 		},
 	}
@@ -1679,6 +1683,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		return
 	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "request_relay")
+	permissions := s.sessionPermissions(msg.GetToken(), raddr)
 
 	target := s.peers.Get(targetID)
 
@@ -1732,9 +1737,9 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	// Forward relay request to target peer (supports UDP, TCP, and WebSocket targets).
 	// NOTE: Must use RequestRelay type, not RelayResponse — RustDesk client's
 	// handle_resp() dispatches RequestRelay to create_relay() but drops RelayResponse.
-	// The controller's token and control_permissions stay here: the device
-	// takes control_permissions from its server over its own settings, and
-	// the token is the controller's sign-in.
+	// control_permissions are the server's (sessionPermissions), never the
+	// controller's: the device applies them over its own settings. The
+	// controller's token is its sign-in and stays here.
 	relayReq := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
@@ -1743,11 +1748,12 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 				Id:         msg.Id,
 				// Target validates this against its own relay (see
 				// relayAdvertisedToTarget); prefer what it reported.
-				RelayServer:       relayAdvertisedToTarget(target, relayServer),
-				ControlledContext: msg.ControlledContext,
-				SwitchCode:        msg.SwitchCode,
-				Secure:            msg.Secure,
-				ConnType:          msg.ConnType,
+				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				ControlledContext:  msg.ControlledContext,
+				SwitchCode:         msg.SwitchCode,
+				Secure:             msg.Secure,
+				ConnType:           msg.ConnType,
+				ControlPermissions: permissions,
 			},
 		},
 	}
@@ -1831,6 +1837,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 		return s.relayUnauthorizedResponse(relayServer)
 	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "request_relay")
+	permissions := s.sessionPermissions(msg.GetToken(), raddr)
 
 	target := s.peers.Get(targetID)
 
@@ -1906,8 +1913,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 	}
 
 	// Forward RequestRelay to target peer (supports UDP, TCP, and WebSocket targets).
-	// The controller's token and control_permissions stay here, as in
-	// handleRequestRelay.
+	// control_permissions and the token as in handleRequestRelay.
 	reqRelay := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
@@ -1917,11 +1923,12 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 				// The target validates this against the relay it configured and
 				// silently drops a mismatch, so prefer the endpoint the target
 				// itself reported before falling back to the server's value.
-				RelayServer:       relayAdvertisedToTarget(target, relayServer),
-				ControlledContext: msg.ControlledContext,
-				SwitchCode:        msg.SwitchCode,
-				Secure:            msg.Secure,
-				ConnType:          msg.ConnType,
+				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				ControlledContext:  msg.ControlledContext,
+				SwitchCode:         msg.SwitchCode,
+				Secure:             msg.Secure,
+				ConnType:           msg.ConnType,
+				ControlPermissions: permissions,
 			},
 		},
 	}
@@ -2423,7 +2430,8 @@ func (s *Server) handleOnlineRequest(msg *pb.OnlineRequest) *pb.RendezvousMessag
 // sendRelayResponse sends relay-only response to the initiator when direct connection is skipped.
 // The target's public key is signed with the server's Ed25519 key (NaCl combined format)
 // so the initiator can verify the target's identity for E2E encryption.
-func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *pb.PunchHoleRequest, relay, initiatorID string) {
+// The target's RequestRelay carries permissions (sessionPermissions).
+func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *pb.PunchHoleRequest, relay, initiatorID string, permissions *pb.ControlPermissions) {
 	// Generate a relay session UUID for pairing both peers at hbbr.
 	relayUUID := uuid.New().String()
 	if refuse := s.admitSession(relayUUID, initiatorID, target.ID); refuse != "" {
@@ -2471,12 +2479,13 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 	reqRelay := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
-				Id:          msg.Id,
-				Uuid:        relayUUID,
-				SocketAddr:  crypto.EncodeAddr(raddr),
-				RelayServer: targetRelay,
-				Secure:      false,
-				ConnType:    msg.ConnType,
+				Id:                 msg.Id,
+				Uuid:               relayUUID,
+				SocketAddr:         crypto.EncodeAddr(raddr),
+				RelayServer:        targetRelay,
+				Secure:             false,
+				ConnType:           msg.ConnType,
+				ControlPermissions: permissions,
 			},
 		},
 	}

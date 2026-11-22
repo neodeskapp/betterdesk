@@ -189,6 +189,10 @@ type Server struct {
 	// connections that sent it, by normalizeAddrKey of their address.
 	panelProof []byte
 	panelConns sync.Map // map[string]net.Conn
+
+	// controllerFeatures looks up the client features of a console
+	// account (see client_features.go); nil until the console sets it.
+	controllerFeatures atomic.Pointer[ControllerFeatures]
 }
 
 // New creates a new signal server instance.

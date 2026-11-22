@@ -109,6 +109,8 @@ func (s *Server) cancelPendingLAN(key string) bool {
 	return true
 }
 
+// beginLANExchange asks the target for its local address. The target's
+// FetchLocalAddr carries permissions (sessionPermissions).
 func (s *Server) beginLANExchange(
 	targetID string,
 	target *peer.Entry,
@@ -117,6 +119,7 @@ func (s *Server) beginLANExchange(
 	initiatorTransport peer.ConnType,
 	relayServer string,
 	socketAddrV6 []byte,
+	permissions *pb.ControlPermissions,
 ) (*pendingLAN, bool) {
 	if s == nil || target == nil || initiatorAddr == nil || target.ConnType == peer.ConnWS {
 		return nil, false
@@ -125,9 +128,10 @@ func (s *Server) beginLANExchange(
 	fetch := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_FetchLocalAddr{
 			FetchLocalAddr: &pb.FetchLocalAddr{
-				SocketAddr:   crypto.EncodeAddr(initiatorAddr),
-				RelayServer:  relayServer,
-				SocketAddrV6: copyBytes(socketAddrV6),
+				SocketAddr:         crypto.EncodeAddr(initiatorAddr),
+				RelayServer:        relayServer,
+				SocketAddrV6:       copyBytes(socketAddrV6),
+				ControlPermissions: permissions,
 			},
 		},
 	}
