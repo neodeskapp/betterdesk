@@ -27,9 +27,10 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 	api.On("GET /api/billing/sessions", 200, sessions)
 	api.On("GET /api/billing/sessions?limit=500", 200, sessions)
 	// a work report's session is looked up by its id, also one far past
-	// the newest sessions (s6, s7); s9 is unknown
+	// the newest sessions (s6, s7); s9 is unknown. Each is the operator's
+	// own, so only the scope decides (L49).
 	for id, device := range map[string]string{"s1": "a", "s2": "b", "s4": "b", "s5": "c", "s6": "b", "s7": "a"} {
-		api.On("GET /api/billing/sessions/"+id, 200, `{"session":{"id":"`+id+`","device_id":"`+device+`","status":"pending_report"},"device":{"id":"`+device+`"}}`)
+		api.On("GET /api/billing/sessions/"+id, 200, `{"session":{"id":"`+id+`","device_id":"`+device+`","operator_name":"e2e_operator","status":"pending_report"},"device":{"id":"`+device+`"}}`)
 	}
 	api.On("GET /api/billing/sessions/s9", 404, `{"error":"billing session not found"}`)
 	api.On("GET /api/billing/reports", 200, `{"reports":[{"id":1,"session_id":"s1"},{"id":2,"session_id":"s2"},{"id":3,"session_id":"s9"}]}`)
@@ -133,10 +134,11 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 }
 
 // TestWorkReportsOfAnotherAccountNeedUserEdit: an account without
-// user.edit files the work report of its own sessions and of sessions whose
-// operator names no account (the console's web client, a desktop client's
-// id), but not of a session whose operator is another account: 403 before
-// the report reaches the API server. user.edit files for others (L49).
+// user.edit files the work report of its own sessions only, the ones whose
+// operator or operator name is its account; a session of another account
+// and one that names no account (a guest's web client session, a desktop
+// client without a sign-in) is 403 before the report reaches the API
+// server. user.edit files for others (L49, L157).
 func TestWorkReportsOfAnotherAccountNeedUserEdit(t *testing.T) {
 	api := routetest.NewAPI()
 	for id, operator := range map[string]string{
@@ -145,6 +147,8 @@ func TestWorkReportsOfAnotherAccountNeedUserEdit(t *testing.T) {
 		"s-other":      `"operator_id":"e2e_viewer"`,
 		"s-other-name": `"operator_id":"987654321","operator_name":"e2e_admin"`,
 		"s-web":        `"operator_id":"panel-web-remote"`,
+		"s-web-name":   `"operator_id":"panel-web-remote","operator_name":"e2e_operator"`,
+		"s-desktop":    `"operator_id":"123456789"`,
 	} {
 		api.On("GET /api/billing/sessions/"+id, 200, `{"session":{"id":"`+id+`","device_id":"b",`+operator+`,"status":"pending_report"},"device":{"id":"b"}}`)
 		api.On("POST /api/billing/sessions/"+id+"/report", 200, `{"ok":"true"}`)
@@ -163,10 +167,10 @@ func TestWorkReportsOfAnotherAccountNeedUserEdit(t *testing.T) {
 	}
 	const filed, refused = `{"ok":"true"}`, `{"success":false,"error":"errors.no_permission"}`
 	w := routetest.New(t, routetest.Options{API: api})
-	for _, id := range []string{"s-own", "s-own-name", "s-web"} {
+	for _, id := range []string{"s-own", "s-own-name", "s-web-name"} {
 		run(w, "operator", id, 200, filed)
 	}
-	for _, id := range []string{"s-other", "s-other-name"} {
+	for _, id := range []string{"s-other", "s-other-name", "s-web", "s-desktop"} {
 		run(w, "operator", id, 403, refused)
 		run(w, "global_admin", id, 200, filed)
 	}

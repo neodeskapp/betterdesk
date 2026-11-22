@@ -316,42 +316,21 @@ func (h *handlers) reportInScope(pattern string) http.HandlerFunc {
 			outOfScope(w, r)
 			return
 		}
-		if session != nil && !forOthers {
-			other, err := h.othersSession(r, session)
-			if err != nil {
-				h.log.Error("Work report operator lookup error:", err)
-				kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
-				return
-			}
-			if other {
-				kit.Fail(w, r, http.StatusForbidden, kit.T(r, "errors.no_permission", nil))
-				return
-			}
+		if session != nil && !forOthers && !ownSession(r, session) {
+			kit.Fail(w, r, http.StatusForbidden, kit.T(r, "errors.no_permission", nil))
+			return
 		}
 		plain(w, r)
 	}
 }
 
-// othersSession reports whether the operator of a billing session is
-// another account than the caller's: its operator_name or operator_id is
-// not the caller's name but the name of another account of the console.
-// A session whose operator names no account (the console's web client, a
-// desktop client's id) is nobody's in particular.
-func (h *handlers) othersSession(r *http.Request, session *goapi.BillingSession) (bool, error) {
+// ownSession reports whether a billing session is the caller's: its
+// operator_name (the console account the signal server recorded for a web
+// client or a signed-in desktop client) or its operator_id is the caller's
+// name. A session that names another account or none is not.
+func ownSession(r *http.Request, session *goapi.BillingSession) bool {
 	me := kit.User(r).Username
-	names := []string{text(session.Session, "operator_name"), text(session.Session, "operator_id")}
-	if slices.Contains(names, me) {
-		return false, nil
-	}
-	for _, name := range names {
-		if name == "" {
-			continue
-		}
-		if found, err := accountNamed(r.Context(), h.d.Store, name); err != nil || found {
-			return found, err
-		}
-	}
-	return false, nil
+	return me != "" && slices.Contains([]string{text(session.Session, "operator_name"), text(session.Session, "operator_id")}, me)
 }
 
 // exportInScope is export. For an account with a limit the API server
