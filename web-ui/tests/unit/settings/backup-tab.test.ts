@@ -19,7 +19,13 @@ vi.mock('#lib/api/settings-system.ts', async (orig) => ({
 		components: { env: true, goPrivKey: true, goApiKey: true, uploads: 0 }
 	})),
 	getBackupSchedule: vi.fn(async () => ({
-		schedule: { enabled: false, intervalHours: 24, retentionCount: 7, destinationType: 'local', destinationPath: '' },
+		schedule: {
+			enabled: false,
+			intervalHours: 24,
+			retentionCount: 7,
+			destinationType: 'local',
+			destinationPath: ''
+		},
 		status: null
 	}))
 }));
@@ -36,7 +42,10 @@ beforeEach(() => {
 		'fetch',
 		vi.fn(async (input: RequestInfo | URL) => {
 			requests.push(String(input));
-			return new Response('{"success":false}', { status: 404, headers: { 'Content-Type': 'application/json' } });
+			return new Response('{"success":false}', {
+				status: 404,
+				headers: { 'Content-Type': 'application/json' }
+			});
 		})
 	);
 });
