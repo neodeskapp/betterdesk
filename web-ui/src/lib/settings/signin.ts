@@ -139,7 +139,7 @@ export function oidcFromServer(d: Record<string, unknown>, origin: string): Oidc
 		redirect_url: str(d.redirect_url),
 		panel_url: str(d.panel_url, origin),
 		scopes: str(d.scopes, 'openid profile email'),
-		use_pkce: !!d.use_pkce,
+		use_pkce: d.use_pkce !== false,
 		auto_discovery: d.auto_discovery !== false,
 		allow_signup: d.allow_signup !== false,
 		prefer_sso: d.prefer_sso === true,

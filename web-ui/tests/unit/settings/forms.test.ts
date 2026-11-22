@@ -139,6 +139,9 @@ describe('Sign-in', () => {
 		expect(v0.auto_discovery).toBe(false);
 		expect(v0.allow_signup).toBe(false);
 		expect(oidcFromServer({}, 'x').auto_discovery).toBe(true);
+		// PKCE is on unless the server says a saved configuration has it off
+		expect(oidcFromServer({}, 'x').use_pkce).toBe(true);
+		expect(oidcFromServer({ use_pkce: false }, 'x').use_pkce).toBe(false);
 		expect(oidcPayload({ ...v0, panel_url: '  ' }, 'https://o').panel_url).toBe('https://o');
 	});
 });
