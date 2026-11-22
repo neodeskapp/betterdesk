@@ -39,6 +39,7 @@
 		awaitRestart,
 		buildTools,
 		channelRepo,
+		channelSourceKey,
 		consoleVersionNow,
 		checkState,
 		componentRows,
@@ -367,14 +368,7 @@
 	{#if channel}
 		<span class="side-value">
 			<span>{channelName(channel.channel)}</span>
-			{#if channel.branch}
-				<span class="side-sub"
-					>{t('settings.updates_tab.channel_source', {
-						repo: channelRepo(channel),
-						branch: channel.branch
-					})}</span
-				>
-			{/if}
+			<span class="side-sub">{t(channelSourceKey(channel), { repo: channelRepo(channel) })}</span>
 		</span>
 	{:else}
 		<Empty />

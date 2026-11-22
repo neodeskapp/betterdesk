@@ -3,6 +3,8 @@
  * backup restore steps and the next scheduled backup, update checks and
  * install results, configuration file groups, translation rows.
  */
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import type { ConfigFile } from '../../../src/lib/api/settings-system.ts';
 import {
@@ -42,6 +44,7 @@ import {
 	awaitRestart,
 	buildTools,
 	channelRepo,
+	channelSourceKey,
 	checkState,
 	componentRows,
 	currentStep,
@@ -215,6 +218,24 @@ describe('updates', () => {
 	test('the repository of the channel, the project when the server names none', () => {
 		expect(channelRepo({ owner: '', repo: '' })).toBe('trybetterdesk/betterdesk');
 		expect(channelRepo({ owner: 'acme', repo: 'desk' })).toBe('acme/desk');
+	});
+
+	test('where the channel installs from, without the channel id as a git branch (L230)', () => {
+		expect(channelSourceKey({ channel: 'stable' })).toBe('settings.updates_tab.channel_source_stable');
+		expect(channelSourceKey({ channel: 'development' })).toBe(
+			'settings.updates_tab.channel_source_development'
+		);
+		// The repository has only main: "branch dev" named a branch that
+		// does not exist, and stable releases come from tags
+		const dir = path.resolve(__dirname, '../../../../betterdesk-server/console/static/files/lang');
+		for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+			const tab = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')).settings.updates_tab;
+			for (const key of ['channel_source_stable', 'channel_source_development']) {
+				expect(tab[key], `${file} ${key}`).toContain('{repo}');
+				expect(tab[key], `${file} ${key}`).not.toContain('{branch}');
+			}
+			expect(tab.channel_source, file).toBeUndefined();
+		}
 	});
 
 	test('changed parts with their files, empty parts left out, unknown parts as other', () => {

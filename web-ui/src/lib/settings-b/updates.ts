@@ -19,6 +19,17 @@ export function channelRepo(channel: Pick<Channel, 'owner' | 'repo'>): string {
 	return `${channel.owner || 'trybetterdesk'}/${channel.repo || 'betterdesk'}`;
 }
 
+/**
+ * The text that says what the channel installs: releases of the repository
+ * (v* tags) or its development builds. The channel's branch field is an
+ * id stored by installs, not a git branch, so the text does not name it.
+ */
+export function channelSourceKey(channel: Pick<Channel, 'channel'>): string {
+	return channel.channel === 'development'
+		? 'settings.updates_tab.channel_source_development'
+		: 'settings.updates_tab.channel_source_stable';
+}
+
 /** Docker image installs update on the host, not from the page */
 export function isDockerMode(check: Pick<UpdateCheck, 'deploymentMode' | 'dockerImageMode'> | null): boolean {
 	return !!check && (check.deploymentMode === 'docker-image' || !!check.dockerImageMode);
