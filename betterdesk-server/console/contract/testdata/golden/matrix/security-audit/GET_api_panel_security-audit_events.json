@@ -164,7 +164,7 @@
      "events": [
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "network",
         "org_id": "<volatile>"
@@ -174,7 +174,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "update",
         "org_id": "<volatile>"
@@ -184,7 +184,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "connection",
         "org_id": "<volatile>"
@@ -194,10 +194,10 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
-        "role": "operator",
+        "role": "user",
         "user_id": "4"
        },
        "target": "apikey:console-bridge",
@@ -205,7 +205,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "update",
         "org_id": "<volatile>"
@@ -215,7 +215,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "network",
         "org_id": "<volatile>"
@@ -225,7 +225,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "security",
         "org_id": "<volatile>"
@@ -235,7 +235,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "features",
         "org_id": "<volatile>"
@@ -245,7 +245,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "connection",
         "org_id": "<volatile>"
@@ -255,7 +255,7 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
         "role": "user",
@@ -266,10 +266,10 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
-        "role": "admin",
+        "role": "user",
         "user_id": "2"
        },
        "target": "apikey:console-bridge",
@@ -277,7 +277,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office"
        },
@@ -286,7 +286,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop"
        },
@@ -295,7 +295,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "legacy"
        },
@@ -304,7 +304,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,vm"
        },
@@ -313,7 +313,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,iot"
        },
@@ -322,7 +322,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,iot"
        },
@@ -331,7 +331,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "mobile"
        },
@@ -340,7 +340,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "mobile"
        },
@@ -349,7 +349,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "kiosk"
        },
@@ -358,7 +358,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "kiosk"
        },
@@ -367,7 +367,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -376,7 +376,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -385,7 +385,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -394,7 +394,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -403,7 +403,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux,critical"
        },
@@ -412,7 +412,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,storage"
        },
@@ -421,7 +421,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -430,7 +430,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -439,7 +439,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -448,7 +448,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -457,7 +457,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -466,7 +466,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse"
        },
@@ -475,7 +475,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "design,laptop"
        },
@@ -484,7 +484,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "design"
        },
@@ -493,7 +493,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "vip"
        },
@@ -502,7 +502,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "finance"
        },
@@ -511,7 +511,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,finance"
        },
@@ -520,7 +520,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,ground-floor"
        },
@@ -529,7 +529,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,ground-floor"
        },
@@ -642,7 +642,7 @@
      "events": [
       {
        "action": "pairing_code_created",
-       "actor": "127.0.0.1",
+       "actor": "e2e_global_admin",
        "details": {
         "id": "<volatile>",
         "label": ""
@@ -652,7 +652,7 @@
       },
       {
        "action": "org_peer_credential_clear",
-       "actor": "127.0.0.1",
+       "actor": "e2e_global_admin",
        "details": {
         "action": "clear",
         "actor": "apikey:console-bridge",
@@ -663,13 +663,13 @@
       },
       {
        "action": "branding_updated",
-       "actor": "127.0.0.1",
+       "actor": "e2e_global_admin",
        "target": "apikey:console-bridge",
        "timestamp": "<volatile>"
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "network",
         "org_id": "<volatile>"
@@ -679,7 +679,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "update",
         "org_id": "<volatile>"
@@ -689,7 +689,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "connection",
         "org_id": "<volatile>"
@@ -699,10 +699,10 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
-        "role": "operator",
+        "role": "user",
         "user_id": "4"
        },
        "target": "apikey:console-bridge",
@@ -710,7 +710,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "update",
         "org_id": "<volatile>"
@@ -720,7 +720,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "network",
         "org_id": "<volatile>"
@@ -730,7 +730,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "security",
         "org_id": "<volatile>"
@@ -740,7 +740,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "features",
         "org_id": "<volatile>"
@@ -750,7 +750,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "connection",
         "org_id": "<volatile>"
@@ -760,7 +760,7 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
         "role": "user",
@@ -771,10 +771,10 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
-        "role": "admin",
+        "role": "user",
         "user_id": "2"
        },
        "target": "apikey:console-bridge",
@@ -782,7 +782,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office"
        },
@@ -791,7 +791,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop"
        },
@@ -800,7 +800,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "legacy"
        },
@@ -809,7 +809,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,vm"
        },
@@ -818,7 +818,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,iot"
        },
@@ -827,7 +827,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,iot"
        },
@@ -836,7 +836,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "mobile"
        },
@@ -845,7 +845,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "mobile"
        },
@@ -854,7 +854,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "kiosk"
        },
@@ -863,7 +863,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "kiosk"
        },
@@ -872,7 +872,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -881,7 +881,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -890,7 +890,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -899,7 +899,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -908,7 +908,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux,critical"
        },
@@ -917,7 +917,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,storage"
        },
@@ -926,7 +926,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -935,7 +935,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -944,7 +944,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -953,7 +953,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -962,7 +962,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -971,7 +971,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse"
        },
@@ -980,7 +980,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "design,laptop"
        },
@@ -989,7 +989,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "design"
        },
@@ -998,7 +998,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "vip"
        },
@@ -1007,7 +1007,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "finance"
        },
@@ -1016,7 +1016,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,finance"
        },
@@ -1025,7 +1025,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,ground-floor"
        },
@@ -1034,7 +1034,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,ground-floor"
        },
@@ -1147,19 +1147,19 @@
      "events": [
       {
        "action": "config_changed",
-       "actor": "127.0.0.1",
+       "actor": "e2e_server_admin",
        "target": "availability_history_retention_days",
        "timestamp": "<volatile>"
       },
       {
        "action": "config_changed",
-       "actor": "127.0.0.1",
+       "actor": "e2e_server_admin",
        "target": "availability_history_enabled",
        "timestamp": "<volatile>"
       },
       {
        "action": "pairing_code_created",
-       "actor": "127.0.0.1",
+       "actor": "e2e_global_admin",
        "details": {
         "id": "<volatile>",
         "label": ""
@@ -1169,7 +1169,7 @@
       },
       {
        "action": "org_peer_credential_clear",
-       "actor": "127.0.0.1",
+       "actor": "e2e_global_admin",
        "details": {
         "action": "clear",
         "actor": "apikey:console-bridge",
@@ -1180,13 +1180,13 @@
       },
       {
        "action": "branding_updated",
-       "actor": "127.0.0.1",
+       "actor": "e2e_global_admin",
        "target": "apikey:console-bridge",
        "timestamp": "<volatile>"
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "network",
         "org_id": "<volatile>"
@@ -1196,7 +1196,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "update",
         "org_id": "<volatile>"
@@ -1206,7 +1206,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "connection",
         "org_id": "<volatile>"
@@ -1216,10 +1216,10 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
-        "role": "operator",
+        "role": "user",
         "user_id": "4"
        },
        "target": "apikey:console-bridge",
@@ -1227,7 +1227,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "update",
         "org_id": "<volatile>"
@@ -1237,7 +1237,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "network",
         "org_id": "<volatile>"
@@ -1247,7 +1247,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "security",
         "org_id": "<volatile>"
@@ -1257,7 +1257,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "features",
         "org_id": "<volatile>"
@@ -1267,7 +1267,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "connection",
         "org_id": "<volatile>"
@@ -1277,7 +1277,7 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
         "role": "user",
@@ -1288,10 +1288,10 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
-        "role": "admin",
+        "role": "user",
         "user_id": "2"
        },
        "target": "apikey:console-bridge",
@@ -1299,7 +1299,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office"
        },
@@ -1308,7 +1308,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop"
        },
@@ -1317,7 +1317,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "legacy"
        },
@@ -1326,7 +1326,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,vm"
        },
@@ -1335,7 +1335,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,iot"
        },
@@ -1344,7 +1344,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,iot"
        },
@@ -1353,7 +1353,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "mobile"
        },
@@ -1362,7 +1362,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "mobile"
        },
@@ -1371,7 +1371,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "kiosk"
        },
@@ -1380,7 +1380,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "kiosk"
        },
@@ -1389,7 +1389,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -1398,7 +1398,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -1407,7 +1407,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -1416,7 +1416,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -1425,7 +1425,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux,critical"
        },
@@ -1434,7 +1434,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,storage"
        },
@@ -1443,7 +1443,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -1452,7 +1452,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -1461,7 +1461,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -1470,7 +1470,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -1479,7 +1479,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -1488,7 +1488,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse"
        },
@@ -1497,7 +1497,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "design,laptop"
        },
@@ -1506,7 +1506,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "design"
        },
@@ -1515,7 +1515,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "vip"
        },
@@ -1524,7 +1524,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "finance"
        },
@@ -1533,7 +1533,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,finance"
        },
@@ -1542,7 +1542,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,ground-floor"
        },
@@ -1551,7 +1551,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,ground-floor"
        },
@@ -1668,19 +1668,19 @@
      "events": [
       {
        "action": "config_changed",
-       "actor": "127.0.0.1",
+       "actor": "e2e_super_admin",
        "target": "availability_history_retention_days",
        "timestamp": "<volatile>"
       },
       {
        "action": "config_changed",
-       "actor": "127.0.0.1",
+       "actor": "e2e_super_admin",
        "target": "availability_history_enabled",
        "timestamp": "<volatile>"
       },
       {
        "action": "pairing_code_created",
-       "actor": "127.0.0.1",
+       "actor": "e2e_super_admin",
        "details": {
         "id": "<volatile>",
         "label": ""
@@ -1690,7 +1690,7 @@
       },
       {
        "action": "org_peer_credential_clear",
-       "actor": "127.0.0.1",
+       "actor": "e2e_super_admin",
        "details": {
         "action": "clear",
         "actor": "apikey:console-bridge",
@@ -1701,25 +1701,25 @@
       },
       {
        "action": "branding_updated",
-       "actor": "127.0.0.1",
+       "actor": "e2e_super_admin",
        "target": "apikey:console-bridge",
        "timestamp": "<volatile>"
       },
       {
        "action": "config_changed",
-       "actor": "127.0.0.1",
+       "actor": "e2e_server_admin",
        "target": "availability_history_retention_days",
        "timestamp": "<volatile>"
       },
       {
        "action": "config_changed",
-       "actor": "127.0.0.1",
+       "actor": "e2e_server_admin",
        "target": "availability_history_enabled",
        "timestamp": "<volatile>"
       },
       {
        "action": "pairing_code_created",
-       "actor": "127.0.0.1",
+       "actor": "e2e_global_admin",
        "details": {
         "id": "<volatile>",
         "label": ""
@@ -1729,7 +1729,7 @@
       },
       {
        "action": "org_peer_credential_clear",
-       "actor": "127.0.0.1",
+       "actor": "e2e_global_admin",
        "details": {
         "action": "clear",
         "actor": "apikey:console-bridge",
@@ -1740,13 +1740,13 @@
       },
       {
        "action": "branding_updated",
-       "actor": "127.0.0.1",
+       "actor": "e2e_global_admin",
        "target": "apikey:console-bridge",
        "timestamp": "<volatile>"
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "network",
         "org_id": "<volatile>"
@@ -1756,7 +1756,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "update",
         "org_id": "<volatile>"
@@ -1766,7 +1766,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "connection",
         "org_id": "<volatile>"
@@ -1776,10 +1776,10 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
-        "role": "operator",
+        "role": "user",
         "user_id": "4"
        },
        "target": "apikey:console-bridge",
@@ -1787,7 +1787,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "update",
         "org_id": "<volatile>"
@@ -1797,7 +1797,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "network",
         "org_id": "<volatile>"
@@ -1807,7 +1807,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "security",
         "org_id": "<volatile>"
@@ -1817,7 +1817,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "features",
         "org_id": "<volatile>"
@@ -1827,7 +1827,7 @@
       },
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "category": "connection",
         "org_id": "<volatile>"
@@ -1837,7 +1837,7 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
         "role": "user",
@@ -1848,10 +1848,10 @@
       },
       {
        "action": "org_user_linked",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "org_id": "<volatile>",
-        "role": "admin",
+        "role": "user",
         "user_id": "2"
        },
        "target": "apikey:console-bridge",
@@ -1859,7 +1859,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office"
        },
@@ -1868,7 +1868,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop"
        },
@@ -1877,7 +1877,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "legacy"
        },
@@ -1886,7 +1886,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,vm"
        },
@@ -1895,7 +1895,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,iot"
        },
@@ -1904,7 +1904,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "lab,iot"
        },
@@ -1913,7 +1913,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "mobile"
        },
@@ -1922,7 +1922,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "mobile"
        },
@@ -1931,7 +1931,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "kiosk"
        },
@@ -1940,7 +1940,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "kiosk"
        },
@@ -1949,7 +1949,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -1958,7 +1958,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -1967,7 +1967,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "laptop,sales"
        },
@@ -1976,7 +1976,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -1985,7 +1985,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux,critical"
        },
@@ -1994,7 +1994,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,storage"
        },
@@ -2003,7 +2003,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -2012,7 +2012,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "server,linux"
        },
@@ -2021,7 +2021,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -2030,7 +2030,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -2039,7 +2039,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse,scanner"
        },
@@ -2048,7 +2048,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "warehouse"
        },
@@ -2057,7 +2057,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "design,laptop"
        },
@@ -2066,7 +2066,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "design"
        },
@@ -2075,7 +2075,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "vip"
        },
@@ -2084,7 +2084,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "finance"
        },
@@ -2093,7 +2093,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,finance"
        },
@@ -2102,7 +2102,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,ground-floor"
        },
@@ -2111,7 +2111,7 @@
       },
       {
        "action": "peer_tags_updated",
-       "actor": "127.0.0.1",
+       "actor": "admin",
        "details": {
         "tags": "office,ground-floor"
        },

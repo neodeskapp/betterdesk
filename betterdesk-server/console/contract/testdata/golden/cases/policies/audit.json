@@ -130,6 +130,10 @@
      "elements": true
     },
     {
+     "path": "entries[*].actor",
+     "pattern": "^[9aA+/_=-]+$"
+    },
+    {
      "path": "entries[*].details.category",
      "pattern": "^a+$"
     },
@@ -148,7 +152,7 @@
      "entries": [
       {
        "action": "org_policy_changed",
-       "actor": "127.0.0.1",
+       "actor": "<volatile>",
        "details": {
         "category": "<volatile>",
         "org_id": "<volatile>"

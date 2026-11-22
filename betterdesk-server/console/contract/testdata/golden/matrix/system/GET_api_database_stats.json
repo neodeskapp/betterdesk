@@ -226,6 +226,10 @@
       },
       {
        "count": 0,
+       "name": "blocklist_entries"
+      },
+      {
+       "count": 0,
        "name": "branding_config"
       },
       {
@@ -423,6 +427,10 @@
       {
        "count": 0,
        "name": "server_config"
+      },
+      {
+       "count": 0,
+       "name": "server_events"
       },
       {
        "count": 0,
