@@ -147,3 +147,42 @@ func TestBillingMetersRelaySessionsWhateverSignalledThem(t *testing.T) {
 		}
 	})
 }
+
+// A billing session the console's web client opens names the signed-in
+// account as its operator (operator_name), so the work report rule "own
+// reports only" can tell whose session it is; a guest's session names no
+// account (BUGS L157, DECISIONS A168).
+func TestBillingSessionsNameTheConsoleAccount(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
+	_, targetAddr := attachTestUDPPair(t, srv)
+	b := billing.NewService(database, nil, 1, false)
+	srv.SetBillingService(b)
+	operator := &db.User{Username: "anna", PasswordHash: "x", Role: "operator"}
+	if err := database.CreateUser(operator); err != nil || operator.ID == 0 {
+		t.Fatalf("CreateUser: %v (id %d)", err, operator.ID)
+	}
+	addr := serveTCPOnLoopback(t, srv)
+
+	for _, c := range []struct {
+		target string
+		proof  []byte
+		want   string
+	}{
+		{"BILLWEB01", srv.PanelProofFor(operator.ID), "anna"},
+		{"BILLWEB02", srv.PanelProof(), ""},
+	} {
+		putOnlinePeer(srv, c.target, targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
+		addDeviceContract(t, database, c.target)
+		if rr, err := relayRequestOverTCP(t, addr, c.proof, c.target); err != nil || rr.RefuseReason != "" {
+			t.Fatalf("%s: relay request %+v, %v", c.target, rr, err)
+		}
+		b.ActivateRelay("panel-proof-" + c.target)
+		sess, err := database.GetBillingSessionByRelayUUID("panel-proof-" + c.target)
+		if err != nil || sess == nil {
+			t.Fatalf("%s: no billing session (%v)", c.target, err)
+		}
+		if sess.OperatorName != c.want || sess.OperatorID != panelWebRemoteInitiatorID {
+			t.Errorf("%s: operator %q, name %q; want %q, %q", c.target, sess.OperatorID, sess.OperatorName, panelWebRemoteInitiatorID, c.want)
+		}
+	}
+}

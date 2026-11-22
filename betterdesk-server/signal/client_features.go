@@ -117,15 +117,14 @@ func (s *Server) controllerAccount(token string, raddr *net.UDPAddr, panel bool)
 	return sess.UserID
 }
 
-// controllerFeaturesOff returns the client features the account behind a
-// request may not use; none for a request without an account. A lookup
-// that fails turns every feature off.
-func (s *Server) controllerFeaturesOff(token string, raddr *net.UDPAddr, panel bool) []string {
+// featuresOff returns the client features the account behind a request
+// (controllerAccount) may not use; none for a request without an account.
+// A lookup that fails turns every feature off.
+func (s *Server) featuresOff(userID int64, raddr *net.UDPAddr) []string {
 	lookup := s.controllerFeatures.Load()
 	if lookup == nil {
 		return nil
 	}
-	userID := s.controllerAccount(token, raddr, panel)
 	switch {
 	case userID == 0:
 		return nil
@@ -164,6 +163,9 @@ var featureRefusals = map[string]string{
 
 // sessionPolicy is what the server does with a session a request starts.
 type sessionPolicy struct {
+	// account is the console account behind the request
+	// (controllerAccount), which billing records as the session's operator.
+	account int64
 	// permissions go to the device: the features the account may not
 	// use turned off, nil for a request without an account.
 	permissions *pb.ControlPermissions
@@ -174,8 +176,9 @@ type sessionPolicy struct {
 
 // sessionPolicy decides a punch or relay request for connType.
 func (s *Server) sessionPolicy(token string, raddr *net.UDPAddr, panel bool, connType pb.ConnType) sessionPolicy {
-	off := s.controllerFeaturesOff(token, raddr, panel)
-	policy := sessionPolicy{permissions: disabledPermissions(off)}
+	account := s.controllerAccount(token, raddr, panel)
+	off := s.featuresOff(account, raddr)
+	policy := sessionPolicy{account: account, permissions: disabledPermissions(off)}
 	for _, need := range connTypeFeatures[connType] {
 		if slices.Contains(off, need) {
 			policy.refusal, policy.feature = featureRefusals[need], need
