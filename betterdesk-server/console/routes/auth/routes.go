@@ -72,6 +72,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/auth/totp/enable", h.totpEnable, d.RequireAuth)
 	r.Post("/api/auth/totp/disable", h.totpDisable, d.RequireAuth)
 	r.Get("/api/auth/totp/status", h.totpStatus, d.RequireAuth)
+	r.Post("/api/auth/totp/recovery-codes", h.totpRecoveryCodes, d.RequireAuth, d.Limits.TOTPVerify.Middleware)
 	r.Get("/api/auth/login-page", h.loginPage)
 
 	// The Node console runs the same clean-up while it is still there. Both

@@ -199,6 +199,40 @@ func (s *Service) VerifyAndEnableTOTP(ctx context.Context, userID int64, token s
 	return codes, nil
 }
 
+// RenewRecoveryCodes replaces the account's recovery codes with 8 new ones
+// when token is a current code of its second factor, and returns them.
+// The code works once, as at sign-in. Only the hashes are stored, so the
+// old codes stop working. It returns ErrTOTPNotSetUp for an account
+// without two-factor sign-in and ErrInvalidTOTPCode for a wrong code.
+func (s *Service) RenewRecoveryCodes(ctx context.Context, userID int64, token string) ([]string, error) {
+	enabled, err := s.IsTOTPEnabled(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, ErrTOTPNotSetUp
+	}
+	valid, err := s.VerifyTOTPCode(ctx, userID, token)
+	if err != nil {
+		return nil, err
+	}
+	if !valid {
+		return nil, ErrInvalidTOTPCode
+	}
+	codes, err := auth.GenerateRecoveryCodesFrom(s.rand)
+	if err != nil {
+		return nil, fmt.Errorf("recovery codes: %w", err)
+	}
+	hashes, err := auth.HashRecoveryCodesCost(codes, s.recoveryCost)
+	if err != nil {
+		return nil, fmt.Errorf("hash the recovery codes: %w", err)
+	}
+	if err := setRecoveryCodes(ctx, s.db, userID, hashes); err != nil {
+		return nil, err
+	}
+	return codes, nil
+}
+
 // VerifyTOTPCode checks the second factor of a sign-in. It is false for an
 // account without two-factor sign-in, and for a code of a step whose code
 // already signed the account in: a code works once.

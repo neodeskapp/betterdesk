@@ -11,8 +11,9 @@
   (/effective-scope) and organizations, four at a time; GET
   /api/panel/user-groups beside it. Actions are offered by permission:
   user.create (and a role the signed-in person may give) to add, user.edit
-  to edit, reset passwords, disable and enable accounts (never yourself)
-  and manage groups, user.delete to delete (never yourself),
+  to edit, reset passwords, disable and enable accounts and turn off their
+  two-factor sign-in (never yourself) and manage groups, user.delete to
+  delete (never yourself),
   org.manage_users to change organizations.
 
   URL: ?search= fills the search and follows it; #user-groups goes to the
@@ -268,6 +269,24 @@
 		}
 	}
 
+	/** Turn off the two-factor sign-in of someone who lost their authenticator */
+	async function turnOffTotp(u: ConsoleUser) {
+		const ok = await confirm({
+			title: t('users.totp_off_title'),
+			message: t('users.totp_off_confirm', { username: u.username }),
+			confirmLabel: t('users.totp_off_menu'),
+			danger: true
+		});
+		if (!ok) return;
+		try {
+			await updateUser(u.id, { totp_enabled: false });
+			toast.success(t('users.totp_off_named', { username: u.username }));
+			void loadUsers();
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
+	}
+
 	async function removeGroup(g: UserGroupRow) {
 		const name = g.name || g.guid;
 		const ok = await confirm({
@@ -435,6 +454,11 @@
 				onselect={() => void setDisabled(u, !u.disabled)}
 				>{u.disabled ? t('users.enable_menu') : t('users.disable_menu')}</MenuItem
 			>
+			{#if u.totp_enabled}
+				<MenuItem class="act-totp-off" icon={ICONS.password} onselect={() => void turnOffTotp(u)}
+					>{t('users.totp_off_menu')}</MenuItem
+				>
+			{/if}
 		{/if}
 		{#if canDelete && changeable && !self}
 			<MenuDivider />

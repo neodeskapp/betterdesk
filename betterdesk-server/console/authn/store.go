@@ -175,6 +175,14 @@ func enableTOTP(ctx context.Context, q store.Querier, id int64, codesJSON string
 	return nil
 }
 
+// setRecoveryCodes stores new recovery codes (their hashes as JSON).
+func setRecoveryCodes(ctx context.Context, q store.Querier, id int64, codesJSON string) error {
+	if _, err := q.Exec(ctx, `UPDATE users SET totp_recovery_codes = ? WHERE id = ?`, codesJSON, id); err != nil {
+		return fmt.Errorf("store new recovery codes of user %d: %w", id, err)
+	}
+	return nil
+}
+
 // disableTOTP deletes the secret and the recovery codes. The API server's
 // users table takes no NULL secret: there the secret is written as "",
 // which reads as none on both sides (DECISIONS D2).

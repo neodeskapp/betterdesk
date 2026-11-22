@@ -133,6 +133,62 @@ func (h *handlers) totpDisable(w http.ResponseWriter, r *http.Request) {
 	kit.OK(w, r, nil)
 }
 
+// totpRecoveryCodes answers POST /api/auth/totp/recovery-codes with the
+// body {code}: a current code of the signed-in account's second factor
+// replaces its recovery codes with 8 new ones, which the answer holds and
+// which are shown this once. A wrong code is a failed sign-in attempt of
+// the account at the client's address, and its lockout there refuses
+// this too.
+func (h *handlers) totpRecoveryCodes(w http.ResponseWriter, r *http.Request) {
+	code := kit.Body(r).Get("code")
+	if !code.Truthy() || !hasLength(code, totpCodeLength) {
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.totp_invalid_code", nil))
+		return
+	}
+	userID := kit.UserID(r)
+	user, err := h.authn.UserByID(r.Context(), userID)
+	if err != nil {
+		h.serverError(w, r, "TOTP recovery codes error:", err)
+		return
+	}
+	if user == nil {
+		kit.Fail(w, r, http.StatusNotFound, kit.T(r, "users.not_found", nil))
+		return
+	}
+	ip := kit.ClientIP(r)
+	lockout, err := h.authn.CheckBruteForce(r.Context(), user.Username, ip)
+	if err != nil {
+		h.serverError(w, r, "TOTP recovery codes error:", err)
+		return
+	}
+	if lockout.Blocked {
+		h.refuseLockedOut(w, r, lockout, h.sessions.ClientMeta(r, ""))
+		return
+	}
+	// A code that is not text is never the right one
+	text, _ := code.Str()
+	codes, err := h.authn.RenewRecoveryCodes(r.Context(), userID, text)
+	switch {
+	case errors.Is(err, authn.ErrInvalidTOTPCode):
+		if err := h.authn.RecordAttempt(r.Context(), user.Username, ip, false); err != nil {
+			h.serverError(w, r, "TOTP recovery codes error:", err)
+			return
+		}
+		kit.Fail(w, r, http.StatusUnauthorized, kit.T(r, "auth.totp_invalid_code", nil))
+		return
+	case errors.Is(err, authn.ErrTOTPNotSetUp):
+		refuse(w, r, authn.ErrTOTPNotSetUp)
+		return
+	case err == nil:
+		err = h.audit(r, userID, "totp_recovery_codes", "New recovery codes")
+	}
+	if err != nil {
+		h.serverError(w, r, "TOTP recovery codes error:", err)
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, totpEnabledAnswer{Success: true, RecoveryCodes: codes})
+}
+
 type totpStatusAnswer struct {
 	Success bool `json:"success"`
 	Enabled bool `json:"enabled"`

@@ -238,6 +238,16 @@ export async function enableTotp(code: string): Promise<string[]> {
 	return out.recoveryCodes ?? [];
 }
 
+/** A current code makes eight new recovery codes; the old ones stop working */
+export async function renewRecoveryCodes(code: string): Promise<string[]> {
+	const out = await api(
+		v.looseObject({ recoveryCodes: v.optional(v.nullable(v.array(v.string())), []) }),
+		'/api/auth/totp/recovery-codes',
+		{ method: 'POST', body: { code } }
+	);
+	return out.recoveryCodes ?? [];
+}
+
 export function disableTotp(password: string) {
 	return api(Ok, '/api/auth/totp/disable', { method: 'POST', body: { password } });
 }

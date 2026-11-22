@@ -87,6 +87,8 @@ export interface UserInput {
 	strategyGuid?: string;
 	/** Disable (true) or enable (false) the account; never your own */
 	disabled?: boolean;
+	/** false turns off the account's two-factor sign-in; never your own */
+	totp_enabled?: false;
 }
 
 /** Needs user.create; the role must be one the caller may give */

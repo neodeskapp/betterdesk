@@ -17,6 +17,7 @@
 		getLdap,
 		getOidc,
 		getTotpEnabled,
+		renewRecoveryCodes,
 		saveClientSessions,
 		saveEnrollment,
 		saveLdap,
@@ -138,7 +139,7 @@
 
 	/* ── Two-factor sign-in ── */
 
-	type TotpView = 'loading' | 'error' | 'off' | 'on' | 'setup' | 'codes' | 'disable';
+	type TotpView = 'loading' | 'error' | 'off' | 'on' | 'setup' | 'codes' | 'disable' | 'renew';
 	let totpView = $state<TotpView>('loading');
 	let totpOn = $state<boolean | null>(null);
 	let totpError = $state('');
@@ -147,6 +148,8 @@
 	let code = $state('');
 	let codeStatus = $state<Line>(NO_LINE);
 	let codes = $state.raw<string[]>([]);
+	/** The codes on show are new ones for an account that had two-factor sign-in already */
+	let codesRenewed = $state(false);
 	let disablePassword = $state('');
 	let disableStatus = $state<Line>(NO_LINE);
 	let totpBusy = $state(false);
@@ -201,6 +204,36 @@
 		try {
 			codes = await enableTotp(c);
 			totpOn = true;
+			codesRenewed = false;
+			totpView = 'codes';
+		} catch (err) {
+			codeStatus = { message: errText(err, t('auth.totp_invalid_code')), tone: 'error' };
+		} finally {
+			totpBusy = false;
+		}
+	}
+
+	function startRenew() {
+		code = '';
+		codeStatus = NO_LINE;
+		totpNote = NO_LINE;
+		totpView = 'renew';
+		queueMicrotask(() => codeEl?.focus());
+	}
+
+	async function confirmRenew(e: SubmitEvent) {
+		e.preventDefault();
+		if (totpBusy) return;
+		const c = code.trim();
+		if (c.length !== 6) {
+			codeStatus = { message: t('auth.totp_enter_code'), tone: 'error' };
+			codeEl?.focus();
+			return;
+		}
+		totpBusy = true;
+		try {
+			codes = await renewRecoveryCodes(c);
+			codesRenewed = true;
 			totpView = 'codes';
 		} catch (err) {
 			codeStatus = { message: errText(err, t('auth.totp_invalid_code')), tone: 'error' };
@@ -646,7 +679,8 @@
 						{:else if totpView === 'on'}
 							<p class="line"><Status tone="good" label={t('settings.signin.totp_on')} /></p>
 							<p class="form-hint">{t('settings.totp_enabled_desc')}</p>
-							<p class="line">
+							<p class="line inline-controls">
+								<Button onclick={startRenew}>{t('settings.signin.recovery_new')}</Button>
 								<Button variant="danger-quiet" onclick={startDisable}
 									>{t('settings.signin.totp_turn_off')}</Button
 								>
@@ -699,8 +733,38 @@
 									<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
 								</div>
 							</form>
+						{:else if totpView === 'renew'}
+							<form class="totp-form" onsubmit={confirmRenew} novalidate>
+								<p class="form-hint">{t('settings.signin.recovery_new_hint')}</p>
+								<Field id="totp-renew-code" label={t('auth.totp_code')} width="short">
+									{#snippet children(f)}
+										<Input
+											{...f}
+											bind:element={codeEl}
+											bind:value={code}
+											inputmode="numeric"
+											pattern="[0-9]{6}"
+											maxlength={6}
+											autocomplete="one-time-code"
+											oninput={() => (code = code.replace(/[^0-9]/g, ''))}
+										/>
+									{/snippet}
+								</Field>
+								<div class="inline-controls">
+									<Button type="submit" variant="primary" busy={totpBusy}
+										>{t('settings.signin.recovery_new')}</Button
+									>
+									<Button onclick={() => void loadTotp()}>{t('actions.cancel')}</Button>
+									<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
+								</div>
+							</form>
 						{:else if totpView === 'codes'}
-							<p class="line"><Status tone="good" label={t('settings.totp_enabled_success')} /></p>
+							<p class="line">
+								<Status
+									tone="good"
+									label={codesRenewed ? t('settings.signin.recovery_renewed') : t('settings.totp_enabled_success')}
+								/>
+							</p>
 							<Notice tone="warning" message={t('settings.totp_recovery_warning')} />
 							<div class="totp-recovery-codes">
 								<CodeBlock code={codes.join('\n')} title={t('settings.signin.recovery_codes')} />

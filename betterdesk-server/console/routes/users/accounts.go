@@ -389,15 +389,18 @@ func (h *handlers) clientError(w http.ResponseWriter, r *http.Request, err error
 
 // update answers PATCH /api/users/{id} with the body {"username", "role",
 // "password", "email", "groupGuids", "folderIds", "peerIds",
-// "strategyGuid", "disabled"}. What it checks, in order: the id, the
-// account, whether the caller may change it (mayChange), the password and
-// role of a directory or single sign-on account, the new username, the
-// caller's own demotion, the role (the last administrator keeps one), the
-// password, the user groups, the device scope, the email, disabled (true
-// or false, never for the caller's own account). Only then is anything
-// written, in the same order. Disabling ends the account's sessions and
-// revokes its access tokens; the account and its history stay. The answer
-// is the account as the list has it.
+// "strategyGuid", "disabled", "totp_enabled"}. What it checks, in order:
+// the id, the account, whether the caller may change it (mayChange), the
+// password and role of a directory or single sign-on account, the new
+// username, the caller's own demotion, the role (the last administrator
+// keeps one), the password, the user groups, the device scope, the email,
+// disabled (true or false, never for the caller's own account),
+// totp_enabled (only false, never for the caller's own account). Only then
+// is anything written, in the same order. Disabling ends the account's
+// sessions and revokes its access tokens; the account and its history
+// stay. Turning off the second factor deletes its secret and recovery
+// codes and ends the account's sessions too. The answer is the account as
+// the list has it.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	userID, ok := pathID(r)
 	if !ok {
@@ -504,6 +507,10 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	if err != nil {
 		return nil, err
 	}
+	totpOff, err := totpOffOf(r, body, user)
+	if err != nil {
+		return nil, err
+	}
 
 	id := user.ID.V
 	if renaming {
@@ -536,6 +543,11 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	}
 	if changeDisabled {
 		if err := h.setDisabled(r, user, disable); err != nil {
+			return nil, err
+		}
+	}
+	if totpOff {
+		if err := h.turnOffTOTP(r, user); err != nil {
 			return nil, err
 		}
 	}
@@ -596,6 +608,38 @@ func (h *handlers) setDisabled(r *http.Request, user *account, disable bool) err
 		action, details = "user_disabled", "Disabled user: "
 	}
 	return h.d.LogAction(r, action, details+user.username())
+}
+
+// totpOffOf reads the body's "totp_enabled": off says it is false and the
+// account has two-factor sign-in on. Only false is taken, and not for the
+// caller's own account, which turns it off in its profile with a code or
+// its password.
+func totpOffOf(r *http.Request, body middleware.JSONObject, user *account) (off bool, err error) {
+	given := member(body, "totp_enabled")
+	if given.IsUndefined() {
+		return false, nil
+	}
+	if given.JSON() != "false" {
+		return false, say(http.StatusBadRequest, "Invalid value for totp_enabled")
+	}
+	if isSessionAccount(r, user.ID.V) {
+		return false, sayKey(r, http.StatusBadRequest, "users.totp_off_own")
+	}
+	return totpOn(user.TOTPEnabled), nil
+}
+
+// turnOffTOTP turns off the account's two-factor sign-in for a person
+// who lost their authenticator: the secret and the recovery codes go, the
+// account's sessions end and its access tokens are revoked, and the audit
+// log names the account.
+func (h *handlers) turnOffTOTP(r *http.Request, user *account) error {
+	if err := h.d.Authn.DisableTOTP(r.Context(), user.ID.V); err != nil {
+		return err
+	}
+	if err := h.endSessions(r, user.ID.V, false); err != nil {
+		return err
+	}
+	return h.d.LogAction(r, "totp_disabled_by_admin", "Turned off two-factor sign-in for user: "+user.username())
 }
 
 // newUsername is the body's username, trimmed, when it is text and names
