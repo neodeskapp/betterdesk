@@ -129,6 +129,35 @@ test_write_server_unit() (
     rm -rf "$TEST_DIR"
 )
 
+# L68: the signal and relay ports live in .env, where the admin changes
+# them; the unit does not set them, and an update moves the ports an older
+# unit set into .env instead of setting 21116 and 21117 again.
+test_update_keeps_the_admins_ports() (
+    load
+    systemctl() { :; }
+    print_info() { :; }
+    write_server_unit "-mode all -api-port 21114" ""
+    if grep -q 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT"; then fail "the unit sets $(grep 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT")"; fi
+    sed -i '/^Environment=BETTERDESK_SUPERVISOR=/a Environment=SIGNAL_PORT=31116\nEnvironment=RELAY_PORT=31117' "$SERVER_UNIT"
+    printf 'SIGNAL_PORT=21116\nRELAY_PORT=21117\nSESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    maybe_update_services
+    if grep -q 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT"; then fail "the updated unit sets $(grep 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT")"; fi
+    grep -qx 'SIGNAL_PORT=31116' "$CONSOLE_PATH/.env" && grep -qx 'RELAY_PORT=31117' "$CONSOLE_PATH/.env" \
+        || fail "the update lost the unit's ports: $(grep '_PORT=' "$CONSOLE_PATH/.env" | tr '\n' ' ')"
+    grep -qx 'SESSION_SECRET=kept' "$CONSOLE_PATH/.env" || fail "the update lost a line of .env"
+
+    # A repair puts the ports into .env when it has none, and leaves the
+    # admin's alone
+    ensure_go_server_signal_ports || true
+    grep -qx 'SIGNAL_PORT=31116' "$CONSOLE_PATH/.env" || fail "a repair changed the admin's signal port"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    ensure_go_server_signal_ports || true
+    grep -qx 'SIGNAL_PORT=21116' "$CONSOLE_PATH/.env" && grep -qx 'RELAY_PORT=21117' "$CONSOLE_PATH/.env" \
+        || fail "a repair left .env without ports: $(cat "$CONSOLE_PATH/.env")"
+    if grep -q 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT"; then fail "a repair pinned $(grep 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT")"; fi
+    rm -rf "$TEST_DIR"
+)
+
 test_node_era_detection() (
     load
     write_node_era_units
@@ -341,4 +370,5 @@ test_update_channel_kept_without_one
 test_server_folder_mode
 test_console_home_copies_no_console_files
 test_releases_come_from_the_fork
+test_update_keeps_the_admins_ports
 echo "Go installer unit checks passed"

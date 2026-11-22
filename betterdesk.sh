@@ -1317,11 +1317,13 @@ _safe_cp_tls_file() {
     return 0
 }
 
-# Ensure Go signal/relay/API ports are not overridden by shared .env (#219).
-# While an install runs the Node.js console, the server's own console stays
-# off (CONSOLE_PORT=0): Node holds its port.
+# The server reads PORT as its signal port when SIGNAL_PORT is missing, and
+# the console's .env sets PORT for the console (#219): .env names the
+# signal and relay ports (the admin's values stay), and the API port stays
+# on the unit. While an install runs the Node.js console, the server's own
+# console stays off (CONSOLE_PORT=0): Node holds its port.
 ensure_go_server_signal_ports() {
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
     local changed=0
     local go_api_port="${GO_API_PORT:-21114}"
 
@@ -1331,13 +1333,15 @@ ensure_go_server_signal_ports() {
         _upsert_systemd_env "$go_svc_file" CONSOLE_PORT 0
         changed=1
     fi
-    if ! grep -q '^Environment=SIGNAL_PORT=21116' "$go_svc_file" 2>/dev/null; then
-        _upsert_systemd_env "$go_svc_file" SIGNAL_PORT 21116
-        changed=1
-    fi
-    if ! grep -q '^Environment=RELAY_PORT=21117' "$go_svc_file" 2>/dev/null; then
-        _upsert_systemd_env "$go_svc_file" RELAY_PORT 21117
-        changed=1
+    if [ -f "$CONSOLE_PATH/.env" ]; then
+        if [ -z "$(env_file_value "$CONSOLE_PATH/.env" SIGNAL_PORT)" ] && [ -z "$(unit_env_value "$go_svc_file" SIGNAL_PORT)" ]; then
+            _upsert_env_line "$CONSOLE_PATH/.env" SIGNAL_PORT 21116
+            changed=1
+        fi
+        if [ -z "$(env_file_value "$CONSOLE_PATH/.env" RELAY_PORT)" ] && [ -z "$(unit_env_value "$go_svc_file" RELAY_PORT)" ]; then
+            _upsert_env_line "$CONSOLE_PATH/.env" RELAY_PORT 21117
+            changed=1
+        fi
     fi
     if ! grep -q "^Environment=GO_API_PORT=${go_api_port}" "$go_svc_file" 2>/dev/null; then
         _upsert_systemd_env "$go_svc_file" GO_API_PORT "$go_api_port"
@@ -1350,7 +1354,7 @@ ensure_go_server_signal_ports() {
     fi
     if [ "$changed" -eq 1 ]; then
         systemctl daemon-reload 2>/dev/null || true
-        print_info "Go server uses SIGNAL_PORT=21116, GO_API_PORT=${go_api_port} (panel PORT/API_PORT in .env are console-only)"
+        print_info "Server ports: signal $(signal_port), relay $(relay_port), API ${go_api_port} (PORT and API_PORT in .env are the console's)"
     fi
     [ "$changed" -eq 1 ]
 }
@@ -1748,7 +1752,7 @@ apply_console_protocol_mode() {
 # Enable signal/relay TLS on betterdesk-server using deployed panel cert (#219).
 sync_go_server_signal_relay_tls() {
     local ssl_dir="${1:-$RUSTDESK_PATH/ssl}"
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
 
     [ -f "$go_svc_file" ] || return 0
     sed -i 's/ -tls-cert [^ ]*//g' "$go_svc_file"
@@ -1763,7 +1767,7 @@ sync_go_server_signal_relay_tls() {
 
 # Remove signal/relay TLS from betterdesk-server (#219).
 clear_go_server_signal_relay_tls() {
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
 
     [ -f "$go_svc_file" ] || return 0
     sed -i 's/ -tls-cert [^ ]*//g' "$go_svc_file"
@@ -1786,7 +1790,7 @@ sync_go_server_trust_proxy() {
     else
         trusted_cidrs="127.0.0.1/32,::1/128"
     fi
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
 
     [ -f "$go_svc_file" ] || return 0
     if [ "$enable" = "yes" ]; then
@@ -4127,7 +4131,8 @@ unit_exec_args() {
         | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/[[:space:]]+/ /g'
 }
 
-# The settings write_server_unit writes itself.
+# The settings write_server_unit writes itself, and the ports that live in
+# .env (carry_unit_ports moves them there).
 SERVER_UNIT_OWN_KEYS=" BETTERDESK_ENV_FILE BETTERDESK_SUPERVISOR SIGNAL_PORT RELAY_PORT GO_API_PORT MESH_ENABLED CONSOLE_PORT "
 
 # server_unit_extra_environment: the Environment= lines of the installed
@@ -4182,8 +4187,6 @@ Group=$SERVICE_USER
 WorkingDirectory=$RUSTDESK_PATH
 Environment=BETTERDESK_ENV_FILE=$CONSOLE_PATH/.env
 Environment=BETTERDESK_SUPERVISOR=systemd
-Environment=SIGNAL_PORT=21116
-Environment=RELAY_PORT=21117
 Environment=GO_API_PORT=${GO_API_PORT:-21114}
 Environment=MESH_ENABLED=Y
 ${extra_env:-__EMPTY__}
@@ -4286,6 +4289,18 @@ setup_services() {
     print_success "Created betterdesk-server.service (server and web console, user $SERVICE_USER)"
 }
 
+# carry_unit_ports: the signal and relay ports an older unit set (they won
+# over .env) go into .env, where the admin changes them, so a unit written
+# without them keeps the ports the server listens on.
+carry_unit_ports() {
+    local key value
+    for key in SIGNAL_PORT RELAY_PORT; do
+        value=$(unit_env_value "$SERVER_UNIT" "$key")
+        [ -n "$value" ] && _upsert_env_line "$CONSOLE_PATH/.env" "$key" "$value"
+    done
+    return 0
+}
+
 # During UPDATE and REPAIR: write the unit again from the template with the
 # installed unit's arguments and extra settings; make it when missing.
 maybe_update_services() {
@@ -4296,6 +4311,7 @@ maybe_update_services() {
     local args extra
     args=$(unit_exec_args "$SERVER_UNIT")
     extra=$(server_unit_extra_environment)
+    carry_unit_ports
     write_server_unit "$args" "$extra"
     systemctl daemon-reload
     print_info "betterdesk-server.service written again with its arguments and settings"
@@ -4319,18 +4335,24 @@ console_health_url() {
     fi
 }
 
+# The signal and relay ports the server listens on.
+signal_port() { read_effective_console_setting SIGNAL_PORT 21116; }
+relay_port() { read_effective_console_setting RELAY_PORT 21117; }
+
 # verify_go_install [SECONDS]: the service runs, the API and the web console
 # answer /health, signal and relay listen, and the client API port listens
 # when it is on.
 verify_go_install() {
-    local timeout="${1:-60}" waited=0 api_ok=false console_url console_ok=false
+    local timeout="${1:-60}" waited=0 api_ok=false console_url console_ok=false signal relay
     console_url=$(console_health_url)
+    signal=$(signal_port)
+    relay=$(relay_port)
     [ -z "$console_url" ] && console_ok=true
     while [ "$waited" -lt "$timeout" ]; do
         if systemctl is-active --quiet "$SERVER_SERVICE"; then
             [ "$api_ok" = true ] || { curl -fsS -o /dev/null --max-time 3 "http://127.0.0.1:${GO_API_PORT:-21114}/api/health" 2>/dev/null && api_ok=true; }
             [ "$console_ok" = true ] || { curl -ksf -o /dev/null --max-time 3 "$console_url" 2>/dev/null && console_ok=true; }
-            if [ "$api_ok" = true ] && [ "$console_ok" = true ] && _tcp_port_is_listening 21116 && _tcp_port_is_listening 21117; then
+            if [ "$api_ok" = true ] && [ "$console_ok" = true ] && _tcp_port_is_listening "$signal" && _tcp_port_is_listening "$relay"; then
                 break
             fi
         fi
@@ -4344,15 +4366,15 @@ verify_go_install() {
     fi
     [ "$api_ok" = true ] || { print_error "The API does not answer on :${GO_API_PORT:-21114}"; show_service_logs "$SERVER_SERVICE" 30; return 1; }
     [ "$console_ok" = true ] || { print_error "The web console does not answer $console_url"; show_service_logs "$SERVER_SERVICE" 30; return 1; }
-    _tcp_port_is_listening 21116 || { print_error "Signal port 21116 is not listening"; return 1; }
-    _tcp_port_is_listening 21117 || { print_error "Relay port 21117 is not listening"; return 1; }
+    _tcp_port_is_listening "$signal" || { print_error "Signal port $signal is not listening"; return 1; }
+    _tcp_port_is_listening "$relay" || { print_error "Relay port $relay is not listening"; return 1; }
     if [ "$(read_effective_console_setting API_ENABLED true | tr '[:upper:]' '[:lower:]')" = "true" ] \
         && [ "$(read_effective_console_setting CONSOLE_PORT 5000)" != "0" ]; then
         local client_port
         client_port=$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")
         _tcp_port_is_listening "$client_port" || print_warning "The client API port $client_port is not listening"
     fi
-    print_success "betterdesk-server answers: API :${GO_API_PORT:-21114}${console_url:+, web console $console_url}, signal :21116, relay :21117"
+    print_success "betterdesk-server answers: API :${GO_API_PORT:-21114}${console_url:+, web console $console_url}, signal :$signal, relay :$relay"
 }
 
 #===============================================================================
@@ -6722,7 +6744,7 @@ do_configure_ssl() {
 # HTTP <-> HTTPS switch so the operator gets immediate, trustworthy feedback.
 # Honours the project invariant: the Go API (:21121) must remain HTTP for RustDesk clients.
 run_protocol_tests() {
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
     local ssl_dir="$RUSTDESK_PATH/ssl"
     local pass=0 fail=0 warn=0
 
@@ -7025,7 +7047,7 @@ do_toggle_protocol() {
 
     local env_file="$CONSOLE_PATH/.env"
     local svc_file="/etc/systemd/system/betterdesk-console.service"
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
     local ssl_dir="$RUSTDESK_PATH/ssl"
 
     # Detect current mode (effective runtime: systemd overrides .env)

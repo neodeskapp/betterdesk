@@ -387,6 +387,33 @@ function Test-ServerLogFile {
     Remove-Item -Recurse -Force $dir
 }
 
+# L68: the signal and relay ports live in .env, where the admin changes
+# them. The service does not set them, and an update moves the ports an
+# older launcher set into .env instead of setting 21116 and 21117 again.
+function Test-UpdateKeepsTheAdminsPorts {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'SIGNAL_PORT=21116', 'RELAY_PORT=21117')
+    Setup-Services | Out-Null
+    $launcher = Join-Path $script:RUSTDESK_PATH 'start-betterdesk-server.cmd'
+    if ((Get-Content $launcher -Raw) -match '(SIGNAL|RELAY)_PORT') { Fail "the launcher sets the ports: $(Get-Content $launcher)" }
+    $exe = Join-Path $script:RUSTDESK_PATH 'betterdesk-server.exe'
+    Set-Content -Path $launcher -Encoding ASCII -Value @(
+        '@echo off',
+        'set "BETTERDESK_SUPERVISOR=task"',
+        'set "SIGNAL_PORT=31116"',
+        'set "RELAY_PORT=31117"',
+        ':run',
+        "`"$exe`" -mode all -api-port 21114",
+        'goto run'
+    )
+    Update-ServerServiceDefinition | Out-Null
+    if ((Get-Content $launcher -Raw) -match '(SIGNAL|RELAY)_PORT') { Fail "the updated launcher sets the ports: $(Get-Content $launcher)" }
+    if ((Get-ConsoleEnvValue -Key 'SIGNAL_PORT') -ne '31116' -or (Get-ConsoleEnvValue -Key 'RELAY_PORT') -ne '31117') { Fail "the update lost the launcher's ports: $(Get-Content $envFile)" }
+    if ((Get-ConsoleEnvValue -Key 'SESSION_SECRET') -ne 'kept') { Fail 'the update lost a line of .env' }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -396,6 +423,7 @@ Test-PostgreSQLSwitchMovesTheWholeInstall
 Test-ReleasesComeFromTheFork
 Test-PostgreSQLAddressIsKept
 Test-ServerLogFile
+Test-UpdateKeepsTheAdminsPorts
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

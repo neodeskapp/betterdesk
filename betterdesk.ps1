@@ -983,17 +983,31 @@ function Get-ServerArguments {
     return $serverArgs
 }
 
-# The settings BetterDeskServer gets besides those it reads from .env.
+# The settings BetterDeskServer gets besides those it reads from .env. The
+# signal and relay ports are in .env, where the admin changes them.
 function Get-ServerBaseEnvironment {
     param([string]$Supervisor = "nssm")
     return @(
         "BETTERDESK_ENV_FILE=$(Join-Path $script:CONSOLE_PATH '.env')",
         "BETTERDESK_SUPERVISOR=$Supervisor",
-        "SIGNAL_PORT=21116",
-        "RELAY_PORT=21117",
         "GO_API_PORT=$($script:GO_API_PORT)",
         "MESH_ENABLED=Y"
     )
+}
+
+# The signal and relay ports an older service or launcher set (they won
+# over .env) go into .env; returns the other settings.
+function Move-PortsToEnvFile {
+    param([string[]]$Environment)
+    $rest = @()
+    foreach ($line in @($Environment)) {
+        if ($line -match '^(SIGNAL_PORT|RELAY_PORT)=(.+)$') {
+            Set-ConsoleEnvValue -Key $Matches[1] -Value $Matches[2]
+            continue
+        }
+        if ($line) { $rest += $line }
+    }
+    return , $rest
 }
 
 # Merges environment lists: the first list wins, later lists add keys it lacks.
@@ -1123,18 +1137,24 @@ function Get-ConsoleHealthUrl {
     return "http://127.0.0.1:$port/health"
 }
 
+# The signal and relay ports the server listens on (.env).
+function Get-SignalPort { $p = Get-ConsoleEnvValue -Key "SIGNAL_PORT"; if ($p) { $p } else { "21116" } }
+function Get-RelayPort { $p = Get-ConsoleEnvValue -Key "RELAY_PORT"; if ($p) { $p } else { "21117" } }
+
 # The server answers: API and web console /health, signal and relay ports
 # (betterdesk-server check).
 function Test-GoInstall {
     param([int]$TimeoutSeconds = 90)
-    $checkArgs = @("check", "--api", "http://127.0.0.1:$($script:GO_API_PORT)/api/health", "--port", "127.0.0.1:21116", "--port", "127.0.0.1:21117", "--insecure")
+    $signal = Get-SignalPort
+    $relay = Get-RelayPort
+    $checkArgs = @("check", "--api", "http://127.0.0.1:$($script:GO_API_PORT)/api/health", "--port", "127.0.0.1:$signal", "--port", "127.0.0.1:$relay", "--insecure")
     $consoleUrl = Get-ConsoleHealthUrl
     if ($consoleUrl) { $checkArgs += @("--panel", $consoleUrl) }
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     do {
         $code = Invoke-ServerCommand -Arguments $checkArgs 6>$null
         if ($code -eq 0) {
-            Print-Success "betterdesk-server answers: API :$($script:GO_API_PORT)$(if ($consoleUrl) { ", web console $consoleUrl" }), signal :21116, relay :21117"
+            Print-Success "betterdesk-server answers: API :$($script:GO_API_PORT)$(if ($consoleUrl) { ", web console $consoleUrl" }), signal :$signal, relay :$relay"
             return $true
         }
         Start-Sleep -Seconds 3
@@ -1551,7 +1571,7 @@ function Update-ServerServiceDefinition {
     if ($nssm -and (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
         $serverArgs = "$(& $nssm get $script:SERVER_SERVICE AppParameters 2>$null)".Trim([char]0, ' ')
         $serverArgs = ($serverArgs -replace '\s-tls-api-port(=\S+)?', '' -replace '\s-tls-api(=\S+)?', '').Trim()
-        $current = Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -notlike 'CONSOLE_PORT=0' }
+        $current = Move-PortsToEnvFile (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
         $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $current)
         Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
         return
@@ -1559,7 +1579,7 @@ function Update-ServerServiceDefinition {
     if (Get-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue) {
         $serverArgs = Get-LauncherArguments
         if (-not $serverArgs) { $serverArgs = Get-ServerArguments -ServerIP (Resolve-RelayIp) }
-        $current = Get-LauncherEnvironment | Where-Object { $_ -notlike 'CONSOLE_PORT=0' }
+        $current = Move-PortsToEnvFile (Get-LauncherEnvironment | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
         $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "task"), $current)
         $launcherPath = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
         Register-ServerTask -Launcher $launcherPath
@@ -1764,7 +1784,7 @@ function Setup-Services {
 
     $current = @()
     if (Test-GoOnlyInstall) {
-        $current = Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE
+        $current = Move-PortsToEnvFile (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE)
     }
     $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $extra, $current)
     Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
