@@ -115,11 +115,14 @@ export function addOrgMember(id: string, userId: number) {
 
 /* ── Invitations ── */
 
+/**
+ * An invitation as the list has it. The server keeps only a hash of the
+ * code: the list never carries it, the answer to creating one carries it
+ * once.
+ */
 export const OrgInvitation = v.looseObject({
 	id: v.pipe(v.union([v.string(), v.number()]), v.transform(String)),
-	token: Str,
 	email: Str,
-	role: Str,
 	expires_at: v.optional(v.nullable(v.string())),
 	used_at: v.optional(v.nullable(v.string()))
 });
@@ -130,9 +133,24 @@ export function listInvitations(id: string, signal?: AbortSignal): Promise<OrgIn
 	return api(listOf('invitations', OrgInvitation), `${base(id)}/invitations`, { signal });
 }
 
-/** Needs org.manage_users */
-export function createInvitation(id: string, body: { email: string; expires_in_hours: number }) {
-	return api(Any, `${base(id)}/invite`, { method: 'POST', body });
+const CreatedInvitation = v.looseObject({
+	id: v.pipe(v.union([v.string(), v.number()]), v.transform(String)),
+	token: v.pipe(v.string(), v.minLength(1)),
+	expires_at: v.optional(v.nullable(v.string()))
+});
+export type CreatedInvitation = v.InferOutput<typeof CreatedInvitation>;
+
+/** Needs org.manage_users; the answer has the invitation's code, the only time it is shown */
+export function createInvitation(
+	id: string,
+	body: { email: string; expires_in_hours: number }
+): Promise<CreatedInvitation> {
+	return api(CreatedInvitation, `${base(id)}/invite`, { method: 'POST', body });
+}
+
+/** Needs org.manage_users; an invitation nobody used yet stops working */
+export function revokeInvitation(id: string, invitationId: string) {
+	return request(`${base(id)}/invitations/${enc(invitationId)}`, { method: 'DELETE' });
 }
 
 /* ── Devices ── */

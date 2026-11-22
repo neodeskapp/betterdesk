@@ -430,15 +430,64 @@ func (s *SQLiteDB) ListOrgInvitations(orgID string) ([]*OrgInvitation, error) {
 	return invs, rows.Err()
 }
 
-func (s *SQLiteDB) UseOrgInvitation(token string) error {
+func (s *SQLiteDB) RedeemOrgInvitation(tokenHash string, user *OrgUser) (*OrgInvitation, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err := s.db.Exec(
-		`UPDATE org_invitations SET used_at = ? WHERE token = ?`,
-		time.Now().UTC().Format(time.RFC3339), token,
-	)
-	return err
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var inv OrgInvitation
+	var expiresAt string
+	var usedAt sql.NullString
+	err = tx.QueryRow(
+		`SELECT id, org_id, token, email, role, expires_at, used_at
+		 FROM org_invitations WHERE token = ?`, tokenHash,
+	).Scan(&inv.ID, &inv.OrgID, &inv.Token, &inv.Email, &inv.Role, &expiresAt, &usedAt)
+	if err == sql.ErrNoRows {
+		return nil, ErrInvitationNotOpen
+	}
+	if err != nil {
+		return nil, err
+	}
+	expires, err := time.Parse(time.RFC3339, expiresAt)
+	now := time.Now().UTC()
+	if err != nil || usedAt.Valid || !now.Before(expires) {
+		return nil, ErrInvitationNotOpen
+	}
+	inv.ExpiresAt = expires
+
+	var taken int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM org_users WHERE org_id = ? AND username = ?`, inv.OrgID, user.Username).Scan(&taken); err != nil {
+		return nil, err
+	}
+	if taken > 0 {
+		return nil, ErrOrgUsernameTaken
+	}
+	res, err := tx.Exec(`UPDATE org_invitations SET used_at = ? WHERE id = ? AND used_at IS NULL`, now.Format(time.RFC3339), inv.ID)
+	if err != nil {
+		return nil, err
+	}
+	if n, err := res.RowsAffected(); err != nil || n != 1 {
+		return nil, ErrInvitationNotOpen
+	}
+	user.OrgID = inv.OrgID
+	if _, err := tx.Exec(
+		`INSERT INTO org_users (id, org_id, server_user_id, username, display_name, email, password_hash, role, totp_secret, avatar_url, created_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		user.ID, user.OrgID, user.ServerUserID, user.Username, user.DisplayName, user.Email, user.PasswordHash,
+		user.Role, user.TOTPSecret, user.AvatarURL, user.CreatedAt.UTC().Format(time.RFC3339),
+	); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	inv.UsedAt = &now
+	return &inv, nil
 }
 
 func (s *SQLiteDB) DeleteOrgInvitation(id string) error {

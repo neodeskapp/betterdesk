@@ -154,10 +154,6 @@
     {
      "path": "invitations[*].org_id",
      "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "invitations[*].token",
-     "pattern": "^[9aA+/_=-]{64}$"
     }
    ],
    "body": {
@@ -169,8 +165,7 @@
        "expires_at": "<volatile>",
        "id": "<volatile>",
        "org_id": "<volatile>",
-       "role": "user",
-       "token": "<volatile>"
+       "role": "user"
       }
      ]
     }

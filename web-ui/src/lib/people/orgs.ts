@@ -18,13 +18,43 @@ export function slugify(name: string): string {
 
 /* ── Invitations ── */
 
+export type InvitationState = 'open' | 'used' | 'expired';
+
+/** Used, expired (at or after its time), or open */
+export function invitationState(i: OrgInvitation, now = Date.now()): InvitationState {
+	if (i.used_at && parseDate(i.used_at)) return 'used';
+	const exp = parseDate(i.expires_at);
+	return exp && exp.getTime() <= now ? 'expired' : 'open';
+}
+
 /** Invitations nobody used yet that have not expired */
 export function openInvitations(list: readonly OrgInvitation[], now = Date.now()): number {
-	return list.filter((i) => {
-		if (i.used_at && parseDate(i.used_at)) return false;
-		const exp = parseDate(i.expires_at);
-		return !(exp && exp.getTime() < now);
-	}).length;
+	return list.filter((i) => invitationState(i, now) === 'open').length;
+}
+
+/**
+ * The link an invitation is sent as: the console's /invite page with the
+ * code after #, so the code is not sent to the server with the page, nor
+ * written into its logs or a Referer.
+ */
+export function invitationLink(origin: string, token: string): string {
+	return `${origin}/invite#${encodeURIComponent(token)}`;
+}
+
+/**
+ * The code in what someone pasted or opened: the part after # of an
+ * invitation link, or the code itself; "" when there is none.
+ */
+export function invitationCode(text: string): string {
+	let raw = text.trim();
+	const hash = raw.indexOf('#');
+	if (hash >= 0) raw = raw.slice(hash + 1);
+	try {
+		raw = decodeURIComponent(raw);
+	} catch {
+		return '';
+	}
+	return /^[0-9a-f]{64}$/i.test(raw) ? raw.toLowerCase() : '';
 }
 
 /* ── Support packages ── */

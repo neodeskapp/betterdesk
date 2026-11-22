@@ -658,6 +658,18 @@ func TestRequestLineForms(t *testing.T) {
 	wantRedirect(t, record(func(w http.ResponseWriter) { h.Handle(w, odd) }), "a request line that is not the path", 301, "/")
 }
 
+// The page that redeems an organization invitation opens without a
+// session, like the sign-in pages; a console page next to it still sends
+// someone signed out to sign in (BUGS L42).
+func TestInvitationPageOpensWithoutSession(t *testing.T) {
+	dir := copySite(t, "")
+	writeFile(t, filepath.Join(dir, "routes.json"), `[{"id":"/(public)/invite","pattern":"^\/invite\/?$"},{"id":"/(console)/devices","pattern":"^\/devices\/?$"}]`)
+	h := New(Options{Dir: dir, Production: true, Session: sessionFromHeader})
+	wantPage(t, serve(h, "GET", "/invite", nil), "/invite signed out", 200)
+	wantPage(t, serve(h, "GET", "/invite", admin), "/invite signed in", 200)
+	wantRedirect(t, serve(h, "GET", "/devices", nil), "a console page signed out", 302, "/login?return=%2Fdevices")
+}
+
 // An escaped percent sign stays escaped when a path is matched against the
 // pages, as in the app: a page whose name holds a percent sign is listed
 // with %25 in its pattern.

@@ -159,6 +159,9 @@ type Set struct {
 	FileAccess *Limiter
 	// Register is the limit of device registrations (POST /api/bd/register).
 	Register *Limiter
+	// Invitation is the limit of looking up and redeeming organization
+	// invitations, signed in or not.
+	Invitation *Limiter
 
 	opts Options
 }
@@ -175,6 +178,8 @@ type Set struct {
 //	UPLOAD_RATE_LIMIT_MAX            30     Upload
 //	FILE_ACCESS_RATE_LIMIT_MAX       120    FileAccess
 //	BD_REGISTER_RATE_LIMIT_MAX       20     Register
+//
+// Invitation allows 20 requests in 15 minutes per address, fixed.
 //
 // A value that is not a number, or zero, gives the default; text after
 // the digits is ignored ("7.9" and "7abc" are 7).
@@ -224,6 +229,7 @@ func NewSet(opts Options) *Set {
 	s.Upload = limiter("uploadLimiter", minute, env("UPLOAD_RATE_LIMIT_MAX", 30), "Too many upload requests. Please try again later.", s.addressKey, nil)
 	s.FileAccess = limiter("fileAccessLimiter", minute, env("FILE_ACCESS_RATE_LIMIT_MAX", 120), "Too many file requests. Please try again later.", s.addressKey, nil)
 	s.Register = limiter("registerLimiter", minute, env("BD_REGISTER_RATE_LIMIT_MAX", 20), "Too many registration requests. Please slow down.", s.addressKey, nil)
+	s.Invitation = limiter("invitationLimiter", 15*minute, 20, "Too many invitation requests. Please try again later.", s.addressKey, nil)
 	return s
 }
 
@@ -248,7 +254,7 @@ func (s *Set) userOrAddressKey(prefix string, r *http.Request) string {
 
 // All lists the limiters.
 func (s *Set) All() []*Limiter {
-	return []*Limiter{s.API, s.SessionRead, s.Widget, s.PanelRead, s.PanelPreference, s.RDClientPage, s.Login, s.TOTPVerify, s.PasswordChange, s.Upload, s.FileAccess, s.Register}
+	return []*Limiter{s.API, s.SessionRead, s.Widget, s.PanelRead, s.PanelPreference, s.RDClientPage, s.Login, s.TOTPVerify, s.PasswordChange, s.Upload, s.FileAccess, s.Register, s.Invitation}
 }
 
 type mount struct {

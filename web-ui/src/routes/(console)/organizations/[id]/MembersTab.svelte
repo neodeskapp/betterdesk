@@ -4,10 +4,14 @@
   user.view); without, the tab says the role cannot see them. An account
   that exists only in the organization (no server account behind it) is
   a sign-in for the BetterDesk client and carries a tag that says so.
+  An invitation makes such a sign-in: the dialog shows its link once, the
+  list shows when it ends and when it was used, and an open one can be
+  revoked.
 -->
 <script lang="ts">
-	import { removeOrgUser, type OrgInvitation, type OrgUser } from '#lib/api/orgs.ts';
+	import { removeOrgUser, revokeInvitation, type OrgInvitation, type OrgUser } from '#lib/api/orgs.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { invitationState } from '#lib/people/orgs.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
@@ -18,7 +22,6 @@
 	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import User from '#lib/ui/User.svelte';
-	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
@@ -44,6 +47,26 @@
 
 	let adding = $state(false);
 	let inviting = $state(false);
+
+	async function revoke(i: OrgInvitation) {
+		const ok = await confirm({
+			title: t('organizations.revoke_invitation_title'),
+			message: t('organizations.revoke_invitation_text'),
+			confirmLabel: t('organizations.revoke_invitation'),
+			confirmIcon: ICONS.revoke,
+			danger: true
+		});
+		if (!ok) return;
+		try {
+			await revokeInvitation(orgId, i.id);
+			toast.success(t('organizations.invitation_revoked'));
+			oninvitations();
+		} catch (err) {
+			toast.error(
+				`${t('organizations.invitation_revoke_failed')} ${err instanceof Error ? err.message : ''}`.trim()
+			);
+		}
+	}
 
 	async function remove(m: OrgUser) {
 		const ok = await confirm({
@@ -91,7 +114,6 @@
 	]);
 
 	const inviteColumns = $derived<Column<OrgInvitation>[]>([
-		{ id: 'token', label: t('organizations.token'), cell: tokenCell },
 		{ id: 'email', label: t('organizations.email'), cell: inviteEmailCell },
 		{
 			id: 'expires',
@@ -99,7 +121,14 @@
 			cell: expiresCell,
 			sortValue: (i) => i.expires_at ?? ''
 		},
-		{ id: 'used', label: t('organizations.used'), cell: usedCell, sortValue: (i) => i.used_at ?? '' }
+		{ id: 'used', label: t('organizations.used'), cell: usedCell, sortValue: (i) => i.used_at ?? '' },
+		{
+			id: 'actions',
+			label: t('organizations.actions'),
+			labelHidden: true,
+			cell: inviteActions,
+			align: 'actions' as const
+		}
 	]);
 </script>
 
@@ -118,13 +147,16 @@
 		>
 	</MenuButton>{/snippet}
 
-{#snippet tokenCell(i: OrgInvitation)}<ValueCopy
-		value={i.token ? `${i.token.substring(0, 16)}…` : ''}
-		copy={false}
-	/>{/snippet}
 {#snippet inviteEmailCell(i: OrgInvitation)}{#if i.email}{i.email}{:else}<Empty />{/if}{/snippet}
 {#snippet expiresCell(i: OrgInvitation)}<Time value={i.expires_at} relative={false} />{/snippet}
 {#snippet usedCell(i: OrgInvitation)}<Time value={i.used_at} empty={t('organizations.not_used')} />{/snippet}
+{#snippet inviteActions(i: OrgInvitation)}{#if invitationState(i) !== 'used'}<Button
+			size="sm"
+			variant="danger-quiet"
+			class="act-revoke"
+			aria-label="{t('organizations.revoke_invitation')}: {i.email || i.id}"
+			onclick={() => void revoke(i)}>{t('organizations.revoke_invitation')}</Button
+		>{/if}{/snippet}
 
 <section class="section" aria-label={t('organizations.users')}>
 	{#if canUsers}
@@ -160,6 +192,7 @@
 			>
 		{/if}
 	</div>
+	<p class="section-note">{t('organizations.invitations_note')}</p>
 	{#if !canUsers}
 		<States message={t('organizations.no_permission')} />
 	{:else if invitationsError}

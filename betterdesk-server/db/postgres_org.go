@@ -322,11 +322,55 @@ func (pg *PostgresDB) ListOrgInvitations(orgID string) ([]*OrgInvitation, error)
 	return invs, rows.Err()
 }
 
-func (pg *PostgresDB) UseOrgInvitation(token string) error {
-	_, err := pg.pool.Exec(pg.ctx,
-		`UPDATE org_invitations SET used_at = NOW() WHERE token = $1`, token,
-	)
-	return err
+func (pg *PostgresDB) RedeemOrgInvitation(tokenHash string, user *OrgUser) (*OrgInvitation, error) {
+	tx, err := pg.pool.Begin(pg.ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(context.Background())
+
+	// The row stays locked until the end, so two redemptions of one
+	// invitation take turns and the second finds it used
+	var inv OrgInvitation
+	err = tx.QueryRow(pg.ctx,
+		`SELECT id, org_id, token, email, role, expires_at, used_at
+		 FROM org_invitations WHERE token = $1 FOR UPDATE`, tokenHash,
+	).Scan(&inv.ID, &inv.OrgID, &inv.Token, &inv.Email, &inv.Role, &inv.ExpiresAt, &inv.UsedAt)
+	if err == pgx.ErrNoRows {
+		return nil, ErrInvitationNotOpen
+	}
+	if err != nil {
+		return nil, err
+	}
+	now := time.Now().UTC()
+	if inv.UsedAt != nil || !now.Before(inv.ExpiresAt) {
+		return nil, ErrInvitationNotOpen
+	}
+
+	var taken int
+	if err := tx.QueryRow(pg.ctx, `SELECT COUNT(*) FROM org_users WHERE org_id = $1 AND username = $2`, inv.OrgID, user.Username).Scan(&taken); err != nil {
+		return nil, err
+	}
+	if taken > 0 {
+		return nil, ErrOrgUsernameTaken
+	}
+	if _, err := tx.Exec(pg.ctx, `UPDATE org_invitations SET used_at = $1 WHERE id = $2`, now, inv.ID); err != nil {
+		return nil, err
+	}
+	user.OrgID = inv.OrgID
+	if _, err := tx.Exec(pg.ctx,
+		`INSERT INTO org_users (id, org_id, server_user_id, username, display_name, email, password_hash, role, totp_secret, avatar_url, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+		user.ID, user.OrgID, user.ServerUserID, user.Username, user.DisplayName, user.Email, user.PasswordHash,
+		user.Role, user.TOTPSecret, user.AvatarURL, user.CreatedAt.UTC(),
+	); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(pg.ctx); err != nil {
+		return nil, err
+	}
+	inv.UsedAt = &now
+	return &inv, nil
 }
 
 func (pg *PostgresDB) DeleteOrgInvitation(id string) error {

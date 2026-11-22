@@ -157,6 +157,12 @@ var (
 	ErrPeerIDSoftDeleted = errors.New("db: peer ID belongs to a deleted peer")
 	// ErrUsernameTaken is returned by RenameUser when the target name is in use.
 	ErrUsernameTaken = errors.New("db: username already exists")
+	// ErrInvitationNotOpen is RedeemOrgInvitation's answer for an
+	// invitation that does not exist, is used or has expired.
+	ErrInvitationNotOpen = errors.New("db: invitation is not open")
+	// ErrOrgUsernameTaken is RedeemOrgInvitation's answer when the
+	// organization already has the username.
+	ErrOrgUsernameTaken = errors.New("db: username already exists in this organization")
 	// ErrInvalidUsername is returned by RenameUser for a name that fails the
 	// account-name format check.
 	ErrInvalidUsername = errors.New("db: invalid username")
@@ -345,11 +351,13 @@ type OrgDevice struct {
 	Tags           string `json:"tags,omitempty"`
 }
 
-// OrgInvitation represents a pending invitation to join an organization.
+// OrgInvitation is an invitation to a sign-in in an organization. The
+// table's token column holds the SHA-256 of the invitation's code; Token
+// carries the code itself only in the answer that creates the invitation.
 type OrgInvitation struct {
 	ID        string     `json:"id"`
 	OrgID     string     `json:"org_id"`
-	Token     string     `json:"token"`
+	Token     string     `json:"token,omitempty"`
 	Email     string     `json:"email,omitempty"`
 	Role      string     `json:"role"` // default: "user"
 	ExpiresAt time.Time  `json:"expires_at"`
@@ -713,7 +721,12 @@ type Database interface {
 	CreateOrgInvitation(inv *OrgInvitation) error
 	GetOrgInvitationByToken(token string) (*OrgInvitation, error)
 	ListOrgInvitations(orgID string) ([]*OrgInvitation, error)
-	UseOrgInvitation(token string) error
+	// RedeemOrgInvitation uses the invitation whose token column is
+	// tokenHash and creates user in its organization, in one transaction.
+	// ErrInvitationNotOpen: no such invitation, or it is used or expired.
+	// ErrOrgUsernameTaken: the organization has user's username. Neither
+	// uses the invitation.
+	RedeemOrgInvitation(tokenHash string, user *OrgUser) (*OrgInvitation, error)
 	DeleteOrgInvitation(id string) error
 
 	// Org Settings

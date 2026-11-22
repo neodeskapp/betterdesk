@@ -544,16 +544,21 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 	}
 
 	// A role in the body is not read: an invitation has the default role.
+	// It is valid for 72 hours unless the body says 1 to 720.
 	var body struct {
 		Email     string `json:"email"`
-		ExpiresIn int    `json:"expires_in_hours"` // default 72 hours
+		ExpiresIn int    `json:"expires_in_hours"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	if body.ExpiresIn <= 0 {
+	if body.ExpiresIn == 0 {
 		body.ExpiresIn = 72
+	}
+	if body.ExpiresIn < 1 || body.ExpiresIn > 720 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "expires_in_hours must be 1 to 720"})
+		return
 	}
 
 	tokenBytes := make([]byte, 32)
@@ -563,10 +568,11 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 	}
 	token := hex.EncodeToString(tokenBytes)
 
+	// The table keeps the code's hash; the answer carries the code, once
 	inv := &db.OrgInvitation{
 		ID:        uuid.New().String(),
 		OrgID:     orgID,
-		Token:     token,
+		Token:     invitationHash(token),
 		Email:     body.Email,
 		Role:      db.OrgRoleUser,
 		ExpiresAt: time.Now().UTC().Add(time.Duration(body.ExpiresIn) * time.Hour),
@@ -577,6 +583,7 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 		http.Error(w, `{"error":"failed to create invitation"}`, http.StatusInternalServerError)
 		return
 	}
+	inv.Token = token
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -594,6 +601,10 @@ func (s *Server) handleListOrgInvitations(w http.ResponseWriter, r *http.Request
 	}
 	if invs == nil {
 		invs = []*db.OrgInvitation{}
+	}
+	// The stored hash is no business of anyone's
+	for _, inv := range invs {
+		inv.Token = ""
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{"invitations": invs})

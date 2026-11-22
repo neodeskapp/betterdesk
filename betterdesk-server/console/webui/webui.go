@@ -9,8 +9,8 @@
 //     for an hour. An .html file is never sent as a file.
 //   - Every other GET gets the app's page. Console pages need a session;
 //     someone signed out is sent to the sign-in page with the way back. The
-//     sign-in pages, the portal, device links and the remote viewer open
-//     without one. An address no page of the app has (routes.json in the
+//     sign-in pages, the portal, device links, the invitation page and the
+//     remote viewer open without one. An address no page of the app has (routes.json in the
 //     build) gets the page with status 404, and the app shows its not-found
 //     page there. /api and /ws never get the page.
 //
@@ -308,11 +308,12 @@ func isServerPath(path string) bool {
 }
 
 // isPublicPage reports whether anyone may open a page of the app: the
-// sign-in pages, the portal, device links, and the remote viewer
+// sign-in pages, the portal, device links, the page that redeems an
+// organization invitation, and the remote viewer
 // (/remote/<device id>), which also opens for guest links and mesh shares.
 // The viewer page holds no data; its data endpoint checks access.
 func isPublicPage(sub string) bool {
-	if isSegment(sub, "/login") || isSegment(sub, "/portal") || strings.HasPrefix(sub, "/d/") ||
+	if isSegment(sub, "/login") || isSegment(sub, "/portal") || strings.HasPrefix(sub, "/d/") || isSegment(sub, "/invite") ||
 		isSegment(sub, "/remote/login") || isSegment(sub, "/remote/guest") {
 		return true
 	}

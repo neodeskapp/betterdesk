@@ -95,6 +95,7 @@ func TestEveryLimiterHasItsOwnAnswer(t *testing.T) {
 		"uploadLimiter":          "Too many upload requests. Please try again later.",
 		"fileAccessLimiter":      "Too many file requests. Please try again later.",
 		"registerLimiter":        "Too many registration requests. Please slow down.",
+		"invitationLimiter":      "Too many invitation requests. Please try again later.",
 	}
 	if len(set.All()) != len(want) {
 		t.Fatalf("%d limiters, want %d", len(set.All()), len(want))
@@ -332,7 +333,7 @@ func TestSetFromEnvironment(t *testing.T) {
 		"apiLimiter": {time.Minute, 100}, "sessionReadLimiter": {time.Minute, 600}, "widgetLimiter": {time.Minute, 600}, "panelReadLimiter": {time.Minute, 600},
 		"panelPreferenceLimiter": {time.Minute, 30}, "rdClientPageLimiter": {time.Minute, 120}, "loginLimiter": {time.Minute, 5}, "totpVerifyLimiter": {time.Minute, 5},
 		"passwordChangeLimiter": {5 * time.Minute, 3}, "uploadLimiter": {time.Minute, 30}, "fileAccessLimiter": {time.Minute, 120},
-		"registerLimiter": {time.Minute, 20},
+		"registerLimiter": {time.Minute, 20}, "invitationLimiter": {15 * time.Minute, 20},
 	}
 	for _, l := range set.All() {
 		if want := defaults[l.Name()]; l.Window() != want.window || l.Max() != want.max {
@@ -346,7 +347,7 @@ func TestSetFromEnvironment(t *testing.T) {
 		"apiLimiter": {2 * time.Second, 11}, "sessionReadLimiter": {2 * time.Second, 13}, "widgetLimiter": {time.Minute, 14}, "panelReadLimiter": {2 * time.Second, 13},
 		"panelPreferenceLimiter": {time.Minute, 15}, "rdClientPageLimiter": {time.Minute, 16}, "loginLimiter": {2 * time.Second, 12}, "totpVerifyLimiter": {2 * time.Second, 12},
 		"passwordChangeLimiter": {5 * time.Minute, 3}, "uploadLimiter": {time.Minute, 17}, "fileAccessLimiter": {time.Minute, 18},
-		"registerLimiter": {time.Minute, 19},
+		"registerLimiter": {time.Minute, 19}, "invitationLimiter": {15 * time.Minute, 20},
 	}
 	for _, l := range set.All() {
 		if want := custom[l.Name()]; l.Window() != want.window || l.Max() != want.max {
