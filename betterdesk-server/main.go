@@ -282,18 +282,27 @@ func main() {
 
 	log.Printf("Database initialized successfully")
 
-	// Explicit ENROLLMENT_MODE is deployment configuration and wins over a
-	// stale value persisted by the panel. Entrypoint-generated defaults are
-	// marked non-explicit so the panel remains authoritative there.
+	// The mode saved in the console wins; ENROLLMENT_MODE is the first
+	// default, unless ENROLLMENT_MODE_ENV_OVERRIDE=Y forces it.
+	envEnrollmentMode := ""
+	if cfg.EnrollmentModeFromEnv {
+		envEnrollmentMode = cfg.EnrollmentMode
+	}
 	enrollmentSource, enrollmentModeErr := applyEnrollmentMode(cfg, database)
 	if enrollmentModeErr != nil {
 		log.Printf("WARN: Failed to reconcile enrollment mode: %v", enrollmentModeErr)
 	}
 	switch enrollmentSource {
 	case "environment":
-		log.Printf("Enrollment mode from explicit environment: %s", cfg.EnrollmentMode)
+		log.Printf("Enrollment mode forced by ENROLLMENT_MODE_ENV_OVERRIDE: %s", cfg.EnrollmentMode)
+	case "first default":
+		log.Printf("Enrollment mode from ENROLLMENT_MODE, saved as the first default: %s", cfg.EnrollmentMode)
 	case "database":
 		log.Printf("Restored enrollment mode from DB: %s", cfg.EnrollmentMode)
+		if envEnrollmentMode != "" && envEnrollmentMode != cfg.EnrollmentMode {
+			log.Printf("ENROLLMENT_MODE=%s is not used: the mode saved in the console is %s (ENROLLMENT_MODE_ENV_OVERRIDE=Y forces the variable)",
+				envEnrollmentMode, cfg.EnrollmentMode)
+		}
 	}
 	if cfg.EnrollmentMode != "" && cfg.EnrollmentMode != "open" {
 		log.Printf("Enrollment restriction active: mode=%s (new devices need token/approval)", cfg.EnrollmentMode)
@@ -693,6 +702,13 @@ func resolveEnrollmentMode(configuredMode, storedMode string, envOverride bool) 
 	}
 }
 
+// applyEnrollmentMode sets cfg.EnrollmentMode from the mode the database
+// holds and the environment, and says where the mode came from:
+// "environment" (forced by ENROLLMENT_MODE_ENV_OVERRIDE=Y), "database" (the
+// mode saved in the console), "first default" (ENROLLMENT_MODE while the
+// database holds none) or "configuration" (the built-in default). A forced
+// mode and a first default are stored, so a restart without the variable
+// keeps them; the built-in default is not.
 func applyEnrollmentMode(cfg *config.Config, database db.Database) (string, error) {
 	storedMode, err := database.GetConfig("enrollment_mode")
 	if err != nil {
@@ -705,8 +721,11 @@ func applyEnrollmentMode(cfg *config.Config, database db.Database) (string, erro
 		cfg.EnrollmentModeEnvOverride,
 	)
 	cfg.EnrollmentMode = resolvedMode
+	if source == "configuration" && cfg.EnrollmentModeFromEnv {
+		source = "first default"
+	}
 
-	if source == "environment" && storedMode != resolvedMode {
+	if (source == "environment" || source == "first default") && storedMode != resolvedMode {
 		if err := database.SetConfig("enrollment_mode", resolvedMode); err != nil {
 			return source, err
 		}

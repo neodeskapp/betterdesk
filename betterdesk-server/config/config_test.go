@@ -165,18 +165,52 @@ func TestConnectionSettingsSnapshotConcurrentApply(t *testing.T) {
 	<-done
 }
 
-func TestLoadEnv_EnrollmentModeExplicitByDefault(t *testing.T) {
+// L35, L36: ENROLLMENT_MODE alone is the first default, not a value that
+// replaces the console's at every start.
+func TestLoadEnv_EnrollmentModeIsADefaultWithoutTheOverride(t *testing.T) {
 	t.Setenv("ENROLLMENT_MODE", "open")
 	t.Setenv("ENROLLMENT_MODE_ENV_OVERRIDE", "")
 
 	cfg := DefaultConfig()
 	cfg.LoadEnv()
 
-	if cfg.EnrollmentMode != EnrollmentModeOpen {
-		t.Fatalf("EnrollmentMode = %q, want %q", cfg.EnrollmentMode, EnrollmentModeOpen)
+	if cfg.EnrollmentMode != EnrollmentModeOpen || !cfg.EnrollmentModeFromEnv {
+		t.Fatalf("EnrollmentMode = %q (from env %v), want %q from the environment",
+			cfg.EnrollmentMode, cfg.EnrollmentModeFromEnv, EnrollmentModeOpen)
 	}
-	if !cfg.EnrollmentModeEnvOverride {
-		t.Fatal("native ENROLLMENT_MODE should be treated as explicit")
+	if cfg.EnrollmentModeEnvOverride {
+		t.Fatal("ENROLLMENT_MODE without ENROLLMENT_MODE_ENV_OVERRIDE=Y must not override the console's mode")
+	}
+}
+
+func TestLoadEnv_EnrollmentModeOverrideForcesTheEnvironment(t *testing.T) {
+	for _, marker := range []string{"Y", "yes", "true", "1"} {
+		t.Setenv("ENROLLMENT_MODE", "locked")
+		t.Setenv("ENROLLMENT_MODE_ENV_OVERRIDE", marker)
+
+		cfg := DefaultConfig()
+		cfg.LoadEnv()
+
+		if cfg.EnrollmentMode != EnrollmentModeLocked || !cfg.EnrollmentModeEnvOverride {
+			t.Fatalf("ENROLLMENT_MODE_ENV_OVERRIDE=%s: mode %q, override %v; want locked, forced",
+				marker, cfg.EnrollmentMode, cfg.EnrollmentModeEnvOverride)
+		}
+	}
+}
+
+// A reload without ENROLLMENT_MODE drops what an earlier read of the
+// environment said.
+func TestLoadEnv_EnrollmentModeMarksClearWhenTheVariableIsGone(t *testing.T) {
+	t.Setenv("ENROLLMENT_MODE", "locked")
+	t.Setenv("ENROLLMENT_MODE_ENV_OVERRIDE", "Y")
+	cfg := DefaultConfig()
+	cfg.LoadEnv()
+
+	t.Setenv("ENROLLMENT_MODE", "")
+	cfg.LoadEnv()
+	if cfg.EnrollmentModeFromEnv || cfg.EnrollmentModeEnvOverride {
+		t.Fatalf("after the variable is gone: from env %v, override %v; want neither",
+			cfg.EnrollmentModeFromEnv, cfg.EnrollmentModeEnvOverride)
 	}
 }
 

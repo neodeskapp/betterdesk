@@ -51,7 +51,21 @@ test_image_has_dsn_helper() (
         || fail "docker/entrypoint.sh does not source /docker/dsn.sh"
 )
 
+# L35: the start scripts pass ENROLLMENT_MODE on as the first default and
+# never mark it as forced; ENROLLMENT_MODE_ENV_OVERRIDE is the admin's to
+# set, and every compose file passes it through.
+test_enrollment_mode_is_not_forced() (
+    local hits f
+    hits=$(grep -nE '^[^#]*ENROLLMENT_MODE_ENV_OVERRIDE=' "$SCRIPT_ROOT"/docker/*.sh || true)
+    [ -z "$hits" ] || fail "a start script sets ENROLLMENT_MODE_ENV_OVERRIDE: $hits"
+    for f in "$SCRIPT_ROOT"/docker-compose*.yml; do
+        grep -q 'ENROLLMENT_MODE_ENV_OVERRIDE=${ENROLLMENT_MODE_ENV_OVERRIDE:-}' "$f" \
+            || fail "$(basename "$f") does not pass ENROLLMENT_MODE_ENV_OVERRIDE through"
+    done
+)
+
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
+test_enrollment_mode_is_not_forced
 echo "Docker entrypoint checks passed"

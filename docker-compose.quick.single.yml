@@ -100,10 +100,12 @@ services:
       - RELAY_SERVERS=${RELAY_SERVERS:-}
       - SIGNAL_RATE_LIMIT_PER_IP=${SIGNAL_RATE_LIMIT_PER_IP:-20}
       - ALLOW_LEGACY_OUTBOUND=${ALLOW_LEGACY_OUTBOUND:-N}
-      # Enrollment policy. Fresh volumes default to "managed" (operator approves
-      # new devices); pre-existing volumes keep their current mode. Override with
-      # "open", "managed", or "locked".
+      # Enrollment mode of the first start ("open", "managed" or "locked").
+      # Fresh volumes default to "managed"; a mode saved in the console stays
+      # across restarts. ENROLLMENT_MODE_ENV_OVERRIDE=Y forces this value at
+      # every start instead.
       - ENROLLMENT_MODE=${ENROLLMENT_MODE:-}
+      - ENROLLMENT_MODE_ENV_OVERRIDE=${ENROLLMENT_MODE_ENV_OVERRIDE:-}
       - NTP_SERVERS=${NTP_SERVERS:-pool.ntp.org,time.google.com,time.cloudflare.com}
       - BILLING_MAX_CLOCK_SKEW_MS=${BILLING_MAX_CLOCK_SKEW_MS:-2000}
       - BILLING_REQUIRE_SYNCED_CLOCK=${BILLING_REQUIRE_SYNCED_CLOCK:-1}

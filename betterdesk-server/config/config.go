@@ -169,8 +169,12 @@ type Config struct {
 	// "open" (default) - Accept all device registrations (backward compatible)
 	// "managed" - New devices need to be approved or have a valid token
 	// "locked" - Only devices with valid tokens can register
+	// ENROLLMENT_MODE is the first default: it applies while the database
+	// holds no mode, and the start stores it. A mode saved in the console
+	// wins over it, unless ENROLLMENT_MODE_ENV_OVERRIDE=Y forces it.
 	EnrollmentMode            string
-	EnrollmentModeEnvOverride bool // ENROLLMENT_MODE was explicitly configured by the operator
+	EnrollmentModeFromEnv     bool // EnrollmentMode came from ENROLLMENT_MODE
+	EnrollmentModeEnvOverride bool // ENROLLMENT_MODE_ENV_OVERRIDE=Y: the environment wins at every start
 
 	// CDAP Gateway
 	CDAPPort        int  // WebSocket gateway port (default 21122)
@@ -595,12 +599,14 @@ func (c *Config) LoadEnv() {
 	if strings.ToUpper(os.Getenv("TLS_API")) == "Y" {
 		c.TLSApi = true
 	}
+	c.EnrollmentModeFromEnv, c.EnrollmentModeEnvOverride = false, false
 	if v := os.Getenv("ENROLLMENT_MODE"); v != "" {
 		mode := strings.ToLower(v)
 		if mode == "open" || mode == "managed" || mode == "locked" {
 			c.EnrollmentMode = mode
+			c.EnrollmentModeFromEnv = true
 			marker := strings.ToUpper(strings.TrimSpace(os.Getenv("ENROLLMENT_MODE_ENV_OVERRIDE")))
-			c.EnrollmentModeEnvOverride = marker != "N" && marker != "NO" && marker != "FALSE" && marker != "0"
+			c.EnrollmentModeEnvOverride = marker == "Y" || marker == "YES" || marker == "TRUE" || marker == "1"
 		}
 	}
 	if v := os.Getenv("CDAP_PORT"); v != "" {

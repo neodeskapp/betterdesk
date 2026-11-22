@@ -49,16 +49,16 @@ elif [ -n "${API_KEY:-}" ] && ! file_exists_as_betterdesk "$API_KEY_FILE"; then
     echo "API key from env → $API_KEY_FILE"
 fi
 
-# Default enrollment policy.
+# Default enrollment policy. The server stores the mode of its first start
+# and keeps the one saved in the console from then on; ENROLLMENT_MODE is
+# only that first default (ENROLLMENT_MODE_ENV_OVERRIDE=Y forces it at
+# every start).
 # Fresh volumes default to "managed": stock RustDesk clients are queued for
 # operator approval instead of connecting silently. Pre-existing installs keep
 # their current behavior (Go default "open", or whatever was set via the panel
 # and persisted in the database). A volume that already contains a server key
 # or SQLite database is treated as pre-existing.
-if [ -n "${ENROLLMENT_MODE:-}" ]; then
-    export ENROLLMENT_MODE_ENV_OVERRIDE="Y"
-else
-    export ENROLLMENT_MODE_ENV_OVERRIDE="N"
+if [ -z "${ENROLLMENT_MODE:-}" ]; then
     ENROLLMENT_SENTINEL="/opt/rustdesk/.enrollment_initialized"
     if ! file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"; then
         if file_exists_as_betterdesk /opt/rustdesk/db_v2.sqlite3 \
