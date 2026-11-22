@@ -552,7 +552,8 @@
 
 	$effect(() =>
 		trackDirty(
-			() => password.dirty || enrollment.dirty || sessions.dirty || twoFactor.dirty || ldap.dirty || oidc.dirty
+			() =>
+				password.dirty || enrollment.dirty || sessions.dirty || twoFactor.dirty || ldap.dirty || oidc.dirty
 		)
 	);
 
@@ -765,7 +766,9 @@
 							<p class="line">
 								<Status
 									tone="good"
-									label={codesRenewed ? t('settings.signin.recovery_renewed') : t('settings.totp_enabled_success')}
+									label={codesRenewed
+										? t('settings.signin.recovery_renewed')
+										: t('settings.totp_enabled_success')}
 								/>
 							</p>
 							<Notice tone="warning" message={t('settings.totp_recovery_warning')} />

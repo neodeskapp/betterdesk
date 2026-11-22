@@ -18,8 +18,22 @@ beforeEach(() => {
 			url.pathname === '/api/panel/security-audit/hardening'
 				? {
 						priorities: [
-							{ id: 'session_timeout', name: 'Session timeout', severity: 'medium', category: 'auth', implemented: true, description: 'Ends after 30 minutes' },
-							{ id: 'single_session', name: 'Session limit', severity: 'high', category: 'auth', implemented: false, description: 'currently unlimited' }
+							{
+								id: 'session_timeout',
+								name: 'Session timeout',
+								severity: 'medium',
+								category: 'auth',
+								implemented: true,
+								description: 'Ends after 30 minutes'
+							},
+							{
+								id: 'single_session',
+								name: 'Session limit',
+								severity: 'high',
+								category: 'auth',
+								implemented: false,
+								description: 'currently unlimited'
+							}
 						]
 					}
 				: { success: false };

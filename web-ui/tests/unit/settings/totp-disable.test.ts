@@ -23,7 +23,9 @@ beforeEach(() => {
 			const url = new URL(input, 'http://localhost').pathname;
 			sent.push({ url, body: init?.body ? JSON.parse(String(init.body)) : null });
 			const body =
-				url === '/api/auth/totp/status' ? { success: true, enabled: true, disable_with: disableWith } : { success: true };
+				url === '/api/auth/totp/status'
+					? { success: true, enabled: true, disable_with: disableWith }
+					: { success: true };
 			return new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } });
 		})
 	);
@@ -43,7 +45,9 @@ test('a directory account turns it off with a current code', async () => {
 	await userEvent.type(document.getElementById('totp-disable-code') as HTMLElement, '123456');
 	await userEvent.click(screen.getByRole('button', { name: 'settings.signin.totp_turn_off' }));
 	await screen.findByText('settings.totp_disabled_success');
-	expect(sent.filter((s) => s.url === '/api/auth/totp/disable').map((s) => s.body)).toEqual([{ code: '123456' }]);
+	expect(sent.filter((s) => s.url === '/api/auth/totp/disable').map((s) => s.body)).toEqual([
+		{ code: '123456' }
+	]);
 }, 30_000);
 
 test('a local account turns it off with its password', async () => {
@@ -55,5 +59,7 @@ test('a local account turns it off with its password', async () => {
 	await userEvent.type(document.getElementById('totp-disable-password') as HTMLElement, 'secret');
 	await userEvent.click(screen.getByRole('button', { name: 'settings.signin.totp_turn_off' }));
 	await screen.findByText('settings.totp_disabled_success');
-	expect(sent.filter((s) => s.url === '/api/auth/totp/disable').map((s) => s.body)).toEqual([{ password: 'secret' }]);
+	expect(sent.filter((s) => s.url === '/api/auth/totp/disable').map((s) => s.body)).toEqual([
+		{ password: 'secret' }
+	]);
 }, 30_000);

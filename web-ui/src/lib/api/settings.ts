@@ -269,7 +269,9 @@ export function disableTotp(proof: { password: string } | { code: string }) {
 
 /** Settings › Sign-in: whether every local account must have two-factor sign-in */
 export async function getTwoFactorPolicy(signal?: AbortSignal): Promise<boolean> {
-	const out = await api(wrapped(v.looseObject({ required: BoolLike })), '/api/settings/two-factor', { signal });
+	const out = await api(wrapped(v.looseObject({ required: BoolLike })), '/api/settings/two-factor', {
+		signal
+	});
 	return out.required === true;
 }
 

@@ -383,7 +383,8 @@
 			>{t('users.groups_line', { groups: u.user_groups.map(groupName).join(', ') })}</span
 		>{/if}
 	{#if self}<span class="cell-sub">{t('users.this_is_you')}</span>{/if}
-	{#if u.disabled}<span class="cell-sub"><Status tone="warning" label={t('users.account_disabled')} /></span>{/if}
+	{#if u.disabled}<span class="cell-sub"><Status tone="warning" label={t('users.account_disabled')} /></span
+		>{/if}
 {/snippet}
 
 {#snippet emailCell(u: ConsoleUser)}{#if u.email}{u.email}{:else}<Empty />{/if}{/snippet}

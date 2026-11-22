@@ -38,7 +38,10 @@ beforeEach(() => {
 		if (url.pathname === '/api/panel/roles/pro/permissions')
 			data = { success: true, data: { role: 'pro', permissions: ['device.view', 'audit.view'] } };
 		if (url.pathname === '/api/panel/role-permissions')
-			data = { success: true, data: { overrides: [{ role: 'pro', permission: 'device.view', granted: true }] } };
+			data = {
+				success: true,
+				data: { overrides: [{ role: 'pro', permission: 'device.view', granted: true }] }
+			};
 		return {
 			ok: true,
 			status: 200,

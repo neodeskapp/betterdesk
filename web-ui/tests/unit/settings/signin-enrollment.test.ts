@@ -10,7 +10,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('#lib/api/settings.ts', async (orig) => ({
 	...(await orig<typeof import('../../../src/lib/api/settings.ts')>()),
-	getEnrollment: vi.fn(async () => ({ mode: 'managed', rich_approve: true, tag_picker: true, pending_count: 0 })),
+	getEnrollment: vi.fn(async () => ({
+		mode: 'managed',
+		rich_approve: true,
+		tag_picker: true,
+		pending_count: 0
+	})),
 	saveEnrollment: vi.fn(async () => ({ mode: 'managed', rich_approve: false, tag_picker: true })),
 	getClientSessions: vi.fn(async () => ({ expiry_days: 7, sliding: true, max_days: 30 })),
 	getLdap: vi.fn(async () => ({})),
@@ -45,7 +50,10 @@ describe('enrollment on Settings › Sign-in', () => {
 		await user.click(screen.getByRole('checkbox', { name: 'settings.enrollment_rich_approve' }));
 		await user.click(screen.getByRole('button', { name: 'settings.signin.enrollment_save' }));
 		await vi.waitFor(() => expect(api.saveEnrollment).toHaveBeenCalledTimes(1));
-		expect(vi.mocked(api.saveEnrollment).mock.calls[0]![0]).toEqual({ rich_approve: false, tag_picker: true });
+		expect(vi.mocked(api.saveEnrollment).mock.calls[0]![0]).toEqual({
+			rich_approve: false,
+			tag_picker: true
+		});
 	});
 
 	test('without enrollment.manage the mode shows without a link', async () => {

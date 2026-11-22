@@ -104,7 +104,11 @@ export const RequiredTotpResult = v.looseObject({
 export type RequiredTotpResult = v.InferOutput<typeof RequiredTotpResult>;
 
 export function enableRequiredTotp(body: { code: string; return?: string }): Promise<RequiredTotpResult> {
-	return api(RequiredTotpResult, '/api/auth/totp/required/enable', { method: 'POST', body, allowAnonymous: true });
+	return api(RequiredTotpResult, '/api/auth/totp/required/enable', {
+		method: 'POST',
+		body,
+		allowAnonymous: true
+	});
 }
 
 /** GET /api/auth/oidc/status: whether single sign-on is on, and whether to start it right away */

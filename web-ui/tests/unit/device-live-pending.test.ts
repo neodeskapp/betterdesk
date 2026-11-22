@@ -24,7 +24,14 @@ beforeEach(() => {
 	calls = [];
 	session.isSuperAdmin = true;
 	session.permissions = [];
-	device = { id: ID, hostname: 'kiosk-1', online: false, banned: false, soft_deleted: false, device_type: 'rustdesk' };
+	device = {
+		id: ID,
+		hostname: 'kiosk-1',
+		online: false,
+		banned: false,
+		soft_deleted: false,
+		device_type: 'rustdesk'
+	};
 	services = { success: true, pending: true, data: { pending: true, command: 'collect.services' } };
 	vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
 		const url = new URL(input, location.origin);

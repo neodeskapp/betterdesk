@@ -3,7 +3,14 @@
  * result (old settings.js, "Self-Update"). No DOM, no requests.
  */
 
-import type { Changes, Channel, InstallResult, Preflight, ServerInfo, UpdateCheck } from '#lib/api/settings-system.ts';
+import type {
+	Changes,
+	Channel,
+	InstallResult,
+	Preflight,
+	ServerInfo,
+	UpdateCheck
+} from '#lib/api/settings-system.ts';
 
 export type UpdateState = 'idle' | 'checking' | 'uptodate' | 'available' | 'baseline' | 'error';
 
