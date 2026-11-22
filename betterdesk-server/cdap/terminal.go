@@ -75,11 +75,12 @@ func (g *Gateway) StartTerminalSession(ctx context.Context, browserConn *websock
 		return nil, fmt.Errorf("device %s not connected", deviceID)
 	}
 
-	// Check that device supports terminal capability
+	// The device declares its terminal with the capability terminal or
+	// commands
 	if dc.Manifest != nil {
 		hasTerminal := false
 		for _, cap := range dc.Manifest.Capabilities {
-			if cap == "commands" {
+			if cap == "terminal" || cap == "commands" {
 				hasTerminal = true
 				break
 			}
