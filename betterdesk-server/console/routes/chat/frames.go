@@ -10,7 +10,9 @@ import (
 )
 
 // capabilities are what the welcome message says the relay can do.
-var capabilities = []string{"multi_conversation", "contacts", "groups", "history", "e2e_encryption", "read_receipts", "typing", "presence", "file_share"}
+// Messages travel and are stored as they come, without encryption of
+// their own.
+var capabilities = []string{"multi_conversation", "contacts", "groups", "history", "read_receipts", "typing", "presence", "file_share"}
 
 // welcome is the answer to hello.
 func (r *Relay) welcome(id string) *object {
