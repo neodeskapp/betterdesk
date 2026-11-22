@@ -409,12 +409,20 @@ func (p *recordingProxy) deviceTypes() []string {
 }
 
 func (p *recordingProxy) sentType(typ string) bool {
-	for _, t := range p.deviceTypes() {
+	return p.count(typ) > 0
+}
+
+// count is how many messages of a type the device sent.
+func (p *recordingProxy) count(typ string) int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	n := 0
+	for _, t := range p.fromDevice {
 		if t == typ {
-			return true
+			n++
 		}
 	}
-	return false
+	return n
 }
 
 // errors are the payloads of the gateway's error messages.
@@ -535,8 +543,9 @@ func freePort(t *testing.T) int {
 	return ln.Addr().(*net.TCPAddr).Port
 }
 
-// TestModbusBridge runs the Modbus bridge with its example config against
-// a Modbus TCP server (pymodbus) on a free port.
+// TestModbusBridge runs the Modbus bridge with its example config, and a
+// float32 register added, against a Modbus TCP server (pymodbus) on a free
+// port.
 func TestModbusBridge(t *testing.T) {
 	py := python(t, "websockets", "pymodbus")
 	port := freePort(t)
@@ -547,22 +556,42 @@ func TestModbusBridge(t *testing.T) {
 			t.Fatal("the example config has no modbus block")
 		}
 		modbus["host"], modbus["port"] = "127.0.0.1", port
+		registers, _ := cfg["registers"].([]any)
+		cfg["registers"] = append(registers, map[string]any{
+			"widget_id": "flow", "label": "Flow", "type": "holding", "address": 20, "count": 2,
+			"data_type": "float32", "scale": 1, "widget": "slider", "min": 0, "max": 10, "readonly": false,
+		})
 	})
 	m := r.registered(id)
 	if m.Device.Type != "scada" || m.Device.Name != "Modbus Bridge" || m.Bridge.Name != "modbus" {
 		t.Fatalf("device %+v bridge %+v", m.Device, m.Bridge)
 	}
-	widgetsAre(t, m, "temperature", "humidity", "relay_1", "setpoint")
+	widgetsAre(t, m, "temperature", "humidity", "relay_1", "setpoint", "flow")
 
 	r.hasValue(id, "temperature", 21.5)
 	r.hasValue(id, "humidity", 45.5)
 	r.hasValue(id, "relay_1", false)
 	r.hasValue(id, "setpoint", 20.0)
+	r.hasValue(id, "flow", 0.0)
 	r.waitFor("a bulk update", func() bool { return r.proxy.sentType("bulk_update") })
 
 	r.answered(r.command(id, "relay_1", "set", true))
 	r.hasValue(id, "relay_1", true)
-	r.answered(r.command(id, "setpoint", "set", 22.5))
+	// 10.2 / 0.1 is 101.99999999999999 in floating point: the register
+	// must still get 102. Two polls later the value comes back from the
+	// device as written.
+	r.answered(r.command(id, "setpoint", "set", 10.2))
+	r.answered(r.command(id, "flow", "set", 3.75))
+	polls := r.proxy.count("bulk_update")
+	r.waitFor("two polls after the writes", func() bool { return r.proxy.count("bulk_update") >= polls+2 })
+	for widget, want := range map[string]float64{"setpoint": 10.2, "flow": 3.75} {
+		if v, _ := r.value(id, widget); v != want {
+			t.Errorf("%s reads back as %v, want %v", widget, v, want)
+		}
+	}
+	if t.Failed() {
+		t.FailNow()
+	}
 
 	r.sent("auth", "register", "bulk_update", "command_response")
 	r.noErrors()

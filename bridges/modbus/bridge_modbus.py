@@ -51,7 +51,9 @@ def encode_value(value: float, data_type: str, scale: float, offset: float) -> l
     """Convert a scaled float back to raw register values."""
     raw = (value - offset) / scale if scale else value
     fmt = DATA_FORMATS.get(data_type, ">H")
-    packed = struct.pack(fmt, int(raw))
+    # Integer registers take the nearest whole number; a float32 register
+    # takes the value as it is.
+    packed = struct.pack(fmt, raw if fmt == ">f" else round(raw))
     regs = []
     for i in range(0, len(packed), 2):
         regs.append(struct.unpack(">H", packed[i : i + 2])[0])
