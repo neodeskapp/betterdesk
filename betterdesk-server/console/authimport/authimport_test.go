@@ -16,7 +16,7 @@ import (
 )
 
 // splitInstall builds the old console's split layout from the SQL text
-// testdata/nodeoracle/split.js took from the real Node console, then lets
+// recorded from the real Node console (testdata/split), then lets
 // the signal server create its tables in the main file and puts accounts
 // and rows there as the server and the user sync left them, and runs the
 // console's migration. It returns the store and the two paths.

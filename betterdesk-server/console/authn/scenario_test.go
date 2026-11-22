@@ -27,10 +27,10 @@ import (
 )
 
 // TestScenarios replays testdata/vectors/db-<dialect>.json: the scenarios
-// testdata/nodeoracle/db.js ran through the Node console's auth service on
-// a real database. Every step must return what Node returned, log what
-// Node logged, send the Go server what Node sent, and leave the same rows
-// and files.
+// the recorder ran through the Node console's auth service on a real
+// database. Every step must return what Node returned, log what Node
+// logged, send the Go server what Node sent, and leave the same rows and
+// files.
 
 type dialectSQL struct {
 	SQLite   string `json:"sqlite"`
@@ -129,7 +129,7 @@ type scenarioVector struct {
 
 // ---- the random stream of a step
 
-// mulberry is the generator the oracle fed crypto.randomBytes from.
+// mulberry is the generator the recorder fed crypto.randomBytes from.
 type mulberry struct{ a uint32 }
 
 func (m *mulberry) Read(p []byte) (int, error) {
@@ -468,7 +468,7 @@ func seedUsers(t *testing.T, db *store.DB, users []seedUser) {
 	}
 }
 
-// dumpTables reads the rows as the oracle wrote them down: flags as
+// dumpTables reads the rows as the recorder wrote them down: flags as
 // booleans, times as seconds from the database's clock, rounded to ten.
 func dumpTables(t *testing.T, db *store.DB) map[string][]map[string]any {
 	t.Helper()

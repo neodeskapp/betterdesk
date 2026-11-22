@@ -56,8 +56,8 @@ func TestLookup(t *testing.T) {
 }
 
 // TestLookupMatchesNode checks Lookup against what the Node console's
-// parser read from the same headers (testdata/parse_vectors.json, written
-// by ../testdata/interop/cookie-vectors.js).
+// parser read from the same headers (testdata/parse_vectors.json, a fixed
+// record made while the Node console still existed).
 func TestLookupMatchesNode(t *testing.T) {
 	raw, err := os.ReadFile("testdata/parse_vectors.json")
 	if err != nil {
