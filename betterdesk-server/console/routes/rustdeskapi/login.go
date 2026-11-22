@@ -145,6 +145,15 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		kit.JSON(w, r, http.StatusConflict, collisionAnswer{Error: "Username collision: a local account with this name already exists", Code: "username_collision"})
 		return
 	}
+	if outcome.Failure == authn.FailureAccountDisabled {
+		_ = h.d.Authn.RecordAttempt(ctx, username, ip, false)
+		if err := h.audit(ctx, 0, "api_login_failed", "Account disabled: "+username, ip); err != nil {
+			serverError(err)
+			return
+		}
+		kit.JSON(w, r, http.StatusForbidden, collisionAnswer{Error: "This account is disabled", Code: authn.FailureAccountDisabled})
+		return
+	}
 	user := outcome.User
 	if user == nil {
 		_ = h.d.Authn.RecordAttempt(ctx, username, ip, false)
@@ -165,6 +174,11 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.TOTPSetupRequired {
+		_ = h.d.Authn.RecordAttempt(ctx, username, ip, false)
+		kit.JSON(w, r, http.StatusForbidden, collisionAnswer{Error: authn.TOTPSetupDueMessage, Code: authn.TOTPSetupDueCode})
+		return
+	}
 	userID := user.ID.V
 	if user.TOTPRequired && !h.totpBypass {
 		secret, err := randomSecret()

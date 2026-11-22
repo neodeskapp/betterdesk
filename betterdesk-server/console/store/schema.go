@@ -247,6 +247,7 @@ func sqliteSteps() []step {
 	s = append(s, seedDefaultGroup("user_groups", "Default user group"), seedDefaultGroup("device_groups", "Default device group"))
 	s = append(s, accessTokenHashes())
 	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin())
+	s = append(s, userDisabled("INTEGER NOT NULL DEFAULT 0"))
 	return s
 }
 
@@ -332,6 +333,7 @@ func postgresSteps() []step {
 	s = append(s, addColumns(lenient, "settings", "updated_at", "TIMESTAMPTZ DEFAULT NOW()")...)
 	s = append(s, widenConditionValue())
 	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin())
+	s = append(s, userDisabled("BOOLEAN NOT NULL DEFAULT FALSE"))
 	return s
 }
 
@@ -344,6 +346,14 @@ func postgresSteps() []step {
 // kind.
 func accessTokenKind() step {
 	return addColumn(strict, "access_tokens", "token_kind", "TEXT NOT NULL DEFAULT 'account'")
+}
+
+// userDisabled adds users.disabled: an account that may not sign in, whose
+// tokens are refused, and which keeps its row and history. Every account
+// that is there when the column comes is enabled. The signal server adds
+// the same column when it makes or finds the table first.
+func userDisabled(definition string) step {
+	return addColumn(strict, "users", "disabled", definition)
 }
 
 // accessTokensAsHashes keeps every access token as its hash only (BUGS

@@ -330,7 +330,7 @@ func init() {
 			Body: map[string]any{
 				"enabled": false, "scopes": "openid profile email", "claim_username": "preferred_username",
 				"claim_email": "email", "claim_name": "name", "claim_groups": "groups", "default_role": "viewer",
-				"allow_signup": true, "auto_discovery": true,
+				"allow_signup": true, "auto_discovery": true, "use_pkce": true,
 			},
 			Roles: writers,
 		},

@@ -14,17 +14,26 @@ const (
 	ldapAccepted = `{"status":200,"body":{"token":"t","role":"viewer","auth_provider":"ldap"}}`
 )
 
-// A typed name that differs from an existing account only in letter case
-// or in spaces at the ends is refused, even when the directory accepts the
-// password: it would be a second account without the first one's second
-// factor and restrictions (RV117).
-func TestSignInRefusesAnotherSpellingOfAnAccount(t *testing.T) {
+// A typed name that differs from a directory account only in letter case
+// or in spaces at the ends signs in to that account, as the directory and
+// the RustDesk client sign-in do (L115); for a local account it is refused,
+// because it would be a second account without the first one's second
+// factor and restrictions (RV117). No second account is made.
+func TestSignInComparesDirectoryNamesInLowerCase(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
 		s, stub, _ := testService(t, db, nil)
-		addUser(t, s, "alice", "pw", "operator", "ldap")
+		alice := addUser(t, s, "alice", "pw", "operator", "ldap")
 		addUser(t, s, "Bob", "pw", "operator", "local")
-		for _, typed := range []string{"Alice", "ALICE", " alice", "alice ", "bob", "BOB"} {
+		addUser(t, s, "carl", "pw", "operator", "local")
+		for _, typed := range []string{"Alice", "ALICE", " alice", "alice "} {
+			stub.load(&goScript{SSO: json.RawMessage(ldapOn), Login: []json.RawMessage{json.RawMessage(ldapAccepted)}})
+			outcome, err := s.Authenticate(ctx, typed, "pw")
+			if err != nil || outcome.User == nil || outcome.User.ID.V != alice || outcome.User.Username != "alice" {
+				t.Errorf("%q: %+v, %v; want the account alice", typed, outcome, err)
+			}
+		}
+		for _, typed := range []string{"bob", "BOB", "Carl", " carl"} {
 			stub.load(&goScript{SSO: json.RawMessage(ldapOn), Login: []json.RawMessage{json.RawMessage(ldapAccepted)}})
 			outcome, err := s.Authenticate(ctx, typed, "pw")
 			if err != nil || outcome.User != nil || outcome.IsFailure() {
@@ -32,8 +41,8 @@ func TestSignInRefusesAnotherSpellingOfAnAccount(t *testing.T) {
 			}
 		}
 		var n int
-		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users`).Scan(&n); err != nil || n != 2 {
-			t.Errorf("%d accounts afterwards, want 2: %v", n, err)
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users`).Scan(&n); err != nil || n != 3 {
+			t.Errorf("%d accounts afterwards, want 3: %v", n, err)
 		}
 		// The exact names still sign in
 		stub.load(&goScript{SSO: json.RawMessage(ldapOn), Login: []json.RawMessage{json.RawMessage(ldapAccepted)}})
@@ -61,9 +70,9 @@ func TestNewDirectoryAccountsAreLowerCase(t *testing.T) {
 		if row, err := getUserByUsername(ctx, db, "carol"); err != nil || row == nil || row.AuthProvider.String != "ldap" {
 			t.Errorf("the row: %+v, %v", row, err)
 		}
-		// Next time any spelling but the account's own is refused
+		// Next time another spelling signs in to the same account (L115)
 		stub.load(&goScript{SSO: json.RawMessage(ldapOn), Login: []json.RawMessage{json.RawMessage(ldapAccepted)}})
-		if outcome, _ := s.Authenticate(ctx, "Carol", "pw"); outcome.User != nil {
+		if outcome, _ := s.Authenticate(ctx, "Carol", "pw"); outcome.User == nil || outcome.User.Username != "carol" {
 			t.Errorf("Carol after carol was made: %+v", outcome.User)
 		}
 

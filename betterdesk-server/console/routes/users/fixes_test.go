@@ -67,6 +67,17 @@ func guidList(from, to int) string {
 	return strings.Join(parts, ",")
 }
 
+// totpFlag is the last field of an account as the list and an update send
+// it in the recordings.
+var totpFlag = regexp.MustCompile(`("totp_enabled":(?:true|false))`)
+
+// withDisabledFlag is a recorded answer with "disabled" after the second
+// factor of every account in it: the list and an update say whether an
+// account is disabled, and no account of the recordings is (L107).
+func withDisabledFlag(answer string) string {
+	return totpFlag.ReplaceAllString(answer, `$1,"disabled":false`)
+}
+
 // is answers the same text on every database.
 func is(answer string) func(string) string { return func(string) string { return answer } }
 

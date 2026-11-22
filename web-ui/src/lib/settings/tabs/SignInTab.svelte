@@ -18,11 +18,14 @@
 		getEnrollment,
 		getLdap,
 		getOidc,
-		getTotpEnabled,
+		getTotpStatus,
+		getTwoFactorPolicy,
+		renewRecoveryCodes,
 		saveClientSessions,
 		saveEnrollment,
 		saveLdap,
 		saveOidc,
+		saveTwoFactorPolicy,
 		setupTotp,
 		testLdap,
 		testOidc
@@ -136,15 +139,19 @@
 
 	/* ── Two-factor sign-in ── */
 
-	type TotpView = 'loading' | 'error' | 'off' | 'on' | 'setup' | 'codes' | 'disable';
+	type TotpView = 'loading' | 'error' | 'off' | 'on' | 'setup' | 'codes' | 'disable' | 'renew';
 	let totpView = $state<TotpView>('loading');
 	let totpOn = $state<boolean | null>(null);
+	/** Turning it off asks the password, or a current code where the account has none here */
+	let disableWithCode = $state(false);
 	let totpError = $state('');
 	let totpNote = $state<Line>(NO_LINE);
 	let setup = $state.raw<{ qrCode: string; secret: string } | null>(null);
 	let code = $state('');
 	let codeStatus = $state<Line>(NO_LINE);
 	let codes = $state.raw<string[]>([]);
+	/** The codes on show are new ones for an account that had two-factor sign-in already */
+	let codesRenewed = $state(false);
 	let disablePassword = $state('');
 	let disableStatus = $state<Line>(NO_LINE);
 	let totpBusy = $state(false);
@@ -155,7 +162,9 @@
 	async function loadTotp() {
 		totpView = 'loading';
 		try {
-			totpOn = await getTotpEnabled();
+			const status = await getTotpStatus();
+			totpOn = status.enabled;
+			disableWithCode = status.disableWith === 'code';
 			totpView = totpOn ? 'on' : 'off';
 		} catch (err) {
 			totpError = errText(err);
@@ -199,6 +208,36 @@
 		try {
 			codes = await enableTotp(c);
 			totpOn = true;
+			codesRenewed = false;
+			totpView = 'codes';
+		} catch (err) {
+			codeStatus = { message: errText(err, t('auth.totp_invalid_code')), tone: 'error' };
+		} finally {
+			totpBusy = false;
+		}
+	}
+
+	function startRenew() {
+		code = '';
+		codeStatus = NO_LINE;
+		totpNote = NO_LINE;
+		totpView = 'renew';
+		queueMicrotask(() => codeEl?.focus());
+	}
+
+	async function confirmRenew(e: SubmitEvent) {
+		e.preventDefault();
+		if (totpBusy) return;
+		const c = code.trim();
+		if (c.length !== 6) {
+			codeStatus = { message: t('auth.totp_enter_code'), tone: 'error' };
+			codeEl?.focus();
+			return;
+		}
+		totpBusy = true;
+		try {
+			codes = await renewRecoveryCodes(c);
+			codesRenewed = true;
 			totpView = 'codes';
 		} catch (err) {
 			codeStatus = { message: errText(err, t('auth.totp_invalid_code')), tone: 'error' };
@@ -225,7 +264,7 @@
 		}
 		totpBusy = true;
 		try {
-			await disableTotp(disablePassword);
+			await disableTotp(disableWithCode ? { code: disablePassword.trim() } : { password: disablePassword });
 			disablePassword = '';
 			await loadTotp();
 			totpNote = { message: t('settings.totp_disabled_success'), tone: 'ok' };
@@ -289,6 +328,24 @@
 			};
 		}
 	});
+
+	/* ── Mandatory two-factor sign-in ── */
+
+	const twoFactor = createForm({
+		initial: { required: false },
+		submit: async (v) => {
+			await saveTwoFactorPolicy(v.required);
+			return { required: await getTwoFactorPolicy() };
+		}
+	});
+
+	async function loadTwoFactor() {
+		try {
+			twoFactor.reset({ required: await getTwoFactorPolicy() });
+		} catch (err) {
+			twoFactor.status = { state: 'error', message: errText(err) };
+		}
+	}
 
 	async function loadSessions() {
 		try {
@@ -494,7 +551,9 @@
 	/* ── Start ── */
 
 	$effect(() =>
-		trackDirty(() => password.dirty || enrollment.dirty || sessions.dirty || ldap.dirty || oidc.dirty)
+		trackDirty(
+			() => password.dirty || enrollment.dirty || sessions.dirty || twoFactor.dirty || ldap.dirty || oidc.dirty
+		)
 	);
 
 	$effect(() => {
@@ -502,6 +561,7 @@
 		if (!canConfig) return;
 		void loadEnrollment();
 		void loadSessions();
+		void loadTwoFactor();
 		void loadLdap();
 		void loadOidc();
 	});
@@ -622,7 +682,8 @@
 						{:else if totpView === 'on'}
 							<p class="line"><Status tone="good" label={t('settings.signin.totp_on')} /></p>
 							<p class="form-hint">{t('settings.totp_enabled_desc')}</p>
-							<p class="line">
+							<p class="line inline-controls">
+								<Button onclick={startRenew}>{t('settings.signin.recovery_new')}</Button>
 								<Button variant="danger-quiet" onclick={startDisable}
 									>{t('settings.signin.totp_turn_off')}</Button
 								>
@@ -675,8 +736,38 @@
 									<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
 								</div>
 							</form>
+						{:else if totpView === 'renew'}
+							<form class="totp-form" onsubmit={confirmRenew} novalidate>
+								<p class="form-hint">{t('settings.signin.recovery_new_hint')}</p>
+								<Field id="totp-renew-code" label={t('auth.totp_code')} width="short">
+									{#snippet children(f)}
+										<Input
+											{...f}
+											bind:element={codeEl}
+											bind:value={code}
+											inputmode="numeric"
+											pattern="[0-9]{6}"
+											maxlength={6}
+											autocomplete="one-time-code"
+											oninput={() => (code = code.replace(/[^0-9]/g, ''))}
+										/>
+									{/snippet}
+								</Field>
+								<div class="inline-controls">
+									<Button type="submit" variant="primary" busy={totpBusy}
+										>{t('settings.signin.recovery_new')}</Button
+									>
+									<Button onclick={() => void loadTotp()}>{t('actions.cancel')}</Button>
+									<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
+								</div>
+							</form>
 						{:else if totpView === 'codes'}
-							<p class="line"><Status tone="good" label={t('settings.totp_enabled_success')} /></p>
+							<p class="line">
+								<Status
+									tone="good"
+									label={codesRenewed ? t('settings.signin.recovery_renewed') : t('settings.totp_enabled_success')}
+								/>
+							</p>
 							<Notice tone="warning" message={t('settings.totp_recovery_warning')} />
 							<div class="totp-recovery-codes">
 								<CodeBlock code={codes.join('\n')} title={t('settings.signin.recovery_codes')} />
@@ -689,17 +780,33 @@
 						{:else if totpView === 'disable'}
 							<form class="totp-form" onsubmit={confirmDisable} novalidate>
 								<Notice tone="warning" message={t('settings.totp_disable_warning')} />
-								<Field id="totp-disable-password" label={t('settings.current_password')}>
-									{#snippet children(f)}
-										<Input
-											{...f}
-											type="password"
-											autocomplete="current-password"
-											bind:element={disableEl}
-											bind:value={disablePassword}
-										/>
-									{/snippet}
-								</Field>
+								{#if disableWithCode}
+									<Field id="totp-disable-code" label={t('auth.totp_code')} width="short">
+										{#snippet children(f)}
+											<Input
+												{...f}
+												inputmode="numeric"
+												pattern="[0-9]{6}"
+												maxlength={6}
+												autocomplete="one-time-code"
+												bind:element={disableEl}
+												bind:value={disablePassword}
+											/>
+										{/snippet}
+									</Field>
+								{:else}
+									<Field id="totp-disable-password" label={t('settings.current_password')}>
+										{#snippet children(f)}
+											<Input
+												{...f}
+												type="password"
+												autocomplete="current-password"
+												bind:element={disableEl}
+												bind:value={disablePassword}
+											/>
+										{/snippet}
+									</Field>
+								{/if}
 								<div class="inline-controls">
 									<Button type="submit" variant="danger-quiet" busy={totpBusy}
 										>{t('settings.signin.totp_turn_off')}</Button
@@ -808,6 +915,21 @@
 							status={sessions.status}
 							label={t('settings.client_sessions_save')}
 						/>
+					</form>
+
+					<form
+						id="two-factor-policy-form"
+						class="form-column settings-subgroup"
+						onsubmit={twoFactor.onsubmit}
+						novalidate
+					>
+						<Checkbox
+							id="require-two-factor"
+							label={t('settings.signin.require_2fa')}
+							hint={t('settings.signin.require_2fa_hint')}
+							bind:checked={twoFactor.values.required}
+						/>
+						<SaveBar form={twoFactor} label={t('actions.save')} />
 					</form>
 				{/snippet}
 				{#snippet end()}
@@ -1000,6 +1122,12 @@
 										bind:value={ldap.values.group_attr_name}
 									/>{/snippet}
 							</Field>
+							<Checkbox
+								id="ldap-allow-signup"
+								label={t('settings.ldap_allow_signup')}
+								hint={t('settings.ldap_allow_signup_hint')}
+								bind:checked={ldap.values.allow_signup}
+							/>
 							<Field
 								id="ldap-default-role"
 								label={t('settings.ldap_default_role')}

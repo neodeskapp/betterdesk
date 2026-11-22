@@ -53,6 +53,7 @@ describe('the address', () => {
 			returnPath: '/devices',
 			expired: true,
 			oidcError: 'oidc_denied',
+			ssoFailed: true,
 			autoLaunch: false,
 			desktop: true
 		});
@@ -60,6 +61,7 @@ describe('the address', () => {
 			returnPath: null,
 			expired: false,
 			oidcError: null,
+			ssoFailed: false,
 			autoLaunch: true,
 			desktop: false
 		});
@@ -69,6 +71,18 @@ describe('the address', () => {
 		const q = readLoginQuery('?return=%2F%2Fevil.example&error=%3Cimg%3E');
 		expect(q.returnPath).toBeNull();
 		expect(q.oidcError).toBeNull();
+		// Still a failed single sign-on: "Prefer SSO" must not start another one
+		expect(q.ssoFailed).toBe(true);
+	});
+
+	test('the code the server sends for a name taken by another account', () => {
+		expect(readLoginQuery('?error=username_collision').oidcError).toBe('username_collision');
+	});
+
+	test('the code the server sends for a disabled account (L107)', () => {
+		expect(readLoginQuery('?error=account_disabled').oidcError).toBe('account_disabled');
+		setStrings('en', 'ltr', { auth: { oidc_error: 'SSO failed.', account_disabled: 'Disabled.' } });
+		expect(oidcErrorText('account_disabled')).toBe('Disabled.');
 	});
 
 	test('the one-time notices leave the address, the rest stays', () => {
@@ -94,6 +108,8 @@ describe('Prefer SSO', () => {
 	test('not with ?autoLaunch=0, after an SSO error, on the local network, or on the desktop sign-in', () => {
 		expect(autoStartsSso(on, readLoginQuery('?autoLaunch=0'))).toBe(false);
 		expect(autoStartsSso(on, readLoginQuery('?error=oidc_failed'))).toBe(false);
+		expect(autoStartsSso(on, readLoginQuery('?error=username_collision'))).toBe(false);
+		expect(autoStartsSso(on, readLoginQuery('?error=something_else'))).toBe(false);
 		expect(autoStartsSso({ ...on, local_bypass: true }, q)).toBe(false);
 		expect(autoStartsSso(on, readLoginQuery('?desktop=1'))).toBe(false);
 		expect(autoStartsSso({ ...on, prefer_sso: false }, q)).toBe(false);
@@ -106,6 +122,17 @@ describe('messages', () => {
 		setStrings('en', 'ltr', { auth: { oidc_denied: 'Denied.', oidc_error: 'SSO failed.' } });
 		expect(oidcErrorText('oidc_denied')).toBe('Denied.');
 		expect(oidcErrorText('oidc_unknown_thing')).toBe('SSO failed.');
+	});
+
+	test('a name taken by another account says so', () => {
+		setStrings('en', 'ltr', {
+			auth: {
+				oidc_error: 'SSO failed.',
+				username_collision: 'Use your local password.',
+				sso_username_collision: 'The name belongs to another account.'
+			}
+		});
+		expect(oidcErrorText('username_collision')).toBe('The name belongs to another account.');
 	});
 
 	test('too many attempts, no server, and the server message', () => {

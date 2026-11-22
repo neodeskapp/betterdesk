@@ -18,6 +18,8 @@
   "cannot_demote_self": "You cannot demote yourself",
   "invalid_role": "Invalid role",
   "cannot_delete_self": "You cannot delete your own account",
+  "cannot_disable_self": "You cannot disable your own account",
+  "totp_off_own": "Turn off your own two-factor sign-in in Settings, Sign-in",
   "last_admin": "Cannot delete the last administrator",
   "invalid_email": "Enter a valid email address.",
   "email_too_long": "An email address has at most 200 characters.",

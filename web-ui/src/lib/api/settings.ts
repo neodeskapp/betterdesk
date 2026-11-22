@@ -218,9 +218,23 @@ export function changePassword(currentPassword: string, newPassword: string, con
 	});
 }
 
+export interface TotpStatus {
+	enabled: boolean;
+	/** What turns it off: the password, or a current code where the account has no password here */
+	disableWith: 'password' | 'code';
+}
+
+export async function getTotpStatus(signal?: AbortSignal): Promise<TotpStatus> {
+	const out = await api(
+		v.looseObject({ enabled: BoolLike, disable_with: v.optional(v.nullable(v.string())) }),
+		'/api/auth/totp/status',
+		{ signal }
+	);
+	return { enabled: out.enabled === true, disableWith: out.disable_with === 'code' ? 'code' : 'password' };
+}
+
 export async function getTotpEnabled(signal?: AbortSignal): Promise<boolean> {
-	const out = await api(v.looseObject({ enabled: BoolLike }), '/api/auth/totp/status', { signal });
-	return out.enabled === true;
+	return (await getTotpStatus(signal)).enabled;
 }
 
 export const TotpSetup = v.looseObject({ qrCode: Text, secret: Text });
@@ -238,8 +252,29 @@ export async function enableTotp(code: string): Promise<string[]> {
 	return out.recoveryCodes ?? [];
 }
 
-export function disableTotp(password: string) {
-	return api(Ok, '/api/auth/totp/disable', { method: 'POST', body: { password } });
+/** A current code makes eight new recovery codes; the old ones stop working */
+export async function renewRecoveryCodes(code: string): Promise<string[]> {
+	const out = await api(
+		v.looseObject({ recoveryCodes: v.optional(v.nullable(v.array(v.string())), []) }),
+		'/api/auth/totp/recovery-codes',
+		{ method: 'POST', body: { code } }
+	);
+	return out.recoveryCodes ?? [];
+}
+
+/** A local account sends its password, a directory or single sign-on account a current code */
+export function disableTotp(proof: { password: string } | { code: string }) {
+	return api(Ok, '/api/auth/totp/disable', { method: 'POST', body: proof });
+}
+
+/** Settings › Sign-in: whether every local account must have two-factor sign-in */
+export async function getTwoFactorPolicy(signal?: AbortSignal): Promise<boolean> {
+	const out = await api(wrapped(v.looseObject({ required: BoolLike })), '/api/settings/two-factor', { signal });
+	return out.required === true;
+}
+
+export function saveTwoFactorPolicy(required: boolean) {
+	return api(Ok, '/api/settings/two-factor', { method: 'PUT', body: { required } });
 }
 
 /* ── Sign-in: for everyone ── */

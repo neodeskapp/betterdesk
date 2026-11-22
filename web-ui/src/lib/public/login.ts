@@ -14,13 +14,22 @@ export interface LoginQuery {
 	returnPath: string | null;
 	/** ?expired=1: the session ended (the server adds it only then, R4) */
 	expired: boolean;
-	/** ?error=oidc_*: the identity provider sent the person back with an error */
+	/**
+	 * ?error=: why a single sign-on did not sign the person in: an oidc_*
+	 * code, username_collision (the name belongs to an account that signs in
+	 * another way) or account_disabled. Null for none or an unknown value.
+	 */
 	oidcError: string | null;
+	/** ?error= with any value: a single sign-on just failed */
+	ssoFailed: boolean;
 	/** ?autoLaunch=0: show the password form although "Prefer SSO" is on */
 	autoLaunch: boolean;
 	/** ?desktop=1: the compact sign-in of the old desktop mode */
 	desktop: boolean;
 }
+
+/** The codes besides oidc_* that the server's single sign-on sends back */
+const SSO_CODES = ['username_collision', 'account_disabled'];
 
 export function readLoginQuery(search: string): LoginQuery {
 	const q = new URLSearchParams(search);
@@ -28,7 +37,8 @@ export function readLoginQuery(search: string): LoginQuery {
 	return {
 		returnPath: safeReturnPath(q.get('return')),
 		expired: q.get('expired') === '1' || q.get('expired') === 'true',
-		oidcError: error && /^oidc_[a-z_]{1,40}$/.test(error) ? error : null,
+		oidcError: error && (/^oidc_[a-z_]{1,40}$/.test(error) || SSO_CODES.includes(error)) ? error : null,
+		ssoFailed: error !== null,
 		autoLaunch: q.get('autoLaunch') !== '0',
 		desktop: q.get('desktop') === '1'
 	};
@@ -51,7 +61,8 @@ export function withoutNotices(href: string): URL {
 
 /**
  * "Prefer SSO": go straight to the identity provider, unless the address
- * says ?autoLaunch=0, the provider just sent an error, the visitor is on the
+ * says ?autoLaunch=0, a single sign-on just failed (any ?error=, so a
+ * refusal never sends the person round in a loop), the visitor is on the
  * local network (the server says so), or it is the compact desktop sign-in
  * (which never offered single sign-on).
  */
@@ -61,14 +72,18 @@ export function autoStartsSso(status: OidcStatus, query: LoginQuery): boolean {
 		status.prefer_sso &&
 		!status.local_bypass &&
 		query.autoLaunch &&
-		!query.oidcError &&
+		!query.ssoFailed &&
 		!query.desktop
 	);
 }
 
-/** The sentence for ?error=oidc_*: its own when the strings have one, the general one otherwise */
+/**
+ * The sentence for ?error=: its own when the strings have one, the general
+ * one otherwise. A name taken by another account has a sentence of its own
+ * for single sign-on (the password sign-in's speaks of the local password).
+ */
 export function oidcErrorText(code: string): string {
-	const key = `auth.${code}`;
+	const key = code === 'username_collision' ? 'auth.sso_username_collision' : `auth.${code}`;
 	return has(key) ? t(key) : t('auth.oidc_error');
 }
 

@@ -35,6 +35,7 @@ var ldapConfigKeys = []string{
 	"ldap.direct_bind",
 	"ldap.direct_bind_dn",
 	"ldap.conn_timeout_sec",
+	"ldap.allow_signup",
 }
 
 // loadLDAPConfigFromDB reads LDAP configuration from the server_config table.
@@ -49,6 +50,7 @@ func (s *Server) loadLDAPConfigFromDB() *auth.LDAPConfig {
 		GroupAttrName:  "cn",
 		DefaultRole:    "viewer",
 		ConnTimeoutSec: 10,
+		AllowSignup:    true,
 	}
 
 	getString := func(key string) string {
@@ -120,6 +122,10 @@ func (s *Server) loadLDAPConfigFromDB() *auth.LDAPConfig {
 	}
 	if n := getInt("ldap.conn_timeout_sec", "10"); n > 0 {
 		cfg.ConnTimeoutSec = n
+	}
+	// A directory that was never saved with the switch creates accounts
+	if v := getString("ldap.allow_signup"); v != "" {
+		cfg.AllowSignup = v == "true"
 	}
 
 	return cfg
@@ -204,6 +210,9 @@ func (s *Server) saveLDAPConfigToDB(cfg *auth.LDAPConfig) error {
 	if err := setInt("ldap.conn_timeout_sec", cfg.ConnTimeoutSec); err != nil {
 		return err
 	}
+	if err := setBool("ldap.allow_signup", cfg.AllowSignup); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -231,9 +240,11 @@ func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var cfg auth.LDAPConfig
-	// sent.BindPassword is nil when the body has no bind_password
+	// sent.BindPassword is nil when the body has no bind_password, and
+	// sent.AllowSignup when it has no allow_signup
 	var sent struct {
 		BindPassword *string `json:"bind_password"`
+		AllowSignup  *bool   `json:"allow_signup"`
 	}
 	if json.Unmarshal(raw, &cfg) != nil || json.Unmarshal(raw, &sent) != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid JSON"})
@@ -265,6 +276,10 @@ func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
 	if cfg.BindPassword == "••••••••" || sent.BindPassword == nil {
 		currentCfg := s.loadLDAPConfigFromDB()
 		cfg.BindPassword = currentCfg.BindPassword
+	}
+	// A body without the Auto-create switch keeps it as it is
+	if sent.AllowSignup == nil {
+		cfg.AllowSignup = s.loadLDAPConfigFromDB().AllowSignup
 	}
 
 	// Set defaults

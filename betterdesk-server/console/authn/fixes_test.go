@@ -387,11 +387,12 @@ func strictSecrets(sc *scenarioVector) bool {
 
 // stopAtOtherSpellings: a typed name that differs from an account's only
 // in letter case or spaces at the ends is refused, and a new directory
-// account is made under the name lower-cased and trimmed (RV117); Node
-// signed such a name in as a second account. A scenario is compared up to
-// its first sign-in with a name in another spelling than a seeded account
-// of the name has, and its rows at the end are not;
-// TestSignInRefusesAnotherSpellingOfAnAccount and
+// account is made under the name lower-cased and trimmed (RV117), but such
+// a spelling of a directory account's name signs in to that account
+// (L115); Node signed such a name in as a second account. A scenario is
+// compared up to its first sign-in with a name in another spelling than a
+// seeded account of the name has, and its rows at the end are not;
+// TestSignInComparesDirectoryNamesInLowerCase and
 // TestNewDirectoryAccountsAreLowerCase hold the new behaviour.
 func stopAtOtherSpellings(sc *scenarioVector) bool {
 	seeded := map[string]bool{}

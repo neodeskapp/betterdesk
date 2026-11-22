@@ -225,9 +225,16 @@ func (s *Server) handleClientLogin(w http.ResponseWriter, r *http.Request) {
 	case passwordLoginInvalid:
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid credentials"})
 		return
+	case passwordLoginDisabled:
+		writeAccountDisabled(w)
+		return
 	}
 
 	user := login.User
+	if s.twoFactorSetupDue(user) {
+		writeTwoFactorSetupDue(w)
+		return
+	}
 
 	// Check if TOTP 2FA is required
 	if user.TOTPEnabled && user.TOTPSecret != "" {
@@ -304,6 +311,10 @@ func (s *Server) handleClientTFAVerify(w http.ResponseWriter, clientIP, totpCode
 	user, err := s.db.GetUser(sess.username)
 	if err != nil || user == nil {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "User not found"})
+		return
+	}
+	if user.Disabled {
+		writeAccountDisabled(w)
 		return
 	}
 

@@ -48,7 +48,37 @@ const (
 	passwordLoginInvalid
 	passwordLoginOIDC
 	passwordLoginInternal
+	// passwordLoginDisabled: the credentials are right, the account is
+	// disabled.
+	passwordLoginDisabled
 )
+
+// storeProviderFields keeps the email address and display name the
+// directory or single sign-on gave at this sign-in on the account; a
+// failure is logged and does not stop the sign-in.
+func (s *Server) storeProviderFields(user *db.User, email, displayName string) {
+	if err := s.db.UpdateUserFromProvider(user.ID, strings.TrimSpace(email), strings.TrimSpace(displayName)); err != nil {
+		log.Printf("[auth] Storing the email and name of %s from the provider failed: %v", user.Username, err)
+	}
+}
+
+// writeAccountDisabled answers a sign-in of a disabled account.
+func writeAccountDisabled(w http.ResponseWriter) {
+	writeJSON(w, http.StatusForbidden, map[string]string{"error": "This account is disabled", "code": "account_disabled"})
+}
+
+// refuseDisabled is the outcome for an account whose credentials were
+// right but that is disabled; the audit log notes the refusal.
+func (s *Server) refuseDisabled(user *db.User, clientIP, method string) passwordLoginResult {
+	if s.auditLog != nil {
+		details := map[string]string{"reason": "account_disabled"}
+		if method != "" {
+			details["method"] = method
+		}
+		s.auditLog.Log(audit.ActionAuthLoginFailed, clientIP, user.Username, details)
+	}
+	return passwordLoginResult{Status: passwordLoginDisabled}
+}
 
 // passwordLoginResult holds the resolved user after provider-bound authentication
 // (Issue #148). Used by panel /api/auth/login and RustDesk client /api/login.
@@ -61,7 +91,9 @@ type passwordLoginResult struct {
 // authenticatePasswordLogin validates credentials using the same provider-bound
 // rules as the web panel: OIDC accounts reject password login; LDAP-bound and
 // unknown users authenticate via LDAP when enabled; local accounts use local
-// hash only (no LDAP fallthrough).
+// hash only (no LDAP fallthrough). A disabled account whose credentials are
+// right is passwordLoginDisabled; a disabled directory account stays as it
+// is, it is neither changed nor made again.
 func (s *Server) authenticatePasswordLogin(username, password, clientIP string) passwordLoginResult {
 	user, err := s.db.GetUser(username)
 	if err != nil {
@@ -113,6 +145,16 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 				}
 			}
 
+			if user != nil && user.Disabled {
+				return s.refuseDisabled(user, clientIP, "ldap")
+			}
+			if user == nil && !s.ldapProvider.Config().AllowSignup {
+				log.Printf("[LDAP] No account for %s and Auto-create users is off", username)
+				if s.auditLog != nil {
+					s.auditLog.Log(audit.ActionAuthLoginFailed, clientIP, username, map[string]string{"method": "ldap", "reason": "no_account"})
+				}
+				return passwordLoginResult{Status: passwordLoginInvalid}
+			}
 			if user == nil {
 				randomSecret, randErr := auth.GenerateRandomString(32)
 				if randErr != nil {
@@ -137,6 +179,7 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 					return passwordLoginResult{Status: passwordLoginInternal}
 				}
 				log.Printf("[LDAP] Auto-provisioned user %s with role %s", username, role)
+				s.storeProviderFields(user, ldapResult.Email, ldapResult.DisplayName)
 			} else {
 				changed := false
 				if ldapResult.Role != "" && ldapResult.Role != user.Role {
@@ -151,6 +194,7 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 				if changed {
 					_ = s.db.UpdateUser(user)
 				}
+				s.storeProviderFields(user, ldapResult.Email, ldapResult.DisplayName)
 			}
 
 			if s.auditLog != nil {
@@ -172,6 +216,10 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 			s.auditLog.Log(audit.ActionAuthLoginFailed, clientIP, username, nil)
 		}
 		return passwordLoginResult{Status: passwordLoginInvalid}
+	}
+
+	if user.Disabled {
+		return s.refuseDisabled(user, clientIP, "")
 	}
 
 	if auth.NeedsRehash(user.PasswordHash) {

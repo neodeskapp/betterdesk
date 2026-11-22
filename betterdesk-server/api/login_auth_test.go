@@ -29,7 +29,7 @@ func (m *mockLDAPProvider) UpdateConfig(*auth.LDAPConfig) {}
 func (m *mockLDAPProvider) TestConnection() error { return nil }
 
 func (m *mockLDAPProvider) Config() auth.LDAPConfig {
-	return auth.LDAPConfig{Enabled: m.enabled}
+	return auth.LDAPConfig{Enabled: m.enabled, AllowSignup: true}
 }
 
 func createLDAPTestUser(t *testing.T, database db.Database, username, role string) {

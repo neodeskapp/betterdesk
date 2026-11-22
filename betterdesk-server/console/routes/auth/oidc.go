@@ -33,6 +33,8 @@ const (
 	// oidcCollision answers a user name that belongs to a local or
 	// directory account, with the text of the password sign-in's answer.
 	oidcCollision = "/login?error=username_collision"
+	// oidcDisabled answers a single sign-on of a disabled account.
+	oidcDisabled = "/login?error=account_disabled"
 )
 
 // queryText is req.query[name] when it is a text: the parameter given
@@ -246,8 +248,8 @@ func (h *handlers) oidcCallback(w http.ResponseWriter, r *http.Request) {
 // without it goes back to the sign-in page and the code stays unused. That user gets a local
 // account if it has none, and a console session. A name that belongs to a
 // local or directory account goes back to the sign-in page with
-// username_collision. A pro account gets 403 with the text of the password
-// sign-in and no session.
+// username_collision, a disabled account with account_disabled. A pro
+// account gets 403 with the text of the password sign-in and no session.
 //
 // No second factor is asked for here.
 func (h *handlers) oidcSession(w http.ResponseWriter, r *http.Request) {
@@ -286,6 +288,10 @@ func (h *handlers) oidcSession(w http.ResponseWriter, r *http.Request) {
 	user, err := h.authn.OIDCUser(r.Context(), exchangeText(data.Get("username")), role)
 	if errors.Is(err, authn.ErrUsernameCollision) {
 		kit.Redirect(w, r, oidcCollision)
+		return
+	}
+	if errors.Is(err, authn.ErrAccountDisabled) {
+		kit.Redirect(w, r, oidcDisabled)
 		return
 	}
 	if err != nil {

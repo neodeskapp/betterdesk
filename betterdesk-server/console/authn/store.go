@@ -30,15 +30,18 @@ type Account struct {
 	TOTPSecret        nullText          `json:"-"`
 	TOTPEnabled       store.Bool        `json:"totp_enabled"`
 	TOTPRecoveryCodes nullText          `json:"-"`
+	// Disabled says the account may not sign in and its tokens are
+	// refused.
+	Disabled store.Bool `json:"-"`
 }
 
 const accountColumns = `id, username, password_hash, role, auth_provider, preferred_language,
-	totp_secret, totp_enabled, totp_recovery_codes`
+	totp_secret, totp_enabled, totp_recovery_codes, disabled`
 
 func scanAccount(row *store.Row) (*Account, error) {
 	var a Account
 	err := row.Scan(&a.ID, &a.Username, &a.PasswordHash, &a.Role, &a.AuthProvider, &a.PreferredLanguage,
-		&a.TOTPSecret, &a.TOTPEnabled, &a.TOTPRecoveryCodes)
+		&a.TOTPSecret, &a.TOTPEnabled, &a.TOTPRecoveryCodes, &a.Disabled)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -53,6 +56,22 @@ func getUserByUsername(ctx context.Context, q store.Querier, username string) (*
 	a, err := scanAccount(store.SelectRow(ctx, q, `SELECT `+accountColumns+` FROM users WHERE username = ?`, username))
 	if err != nil {
 		return nil, fmt.Errorf("load user by name: %w", err)
+	}
+	return a, nil
+}
+
+// directoryAccountNamed returns the directory account whose name is
+// username lower-cased and without spaces at the ends, or nil when there
+// is none or username is already that name. Directory accounts are named
+// in lower case, and a directory compares names that way.
+func directoryAccountNamed(ctx context.Context, q store.Querier, username string) (*Account, error) {
+	name := strings.ToLower(strings.TrimSpace(username))
+	if name == "" || name == username {
+		return nil, nil
+	}
+	a, err := getUserByUsername(ctx, q, name)
+	if err != nil || a == nil || normalizeAuthProvider(a.AuthProvider.String) != providerLDAP {
+		return nil, err
 	}
 	return a, nil
 }
@@ -168,6 +187,14 @@ func enableTOTP(ctx context.Context, q store.Querier, id int64, codesJSON string
 		`UPDATE users SET totp_enabled = TRUE, totp_recovery_codes = ? WHERE id = ?`)
 	if _, err := q.Exec(ctx, query, codesJSON, id); err != nil {
 		return fmt.Errorf("turn on two-factor sign-in for user %d: %w", id, err)
+	}
+	return nil
+}
+
+// setRecoveryCodes stores new recovery codes (their hashes as JSON).
+func setRecoveryCodes(ctx context.Context, q store.Querier, id int64, codesJSON string) error {
+	if _, err := q.Exec(ctx, `UPDATE users SET totp_recovery_codes = ? WHERE id = ?`, codesJSON, id); err != nil {
+		return fmt.Errorf("store new recovery codes of user %d: %w", id, err)
 	}
 	return nil
 }

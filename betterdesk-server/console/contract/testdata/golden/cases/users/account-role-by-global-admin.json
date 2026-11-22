@@ -57,6 +57,7 @@
      "data": {
       "auth_provider": "local",
       "created_at": "<volatile>",
+      "disabled": false,
       "email": "Tmp@Example.invalid",
       "folder_ids": [],
       "id": 0,

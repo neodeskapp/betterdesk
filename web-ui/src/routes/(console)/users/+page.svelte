@@ -11,8 +11,10 @@
   (/effective-scope) and organizations, four at a time; GET
   /api/panel/user-groups beside it. Actions are offered by permission:
   user.create (and a role the signed-in person may give) to add, user.edit
-  to edit, reset passwords and manage groups, user.delete to delete (never
-  yourself), org.manage_users to change organizations.
+  to edit, reset passwords, disable and enable accounts and turn off their
+  two-factor sign-in (never yourself) and manage groups, user.delete to
+  delete (never yourself),
+  org.manage_users to change organizations.
 
   URL: ?search= fills the search and follows it; #user-groups goes to the
   user groups.
@@ -30,6 +32,7 @@
 		listConsoleUsers,
 		listUserGroupRows,
 		listUserOrgs,
+		updateUser,
 		type ConsoleUser,
 		type EffectiveScope,
 		type UserGroupRow,
@@ -45,6 +48,7 @@
 		eachLimited,
 		filterUsers,
 		mayChangeUser,
+		mayDisableUser,
 		providerOf,
 		scopeText
 	} from '#lib/people/users.ts';
@@ -63,6 +67,7 @@
 	import RowList from '#lib/ui/RowList.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import States from '#lib/ui/States.svelte';
+	import Status from '#lib/ui/Status.svelte';
 	import Table from '#lib/ui/Table.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
@@ -86,6 +91,7 @@
 	const meId = String(session.user?.id ?? '');
 	/** The server changes only the person's own account and those whose role they may give */
 	const mayChange = (u: ConsoleUser) => mayChangeUser(session.user?.role, meId, u);
+	const mayDisable = (u: ConsoleUser) => mayDisableUser(session.user?.role, meId, u);
 
 	/* ── Labels ── */
 
@@ -243,6 +249,45 @@
 		}
 	}
 
+	/** Disable (after a confirmation) or enable an account */
+	async function setDisabled(u: ConsoleUser, disabled: boolean) {
+		if (disabled) {
+			const ok = await confirm({
+				title: t('users.disable_title'),
+				message: t('users.disable_confirm', { username: u.username }),
+				confirmLabel: t('users.disable_menu'),
+				confirmIcon: ICONS.disable,
+				danger: true
+			});
+			if (!ok) return;
+		}
+		try {
+			await updateUser(u.id, { disabled });
+			toast.success(t(disabled ? 'users.disabled_named' : 'users.enabled_named', { username: u.username }));
+			void loadUsers();
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
+	}
+
+	/** Turn off the two-factor sign-in of someone who lost their authenticator */
+	async function turnOffTotp(u: ConsoleUser) {
+		const ok = await confirm({
+			title: t('users.totp_off_title'),
+			message: t('users.totp_off_confirm', { username: u.username }),
+			confirmLabel: t('users.totp_off_menu'),
+			danger: true
+		});
+		if (!ok) return;
+		try {
+			await updateUser(u.id, { totp_enabled: false });
+			toast.success(t('users.totp_off_named', { username: u.username }));
+			void loadUsers();
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
+	}
+
 	async function removeGroup(g: UserGroupRow) {
 		const name = g.name || g.guid;
 		const ok = await confirm({
@@ -338,6 +383,7 @@
 			>{t('users.groups_line', { groups: u.user_groups.map(groupName).join(', ') })}</span
 		>{/if}
 	{#if self}<span class="cell-sub">{t('users.this_is_you')}</span>{/if}
+	{#if u.disabled}<span class="cell-sub"><Status tone="warning" label={t('users.account_disabled')} /></span>{/if}
 {/snippet}
 
 {#snippet emailCell(u: ConsoleUser)}{#if u.email}{u.email}{:else}<Empty />{/if}{/snippet}
@@ -402,6 +448,19 @@
 			onselect={() => (accessFor = { subject: { kind: 'user', id: u.id }, name: u.username, role: u.role })}
 			>{tf('users.access_menu', 'Panel access…')}</MenuItem
 		>
+		{#if canEdit && mayDisable(u)}
+			<MenuItem
+				class="act-disable"
+				icon={u.disabled ? ICONS.enable : ICONS.disable}
+				onselect={() => void setDisabled(u, !u.disabled)}
+				>{u.disabled ? t('users.enable_menu') : t('users.disable_menu')}</MenuItem
+			>
+			{#if u.totp_enabled}
+				<MenuItem class="act-totp-off" icon={ICONS.password} onselect={() => void turnOffTotp(u)}
+					>{t('users.totp_off_menu')}</MenuItem
+				>
+			{/if}
+		{/if}
 		{#if canDelete && changeable && !self}
 			<MenuDivider />
 			<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void removeUser(u)}

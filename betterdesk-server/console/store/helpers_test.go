@@ -222,6 +222,32 @@ func (c catalog) withTokenKind(postgres bool) catalog {
 	return out
 }
 
+// withDisabled is the catalog of a database as the Go console leaves it:
+// users has the column disabled, which Node did not have (L107). On SQLite
+// the column stands in the table's statement text where ALTER TABLE puts
+// it, after the last column.
+func (c catalog) withDisabled(postgres bool) catalog {
+	out := catalog{}
+	columns := 0
+	for k, v := range c {
+		if strings.HasPrefix(k, "column:users.") {
+			columns++
+		}
+		out[k] = v
+	}
+	if columns == 0 {
+		return out
+	}
+	if postgres {
+		out["column:users.disabled"] = fmt.Sprintf(`#%d type=boolean notnull=true default=false identity="" generated=""`, columns)
+		return out
+	}
+	out["column:users.disabled"] = fmt.Sprintf("#%d type=INTEGER notnull=1 default=0 pk=0", columns)
+	text := c["table:users"]
+	out["table:users"] = text[:strings.LastIndex(text, ")")] + ", disabled INTEGER NOT NULL DEFAULT 0)"
+	return out
+}
+
 // diffCatalogs lists what got has differently from want.
 func diffCatalogs(want, got catalog) []string {
 	var out []string

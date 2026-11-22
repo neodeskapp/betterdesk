@@ -276,20 +276,41 @@ func TestResolveRole(t *testing.T) {
 	}
 }
 
+// With a group map set, the map decides the role at every sign-in: a
+// person in none of its groups, or in no group at all, gets the default
+// role, so leaving the admin group at the provider takes the admin role
+// away. Without a map the default role is only the role of a new account
+// (L117).
 func TestResolveRoleWithSource(t *testing.T) {
 	p := newTestOIDCProvider(t, &OIDCConfig{
 		GroupRoleMap: "admins=admin|ops=operator",
 		DefaultRole:  "viewer",
 	})
 
-	role, matched := p.resolveRoleWithSource([]string{"users"})
-	if role != "viewer" || matched {
-		t.Fatalf("unmatched role = %q, matched = %v; want viewer, false", role, matched)
+	role, decided := p.resolveRoleWithSource([]string{"users"})
+	if role != "viewer" || !decided {
+		t.Fatalf("no mapped group: role = %q, decided = %v; want viewer, true", role, decided)
+	}
+	role, decided = p.resolveRoleWithSource(nil)
+	if role != "viewer" || !decided {
+		t.Fatalf("no groups: role = %q, decided = %v; want viewer, true", role, decided)
+	}
+	role, decided = p.resolveRoleWithSource([]string{"ops"})
+	if role != "operator" || !decided {
+		t.Fatalf("mapped role = %q, decided = %v; want operator, true", role, decided)
 	}
 
-	role, matched = p.resolveRoleWithSource([]string{"ops"})
-	if role != "operator" || !matched {
-		t.Fatalf("mapped role = %q, matched = %v; want operator, true", role, matched)
+	// A map without a default role lowers to viewer
+	noDefault := newTestOIDCProvider(t, &OIDCConfig{GroupRoleMap: "admins=admin"})
+	role, decided = noDefault.resolveRoleWithSource([]string{"users"})
+	if role != RoleViewer || !decided {
+		t.Fatalf("no default role: role = %q, decided = %v; want viewer, true", role, decided)
+	}
+
+	unmapped := newTestOIDCProvider(t, &OIDCConfig{DefaultRole: "viewer"})
+	role, decided = unmapped.resolveRoleWithSource([]string{"admins"})
+	if role != "viewer" || decided {
+		t.Fatalf("no group map: role = %q, decided = %v; want viewer, false", role, decided)
 	}
 }
 

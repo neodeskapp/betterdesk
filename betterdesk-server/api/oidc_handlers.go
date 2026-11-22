@@ -25,6 +25,7 @@ func (s *Server) loadOIDCConfigFromDB() *auth.OIDCConfig {
 		DefaultRole:   "viewer",
 		AllowSignup:   true,
 		AutoDiscovery: true,
+		UsePKCE:       true,
 	}
 
 	getString := func(key string) string {
@@ -61,7 +62,11 @@ func (s *Server) loadOIDCConfigFromDB() *auth.OIDCConfig {
 	if v := getString("oidc.scopes"); v != "" {
 		cfg.Scopes = v
 	}
-	cfg.UsePKCE = getBool("oidc.use_pkce")
+	// PKCE is on for a configuration that was never saved; a saved one
+	// keeps its value
+	if v := getString("oidc.use_pkce"); v != "" {
+		cfg.UsePKCE = v == "true"
+	}
 	// auto_discovery defaults to true unless explicitly "false"
 	if v := getString("oidc.auto_discovery"); v != "" {
 		cfg.AutoDiscovery = v == "true"

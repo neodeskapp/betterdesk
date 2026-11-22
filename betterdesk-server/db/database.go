@@ -95,6 +95,10 @@ type User struct {
 	// changed, in Unix seconds; 0 when never since the column exists. A
 	// sign-in token issued before it is no longer good.
 	CredentialsChangedAt int64 `json:"-"`
+	// Disabled says the account may not sign in and its tokens are refused;
+	// the account and its history stay. UpdateUser leaves it as it is:
+	// SetUserDisabled changes it.
+	Disabled bool `json:"-"`
 }
 
 // RolePermission represents a custom permission override for a role.
@@ -646,6 +650,12 @@ type Database interface {
 	// one transaction and returns ErrUsernameTaken on a collision.
 	RenameUser(id int64, newUsername string) error
 	DeleteUser(id int64) error
+	// SetUserDisabled disables or enables an account.
+	SetUserDisabled(id int64, disabled bool) error
+	// UpdateUserFromProvider stores the email address and display name a
+	// directory or single sign-on gave at sign-in in the web console's
+	// profile columns; an empty value leaves its column as it is.
+	UpdateUserFromProvider(id int64, email, displayName string) error
 	UpdateUserLogin(id int64) error
 	UserCount() (int, error)
 

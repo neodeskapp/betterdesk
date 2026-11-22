@@ -152,6 +152,9 @@ func TestTryGoServerAuth(t *testing.T) {
 		{401, `{"error":"Invalid credentials"}`, `null`},
 		{429, `{"error":"Too many login attempts"}`, `null`},
 		{200, `not json`, `null`},
+		// A disabled account whose credentials were right (L107)
+		{403, `{"code":"account_disabled","error":"This account is disabled"}`, `{"account_disabled":true}`},
+		{403, `{"error":"Forbidden"}`, `null`},
 	}
 	for _, c := range cases {
 		api := &signInAPI{status: c.status, body: c.body}

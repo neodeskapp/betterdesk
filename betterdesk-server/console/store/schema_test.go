@@ -17,8 +17,8 @@ const sessionTable = "panel_sessions"
 // A database the Go console sets up is the database the Node console set
 // up: same tables, columns, defaults, constraints and indexes, and on
 // SQLite the same stored statement text. On PostgreSQL
-// alert_rules.condition_value is double precision (BUGS AE4), and
-// access_tokens has token_kind (BUGS RV1).
+// alert_rules.condition_value is double precision (BUGS AE4), access_tokens
+// has token_kind (BUGS RV1) and users has disabled (L107).
 func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		mustMigrate(t, db)
@@ -29,7 +29,7 @@ func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 			node = storetest.Postgres(t)
 		}
 		storetest.NodeSchema(t, node)
-		want := readCatalog(t, node).without(sessionTable).wideConditionValue().withTokenKind(db.IsPostgres())
+		want := readCatalog(t, node).without(sessionTable).wideConditionValue().withTokenKind(db.IsPostgres()).withDisabled(db.IsPostgres())
 
 		if n := len(want.tables()); n != 55 {
 			t.Fatalf("the Node dump has %d tables besides %s, want 55", n, sessionTable)
@@ -49,7 +49,8 @@ func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 // table, changes neither the schema nor a single row, and reports nothing
 // done, but for widening alert_rules.condition_value on PostgreSQL (BUGS
 // AE4), adding access_tokens.token_kind, "account" in every row (BUGS
-// RV1), and keeping each access token as its hash only (BUGS RV128).
+// RV1), keeping each access token as its hash only (BUGS RV128), and
+// adding users.disabled, every account enabled (L107).
 // Running it again changes nothing.
 func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
@@ -79,11 +80,19 @@ func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 			rowsAfter["access_tokens"] = append(rowsAfter["access_tokens"], strings.Join(columns, " | ")+" | account")
 		}
 		sort.Strings(rowsAfter["access_tokens"])
+		enabled := " | 0"
+		if db.IsPostgres() {
+			enabled = " | false"
+		}
+		rowsAfter["users"] = nil
+		for _, row := range rowsBefore["users"] {
+			rowsAfter["users"] = append(rowsAfter["users"], row+enabled)
+		}
 
 		for run := 1; run <= 2; run++ {
 			out := captureLog(t, func() { mustMigrate(t, db) })
 			if run == 1 {
-				want := []string{"[DB] Migration: added access_tokens.token_kind", "[DB] Migration: kept 2 access tokens as their hash only"}
+				want := []string{"[DB] Migration: added access_tokens.token_kind", "[DB] Migration: kept 2 access tokens as their hash only", "[DB] Migration: added users.disabled"}
 				if db.IsPostgres() {
 					want = append([]string{"[DB] Migration: widened alert_rules.condition_value to double precision"}, want...)
 				}
@@ -100,7 +109,7 @@ func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 			if out != "" {
 				t.Errorf("run %d: Migrate found something to do on a Node database:\n%s", run, out)
 			}
-			requireSameCatalog(t, "catalog of a Node database after Migrate", catalogBefore.wideConditionValue().withTokenKind(db.IsPostgres()), readCatalog(t, db))
+			requireSameCatalog(t, "catalog of a Node database after Migrate", catalogBefore.wideConditionValue().withTokenKind(db.IsPostgres()).withDisabled(db.IsPostgres()), readCatalog(t, db))
 			requireSameSnapshot(t, "rows of a Node database after Migrate", rowsAfter, readSnapshot(t, db, tables))
 		}
 	})

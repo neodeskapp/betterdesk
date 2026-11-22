@@ -63,7 +63,9 @@ export const ConsoleUser = v.looseObject({
 	has_avatar: v.optional(v.nullable(v.boolean())),
 	avatar_version: v.optional(v.nullable(v.union([v.string(), v.number()]))),
 	/** Two-factor sign-in is on (older servers leave it out) */
-	totp_enabled: v.optional(v.nullable(v.union([v.boolean(), v.number()])))
+	totp_enabled: v.optional(v.nullable(v.union([v.boolean(), v.number()]))),
+	/** The account may not sign in (older servers leave it out: enabled) */
+	disabled: v.optional(v.boolean(), false)
 });
 export type ConsoleUser = v.InferOutput<typeof ConsoleUser>;
 
@@ -83,6 +85,10 @@ export interface UserInput {
 	folderIds?: number[];
 	peerIds?: string[];
 	strategyGuid?: string;
+	/** Disable (true) or enable (false) the account; never your own */
+	disabled?: boolean;
+	/** false turns off the account's two-factor sign-in; never your own */
+	totp_enabled?: false;
 }
 
 /** Needs user.create; the role must be one the caller may give */

@@ -2,7 +2,9 @@
   The sign-in page (views/login.ejs, desktop-login.ejs, public/js/login.js,
   desktop-login.js). One form for password and directory (LDAP) accounts:
   the server decides which; a second step for the two-factor code or a
-  recovery code; single sign-on (OIDC) below when it is on, and started
+  recovery code, or, where the server requires two-factor sign-in and the
+  account has none, its set-up and the recovery codes before the sign-in
+  ends; single sign-on (OIDC) below when it is on, and started
   right away when the admin prefers it (not with ?autoLaunch=0). After
   sign-in the browser goes to ?return= when it is a console path (R3).
 
@@ -16,13 +18,16 @@
 	import { setCsrfToken } from '#lib/api/client.ts';
 	import { saveLanguage } from '#lib/api/console.ts';
 	import {
+		enableRequiredTotp,
 		getLoginPage,
 		getOidcStatus,
 		oidcStartUrl,
+		setupRequiredTotp,
 		signIn,
 		verifyTotp,
 		type LoginPage,
-		type OidcStatus
+		type OidcStatus,
+		type RequiredTotpSetup
 	} from '#lib/api/signin.ts';
 	import { i18n, switchLanguage, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import LanguageMenu from '#lib/shell/LanguageMenu.svelte';
@@ -59,7 +64,15 @@
 	const host = typeof location !== 'undefined' ? location.host : '';
 	const mode = $derived(compact ? 'classic' : page.branding.loginPromoMode);
 
-	let step = $state<'password' | 'totp'>('password');
+	let step = $state<'password' | 'totp' | 'setup' | 'codes'>('password');
+	/** The mandatory set-up's secret and QR code, and what its first code answered */
+	let setup = $state<RequiredTotpSetup | null>(null);
+	let recoveryCodes = $state<string[]>([]);
+	let afterCodes = $state<string | undefined>(undefined);
+	// The QR code comes as a data URL from the server; anything else is not shown
+	const qrSrc = $derived(
+		setup && /^data:image\/(png|svg\+xml|jpeg|gif);base64,/i.test(setup.qrCode) ? setup.qrCode : ''
+	);
 	let useRecovery = $state(false);
 	let username = $state('');
 	let password = $state('');
@@ -143,6 +156,11 @@
 				await showTotp();
 				return;
 			}
+			if (res.totpSetupRequired) {
+				busy = false;
+				await showSetup();
+				return;
+			}
 			done(res.redirect);
 		} catch (err) {
 			busy = false;
@@ -162,6 +180,53 @@
 		missing = null;
 		await tick();
 		codeInput?.focus();
+	}
+
+	/** Two-factor sign-in is mandatory and the account has none: its set-up comes first */
+	async function showSetup() {
+		step = 'setup';
+		code = '';
+		error = '';
+		missing = null;
+		setup = null;
+		try {
+			setup = await setupRequiredTotp();
+		} catch (err) {
+			error = signInErrorText(err, 'auth.login_failed');
+		}
+		await tick();
+		codeInput?.focus();
+	}
+
+	async function submitSetup(e?: SubmitEvent) {
+		e?.preventDefault();
+		if (busy) return;
+		error = '';
+		const value = codeDigits(code);
+		if (value.length !== 6) {
+			missing = 'code';
+			error = t('auth.totp_enter_code');
+			codeInput?.focus();
+			return;
+		}
+		missing = null;
+		busy = true;
+		try {
+			const res = await enableRequiredTotp({
+				code: value,
+				...(query.returnPath ? { return: query.returnPath } : {})
+			});
+			busy = false;
+			recoveryCodes = res.recoveryCodes;
+			afterCodes = res.redirect;
+			step = 'codes';
+		} catch (err) {
+			busy = false;
+			error = signInErrorText(err, 'auth.totp_invalid_code');
+			code = '';
+			await tick();
+			codeInput?.focus();
+		}
 	}
 
 	async function backToPassword() {
@@ -215,7 +280,7 @@
 	function oncodeinput(e: Event) {
 		const digits = codeDigits((e.currentTarget as HTMLInputElement).value);
 		if (digits !== code) code = digits;
-		if (digits.length === 6) void submitTotp();
+		if (digits.length === 6) void (step === 'setup' ? submitSetup() : submitTotp());
 	}
 
 	async function changeLanguage(next: string) {
@@ -329,6 +394,59 @@
 						<Button href={ssoHref} block>{ssoLabel}</Button>
 					</div>
 				{/if}
+			{:else if step === 'setup'}
+				<form class="login-form" novalidate onsubmit={submitSetup}>
+					<div class="totp-header">
+						<h2 class="totp-title">{t('auth.totp_setup_required_title')}</h2>
+						<p class="totp-subtitle" id="{uid}-setup-sub">{t('auth.totp_setup_required')}</p>
+					</div>
+					{#if qrSrc}<img
+							src={qrSrc}
+							alt={t('settings.signin.totp_qr_alt')}
+							class="totp-qr"
+							width="200"
+							height="200"
+						/>{/if}
+					{#if setup?.secret}
+						<p class="totp-secret">
+							<span class="totp-secret-label">{t('settings.totp_manual_key')}</span>
+							<code class="mono">{setup.secret}</code>
+						</p>
+					{/if}
+					<Field label={t('auth.totp_code')} id="totp-setup-code">
+						{#snippet children(f)}
+							<Input
+								{...f}
+								describedby={[f.describedby, `${uid}-setup-sub`].filter(Boolean).join(' ')}
+								invalid={missing === 'code'}
+								class="totp-input"
+								inputmode="numeric"
+								autocomplete="one-time-code"
+								pattern="[0-9]{6}"
+								maxlength={6}
+								bind:value={code}
+								bind:element={codeInput}
+								oninput={oncodeinput}
+							/>
+						{/snippet}
+					</Field>
+					<Button type="submit" variant="primary" block {busy}>{t('auth.totp_verify')}</Button>
+					<p class="totp-links">
+						<Button variant="link" onclick={() => void backToPassword()}
+							>{t('auth.totp_back_to_login')}</Button
+						>
+					</p>
+				</form>
+			{:else if step === 'codes'}
+				<div class="login-form">
+					<Notice tone="warning" message={t('settings.totp_recovery_warning')} />
+					<ul class="recovery-codes mono" aria-label={t('settings.signin.recovery_codes')}>
+						{#each recoveryCodes as c (c)}<li>{c}</li>{/each}
+					</ul>
+					<Button variant="primary" block onclick={() => done(afterCodes)}
+						>{t('settings.signin.recovery_saved')}</Button
+					>
+				</div>
 			{:else}
 				<form class="login-form" novalidate onsubmit={submitTotp}>
 					<div class="totp-header">
@@ -501,6 +619,29 @@
 	.login-form :global(.totp-input) {
 		font-size: var(--text-md);
 		letter-spacing: 0.2em;
+	}
+	.totp-qr {
+		align-self: center;
+		background: #fff;
+		border-radius: var(--radius-sm);
+	}
+	.totp-secret {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		overflow-wrap: anywhere;
+	}
+	.totp-secret-label {
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+	}
+	.recovery-codes {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-1) var(--space-4);
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 	.totp-links {
 		display: flex;

@@ -65,6 +65,9 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 		refuse(http.StatusConflict, goapi.NewObject(
 			"error", "Username collision: a local account with this name already exists", "code", "username_collision"))
 		return
+	case outcome.Failure == authn.FailureAccountDisabled:
+		refuse(http.StatusForbidden, goapi.NewObject("error", "This account is disabled", "code", authn.FailureAccountDisabled))
+		return
 	case user == nil:
 		refuse(http.StatusUnauthorized, failure{Error: "Invalid credentials"})
 		return
@@ -78,6 +81,10 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 	if user.TOTPRequired {
 		kit.JSON(w, r, http.StatusForbidden, goapi.NewObject(
 			"error", "Two-factor authentication is required for this account", "code", "totp_required"))
+		return
+	}
+	if user.TOTPSetupRequired {
+		kit.JSON(w, r, http.StatusForbidden, goapi.NewObject("error", authn.TOTPSetupDueMessage, "code", authn.TOTPSetupDueCode))
 		return
 	}
 	device, err := textOr(jsreq.Prop(body, "device_id"), "")

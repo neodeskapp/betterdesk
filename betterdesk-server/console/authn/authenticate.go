@@ -36,6 +36,10 @@ const FailureUsernameCollision = "username_collision"
 // for an account of the role "pro".
 const FailureProOnly = "pro_only"
 
+// FailureAccountDisabled is the failure code of a sign-in with the right
+// credentials for an account that is disabled.
+const FailureAccountDisabled = "account_disabled"
+
 // rolePro marks accounts for the RustDesk desktop client only. They cannot
 // sign in to the console.
 const rolePro = "pro"
@@ -51,6 +55,10 @@ type User struct {
 	// TOTPRequired says the sign-in is not finished: the second factor is
 	// due.
 	TOTPRequired bool
+	// TOTPSetupRequired says the sign-in is not finished either: two-factor
+	// sign-in is mandatory (TwoFactorRequired) and this local account has
+	// none, so it sets it up first. It is not part of the JSON.
+	TOTPSetupRequired bool
 	// nullPartialToken adds "goPartialToken": null to the JSON. The answer
 	// for a local account with two-factor sign-in carries it, and sessions
 	// that wait for the second factor store it.
@@ -95,7 +103,8 @@ type Outcome struct {
 	// User is the account that signed in, nil when sign-in was refused.
 	User *User
 	// Failure is the code of a refusal that has its own answer:
-	// FailureUsernameCollision or FailureProOnly. Empty otherwise.
+	// FailureUsernameCollision, FailureProOnly or FailureAccountDisabled.
+	// Empty otherwise.
 	Failure string
 }
 
@@ -129,6 +138,9 @@ type goAccept struct {
 	provider string
 	// requires2FA says it asks for a second factor.
 	requires2FA bool
+	// disabled says the credentials are right and the account is
+	// disabled: the server signs nobody in.
+	disabled bool
 }
 
 // tryGoServerAuth asks the signal server to check the credentials. It
@@ -138,7 +150,7 @@ func (s *Service) tryGoServerAuth(ctx context.Context, username, password string
 	if answer == nil {
 		return nil
 	}
-	accept := &goAccept{requires2FA: answer.Bool("requires2fa")}
+	accept := &goAccept{requires2FA: answer.Bool("requires2fa"), disabled: answer.Bool("account_disabled")}
 	if role, ok := answer.Get("role").(string); ok {
 		accept.role = role
 	}
@@ -335,14 +347,26 @@ func authSuccessFromUser(user *Account, accept *goAccept) *User {
 }
 
 // finish turns accepted credentials into the outcome and notes the
-// sign-in on the row unless the second factor is still due. A pro account
-// is the failure FailureProOnly.
+// sign-in on the row unless the second factor is still due. A disabled
+// account is the failure FailureAccountDisabled, a pro account the failure
+// FailureProOnly.
 func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (Outcome, error) {
+	if user.Disabled.True() {
+		s.log.Info(fmt.Sprintf("[AUTH] Login refused: '%s' is disabled", logName(user.Username)))
+		return Outcome{Failure: FailureAccountDisabled}, nil
+	}
 	result := authSuccessFromUser(user, accept)
 	if result == nil {
 		return Outcome{Failure: FailureProOnly}, nil
 	}
-	if !result.TOTPRequired {
+	if !result.TOTPRequired && normalizeAuthProvider(user.AuthProvider.String) == providerLocal {
+		required, err := s.TwoFactorRequired(ctx)
+		if err != nil {
+			return Outcome{}, err
+		}
+		result.TOTPSetupRequired = required
+	}
+	if !result.TOTPRequired && !result.TOTPSetupRequired {
 		if err := touchLastLogin(ctx, s.db, user.ID.V); err != nil {
 			return Outcome{}, err
 		}
@@ -364,17 +388,21 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 //     alone accepts the password, the outcome is the failure
 //     FailureUsernameCollision. A hash the password fits stays as it is,
 //     whatever its form.
-//   - A name that differs from an account's only in letter case or in
-//     spaces at the ends is refused.
+//   - A name that differs from a directory account's only in letter case
+//     or in spaces at the ends signs in to that account: the directory
+//     compares names in lower case. For any other account such a name is
+//     refused.
 //   - An unknown user is refused, unless single sign-on is on or
 //     Settings.AutoCreate is set and the signal server accepts the
 //     credentials: then a local row is made, for a directory or single
 //     sign-on account under the name lower-cased and trimmed.
 //
 // An account with the role "pro" is refused: with FailureProOnly when its
-// credentials were accepted, plainly otherwise. The outcome's user has
-// TOTPRequired set when the second factor is due; only otherwise is the
-// sign-in noted on the row (last_login).
+// credentials were accepted, plainly otherwise. So is a disabled account,
+// with FailureAccountDisabled. The outcome's user has
+// TOTPRequired set when the second factor is due, and TOTPSetupRequired
+// when two-factor sign-in is mandatory and the local account has none yet;
+// only otherwise is the sign-in noted on the row (last_login).
 //
 // Authenticate does not look at lockouts and does not record the attempt:
 // CheckBruteForce and RecordAttempt are separate calls.
@@ -391,8 +419,15 @@ func (s *Service) Authenticate(ctx context.Context, username, password string) (
 		return Outcome{}, err
 	}
 	if user == nil {
-		// A directory matches names without regard to case: another
-		// spelling of an account would sign in as a second account.
+		// A directory compares names in lower case: another spelling of a
+		// directory account's name is that account
+		if user, err = directoryAccountNamed(ctx, s.db, username); err != nil {
+			return Outcome{}, err
+		}
+	}
+	if user == nil {
+		// Another spelling of any other account would sign in as a second
+		// account
 		other, err := otherSpellingExists(ctx, s.db, username)
 		if err != nil {
 			return Outcome{}, err
@@ -413,6 +448,10 @@ func (s *Service) Authenticate(ctx context.Context, username, password string) (
 		if accept == nil {
 			s.log.Info(fmt.Sprintf("[AUTH] Login failed: LDAP credentials rejected for '%s'", logName(username)))
 			return Outcome{}, nil
+		}
+		if accept.disabled {
+			s.log.Info(fmt.Sprintf("[AUTH] Login refused: '%s' is disabled", logName(username)))
+			return Outcome{Failure: FailureAccountDisabled}, nil
 		}
 		s.log.Info(fmt.Sprintf("[AUTH] Go server accepted LDAP login for '%s' — syncing local account", logName(username)))
 		user, err = s.syncLocalUserFromGo(ctx, user, accept, "")
@@ -447,6 +486,9 @@ func (s *Service) authenticateLocal(ctx context.Context, user *Account, username
 	if !valid {
 		accept := s.tryGoServerAuth(ctx, username, password)
 		switch {
+		case accept != nil && accept.disabled:
+			s.log.Info(fmt.Sprintf("[AUTH] Login refused: '%s' is disabled", logName(username)))
+			return Outcome{Failure: FailureAccountDisabled}, nil
 		case accept != nil:
 			// A local account is never turned into a directory or single
 			// sign-on account by a sign-in.
@@ -481,7 +523,9 @@ func (s *Service) authenticateUnknown(ctx context.Context, username, password st
 	}
 
 	if s.set.AutoCreate || sso.any {
-		if accept := s.tryGoServerAuth(ctx, username, password); accept != nil {
+		if accept := s.tryGoServerAuth(ctx, username, password); accept != nil && accept.disabled {
+			return Outcome{Failure: FailureAccountDisabled}, nil
+		} else if accept != nil {
 			reason := "OIDC enabled on Go server"
 			switch {
 			case s.set.AutoCreate:

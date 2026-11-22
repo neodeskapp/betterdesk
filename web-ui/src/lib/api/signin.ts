@@ -57,6 +57,8 @@ export function getLoginPage(signal?: AbortSignal): Promise<LoginPage> {
 export const SignInResult = v.looseObject({
 	success: v.literal(true),
 	totpRequired: v.optional(v.boolean(), false),
+	/** Two-factor sign-in is mandatory and the account has none: set it up first */
+	totpSetupRequired: v.optional(v.boolean(), false),
 	redirect: v.optional(v.string())
 });
 export type SignInResult = v.InferOutput<typeof SignInResult>;
@@ -80,6 +82,29 @@ export type TotpSignIn = ({ code: string } | { recoveryCode: string }) & {
 
 export function verifyTotp(body: TotpSignIn): Promise<SignInResult> {
 	return api(SignInResult, '/api/auth/totp/verify', { method: 'POST', body, allowAnonymous: true });
+}
+
+/** The secret and QR code of the two-factor set-up a mandatory second factor asks for after the password */
+export const RequiredTotpSetup = v.looseObject({
+	qrCode: v.optional(v.string(), ''),
+	secret: v.optional(v.string(), '')
+});
+export type RequiredTotpSetup = v.InferOutput<typeof RequiredTotpSetup>;
+
+export function setupRequiredTotp(): Promise<RequiredTotpSetup> {
+	return api(RequiredTotpSetup, '/api/auth/totp/required/setup', { method: 'POST', allowAnonymous: true });
+}
+
+/** The first code turns two-factor sign-in on and finishes the sign-in; the recovery codes are shown once */
+export const RequiredTotpResult = v.looseObject({
+	success: v.literal(true),
+	redirect: v.optional(v.string()),
+	recoveryCodes: v.optional(v.array(v.string()), [])
+});
+export type RequiredTotpResult = v.InferOutput<typeof RequiredTotpResult>;
+
+export function enableRequiredTotp(body: { code: string; return?: string }): Promise<RequiredTotpResult> {
+	return api(RequiredTotpResult, '/api/auth/totp/required/enable', { method: 'POST', body, allowAnonymous: true });
 }
 
 /** GET /api/auth/oidc/status: whether single sign-on is on, and whether to start it right away */

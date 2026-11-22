@@ -128,6 +128,14 @@ describe('Sign-in', () => {
 		expect(ldapFromServer({ port: '636', enabled: 1 })).toMatchObject({ port: 636, enabled: true });
 	});
 
+	test('LDAP: Auto-create users is on unless the server says it is off, and is sent', () => {
+		expect(ldapFromServer({}).allow_signup).toBe(true);
+		const off = ldapFromServer({ allow_signup: false });
+		expect(off.allow_signup).toBe(false);
+		expect(ldapPayload(off).allow_signup).toBe(false);
+		expect(ldapPayload(ldapFromServer({})).allow_signup).toBe(true);
+	});
+
 	test('OIDC: defaults in, the console address when the panel URL is empty', () => {
 		const v0 = oidcFromServer({ auto_discovery: false, allow_signup: false }, 'https://desk.example.com');
 		expect(v0.panel_url).toBe('https://desk.example.com');
@@ -136,6 +144,9 @@ describe('Sign-in', () => {
 		expect(v0.auto_discovery).toBe(false);
 		expect(v0.allow_signup).toBe(false);
 		expect(oidcFromServer({}, 'x').auto_discovery).toBe(true);
+		// PKCE is on unless the server says a saved configuration has it off
+		expect(oidcFromServer({}, 'x').use_pkce).toBe(true);
+		expect(oidcFromServer({ use_pkce: false }, 'x').use_pkce).toBe(false);
 		expect(oidcPayload({ ...v0, panel_url: '  ' }, 'https://o').panel_url).toBe('https://o');
 	});
 });

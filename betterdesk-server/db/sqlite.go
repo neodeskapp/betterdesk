@@ -136,7 +136,8 @@ func (s *SQLiteDB) Migrate() error {
 			totp_recovery_codes TEXT DEFAULT NULL,
 			created_at TEXT DEFAULT (datetime('now')),
 			last_login TEXT DEFAULT '',
-			credentials_changed_at INTEGER DEFAULT NULL
+			credentials_changed_at INTEGER DEFAULT NULL,
+			disabled INTEGER NOT NULL DEFAULT 0
 		)`,
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)`,
 
@@ -726,6 +727,8 @@ func (s *SQLiteDB) Migrate() error {
 		{"billing_period_totals", "included_limit_snapshot", `ALTER TABLE billing_period_totals ADD COLUMN included_limit_snapshot INTEGER NOT NULL DEFAULT 0`},
 		// users: when the password or the second factor last changed
 		{"users", "credentials_changed_at", `ALTER TABLE users ADD COLUMN credentials_changed_at INTEGER DEFAULT NULL`},
+		// users: an account that may not sign in (the console adds it too)
+		{"users", "disabled", `ALTER TABLE users ADD COLUMN disabled INTEGER NOT NULL DEFAULT 0`},
 	}
 
 	for _, m := range columnMigrations {
@@ -2222,7 +2225,8 @@ func formatTime(t time.Time) string {
 // COALESCE guards against NULL text columns that Scan into string (Issue #292).
 const userSelectCols = `id, username, password_hash, role, COALESCE(is_server_admin, 0),
 		COALESCE(auth_provider, 'local'), COALESCE(totp_secret, ''), totp_enabled, COALESCE(totp_recovery_codes, ''),
-		COALESCE(created_at, datetime('now')), COALESCE(last_login, ''), COALESCE(credentials_changed_at, 0)`
+		COALESCE(created_at, datetime('now')), COALESCE(last_login, ''), COALESCE(credentials_changed_at, 0),
+		COALESCE(disabled, 0)`
 
 // CreateUser inserts a new user.
 func (s *SQLiteDB) CreateUser(u *User) error {
@@ -2248,7 +2252,7 @@ func (s *SQLiteDB) GetUser(username string) (*User, error) {
 	u := &User{}
 	err := s.db.QueryRow(`SELECT `+userSelectCols+` FROM users WHERE username = ?`, username).Scan(
 		&u.ID, &u.Username, &u.PasswordHash, &u.Role, &u.IsServerAdmin,
-		&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin, &u.CredentialsChangedAt)
+		&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin, &u.CredentialsChangedAt, &u.Disabled)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -2262,7 +2266,7 @@ func (s *SQLiteDB) GetUserByID(id int64) (*User, error) {
 	u := &User{}
 	err := s.db.QueryRow(`SELECT `+userSelectCols+` FROM users WHERE id = ?`, id).Scan(
 		&u.ID, &u.Username, &u.PasswordHash, &u.Role, &u.IsServerAdmin,
-		&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin, &u.CredentialsChangedAt)
+		&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin, &u.CredentialsChangedAt, &u.Disabled)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -2282,7 +2286,7 @@ func (s *SQLiteDB) ListUsers() ([]*User, error) {
 	for rows.Next() {
 		u := &User{}
 		if err := rows.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.Role, &u.IsServerAdmin,
-			&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin, &u.CredentialsChangedAt); err != nil {
+			&u.AuthProvider, &u.TOTPSecret, &u.TOTPEnabled, &u.TOTPRecoveryCodes, &u.CreatedAt, &u.LastLogin, &u.CredentialsChangedAt, &u.Disabled); err != nil {
 			return nil, err
 		}
 		users = append(users, u)
@@ -2406,6 +2410,38 @@ func (s *SQLiteDB) DeleteUser(id int64) error {
 	}
 	_, err := s.db.Exec(`DELETE FROM users WHERE id=?`, id)
 	return err
+}
+
+// UpdateUserFromProvider stores the email address and display name of a
+// directory or single sign-on in the web console's profile columns. A
+// database without those columns (the server without its console) is left
+// as it is.
+func (s *SQLiteDB) UpdateUserFromProvider(id int64, email, displayName string) error {
+	sets, values := providerProfile(email, displayName, func(column string) bool { return s.hasColumn("users", column) })
+	if len(sets) == 0 {
+		return nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	query := "UPDATE users SET " + strings.Join(sets, " = ?, ") + " = ? WHERE id = ?"
+	if _, err := s.db.Exec(query, append(values, id)...); err != nil {
+		return fmt.Errorf("db: UpdateUserFromProvider: %w", err)
+	}
+	return nil
+}
+
+// SetUserDisabled disables or enables an account.
+func (s *SQLiteDB) SetUserDisabled(id int64, disabled bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	flag := 0
+	if disabled {
+		flag = 1
+	}
+	if _, err := s.db.Exec(`UPDATE users SET disabled = ? WHERE id = ?`, flag, id); err != nil {
+		return fmt.Errorf("db: SetUserDisabled: %w", err)
+	}
+	return nil
 }
 
 // UpdateUserLogin updates the last_login timestamp for a user.

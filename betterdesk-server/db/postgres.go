@@ -177,7 +177,8 @@ func (pg *PostgresDB) Migrate() error {
 			totp_recovery_codes  TEXT DEFAULT NULL,
 			created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			last_login           TIMESTAMPTZ,
-			credentials_changed_at BIGINT
+			credentials_changed_at BIGINT,
+			disabled             BOOLEAN NOT NULL DEFAULT FALSE
 		)`,
 
 		`CREATE TABLE IF NOT EXISTS api_keys (
@@ -763,6 +764,8 @@ func (pg *PostgresDB) Migrate() error {
 		`ALTER TABLE billing_period_totals ADD COLUMN IF NOT EXISTS included_limit_snapshot INTEGER NOT NULL DEFAULT 0`,
 		// users: when the password or the second factor last changed
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS credentials_changed_at BIGINT`,
+		// users: an account that may not sign in (the console adds it too)
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT FALSE`,
 	}
 
 	for _, ddl := range columnMigrations {
@@ -1880,7 +1883,7 @@ func scanUser(row pgx.Row) (*User, error) {
 
 	err := row.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.Role,
 		&u.TOTPSecret, &u.TOTPEnabled, &createdAt, &lastLogin, &u.IsServerAdmin, &recoveryCodes, &authProvider,
-		&u.CredentialsChangedAt)
+		&u.CredentialsChangedAt, &u.Disabled)
 	if err != nil {
 		return nil, err
 	}
@@ -1909,7 +1912,7 @@ func scanUser(row pgx.Row) (*User, error) {
 // GET /api/users, which in turn triggered mirrorCreate retry loops.
 const userSelectColsPG = `id, username, password_hash, role, COALESCE(totp_secret, ''), totp_enabled,
 		        created_at, last_login, COALESCE(is_server_admin, FALSE), totp_recovery_codes, COALESCE(auth_provider, 'local'),
-		        COALESCE(credentials_changed_at, 0)`
+		        COALESCE(credentials_changed_at, 0), COALESCE(disabled, FALSE)`
 
 // GetUser returns a user by username, or nil if not found.
 func (pg *PostgresDB) GetUser(username string) (*User, error) {
@@ -2076,6 +2079,40 @@ func (pg *PostgresDB) DeleteUser(id int64) error {
 	}
 	_, err := pg.pool.Exec(pg.ctx, `DELETE FROM users WHERE id = $1`, id)
 	return err
+}
+
+// UpdateUserFromProvider stores the email address and display name of a
+// directory or single sign-on in the web console's profile columns. A
+// database without those columns (the server without its console) is left
+// as it is.
+func (pg *PostgresDB) UpdateUserFromProvider(id int64, email, displayName string) error {
+	has := func(column string) bool {
+		var n int
+		err := pg.pool.QueryRow(pg.ctx, `SELECT COUNT(*) FROM information_schema.columns
+			WHERE table_schema = current_schema() AND table_name = 'users' AND column_name = $1`, column).Scan(&n)
+		return err == nil && n > 0
+	}
+	sets, values := providerProfile(email, displayName, has)
+	if len(sets) == 0 {
+		return nil
+	}
+	parts := make([]string, len(sets))
+	for i, column := range sets {
+		parts[i] = fmt.Sprintf("%s = $%d", column, i+1)
+	}
+	query := fmt.Sprintf("UPDATE users SET %s WHERE id = $%d", strings.Join(parts, ", "), len(sets)+1)
+	if _, err := pg.pool.Exec(pg.ctx, query, append(values, id)...); err != nil {
+		return fmt.Errorf("db: UpdateUserFromProvider: %w", err)
+	}
+	return nil
+}
+
+// SetUserDisabled disables or enables an account.
+func (pg *PostgresDB) SetUserDisabled(id int64, disabled bool) error {
+	if _, err := pg.pool.Exec(pg.ctx, `UPDATE users SET disabled = $1 WHERE id = $2`, disabled, id); err != nil {
+		return fmt.Errorf("db: SetUserDisabled: %w", err)
+	}
+	return nil
 }
 
 // UpdateUserLogin updates the last_login timestamp for a user.
