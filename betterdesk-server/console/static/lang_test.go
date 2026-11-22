@@ -80,3 +80,44 @@ func TestLanguageFilesHaveNoBrokenCharacters(t *testing.T) {
 		t.Errorf("%d texts with broken characters:\n%s", len(broken), findings(broken))
 	}
 }
+
+// foreign holds words of another language that a language's texts do not
+// use: German words outside the German file, French ones in Italian,
+// Spanish ones in Portuguese and Polish ones in Czech, also with the
+// Polish letters dropped. A word after a hyphen is a pronoun of the
+// language itself (Portuguese "copiá-los").
+var foreign = map[string]*regexp.Regexp{
+	"german":  regexp.MustCompile(`(?:^|[^\p{L}-])(?:nicht|wird|Sie|Ihre[nm]?|und|oder|bitte|Datei|Dateien|Gerät|Geräte|Einstellungen|Benutzer)(?:[^\p{L}]|$)`),
+	"french":  regexp.MustCompile(`(?:^|[^\p{L}-])(?:les|des|du|vous|votre|une|pour|avec|serveur|être)(?:[^\p{L}]|$)`),
+	"spanish": regexp.MustCompile(`(?:^|[^\p{L}-])(?:el|los|del|una|sesión|conexión|archivo|archivos)(?:[^\p{L}]|$)`),
+	"polish":  regexp.MustCompile(`[ąęłńśźżŁŚŻ]|(?:^|[^\p{L}-])(?:się|sie|jest|nie|lub|oraz|ktory|który|polaczenia|polaczen|urzadzenia|urzadzen|ustawienia|zostanie|wybierz)(?:[^\p{L}]|$)`),
+}
+
+// Each language file holds its own language: the German, French, Spanish
+// and Polish texts that sat in other files are translated (BUGS L160).
+func TestLanguageFilesHoldNoOtherLanguage(t *testing.T) {
+	all := languageTexts(t)
+	english := all["en"]
+	checks := map[string][]string{"it": {"french"}, "pt": {"spanish"}, "cs": {"polish"}}
+	for lang := range all {
+		if lang != "en" && lang != "de" {
+			checks[lang] = append(checks[lang], "german")
+		}
+	}
+	var found []string
+	for lang, kinds := range checks {
+		for key, text := range all[lang] {
+			if text == english[key] {
+				continue
+			}
+			for _, kind := range kinds {
+				if foreign[kind].MatchString(text) {
+					found = append(found, lang+" "+key+" ("+kind+"): "+text)
+				}
+			}
+		}
+	}
+	if len(found) > 0 {
+		t.Errorf("%d texts in another language:\n%s", len(found), findings(found))
+	}
+}

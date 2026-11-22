@@ -780,7 +780,7 @@
     "enrollment_title": "Rejestracja urządzeń (RustDesk)",
     "enrollment_desc": "Jak zatwierdza się nowych klientów RustDesk na stronie Żądania rejestracji.",
     "enrollment_rich_approve": "Pełny formularz przy akceptacji (nazwa, folder, grupy, tagi)",
-    "enrollment_rich_approve_hint": "Pokazuje rozbudowany dialog przy zatwierdzaniu rejestracji enrollment i LAN.",
+    "enrollment_rich_approve_hint": "Pokazuje szczegółowe okno przy zatwierdzaniu żądań rejestracji lub rejestracji LAN.",
     "enrollment_tag_picker": "Wybór tagów z listy istniejących",
     "enrollment_tag_picker_hint": "Umożliwia wybór tagów z listy używanej na stronie Urządzenia zamiast samego wpisywania.",
     "enrollment_open_requests": "Otwórz żądania rejestracji",
