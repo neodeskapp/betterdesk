@@ -62,6 +62,7 @@
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Platform from '#lib/ui/Platform.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
 	import Status from '#lib/ui/Status.svelte';
@@ -477,6 +478,7 @@
 			<h1>{t('nav.registrations')}</h1>
 			<p class="page-description">{t('registrations.page_description')}</p>
 		</div>
+		<ReadOnlyHint writes={['enrollment.approve']} />
 
 		<div class="page-cols">
 			<div class="page-main">

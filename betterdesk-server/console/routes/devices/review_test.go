@@ -17,8 +17,9 @@ import (
 // routes fixed, each with the behaviour the fix changed.
 
 // TestGroupWritesKeepTheScope: an account whose device scope is limited
-// changes and deletes only the device groups open to it, sets or changes
-// no access list and makes no tag group, with either writer; each refusal
+// changes only the device groups open to it, deletes none with an access
+// list (L47), sets or changes no access list and makes no tag group, with
+// either writer; each refusal
 // is 403 before anything is written here or on the API server, and the
 // account still may not see device C afterwards. The admin and an
 // operator who sees every device do all of it (BUGS RV59).
@@ -100,8 +101,9 @@ func TestGroupWritesKeepTheScope(t *testing.T) {
 					t.Errorf("%s as operator (console writer %v): %d %s, want 200", body, node, got.Status, got.Body)
 				}
 			}
-			if got := operator.Do("DELETE", "/api/device-groups/g-ops", ""); got.Status != http.StatusOK {
-				t.Errorf("delete of a group open to the operator (console writer %v): %d %s", node, got.Status, got.Body)
+			// g-ops has an access list, so deleting it needs user.edit (L47)
+			if got := operator.Do("DELETE", "/api/device-groups/g-ops", ""); got.Status != http.StatusForbidden || got.Body != forbidden {
+				t.Errorf("delete of a group with a list open to the operator (console writer %v): %d %s", node, got.Status, got.Body)
 			}
 			admin := w.As("admin")
 			if got := admin.Do("POST", "/api/device-groups", `{"guid":"g-viewer","name":"Viewer only","allowed_users":"e2e_viewer, e2e_operator"}`); got.Status != http.StatusOK {
@@ -126,6 +128,76 @@ func TestGroupWritesKeepTheScope(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestDeletingAGroupWithAnAccessListNeedsUserEdit: deleting a device group
+// that has an access list opens its devices to everyone, so an operator
+// (device.edit, no user.edit) deletes only a group without a list, also
+// when the list is open to it; the refusal is 403, writes nothing and
+// calls no write on the API server. A global admin deletes the group with
+// a list (L47).
+func TestDeletingAGroupWithAnAccessListNeedsUserEdit(t *testing.T) {
+	for _, node := range []bool{false, true} {
+		storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+			w, api := world(t, db, nil, func(cfg *config.Config) { cfg.PanelGroupingNode = node })
+			operator, globalAdmin := w.As("operator"), w.As("global_admin")
+			for _, q := range []string{
+				`DELETE FROM device_group_user_access`,
+				`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-lab', 'Lab', '', '', 'manual', ''), ('g-team', 'Team', '', '', 'manual', '')`,
+				// g-viewer's list names e2e_operator, g-team's a user group
+				// it is in: both are open to it
+				`INSERT INTO device_group_user_access (device_group_id, user_id) SELECT id, 5 FROM device_groups WHERE guid = 'g-viewer'`,
+				`INSERT INTO user_groups (guid, name, note, team_id) VALUES ('ug-1', 'Support', '', '')`,
+				`INSERT INTO user_group_members (user_group_id, user_id) SELECT id, 5 FROM user_groups WHERE guid = 'ug-1'`,
+				`INSERT INTO device_group_user_group_access (device_group_id, user_group_id) SELECT d.id, u.id FROM device_groups d, user_groups u WHERE d.guid = 'g-team' AND u.guid = 'ug-1'`,
+			} {
+				if _, err := db.Exec(context.Background(), q); err != nil {
+					t.Fatalf("%s: %v", q, err)
+				}
+			}
+			forbidden := `{"success":false,"error":"You don't have access to this device."}`
+			for _, guid := range []string{"g-viewer", "g-team"} {
+				api.Calls()
+				if got := operator.Do("DELETE", "/api/device-groups/"+guid, ""); got.Status != http.StatusForbidden || got.Body != forbidden {
+					t.Errorf("delete %s as operator (console writer %v): %d %s, want 403 %s", guid, node, got.Status, got.Body, forbidden)
+				}
+				for _, call := range api.Calls() {
+					if !strings.HasPrefix(call, "GET ") {
+						t.Errorf("delete %s as operator (console writer %v) reached the server: %s", guid, node, call)
+					}
+				}
+			}
+			if got := groupGUIDs(t, db); got != "g-lab,g-team,g-viewer" {
+				t.Errorf("groups after the refusals (console writer %v): %s", node, got)
+			}
+			if got := operator.Do("DELETE", "/api/device-groups/g-lab", ""); got.Status != http.StatusOK {
+				t.Errorf("delete the group without a list as operator (console writer %v): %d %s", node, got.Status, got.Body)
+			}
+			if got := globalAdmin.Do("DELETE", "/api/device-groups/g-viewer", ""); got.Status != http.StatusOK {
+				t.Errorf("delete the group with a list as global admin (console writer %v): %d %s", node, got.Status, got.Body)
+			}
+		})
+	}
+}
+
+// groupGUIDs lists the guids of the test's device groups (g-...), in
+// order.
+func groupGUIDs(t *testing.T, db *store.DB) string {
+	t.Helper()
+	res, err := db.Query(context.Background(), `SELECT guid FROM device_groups WHERE guid LIKE 'g-%' ORDER BY guid`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Close()
+	var out []string
+	for res.Next() {
+		var guid string
+		if err := res.Scan(&guid); err != nil {
+			t.Fatal(err)
+		}
+		out = append(out, guid)
+	}
+	return strings.Join(out, ",")
 }
 
 // TestGroupAccessListsNeedUserEdit: an operator who sees every device
@@ -176,6 +248,92 @@ func TestGroupAccessListsNeedUserEdit(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestLimitedScopeBindsNoRuleToAUserGroup: an account whose device scope
+// is limited may not bind a client rule to a user group, nor change or
+// clear the user group of a rule, on create or change (403, nothing
+// written, no write on the API server); a save that keeps the stored user
+// group passes. An account that sees every device binds any (L50, the
+// rule of A72 for the users list).
+func TestLimitedScopeBindsNoRuleToAUserGroup(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, api := world(t, db, nil, nil)
+		ctx := context.Background()
+		admin, operator := w.As("admin"), w.As("operator")
+		create := func(a *routetest.Agent, body string) string {
+			t.Helper()
+			created := a.Do("POST", "/api/panel/strategies", body)
+			m := strategyGUIDField.FindStringSubmatch(created.Body)
+			if created.Status != http.StatusOK || m == nil {
+				t.Fatalf("create %s: %d %s", body, created.Status, created.Body)
+			}
+			return "/api/panel/strategies/" + m[1]
+		}
+		grouped := create(admin, `{"name":"Grouped","user_group_guid":"ug-1"}`)
+		plain := create(admin, `{"name":"Plain"}`)
+		state := func() string {
+			t.Helper()
+			rows, err := db.Query(ctx, `SELECT name || '=' || COALESCE(user_group_guid, '') FROM strategies ORDER BY name`)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer rows.Close()
+			var out []string
+			for rows.Next() {
+				var s string
+				if err := rows.Scan(&s); err != nil {
+					t.Fatal(err)
+				}
+				out = append(out, s)
+			}
+			return strings.Join(out, " ")
+		}
+		before := state()
+		if before != "Grouped=ug-1 Plain=" {
+			t.Fatalf("rules: %s", before)
+		}
+		forbidden := `{"success":false,"error":"You don't have access to this device."}`
+		for _, c := range []struct{ method, path, body string }{
+			{"POST", "/api/panel/strategies", `{"name":"Mine","user_group_guid":"ug-1"}`},
+			{"PATCH", plain, `{"user_group_guid":"ug-1"}`},
+			{"PATCH", grouped, `{"user_group_guid":"ug-2"}`},
+			{"PATCH", grouped, `{"name":"Grouped","user_group_guid":""}`},
+		} {
+			api.Calls()
+			if got := operator.Do(c.method, c.path, c.body); got.Status != http.StatusForbidden || got.Body != forbidden {
+				t.Errorf("%s %s %s as a limited operator: %d %s, want 403 %s", c.method, c.path, c.body, got.Status, got.Body, forbidden)
+			}
+			for _, call := range api.Calls() {
+				if !strings.HasPrefix(call, "GET ") {
+					t.Errorf("%s %s %s as a limited operator reached the server: %s", c.method, c.path, c.body, call)
+				}
+			}
+			if got := state(); got != before {
+				t.Fatalf("%s %s %s as a limited operator wrote: %s", c.method, c.path, c.body, got)
+			}
+		}
+		for _, c := range []struct{ method, path, body string }{
+			{"PATCH", grouped, `{"name":"Grouped","enabled":false,"user_group_guid":"ug-1"}`},
+			{"PATCH", plain, `{"name":"Plain","user_group_guid":""}`},
+			{"POST", "/api/panel/strategies", `{"name":"Mine","user_group_guid":""}`},
+		} {
+			if got := operator.Do(c.method, c.path, c.body); got.Status != http.StatusOK {
+				t.Errorf("%s %s %s as a limited operator: %d %s, want 200", c.method, c.path, c.body, got.Status, got.Body)
+			}
+		}
+		if got := admin.Do("PATCH", plain, `{"user_group_guid":"ug-1"}`); got.Status != http.StatusOK {
+			t.Errorf("the admin binds a rule to a user group: %d %s", got.Status, got.Body)
+		}
+		// Without access lists the operator sees every device and binds any
+		if _, err := db.Exec(ctx, `DELETE FROM device_group_user_access`); err != nil {
+			t.Fatal(err)
+		}
+		create(operator, `{"name":"Team","user_group_guid":"ug-2"}`)
+		if got := state(); got != "Grouped=ug-1 Mine= Plain=ug-1 Team=ug-2" {
+			t.Errorf("rules at the end: %s", got)
+		}
+	})
 }
 
 // TestStrategyRoutesKeepTheScope: an account whose device scope is

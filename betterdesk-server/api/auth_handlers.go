@@ -1185,9 +1185,33 @@ func (s *Server) handleListAPIKeys(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, result)
 }
 
+// keyRoles are the roles an API key can be given.
+var keyRoles = []string{
+	auth.RoleSuperAdmin, auth.RoleAdmin, auth.RoleServerAdmin, auth.RoleGlobalAdmin,
+	auth.RoleOperator, auth.RoleViewer, auth.RolePro, auth.RoleGuestIssuer,
+}
+
+// givesSomeRole reports whether a caller of role may give at least one
+// role (auth.CanAssignRole).
+func givesSomeRole(role string) bool {
+	for _, target := range keyRoles {
+		if auth.CanAssignRole(role, target) {
+			return true
+		}
+	}
+	return false
+}
+
 // handleCreateAPIKey generates a new API key. The plaintext key is returned ONCE.
+// A key acts with its role, so a caller that may give no role, such as
+// server_admin, lists and deletes keys but creates none: it gets 403
+// before the body is read.
 // POST /api/keys
 func (s *Server) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
+	if !givesSomeRole(getRoleFromCtx(r)) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "This role can list and delete API keys but not create them"})
+		return
+	}
 	var body struct {
 		Name      string `json:"name"`
 		Role      string `json:"role"`

@@ -56,6 +56,7 @@
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import SaveBar from '#lib/ui/SaveBar.svelte';
 	import ShowWhen, { showWhenControl } from '#lib/ui/ShowWhen.svelte';
 	import States from '#lib/ui/States.svelte';
@@ -660,6 +661,7 @@
 {/snippet}
 
 {#if !canConfig}
+	<ReadOnlyHint writes={['server.config']} />
 	{@render serverInfo()}
 {:else}
 	<SettingsLayout {toc} {side} sideLabelledby="general-side-title">

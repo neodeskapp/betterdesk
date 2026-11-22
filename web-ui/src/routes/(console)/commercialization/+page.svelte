@@ -19,6 +19,7 @@
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import { ICONS } from '#lib/util/display.ts';
 	import PackagesView from './PackagesView.svelte';
 	import SessionsView from './SessionsView.svelte';
@@ -71,6 +72,7 @@
 				<a href={link(`/commercialization?tab=${other}`)}>{t(`commercialization.tabs.${other}`)}</a>
 			</p>
 		</div>
+		<ReadOnlyHint writes={['billing.manage', 'billing.reports']} />
 
 		{#if unsynced}
 			<Notice tone="warning" message={t('commercialization.clock.unsynced')} />

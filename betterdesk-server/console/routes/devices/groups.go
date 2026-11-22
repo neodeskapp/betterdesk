@@ -276,7 +276,9 @@ func groupGUID(group *goapi.Object) string {
 	return jsTextOf(devicegroups.Plain(group.Get("guid")))
 }
 
-// deleteDeviceGroup answers DELETE /api/device-groups/{guid}.
+// deleteDeviceGroup answers DELETE /api/device-groups/{guid}. A group
+// with an access list goes only for an account that may change the list
+// (access.GroupRights.Delete).
 func (h *handlers) deleteDeviceGroup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	guid := r.PathValue("guid")
@@ -297,7 +299,7 @@ func (h *handlers) deleteDeviceGroup(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "devices.folder_group_readonly")
 		return
 	}
-	if rights, err := h.groupRights(r, group); err != nil || !rights.Change {
+	if rights, err := h.groupRights(r, group); err != nil || !rights.Delete {
 		if err != nil {
 			h.serverError(w, r, "Delete device group error:", err)
 			return

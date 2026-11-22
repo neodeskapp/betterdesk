@@ -223,7 +223,9 @@ func TestLimitedScopeKeepsToItsFolders(t *testing.T) {
 		want(t, "save its own folder as the web app does", operator.Do("PATCH", "/api/folders/2", `{"name":"Mine","color":"#123","allowed_users":"e2e_operator","allowed_groups":[]}`), 200, ok)
 		want(t, "create a folder without lists as the web app does", operator.Do("POST", "/api/folders", `{"name":"New","allowed_users":"","allowed_groups":[]}`),
 			200, `{"success":true,"data":{"id":3,"name":"New","color":"#6366f1","icon":"folder","allowed_users":[],"allowed_groups":[]}}`)
-		want(t, "delete its own folder", operator.Do("DELETE", "/api/folders/2", ""), 200, ok)
+		// A folder with an access list goes only with user.edit (L47)
+		want(t, "delete its own folder, which has a list", operator.Do("DELETE", "/api/folders/2", ""), 403, refused)
+		want(t, "delete its own folder without a list", operator.Do("DELETE", "/api/folders/3", ""), 200, ok)
 		want(t, "the admin changes the closed folder", admin.Do("PATCH", "/api/folders/1", `{"name":"Lab","allowed_users":["e2e_operator"]}`), 200, ok)
 		want(t, "the operator may now change it", operator.Do("PATCH", "/api/folders/1", `{"name":"Lab 2"}`), 200, ok)
 	})
@@ -251,6 +253,38 @@ func TestFolderAccessListsNeedUserEdit(t *testing.T) {
 		want(t, "rename the folder open to it", operator.Do("PATCH", "/api/folders/1", `{"name":"Lab"}`), 200, ok)
 		want(t, "the global admin clears the list", globalAdmin.Do("PATCH", "/api/folders/1", `{"allowed_users":[]}`), 200, ok)
 		want(t, "delete the folder", operator.Do("DELETE", "/api/folders/1", ""), 200, ok)
+	})
+}
+
+// L47: deleting a folder whose device group has an access list opens its
+// devices to everyone, so it needs user.edit like changing the list; a
+// folder without a list stays with device.edit. Nothing goes on a refusal.
+func TestDeletingAFolderWithAnAccessListNeedsUserEdit(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newWorld(t, db)
+		operator, globalAdmin := w.As("operator"), w.As("global_admin")
+		const refused = `{"success":false,"error":"You don't have permission to do this. Ask an administrator."}`
+		if _, err := db.Exec(context.Background(), `INSERT INTO user_groups (guid, name, note, team_id) VALUES ('g-1', 'Support', '', '')`); err != nil {
+			t.Fatal(err)
+		}
+		for _, folder := range []string{`{"name":"Office","allowed_users":["e2e_operator"]}`, `{"name":"Team","allowed_groups":["g-1"]}`, `{"name":"Lab"}`} {
+			if got := globalAdmin.Do("POST", "/api/folders", folder); got.Status != http.StatusOK {
+				t.Fatalf("create %s: %d %s", folder, got.Status, got.Body)
+			}
+		}
+		want(t, "the operator deletes the folder whose list names it", operator.Do("DELETE", "/api/folders/1", ""), 403, refused)
+		want(t, "the operator deletes the folder with a user group list", operator.Do("DELETE", "/api/folders/2", ""), 403, refused)
+		if got := rows(t, db, `SELECT name FROM folders ORDER BY id`); got != "Office,Team,Lab" {
+			t.Errorf("folders after the refusals: %q", got)
+		}
+		if got := rows(t, db, `SELECT guid FROM device_groups WHERE guid LIKE 'folder%' ORDER BY guid`); got != "folder_1,folder_2" {
+			t.Errorf("device groups after the refusals: %q", got)
+		}
+		want(t, "the operator deletes the folder without a list", operator.Do("DELETE", "/api/folders/3", ""), 200, ok)
+		want(t, "the global admin deletes the folder with a list", globalAdmin.Do("DELETE", "/api/folders/1", ""), 200, ok)
+		if got := rows(t, db, `SELECT name FROM folders ORDER BY id`); got != "Team" {
+			t.Errorf("folders at the end: %q", got)
+		}
 	})
 }
 

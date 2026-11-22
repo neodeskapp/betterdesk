@@ -39,6 +39,7 @@
 	import Input from '#lib/ui/Input.svelte';
 	import Meter from '#lib/ui/Meter.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import SaveBar from '#lib/ui/SaveBar.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
@@ -249,6 +250,7 @@
 			<h1>{t('nav.server_attestation')}</h1>
 			<p class="page-description">{t('server_attestation.page_description')}</p>
 		</div>
+		<ReadOnlyHint writes={['server.attestation']} />
 
 		<div class="page-cols">
 			<div class="page-main">

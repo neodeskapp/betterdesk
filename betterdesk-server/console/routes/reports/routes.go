@@ -7,7 +7,9 @@
 // front.
 //
 // An account limited to some devices gets reports of those devices (see
-// engine.Filters), and reads the saved reports it saved itself.
+// engine.Filters: their tickets and the tickets of no device, the audit
+// entries that name no device outside its scope), and reads the saved
+// reports it saved itself.
 package reports
 
 import (
@@ -30,23 +32,29 @@ import (
 // it sees every device.
 type scopeFunc func(r *http.Request) (*access.DeviceScope, error)
 
+// outsideFunc is the set of ids of the devices outside a limited scope,
+// deleted ones included.
+type outsideFunc func(r *http.Request, scope *access.DeviceScope) map[string]bool
+
 type handlers struct {
-	db     *store.DB
-	engine *engine.Engine
-	scope  scopeFunc
-	log    *kit.Logger
-	now    func() time.Time
+	db      *store.DB
+	engine  *engine.Engine
+	scope   scopeFunc
+	outside outsideFunc
+	log     *kit.Logger
+	now     func() time.Time
 }
 
 // Register adds the group's routes below the mount (/api/reports).
 func Register(d *kit.Deps) {
 	opts := engine.Options{DB: d.Store}
 	scope := func(*http.Request) (*access.DeviceScope, error) { return nil, nil }
+	outside := func(*http.Request, *access.DeviceScope) map[string]bool { return nil }
 	if d.DeviceGroups != nil {
 		opts.SyncPeers = d.DeviceGroups.SyncServerPeers
-		scope = scopeOf(d)
+		scope, outside = scopeOf(d), outsideOf(d)
 	}
-	h := &handlers{db: d.Store, engine: engine.New(opts), scope: scope, log: d.Log.Child("Reports"), now: time.Now}
+	h := &handlers{db: d.Store, engine: engine.New(opts), scope: scope, outside: outside, log: d.Log.Child("Reports"), now: time.Now}
 	r := d.Router
 	r.Get("/types", h.types, requireSession)
 	r.Post("/generate", h.generate, requireSession)
@@ -68,6 +76,23 @@ func scopeOf(d *kit.Deps) scopeFunc {
 			return scope, err
 		}
 		return d.DeviceGroups.DeviceScopeForUser(ctx, user, d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{}))
+	}
+}
+
+// outsideOf lists the devices of the device layer, deleted ones included,
+// that a limited scope leaves out; nil for a scope without a limit.
+func outsideOf(d *kit.Deps) outsideFunc {
+	return func(r *http.Request, scope *access.DeviceScope) map[string]bool {
+		if scope.Unlimited() {
+			return nil
+		}
+		out := map[string]bool{}
+		for _, device := range d.Backend.GetAllDevices(r.Context(), goapi.DeviceFilters{IncludeDeleted: true}) {
+			if id := device.Str("id"); id != "" && !scope.Has(id) {
+				out[id] = true
+			}
+		}
+		return out
 	}
 }
 
@@ -176,6 +201,10 @@ func (h *handlers) generated(w http.ResponseWriter, r *http.Request, body middle
 		return nil
 	}
 	filters.Scope = scope
+	if typ.IsString() && typ.Str() == "security" {
+		// only the security report reads the audit log
+		filters.Outside = h.outside(r, scope)
+	}
 	report, err := h.engine.Generate(r.Context(), typ, filters)
 	if err != nil {
 		h.log.Error(logPrefix, err)

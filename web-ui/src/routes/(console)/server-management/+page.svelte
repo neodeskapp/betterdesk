@@ -13,6 +13,7 @@
 	import { TAB_TITLE, tabFrom } from '#lib/serverarea/management.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import Button from '#lib/ui/Button.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import { ICONS } from '#lib/util/display.ts';
 	import FilesPanel from './FilesPanel.svelte';
 	import Overview from './Overview.svelte';
@@ -55,6 +56,7 @@
 				</div>
 			{/if}
 		</div>
+		<ReadOnlyHint writes={['server.config']} />
 
 		{#key tab}
 			{#if tab === 'overview'}

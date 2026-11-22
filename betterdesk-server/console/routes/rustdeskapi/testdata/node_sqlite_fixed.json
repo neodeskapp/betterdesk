@@ -681,6 +681,17 @@
   },
   "bug": "RV4"
  },
+ "526 GET /api/user-groups": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "L52"
+ },
  "609 GET /API/Device-Group/Accessible": {
   "answer": {
    "answer": "{\"data\":[{\"name\":\"Default\",\"guid\":\"<uuid>\",\"note\":\"Default device group\",\"sort\":0},{\"name\":\"Lab devices\",\"guid\":\"dg-lab\",\"note\":\"\",\"sort\":1},{\"name\":\"Manual\",\"guid\":\"dg-manual\",\"note\":\"m\",\"sort\":2},{\"name\":\"Private\",\"guid\":\"g-private\",\"note\":\"\",\"sort\":3},{\"name\":\"Lab\",\"guid\":\"folder_2\",\"note\":\"\",\"sort\":4},{\"name\":\"Office\",\"guid\":\"folder_1\",\"note\":\"\",\"sort\":5}],\"total\":6,\"msg\":\"success\"}",

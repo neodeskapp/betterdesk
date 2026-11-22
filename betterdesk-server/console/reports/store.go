@@ -324,9 +324,32 @@ func (e *Engine) auditLogs(ctx context.Context, limit, offset int) ([]*goapi.Obj
 	return rows, nil
 }
 
+// ticketsInScope is the WHERE clause that keeps the tickets of the
+// scope's devices and those of no device, with its parameter; "" for a
+// scope without a limit, which keeps every ticket.
+func (e *Engine) ticketsInScope(scope *access.DeviceScope) (string, []any) {
+	condition, arg, ok := e.inScope(scope, "device_id")
+	if !ok {
+		return "", nil
+	}
+	return " WHERE (device_id IS NULL OR device_id = '' OR " + condition + ")", []any{arg}
+}
+
+// andTicketsInScope is ticketsInScope for a statement that has a WHERE
+// clause already.
+func (e *Engine) andTicketsInScope(scope *access.DeviceScope) (string, []any) {
+	where, args := e.ticketsInScope(scope)
+	if where == "" {
+		return "", nil
+	}
+	return " AND" + where[len(" WHERE"):], args
+}
+
 // ticketStats is getTicketStats(): {total, open, in_progress, resolved,
-// closed}.
-func (e *Engine) ticketStats(ctx context.Context) (*goapi.Object, error) {
+// closed} of the tickets of the scope (ticketsInScope).
+func (e *Engine) ticketStats(ctx context.Context, scope *access.DeviceScope) (*goapi.Object, error) {
+	where, args := e.ticketsInScope(scope)
+	and, andArgs := e.andTicketsInScope(scope)
 	if e.db.IsPostgres() {
 		rows, err := e.rows(ctx, `
                 SELECT COUNT(*) as total,
@@ -335,7 +358,7 @@ func (e *Engine) ticketStats(ctx context.Context) (*goapi.Object, error) {
                     COUNT(*) FILTER (WHERE status = 'resolved') as resolved,
                     COUNT(*) FILTER (WHERE status = 'closed') as closed
                 FROM tickets
-            `)
+            `+where, args...)
 		if err != nil {
 			return nil, fmt.Errorf("count the tickets: %w", err)
 		}
@@ -347,14 +370,17 @@ func (e *Engine) ticketStats(ctx context.Context) (*goapi.Object, error) {
 		return stats, nil
 	}
 	stats := goapi.NewObject()
-	for _, c := range []struct{ key, query string }{
-		{"total", "SELECT COUNT(*) as c FROM tickets"},
-		{"open", "SELECT COUNT(*) as c FROM tickets WHERE status = 'open'"},
-		{"in_progress", "SELECT COUNT(*) as c FROM tickets WHERE status = 'in_progress'"},
-		{"resolved", "SELECT COUNT(*) as c FROM tickets WHERE status = 'resolved'"},
-		{"closed", "SELECT COUNT(*) as c FROM tickets WHERE status = 'closed'"},
+	for _, c := range []struct {
+		key, query string
+		args       []any
+	}{
+		{"total", "SELECT COUNT(*) as c FROM tickets" + where, args},
+		{"open", "SELECT COUNT(*) as c FROM tickets WHERE status = 'open'" + and, andArgs},
+		{"in_progress", "SELECT COUNT(*) as c FROM tickets WHERE status = 'in_progress'" + and, andArgs},
+		{"resolved", "SELECT COUNT(*) as c FROM tickets WHERE status = 'resolved'" + and, andArgs},
+		{"closed", "SELECT COUNT(*) as c FROM tickets WHERE status = 'closed'" + and, andArgs},
 	} {
-		n, err := e.count(ctx, c.query)
+		n, err := e.count(ctx, c.query, c.args...)
 		if err != nil {
 			return nil, err
 		}
@@ -363,12 +389,13 @@ func (e *Engine) ticketStats(ctx context.Context) (*goapi.Object, error) {
 	return stats, nil
 }
 
-// ticketsBy counts the tickets by the values of a column: {name, n}, the
-// value of the newest ticket first, as the old console met them in
-// getAllTickets().
-func (e *Engine) ticketsBy(ctx context.Context, column string) ([]*goapi.Object, error) {
-	rows, err := e.rows(ctx, "SELECT "+column+" AS name, COUNT(*) AS n FROM tickets GROUP BY "+column+
-		" ORDER BY MAX(created_at) DESC, MIN(id)")
+// ticketsBy counts the tickets of the scope (ticketsInScope) by the
+// values of a column: {name, n}, the value of the newest ticket first, as
+// the old console met them in getAllTickets().
+func (e *Engine) ticketsBy(ctx context.Context, column string, scope *access.DeviceScope) ([]*goapi.Object, error) {
+	where, args := e.ticketsInScope(scope)
+	rows, err := e.rows(ctx, "SELECT "+column+" AS name, COUNT(*) AS n FROM tickets"+where+" GROUP BY "+column+
+		" ORDER BY MAX(created_at) DESC, MIN(id)", args...)
 	if err != nil {
 		return nil, fmt.Errorf("count the tickets by %s: %w", column, err)
 	}

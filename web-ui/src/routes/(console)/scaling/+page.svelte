@@ -48,6 +48,7 @@
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import Meter from '#lib/ui/Meter.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
@@ -346,6 +347,7 @@
 				</div>
 			{/if}
 		</div>
+		<ReadOnlyHint writes={['server.config']} />
 
 		{#if !settled}
 			<States kind="loading" message={t('scaling.relays_loading')} />

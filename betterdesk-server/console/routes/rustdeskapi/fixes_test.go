@@ -65,6 +65,28 @@ func TestAuditReadsAskForAuditView(t *testing.T) {
 	}
 }
 
+// The user groups are listed to a token whose account has user.view, with
+// the overrides of its role; any other account gets the empty list, as a
+// pro account does (L52).
+func TestUserGroupsAskForUserView(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		mustExec(t, db, `INSERT INTO user_groups (guid, name, note, team_id) VALUES ('ug-support', 'Support', '', '')`)
+		for _, role := range []string{"viewer", "guest_issuer", "pro"} {
+			if got := w.SignedOut().Do("GET", "/api/user-groups", "", clientToken(t, w, role)...); got.Status != 200 || got.Body != `{"data":[],"total":0}` {
+				t.Errorf("%s: %d %s, want the empty list", role, got.Status, got.Body)
+			}
+		}
+		if got := w.SignedOut().Do("GET", "/api/user-groups", "", clientToken(t, w, "operator")...); got.Status != 200 || !strings.Contains(got.Body, `"name":"Support"`) {
+			t.Errorf("operator: %d %s, want the groups", got.Status, got.Body)
+		}
+	})
+	w := routetest.New(t, routetest.Options{Roles: routetest.Overrides{"viewer": {"user.view": true}}})
+	if got := w.SignedOut().Do("GET", "/api/user-groups", "", clientToken(t, w, "viewer")...); got.Status != 200 || got.Body == `{"data":[],"total":0}` {
+		t.Errorf("viewer with user.view: %d %s, want the groups", got.Status, got.Body)
+	}
+}
+
 // scopedWorld is a console whose devices nobody was given are hidden, with
 // the devices D1 and D2 in folder 1 and in the device group dg-both, and
 // the operator granted D1 alone. The

@@ -59,6 +59,7 @@
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import States from '#lib/ui/States.svelte';
@@ -428,6 +429,7 @@
 			{/if}
 			<p class="page-description">{t('users.page_description')}</p>
 		</div>
+		<ReadOnlyHint writable={canCreate || canEdit || canDelete} />
 
 		<div class="page-cols">
 			<div class="page-main">

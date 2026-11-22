@@ -28,6 +28,7 @@
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
@@ -314,6 +315,7 @@
 			</div>
 		{/if}
 	</div>
+	<ReadOnlyHint writes={['device.edit']} />
 
 	<div class="page-cols">
 		<div class="page-main">

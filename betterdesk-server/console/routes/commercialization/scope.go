@@ -3,9 +3,11 @@ package commercialization
 import (
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/goapipath"
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -19,14 +21,19 @@ import (
 //	the sessions list                 the sessions of devices in the scope
 //	the work reports list             the reports of those sessions, looked up among
 //	                                  the 500 newest sessions
-//	the contracts list                without the contracts of a device outside it
+//	the contracts list                the contracts of a device in the scope, of a
+//	                                  device group or folder open to the account, and
+//	                                  of an organization with a device in the scope
 //	check, sessions/pending           403 for a device_id outside it, no call
 //	a session's work report           403 unless the API server knows the session
 //	                                  (GET /api/billing/sessions/{id}) and its device
 //	                                  is in the scope, no call
-//	the two exports                   403: the files cannot be cut to the scope
+//	the two exports                   the rows of the devices in the scope: the API
+//	                                  server gets them as device_ids
 //
 // An account without a limit gets the API server's answers as they are.
+// Without user.edit an account files no work report of a session whose
+// operator is another account, with a limit or without (reportInScope).
 
 // sessionsLookup is how many of the newest sessions are read to find
 // sessions by id: the most the API server lists at once.
@@ -138,10 +145,92 @@ func sessionInScope(scope *access.DeviceScope, session *goapi.Object) bool {
 	return scope.Has(text(session, "device_id"))
 }
 
-// contractInScope keeps the contracts of other targets than a device, and
-// those of a device in the scope.
-func contractInScope(scope *access.DeviceScope, contract *goapi.Object) bool {
-	return text(contract, "target_type") != "device" || scope.Has(text(contract, "target_key"))
+// contractsInScope answers GET /api/panel/billing/contracts for an
+// account with a limit: the contracts whose target is in its scope
+// (contractTargets).
+func (h *handlers) contractsInScope(w http.ResponseWriter, r *http.Request, scope *access.DeviceScope) {
+	resp := h.call(w, r, withSearch(goapipath.Fixed("/billing/contracts"), search(r)))
+	if resp == nil {
+		return
+	}
+	data := resp.Data()
+	targets := contractTargets{h: h, r: r, scope: scope, orgs: map[string]bool{}}
+	keepMember(data, "contracts", targets.keep)
+	if targets.err != nil {
+		h.log.Error("Billing contract scope error:", targets.err)
+		kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+		return
+	}
+	goapipath.WriteJSON(w, r, resp.Status, data)
+}
+
+// contractTargets decides which contracts an account with a limit sees:
+// the contract of a device in its scope, of a device group open to it (as
+// the device group list shows them), of a folder whose device group is
+// open to it, and of an organization that holds a device of its scope. A
+// target of another kind, or a device group that is gone, is left out.
+// The first failed lookup is kept in err.
+type contractTargets struct {
+	h     *handlers
+	r     *http.Request
+	scope *access.DeviceScope
+	// orgs holds the answer for each organization looked up
+	orgs map[string]bool
+	err  error
+}
+
+func (c *contractTargets) keep(contract *goapi.Object) bool {
+	if c.err != nil {
+		return false
+	}
+	key := text(contract, "target_key")
+	var kept bool
+	switch text(contract, "target_type") {
+	case "device":
+		return c.scope.Has(key)
+	case "device_group":
+		kept, c.err = c.groupOpen(key, false)
+	case "folder":
+		kept, c.err = c.groupOpen("folder_"+key, true)
+	case "org":
+		kept, c.err = c.orgInScope(key)
+	}
+	return kept && c.err == nil
+}
+
+// groupOpen reports whether the device group guid is open to the account.
+// A folder without a device group has no access list and is open.
+func (c *contractTargets) groupOpen(guid string, folder bool) (bool, error) {
+	ctx := c.r.Context()
+	group, err := c.h.d.DeviceGroups.DeviceGroupByGUID(ctx, guid)
+	if err != nil || group == nil {
+		return folder && err == nil, err
+	}
+	user := c.h.d.Access.UserAccessContext(ctx, devicegroups.ScopeUser(kit.User(c.r)))
+	return access.GroupAllowedForUser(devicegroups.ScopeGroup(group), user), nil
+}
+
+// orgInScope reports whether the organization holds a device of the
+// scope, by its device list on the API server.
+func (c *contractTargets) orgInScope(id string) (bool, error) {
+	if kept, seen := c.orgs[id]; seen {
+		return kept, nil
+	}
+	resp, err := c.h.api.Request(c.r.Context(), http.MethodGet, "/org/"+goapi.EncodeURIComponent(id)+"/devices")
+	if err != nil {
+		if goapi.AsError(err).Status() == http.StatusNotFound {
+			c.orgs[id] = false
+			return false, nil
+		}
+		return false, err
+	}
+	kept := false
+	keepMember(resp.Data(), "devices", func(device *goapi.Object) bool {
+		kept = kept || c.scope.Has(text(device, "device_id"))
+		return true
+	})
+	c.orgs[id] = kept
+	return kept, nil
 }
 
 // sessionDevices reads the devices of the newest sessions by session id.
@@ -196,15 +285,24 @@ func (h *handlers) deviceInScope(pattern string) http.HandlerFunc {
 	})
 }
 
-// reportInScope is passBody for the work report of a session, refused
-// for an account with a limit unless the API server knows the session and
-// its device is in the scope. Whether the session still takes a report is
-// the API server's to answer.
+// reportInScope is passBody for the work report of a session. An account
+// without user.edit files no report of a session whose operator is
+// another account (othersSession), and an account with a limit only that
+// of a session of a device in its scope, which the API server has to
+// know. The session is looked up only for those checks. Whether the
+// session still takes a report is the API server's to answer.
 func (h *handlers) reportInScope(pattern string) http.HandlerFunc {
 	plain := h.passBody(http.MethodPost, pattern)
-	return h.scoped(plain, func(w http.ResponseWriter, r *http.Request, scope *access.DeviceScope) {
-		if _, err := goapipath.PathOf(r, pattern)(); err != nil {
-			// the path is refused with 400 before any call
+	return func(w http.ResponseWriter, r *http.Request) {
+		scope, err := h.scope(r)
+		if err != nil {
+			h.log.Error("Billing device scope error:", err)
+			kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+			return
+		}
+		forOthers := kit.HasPermission(r, "user.edit")
+		if _, err := goapipath.PathOf(r, pattern)(); err != nil || scope.Unlimited() && forOthers {
+			// a refused path is answered 400 before any call
 			plain(w, r)
 			return
 		}
@@ -214,17 +312,71 @@ func (h *handlers) reportInScope(pattern string) http.HandlerFunc {
 			goapipath.WriteJSON(w, r, status, data)
 			return
 		}
-		if session == nil || !scope.Has(session.DeviceID()) {
+		if !scope.Unlimited() && (session == nil || !scope.Has(session.DeviceID())) {
 			outOfScope(w, r)
 			return
 		}
+		if session != nil && !forOthers {
+			other, err := h.othersSession(r, session)
+			if err != nil {
+				h.log.Error("Work report operator lookup error:", err)
+				kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+				return
+			}
+			if other {
+				kit.Fail(w, r, http.StatusForbidden, kit.T(r, "errors.no_permission", nil))
+				return
+			}
+		}
 		plain(w, r)
+	}
+}
+
+// othersSession reports whether the operator of a billing session is
+// another account than the caller's: its operator_name or operator_id is
+// not the caller's name but the name of another account of the console.
+// A session whose operator names no account (the console's web client, a
+// desktop client's id) is nobody's in particular.
+func (h *handlers) othersSession(r *http.Request, session *goapi.BillingSession) (bool, error) {
+	me := kit.User(r).Username
+	names := []string{text(session.Session, "operator_name"), text(session.Session, "operator_id")}
+	if slices.Contains(names, me) {
+		return false, nil
+	}
+	for _, name := range names {
+		if name == "" {
+			continue
+		}
+		if found, err := accountNamed(r.Context(), h.d.Store, name); err != nil || found {
+			return found, err
+		}
+	}
+	return false, nil
+}
+
+// exportInScope is export. For an account with a limit the API server
+// gets the devices of its scope as device_ids, in place of any the
+// request names, and answers with their rows alone, as the lists keep to
+// them.
+func (h *handlers) exportInScope(pattern string) http.HandlerFunc {
+	return h.scoped(h.export(pattern), func(w http.ResponseWriter, r *http.Request, scope *access.DeviceScope) {
+		query := url.Values{"device_ids": {strings.Join(scope.IDs(), ",")}}.Encode()
+		if own := withoutParameter(search(r), "device_ids"); own != "" {
+			query = own + "&" + query
+		}
+		goapipath.ProxyBinaryToGo(h.api, w, r, http.MethodGet, withSearch(goapipath.PathOf(r, pattern), "?"+query))
 	})
 }
 
-// exportInScope is export, refused for an account with a limit.
-func (h *handlers) exportInScope(pattern string) http.HandlerFunc {
-	return h.scoped(h.export(pattern), func(w http.ResponseWriter, r *http.Request, _ *access.DeviceScope) {
-		outOfScope(w, r)
-	})
+// withoutParameter is a written query (search, with its "?") without the
+// parts of one parameter, and without the "?".
+func withoutParameter(query, name string) string {
+	var kept []string
+	for _, part := range strings.Split(strings.TrimPrefix(query, "?"), "&") {
+		key, _, _ := strings.Cut(part, "=")
+		if decoded, err := url.QueryUnescape(key); part != "" && (err != nil || decoded != name) {
+			kept = append(kept, part)
+		}
+	}
+	return strings.Join(kept, "&")
 }

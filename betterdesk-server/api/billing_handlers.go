@@ -418,7 +418,27 @@ func (s *Server) handleGetPendingBillingSession(w http.ResponseWriter, r *http.R
 	writeJSON(w, http.StatusOK, map[string]any{"session": sessions[0]})
 }
 
-// GET /api/billing/reports/export?format=csv|pdf&org_id=
+// exportDevices reads device_ids of an export's query: the devices,
+// separated by commas, whose rows the export holds. It is nil without the
+// parameter, which keeps every row; an empty list keeps none. The console
+// names the devices of a limited account's scope with it.
+func exportDevices(r *http.Request) map[string]bool {
+	values, named := r.URL.Query()["device_ids"]
+	if !named {
+		return nil
+	}
+	keep := map[string]bool{}
+	for _, value := range values {
+		for _, id := range strings.Split(value, ",") {
+			if id = strings.TrimSpace(id); id != "" {
+				keep[id] = true
+			}
+		}
+	}
+	return keep
+}
+
+// GET /api/billing/reports/export?format=csv|pdf&org_id=&device_ids=
 func (s *Server) handleExportBillingReports(w http.ResponseWriter, r *http.Request) {
 	format := strings.ToLower(r.URL.Query().Get("format"))
 	if format == "" {
@@ -440,6 +460,15 @@ func (s *Server) handleExportBillingReports(w http.ResponseWriter, r *http.Reque
 		sessMap[sess.ID] = sess
 	}
 	rows := billing.BuildReportExportRows(reports, sessMap)
+	if keep := exportDevices(r); keep != nil {
+		kept := rows[:0]
+		for _, row := range rows {
+			if keep[row.DeviceID] {
+				kept = append(kept, row)
+			}
+		}
+		rows = kept
+	}
 	stamp := s.exportStamp()
 
 	switch format {
@@ -462,7 +491,7 @@ func (s *Server) handleExportBillingReports(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// GET /api/billing/sessions/export?format=csv&org_id=
+// GET /api/billing/sessions/export?format=csv&org_id=&device_ids=
 func (s *Server) handleExportBillingSessions(w http.ResponseWriter, r *http.Request) {
 	format := strings.ToLower(r.URL.Query().Get("format"))
 	if format != "csv" {
@@ -475,8 +504,12 @@ func (s *Server) handleExportBillingSessions(w http.ResponseWriter, r *http.Requ
 		writeInternalError(w, err, "ListBillingSessions")
 		return
 	}
+	keep := exportDevices(r)
 	exportRows := make([]billing.SessionExportRow, 0, len(sessions))
 	for _, sess := range sessions {
+		if keep != nil && !keep[sess.DeviceID] {
+			continue
+		}
 		exportRows = append(exportRows, billing.SessionExportRow{
 			ID:            sess.ID,
 			OrgID:         sess.OrgID,

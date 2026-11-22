@@ -78,7 +78,8 @@
   },
   {
    "roles": [
-    "operator"
+    "operator",
+    "global_admin"
    ],
    "status": 200,
    "headers": {
@@ -136,7 +137,6 @@
   },
   {
    "roles": [
-    "global_admin",
     "super_admin",
     "admin"
    ],
@@ -177,7 +177,7 @@
       {
        "created_at": "<volatile>",
        "id": 8,
-       "operator_id": "e2e_operator",
+       "operator_id": "e2e_global_admin",
        "session_id": "demo-bs-009",
        "summary": "   ",
        "ticket_ref": "#1"

@@ -53,7 +53,7 @@ func Register(d *kit.Deps) {
 	r.Put("/api/panel/billing/packages/{packageId}", h.passBody("PUT", "/billing/packages/{packageId}"), auth, manage)
 	r.Delete("/api/panel/billing/packages/{packageId}", h.pass("DELETE", "/billing/packages/{packageId}"), auth, manage)
 
-	r.Get("/api/panel/billing/contracts", h.listInScope("/billing/contracts", "contracts", contractInScope), auth, view)
+	r.Get("/api/panel/billing/contracts", h.scoped(h.withQuery("/billing/contracts"), h.contractsInScope), auth, view)
 	r.Post("/api/panel/billing/contracts", h.passBody("POST", "/billing/contracts"), auth, manage)
 	r.Put("/api/panel/billing/contracts/{contractId}", h.passBody("PUT", "/billing/contracts/{contractId}"), auth, manage)
 	r.Delete("/api/panel/billing/contracts/{contractId}", h.pass("DELETE", "/billing/contracts/{contractId}"), auth, manage)

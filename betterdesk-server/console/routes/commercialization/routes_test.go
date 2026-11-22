@@ -74,6 +74,36 @@ func fixed(v *proxytest.Vector) bool {
 	return true
 }
 
+// othersReport changes the vector of a work report filed by an account
+// without user.edit into the answer the console gives now: the route
+// looks the session up first (GET /api/billing/sessions/{id}) to see
+// whether its operator is another account (L49), and the vectors' API
+// answer holds no session, so the lookup fails before the report goes
+// on. It reports whether v is one of them.
+func othersReport(v *proxytest.Vector) bool {
+	session := v.Request.Session
+	if v.Request.Method != http.MethodPost || !strings.HasSuffix(v.Request.Path, "/report") || session == nil ||
+		session.User.Role != "operator" || len(v.Calls) != 1 {
+		return false
+	}
+	target := strings.TrimSuffix(v.Calls[0].URL, "/report")
+	v.Status, v.Type, v.Body = http.StatusInternalServerError, "application/json; charset=utf-8", `{"error":"Go server unreachable"}`
+	v.Calls = []proxytest.Call{{Method: http.MethodGet, URL: target, Type: "application/json"}}
+	return true
+}
+
+func TestOthersReportVectorsAreCounted(t *testing.T) {
+	changed := 0
+	for _, v := range proxytest.Load(t, filepath.Join("testdata", "vectors.json")) {
+		if othersReport(&v) {
+			changed++
+		}
+	}
+	if changed != 1 {
+		t.Errorf("%d vectors file a work report without user.edit, want 1", changed)
+	}
+}
+
 func TestTwoDotsVectorsAreListed(t *testing.T) {
 	found := map[string]int{}
 	for _, v := range proxytest.Load(t, filepath.Join("testdata", "vectors.json")) {
@@ -210,6 +240,7 @@ func templates(vectors []proxytest.Vector) map[string]proxytest.Vector {
 		}
 		fixed(&v)
 		everyMember(&v)
+		othersReport(&v)
 		if key := templateKey(v, v.Request.Path); out[key].Status == 0 {
 			out[key] = v
 		}
@@ -246,6 +277,7 @@ func replay(t *testing.T, keep func(proxytest.Vector) bool) {
 		if keep(v) {
 			fixed(&v)
 			everyMember(&v)
+			othersReport(&v)
 			plainQueries(&v, from)
 			kept = append(kept, v)
 		}

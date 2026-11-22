@@ -59,6 +59,7 @@
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Radio from '#lib/ui/Radio.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import SaveBar from '#lib/ui/SaveBar.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
@@ -794,7 +795,7 @@
 {/snippet}
 
 <SettingsLayout {toc} {side} sideLabelledby="branding-preview-title" sticky>
-	{#if !canEdit}<Notice message={t('settings.appearance.read_only')} />{/if}
+	<ReadOnlyHint writes={['branding.edit']} />
 	{#if readText}
 		<Notice
 			tone={readIssues.some((i) => i.severity === 'error') ? 'danger' : 'warning'}
