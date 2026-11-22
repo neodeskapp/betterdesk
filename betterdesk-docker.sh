@@ -564,8 +564,21 @@ pull_image() {
         return 0
     fi
     step "Pulling $(image_ref)"
-    local out
-    if ! out=$(compose pull --quiet betterdesk 2>&1); then
+    local out ok=true
+    out=$(compose pull --quiet betterdesk 2>&1) || ok=false
+    # Before the first release there is no latest image: without a tag given
+    # or saved, the install runs the development image, as the native
+    # installers take the development build then
+    if [ "$ok" = false ] && printf '%s' "$out" | grep -qiE 'manifest unknown|not found' && [ "$(image_tag)" = latest ] \
+        && [ -z "$BETTERDESK_IMAGE_TAG_SET" ] && [ -z "$(env_get BETTERDESK_IMAGE_TAG)" ]; then
+        warn "ghcr.io has no release image yet (latest): running the development image dev instead."
+        warn "Once a release is out: sudo bash betterdesk-docker.sh update --tag latest"
+        env_set BETTERDESK_IMAGE_TAG dev
+        step "Pulling $(image_ref)"
+        ok=true
+        out=$(compose pull --quiet betterdesk 2>&1) || ok=false
+    fi
+    if [ "$ok" = false ]; then
         if printf '%s' "$out" | grep -qiE 'manifest unknown|not found|denied|unauthorized'; then
             die "The image $(image_ref) was not found on ghcr.io." \
                 "Check the tag (--tag, BETTERDESK_IMAGE_TAG in $(env_file)); latest is the newest release." \

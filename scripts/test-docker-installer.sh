@@ -60,8 +60,13 @@ docker() {
         compose)
             case "$2" in
                 version) [ "${3:-}" = --short ] && printf '2.29.1\n'; return 0 ;;
-                pull) if [ -f "$TEST_DIR/pull-fails" ]; then printf 'manifest unknown
-' >&2; return 1; fi; return 0 ;;
+                pull)
+                    # missing-<tag>: ghcr.io has no image of that tag
+                    local tag
+                    tag=$(grep -E '^BETTERDESK_IMAGE_TAG=' "$BETTERDESK_DIR/.env" 2>/dev/null | tail -n 1 | cut -d= -f2)
+                    if [ -f "$TEST_DIR/pull-fails" ] || [ -f "$TEST_DIR/missing-${tag:-latest}" ]; then printf 'manifest unknown
+' >&2; return 1; fi
+                    return 0 ;;
                 up)
                     touch "$TEST_DIR/exists" "$TEST_DIR/running"
                     cp "$TEST_DIR/pulled" "$TEST_DIR/current-image" ;;
@@ -155,6 +160,23 @@ test_fresh_install() (
 
     out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the second run failed: $out"
     if printf '%s' "$out" | grep -q 'first-pass-0123'; then fail "the second run printed the password again"; fi
+    rm -rf "$TEST_DIR"
+)
+
+# L254: before any release, ghcr.io has no latest image. Without a tag
+# given or saved the install runs the development image dev and says so,
+# as the native installers take the development build; a tag given stays
+# and fails with what to do.
+test_no_release_image_runs_dev() (
+    load
+    : > "$TEST_DIR/missing-latest"
+    local out
+    out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "an install without a release image failed: $out"
+    grep -qx 'BETTERDESK_IMAGE_TAG=dev' "$BETTERDESK_DIR/.env" || fail "the install does not run dev: $(cat "$BETTERDESK_DIR/.env")"
+    printf '%s' "$out" | grep -q 'no release image yet' || fail "the install does not say it took the development image: $out"
+    rm -rf "$BETTERDESK_DIR"
+    if out=$(mgr 'BETTERDESK_IMAGE_TAG_SET=latest; COMMAND=install; do_install' 2>&1); then fail "an install with latest given ran another image"; fi
+    printf '%s' "$out" | grep -q 'was not found on ghcr.io' || fail "a missing given tag is not said: $out"
     rm -rf "$TEST_DIR"
 )
 
@@ -469,6 +491,7 @@ test_install_sh_opens_the_published_ports() (
 )
 
 test_fresh_install
+test_no_release_image_runs_dev
 test_update_goes_back_when_unhealthy
 test_update_keeps_compose_edits
 test_fresh_install_on_postgres

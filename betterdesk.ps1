@@ -957,6 +957,22 @@ function Get-NewestPrereleaseTag {
     return ""
 }
 
+# The stable channel's release as GitHub's API names it: @{ Tag } of the
+# newest stable release, @{ Missing } when the repository has none (the
+# API answers 404), or @{} when the API gives no answer, and the download
+# then asks releases/latest itself.
+function Get-StableRelease {
+    try {
+        $r = Invoke-RestMethod -Uri "https://api.github.com/repos/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/releases/latest" -Headers @{ Accept = "application/vnd.github+json" } -UseBasicParsing -ErrorAction Stop
+        if ("$($r.tag_name)" -match '^[A-Za-z0-9][A-Za-z0-9._-]*$') { return @{ Tag = [string]$r.tag_name } }
+    } catch {
+        $code = 0
+        if ($_.Exception.Response) { try { $code = [int]$_.Exception.Response.StatusCode } catch { $code = 0 } }
+        if ($code -eq 404 -or (-not $code -and "$($_.Exception.Message)" -match '\b404\b')) { return @{ Missing = $true } }
+    }
+    return @{}
+}
+
 # Downloads the release binary for this machine into $Dir, checked against
 # the release's SHA256SUMS and, when the installed binary can check it
 # (verify-release), the signature of the release's manifest. Returns the
@@ -979,6 +995,32 @@ function Get-ReleaseBinary {
     $fallback = -not $env:RELEASE_BASE_URL -and -not $script:UPDATE_GITHUB_BRANCH_GIVEN -and -not (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_BRANCH")
     $askedForPrerelease = $false
     $script:RELEASE_TAG = ""
+    # The stable channel's release is found through GitHub's API first:
+    # while the repository has none, releases/latest/download answers in a
+    # way Windows PowerShell 5.1 reports as a closed connection, not a 404
+    if (-not $env:RELEASE_BASE_URL -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
+        $stable = Get-StableRelease
+        if ($stable.Tag) {
+            $script:RELEASE_TAG = $stable.Tag
+        } elseif ($stable.Missing) {
+            $askedForPrerelease = $true
+            $prerelease = Get-NewestPrereleaseTag
+            if ($prerelease) {
+                Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release yet: installing the newest pre-release $prerelease"
+                $script:RELEASE_TAG = $prerelease
+            } elseif ($fallback) {
+                Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release or pre-release yet: installing the development build (-Channel dev) instead"
+                Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1')' -Update -Channel stable"
+                $script:UPDATE_GITHUB_BRANCH = "dev"
+                $script:UPDATE_GITHUB_BRANCH_GIVEN = "dev"
+                $env:UPDATE_GITHUB_BRANCH = "dev"
+            } else {
+                Print-Error "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release or pre-release yet"
+                Print-Info "Install the development build with -Channel dev, or a binary you have with -Binary FILE"
+                return $null
+            }
+        }
+    }
     while ($true) {
         $base = Get-ReleaseBaseUrl
         Print-Info "Downloading $asset ($($script:UPDATE_GITHUB_BRANCH) channel) from $base"

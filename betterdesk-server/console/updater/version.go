@@ -47,8 +47,10 @@ func ChannelLabel(channel string) string {
 
 // CompareVersions compares two versions X.Y.Z[-suffix]: -1, 0 or 1. A
 // version with a suffix comes before the same version without one; two
-// suffixes compare as text. A version that is not of that form (a
-// development build's "dev") comes before every version that is.
+// suffixes compare as semver orders pre-releases, identifier by
+// identifier, numbers as numbers (rc.9 before rc.10). A version that is
+// not of that form (a development build's "dev") comes before every
+// version that is.
 func CompareVersions(a, b string) int {
 	pa, okA := parseVersion(a)
 	pb, okB := parseVersion(b)
@@ -76,7 +78,42 @@ func CompareVersions(a, b string) int {
 	case pb.suffix == "":
 		return -1
 	}
-	return strings.Compare(pa.suffix, pb.suffix)
+	return comparePrerelease(pa.suffix, pb.suffix)
+}
+
+// comparePrerelease compares two pre-release suffixes (rc.1, beta.2) by
+// semver's rule: numeric identifiers as numbers and before text ones,
+// text ones as text, and a shorter list first when all else is equal.
+func comparePrerelease(a, b string) int {
+	as, bs := strings.Split(a, "."), strings.Split(b, ".")
+	for i := 0; i < len(as) && i < len(bs); i++ {
+		na, errA := strconv.ParseUint(as[i], 10, 64)
+		nb, errB := strconv.ParseUint(bs[i], 10, 64)
+		switch {
+		case errA == nil && errB == nil:
+			if na != nb {
+				if na < nb {
+					return -1
+				}
+				return 1
+			}
+		case errA == nil:
+			return -1
+		case errB == nil:
+			return 1
+		default:
+			if c := strings.Compare(as[i], bs[i]); c != 0 {
+				return c
+			}
+		}
+	}
+	switch {
+	case len(as) < len(bs):
+		return -1
+	case len(as) > len(bs):
+		return 1
+	}
+	return 0
 }
 
 type version struct {
