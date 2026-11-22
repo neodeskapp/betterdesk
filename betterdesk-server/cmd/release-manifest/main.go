@@ -5,23 +5,28 @@
 //
 //	go run ./cmd/release-manifest -dir dist -version 3.6.0 -commit <sha> -branch main
 //
-// The signing key is the ed25519 seed (32 bytes) or private key (64
-// bytes) in base64, in BETTERDESK_RELEASE_SIGNING_KEY; it is never taken
-// from the command line. Without it the release is unsigned. -verify-key
-// checks the written signature against public keys (several separated by
-// commas), as the updater would.
+// The signing key is in BETTERDESK_RELEASE_SIGNING_KEY: a PKCS#8 PEM
+// private key, as "openssl genpkey -algorithm ed25519" writes it, or the
+// ed25519 seed (32 bytes) or private key (64 bytes) in base64; it is never
+// taken from the command line. The written signature must verify against
+// the release keys compiled into the updater (updater.CompiledKeys) and
+// -verify-key (public keys in base64, comma separated), as the updater
+// checks it. While a key is compiled in, a release without a signing key
+// is refused: no install would take it.
 //
 // With -check the command writes nothing: it checks an existing release
 // folder (the manifest's form, every binary's SHA-256 and size, and the
-// signature against -verify-key).
+// signature against the compiled keys and -verify-key).
 package main
 
 import (
 	"crypto/ed25519"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"flag"
 	"fmt"
@@ -101,25 +106,28 @@ func run(args []string, getenv func(string) string, out io.Writer) error {
 	written := []string{"manifest.json"}
 
 	payload := updater.CanonicalPayload(manifest.Signed())
+	compiled, extra := updater.CompiledKeys(), updater.ParseKeys(*verifyKey)
 	if seed := strings.TrimSpace(getenv("BETTERDESK_RELEASE_SIGNING_KEY")); seed != "" {
 		key, err := privateKey(seed)
 		if err != nil {
 			return err
 		}
 		sig := base64.StdEncoding.EncodeToString(ed25519.Sign(key, payload)) + "\n"
+		if len(compiled) > 0 && !updater.VerifySignature(payload, []byte(sig), compiled) {
+			return errors.New("the signature does not verify against the release key compiled into the updater: the signing key is not the release key")
+		}
+		if *verifyKey != "" && !updater.VerifySignature(payload, []byte(sig), extra) {
+			return errors.New("the signature does not verify against -verify-key")
+		}
 		if err := os.WriteFile(filepath.Join(*dir, "manifest.sig"), []byte(sig), 0o644); err != nil {
 			return err
 		}
 		written = append(written, "manifest.sig")
 		fmt.Fprintf(out, "signed with the key %s\n", base64.StdEncoding.EncodeToString(key.Public().(ed25519.PublicKey)))
-		if *verifyKey != "" && !updater.VerifySignature(payload, []byte(sig), updater.ParseKeys(*verifyKey)) {
-			return errors.New("the signature does not verify against -verify-key")
-		}
+	} else if len(compiled) > 0 || *verifyKey != "" {
+		return errors.New("BETTERDESK_RELEASE_SIGNING_KEY is not set, and the updater refuses a release without a signature")
 	} else {
 		fmt.Fprintln(out, "BETTERDESK_RELEASE_SIGNING_KEY is not set: the release is not signed")
-		if *verifyKey != "" {
-			return errors.New("-verify-key given, but there is no signing key")
-		}
 	}
 
 	var sums strings.Builder
@@ -142,9 +150,20 @@ func run(args []string, getenv func(string) string, out io.Writer) error {
 	return nil
 }
 
-// privateKey reads the signing key: a seed of 32 bytes or a private key
-// of 64 bytes, in base64.
+// privateKey reads the signing key: an ed25519 key in a PKCS#8 PEM block,
+// or a seed of 32 bytes or a private key of 64 bytes in base64.
 func privateKey(text string) (ed25519.PrivateKey, error) {
+	if block, _ := pem.Decode([]byte(text)); block != nil {
+		parsed, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, errors.New("BETTERDESK_RELEASE_SIGNING_KEY is a PEM block but no PKCS#8 private key")
+		}
+		key, ok := parsed.(ed25519.PrivateKey)
+		if !ok {
+			return nil, errors.New("BETTERDESK_RELEASE_SIGNING_KEY is no ed25519 key")
+		}
+		return key, nil
+	}
 	raw, err := base64.StdEncoding.DecodeString(text)
 	if err != nil {
 		return nil, errors.New("BETTERDESK_RELEASE_SIGNING_KEY is not base64")
@@ -195,9 +214,13 @@ func checkRelease(dir, owner, repo, branch, keys string, out io.Writer) error {
 	if data, err := os.ReadFile(filepath.Join(dir, "manifest.sig")); err == nil {
 		sig = data
 	}
-	trust := updater.EvaluateTrust(updater.CanonicalPayload(m.Signed()), sig, updater.ParseKeys(keys), false)
+	payload := updater.CanonicalPayload(m.Signed())
+	trust := updater.EvaluateTrust(payload, sig, updater.CompiledKeys(), false)
 	if !trust.OK {
 		return errors.New(trust.Reason)
+	}
+	if keys != "" && (sig == nil || !updater.VerifySignature(payload, sig, updater.ParseKeys(keys))) {
+		return errors.New("the signature does not verify against -verify-key")
 	}
 	fmt.Fprintf(out, "release %s (%s) of %s/%s: %d binaries match, signature: %s\n", m.Version, m.SHA[:7], owner, repo, len(m.Files),
 		map[bool]string{true: "verified", false: "not verified (" + trust.Code + ")"}[trust.Verified])
