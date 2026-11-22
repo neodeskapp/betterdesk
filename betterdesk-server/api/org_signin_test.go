@@ -146,7 +146,6 @@ var orgTokenReads = []string{
 	"/api/device-group/accessible",
 	"/api/peers/list",
 	"/api/user/group",
-	"/api/user-groups",
 	// what the server tells every client: health, sign-in options,
 	// branding, its key, software links, the permission catalog
 	"/api/health",
