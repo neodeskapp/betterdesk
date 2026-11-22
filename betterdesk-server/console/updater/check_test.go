@@ -2,6 +2,7 @@ package updater
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -128,6 +129,56 @@ func TestCheckFindsTheRelease(t *testing.T) {
 	}
 	if after := in.gh.count("GET https://api.github.com"); after != before {
 		t.Errorf("the cache did not hold: %d API calls, then %d", before, after)
+	}
+}
+
+// L210 (A183): while the repository has no stable release, the stable
+// channel takes the newest pre-release that is not the rolling dev one (a
+// release candidate of a v* tag with a suffix), and the development build
+// only when there is no pre-release either; the update says which it took.
+func TestStableChannelWithoutAStableRelease(t *testing.T) {
+	in := newInstall(t)
+	in.gh.serve(newTestRelease("3.5.272", "5555555555555555555555555555555555555555", BranchDevelopment))
+	older := newTestRelease("3.6.0-rc.1", "4444444444444444444444444444444444444444", BranchStable)
+	older.prerelease = true
+	in.gh.serve(older)
+	rc := newTestRelease("3.6.0-rc.2", newCommit, BranchStable)
+	rc.prerelease = true
+	in.gh.serve(rc)
+	// The dev pre-release is made again on every push, so it is often the
+	// newest; a draft is no release
+	in.gh.list(json.RawMessage(`{"tag_name":"dev","name":"dev","draft":false,"prerelease":true,"assets":[]}`))
+	in.gh.list(json.RawMessage(`{"tag_name":"v3.7.0-rc.1","name":"draft","draft":true,"prerelease":true,"assets":[]}`))
+	got, err := in.svc.Check(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ReleaseTag != "v3.6.0-rc.2" || got.LatestVersion != "3.6.0-rc.2" || got.RemoteSHA != newCommit || !got.UpdateAvailable {
+		t.Errorf("without a stable release the check found %s %s (%s), update %v", got.ReleaseTag, got.LatestVersion, got.RemoteSHA, got.UpdateAvailable)
+	}
+	if code, out := runCLI(in, "", "--check"); code != 0 || !strings.Contains(out, "no stable release yet: the newest pre-release v3.6.0-rc.2") {
+		t.Errorf("the update does not say which release it took: %d\n%s", code, out)
+	}
+
+	in = newInstall(t)
+	in.gh.serve(newTestRelease("3.5.272", newCommit, BranchDevelopment))
+	got, err = in.svc.Check(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ReleaseTag != "dev" || got.LatestVersion != "3.5.272" || !got.UpdateAvailable {
+		t.Errorf("without a stable release or pre-release the check found %s %s, update %v", got.ReleaseTag, got.LatestVersion, got.UpdateAvailable)
+	}
+	if code, out := runCLI(in, "", "--check"); code != 0 || !strings.Contains(out, "no stable release or pre-release yet: the development build") {
+		t.Errorf("the update does not say it took the development build: %d\n%s", code, out)
+	}
+
+	// A stable release wins over every pre-release
+	in = newInstall(t)
+	in.gh.serve(rc)
+	in.gh.serve(newTestRelease("3.6.0", newCommit, BranchStable))
+	if got, err = in.svc.Check(context.Background()); err != nil || got.ReleaseTag != "v3.6.0" {
+		t.Errorf("with a stable release the check found %+v (%v)", got, err)
 	}
 }
 

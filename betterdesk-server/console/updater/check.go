@@ -148,6 +148,8 @@ func (c *comparison) commitsBehind() int {
 // old console sent them. The Docker fields are only there for an image
 // install.
 type CheckResult struct {
+	// note is Release.Note, for the update command; not in the answer
+	note                 string
 	LocalVersion         string               `json:"localVersion"`
 	LocalSHA             *string              `json:"localSHA"`
 	RemoteSHA            string               `json:"remoteSHA"`
@@ -188,6 +190,7 @@ func (s *Service) Check(ctx context.Context) (*CheckResult, error) {
 		LocalVersion: s.opts.Version, LocalSHA: nullable(local), RemoteSHA: rel.Manifest.SHA,
 		LatestMessage: headline(firstNonEmpty(rel.Name, rel.Tag)), LatestDate: rel.PublishedAt, LatestAuthor: rel.Author,
 		Components: map[string]Component{}, LatestVersion: rel.Manifest.Version, ReleaseTag: rel.Tag, Signature: rel.Trust,
+		note: rel.Note,
 	}
 	s.withDeployment(out)
 	newer := CompareVersions(rel.Manifest.Version, s.opts.Version) >= 0

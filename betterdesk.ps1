@@ -933,8 +933,24 @@ function Invoke-ServerCommand {
 function Get-ReleaseBaseUrl {
     if ($env:RELEASE_BASE_URL) { return $env:RELEASE_BASE_URL.TrimEnd('/') }
     $releases = "https://github.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/releases"
+    if ($script:RELEASE_TAG) { return "$releases/download/$($script:RELEASE_TAG)" }
     if ($script:UPDATE_GITHUB_BRANCH -eq "dev") { return "$releases/download/dev" }
     return "$releases/latest/download"
+}
+
+# The tag of the newest published pre-release of the repository other than
+# the rolling "dev" one, or "" when there is none or the API does not
+# answer. GitHub lists the releases newest first.
+function Get-NewestPrereleaseTag {
+    try {
+        $list = Invoke-RestMethod -Uri "https://api.github.com/repos/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/releases?per_page=50" -Headers @{ Accept = "application/vnd.github+json" } -UseBasicParsing -ErrorAction Stop
+    } catch {
+        return ""
+    }
+    foreach ($r in @($list)) {
+        if (-not $r.draft -and $r.prerelease -and $r.tag_name -ne "dev" -and "$($r.tag_name)" -match '^[A-Za-z0-9][A-Za-z0-9._-]*$') { return [string]$r.tag_name }
+    }
+    return ""
 }
 
 # Downloads the release binary for this machine into $Dir, checked against
@@ -957,6 +973,8 @@ function Get-ReleaseBinary {
     $status = 0
     $failure = $null
     $fallback = -not $env:RELEASE_BASE_URL -and -not $script:UPDATE_GITHUB_BRANCH_GIVEN -and -not (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_BRANCH")
+    $askedForPrerelease = $false
+    $script:RELEASE_TAG = ""
     while ($true) {
         $base = Get-ReleaseBaseUrl
         Print-Info "Downloading $asset ($($script:UPDATE_GITHUB_BRANCH) channel) from $base"
@@ -971,10 +989,20 @@ function Get-ReleaseBinary {
             if ($_.Exception.Response) { try { $status = [int]$_.Exception.Response.StatusCode } catch { $status = 0 } }
             if (-not $status -and "$($_.Exception.Message)" -match '\b404\b') { $status = 404 }
         }
-        # No channel given or saved, and no stable release yet: the
-        # development build, and its channel for later updates
-        if ($failure -and $status -eq 404 -and $fallback -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
-            Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release yet: installing the development build (-Channel dev) instead"
+        # No stable release yet: the newest pre-release (a release candidate
+        # of the stable channel), else, with no channel given or saved, the
+        # development build and its channel for later updates (DECISIONS A183)
+        if ($failure -and $status -eq 404 -and -not $env:RELEASE_BASE_URL -and $script:UPDATE_GITHUB_BRANCH -ne "dev" -and -not $askedForPrerelease) {
+            $askedForPrerelease = $true
+            $prerelease = Get-NewestPrereleaseTag
+            if ($prerelease) {
+                Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release yet: installing the newest pre-release $prerelease"
+                $script:RELEASE_TAG = $prerelease
+                continue
+            }
+        }
+        if ($failure -and $status -eq 404 -and $fallback -and -not $script:RELEASE_TAG -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
+            Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release or pre-release yet: installing the development build (-Channel dev) instead"
             Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1')' -Update -Channel stable"
             $script:UPDATE_GITHUB_BRANCH = "dev"
             $script:UPDATE_GITHUB_BRANCH_GIVEN = "dev"

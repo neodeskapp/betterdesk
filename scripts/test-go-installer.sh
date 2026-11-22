@@ -590,10 +590,103 @@ FAKE
     rm -rf "$TEST_DIR"
 )
 
+# workflow_step NAME|ID: the run script of a step of release-go.yml, as
+# bash runs it (the block below its run: |, without the YAML indent)
+workflow_step() {
+    awk -v want="$1" '
+        /^      - (id|name): / { inside = (index($0, want) > 0); next }
+        inside && /^        run: \|/ { body = 1; next }
+        body && /^          / { print substr($0, 11); next }
+        body && !/^[[:space:]]*$/ { exit }
+        body { print "" }
+    ' "$SCRIPT_ROOT/.github/workflows/release-go.yml"
+}
+
+# L210 (A183): release-go.yml publishes a v* tag with a suffix
+# (v3.6.0-rc.1) as a GitHub pre-release, never the latest release; a
+# version without one is the latest release.
+test_release_workflow_publishes_candidates_as_prereleases() (
+    local dir version plan publish
+    dir=$(mktemp -d)
+    plan=$(workflow_step 'id: plan' | sed 's/\${{ inputs.channel }}//')
+    publish=$(workflow_step 'name: Publish')
+    [ -n "$plan" ] && [ -n "$publish" ] || fail "release-go.yml has no plan or Publish step"
+    for version in 3.6.0-rc.1 3.6.0; do
+        mkdir -p "$dir/$version/betterdesk-server/internal/productversion" "$dir/$version/dist"
+        printf '%s\n' "$version" > "$dir/$version/betterdesk-server/internal/productversion/VERSION"
+        touch "$dir/$version/dist/betterdesk-server-linux-amd64" "$dir/$version/dist/manifest.json" "$dir/$version/dist/SHA256SUMS"
+        (
+            cd "$dir/$version"
+            SERVER_DIR=betterdesk-server GITHUB_REF_TYPE=tag GITHUB_REF_NAME="v$version" GITHUB_OUTPUT="$dir/$version/out" \
+                bash -c "$plan" >/dev/null
+            # The outputs reach the Publish step as its env does
+            export GH_LOG="$dir/$version/gh"
+            gh() { printf '%s\n' "$*" >> "$GH_LOG"; [ "$1 $2" != "release view" ]; }
+            export -f gh
+            TAG=$(sed -n 's/^tag=//p' out) VERSION=$(sed -n 's/^version=//p' out) PRERELEASE=$(sed -n 's/^prerelease=//p' out) \
+                GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 bash -c "$publish"
+        ) || fail "the release steps failed for $version"
+    done
+    grep -q -- '^release create v3.6.0-rc.1 .*--prerelease' "$dir/3.6.0-rc.1/gh" || fail "v3.6.0-rc.1 is not made a pre-release: $(cat "$dir/3.6.0-rc.1/gh")"
+    if grep -q -- '--latest' "$dir/3.6.0-rc.1/gh"; then fail "v3.6.0-rc.1 is marked the latest release: $(cat "$dir/3.6.0-rc.1/gh")"; fi
+    grep -q -- '^release edit v3.6.0 --draft=false --latest$' "$dir/3.6.0/gh" || fail "v3.6.0 is not the latest release: $(cat "$dir/3.6.0/gh")"
+    if grep -q -- '--prerelease' "$dir/3.6.0/gh"; then fail "v3.6.0 is made a pre-release: $(cat "$dir/3.6.0/gh")"; fi
+    rm -rf "$dir"
+)
+
+# L210 (A183): while the repository has no stable release, the stable
+# channel installs the newest pre-release that is not the rolling dev one
+# (a release candidate), also with --channel stable or the channel saved in
+# .env, and stays on the stable channel; the run says which release it took.
+test_no_stable_release_installs_the_newest_prerelease() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO RELEASE_BASE_URL
+    load
+    print_info() { echo "$1"; }
+    print_warning() { echo "$1"; }
+    print_error() { echo "$1"; }
+    release_asset_name() { echo betterdesk-server-linux-amd64; }
+    SKIP_VERIFY=true
+    # curl: no stable release; the list of releases, newest first: the dev
+    # pre-release, a draft, two release candidates
+    curl() {
+        local a prev="" dest="" url="${!#}"
+        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
+        case "$url" in
+            https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50)
+                printf '[\n  {\n    "url": "x",\n    "author": {"login": "bot"},\n    "tag_name": "dev",\n    "draft": false,\n    "prerelease": true,\n    "assets": [{"name": "manifest.json"}]\n  },\n'
+                printf '  {"tag_name": "v3.7.0-rc.1", "draft": true, "prerelease": true, "assets": []},\n'
+                printf '  {"tag_name": "v3.6.0-rc.2", "name": "BetterDesk 3.6.0-rc.2", "draft": false, "prerelease": true, "assets": []},\n'
+                printf '  {"tag_name": "v3.6.0-rc.1", "draft": false, "prerelease": true, "assets": []}\n]\n' ;;
+            */releases/download/v3.6.0-rc.2/SHA256SUMS)
+                printf '%s  betterdesk-server-linux-amd64\n' "$(printf 'candidate\n' | sha256sum | cut -d' ' -f1)" > "$dest"
+                printf '200' ;;
+            */releases/download/v3.6.0-rc.2/betterdesk-server-linux-amd64) printf 'candidate\n' > "$dest"; printf '200' ;;
+            *) printf '404' ;;
+        esac
+    }
+    local given
+    for given in "" main saved; do
+        rm -f "$TEST_DIR/betterdesk-server" "$CONSOLE_PATH/.env"
+        unset UPDATE_GITHUB_BRANCH_GIVEN
+        UPDATE_GITHUB_BRANCH=main
+        case "$given" in
+            main) UPDATE_GITHUB_BRANCH_GIVEN=main ;;
+            saved) printf 'UPDATE_GITHUB_BRANCH=main\n' > "$CONSOLE_PATH/.env" ;;
+        esac
+        download_release_binary "$TEST_DIR" > "$TEST_DIR/out" 2>&1 || fail "no stable release and the candidate was not installed ($given): $(cat "$TEST_DIR/out")"
+        [ "$(cat "$TEST_DIR/betterdesk-server")" = candidate ] || fail "the newest pre-release is not staged ($given)"
+        grep -q 'no stable release yet: installing the newest pre-release v3.6.0-rc.2' "$TEST_DIR/out" \
+            || fail "the run does not say which release it took ($given): $(cat "$TEST_DIR/out")"
+        [ "$UPDATE_GITHUB_BRANCH" = main ] || fail "the install left the stable channel for $UPDATE_GITHUB_BRANCH ($given)"
+    done
+    rm -rf "$TEST_DIR"
+)
+
 # A fresh install from the one-liner without --channel takes the stable
-# channel, and while the repository has no stable release it installs the
-# development build, says so and keeps that channel. A channel given
-# (--channel stable) or saved in .env gets no fallback but the error.
+# channel, and while the repository has no stable release and no
+# pre-release it installs the development build, says so and keeps that
+# channel. A channel given (--channel stable) or saved in .env gets no
+# fallback but the error.
 test_no_stable_release_installs_dev() (
     unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO RELEASE_BASE_URL
     load
@@ -619,7 +712,7 @@ test_no_stable_release_installs_dev() (
     }
     download_release_binary "$TEST_DIR" > "$TEST_DIR/out" 2>&1 || fail "no stable release and no fallback: $(cat "$TEST_DIR/out")"
     [ -f "$TEST_DIR/betterdesk-server" ] || fail "the development build is not staged"
-    grep -q 'no stable release yet: installing the development build' "$TEST_DIR/out" || fail "the fallback is not said: $(cat "$TEST_DIR/out")"
+    grep -q 'no stable release or pre-release yet: installing the development build' "$TEST_DIR/out" || fail "the fallback is not said: $(cat "$TEST_DIR/out")"
     grep -q -- '--update --channel stable' "$TEST_DIR/out" || fail "the fallback does not say how to go back to stable: $(cat "$TEST_DIR/out")"
     [ "$UPDATE_GITHUB_BRANCH" = dev ] && [ "$UPDATE_GITHUB_BRANCH_GIVEN" = dev ] \
         || fail "the fallback does not keep the development channel ($UPDATE_GITHUB_BRANCH, given ${UPDATE_GITHUB_BRANCH_GIVEN:-none})"
@@ -1060,6 +1153,8 @@ test_one_command_install
 test_runs_without_term
 test_apt_source_failure_goes_on
 test_backup_uses_the_servers_backup
+test_release_workflow_publishes_candidates_as_prereleases
+test_no_stable_release_installs_the_newest_prerelease
 test_no_stable_release_installs_dev
 test_rerun_updates_and_forgets_the_password
 test_panel_public_host

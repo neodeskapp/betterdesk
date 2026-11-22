@@ -3881,11 +3881,28 @@ fetch_release_file() {
     printf '%s\n' "${code:-000}"
 }
 
+# newest_prerelease_tag: the tag of the newest published pre-release of
+# UPDATE_GITHUB_OWNER/UPDATE_GITHUB_REPO other than the rolling "dev" one;
+# empty when there is none or the API does not answer. GitHub lists the
+# releases newest first, each with tag_name, then draft, then prerelease.
+newest_prerelease_tag() {
+    curl -fsSL --retry 2 --connect-timeout 20 -H 'Accept: application/vnd.github+json' \
+        "https://api.github.com/repos/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/releases?per_page=50" 2>/dev/null \
+        | tr -d '\r\n' \
+        | grep -oE '"(tag_name|draft|prerelease)"[[:space:]]*:[[:space:]]*("[^"]*"|true|false)' \
+        | sed -E 's/^"([a-z_]+)"[[:space:]]*:[[:space:]]*"?([^"]*)"?$/\1 \2/' \
+        | awk '$1 == "tag_name" { tag = $2; draft = "" }
+               $1 == "draft" { draft = $2 }
+               $1 == "prerelease" && $2 == "true" && draft == "false" && tag != "dev" && tag ~ /^[A-Za-z0-9][A-Za-z0-9._-]*$/ { print tag; exit }' \
+        || true
+}
+
 # download_release_binary DIR: the release binary for this machine into
 # DIR/betterdesk-server, checked against the release's SHA256SUMS and the
-# signature of its manifest (verify_release_files). The stable channel
-# falls back to the development build while the repository has no stable
-# release, unless a channel was given or saved.
+# signature of its manifest (verify_release_files). While the repository
+# has no stable release, the stable channel takes the newest pre-release,
+# and the development build when there is none and no channel was given or
+# saved.
 download_release_binary() {
     local dir="$1" asset base expected actual code
     asset=$(release_asset_name) || {
@@ -3899,11 +3916,21 @@ download_release_binary() {
     base=$(release_base_url)
     print_info "Downloading $asset ($UPDATE_GITHUB_BRANCH channel) from $base"
     code=$(fetch_release_file "$base" SHA256SUMS "$dir/SHA256SUMS")
-    # No channel given or saved, and no stable release yet: the
-    # development build, and its channel for later updates
-    if [ "$code" = 404 ] && [ -z "${RELEASE_BASE_URL:-}" ] && [ "$UPDATE_GITHUB_BRANCH" != dev ] \
+    # No stable release yet: the newest pre-release (a release candidate of
+    # the stable channel), else, with no channel given or saved, the
+    # development build and its channel for later updates (DECISIONS A183)
+    local prerelease=""
+    if [ "$code" = 404 ] && [ -z "${RELEASE_BASE_URL:-}" ] && [ "$UPDATE_GITHUB_BRANCH" != dev ]; then
+        prerelease=$(newest_prerelease_tag)
+    fi
+    if [ -n "$prerelease" ]; then
+        print_warning "${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO} has no stable release yet: installing the newest pre-release $prerelease"
+        base="https://github.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/releases/download/$prerelease"
+        print_info "Downloading $asset ($prerelease) from $base"
+        code=$(fetch_release_file "$base" SHA256SUMS "$dir/SHA256SUMS")
+    elif [ "$code" = 404 ] && [ -z "${RELEASE_BASE_URL:-}" ] && [ "$UPDATE_GITHUB_BRANCH" != dev ] \
         && [ -z "${UPDATE_GITHUB_BRANCH_GIVEN:-}" ] && [ -z "$(env_file_value "${CONSOLE_PATH:-}/.env" UPDATE_GITHUB_BRANCH)" ]; then
-        print_warning "${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO} has no stable release yet: installing the development build (--channel dev) instead"
+        print_warning "${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO} has no stable release or pre-release yet: installing the development build (--channel dev) instead"
         print_info "Updates follow the development channel; once a stable release is out: sudo $(basename "$MANAGER_COMMAND") --update --channel stable"
         UPDATE_GITHUB_BRANCH=dev
         UPDATE_GITHUB_BRANCH_GIVEN=dev

@@ -1,7 +1,9 @@
 # Release of betterdesk-server for the in-app updater (console/updater,
 # spec updater-installers.md 4.4 and 4.8).
 #
-# A tag v<X.Y.Z> publishes the stable release v<X.Y.Z>. A push to dev (or a
+# A tag v<X.Y.Z> publishes the stable release v<X.Y.Z>; a tag with a suffix
+# (v3.6.0-rc.1) publishes a pre-release, which the stable channel installs
+# only while there is no stable release. A push to dev (or a
 # manual run with channel=development) replaces the pre-release tagged "dev",
 # which the development channel installs. Each release holds the binary for
 # linux amd64, arm64 and armv7 and windows amd64, manifest.json, SHA256SUMS
@@ -46,6 +48,7 @@ jobs:
       version: ${{ steps.plan.outputs.version }}
       branch: ${{ steps.plan.outputs.branch }}
       tag: ${{ steps.plan.outputs.tag }}
+      prerelease: ${{ steps.plan.outputs.prerelease }}
       created: ${{ steps.plan.outputs.created }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -59,9 +62,16 @@ jobs:
             [ "${GITHUB_REF_NAME}" = "v${version}" ] || { echo "tag ${GITHUB_REF_NAME} does not match VERSION ${version}"; exit 1; }
             echo "branch=main" >> "$GITHUB_OUTPUT"
             echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+            # A version with a suffix (3.6.0-rc.1) is a release candidate: a
+            # GitHub pre-release, never the latest release (DECISIONS A183)
+            case "${version}" in
+              *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
+              *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
+            esac
           else
             echo "branch=dev" >> "$GITHUB_OUTPUT"
             echo "tag=dev" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
           fi
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
@@ -183,6 +193,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.plan.outputs.tag }}
           VERSION: ${{ needs.plan.outputs.version }}
+          PRERELEASE: ${{ needs.plan.outputs.prerelease }}
         run: |
           set -euo pipefail
           files=(dist/betterdesk-server-* dist/manifest.json dist/SHA256SUMS)
@@ -198,6 +209,11 @@ jobs:
             gh release edit dev --draft=false
           elif gh release view "${TAG}" >/dev/null 2>&1; then
             gh release upload "${TAG}" "${files[@]}" --clobber
+          elif [ "${PRERELEASE}" = true ]; then
+            # A release candidate stays a pre-release: the stable channel
+            # takes it only while there is no stable release
+            gh release create "${TAG}" "${files[@]}" --draft --prerelease --verify-tag --title "BetterDesk ${VERSION}" --generate-notes
+            gh release edit "${TAG}" --draft=false
           else
             gh release create "${TAG}" "${files[@]}" --draft --verify-tag --title "BetterDesk ${VERSION}" --generate-notes
             gh release edit "${TAG}" --draft=false --latest

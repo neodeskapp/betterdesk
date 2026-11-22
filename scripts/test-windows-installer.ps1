@@ -816,6 +816,54 @@ function Test-ReleaseSignatureOnWindows {
     Remove-Item -Recurse -Force $dir
 }
 
+# L210 (A183): while the repository has no stable release, the stable
+# channel installs the newest pre-release that is not the rolling dev one,
+# also with -Channel stable, and says which release it took; the
+# development build only when there is no pre-release either.
+function Test-NoStableReleaseTakesTheNewestPrerelease {
+    $dir = New-TestInstall
+    $asset = 'betterdesk-server-windows-amd64.exe'
+    $rel = Join-Path $dir 'rc2'
+    New-Item -ItemType Directory -Path $rel -Force | Out-Null
+    Set-Content -Path (Join-Path $rel $asset) -Value 'candidate'
+    $sum = (Get-FileHash -Path (Join-Path $rel $asset) -Algorithm SHA256).Hash.ToLower()
+    Set-Content -Path (Join-Path $rel 'SHA256SUMS') -Value "$sum  $asset"
+    $script:releases = @(
+        [pscustomobject]@{ tag_name = 'dev'; draft = $false; prerelease = $true },
+        [pscustomobject]@{ tag_name = 'v3.7.0-rc.1'; draft = $true; prerelease = $true },
+        [pscustomobject]@{ tag_name = 'v3.6.0-rc.2'; draft = $false; prerelease = $true },
+        [pscustomobject]@{ tag_name = 'v3.6.0-rc.1'; draft = $false; prerelease = $true })
+    function Invoke-RestMethod { param($Uri, $Headers, [switch]$UseBasicParsing, $ErrorAction) if ($Uri -ne 'https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50') { throw "unexpected $Uri" }; return $script:releases }
+    function Invoke-WebRequest {
+        param($Uri, $OutFile, [switch]$UseBasicParsing, $ErrorAction)
+        if ($Uri -notlike 'https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0-rc.2/*') { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+        Copy-Item -Path (Join-Path $rel (($Uri -split '/')[-1])) -Destination $OutFile -Force
+    }
+    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'trybetterdesk', 'betterdesk'
+    $script:SKIP_VERIFY = $true
+    foreach ($given in @('', 'main')) {
+        $stage = Join-Path $dir "stage-$given"
+        New-Item -ItemType Directory -Path $stage -Force | Out-Null
+        $script:UPDATE_GITHUB_BRANCH_GIVEN = $given
+        $script:UPDATE_GITHUB_BRANCH = 'main'
+        $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
+        if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "the newest pre-release was not installed (given '$given'): $out" }
+        if ($out -notmatch 'no stable release yet: installing the newest pre-release v3\.6\.0-rc\.2') { Fail "the install does not say which release it took: $out" }
+        if ($script:UPDATE_GITHUB_BRANCH -ne 'main') { Fail "the install left the stable channel for $($script:UPDATE_GITHUB_BRANCH)" }
+    }
+    # Without a pre-release: the development build
+    $script:releases = @([pscustomobject]@{ tag_name = 'dev'; draft = $false; prerelease = $true })
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $out = (Get-ReleaseBinary -Dir (Join-Path $dir 'stage-') 6>&1 | Out-String -Width 4096)
+    if ($out -notmatch 'no stable release or pre-release yet: installing the development build') { Fail "without a pre-release the install does not take the development build: $out" }
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $env:UPDATE_GITHUB_BRANCH = $null
+    $script:SKIP_VERIFY = $false
+    Remove-Item -Recurse -Force $dir
+}
+
 # L71: the installed binary's migrate command moves the database; the
 # separate tool of an older release is the fallback.
 function Test-MigrateCommand {
@@ -917,6 +965,7 @@ Test-CertificateFromTheBinary
 Test-SecretsAreRandom
 Test-DatabaseUrlOnly
 Test-ReleaseSignatureOnWindows
+Test-NoStableReleaseTakesTheNewestPrerelease
 Test-MigrateCommand
 Test-BackupUsesTheServersBackup
 Test-FreshInstallStartsManaged
