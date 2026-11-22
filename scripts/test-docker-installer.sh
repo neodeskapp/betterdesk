@@ -246,6 +246,11 @@ test_errors_say_what_to_do() (
     if out=$(mgr 'COMMAND=install; do_install' 2>&1); then fail "an install with 21116 taken went on"; fi
     printf '%s' "$out" | grep -q 'RustDesk server' || fail "the error does not name the RustDesk server: $out"
     rm -f "$TEST_DIR/taken-21116"
+    # L225: the compose file publishes the console's HTTPS port too
+    printf 'nginx\n' > "$TEST_DIR/taken-5443"
+    if out=$(mgr 'COMMAND=install; do_install' 2>&1); then fail "an install with 5443 taken went on"; fi
+    printf '%s' "$out" | grep -q 'TCP 5443: nginx' || fail "the port error does not name 5443: $out"
+    rm -f "$TEST_DIR/taken-5443"
 
     if out=$(mgr 'docker() { case "$1" in info) return 0 ;; *) return 1 ;; esac; }
               docker-compose() { :; }
@@ -444,6 +449,25 @@ test_install_sh_runs_the_manager() (
     rm -rf "$dir"
 )
 
+# L225: install.sh's firewall for Docker opens the ports the compose file
+# publishes, the console's HTTPS port (5443) among them
+test_install_sh_opens_the_published_ports() (
+    local dir
+    dir=$(mktemp -d)
+    (
+        # shellcheck disable=SC1091
+        source "$SCRIPT_ROOT/install.sh"
+        ufw() { printf '%s\n' "$*" >> "$dir/ufw"; [ "$1" != status ] || echo "Status: active"; }
+        configure_firewall
+    ) > /dev/null 2>&1 || fail "install.sh's firewall step failed"
+    local port
+    for port in 5000 5443 21115 21116 21117 21121 21122; do
+        grep -q "^allow ${port}/tcp" "$dir/ufw" || fail "install.sh does not open ${port}/tcp: $(tr '\n' ';' < "$dir/ufw")"
+    done
+    grep -q '^allow 21116/udp' "$dir/ufw" || fail "install.sh does not open 21116/udp"
+    rm -rf "$dir"
+)
+
 test_fresh_install
 test_update_goes_back_when_unhealthy
 test_update_keeps_compose_edits
@@ -459,5 +483,6 @@ test_postgres_failed_move_keeps_sqlite
 test_failed_first_install_resumes
 test_rerun_without_changes_keeps_the_container
 test_install_sh_runs_the_manager
+test_install_sh_opens_the_published_ports
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"

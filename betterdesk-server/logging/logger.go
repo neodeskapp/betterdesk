@@ -129,20 +129,22 @@ func detectLevel(msg string) string {
 // level: error | warn | info | debug (default info).
 // Returns a cleanup function (currently a no-op, reserved for future use).
 func Setup(format string, level string) func() {
-	minLevel := ParseLevel(level)
-	filter := &levelFilter{minLevel: minLevel, inner: os.Stderr}
+	setupTo(os.Stderr, format, level)
+	return func() {}
+}
 
+// setupTo is Setup with the log written to w. The level filter reads each
+// line as the server wrote it, also in JSON, before it becomes JSON.
+func setupTo(w io.Writer, format string, level string) {
+	minLevel := ParseLevel(level)
 	switch Format(strings.ToLower(format)) {
 	case FormatJSON:
-		jw := NewJSONWriter(filter)
-		log.SetOutput(jw)
+		log.SetOutput(&levelFilter{minLevel: minLevel, inner: NewJSONWriter(w)})
 		log.SetFlags(0) // No stdlib prefix — JSONWriter handles timestamps
-		return func() {}
 	default:
 		// text format — use default stdlib logging with level filter
-		log.SetOutput(filter)
+		log.SetOutput(&levelFilter{minLevel: minLevel, inner: w})
 		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		return func() {}
 	}
 }
 

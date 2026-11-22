@@ -189,7 +189,7 @@ if [ -z "${RELAY_SERVERS:-}" ]; then
         case "$DETECTED_IP" in
             10.*|172.1[6-9].*|172.2[0-9].*|172.3[0-1].*|192.168.*|127.*)
                 echo "WARNING: Auto-detected IP ($DETECTED_IP) is private — relay may fail for remote clients."
-                echo "         Set RELAY_SERVERS=YOUR.PUBLIC.IP in docker-compose.single.yml"
+                echo "         Set RELAY_SERVERS=YOUR.PUBLIC.IP in the .env next to the compose file, then run docker compose up -d"
                 ;;
             *)
                 export RELAY_SERVERS="$DETECTED_IP"
@@ -198,7 +198,7 @@ if [ -z "${RELAY_SERVERS:-}" ]; then
         esac
     else
         echo "WARNING: Could not auto-detect public IP for relay."
-        echo "         Set RELAY_SERVERS=YOUR.PUBLIC.IP in docker-compose.single.yml"
+        echo "         Set RELAY_SERVERS=YOUR.PUBLIC.IP in the .env next to the compose file, then run docker compose up -d"
     fi
 else
     echo "Relay IP:     $RELAY_SERVERS (from env)"

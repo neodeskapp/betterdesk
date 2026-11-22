@@ -211,6 +211,19 @@ test_banner_names_the_moved_ports() (
 )
 
 test_banner_names_the_moved_ports
+
+# L225: when the relay address is not found, the entrypoint says to set
+# RELAY_SERVERS in .env, which every compose file reads, not in
+# docker-compose.single.yml, which the published image's install does not
+# have.
+test_relay_hint_names_the_env_file() (
+    local ep="$SCRIPT_ROOT/docker/entrypoint.sh" hints
+    hints=$(grep -n 'Set RELAY_SERVERS' "$ep" || true)
+    [ "$(printf '%s\n' "$hints" | grep -c .)" -ge 2 ] || fail "the entrypoint has fewer relay hints than before: $hints"
+    if printf '%s\n' "$hints" | grep -q 'docker-compose'; then fail "a relay hint names a compose file: $hints"; fi
+    if printf '%s\n' "$hints" | grep -qv '\.env'; then fail "a relay hint does not name .env: $hints"; fi
+)
+
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
@@ -223,4 +236,5 @@ test_image_binary_knows_its_build
 test_credentials_hint_names_the_service
 test_bootstrap_keeps_a_replaced_first_password_away
 test_remote_targets_work_out_of_the_box
+test_relay_hint_names_the_env_file
 echo "Docker entrypoint checks passed"

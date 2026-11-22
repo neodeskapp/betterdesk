@@ -216,8 +216,12 @@ if ($NodeJs -or $Flask) {
     Write-Host "NOTE: -NodeJs and -Flask are no longer needed: the web console is part of betterdesk-server" -ForegroundColor Yellow
 }
 
-# Database configuration
-$script:USE_POSTGRESQL = $PostgreSQL -or ($env:USE_POSTGRESQL -eq "true")
+# Database configuration. -PgUri names a PostgreSQL database, so it means
+# -PostgreSQL too.
+function Test-PostgreSQLWanted([bool]$Switch, [string]$Uri) {
+    return $Switch -or -not [string]::IsNullOrEmpty($Uri) -or ($env:USE_POSTGRESQL -eq "true")
+}
+$script:USE_POSTGRESQL = Test-PostgreSQLWanted -Switch $PostgreSQL.IsPresent -Uri $PgUri
 $script:POSTGRESQL_URI = if ($PgUri) { $PgUri } elseif ($env:POSTGRESQL_URI) { $env:POSTGRESQL_URI } else { "" }
 $script:POSTGRESQL_USER = if ($env:POSTGRESQL_USER) { $env:POSTGRESQL_USER } else { "betterdesk" }
 $script:POSTGRESQL_PASS = if ($env:POSTGRESQL_PASS) { $env:POSTGRESQL_PASS } else { "" }
@@ -2758,6 +2762,11 @@ function Install-Golang {
 #===============================================================================
 
 function Choose-DatabaseType {
+    # A database given with -PgUri needs no question
+    if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
+        Print-Info "Using the PostgreSQL database given with -PgUri"
+        return
+    }
     if ($script:AUTO_MODE) {
         if ($script:USE_POSTGRESQL) {
             Print-Info "Auto mode: Using PostgreSQL"
