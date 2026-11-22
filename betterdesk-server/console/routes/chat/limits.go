@@ -18,34 +18,83 @@ import (
 // keeps its own until the package has them.
 const MaxOperatorSockets = 10
 
-// accounts counts the open operator sockets per account.
-type accounts struct {
+// MaxAgentSocketsPerToken is how many agent sockets one token may have
+// open at once, whatever device ids they name. A token belongs to one
+// device (a device token, or an enrollment token bound to the device that
+// used it first; one no device used yet passes only for ids the server
+// does not know), and a device has one agent socket: a reconnect replaces
+// it, and the replaced socket counts until its close handshake ends, a
+// few seconds at most. So a real agent holds two now and then; four
+// leaves room for one that reconnects twice within those seconds.
+const MaxAgentSocketsPerToken = 4
+
+// An agent socket may send AgentFrameBurst messages at once and
+// AgentFramesPerSecond after that; the relay drops what comes faster and
+// keeps the socket open. A person sends a chat message every few seconds
+// at most, typing notices and read receipts follow what people type and
+// read, and an agent that connects asks for its contacts, groups and
+// history at once: real agents stay far below both numbers, while a
+// flood no longer turns into stored messages and broadcasts without end.
+const (
+	AgentFrameBurst      = 40
+	AgentFramesPerSecond = 4
+)
+
+// openSockets counts open sockets per key: per account for operators,
+// per token for agents.
+type openSockets[K comparable] struct {
 	mu   sync.Mutex
-	open map[int64]int
+	open map[K]int
 }
 
-// take counts one more socket of the account, unless it has
-// MaxOperatorSockets open.
-func (a *accounts) take(account int64) bool {
+// take counts one more socket of the key, unless it has limit open.
+func (a *openSockets[K]) take(key K, limit int) bool {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if a.open[account] >= MaxOperatorSockets {
+	if a.open[key] >= limit {
 		return false
 	}
 	if a.open == nil {
-		a.open = map[int64]int{}
+		a.open = map[K]int{}
 	}
-	a.open[account]++
+	a.open[key]++
 	return true
 }
 
 // release counts one socket less.
-func (a *accounts) release(account int64) {
+func (a *openSockets[K]) release(key K) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if a.open[account]--; a.open[account] <= 0 {
-		delete(a.open, account)
+	if a.open[key]--; a.open[key] <= 0 {
+		delete(a.open, key)
 	}
+}
+
+// frameBudget is the rate of an agent socket's messages: a bucket of
+// AgentFrameBurst that fills by AgentFramesPerSecond. Only the socket's
+// reading goroutine uses it.
+type frameBudget struct {
+	left float64
+	last time.Time
+	// dropped counts the messages the budget refused
+	dropped int
+}
+
+// allow takes one message from the budget at now, false when it is used
+// up.
+func (b *frameBudget) allow(now time.Time) bool {
+	if b.last.IsZero() {
+		b.left = AgentFrameBurst
+	} else if elapsed := now.Sub(b.last).Seconds(); elapsed > 0 {
+		b.left = min(AgentFrameBurst, b.left+elapsed*AgentFramesPerSecond)
+	}
+	b.last = now
+	if b.left < 1 {
+		b.dropped++
+		return false
+	}
+	b.left--
+	return true
 }
 
 // heard notes when the client of a socket last sent anything: a message,

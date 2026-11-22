@@ -168,7 +168,8 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 		}
 
 	case "create_group":
-		if frame.Get("name").Truthy() && frame.Get("member_ids").Truthy() {
+		// An agent makes groups of its own device and operators only
+		if frame.Get("name").Truthy() && frame.Get("member_ids").Truthy() && ownGroupMembers(frame.Get("member_ids"), c.id) {
 			body := newObject().val("name", frame.Get("name")).val("members", frame.Get("member_ids")).str("created_by", c.id).json()
 			c.later(func(ctx context.Context) {
 				group, ok := createGroup(ctx, r.opts.API, body)
@@ -235,6 +236,24 @@ func (r *Relay) agentIn(ctx context.Context, c *client, conversation jsjson.Valu
 		}
 	}
 	return false
+}
+
+// ownGroupMembers reports whether the members an agent names for a new
+// group are a list of its own device id and operators ("operator",
+// "operator:<name>"), and nothing else.
+func ownGroupMembers(members jsjson.Value, id string) bool {
+	if members.Kind() != jsjson.Array {
+		return false
+	}
+	for _, m := range members.Items() {
+		if m.Kind() != jsjson.String {
+			return false
+		}
+		if name := m.Str(); name != id && name != "operator" && !strings.HasPrefix(name, "operator:") {
+			return false
+		}
+	}
+	return true
 }
 
 // isMember reports whether a group's members, a comma-separated text or a

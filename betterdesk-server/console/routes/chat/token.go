@@ -1,5 +1,10 @@
 package chat
 
+import (
+	"crypto/sha256"
+	"encoding/hex"
+)
+
 // bearerToken is the token of an Authorization header: the group of
 // /^Bearer\s+(\S+)$/, or "" when it does not match, on the header as Node
 // read it, each byte a character (Latin-1). The token is returned in
@@ -38,4 +43,11 @@ func jsSpace(r rune) bool {
 		return true
 	}
 	return false
+}
+
+// tokenKey is what the relay counts a token's sockets by: its SHA-256,
+// so the count does not keep the token itself.
+func tokenKey(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
 }
