@@ -1934,6 +1934,19 @@ export class RDClient {
 			const canvas = this.renderer.canvas;
 			const stream = canvas.captureStream(15); // 15fps recording
 
+			// The device's sound: the volume node plays into the recording as well
+			const audioCtx = this.audio.audioCtx;
+			if (audioCtx && audioCtx.state === 'running' && this.audio.gainNode) {
+				try {
+					const sound = audioCtx.createMediaStreamDestination();
+					this.audio.gainNode.connect(sound);
+					const track = sound.stream.getAudioTracks()[0];
+					if (track) stream.addTrack(track);
+				} catch {
+					// The recording goes on without sound
+				}
+			}
+
 			let mimeType = 'video/webm;codecs=vp9,opus';
 			if (!MediaRecorder.isTypeSupported(mimeType)) {
 				mimeType = 'video/webm;codecs=vp8,opus';

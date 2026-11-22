@@ -36,3 +36,35 @@ describe('the device cursor', () => {
 		s.c.disconnect();
 	});
 });
+
+describe('recording the session', () => {
+	test("takes the device's sound along with the screen", async () => {
+		const s = await streaming();
+		const tracks: unknown[] = [];
+		const screen = { addTrack: (t: unknown) => tracks.push(t), getTracks: () => tracks };
+		Object.defineProperty(s.canvas, 'captureStream', { configurable: true, value: () => screen });
+		class FakeRecorder {
+			static isTypeSupported = () => true;
+			state = 'recording';
+			mimeType = 'video/webm';
+			constructor(public stream: unknown) {}
+			start() {}
+			stop() {}
+		}
+		vi.stubGlobal('MediaRecorder', FakeRecorder);
+		const sound = { kind: 'audio' };
+		const destination = { stream: { getAudioTracks: () => [sound] } };
+		const gainConnect = vi.fn();
+		s.c.audio.audioCtx = {
+			state: 'running',
+			createMediaStreamDestination: () => destination
+		} as unknown as AudioContext;
+		s.c.audio.gainNode = { connect: gainConnect } as unknown as GainNode;
+		expect(s.c.startRecording()).toBe(true);
+		expect(gainConnect).toHaveBeenCalledWith(destination);
+		expect(tracks).toEqual([sound]);
+		s.c.audio.audioCtx = null;
+		s.c.audio.gainNode = null;
+		s.c.disconnect();
+	});
+});
