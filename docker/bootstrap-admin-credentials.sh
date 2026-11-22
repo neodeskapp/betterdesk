@@ -160,6 +160,12 @@ wait_for_bootstrap_credentials() {
     return 1
 }
 
+# The console removes .admin_credentials once the admin changed the first
+# password and leaves this note; the first password is not made again.
+first_password_replaced() {
+    file_exists_as_betterdesk "${CREDS_FILE}.removed"
+}
+
 # Already configured via env — keep Go and Node in sync, and still publish
 # .admin_credentials on a fresh volume so operators / show-admin-credentials
 # can read the same password (#385).
@@ -169,7 +175,9 @@ if [ -n "${INIT_ADMIN_PASS:-}" ] || [ -n "${DEFAULT_ADMIN_PASSWORD:-}" ]; then
     if [ -n "$_env_pass" ]; then
         echo "Bootstrap: INIT_ADMIN_PASS/DEFAULT_ADMIN_PASSWORD set=yes (password not logged)"
         run_as_betterdesk mkdir -p "$CREDS_DIR" 2>/dev/null || true
-        if ! file_exists_as_betterdesk "$CREDS_FILE" && ! primary_database_has_users; then
+        if first_password_replaced; then
+            : # the admin changed the first password; nothing to publish
+        elif ! file_exists_as_betterdesk "$CREDS_FILE" && ! primary_database_has_users; then
             write_bootstrap_credentials "$_env_pass" " (ADMIN_PASSWORD)"
             echo "Bootstrap admin credentials → ${CREDS_FILE} (from ADMIN_PASSWORD / INIT_ADMIN_PASS)"
         elif ! primary_database_has_users; then
@@ -190,6 +198,11 @@ run_as_betterdesk mkdir -p "$CREDS_DIR" 2>/dev/null || true
 # Reuse an existing shared credential before trying to acquire the creation
 # lock. The second check after mkdir closes the check-then-create race.
 if read_existing_credentials; then
+    return 0 2>/dev/null || exit 0
+fi
+
+if first_password_replaced; then
+    echo "Bootstrap: the admin changed the first password; no credentials file is made"
     return 0 2>/dev/null || exit 0
 fi
 

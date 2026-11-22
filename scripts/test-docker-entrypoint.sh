@@ -162,6 +162,23 @@ test_credentials_hint_names_the_service() (
     grep -q 'docker compose logs betterdesk' "$SCRIPT_ROOT/docker/show-admin-credentials.sh" || fail "show-admin-credentials.sh does not point at docker compose logs betterdesk"
 )
 
+# L77: after the console removed the first password (it leaves
+# .admin_credentials.removed), the start makes no new credentials file,
+# with or without ADMIN_PASSWORD; without the note a fresh volume gets one.
+test_bootstrap_keeps_a_replaced_first_password_away() (
+    local dir out
+    dir=$(mktemp -d)
+    : > "$dir/.admin_credentials.removed"
+    out=$(cd "$dir" && RUSTDESK_PATH="$dir" DB_PATH="$dir/none.sqlite3" sh -c '. "$1"' sh "$SCRIPT_ROOT/docker/bootstrap-admin-credentials.sh" 2>&1)
+    [ ! -e "$dir/.admin_credentials" ] || fail "the start made the first password again after it was replaced: $out"
+    out=$(cd "$dir" && RUSTDESK_PATH="$dir" DB_PATH="$dir/none.sqlite3" ADMIN_PASSWORD=env-pass-123456 sh -c '. "$1"' sh "$SCRIPT_ROOT/docker/bootstrap-admin-credentials.sh" 2>&1)
+    [ ! -e "$dir/.admin_credentials" ] || fail "the start wrote ADMIN_PASSWORD into a credentials file after the first password was replaced: $out"
+    rm -f "$dir/.admin_credentials.removed"
+    out=$(cd "$dir" && RUSTDESK_PATH="$dir" DB_PATH="$dir/none.sqlite3" sh -c '. "$1"' sh "$SCRIPT_ROOT/docker/bootstrap-admin-credentials.sh" 2>&1)
+    grep -q '^Admin Password: ' "$dir/.admin_credentials" 2>/dev/null || fail "a fresh volume got no first password: $out"
+    rm -rf "$dir"
+)
+
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
@@ -172,4 +189,5 @@ test_compose_reads_env_file
 test_healthcheck_follows_tls
 test_image_binary_knows_its_build
 test_credentials_hint_names_the_service
+test_bootstrap_keeps_a_replaced_first_password_away
 echo "Docker entrypoint checks passed"
