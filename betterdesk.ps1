@@ -1032,9 +1032,11 @@ function Set-NssmServerService {
     & $Nssm set $script:SERVER_SERVICE AppExit Default Restart | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppRestartDelay 2000 | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppStopMethodConsole 10000 | Out-Null
-    New-Item -ItemType Directory -Path "$script:RUSTDESK_PATH\logs" -Force | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppStdout "$script:RUSTDESK_PATH\logs\server.log" | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppStderr "$script:RUSTDESK_PATH\logs\server_error.log" | Out-Null
+    # The server logs to standard error: both streams go to one file
+    $log = Get-ServerLogPath
+    New-Item -ItemType Directory -Path (Split-Path -Parent $log) -Force | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppStdout $log | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppStderr $log | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppRotateFiles 1 | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppRotateBytes 10485760 | Out-Null
     # The service account needs the server folder and the console's folder
@@ -1055,8 +1057,10 @@ function Write-ServerLauncher {
         $lines += "set `"$pair`""
     }
     $lines += "set `"BETTERDESK_SUPERVISOR=task`""
+    $log = Get-ServerLogPath
+    New-Item -ItemType Directory -Path (Split-Path -Parent $log) -Force | Out-Null
     $lines += ":run"
-    $lines += "`"$(Get-ServerBinaryPath)`" $Arguments"
+    $lines += "`"$(Get-ServerBinaryPath)`" $Arguments >> `"$log`" 2>&1"
     $lines += "timeout /t 2 /nobreak >nul"
     $lines += "goto run"
     Set-Content -Path $launcher -Value $lines -Encoding ASCII
@@ -1073,14 +1077,23 @@ function Get-LauncherEnvironment {
     })
 }
 
-# The arguments of an existing launcher's server line.
+# The arguments of an existing launcher's server line, without the
+# redirect of its output.
 function Get-LauncherArguments {
     $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
     if (-not (Test-Path $launcher)) { return $null }
     foreach ($line in Get-Content $launcher) {
-        if ($line -match '^"[^"]*betterdesk-server\.exe"\s*(.*)$') { return $Matches[1] }
+        if ($line -match '^"[^"]*betterdesk-server\.exe"\s*(.*)$') {
+            return ($Matches[1] -replace '\s*>>\s*"[^"]*"\s*2>&1\s*$', '').Trim()
+        }
     }
     return $null
+}
+
+# The server's log file: both of its output streams, as a service and as
+# a scheduled task.
+function Get-ServerLogPath {
+    return (Join-Path $script:RUSTDESK_PATH "logs\server.log")
 }
 
 function Register-ServerTask {
@@ -2260,7 +2273,7 @@ function Print-Status {
             $svc = Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
             if ($svc -and $svc.Status -eq 'Stopped') {
                 Write-Host "  BetterDesk Server (Go): " -NoNewline; Write-Host "o Stopped" -ForegroundColor Red
-                Write-Host "    Hint: Check logs at $script:RUSTDESK_PATH\logs\server_error.log" -ForegroundColor Yellow
+                Write-Host "    Hint: Check the log $(Get-ServerLogPath)" -ForegroundColor Yellow
             } else {
                 Write-Host "  BetterDesk Server (Go): " -NoNewline; Write-Host "o Inactive" -ForegroundColor Red
             }

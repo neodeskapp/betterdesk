@@ -15,6 +15,8 @@ func TestTemplateDefaults(t *testing.T) {
 	for _, want := range []string{
 		// L75: mail goes only to a server whose certificate checks out
 		"SMTP_TLS_VERIFY=true",
+		// L74: the start summary and "[console] listening on" are logged
+		"LOG_LEVEL=info",
 	} {
 		if !lines[want] {
 			t.Errorf("the template has no line %q", want)

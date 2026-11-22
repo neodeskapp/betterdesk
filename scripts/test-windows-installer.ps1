@@ -361,6 +361,32 @@ function Test-PostgreSQLAddressIsKept {
     Remove-Item -Recurse -Force $dir
 }
 
+# L74: the server's log, which it writes to standard error, goes to
+# logs\server.log, as a service and as a scheduled task; an update of the
+# task keeps one redirect.
+function Test-ServerLogFile {
+    $dir = New-TestInstall
+    $log = Join-Path $script:RUSTDESK_PATH 'logs\server.log'
+    $script:fakeNssm = 'fake-nssm'
+    $script:nssmCalls = @()
+    Setup-Services | Out-Null
+    $script:fakeNssm = $null
+    foreach ($stream in 'AppStdout', 'AppStderr') {
+        $call = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq $stream } | Select-Object -Last 1
+        if (-not $call -or $call[3] -ne $log) { Fail "the service's $stream goes to $($call[3]), not $log" }
+    }
+    $script:registeredTasks = @{}
+    Setup-Services | Out-Null
+    $launcher = Join-Path $script:RUSTDESK_PATH 'start-betterdesk-server.cmd'
+    $redirect = '>> "' + $log + '" 2>&1'
+    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*betterdesk-server.exe"*' })
+    if ($line.Count -ne 1 -or -not $line[0].EndsWith($redirect)) { Fail "the task's server line does not write $log`: $line" }
+    Update-ServerServiceDefinition | Out-Null
+    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*betterdesk-server.exe"*' })
+    if ($line.Count -ne 1 -or -not $line[0].EndsWith($redirect) -or ($line[0] -split '>>').Count -ne 2) { Fail "an update of the task changed the redirect: $line" }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -369,6 +395,7 @@ Test-MigrationMenusPassOverwrite
 Test-PostgreSQLSwitchMovesTheWholeInstall
 Test-ReleasesComeFromTheFork
 Test-PostgreSQLAddressIsKept
+Test-ServerLogFile
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'
