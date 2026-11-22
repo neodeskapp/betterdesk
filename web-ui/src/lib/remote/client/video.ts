@@ -484,7 +484,8 @@ export class RDVideo {
 			// 60fps target; that causes queue growth and visible stalls on
 			// tablet browsers.
 			fps: RDVideo.isSupported() ? 60 : 30,
-			clearBuffer: false, // We manage buffer trimming in _startHealthCheck
+			// JMuxer removes played video every 10 seconds (keeping 30 seconds before the last keyframe)
+			clearBuffer: true,
 			debug: false,
 			onReady: () => {
 				debugLog('[RDVideo] JMuxer ready, buffered frames:', this._pendingFeeds?.length);
