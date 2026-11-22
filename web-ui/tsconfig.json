@@ -16,6 +16,6 @@
 		"moduleResolution": "bundler",
 		"types": ["$app/types", "vitest/globals", "@testing-library/jest-dom"]
 	},
-	"include": ["src", "tests", "e2e", "vite-plugins", "*"],
+	"include": ["src", "tests", "e2e", "vite-plugins", "scripts", "eslint-rules", "*"],
 	"exclude": ["src/service-worker"]
 }

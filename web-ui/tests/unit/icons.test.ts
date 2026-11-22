@@ -2,15 +2,15 @@
  * The self-hosted Material Symbols subset (static/fonts) has a glyph for
  * every icon the console draws. A name missing from the font draws nothing:
  * the icon box is 1em wide and hides the text, so the button looks empty.
- * scripts/icon-names.mjs finds the names (also the ones picked at run time),
- * scripts/update-material-symbols.mjs at the repo root builds the font from
+ * scripts/icon-names.ts finds the names (also the ones picked at run time),
+ * scripts/update-material-symbols.ts builds the font from
  * them. The first block checks that the scan reads the ways the console
  * writes icon names; the last test checks the font against the scan.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { ICONS } from '../../src/lib/util/display.ts';
-import { collectCandidateIcons, iconNamesIn, readMeanings } from '../../scripts/icon-names.mjs';
+import { collectCandidateIcons, iconNamesIn, readMeanings } from '../../scripts/icon-names.ts';
 
 const root = path.resolve(__dirname, '../..');
 
@@ -165,7 +165,7 @@ describe('icon font subset', () => {
 		const have = subset();
 		const missing: Record<string, string[]> = {};
 		for (const [name, files] of scanned()) if (!have.has(name)) missing[name] = [...files];
-		// Run `node scripts/update-material-symbols.mjs` from the repo root when this fails
+		// Run `node scripts/update-material-symbols.ts` in web-ui when this fails
 		expect(missing).toEqual({});
 	});
 });

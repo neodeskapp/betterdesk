@@ -1,9 +1,9 @@
 /**
  * The Material Symbols names the console draws, for the self-hosted font
- * subset in static/fonts. scripts/update-material-symbols.mjs at the repo
- * root builds the font from this list, and tests/unit/icons.test.ts checks
- * that the font has a glyph for every name. A name the font lacks draws
- * nothing, so its button looks empty.
+ * subset in static/fonts. scripts/update-material-symbols.ts builds the
+ * font from this list, and tests/unit/icons.test.ts checks that the font
+ * has a glyph for every name. A name the font lacks draws nothing, so its
+ * button looks empty.
  *
  * Icons are drawn by the Icon component (src/lib/ui/Icon.svelte), directly
  * or through the icon props of Button, IconButton, MenuItem and the rest;
@@ -46,7 +46,7 @@ const SKIP_DIRS = new Set(['node_modules', '.git', 'coverage', 'vendor', 'genera
  * Names that only arrive as data at run time. The branding logo icon is
  * free text; its hint (branding.logo_icon_hint) suggests these three.
  */
-export const EXTRA_ICONS = ['dns', 'cloud', 'security'];
+export const EXTRA_ICONS: readonly string[] = ['dns', 'cloud', 'security'];
 
 const NAME = /^[a-z][a-z0-9_]{1,48}$/;
 const ICONISH = String.raw`[\w$]*?(?<![Ff]av|FAV)(?:icon|Icon|ICON)[\w$]*`;
@@ -95,37 +95,37 @@ const KEYWORDS = new Set([
 const OPEN = '([{';
 const CLOSE = ')]}';
 
-function lineEnd(code, i) {
+function lineEnd(code: string, i: number): number {
 	const j = code.indexOf('\n', i);
 	return j < 0 ? code.length : j;
 }
 
-function blockEnd(code, i) {
+function blockEnd(code: string, i: number): number {
 	const j = code.indexOf('*/', i + 2);
 	return j < 0 ? code.length : j + 2;
 }
 
 /** Index after the string literal that starts at i; a quote left open ends at the line end */
-function stringEnd(code, i) {
-	const quote = code[i];
+function stringEnd(code: string, i: number): number {
+	const quote = code.charAt(i);
 	for (let j = i + 1; j < code.length; j++) {
-		const c = code[j];
+		const c = code.charAt(j);
 		if (c === '\\') j++;
 		else if (c === quote) return j + 1;
-		else if (quote === '`' && c === '$' && code[j + 1] === '{') j = closeOf(code, j + 1) - 1;
+		else if (quote === '`' && c === '$' && code.charAt(j + 1) === '{') j = closeOf(code, j + 1) - 1;
 		else if (c === '\n' && quote !== '`') return j;
 	}
 	return code.length;
 }
 
 /** Index after the bracket that closes the one at i, skipping strings and comments */
-function closeOf(code, i, limit = code.length) {
+function closeOf(code: string, i: number, limit = code.length): number {
 	let depth = 0;
 	for (let j = i; j < limit;) {
-		const c = code[j];
+		const c = code.charAt(j);
 		if (c === '"' || c === "'" || c === '`') j = stringEnd(code, j);
-		else if (c === '/' && code[j + 1] === '/') j = lineEnd(code, j);
-		else if (c === '/' && code[j + 1] === '*') j = blockEnd(code, j);
+		else if (c === '/' && code.charAt(j + 1) === '/') j = lineEnd(code, j);
+		else if (c === '/' && code.charAt(j + 1) === '*') j = blockEnd(code, j);
 		else {
 			if (OPEN.includes(c)) depth++;
 			else if (CLOSE.includes(c) && --depth === 0) return j + 1;
@@ -136,7 +136,7 @@ function closeOf(code, i, limit = code.length) {
 }
 
 /** Whether the expression that started at start goes on after the line break at j */
-function continues(code, start, j) {
+function continues(code: string, start: number, j: number): boolean {
 	const before = code.slice(start, j).trimEnd();
 	if (!before || /(?:[=?:|&+\-*/,(]|=>)$/.test(before)) return true;
 	const next = /\S/.exec(code.slice(j + 1, j + 200));
@@ -144,14 +144,14 @@ function continues(code, start, j) {
 }
 
 /** The expression that starts at i: up to one of stops or a closing bracket at its own level, or the line end */
-function expressionAt(code, i, stops = ';,') {
+function expressionAt(code: string, i: number, stops = ';,'): string {
 	const limit = Math.min(code.length, i + 4000);
 	let j = i;
 	while (j < limit) {
-		const c = code[j];
+		const c = code.charAt(j);
 		if (c === '"' || c === "'" || c === '`') j = stringEnd(code, j);
-		else if (c === '/' && code[j + 1] === '/') j = lineEnd(code, j);
-		else if (c === '/' && code[j + 1] === '*') j = blockEnd(code, j);
+		else if (c === '/' && code.charAt(j + 1) === '/') j = lineEnd(code, j);
+		else if (c === '/' && code.charAt(j + 1) === '*') j = blockEnd(code, j);
 		else if (OPEN.includes(c)) j = closeOf(code, j, limit);
 		else if (CLOSE.includes(c) || stops.includes(c)) break;
 		else if (c === '\n' && !continues(code, i, j)) break;
@@ -161,14 +161,14 @@ function expressionAt(code, i, stops = ';,') {
 }
 
 /** The return values in a function body */
-function returnsIn(body) {
+function returnsIn(body: string): string[] {
 	return [...body.matchAll(/(?<![\w$.])return\b\s*/g)].map((m) =>
 		expressionAt(body, m.index + m[0].length, ';')
 	);
 }
 
 /** A value in an icon place; for a function, what it returns */
-function valueAt(code, i, stops) {
+function valueAt(code: string, i: number, stops: string): string {
 	const expr = expressionAt(code, i, stops);
 	const fn =
 		/^(?:async\s*)?(?:\([^()]*\)|[\w$]+)\s*(?::[^=;{]+?)?=>\s*\{|^(?:async\s*)?function\b[^{]*\{/.exec(expr);
@@ -176,11 +176,11 @@ function valueAt(code, i, stops) {
 }
 
 /** Split call arguments or parameters at their own commas */
-function splitTopLevel(code) {
-	const parts = [];
+function splitTopLevel(code: string): string[] {
+	const parts: string[] = [];
 	let from = 0;
 	for (let j = 0; j < code.length;) {
-		const c = code[j];
+		const c = code.charAt(j);
 		if (c === '"' || c === "'" || c === '`') j = stringEnd(code, j);
 		else if (OPEN.includes(c)) j = closeOf(code, j);
 		else {
@@ -196,7 +196,7 @@ function splitTopLevel(code) {
 }
 
 /** Compared with (=== 'light'), tested for (.includes('x')), a translation key (t('key')) or an object key ('key':) */
-function notAnIcon(code, start, end) {
+function notAnIcon(code: string, start: number, end: number): boolean {
 	const before = code.slice(Math.max(0, start - 16), start);
 	const after = code.slice(end, end + 8);
 	return (
@@ -207,27 +207,27 @@ function notAnIcon(code, start, end) {
 }
 
 /** The quoted names in a piece of code that can be icon names */
-function namesIn(code) {
-	const out = [];
+function namesIn(code: string): string[] {
+	const out: string[] = [];
 	for (let j = 0; j < code.length;) {
-		const c = code[j];
+		const c = code.charAt(j);
 		if (c === '"' || c === "'" || c === '`') {
 			const end = stringEnd(code, j);
 			const value = code.slice(j + 1, end - 1);
 			if (NAME.test(value) && !notAnIcon(code, j, end)) out.push(value);
 			j = end;
-		} else if (c === '/' && code[j + 1] === '/') j = lineEnd(code, j);
-		else if (c === '/' && code[j + 1] === '*') j = blockEnd(code, j);
+		} else if (c === '/' && code.charAt(j + 1) === '/') j = lineEnd(code, j);
+		else if (c === '/' && code.charAt(j + 1) === '*') j = blockEnd(code, j);
 		else j++;
 	}
 	return out;
 }
 
 /** Index of the > that ends the tag whose attributes start at i */
-function tagEnd(code, i) {
+function tagEnd(code: string, i: number): number {
 	const limit = Math.min(code.length, i + 4000);
 	for (let j = i; j < limit;) {
-		const c = code[j];
+		const c = code.charAt(j);
 		if (c === '>') return j;
 		if (c === '"' || c === "'") j = stringEnd(code, j);
 		else if (c === '{') j = closeOf(code, j, limit);
@@ -237,12 +237,12 @@ function tagEnd(code, i) {
 }
 
 /** Parameter positions named like icon, per function declared in the code */
-function iconParams(code) {
-	const found = new Map();
+function iconParams(code: string): Map<string, number> {
+	const found = new Map<string, number>();
 	for (const { re, body } of DECLARATIONS) {
 		for (const m of code.matchAll(re)) {
 			const fn = m[1];
-			if (KEYWORDS.has(fn) || found.has(fn)) continue;
+			if (fn === undefined || KEYWORDS.has(fn) || found.has(fn)) continue;
 			const open = m.index + m[0].length - 1;
 			const close = closeOf(code, open);
 			if (!body.test(code.slice(close, close + 200))) continue;
@@ -255,9 +255,9 @@ function iconParams(code) {
 }
 
 /** The icon names written in one file's text, as written (meanings not yet turned into glyphs) */
-export function iconNamesIn(text, file) {
-	const names = new Set();
-	const take = (code) => namesIn(code).forEach((n) => names.add(n));
+export function iconNamesIn(text: string, file: string): string[] {
+	const names = new Set<string>();
+	const take = (code: string) => namesIn(code).forEach((n) => names.add(n));
 	const ext = path.extname(file);
 
 	let code = text;
@@ -269,19 +269,19 @@ export function iconNamesIn(text, file) {
 		css = [...text.matchAll(STYLE_BLOCK)].map((m) => m[1]).join('\n');
 		code = text.replace(STYLE_BLOCK, '');
 	}
-	for (const m of css.matchAll(CSS_CONTENT)) names.add(m[2]);
+	for (const m of css.matchAll(CSS_CONTENT)) if (m[2] !== undefined) names.add(m[2]);
 
 	for (const m of code.matchAll(ICON_TAG)) {
 		const start = m.index + m[0].length;
 		const tag = code.slice(start, tagEnd(code, start));
 		for (const attr of tag.matchAll(/(?<![\w$:-])name=(?=["'{])/g)) {
 			const at = attr.index + attr[0].length;
-			take(tag[at] === '{' ? tag.slice(at, closeOf(tag, at)) : tag.slice(at, stringEnd(tag, at)));
+			take(tag.charAt(at) === '{' ? tag.slice(at, closeOf(tag, at)) : tag.slice(at, stringEnd(tag, at)));
 		}
 	}
 	for (const m of code.matchAll(ICON_ATTR)) {
 		const at = m.index + m[0].length;
-		take(code[at] === '{' ? code.slice(at, closeOf(code, at)) : code.slice(at, stringEnd(code, at)));
+		take(code.charAt(at) === '{' ? code.slice(at, closeOf(code, at)) : code.slice(at, stringEnd(code, at)));
 	}
 	for (const m of code.matchAll(ICON_ASSIGN)) take(valueAt(code, m.index + m[0].length, ';,'));
 	for (const m of code.matchAll(ICON_PROP)) take(valueAt(code, m.index + m[0].length, ';,'));
@@ -301,23 +301,28 @@ export function iconNamesIn(text, file) {
 			if (arg) take(arg);
 		}
 	}
-	for (const m of code.matchAll(SPAN_TEXT)) names.add(m[1]);
+	for (const m of code.matchAll(SPAN_TEXT)) if (m[1] !== undefined) names.add(m[1]);
 	for (const m of code.matchAll(SPAN_EXPR)) {
 		const at = m.index + m[0].length;
-		take(code[at] === '{' ? code.slice(at, closeOf(code, at)) : expressionAt(code, at, ';,+'));
+		take(code.charAt(at) === '{' ? code.slice(at, closeOf(code, at)) : expressionAt(code, at, ';,+'));
 	}
 	return [...names];
 }
 
 /** The ICONS meaning table of src/lib/util/display.ts, read from its source */
-export function readMeanings() {
+export function readMeanings(): Record<string, string> {
 	const text = fs.readFileSync(path.join(UI, 'src/lib/util/display.ts'), 'utf8');
 	const table = /export const ICONS = \{([^}]*)\}/.exec(text);
 	if (!table) throw new Error('No ICONS table in src/lib/util/display.ts');
-	return Object.fromEntries([...table[1].matchAll(/([\w$]+):\s*'([a-z0-9_]+)'/g)].map((m) => [m[1], m[2]]));
+	return Object.fromEntries(
+		[...(table[1] ?? '').matchAll(/([\w$]+):\s*'([a-z0-9_]+)'/g)].map((m): [string, string] => [
+			m[1] ?? '',
+			m[2] ?? ''
+		])
+	);
 }
 
-function walkFiles(dir, out = []) {
+function walkFiles(dir: string, out: string[] = []): string[] {
 	for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
 		if (SKIP_DIRS.has(ent.name)) continue;
 		const full = path.join(dir, ent.name);
@@ -329,12 +334,13 @@ function walkFiles(dir, out = []) {
 }
 
 /** Every glyph name the console may draw, with the files (relative to web-ui) that draw it */
-export function collectCandidateIcons() {
+export function collectCandidateIcons(): Map<string, Set<string>> {
 	const meanings = readMeanings();
-	const icons = new Map();
-	const add = (name, where) => {
-		if (!icons.has(name)) icons.set(name, new Set());
-		icons.get(name).add(where);
+	const icons = new Map<string, Set<string>>();
+	const add = (name: string, where: string) => {
+		let files = icons.get(name);
+		if (!files) icons.set(name, (files = new Set()));
+		files.add(where);
 	};
 	for (const name of EXTRA_ICONS) add(name, '(EXTRA_ICONS)');
 	for (const root of SCAN_ROOTS) {
@@ -343,7 +349,7 @@ export function collectCandidateIcons() {
 		for (const file of fs.statSync(dir).isDirectory() ? walkFiles(dir) : [dir]) {
 			const rel = path.relative(UI, file).split(path.sep).join('/');
 			// The Icon component turns meanings ("copy") into glyphs; the plain JS under static/ writes glyphs
-			const glyph = rel.startsWith('static/') ? (n) => n : (n) => meanings[n] ?? n;
+			const glyph = rel.startsWith('static/') ? (n: string) => n : (n: string) => meanings[n] ?? n;
 			for (const name of iconNamesIn(fs.readFileSync(file, 'utf8'), rel)) add(glyph(name), rel);
 		}
 	}
