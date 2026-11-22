@@ -73,9 +73,13 @@ for (const role of ROLES) {
 			// The server tabs: open with server.config, one sentence otherwise
 			await page.goto(`${UI}/settings?tab=backup`);
 			if (config)
-				await expect(page.getByText('Only administrators can see and change these settings.')).toHaveCount(0);
+				await expect(
+					page.getByText('Only super admins and server admins can see and change these settings.')
+				).toHaveCount(0);
 			else
-				await expect(page.getByText('Only administrators can see and change these settings.')).toBeVisible();
+				await expect(
+					page.getByText('Only super admins and server admins can see and change these settings.')
+				).toBeVisible();
 		});
 
 		test('the search finds only what the role can reach', async ({ page }) => {

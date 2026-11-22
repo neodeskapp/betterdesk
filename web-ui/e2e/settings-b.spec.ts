@@ -78,7 +78,7 @@ for (const role of ROLES) {
 					await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible(START);
 				} else {
 					await expect(
-						page.getByText('Only administrators can see and change these settings.')
+						page.getByText('Only super admins and server admins can see and change these settings.')
 					).toBeVisible();
 					await expect(page.getByRole('heading', { name: heading, exact: true })).toHaveCount(0);
 				}
