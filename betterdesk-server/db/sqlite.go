@@ -1199,7 +1199,7 @@ func (s *SQLiteDB) DeletePeer(id string) error {
 		`UPDATE peers SET soft_deleted = 1, deleted_at = datetime('now') WHERE id = ?`, id); err != nil {
 		return err
 	}
-	if err := sqliteRevokeDeviceAccessTokens(tx, id); err != nil {
+	if err := sqliteEndDeviceTokens(tx, id); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -1222,7 +1222,7 @@ func (s *SQLiteDB) HardDeletePeer(id string) error {
 	if _, err := tx.Exec(`DELETE FROM peers WHERE id = ?`, id); err != nil {
 		return err
 	}
-	if err := sqliteRevokeDeviceAccessTokens(tx, id); err != nil {
+	if err := sqliteEndDeviceTokens(tx, id); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(
@@ -1772,7 +1772,7 @@ func (s *SQLiteDB) BanPeer(id string, reason string) error {
 		reason, id); err != nil {
 		return err
 	}
-	if err := sqliteRevokeDeviceAccessTokens(tx, id); err != nil {
+	if err := sqliteEndDeviceTokens(tx, id); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -1888,12 +1888,12 @@ func (s *SQLiteDB) cascadePeerIDInTx(tx *sql.Tx, oldID, newID string) error {
 			return fmt.Errorf("db: cascadePeerID %s→%s: %w", oldID, newID, err)
 		}
 	}
-	return sqliteMoveDeviceAccessTokens(tx, oldID, newID)
+	return sqliteEndRenamedDeviceTokens(tx, oldID, newID)
 }
 
 // ChangePeerID changes a peer's ID and records it in history. What is
-// bound to the old ID, the device tokens among it, moves along in the same
-// transaction (cascadePeerIDInTx).
+// bound to the old ID moves along in the same transaction
+// (cascadePeerIDInTx); the device tokens of the device end there.
 func (s *SQLiteDB) ChangePeerID(oldID, newID, reason string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

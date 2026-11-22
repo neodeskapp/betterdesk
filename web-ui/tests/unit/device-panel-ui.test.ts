@@ -15,7 +15,7 @@ import {
 	refreshDevice
 } from '../../src/lib/state/devicePanel.svelte.ts';
 import { session } from '../../src/lib/state/session.svelte.ts';
-import { dismissAll } from '../../src/lib/ui/toasts.svelte.ts';
+import { dismissAll, toasts } from '../../src/lib/ui/toasts.svelte.ts';
 
 const ID = '900100001';
 
@@ -302,6 +302,58 @@ describe('permissions per role', () => {
 		await openPanel('edit');
 		await waitFor(() => expect(devicePanel.mode).toBe('view'));
 		expect(screen.queryByLabelText('devices.display_name')).toBeNull();
+	});
+});
+
+describe('issue a new token from the Actions tab', () => {
+	const tokenPosts = () =>
+		calls.filter((c) => c.method === 'POST' && c.path === `/api/devices/${ID}/device-token`);
+	const actionKeys = () =>
+		[...document.querySelectorAll('[data-action-key]')].map((b) => b.getAttribute('data-action-key'));
+
+	async function openActions(device: Record<string, unknown>) {
+		serve(device);
+		routes[`POST /api/devices/${ID}/device-token`] = () => ({ success: true });
+		await openPanel();
+		await userEvent.click(await screen.findByRole('tab', { name: 'device_detail.tab_actions' }));
+	}
+
+	test('asks first, then posts to the device-token route', async () => {
+		await openActions(baseDevice());
+		await userEvent.click(await screen.findByRole('button', { name: /^Issue a new token/ }));
+		const dialog = await screen.findByRole('dialog', { name: 'Issue a new token' });
+		expect(
+			within(dialog).getByText(/^The current token of Front desk \(900100001\) stops working now\./)
+		).toBeInTheDocument();
+		expect(tokenPosts()).toHaveLength(0);
+		await userEvent.click(within(dialog).getByRole('button', { name: 'Issue token' }));
+		await waitFor(() => expect(tokenPosts()).toHaveLength(1));
+		await waitFor(() =>
+			expect(toasts.items.map((x) => x.message)).toContain(
+				'New token issued. The device picks it up the next time it checks in.'
+			)
+		);
+	});
+
+	test('Cancel sends nothing', async () => {
+		await openActions(baseDevice());
+		await userEvent.click(await screen.findByRole('button', { name: /^Issue a new token/ }));
+		const dialog = await screen.findByRole('dialog', { name: 'Issue a new token' });
+		await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+		await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Issue a new token' })).toBeNull());
+		expect(tokenPosts()).toHaveLength(0);
+	});
+
+	test.each([
+		['without device.edit', ['device.view', 'device.connect'], {}, 'connect-web', false],
+		['with device.edit', ['device.view', 'device.edit'], {}, 'edit', true],
+		['banned', null, { banned: true }, 'unban', false]
+	] as const)('the token button, %s', async (_name, perms, over, shownKey, shown) => {
+		session.isSuperAdmin = perms === null;
+		session.permissions = perms ? [...perms] : [];
+		await openActions(baseDevice(over));
+		await waitFor(() => expect(actionKeys()).toContain(shownKey));
+		expect(actionKeys().includes('issue-token')).toBe(shown);
 	});
 });
 

@@ -27,6 +27,9 @@ type caller struct {
 	token    *authn.AccessToken
 	user     *authn.Account
 	deviceID string
+	// byDeviceToken says that a device token named deviceID, the console's
+	// or one in device_tokens.
+	byDeviceToken bool
 }
 
 func callerOf(r *http.Request) *caller {
@@ -96,9 +99,10 @@ func isOperator(user *authn.Account) bool {
 
 // identifyDevice names the device of a registration, the one route a
 // device may call before it has a token: a live device token bound to a
-// well-formed device id, else the header X-Device-Id when it is one. The
-// header proves nothing, and an account's token names no device. A token's use is noted; when that or the lookup
-// fails the header still counts.
+// well-formed device id (the console's, or one in device_tokens), else the
+// header X-Device-Id when it is one. The header proves nothing, and an
+// account's token names no device. A console token's use is noted; when
+// that or the lookup fails the header still counts.
 //
 //	401 {"error":"Missing device identification"}
 func (h *handlers) identifyDevice(next http.Handler) http.Handler {
@@ -108,7 +112,7 @@ func (h *handlers) identifyDevice(next http.Handler) http.Handler {
 			row, err := h.d.Authn.LookupAccessToken(r.Context(), token)
 			if err == nil && row != nil {
 				if bound := row.ClientID.String; row.IsDeviceToken() && deviceIDPattern(bound) {
-					c.deviceID = bound
+					c.deviceID, c.byDeviceToken = bound, true
 				}
 				c.token = row
 				if h.d.Authn.TouchAccessToken(r.Context(), token) == nil && c.deviceID != "" {
@@ -116,6 +120,14 @@ func (h *handlers) identifyDevice(next http.Handler) http.Handler {
 					return
 				}
 			}
+			if err == nil && row == nil {
+				if bound, err := h.d.Authn.ServerDeviceToken(r.Context(), token); err == nil && deviceIDPattern(bound) {
+					c.deviceID, c.byDeviceToken = bound, true
+					next.ServeHTTP(w, withCaller(r, c))
+					return
+				}
+			}
+			c.byDeviceToken = false
 		}
 		if header := headerText(r, "X-Device-Id"); header != "" && deviceIDPattern(header) {
 			c.deviceID = header

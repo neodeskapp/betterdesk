@@ -39,7 +39,9 @@ func (s *Service) GenerateSignInToken(ctx context.Context, userID int64, clientI
 // (RequireDeviceToken, VerifyDeviceWSAuth) accept. It revokes the device
 // tokens the device had. userID is the account on whose behalf the token
 // is issued; the token never counts as that account's sign-in. The token
-// lasts TokenExpiryDays days.
+// does not expire by time (store.DeviceTokenExpiry): a delete, a ban, a
+// change of the device's id and the next token issued for the device end
+// it.
 func (s *Service) IssueDeviceToken(ctx context.Context, userID int64, deviceID, ip string) (string, error) {
 	if !IsDeviceID(deviceID) {
 		return "", fmt.Errorf("device token: %q is no device id", deviceID)
@@ -47,7 +49,7 @@ func (s *Service) IssueDeviceToken(ctx context.Context, userID int64, deviceID, 
 	if err := revokeDeviceTokens(ctx, s.db, deviceID); err != nil {
 		return "", err
 	}
-	return s.issue(ctx, TokenKindDevice, userID, deviceID, "", ip)
+	return s.issue(ctx, TokenKindDevice, userID, deviceID, "", ip, store.DeviceTokenExpiry())
 }
 
 // RevokeDeviceTokens revokes the device tokens issued for the device, for
@@ -56,10 +58,10 @@ func (s *Service) RevokeDeviceTokens(ctx context.Context, deviceID string) error
 	return revokeDeviceTokens(ctx, s.db, deviceID)
 }
 
-// TokenExpiryDays is how many days a new access token lasts.
+// TokenExpiryDays is how many days a new account's token lasts.
 func (s *Service) TokenExpiryDays() int { return int(s.tokenDays.Load()) }
 
-// SetTokenExpiryDays changes how long new access tokens last, from the
+// SetTokenExpiryDays changes how long new accounts' tokens last, from the
 // text of the setting as API_TOKEN_EXPIRY_DAYS is read: its whole number,
 // or 7 when it has none or the number is 0.
 func (s *Service) SetTokenExpiryDays(text string) {
@@ -70,16 +72,17 @@ func (s *Service) SetTokenExpiryDays(text string) {
 // none. It is for a sign-in whose request names no client UUID at all:
 // nothing is revoked, and the token is stored with an empty UUID.
 func (s *Service) IssueAccessToken(ctx context.Context, userID int64, clientID, clientUUID, ip string) (string, error) {
-	return s.issue(ctx, TokenKindAccount, userID, clientID, clientUUID, ip)
+	expires := s.now().Add(time.Duration(s.tokenDays.Load()) * 24 * time.Hour)
+	return s.issue(ctx, TokenKindAccount, userID, clientID, clientUUID, ip, expires)
 }
 
-// issue stores a new token of the kind and returns it.
-func (s *Service) issue(ctx context.Context, kind string, userID int64, clientID, clientUUID, ip string) (string, error) {
+// issue stores a new token of the kind that expires at expires and returns
+// it.
+func (s *Service) issue(ctx context.Context, kind string, userID int64, clientID, clientUUID, ip string, expires time.Time) (string, error) {
 	token, err := s.randomHex(32)
 	if err != nil {
 		return "", fmt.Errorf("access token: %w", err)
 	}
-	expires := s.now().Add(time.Duration(s.tokenDays.Load()) * 24 * time.Hour)
 	if err := createAccessToken(ctx, s.db, kind, token, userID, clientID, clientUUID, s.expiryText(expires), ip); err != nil {
 		return "", err
 	}

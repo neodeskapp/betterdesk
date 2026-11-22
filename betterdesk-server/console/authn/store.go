@@ -323,7 +323,8 @@ func revokeUserClientTokens(ctx context.Context, q store.Querier, userID int64, 
 	return nil
 }
 
-// revokeDeviceTokens revokes the device tokens issued for the device.
+// revokeDeviceTokens revokes the device tokens issued for the device: the
+// console's and the API server's.
 func revokeDeviceTokens(ctx context.Context, q store.Querier, deviceID string) error {
 	query := q.Pick(
 		`UPDATE access_tokens SET revoked = 1 WHERE token_kind = ? AND client_id = ?`,
@@ -331,7 +332,61 @@ func revokeDeviceTokens(ctx context.Context, q store.Querier, deviceID string) e
 	if _, err := q.Exec(ctx, query, TokenKindDevice, deviceID); err != nil {
 		return fmt.Errorf("revoke the device tokens of %s: %w", deviceID, err)
 	}
+	return revokeServerDeviceTokens(ctx, q, deviceID)
+}
+
+// ServerDeviceTokenCreator is created_by of a device token in
+// device_tokens: one the API server or the console issued for a device it
+// admitted (db.DeviceCredentialCreator). Enrollment tokens an operator
+// made carry the operator's name and are no device tokens.
+const ServerDeviceTokenCreator = "system"
+
+// revokeServerDeviceTokens revokes the device tokens in device_tokens
+// issued for the device. A database without the table has none.
+func revokeServerDeviceTokens(ctx context.Context, q store.Querier, deviceID string) error {
+	query := `UPDATE device_tokens SET status = 'revoked', revoked_at = ` + store.NowSQL(q.Dialect()) + `
+		WHERE peer_id = ? AND created_by = ? AND status NOT IN ('revoked', 'expired')`
+	if _, err := q.Exec(ctx, query, deviceID, ServerDeviceTokenCreator); err != nil && !missingTable(q, err) {
+		return fmt.Errorf("revoke the server's device tokens of %s: %w", deviceID, err)
+	}
 	return nil
+}
+
+// createServerDeviceToken stores a device token in device_tokens for the
+// device, as the API server stores the ones it issues: its hash, the first
+// eight characters, active, without a limit of uses and without an expiry.
+func createServerDeviceToken(ctx context.Context, q store.Querier, deviceID, token, note string) error {
+	_, err := q.Exec(ctx, `INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, created_by, note)
+		VALUES (?, ?, ?, ?, 'active', 0, 0, ?, ?)`,
+		HashDeviceToken(token), token[:8], "Auto-"+deviceID, deviceID, ServerDeviceTokenCreator, note)
+	if err != nil {
+		return fmt.Errorf("store a device token of %s: %w", deviceID, err)
+	}
+	return nil
+}
+
+// lookupServerDeviceToken returns the device token in device_tokens with
+// this hash that was issued for a device, or nil. A database without the
+// table has none.
+func lookupServerDeviceToken(ctx context.Context, q store.Querier, tokenHash string) (*enrollmentToken, error) {
+	var t enrollmentToken
+	err := store.SelectRow(ctx, q,
+		`SELECT peer_id, status, max_uses, use_count, expires_at FROM device_tokens WHERE token_hash = ? AND created_by = ?`,
+		tokenHash, ServerDeviceTokenCreator).
+		Scan(&t.peerID, &t.status, &t.maxUses, &t.useCount, &t.expiresAt)
+	switch {
+	case err == nil:
+		return &t, nil
+	case errors.Is(err, sql.ErrNoRows), missingTable(q, err):
+		return nil, nil
+	}
+	return nil, fmt.Errorf("look up a device token of the server: %w", err)
+}
+
+// missingTable reports whether err says a table the statement names is not
+// there.
+func missingTable(q store.Querier, err error) bool {
+	return strings.Contains(err.Error(), q.Pick("no such table", "does not exist"))
 }
 
 func revokeAllUserTokens(ctx context.Context, q store.Querier, userID int64) error {

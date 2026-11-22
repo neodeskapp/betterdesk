@@ -14,6 +14,7 @@ vi.mock('#lib/api/devices.ts', () => ({
 	restoreDevice: vi.fn(async () => ({})),
 	bulkDelete: vi.fn(async (ids: string[]) => ids.length),
 	changeDeviceId: vi.fn(async () => ({})),
+	issueDeviceToken: vi.fn(async () => ({ success: true })),
 	setDeviceTags: vi.fn(async (_id: string, tags: string[]) => ({ tags })),
 	setDeviceFolder: vi.fn(async () => ({})),
 	moveToFolder: vi.fn(async () => ({})),
@@ -148,6 +149,7 @@ describe('permission gates: nothing is asked or sent without the permission', ()
 		],
 		['permanentDelete', 'device.delete', () => act.permanentDelete(dev()), () => devicesApi.deleteDevice],
 		['changeId', 'device.change_id', () => act.changeId(dev()), () => devicesApi.changeDeviceId],
+		['issueToken', 'device.edit', () => act.issueToken(dev()), () => devicesApi.issueDeviceToken],
 		[
 			'setConnectionMode',
 			'device.connection_mode',
@@ -205,6 +207,7 @@ describe('permission gates: nothing is asked or sent without the permission', ()
 		expect(await act.rename(dev({ soft_deleted: true }))).toBe(false);
 		expect(await act.ban(dev({ soft_deleted: true }))).toBe(false);
 		expect(await act.changeId(dev({ soft_deleted: true }))).toBeNull();
+		expect(await act.issueToken(dev({ soft_deleted: true }))).toBe(false);
 		const ids = act
 			.deviceMenu(dev({ soft_deleted: true }))
 			.flat()
@@ -260,6 +263,56 @@ describe('what the actions send', () => {
 		expect(await act.changeId(dev({ online: true }))).toBe('NEWID123');
 		expect(confirm).toHaveBeenCalled();
 		expect(devicesApi.changeDeviceId).toHaveBeenCalledWith('900100001', 'NEWID123');
+	});
+
+	test('issue token asks first, then sends; cancelling sends nothing', async () => {
+		as('device.edit');
+		dismissAll();
+		expect(await act.issueToken(dev())).toBe(true);
+		expect(confirm).toHaveBeenCalledWith(
+			expect.objectContaining({
+				title: 'Issue a new token',
+				message:
+					'The current token of reception (900100001) stops working now. The device gets a new one the next time it checks in. Stock RustDesk clients do not use device tokens.',
+				confirmLabel: 'Issue token'
+			})
+		);
+		expect(devicesApi.issueDeviceToken).toHaveBeenCalledWith('900100001');
+		expect(vi.mocked(confirm).mock.invocationCallOrder[0]).toBeLessThan(
+			vi.mocked(devicesApi.issueDeviceToken).mock.invocationCallOrder[0]!
+		);
+		expect(toasts.items.map((x) => [x.type, x.message])).toEqual([
+			['success', 'New token issued. The device picks it up the next time it checks in.']
+		]);
+
+		vi.mocked(devicesApi.issueDeviceToken).mockClear();
+		vi.mocked(confirm).mockResolvedValueOnce(false);
+		expect(await act.issueToken(dev())).toBe(false);
+		expect(devicesApi.issueDeviceToken).not.toHaveBeenCalled();
+	});
+
+	test('issue token: device.edit, and not for deleted, banned or RDP/VNC devices', async () => {
+		as();
+		expect(act.may.issueToken(dev())).toBe(false);
+		as('device.ban', 'device.change_id', 'device.delete');
+		expect(act.may.issueToken(dev())).toBe(false);
+		as('device.edit');
+		expect(act.may.issueToken(dev())).toBe(true);
+		expect(act.may.issueToken(dev({ soft_deleted: true }))).toBe(false);
+		expect(act.may.issueToken(dev({ banned: true }))).toBe(false);
+		expect(act.may.issueToken(dev({ id: 'rt_1', remote_target: true, device_type: 'rdp' }))).toBe(false);
+		expect(await act.issueToken(dev({ banned: true }))).toBe(false);
+		expect(await act.issueToken(dev({ id: 'rt_1', remote_target: true }))).toBe(false);
+		expect(confirm).not.toHaveBeenCalled();
+		expect(devicesApi.issueDeviceToken).not.toHaveBeenCalled();
+	});
+
+	test('a refused token request is a toast with the server message', async () => {
+		as('device.edit');
+		dismissAll();
+		vi.mocked(devicesApi.issueDeviceToken).mockRejectedValueOnce(new Error('Device not found'));
+		await expect(act.issueToken(dev())).resolves.toBe(false);
+		expect(toasts.items.map((x) => [x.type, x.message])).toEqual([['error', 'Device not found']]);
 	});
 
 	test('tags: added without duplicates, removed case-insensitively, unchanged devices skipped', async () => {
@@ -358,13 +411,17 @@ describe('row menu', () => {
 			'manage-tags',
 			'groups',
 			'move-folder',
-			'access-policy'
+			'access-policy',
+			'issue-token'
 		]);
 	});
 
 	test('admin: ban or unban by state, change ID and delete', () => {
 		session.isSuperAdmin = true;
 		expect(ids(dev())).toContain('toggle-ban');
+		expect(ids(dev())).toEqual(expect.arrayContaining(['change-id', 'issue-token']));
+		// A banned device gets no new token
+		expect(ids(dev({ banned: true }))).not.toContain('issue-token');
 		expect(
 			act
 				.deviceMenu(dev({ banned: true }))
@@ -372,6 +429,18 @@ describe('row menu', () => {
 				.find((i) => i.id === 'toggle-ban')?.icon
 		).toBe('lock_open');
 		expect(ids(dev()).slice(-1)).toEqual(['delete']);
+	});
+
+	test('the token item asks, then issues the token', async () => {
+		as('device.edit');
+		const entry = act
+			.deviceMenu(dev())
+			.flat()
+			.find((i) => i.id === 'issue-token');
+		expect(entry?.icon).toBe('key');
+		await entry!.run();
+		expect(confirm).toHaveBeenCalledTimes(1);
+		expect(devicesApi.issueDeviceToken).toHaveBeenCalledWith('900100001');
 	});
 
 	test('MeshAgent online: its tools; offline: only Wake', () => {

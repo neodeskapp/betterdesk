@@ -75,16 +75,35 @@ describe('permission gates per role', () => {
 		expect(footerSlots(device(), can)).toEqual({ edit: true, editTarget: false, connect: true });
 		const a = panelActions(device(), can);
 		expect(a.connect).toEqual(['connect-web', 'connect-desktop', 'cdap-viewer', 'guest-access']);
-		expect(a.manage).toEqual(['edit', 'groups', 'access-policy']);
+		expect(a.manage).toEqual(['edit', 'groups', 'access-policy', 'issue-token']);
 		expect(a.danger).toEqual([]);
 	});
 
 	test('admin: every action, ban turns into unban on a banned device', () => {
 		const can = canFor('admin');
 		const a = panelActions(device(), can);
-		expect(a.manage).toEqual(['edit', 'groups', 'access-policy', 'change-id', 'ban']);
+		expect(a.manage).toEqual(['edit', 'groups', 'access-policy', 'change-id', 'issue-token', 'ban']);
 		expect(a.danger).toEqual(['delete']);
 		expect(panelActions(device({ banned: true }), can).manage).toContain('unban');
+	});
+
+	test('a new token needs device.edit; a banned, deleted or RDP/VNC device gets none', () => {
+		const admin = canFor('admin');
+		expect(panelActions(device(), canFor('viewer')).manage).not.toContain('issue-token');
+		expect(panelActions(device(), (p) => admin(p) && p !== 'device.edit').manage).not.toContain(
+			'issue-token'
+		);
+		expect(panelActions(device({ banned: true }), admin).manage).toEqual([
+			'edit',
+			'groups',
+			'access-policy',
+			'change-id',
+			'unban'
+		]);
+		const deleted = panelActions(device({ soft_deleted: true }), admin);
+		expect([...deleted.manage, ...deleted.deleted]).not.toContain('issue-token');
+		const target = device({ id: 'rt_1', remote_target: true, device_type: 'rdp' });
+		expect(panelActions(target, admin).manage).not.toContain('issue-token');
 	});
 
 	test('a deleted device: no footer actions, only restore and delete for good (device.delete)', () => {

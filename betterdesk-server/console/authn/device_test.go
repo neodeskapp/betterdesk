@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
@@ -154,13 +155,12 @@ func TestServerDeletesAndBansEndDeviceTokens(t *testing.T) {
 	})
 }
 
-// TestARenamedDeviceKeepsItsDeviceToken: the signal server's id change
-// moves the device's device tokens to the new id in the same step, so the
-// device goes on speaking under its new id and its token proves nothing
-// under the old one. A token still bound to the new id (a device the
-// console admitted under it that never reached the signal server) gives
-// way; an account's token naming the old id stays as it was (BUGS RV232).
-func TestARenamedDeviceKeepsItsDeviceToken(t *testing.T) {
+// TestAChangeOfIDEndsTheDeviceTokens: the signal server's id change ends
+// the device's device tokens in the same step, under the old id and the
+// new one, and also a token still bound to the new id (a device the
+// console admitted under it that never reached the signal server). An
+// account's token naming the old id stays as it was (L44, decision 1).
+func TestAChangeOfIDEndsTheDeviceTokens(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		db = storetest.Prepare(t, db, storetest.GoServerFirst)
 		server := storetest.GoServer(t, db)
@@ -168,7 +168,7 @@ func TestARenamedDeviceKeepsItsDeviceToken(t *testing.T) {
 		s, _, _ := testService(t, db, nil)
 		id := addUser(t, s, "admin", "pw", "admin", "local")
 		mustExec(t, db, `INSERT INTO peers (id) VALUES ('rename-old')`)
-		moving, err := s.IssueDeviceToken(ctx, id, "rename-old", "")
+		renamed, err := s.IssueDeviceToken(ctx, id, "rename-old", "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -185,26 +185,51 @@ func TestARenamedDeviceKeepsItsDeviceToken(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if device, err := s.RequireDeviceToken(ctx, "Bearer "+moving); err != nil || device.DeviceID != "rename-new" {
-			t.Errorf("device request with the renamed device's token: %+v, %v; want it through as rename-new", device, err)
-		}
-		for _, c := range []struct {
-			device, token string
-			want          bool
-		}{
-			{"rename-new", moving, true},
-			{"rename-old", moving, false},
-			{"rename-new", stale, false},
-		} {
-			if ok, err := s.VerifyDeviceWSAuth(ctx, c.device, c.token); ok != c.want || err != nil {
-				t.Errorf("device socket of %s: %v, %v; want %v", c.device, ok, err, c.want)
+		for name, token := range map[string]string{"the renamed device's token": renamed, "the token left on the new id": stale} {
+			if device, err := s.RequireDeviceToken(ctx, "Bearer "+token); err == nil {
+				t.Errorf("device request with %s: through as %s, want it refused", name, device.DeviceID)
 			}
-		}
-		if _, err := s.RequireDeviceToken(ctx, "Bearer "+stale); err == nil {
-			t.Error("device request with the token left bound to the new id: through, want it refused")
+			for _, device := range []string{"rename-old", "rename-new"} {
+				if ok, err := s.VerifyDeviceWSAuth(ctx, device, token); ok || err != nil {
+					t.Errorf("device socket of %s with %s: %v, %v; want it refused", device, name, ok, err)
+				}
+			}
 		}
 		if user, err := s.ValidateAccessToken(ctx, account); err != nil || user == nil || user.ClientID.String != "rename-old" {
 			t.Errorf("account token naming the old id: %+v, %v; want it live and unchanged", user, err)
+		}
+	})
+}
+
+// TestDeviceTokensDoNotExpireByTime: a device token stays good after the
+// lifetime of an account's token has passed; only a delete, a ban, a
+// change of id and a new token end it (L44, decision 1).
+func TestDeviceTokensDoNotExpireByTime(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
+		ctx := context.Background()
+		issuedAt := time.Now().Add(-400 * 24 * time.Hour)
+		s, _, _ := testService(t, db, func(o *Options) { o.Now = func() time.Time { return issuedAt } })
+		s.SetTokenExpiryDays("30")
+		id := addUser(t, s, "admin", "pw", "admin", "local")
+		mustExec(t, db, `INSERT INTO peers (id) VALUES ('old-device')`)
+		device, err := s.IssueDeviceToken(ctx, id, "old-device", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		account, err := s.GenerateSignInToken(ctx, id, "old-device", "uuid-1", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if got, err := s.RequireDeviceToken(ctx, "Bearer "+device); err != nil || got.DeviceID != "old-device" {
+			t.Errorf("device request with a token issued 400 days ago: %+v, %v; want it through", got, err)
+		}
+		if ok, err := s.VerifyDeviceWSAuth(ctx, "old-device", device); !ok || err != nil {
+			t.Errorf("device socket with a token issued 400 days ago: %v, %v; want it open", ok, err)
+		}
+		if user, err := s.ValidateAccessToken(ctx, account); user != nil || err != nil {
+			t.Errorf("an account's token issued 400 days ago: %+v, %v; want it expired", user, err)
 		}
 	})
 }

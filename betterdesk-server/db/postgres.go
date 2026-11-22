@@ -1057,7 +1057,7 @@ func (pg *PostgresDB) DeletePeer(id string) error {
 		`UPDATE peers SET soft_deleted = TRUE, deleted_at = NOW() WHERE id = $1`, id); err != nil {
 		return err
 	}
-	if err := pgRevokeDeviceAccessTokens(pg.ctx, tx, id); err != nil {
+	if err := pgEndDeviceTokens(pg.ctx, tx, id); err != nil {
 		return err
 	}
 	return tx.Commit(pg.ctx)
@@ -1077,7 +1077,7 @@ func (pg *PostgresDB) HardDeletePeer(id string) error {
 	if _, err := tx.Exec(pg.ctx, `DELETE FROM peers WHERE id = $1`, id); err != nil {
 		return err
 	}
-	if err := pgRevokeDeviceAccessTokens(pg.ctx, tx, id); err != nil {
+	if err := pgEndDeviceTokens(pg.ctx, tx, id); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(pg.ctx,
@@ -1500,7 +1500,7 @@ func (pg *PostgresDB) BanPeer(id string, reason string) error {
 		reason, id); err != nil {
 		return err
 	}
-	if err := pgRevokeDeviceAccessTokens(pg.ctx, tx, id); err != nil {
+	if err := pgEndDeviceTokens(pg.ctx, tx, id); err != nil {
 		return err
 	}
 	return tx.Commit(pg.ctx)
@@ -1609,13 +1609,13 @@ func (pg *PostgresDB) cascadePeerIDInTx(ctx context.Context, tx pgx.Tx, oldID, n
 			return fmt.Errorf("db: cascadePeerID %s→%s: %w", oldID, newID, err)
 		}
 	}
-	return pgMoveDeviceAccessTokens(ctx, tx, oldID, newID)
+	return pgEndRenamedDeviceTokens(ctx, tx, oldID, newID)
 }
 
 // ChangePeerID changes a peer's ID and records it in history. What is
-// bound to the old ID, the device tokens among it, moves along
-// (cascadePeerIDInTx). Uses a PostgreSQL transaction with row-level
-// locking.
+// bound to the old ID moves along (cascadePeerIDInTx); the device tokens
+// of the device end there. Uses a PostgreSQL transaction
+// with row-level locking.
 func (pg *PostgresDB) ChangePeerID(oldID, newID, reason string) error {
 	tx, err := pg.pool.Begin(pg.ctx)
 	if err != nil {

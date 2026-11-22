@@ -189,7 +189,7 @@
 //	func (h *handlers) taskResult(w http.ResponseWriter, r *http.Request) {
 //		device := kit.Device(r) // never nil behind RequireDeviceToken
 //		id := device.DeviceID   // req.deviceId
-//		_ = device.Token        // req.deviceToken, the token's row
+//		_ = device.Token        // req.deviceToken, the console token's row; nil for one in device_tokens
 //		...
 //	}
 //

@@ -374,6 +374,24 @@ func (s *Service) issueClaimed(ctx context.Context, deviceID string, issue func(
 	return token, nil
 }
 
+// ReissueToken makes the device token of the device's approved
+// registration due again, for a new token from the devices page: the next
+// status the device asks for carries a new token, once, as after the
+// approval (DeliverToken). It reports whether the device has an approved
+// registration.
+func (s *Service) ReissueToken(ctx context.Context, deviceID string) (bool, error) {
+	res, err := s.db.Exec(ctx, `UPDATE pending_registrations SET access_token = ?, updated_at = `+store.NowSQL(s.db.Dialect())+`
+		WHERE device_id = ? AND status = 'approved'`, tokenDue, deviceID)
+	if err != nil {
+		return false, fmt.Errorf("make the device token of %q due: %w", deviceID, err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("make the device token of %q due: %w", deviceID, err)
+	}
+	return n > 0, nil
+}
+
 // TokenDue reports whether the access_token a row holds says its device
 // token is due, so that DeliverToken may issue it.
 func TokenDue(stored any) bool {

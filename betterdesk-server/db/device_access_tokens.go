@@ -8,17 +8,18 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// The console's device tokens live in access_tokens, a table the console
-// creates and migrates in the database it shares with this server: rows
-// whose token_kind is "device", bound to a device by client_id. The
-// console's device routes and sockets accept them. A delete, soft or hard,
-// and a ban revoke them in the same transaction as the change to peers,
-// whichever port or command made it; a restore or an unban gives none
-// back. An id change moves them to the new id in the transaction of the
-// rename, so the device keeps them and none stays bound to the old id. A
-// database the console has not migrated yet (no access_tokens, or
-// one without token_kind, which holds no device tokens) has nothing to
-// revoke.
+// A device's device tokens are the console's, in access_tokens, a table
+// the console creates and migrates in the database it shares with this
+// server (rows whose token_kind is "device", bound to a device by
+// client_id), and the ones the server issued for it in device_tokens
+// (created_by DeviceCredentialCreator). The console's device routes and
+// sockets accept both. They do not expire by time. A delete, soft or hard,
+// a ban and a change of the device's id revoke both kinds in the same
+// transaction as the change to peers, whichever port or command made it; a
+// restore or an unban gives none back, and a renamed device gets a new
+// token under its new id the way it got its first. A database the console
+// has not migrated yet (no access_tokens, or one without token_kind, which
+// holds no device tokens) has no console tokens to revoke.
 
 // sqliteHasDeviceAccessTokens reports whether access_tokens is there with
 // its token_kind column.
@@ -31,9 +32,18 @@ func sqliteHasDeviceAccessTokens(tx *sql.Tx) (bool, error) {
 	return n > 0, nil
 }
 
-// sqliteRevokeDeviceAccessTokens revokes the console's device tokens of
+// sqliteEndDeviceTokens revokes the device tokens of the device, both
+// kinds.
+func sqliteEndDeviceTokens(tx *sql.Tx, id string) error {
+	if err := sqliteRevokeConsoleDeviceTokens(tx, id); err != nil {
+		return err
+	}
+	return sqliteRevokeDeviceCredentials(tx, id, 0)
+}
+
+// sqliteRevokeConsoleDeviceTokens revokes the console's device tokens of
 // the device.
-func sqliteRevokeDeviceAccessTokens(tx *sql.Tx, id string) error {
+func sqliteRevokeConsoleDeviceTokens(tx *sql.Tx, id string) error {
 	ok, err := sqliteHasDeviceAccessTokens(tx)
 	if err != nil || !ok {
 		return err
@@ -45,21 +55,23 @@ func sqliteRevokeDeviceAccessTokens(tx *sql.Tx, id string) error {
 	return nil
 }
 
-// sqliteMoveDeviceAccessTokens moves the console's device tokens of a
-// device whose id changes to the new id. A device token still bound to
-// the new id, of a device that had it before, is revoked first.
-func sqliteMoveDeviceAccessTokens(tx *sql.Tx, oldID, newID string) error {
+// sqliteEndRenamedDeviceTokens revokes the device tokens of a device
+// whose id changes, both kinds, and any still bound to the new id, of a
+// device that had it before. It runs after the rename moved the rows of
+// device_tokens to the new id.
+func sqliteEndRenamedDeviceTokens(tx *sql.Tx, oldID, newID string) error {
+	for _, id := range []string{oldID, newID} {
+		if err := sqliteRevokeDeviceCredentials(tx, id, 0); err != nil {
+			return err
+		}
+	}
 	ok, err := sqliteHasDeviceAccessTokens(tx)
 	if err != nil || !ok {
 		return err
 	}
 	if _, err := tx.Exec(
-		`UPDATE access_tokens SET revoked = 1 WHERE token_kind = 'device' AND client_id = ?`, newID); err != nil {
-		return fmt.Errorf("db: revoke the device tokens left on %s: %w", newID, err)
-	}
-	if _, err := tx.Exec(
-		`UPDATE access_tokens SET client_id = ? WHERE token_kind = 'device' AND client_id = ?`, newID, oldID); err != nil {
-		return fmt.Errorf("db: move the device tokens of %s to %s: %w", oldID, newID, err)
+		`UPDATE access_tokens SET revoked = 1 WHERE token_kind = 'device' AND client_id IN (?, ?)`, oldID, newID); err != nil {
+		return fmt.Errorf("db: revoke the device tokens of %s renamed to %s: %w", oldID, newID, err)
 	}
 	return nil
 }
@@ -78,9 +90,17 @@ func pgHasDeviceAccessTokens(ctx context.Context, tx pgx.Tx) (bool, error) {
 	return ok, nil
 }
 
-// pgRevokeDeviceAccessTokens revokes the console's device tokens of the
+// pgEndDeviceTokens revokes the device tokens of the device, both kinds.
+func pgEndDeviceTokens(ctx context.Context, tx pgx.Tx, id string) error {
+	if err := pgRevokeConsoleDeviceTokens(ctx, tx, id); err != nil {
+		return err
+	}
+	return pgRevokeDeviceCredentials(ctx, tx, id, 0)
+}
+
+// pgRevokeConsoleDeviceTokens revokes the console's device tokens of the
 // device.
-func pgRevokeDeviceAccessTokens(ctx context.Context, tx pgx.Tx, id string) error {
+func pgRevokeConsoleDeviceTokens(ctx context.Context, tx pgx.Tx, id string) error {
 	ok, err := pgHasDeviceAccessTokens(ctx, tx)
 	if err != nil || !ok {
 		return err
@@ -92,21 +112,23 @@ func pgRevokeDeviceAccessTokens(ctx context.Context, tx pgx.Tx, id string) error
 	return nil
 }
 
-// pgMoveDeviceAccessTokens moves the console's device tokens of a device
-// whose id changes to the new id. A device token still bound to the new
-// id, of a device that had it before, is revoked first.
-func pgMoveDeviceAccessTokens(ctx context.Context, tx pgx.Tx, oldID, newID string) error {
+// pgEndRenamedDeviceTokens revokes the device tokens of a device whose id
+// changes, both kinds, and any still bound to the new id, of a device that
+// had it before. It runs after the rename moved the rows of device_tokens
+// to the new id.
+func pgEndRenamedDeviceTokens(ctx context.Context, tx pgx.Tx, oldID, newID string) error {
+	for _, id := range []string{oldID, newID} {
+		if err := pgRevokeDeviceCredentials(ctx, tx, id, 0); err != nil {
+			return err
+		}
+	}
 	ok, err := pgHasDeviceAccessTokens(ctx, tx)
 	if err != nil || !ok {
 		return err
 	}
 	if _, err := tx.Exec(ctx,
-		`UPDATE access_tokens SET revoked = TRUE WHERE token_kind = 'device' AND client_id = $1`, newID); err != nil {
-		return fmt.Errorf("db: revoke the device tokens left on %s: %w", newID, err)
-	}
-	if _, err := tx.Exec(ctx,
-		`UPDATE access_tokens SET client_id = $1 WHERE token_kind = 'device' AND client_id = $2`, newID, oldID); err != nil {
-		return fmt.Errorf("db: move the device tokens of %s to %s: %w", oldID, newID, err)
+		`UPDATE access_tokens SET revoked = TRUE WHERE token_kind = 'device' AND client_id IN ($1, $2)`, oldID, newID); err != nil {
+		return fmt.Errorf("db: revoke the device tokens of %s renamed to %s: %w", oldID, newID, err)
 	}
 	return nil
 }

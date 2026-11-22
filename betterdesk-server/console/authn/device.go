@@ -2,6 +2,7 @@ package authn
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -10,10 +11,13 @@ import (
 )
 
 // Checks for requests and sockets that come from devices. A device proves
-// itself with a token: a device token the console issued for it
-// (IssueDeviceToken), or on the device sockets also an enrollment token of
-// the signal server. An account's sign-in token proves no device, whatever
-// client id it stored. The header X-Device-Id names a device and proves
+// itself with a token: a device token issued for it, by the console
+// (IssueDeviceToken, in access_tokens) or by the API server or the console
+// at an enrollment, a pairing or a registration (device_tokens, created_by
+// "system"; IssueServerDeviceToken), or on the device sockets also an
+// enrollment token of the signal server. An account's sign-in token proves
+// no device, whatever client id it stored. Device tokens do not expire by
+// time. The header X-Device-Id names a device and proves
 // nothing. Neither token proves anything while the signal server holds
 // the device as banned or soft-deleted, whoever banned or deleted it.
 // Every delete and ban also revokes the device's tokens for good: the
@@ -57,14 +61,16 @@ func (e *DeviceAuthError) Error() string { return e.Text }
 type DeviceAuth struct {
 	// DeviceID is the device the token is bound to.
 	DeviceID string
-	// Token is the token's row.
+	// Token is the row of a console device token; nil for a device token
+	// in device_tokens.
 	Token *AccessToken
 }
 
 // RequireDeviceToken checks the Authorization header of a device request.
-// It needs a Bearer device token that is live and bound to a device id
-// the signal server does not hold as banned or soft-deleted, and notes the
-// use on the token. It refuses with a *DeviceAuthError:
+// It needs a Bearer device token (the console's or one in device_tokens)
+// that is live and bound to a device id the signal server does not hold as
+// banned or soft-deleted, and notes the use on a console token. It refuses
+// with a *DeviceAuthError:
 //
 //	401 "Bearer access token required"     no Bearer token
 //	401 "Invalid or expired access token"  a lookup failed
@@ -80,19 +86,77 @@ func (s *Service) RequireDeviceToken(ctx context.Context, authorization string) 
 	if err != nil {
 		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or expired access token"}
 	}
-	if !row.IsDeviceToken() || row.ClientID.String == "" || !IsDeviceID(row.ClientID.String) {
+	deviceID := ""
+	switch {
+	case row.IsDeviceToken():
+		deviceID = row.ClientID.String
+	case row == nil:
+		if deviceID, err = s.ServerDeviceToken(ctx, token); err != nil {
+			return nil, &DeviceAuthError{Status: 401, Text: "Invalid or expired access token"}
+		}
+	}
+	if !IsDeviceID(deviceID) {
 		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or unbound access token"}
 	}
-	shutOut, err := deviceShutOut(ctx, s.db, row.ClientID.String)
+	shutOut, err := deviceShutOut(ctx, s.db, deviceID)
 	if err != nil {
 		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or expired access token"}
 	}
 	if shutOut {
 		return nil, &DeviceAuthError{Status: 401, Text: "Invalid or unbound access token"}
 	}
-	// The token is good; a failure to note its use changes nothing.
-	_ = touchAccessToken(ctx, s.db, token)
-	return &DeviceAuth{DeviceID: row.ClientID.String, Token: row}, nil
+	if row != nil {
+		// The token is good; a failure to note its use changes nothing.
+		_ = touchAccessToken(ctx, s.db, token)
+	}
+	return &DeviceAuth{DeviceID: deviceID, Token: row}, nil
+}
+
+// ServerDeviceToken returns the device a device token in device_tokens is
+// bound to: a token issued for a device (created_by "system"), active,
+// with uses left, not expired and bound to a device id. It is "" for any
+// other token, an operator's enrollment token among them. It does not look
+// at the device's ban.
+func (s *Service) ServerDeviceToken(ctx context.Context, token string) (string, error) {
+	if token == "" {
+		return "", nil
+	}
+	row, err := lookupServerDeviceToken(ctx, s.db, HashDeviceToken(token))
+	if err != nil || row == nil {
+		return "", err
+	}
+	device := row.peerID.String
+	if row.status.String != "active" || !IsDeviceID(device) || !s.enrollmentValid(row, device) {
+		return "", nil
+	}
+	return device, nil
+}
+
+// IssueServerDeviceToken issues a device token in device_tokens, the way
+// the API server issues one at an enrollment, for a device the console
+// admitted without an approver (an agent template, the proof of its key).
+// It ends the device tokens the device had, the console's and the server's.
+// The row keeps only the token's hash and its first eight characters; the
+// token does not expire by time. A database without the signal server's
+// device_tokens issues none: the token is "".
+func (s *Service) IssueServerDeviceToken(ctx context.Context, deviceID, note string) (string, error) {
+	if !IsDeviceID(deviceID) {
+		return "", fmt.Errorf("device token: %q is no device id", deviceID)
+	}
+	token, err := s.randomHex(32)
+	if err != nil {
+		return "", fmt.Errorf("device token: %w", err)
+	}
+	if err := revokeDeviceTokens(ctx, s.db, deviceID); err != nil {
+		return "", err
+	}
+	if err := createServerDeviceToken(ctx, s.db, deviceID, token, note); err != nil {
+		if missingTable(s.db, err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return token, nil
 }
 
 // DeviceClaim is one place where a request can name the device it speaks

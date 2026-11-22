@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf16"
 
 	"github.com/google/uuid"
@@ -246,7 +247,7 @@ func sqliteSteps() []step {
 	)...)
 	s = append(s, seedDefaultGroup("user_groups", "Default user group"), seedDefaultGroup("device_groups", "Default device group"))
 	s = append(s, accessTokenHashes())
-	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin())
+	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin(), deviceTokensWithoutExpiry())
 	s = append(s, userDisabled("INTEGER NOT NULL DEFAULT 0"))
 	return s
 }
@@ -332,7 +333,7 @@ func postgresSteps() []step {
 	s = append(s, createTable("user_avatars"))
 	s = append(s, addColumns(lenient, "settings", "updated_at", "TIMESTAMPTZ DEFAULT NOW()")...)
 	s = append(s, widenConditionValue())
-	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin())
+	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin(), deviceTokensWithoutExpiry())
 	s = append(s, userDisabled("BOOLEAN NOT NULL DEFAULT FALSE"))
 	return s
 }
@@ -726,6 +727,43 @@ const storedTokenPrefix = "sha256 "
 // and no value twice, so it holds "sha256 " and the hash; the space keeps
 // it from ever being a token, which holds no white space.
 func StoredAccessToken(hash string) string { return storedTokenPrefix + hash }
+
+// DeviceTokenExpiry is the expiry every device token is stored with:
+// device tokens do not expire by time. A delete, a ban, a change of the
+// device's id and a new token for the device end them.
+func DeviceTokenExpiry() time.Time { return time.Date(2999, 12, 31, 23, 59, 59, 0, time.UTC) }
+
+// DeviceTokenExpiryText is DeviceTokenExpiry as an access_tokens row of the
+// dialect stores an expiry.
+func DeviceTokenExpiryText(dialect Dialect) string {
+	text := DateTimeMillis(DeviceTokenExpiry())
+	if dialect == Postgres {
+		return text + "+00"
+	}
+	return text
+}
+
+// deviceTokensWithoutExpiry gives every device token that is not revoked
+// the expiry of a device token, also one issued with the lifetime of a
+// sign-in before device tokens stopped expiring. Running it again changes
+// nothing.
+func deviceTokensWithoutExpiry() step {
+	return step{
+		name: "keep device tokens without an expiry",
+		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+			expiry := DeviceTokenExpiryText(tx.Dialect())
+			res, err := tx.Exec(ctx, `UPDATE access_tokens SET expires_at = ?
+				WHERE token_kind = 'device' AND NOT revoked AND expires_at < ?`, expiry, expiry)
+			if err != nil {
+				return err
+			}
+			if n, err := res.RowsAffected(); err == nil && n > 0 {
+				logging.Logf(logComponent, "Migration: kept %d device tokens without an expiry", n)
+			}
+			return nil
+		},
+	}
+}
 
 // accessTokenHashIndex is written with the line break and indent the Node
 // console's statement had, because SQLite stores the text.

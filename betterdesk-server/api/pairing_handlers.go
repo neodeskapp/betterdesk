@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 	"strconv"
@@ -200,8 +201,12 @@ func (s *Server) connectionEndpoints(r *http.Request) map[string]any {
 		}
 		relayServers = strings.Join(s.cfg.GetRelayServers(), ",")
 	}
-	scheme := "https"
-	if r != nil && r.TLS == nil {
+	// The API address has the scheme the request came with: https over TLS
+	// or behind a trusted proxy that says so, http otherwise.
+	scheme := "http"
+	if r != nil && r.TLS != nil {
+		scheme = "https"
+	} else if r != nil {
 		if proto := strings.TrimSpace(s.forwardedHeader(r, "X-Forwarded-Proto")); proto != "" {
 			scheme = strings.ToLower(proto)
 		}
@@ -564,7 +569,13 @@ func (s *Server) enrollPairedDevice(r *http.Request, req *EnrollmentRequest) Enr
 			syncMode = "standard"
 		}
 		displayName, _ := s.db.GetConfig("device_display_name_" + req.DeviceID)
-		return s.buildEnrollmentResponse("approved", req.DeviceID, syncMode, displayName)
+		resp := s.buildEnrollmentResponse("approved", req.DeviceID, syncMode, displayName)
+		// As at a registration: a known device that proves its key and holds
+		// no working device token gets a new one; one that holds it keeps it.
+		if !s.hasEnrollmentCredential(req.DeviceID, enrollmentTokenCandidates(r, ""), true) {
+			s.issuePairedDeviceToken(r, req, &resp, true)
+		}
+		return resp
 	}
 
 	if mode != "open" {
@@ -594,10 +605,30 @@ func (s *Server) enrollPairedDevice(r *http.Request, req *EnrollmentRequest) Enr
 		}
 	}
 	resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
+	s.issuePairedDeviceToken(r, req, &resp, false)
 	if s.auditLog != nil {
 		s.auditLog.Log("device_enrolled", s.eventActor(r), req.DeviceID, map[string]string{
 			"mode": "pairing", "hostname": req.Hostname,
 		})
 	}
 	return resp
+}
+
+// issuePairedDeviceToken gives a device that redeemed a code its device
+// token when the request proves the device's key (the X-BD-Enrollment
+// headers, signed for POST /api/pairing/redeem), the way a registration
+// does; without a proof the answer says so and the device gets its token
+// at its next signed registration. known is whether the device was
+// enrolled before.
+func (s *Server) issuePairedDeviceToken(r *http.Request, req *EnrollmentRequest, resp *EnrollmentResponse, known bool) {
+	if !s.authorizeEnrollmentTokenIssue(r, req.DeviceID, req.PublicKey, "", known) {
+		resp.Message = "Device identity proof is required to issue a device token"
+		return
+	}
+	token, err := s.issueEnrollmentDeviceToken(req.DeviceID)
+	if err != nil {
+		log.Printf("[API] Failed to issue a device token for paired device %s: %v", req.DeviceID, err)
+		return
+	}
+	resp.DeviceToken = token
 }

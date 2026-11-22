@@ -154,6 +154,15 @@
 			icon: ICONS.rename,
 			go: () => actions.changeId(d)
 		},
+		'issue-token': {
+			label: tf('devices.issue_token', 'Issue a new token'),
+			desc: tf(
+				'device_detail.action_issue_token_desc',
+				'Stop the current token; the device gets a new one when it next checks in'
+			),
+			icon: ICONS.password,
+			go: () => actions.issueToken(d)
+		},
 		ban: {
 			label: t('actions.ban'),
 			desc: t('device_detail.action_ban_desc'),

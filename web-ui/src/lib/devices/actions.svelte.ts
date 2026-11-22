@@ -43,6 +43,8 @@
  *   restoreDevice(d), permanentDelete(d) (device.delete)
  *   changeId(d)                  warns when online, then asks for the new ID (device.change_id);
  *                                resolves the new ID, or null
+ *   issueToken(d)                asks, then ends the device's tokens; the device gets a new one
+ *                                the next time it checks in (device.edit; not banned)
  *
  * RDP/VNC targets
  *   addRemoteTarget(), editRemoteTarget(d)   sheet (remote_target.edit, test: remote_target.test)
@@ -125,6 +127,8 @@ export const may = {
 	ban: (d: DeviceLike) => !d.soft_deleted && !d.remote_target && can('device.ban'),
 	delete: (d: DeviceLike) => !d.remote_target && can('device.delete'),
 	changeId: (d: DeviceLike) => !d.soft_deleted && !d.remote_target && can('device.change_id'),
+	/** RDP/VNC targets have no device token */
+	issueToken: (d: DeviceLike) => !d.soft_deleted && !d.banned && !d.remote_target && can('device.edit'),
 	connectionMode: (d: DeviceLike) => !d.soft_deleted && !d.banned && can('device.connection_mode')
 };
 
@@ -635,6 +639,35 @@ export async function changeId(d: DeviceLike): Promise<string | null> {
 	}
 }
 
+/** Ends every device token of the device; it gets a new one the next time it checks in */
+export async function issueToken(d: DeviceLike): Promise<boolean> {
+	if (!may.issueToken(d)) return false;
+	const ok = await confirm({
+		title: tf('devices.issue_token', 'Issue a new token'),
+		message: tf(
+			'devices.issue_token_effect',
+			'The current token of {device} stops working now. The device gets a new one the next time it checks in. Stock RustDesk clients do not use device tokens.',
+			{ device: deviceLabel(d) }
+		),
+		confirmLabel: tf('devices.issue_token_action', 'Issue token'),
+		confirmIcon: ICONS.password
+	});
+	if (!ok) return false;
+	try {
+		await devicesApi.issueDeviceToken(d.id);
+		toast.success(
+			tf(
+				'devices.issue_token_success',
+				'New token issued. The device picks it up the next time it checks in.'
+			)
+		);
+		devicesChanged(d.id);
+		return true;
+	} catch (err) {
+		return fail(err, 'errors.issue_token_failed');
+	}
+}
+
 /* ── RDP/VNC targets ── */
 
 function remoteTargetSheet(d: DeviceLike | null): Promise<boolean> {
@@ -959,6 +992,10 @@ export function deviceMenu(d: DeviceLike, opts: { knownTags?: readonly string[] 
 	}
 	if (can('device.change_id'))
 		manage.push(item('change-id', t('devices.change_id'), ICONS.rename, () => changeId(d)));
+	if (may.issueToken(d))
+		manage.push(
+			item('issue-token', tf('devices.issue_token', 'Issue a new token'), ICONS.password, () => issueToken(d))
+		);
 	if (can('device.ban')) {
 		manage.push(
 			d.banned

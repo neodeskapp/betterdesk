@@ -91,6 +91,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/devices/{id}/ban", h.ban, d.RequireAuth, d.RequirePermission("device.ban"))
 	r.Post("/api/devices/{id}/unban", h.unban, d.RequireAuth, d.RequirePermission("device.ban"))
 	r.Post("/api/devices/{id}/change-id", h.changeID, d.RequireAuth, d.RequirePermission("device.change_id"))
+	r.Post("/api/devices/{id}/device-token", h.issueDeviceToken, d.RequireAuth, edit)
 	r.Put("/api/devices/{id}/tags", h.setTags, d.RequireAuth, edit)
 	r.Post("/api/devices/bulk-delete", h.bulkDelete, d.RequireAuth, d.RequirePermission("device.delete"))
 
