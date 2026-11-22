@@ -111,6 +111,7 @@
      "data": {
       "auth_provider": "local",
       "created_at": "<volatile>",
+      "disabled": false,
       "email": "viewer@example.invalid",
       "folder_ids": [],
       "id": 3,
