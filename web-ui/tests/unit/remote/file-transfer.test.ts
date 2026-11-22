@@ -153,3 +153,43 @@ describe('a folder transfer whose file does not go through', () => {
 		expect(abort).toHaveBeenCalledWith(7, true);
 	});
 });
+
+describe('resuming a download on the desktop', () => {
+	test('starts again where the file ends, not after the blocks that were not written yet', async () => {
+		const t = await setup();
+		vi.spyOn(t.ft, '_supportsStreamDownload').mockReturnValue(true);
+		// Blocks of 3 bytes; the client writes to the file in batches of 6
+		t.ft.BLOCK_SIZE = 3;
+		t.ft.DOWNLOAD_WRITE_BATCH = 6;
+		const disk: string[] = [];
+		const begin = vi
+			.spyOn(LocalFiles, 'beginDownload')
+			.mockResolvedValue({ started: true, handle: 7, path: '/tmp/a.bin' });
+		vi.spyOn(LocalFiles, 'writeDownload').mockImplementation(async (_handle, data) => {
+			disk.push(dec(data as Uint8Array));
+		});
+		vi.spyOn(LocalFiles, 'abortDownload').mockResolvedValue(undefined);
+		vi.spyOn(LocalFiles, 'finishDownload').mockResolvedValue({ saved: true });
+		const confirms = () =>
+			t.sent.filter((m) => m.fileAction?.sendConfirm).map((m) => m.fileAction!.sendConfirm!);
+		const sends = () => t.sent.filter((m) => m.fileAction?.send);
+
+		const id = t.ft.downloadFile('/data', { name: 'a.bin', size: 12 });
+		await vi.waitFor(() => expect(sends()).toHaveLength(1));
+		t.respond({ digest: { id, fileNum: 0, fileSize: 12 } });
+		for (const part of ['AAA', 'BBB', 'CCC']) t.respond({ block: { id, data: enc(part) } });
+		await vi.waitFor(() => expect(disk).toEqual(['AAABBB']));
+		t.respond({ error: { id, error: 'connection reset' } });
+		expect(t.named('file_transfer_error').at(-1)).toMatchObject({ id, resumable: true });
+
+		t.ft.resumeTransfer(id);
+		await vi.waitFor(() => expect(sends()).toHaveLength(2));
+		expect(begin.mock.calls.at(-1)?.[0]).toMatchObject({ absolutePath: '/tmp/a.bin', appendOffset: 6 });
+		t.respond({ digest: { id, fileNum: 0, fileSize: 12 } });
+		expect(confirms().at(-1)?.offsetBlk).toBe(2);
+		for (const part of ['CCC', 'DDD']) t.respond({ block: { id, data: enc(part) } });
+		t.respond({ done: { id } });
+		await vi.waitFor(() => expect(t.named('file_transfer_complete')).toHaveLength(1));
+		expect(disk.join('')).toBe('AAABBBCCCDDD');
+	});
+});

@@ -163,6 +163,8 @@ export interface RDDownloadTransfer extends RDTransferBase {
 	type: 'download';
 	remoteFileName: string;
 	receivedBytes: number;
+	/** The bytes the desktop file holds: received bytes still in the write batch are not in it */
+	savedBytes: number;
 	/** The received blocks; null while they stream to the desktop file */
 	blocks: Uint8Array[] | null;
 	streamDownload: boolean;
@@ -806,10 +808,18 @@ export class RDFileTransfer {
 						this._armTransferTimeout(id);
 					};
 					if (transfer.streamDownload && transfer.localPath) {
-						LocalFiles.beginDownload({
-							absolutePath: transfer.localPath,
-							appendOffset: transfer.receivedBytes || 0
-						})
+						const localPath = transfer.localPath;
+						// Once the writes on their way are done, the device sends the rest from where the file ends
+						transfer.writeChain
+							.then(() => {
+								transfer._writeBatch = [];
+								transfer._writeBatchLen = 0;
+								transfer.receivedBytes = transfer.savedBytes;
+								return LocalFiles.beginDownload({
+									absolutePath: localPath,
+									appendOffset: transfer.savedBytes
+								});
+							})
 							.then((result) => {
 								if (!result || !answerField(result, 'started') || !answerField(result, 'handle')) {
 									this._failTransfer(id, 'Download cancelled');
@@ -911,6 +921,7 @@ export class RDFileTransfer {
 			remoteFileName: fileEntry.name,
 			fileSize: Number(fileEntry.size || 0),
 			receivedBytes: 0,
+			savedBytes: 0,
 			blocks: this._supportsStreamDownload() && !options.forceBuffer ? null : [],
 			streamDownload: this._supportsStreamDownload() && !options.forceBuffer,
 			captureBlob: !!options.captureBlob,
@@ -2025,7 +2036,9 @@ export class RDFileTransfer {
 				merged.set(part, off);
 				off += part.length;
 			}
-			return LocalFiles.writeDownload(transfer.downloadHandle, merged);
+			return LocalFiles.writeDownload(transfer.downloadHandle, merged).then(() => {
+				transfer.savedBytes += total;
+			});
 		};
 
 		const maybeEmitProgress = (force: boolean): void => {
@@ -2190,7 +2203,9 @@ export class RDFileTransfer {
 								merged.set(part, off);
 								off += part.length;
 							}
-							return LocalFiles.writeDownload(transfer.downloadHandle, merged);
+							return LocalFiles.writeDownload(transfer.downloadHandle, merged).then(() => {
+								transfer.savedBytes += total;
+							});
 						}
 						return null;
 					})
