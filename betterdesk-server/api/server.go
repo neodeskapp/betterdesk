@@ -27,7 +27,6 @@ import (
 	"github.com/unitronix/betterdesk-server/crypto/peervault"
 	"github.com/unitronix/betterdesk-server/db"
 	eventsModule "github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/internal/clientaddr"
 	"github.com/unitronix/betterdesk-server/meshcentral"
 	"github.com/unitronix/betterdesk-server/metrics"
 	"github.com/unitronix/betterdesk-server/peer"
@@ -2102,30 +2101,12 @@ func (s *Server) forwardedHeader(r *http.Request, name string) string {
 	return r.Header.Get(name)
 }
 
-// remoteIP is the client's address. Behind a trusted proxy (TRUST_PROXY
-// and TRUSTED_PROXIES) it is the rightmost X-Forwarded-For entry that is
-// not a trusted proxy (clientaddr.Rightmost), else X-Real-IP; the socket's
-// address otherwise, and when neither header holds an address.
+// remoteIP is the client's address (config's ClientIP): behind a trusted
+// proxy (TRUST_PROXY and TRUSTED_PROXIES) the rightmost X-Forwarded-For
+// entry that is not a trusted proxy, else X-Real-IP; the socket's address
+// otherwise, and when neither header holds an address.
 func (s *Server) remoteIP(r *http.Request) string {
-	socket := r.RemoteAddr
-	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
-		socket = host
-	}
-	if s.cfg == nil || !s.cfg.ShouldHonorForwardedHeaders(r.RemoteAddr) {
-		return socket
-	}
-	if forwarded := clientaddr.Forwarded(r.Header); len(forwarded) > 0 {
-		client := clientaddr.Rightmost(socket, forwarded, func(addr string, _ int) bool {
-			return s.cfg.RemoteAddrIsTrustedProxy(addr)
-		})
-		if ip := forwardedIP(client); ip != "" {
-			return ip
-		}
-	}
-	if ip := forwardedIP(r.Header.Get("X-Real-IP")); ip != "" {
-		return ip
-	}
-	return socket
+	return s.cfg.ClientIP(r)
 }
 
 // eventActor names who acted, for a server event: the account the console
@@ -2137,22 +2118,6 @@ func (s *Server) eventActor(r *http.Request) string {
 		return actor
 	}
 	return s.remoteIP(r)
-}
-
-// forwardedIP is the address of a forwarded entry with or without a port,
-// "" when it is no address or names port 0.
-func forwardedIP(entry string) string {
-	entry = strings.TrimSpace(entry)
-	if host, port, err := net.SplitHostPort(entry); err == nil {
-		if port == "0" {
-			return ""
-		}
-		entry = host
-	}
-	if ip := net.ParseIP(entry); ip != nil {
-		return ip.String()
-	}
-	return ""
 }
 
 // --- Tags Handlers ---

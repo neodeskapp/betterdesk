@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -159,24 +158,17 @@ func (s *Server) handleWSUpgrade(w http.ResponseWriter, r *http.Request) {
 }
 
 // wsEffectiveRemoteAddr returns the client address for WS signal registration.
-// When TrustProxy is enabled and the direct peer is in TRUSTED_PROXIES, prefer
-// X-Real-IP then the first X-Forwarded-For hop. Forwarded values are parsed
-// with net.SplitHostPort / net.ParseIP so IP-only headers keep the proxy
-// connection port (never synthesise :0) and IP:port headers are not
+// Behind a trusted proxy (TRUST_PROXY and TRUSTED_PROXIES) it is the
+// forwarded entry the API's rule picks (config's ForwardedClient); the
+// socket's address otherwise. Forwarded values are parsed with
+// net.SplitHostPort / net.ParseIP so IP-only entries keep the proxy
+// connection port (never synthesise :0) and IP:port entries are not
 // double-wrapped into malformed [IP:port]:0 keys (issue #276).
 func wsEffectiveRemoteAddr(r *http.Request, cfg *config.Config) string {
 	if r == nil {
 		return ""
 	}
-	if cfg == nil || !cfg.ShouldHonorForwardedHeaders(r.RemoteAddr) {
-		return r.RemoteAddr
-	}
-	fwd := strings.TrimSpace(r.Header.Get("X-Real-IP"))
-	if fwd == "" {
-		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-			fwd = strings.TrimSpace(strings.SplitN(xff, ",", 2)[0])
-		}
-	}
+	fwd := cfg.ForwardedClient(r)
 	if fwd == "" {
 		return r.RemoteAddr
 	}

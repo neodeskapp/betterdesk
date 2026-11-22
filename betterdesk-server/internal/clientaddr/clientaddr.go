@@ -7,9 +7,26 @@
 package clientaddr
 
 import (
+	"net"
 	"net/http"
 	"strings"
 )
+
+// EntryIP is the address of a forwarded entry with or without a port, ""
+// when the entry is no address or names port 0.
+func EntryIP(entry string) string {
+	entry = strings.TrimSpace(entry)
+	if host, port, err := net.SplitHostPort(entry); err == nil {
+		if port == "0" {
+			return ""
+		}
+		entry = host
+	}
+	if ip := net.ParseIP(entry); ip != nil {
+		return ip.String()
+	}
+	return ""
+}
 
 // Forwarded returns the entries of every X-Forwarded-For line of h in
 // order, trimmed, without empty ones.

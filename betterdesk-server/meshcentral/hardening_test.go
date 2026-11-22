@@ -31,7 +31,7 @@ func TestClientIPHonorsForwardedHeaderOnlyForTrustedProxy(t *testing.T) {
 	}
 	cfg.TrustedProxies = nets
 	if got := clientIP(request, cfg); got != "198.51.100.20" {
-		t.Fatalf("trusted clientIP() = %q, want first X-Forwarded-For hop", got)
+		t.Fatalf("trusted clientIP() = %q, want the rightmost untrusted X-Forwarded-For entry", got)
 	}
 }
 

@@ -442,13 +442,22 @@ func TestWSEffectiveRemoteAddr(t *testing.T) {
 			want:           "203.0.113.10:50123",
 		},
 		{
-			name:           "x-real-ip preferred over xff",
+			// The rightmost untrusted entry, as the API takes it (L139)
+			name:           "xff entry the client wrote is skipped",
+			trustProxy:     true,
+			trustedProxies: []*net.IPNet{loopbackNet},
+			remoteAddr:     "10.0.0.2:50123",
+			xff:            "6.6.6.6, 203.0.113.10",
+			want:           "203.0.113.10:50123",
+		},
+		{
+			name:           "xff preferred over x-real-ip",
 			trustProxy:     true,
 			trustedProxies: []*net.IPNet{loopbackNet},
 			remoteAddr:     "10.0.0.10:48438",
 			xri:            "203.0.113.99",
 			xff:            "198.51.100.1",
-			want:           "203.0.113.99:48438",
+			want:           "198.51.100.1:48438",
 		},
 		{
 			name:           "xff with port is not double-wrapped",

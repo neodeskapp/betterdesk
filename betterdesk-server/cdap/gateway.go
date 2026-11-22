@@ -12,7 +12,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -666,25 +665,8 @@ func (g *Gateway) GetDeviceConn(deviceID string) *DeviceConn {
 	return val.(*DeviceConn)
 }
 
-// extractIP is the client's address: X-Real-IP, else the first entry of
-// X-Forwarded-For, when the connection comes from a trusted proxy
-// (TRUST_PROXY and TRUSTED_PROXIES), else the socket's address.
+// extractIP is the address the gateway counts a client by, for its limit,
+// the blocklist and the logs: the API's rule (config's ClientIP).
 func extractIP(r *http.Request, cfg *config.Config) string {
-	if cfg.ShouldHonorForwardedHeaders(r.RemoteAddr) {
-		if ip := strings.TrimSpace(r.Header.Get("X-Real-IP")); ip != "" {
-			return ip
-		}
-		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-			parts := strings.SplitN(xff, ",", 2)
-			if ip := strings.TrimSpace(parts[0]); ip != "" {
-				return ip
-			}
-		}
-	}
-	// Fall back to remote addr
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return r.RemoteAddr
-	}
-	return host
+	return cfg.ClientIP(r)
 }
