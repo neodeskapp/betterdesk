@@ -25,7 +25,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)
 
 # Settings: flags win over these variables, which win over the defaults
 BETTERDESK_DIR="${BETTERDESK_DIR:-/opt/betterdesk/docker}"
-BETTERDESK_IMAGE="${BETTERDESK_IMAGE:-ghcr.io/trybetterdesk/betterdesk}"
+# The image the compose file runs (a mirror goes into docker-compose.override.yml)
+BETTERDESK_IMAGE="ghcr.io/trybetterdesk/betterdesk"
 BETTERDESK_IMAGE_TAG_SET="${BETTERDESK_IMAGE_TAG:-}"
 BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/trybetterdesk/betterdesk/${BETTERDESK_BRANCH:-main}}"
 RELAY_SERVERS_SET="${RELAY_SERVERS:-}"
