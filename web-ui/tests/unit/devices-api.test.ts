@@ -1,6 +1,13 @@
 import * as v from 'valibot';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { createFolder, Device, DeviceList, listDevices, listFolders } from '../../src/lib/api/devices.ts';
+import {
+	createFolder,
+	Device,
+	DeviceList,
+	issueDeviceToken,
+	listDevices,
+	listFolders
+} from '../../src/lib/api/devices.ts';
 import {
 	countDevices,
 	deviceState,
@@ -157,5 +164,27 @@ describe('a disabled RDP or VNC target (the server marks it soft_deleted)', () =
 			danger: ['delete-target']
 		});
 		expect(panelStatus(target!)).toEqual({ tone: 'neutral', key: 'devices.remote_disabled_badge' });
+	});
+});
+
+describe('a new device token', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	const answer = (status: number, body: unknown) =>
+		new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+	test('posts to the device-token route of the encoded ID', async () => {
+		const seen: [string, string | undefined][] = [];
+		vi.stubGlobal('fetch', async (url: string, init: RequestInit = {}) => {
+			seen.push([url, init.method]);
+			return answer(200, { success: true });
+		});
+		await expect(issueDeviceToken('a/b c')).resolves.toMatchObject({ success: true });
+		expect(seen).toEqual([['/api/devices/a%2Fb%20c/device-token', 'POST']]);
+	});
+
+	test("a refusal rejects with the server's message", async () => {
+		vi.stubGlobal('fetch', async () => answer(404, { success: false, error: 'Device not found' }));
+		await expect(issueDeviceToken('900100001')).rejects.toThrow('Device not found');
 	});
 });

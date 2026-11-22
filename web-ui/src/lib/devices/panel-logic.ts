@@ -148,6 +148,7 @@ export type ActionId =
 	| 'groups'
 	| 'access-policy'
 	| 'change-id'
+	| 'issue-token'
 	| 'ban'
 	| 'unban'
 	| 'delete'
@@ -212,6 +213,7 @@ export function panelActions(d: PanelDevice, can: Can): PanelActions {
 
 	if (can('device.edit')) out.manage.push('edit', 'groups', 'access-policy');
 	if (can('device.change_id')) out.manage.push('change-id');
+	if (can('device.edit') && !d.banned) out.manage.push('issue-token');
 	if (can('device.ban')) out.manage.push(d.banned ? 'unban' : 'ban');
 	if (can('device.delete')) out.danger.push('delete');
 	return out;

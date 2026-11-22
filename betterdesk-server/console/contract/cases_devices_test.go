@@ -329,6 +329,13 @@ func init() {
 		contract.Case{Name: "unban-unknown", Method: "POST", Path: "/api/devices/999999999/unban", Body: map[string]any{}},
 		contract.Case{Name: "ban-reason-not-text", Method: "POST", Path: "/api/devices/900100018/ban", Body: map[string]any{"reason": []any{"x"}}},
 		contract.Case{Name: "unban-again", Method: "POST", Path: "/api/devices/900100018/unban", Body: map[string]any{}},
+		// "Issue a new token" (L45): the device's tokens end and a new one
+		// is due. 900100018 holds none of the stack's device tokens, which
+		// other groups use. Recorded from Go (CONTRACT_RECORD_NEW): the
+		// route is new.
+		contract.Case{Name: "issue-device-token", Method: "POST", Path: "/api/devices/900100018/device-token", Body: map[string]any{}},
+		contract.Case{Name: "issue-device-token-unknown", Method: "POST", Path: "/api/devices/999999999/device-token", Body: map[string]any{}},
+		contract.Case{Name: "issue-device-token-restricted", Method: "POST", Path: "/api/devices/900100019/device-token", Body: map[string]any{}, Roles: contract.Roles("operator")},
 
 		// Delete and restore
 		contract.Case{Name: "delete-unknown", Method: "DELETE", Path: "/api/devices/999999999", Query: map[string][]string{"revoke": {"true"}}},

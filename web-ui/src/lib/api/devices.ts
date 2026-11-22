@@ -181,6 +181,11 @@ export function changeDeviceId(id: string, newId: string) {
 	return api(Ok, `/api/devices/${encodeURIComponent(id)}/change-id`, { method: 'POST', body: { newId } });
 }
 
+/** Ends every device token of the device; it gets a new one the next time it checks in */
+export function issueDeviceToken(id: string) {
+	return api(Ok, `/api/devices/${encodeURIComponent(id)}/device-token`, { method: 'POST' });
+}
+
 export function setDeviceTags(id: string, tags: string[]) {
 	return api(
 		wrapped(v.looseObject({ tags: v.array(v.string()) })),
