@@ -556,6 +556,12 @@ func (c *Client) roundTrip(ctx context.Context, method, target string, header ht
 		if err != nil {
 			return nil, err
 		}
+		// A context canceled while the handler ran ends the call as
+		// canceled, also when the handler's answer was ready at the same
+		// moment and the select took it first
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		return rec.response(), nil
 	case <-ctx.Done():
 		return nil, ctx.Err()
