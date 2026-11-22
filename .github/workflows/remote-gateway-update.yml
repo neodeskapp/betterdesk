@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout development branch
+      - name: Checkout main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: dev
+          ref: main
           fetch-depth: 0
 
       - name: Set up Python
@@ -34,7 +34,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          count=$(gh pr list --base dev --head automation/remote-gateway-update --state open --json number --jq 'length')
+          count=$(gh pr list --base main --head automation/remote-gateway-update --state open --json number --jq 'length')
           echo "exists=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
       - name: Prepare the pinned manifest update
@@ -65,7 +65,7 @@ jobs:
           git commit -m "chore(remote-gateway): update pinned upstream source"
           git push --set-upstream origin automation/remote-gateway-update
           gh pr create \
-            --base dev \
+            --base main \
             --head automation/remote-gateway-update \
             --title "chore(remote-gateway): update pinned upstream source" \
             --body "Automated candidate update. CI must verify checksums, licenses, SBOM and gateway tests before merge."

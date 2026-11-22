@@ -75,9 +75,9 @@
   description: "Security vulnerability or hardening"
 
 # Status
-- name: "status: fixed-in-dev"
+- name: "status: fixed-on-main"
   color: "0e8a16"
-  description: "Fixed in development branch, not yet released"
+  description: "Fixed on main, not yet released"
 
 - name: "status: wontfix"
   color: "ffffff"

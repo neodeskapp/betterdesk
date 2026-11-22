@@ -314,8 +314,8 @@ CASES
     rm -rf "$TEST_DIR"
 )
 
-# UP8: an update channel given to the installer (install.sh passes the
-# branch it installed) goes into .env over the template's main, on a fresh
+# UP8: an update channel given to the installer (install.sh passes its
+# --channel) goes into .env over the template's main, on a fresh
 # install and on an update; without one .env keeps what it has.
 test_update_channel_in_env() (
     export UPDATE_GITHUB_BRANCH=dev
@@ -506,12 +506,12 @@ test_one_command_install() (
     install_manager_command >/dev/null
     [ -x "$MANAGER_COMMAND" ] || fail "no betterdesk command was left behind"
     cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/betterdesk.sh" || fail "the betterdesk command is not this installer"
-    # Piped from curl, it fetches itself from the repository's default
-    # branch, whatever the release channel: main holds upstream's older
-    # installer
+    # Piped from curl, it fetches itself from the repository's branch,
+    # main, whatever the release channel: the development channel's id is
+    # dev, and there is no dev branch
     rm -f "$MANAGER_COMMAND"
     BETTERDESK_SELF=""
-    UPDATE_GITHUB_BRANCH=main
+    UPDATE_GITHUB_BRANCH=dev
     curl() {
         local a prev="" dest=""
         for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
@@ -519,7 +519,7 @@ test_one_command_install() (
         cp "$SCRIPT_ROOT/betterdesk.sh" "$dest"
     }
     install_manager_command >/dev/null
-    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/betterdesk.sh" ] \
+    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh" ] \
         || fail "the betterdesk command came from $(cat "$TEST_DIR/fetched")"
     unset -f curl
     rm -rf "$TEST_DIR"

@@ -3,7 +3,7 @@
 #
 # A tag v<X.Y.Z> publishes the stable release v<X.Y.Z>; a tag with a suffix
 # (v3.6.0-rc.1) publishes a pre-release, which the stable channel installs
-# only while there is no stable release. A push to dev (or a
+# only while there is no stable release. A push to main (or a
 # manual run with channel=development) replaces the pre-release tagged "dev",
 # which the development channel installs. Each release holds the binary for
 # linux amd64, arm64 and armv7 and windows amd64, manifest.json, SHA256SUMS
@@ -17,7 +17,7 @@ name: Release Go server
 on:
   push:
     tags: ['v*']
-    branches: [dev]
+    branches: [main]
     paths:
       - 'betterdesk-server/**'
       - 'web-ui/**'
@@ -57,6 +57,9 @@ jobs:
         run: |
           set -euo pipefail
           version="$(tr -d '[:space:]' < "$SERVER_DIR/internal/productversion/VERSION")"
+          # branch is the manifest's name of the update channel (the
+          # UPDATE_GITHUB_BRANCH of installs): main for stable, dev for the
+          # development build. It is not the git branch the build comes from.
           if [ "${GITHUB_REF_TYPE}" = tag ] || [ "${{ inputs.channel }}" = stable ]; then
             [ "${GITHUB_REF_TYPE}" = tag ] || { echo "a stable release needs a v* tag"; exit 1; }
             [ "${GITHUB_REF_NAME}" = "v${version}" ] || { echo "tag ${GITHUB_REF_NAME} does not match VERSION ${version}"; exit 1; }

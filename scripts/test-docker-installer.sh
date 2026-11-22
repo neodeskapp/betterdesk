@@ -415,7 +415,7 @@ test_install_sh_runs_the_manager() (
     install_sh() {
         (
             INSTALL_DIR="$dir/opt"
-            BETTERDESK_RAW_BASE="https://raw.githubusercontent.com/example/fork/dev"
+            BETTERDESK_RAW_BASE="https://raw.githubusercontent.com/example/fork/feature-x"
             # shellcheck disable=SC1091
             source "$SCRIPT_ROOT/install.sh"
             require_root() { :; }
@@ -430,7 +430,7 @@ test_install_sh_runs_the_manager() (
     [ -x "$dir/opt/docker/betterdesk-docker.sh" ] || fail "the manager is not in the compose folder"
     [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto" ] \
         || fail "the manager ran as: $(cat "$dir/manager-args")"
-    [ "$(cat "$dir/manager-env")" = "Docker-Admin-1|https://raw.githubusercontent.com/example/fork/dev" ] \
+    [ "$(cat "$dir/manager-env")" = "Docker-Admin-1|https://raw.githubusercontent.com/example/fork/feature-x" ] \
         || fail "the manager did not get the admin password and the branch's files: $(cat "$dir/manager-env")"
     install_sh --relay-servers 203.0.113.9 --version 3.6.0 --skip-docker-install || fail "install.sh with options failed: $(cat "$dir/out")"
     [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay 203.0.113.9 --tag 3.6.0 --no-install-docker" ] \

@@ -6,25 +6,26 @@
 #   ghcr.io/<owner>/betterdesk          (server with its web console, one process)
 #
 # Tags:
-#   - main push: latest, sha-<commit>
-#   - dev push:  dev, sha-<commit>
+#   - main push: dev, sha-<commit>
 #   - GitHub Release (stable): semver, v*, major.minor, latest
-#   - workflow_dispatch: latest + VERSION when tag empty/latest; else custom tag
+#   - workflow_dispatch on a v* tag with tag empty/latest: latest and the
+#     tag's versions; tag=dev: dev, sha-<commit>; else the custom tag
 #
-# Branch pushes (main/dev): build ONLY on CI version-bump subjects
-# (`chore: bump version … [version-bump]` / `chore: release version …`) so the
-# GHCR image VERSION matches tip (auto-bump runs after the feature commit;
-# building the feature SHA left :dev/:latest one patch behind — #401).
-# Feature commits skip. Releases and workflow_dispatch always build.
+# Pushes to main: build ONLY on CI version-bump subjects
+# (`chore: bump version … [version-bump]`) so the GHCR image VERSION matches
+# tip (auto-bump runs after the feature commit; building the feature SHA left
+# :dev one patch behind — #401). Feature commits skip. Releases and
+# workflow_dispatch always build. latest comes from a release or a v* tag,
+# never from main.
 #
-# Note: GITHUB_TOKEN pushes do not re-trigger workflows, so version-bump-dev
-# dispatches this workflow with tag=dev after each successful bump.
+# Note: GITHUB_TOKEN pushes do not re-trigger workflows, so version-bump.yml
+# dispatches this workflow on main with tag=dev after each successful bump.
 #
 # Phase 1 (amd64) then Phase 2 (native ubuntu-24.04-arm). AIO :dev is
 # multi-arch again (#476); ARM runs last so amd64 still publishes if ARM fails
 # (soft-merge). Native ARM avoids the old QEMU/npm 6h limit (#401).
 #
-# Triggers: push main/dev (path-filtered), push tag v*, release published, manual
+# Triggers: push main (path-filtered), release published, manual
 # =============================================================================
 
 name: Build & Publish Docker Images
@@ -33,13 +34,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Image tag (empty or latest = push latest + VERSION; else custom tag). Use tag=dev for multi-arch :dev (amd64+arm64); custom tip tags such as dev-arm still work.'
+        description: 'Image tag (empty or latest = push latest + the version, only when run on a v* tag; else custom tag). Use tag=dev for multi-arch :dev (amd64+arm64); custom tip tags such as dev-arm still work.'
         required: false
         default: 'latest'
         type: string
 
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'Dockerfile*'
       - 'docker-compose*.yml'
@@ -75,11 +76,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Validate manual publish tag
-        # Tags are checked out as `refs/tags/vX.Y.Z`; a stable release dispatch
-        # from version-bump-main.yml must be allowed to publish `latest`.
-        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')
+        # Tags are checked out as `refs/tags/vX.Y.Z`; only a run on a release
+        # tag may publish `latest`. main is the development branch.
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && !startsWith(github.ref, 'refs/tags/')
         run: |
-          echo "::error::The latest tag may only be published from main or a release tag. Use tag=dev or a custom test tag such as dev-arm."
+          echo "::error::The latest tag may only be published from a release tag. Use tag=dev or a custom test tag such as dev-arm."
           exit 1
       - id: ver
         run: |
@@ -185,15 +186,13 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
-            type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
+            type=raw,value=latest,enable=${{ (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && startsWith(github.ref, 'refs/tags/')) }}
+            type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}},enable=${{ !contains(github.ref_name, '-') && (github.event_name != 'workflow_dispatch' || !contains(github.event.inputs.tag, '-')) }}
-            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
-            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != 'latest' && github.event.inputs.tag != 'dev' }}
-            type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
+            type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
       - id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
@@ -269,15 +268,13 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
-            type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
+            type=raw,value=latest,enable=${{ (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && startsWith(github.ref, 'refs/tags/')) }}
+            type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}},enable=${{ !contains(github.ref_name, '-') && (github.event_name != 'workflow_dispatch' || !contains(github.event.inputs.tag, '-')) }}
-            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
-            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != 'latest' && github.event.inputs.tag != 'dev' }}
-            type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
+            type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
       - id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
@@ -495,15 +492,13 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
-            type=raw,value=latest,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))) }}
-            type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/dev' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
+            type=raw,value=latest,enable=${{ (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && startsWith(github.ref, 'refs/tags/')) }}
+            type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}},enable=${{ !contains(github.ref_name, '-') && (github.event_name != 'workflow_dispatch' || !contains(github.event.inputs.tag, '-')) }}
-            type=raw,value=${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
-            type=raw,value=v${{ needs.read-version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && github.ref == 'refs/heads/main' }}
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != 'latest' && github.event.inputs.tag != 'dev' }}
-            type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
+            type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
       - name: Create multi-architecture manifest
         env:

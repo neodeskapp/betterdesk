@@ -1,26 +1,27 @@
 # =============================================================================
-# BetterDesk — automatic patch version bump on dev branch
+# BetterDesk — automatic patch version bump on the main branch
 # =============================================================================
-# Every push to dev (except version-bump commits) bumps product version +0.0.1
+# Every push to main (except version-bump commits) bumps product version +0.0.1
 # across Tier 1/2 files via repotool bump-version (betterdesk-server/cmd/repotool).
+# Stable releases come from v* tags (release-go.yml), not from this workflow.
 #
 # After a successful bump push, explicitly dispatch docker-publish (tag=dev).
 # GITHUB_TOKEN branch pushes do not re-trigger other workflows, so relying on
 # the bump commit alone would never republish GHCR :dev (#401).
 # =============================================================================
 
-name: Version Bump (dev)
+name: Version Bump
 
 on:
   push:
-    branches: [dev]
+    branches: [main]
 
 permissions:
   contents: write
   actions: write
 
 concurrency:
-  group: version-bump-dev
+  group: version-bump
   cancel-in-progress: false
 
 jobs:
@@ -64,17 +65,15 @@ jobs:
             exit 0
           fi
           git commit -m "chore: bump version to ${NEW_VERSION} [version-bump]"
-          # The branch by its full name: the dev release has a tag named dev,
-          # and a bare "dev" would fetch or push that tag
           for attempt in 1 2 3 4 5; do
-            if git push origin HEAD:refs/heads/dev; then
+            if git push origin HEAD:refs/heads/main; then
               echo "pushed=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "Push failed (attempt ${attempt}/5) — rebasing and retrying..."
-            if ! git pull --rebase origin refs/heads/dev; then
+            if ! git pull --rebase origin refs/heads/main; then
               git rebase --abort || true
-              echo "The bump does not rebase onto dev without conflicts"
+              echo "The bump does not rebase onto main without conflicts"
               exit 1
             fi
           done
@@ -87,5 +86,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Explicit dispatch — bump commits from GITHUB_TOKEN do not start workflows.
-          gh workflow run .github/workflows/docker-publish.yml --ref dev -f tag=dev
+          gh workflow run .github/workflows/docker-publish.yml --ref main -f tag=dev
           echo "Dispatched docker-publish for :dev (VERSION ${{ steps.bump.outputs.version }})"

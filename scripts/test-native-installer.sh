@@ -99,7 +99,7 @@ FAKE_ID
     export INSTALL_DIR="$install_dir"
     export RELAY_SERVERS="127.0.0.1:21117"
     export BETTERDESK_REPO="example/BetterDesk"
-    export BETTERDESK_BRANCH="dev"
+    export BETTERDESK_BRANCH="main"
     set --
     # shellcheck disable=SC1091
     source "$SCRIPT_ROOT/install.sh"
@@ -139,9 +139,10 @@ FAKE_ID
         || fail "piped native installer did not reach main: ${piped_output}"
 )
 
-# UP8: the native install passes the branch it installed to betterdesk.sh
-# as the update channel, so an install from dev updates from dev. A branch
-# that is no channel passes none, and betterdesk.sh keeps its default.
+# UP8: the native install passes the release channel it was given
+# (--channel) to betterdesk.sh. The branch only names the installer's
+# files: every branch, main included, passes no channel, and betterdesk.sh
+# keeps its default.
 test_native_update_channel() (
     local temp_dir fake_bin
     temp_dir=$(mktemp -d)
@@ -170,11 +171,8 @@ FAKE_GIT
     unset UPDATE_GITHUB_BRANCH
 
     local branch expected got
-    for branch in dev main feature-x; do
-        case "$branch" in
-            dev|main) expected="$branch" ;;
-            *) expected="" ;;
-        esac
+    for branch in main dev feature-x; do
+        expected=""
         rm -f "$temp_dir/channel"
         (
             export INSTALL_DIR="$temp_dir/install-$branch" BETTERDESK_BRANCH="$branch"
@@ -206,7 +204,7 @@ FAKE_GIT
             set -- $args
             # shellcheck disable=SC1091
             source "$SCRIPT_ROOT/install.sh"
-            [ "$BETTERDESK_BRANCH" = dev ] || fail "install.sh installs the files of $BETTERDESK_BRANCH"
+            [ "$BETTERDESK_BRANCH" = main ] || fail "install.sh installs the files of $BETTERDESK_BRANCH"
             install_native_mode
         ) >/dev/null
         got=$(cat "$temp_dir/channel" 2>/dev/null || echo "(betterdesk.sh did not run)")
@@ -452,12 +450,13 @@ test_install_sh_uses_the_fork() (
         *) fail "install.sh downloads from $BETTERDESK_RAW_BASE" ;;
     esac
     # The one-liners and the installers' own downloads name the fork's
-    # default branch, dev: its main branch holds upstream's older installer
-    [ "$BETTERDESK_RAW_BASE" = https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev ] \
+    # only branch, main; there is no dev branch, and upstream's main holds
+    # its older installer
+    [ "$BETTERDESK_RAW_BASE" = https://raw.githubusercontent.com/trybetterdesk/betterdesk/main ] \
         || fail "install.sh downloads from $BETTERDESK_RAW_BASE"
     local hits
-    hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(trybetterdesk/betterdesk/main|UNITRONIX/BetterDesk/main/(install\.sh|betterdesk(-docker)?\.(sh|ps1)|docker-compose))' \
-        install.sh betterdesk.sh betterdesk.ps1 betterdesk-docker.sh docker-compose*.yml README.md docs/docker/*.md docs/wiki/*.md || true)
+    hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(trybetterdesk/betterdesk/dev/|UNITRONIX/BetterDesk/main/(install\.sh|betterdesk(-docker)?\.(sh|ps1)|docker-compose))|github\.com/trybetterdesk/betterdesk/(blob|tree)/dev/' \
+        install.sh betterdesk.sh betterdesk.ps1 betterdesk-docker.sh docker-compose*.yml README.md SECURITY.md || true)
     [ -z "$hits" ] || fail "one-liners name a branch without the current installers: $hits"
     local docker_base
     docker_base=$(
@@ -467,10 +466,10 @@ test_install_sh_uses_the_fork() (
         source "$SCRIPT_ROOT/betterdesk-docker.sh"
         printf '%s\n' "$BETTERDESK_RAW_BASE"
     )
-    [ "$docker_base" = https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev ] \
+    [ "$docker_base" = https://raw.githubusercontent.com/trybetterdesk/betterdesk/main ] \
         || fail "betterdesk-docker.sh downloads from $docker_base"
-    grep -qF '$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "dev" }' "$SCRIPT_ROOT/betterdesk.ps1" \
-        || fail "betterdesk.ps1 does not fetch itself from dev"
+    grep -qF '$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "main" }' "$SCRIPT_ROOT/betterdesk.ps1" \
+        || fail "betterdesk.ps1 does not fetch itself from main"
 )
 
 test_bounded_go_commands

@@ -2,13 +2,13 @@ name: Web UI CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'web-ui/**'
       - 'betterdesk-server/protos/**'
       - '.github/workflows/web-ui-ci.yml'
   pull_request:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - 'web-ui/**'
       - 'betterdesk-server/protos/**'

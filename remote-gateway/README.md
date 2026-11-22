@@ -5,7 +5,7 @@ daemon used by BetterDesk's RDP/VNC session broker. The pinned source version
 is verified by `.github/workflows/remote-gateway-supply-chain.yml`; the
 workflow reports upstream changes but never changes the manifest or deploys
 code automatically. `.github/workflows/remote-gateway-update.yml` may prepare
-an update PR against `dev`, but merging that PR remains a reviewed decision.
+an update PR against `main`, but merging that PR remains a reviewed decision.
 
 The broker in `betterdesk-server/api/remote_target_gateway.go` only connects
 to `GUACD_ADDRESS` on loopback. It rejects remote guacd addresses and refuses
