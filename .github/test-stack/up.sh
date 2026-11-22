@@ -27,7 +27,11 @@ case "$cmd" in
         # as in the local stack. The image is the base of the local stack's
         # (Debian with Node): the server terminal's answers name its first
         # account, node.
+        # UPDATE_GITHUB_TOKEN, when the step sets it, goes into the instance
+        # by name: the update check then asks GitHub with the job's token
+        # instead of the runner address's 60 requests an hour
         docker run -d --name "bdgo-$name" --hostname "bdgo-$name" --network bdgo \
+            ${UPDATE_GITHUB_TOKEN:+-e UPDATE_GITHUB_TOKEN} \
             -v "$GITHUB_WORKSPACE:/repo" --tmpfs /repo/web-nodejs:exec,mode=0755 \
             -v "$dir/secrets:/stack/secrets" -v "$dir/logs:/stack/logs" \
             -v "$bin/betterdesk-server:/usr/local/bin/betterdesk-server:ro" \

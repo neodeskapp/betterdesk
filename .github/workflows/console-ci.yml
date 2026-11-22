@@ -205,7 +205,11 @@ jobs:
           name: test-server
           path: ${{ runner.temp }}/bin
 
+      # The update check asks GitHub; with the job's token it is not
+      # refused for the runner address's rate limit
       - name: Start a test instance
+        env:
+          UPDATE_GITHUB_TOKEN: ${{ github.token }}
         run: bash .github/test-stack/up.sh start e2e "$RUNNER_TEMP/bin"
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
