@@ -82,22 +82,25 @@ const psQuote = (s: string) => s.replace(/'/g, "''");
 
 /**
  * The PowerShell snippet for Intune or PSADT: it hands RustDesk the same
- * values as the deploy string. Values are quoted for PowerShell, so a quote
- * in a host name can't end the string.
+ * values as the deploy string (ID server, relay with its port, API, key).
+ * Values are quoted for PowerShell, so a quote in a host name can't end
+ * the string.
  */
 export function intuneScript(config: ClientConfig | null): string {
 	const host = config?.server_id || config?.client_server_host || 'YOUR_SERVER_HOST';
+	const relay = config?.relay_server || host;
 	const apiUrl = config?.api_url || `http://${host}:21114`;
 	const publicKey = config?.public_key || 'YOUR_PUBLIC_KEY';
 	return `# Run elevated after RustDesk MSI (PSADT post-install / Intune Win32)
 $RustDesk = Join-Path $env:ProgramFiles 'RustDesk\\rustdesk.exe'
 $ServerHost = '${psQuote(host)}'
+$RelayServer = '${psQuote(relay)}'
 $PublicKey = '${psQuote(publicKey)}'
 $ApiUrl = '${psQuote(apiUrl)}'
 
 $json = @{
     host = $ServerHost
-    relay = $ServerHost
+    relay = $RelayServer
     api = $ApiUrl
     key = $PublicKey
 } | ConvertTo-Json -Compress
