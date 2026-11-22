@@ -370,6 +370,42 @@ func TestFallbackCookieIsSecureOnlyOverHTTPS(t *testing.T) {
 	})
 }
 
+// Without HTTPS mode, behind a TLS reverse proxy the console trusts, the
+// cookie keeps its HTTP name and is Secure; a forwarded proto from a peer
+// that is not trusted, or a plain request, gets no Secure (L89).
+func TestHTTPModeCookieIsSecureBehindATrustedTLSProxy(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		f := newFixture(t, db, func(o *Options) {
+			o.TrustProxy, _ = httpx.ParseTrustProxy("loopback")
+		})
+		proxied := func() *http.Request {
+			r := get("/")
+			r.RemoteAddr = "127.0.0.1:50000"
+			r.Header.Set("X-Forwarded-Proto", "https")
+			return r
+		}
+		untrusted := func() *http.Request {
+			r := get("/")
+			r.Header.Set("X-Forwarded-Proto", "https")
+			return r
+		}
+		plain := func() *http.Request { return get("/") }
+		for _, c := range []struct {
+			name   string
+			r      func() *http.Request
+			secure bool
+		}{{"plain", plain, false}, {"untrusted peer", untrusted, false}, {"through a trusted proxy over HTTPS", proxied, true}} {
+			if got := f.m.SecureCookie(c.r()); got != c.secure {
+				t.Errorf("%s: SecureCookie %v, want %v", c.name, got, c.secure)
+			}
+			cookies := setCookies(f.serve(c.r(), write("x", 1)))
+			if len(cookies) != 1 || !strings.HasPrefix(cookies[0], "bd.sid=") || strings.HasSuffix(cookies[0], "; HttpOnly; Secure; SameSite=Lax") != c.secure {
+				t.Errorf("%s: Set-Cookie %q, want Secure %v", c.name, cookies, c.secure)
+			}
+		}
+	})
+}
+
 func TestSecureCookieOverPlainHTTP(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		f := newFixture(t, db, httpsMode)

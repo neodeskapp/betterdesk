@@ -33,10 +33,10 @@ type Options struct {
 	// HTTPS says the console is set up for HTTPS (HTTPS_ENABLED=true). It
 	// picks the cookie's name.
 	HTTPS bool
-	// Secure marks the cookie Secure: set it when the console serves
-	// HTTPS. In HTTPS mode without a usable certificate the console serves
-	// plain HTTP: the cookie keeps its HTTPS name and is Secure only for a
-	// request that came over HTTPS (through a proxy TrustProxy trusts).
+	// Secure marks every cookie Secure: set it when the console serves
+	// HTTPS. Without it a cookie is Secure only for a request that came
+	// over HTTPS (through a proxy TrustProxy trusts), in HTTPS mode without
+	// a usable certificate and in HTTP mode behind a TLS reverse proxy.
 	Secure bool
 	// Policy holds the lifetimes and the per-account limit (see
 	// PolicyFromEnv). The zero value is the default policy.
@@ -61,7 +61,6 @@ type Options struct {
 type Manager struct {
 	table         *table
 	secret        string
-	https         bool
 	secure        bool
 	cookieName    string
 	policy        Policy
@@ -84,7 +83,6 @@ func New(ctx context.Context, opts Options) (*Manager, error) {
 	}
 	m := &Manager{
 		secret:        opts.Secret,
-		https:         opts.HTTPS,
 		secure:        opts.Secure,
 		cookieName:    cookieNameHTTP,
 		policy:        opts.Policy.normalized(),
@@ -231,11 +229,12 @@ func clearCookie(w http.ResponseWriter, name string) {
 }
 
 // SecureCookie reports whether a cookie the console sets in answer to r
-// is Secure: when the console serves HTTPS, and in HTTPS mode without a
-// certificate when the request came over HTTPS. A new session's cookie
-// follows it, and so do the console's other cookies.
+// is Secure: when the console serves HTTPS, and otherwise when the request
+// came over HTTPS, also in HTTP mode behind a TLS reverse proxy the
+// console trusts. A new session's cookie follows it, and so do the
+// console's other cookies.
 func (m *Manager) SecureCookie(r *http.Request) bool {
-	return m.secure || m.https && r != nil && m.secureRequest(r)
+	return m.secure || r != nil && m.secureRequest(r)
 }
 
 // secureRequest reports whether the request came over HTTPS: on a TLS
