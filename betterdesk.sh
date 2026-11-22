@@ -3677,8 +3677,11 @@ migrate_sqlite_to_postgresql() {
     
     chmod +x "$migrate_bin"
     
-    # Verify binary supports -mode flag (in case of outdated binary)
-    if ! "$migrate_bin" -h 2>&1 | grep -q -- "-mode"; then
+    # Verify binary supports -mode flag (in case of outdated binary). The
+    # help is read whole first: grep -q on a pipe can end the tool early
+    local migrate_help
+    migrate_help=$("$migrate_bin" -h 2>&1 || true)
+    if ! grep -q -- "-mode" <<< "$migrate_help"; then
         print_warning "Migration binary is outdated (missing -mode flag): the server keeps using $sqlite_db"
         print_info "Rebuild with: cd betterdesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
         keep_sqlite_install "$sqlite_db"
