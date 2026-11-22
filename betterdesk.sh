@@ -139,6 +139,18 @@ while [[ $# -gt 0 ]]; do
             FROM_SOURCE=true
             shift
             ;;
+        --channel)
+            case "${2:-}" in
+                stable|main) UPDATE_GITHUB_BRANCH=main ;;
+                dev|development) UPDATE_GITHUB_BRANCH=dev ;;
+                *)
+                    echo "ERROR: --channel must be 'stable' or 'dev'"
+                    exit 1
+                    ;;
+            esac
+            export UPDATE_GITHUB_BRANCH
+            shift 2
+            ;;
         --postgresql|--postgres)
             USE_POSTGRESQL=true
             shift
@@ -183,6 +195,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --cleanup-node   Delete the Node.js console's code and its disabled service"
             echo "                   after an upgrade"
             echo "  --binary FILE    Install this betterdesk-server binary instead of the release"
+            echo "  --channel C      Release channel: 'stable' (default, the newest release) or"
+            echo "                   'dev' (the development build); kept for later updates"
             echo "  --from-source    Build betterdesk-server from this checkout (needs Go, and"
             echo "                   Node.js unless web-ui/build exists)"
             echo "  --uninstall      Stop services and remove the native installation"
@@ -3780,11 +3794,34 @@ download_release_binary() {
     read_update_github_branch_from_env
     base=$(release_base_url)
     print_info "Downloading $asset ($UPDATE_GITHUB_BRANCH channel) from $base"
-    if ! curl -fsSL --retry 3 --connect-timeout 20 -o "$dir/SHA256SUMS" "$base/SHA256SUMS"; then
-        print_error "Could not download $base/SHA256SUMS"
-        return 1
-    fi
-    if ! curl -fSL --retry 3 --connect-timeout 20 --progress-bar -o "$dir/$asset" "$base/$asset"; then
+    local code
+    code=$(curl -sSL --retry 3 --connect-timeout 20 -o "$dir/SHA256SUMS" -w '%{http_code}' "$base/SHA256SUMS" 2>/dev/null) || true
+    case "$code" in
+        200) ;;
+        000|"")
+            print_error "Could not reach $base"
+            print_info "Check this server's internet access and DNS (a proxy goes in HTTPS_PROXY),"
+            print_info "or install offline: download the binary elsewhere and run with --binary FILE"
+            return 1
+            ;;
+        404)
+            if [ -z "${RELEASE_BASE_URL:-}" ] && [ "$UPDATE_GITHUB_BRANCH" != dev ]; then
+                print_error "${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO} has no stable release yet"
+                print_info "Install the development build with --channel dev, or a binary you have with --binary FILE"
+            else
+                print_error "There is no release at $base"
+                print_info "Install a binary you have with --binary FILE"
+            fi
+            return 1
+            ;;
+        *)
+            print_error "Downloading $base/SHA256SUMS failed (HTTP $code); try again later, or use --binary FILE"
+            return 1
+            ;;
+    esac
+    local progress=(-s)
+    [ -t 1 ] && progress=(--progress-bar)
+    if ! curl -fSL --retry 3 --connect-timeout 20 "${progress[@]}" -o "$dir/$asset" "$base/$asset"; then
         print_error "Could not download $base/$asset"
         return 1
     fi

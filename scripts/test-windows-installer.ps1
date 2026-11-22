@@ -414,6 +414,41 @@ function Test-UpdateKeepsTheAdminsPorts {
     Remove-Item -Recurse -Force $dir
 }
 
+# L140: -Channel picks the channel, wins over .env and goes into it, and a
+# failed download says what to do: no stable release yet, or no way out.
+function Test-ChannelAndDownloadErrors {
+    $dir = New-TestInstall
+    $saved = $env:UPDATE_GITHUB_BRANCH
+    $env:UPDATE_GITHUB_BRANCH = $null
+    $Channel = 'dev'
+    $defaults = $ast.FindAll({
+        $args[0] -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+        $args[0].Left.Extent.Text -like '$script:UPDATE_GITHUB_*'
+    }, $false)
+    foreach ($a in $defaults) { . ([scriptblock]::Create($a.Extent.Text)) }
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('UPDATE_GITHUB_BRANCH=main')
+    Read-UpdateGitHubBranchFromEnv
+    if ($script:UPDATE_GITHUB_BRANCH -ne 'dev') { Fail "-Channel dev lost to the main of .env: $($script:UPDATE_GITHUB_BRANCH)" }
+    Use-FakeServerBinary
+    Merge-ConsoleEnv -FreshInstall $false *> $null
+    if ((Get-ConsoleEnvValue -Key 'UPDATE_GITHUB_BRANCH') -ne 'dev') { Fail "the given channel is not in .env: $(Get-Content $envFile)" }
+
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    Remove-Item -Force $envFile
+    function script:Invoke-WebRequest { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String)
+    if ($out -notmatch 'no stable release' -or $out -notmatch '-Channel dev' -or $out -notmatch '-Binary') { Fail "a missing stable release says: $out" }
+    function script:Invoke-WebRequest { throw [System.Net.WebException]::new('The remote name could not be resolved: github.com') }
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String)
+    if ($out -notmatch 'Could not reach' -or $out -notmatch '-Binary') { Fail "a download without network says: $out" }
+    Remove-Item function:Invoke-WebRequest -ErrorAction SilentlyContinue
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $env:UPDATE_GITHUB_BRANCH = $saved
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -424,6 +459,7 @@ Test-ReleasesComeFromTheFork
 Test-PostgreSQLAddressIsKept
 Test-ServerLogFile
 Test-UpdateKeepsTheAdminsPorts
+Test-ChannelAndDownloadErrors
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

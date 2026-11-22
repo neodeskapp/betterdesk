@@ -58,6 +58,10 @@
     Build betterdesk-server.exe from this checkout (needs Go, and Node.js
     unless web-ui\build exists).
 
+.PARAMETER Channel
+    Release channel: 'stable' (default, the newest release) or 'dev' (the
+    development build). The install keeps it for later updates.
+
 .PARAMETER Protocol
     Set protocol mode: 'http' or 'https'
 
@@ -133,6 +137,8 @@ param(
     [switch]$RollbackGo,
     [switch]$CleanupNode,
     [string]$Binary = "",
+    [ValidateSet('stable', 'dev', '')]
+    [string]$Channel = "",
     [switch]$FromSource,
     [switch]$PostgreSQL,
     [string]$PgUri = "",
@@ -696,6 +702,10 @@ function Merge-ConsoleEnv {
     if ($FreshInstall -and -not (Get-ConsoleEnvValue -Key "ENROLLMENT_MODE")) {
         Set-ConsoleEnvValue -Key "ENROLLMENT_MODE" -Value "managed"
     }
+    # The channel the installer was given, where the server's updater reads it
+    if ($script:UPDATE_GITHUB_BRANCH_GIVEN) {
+        Set-ConsoleEnvValue -Key "UPDATE_GITHUB_BRANCH" -Value $script:UPDATE_GITHUB_BRANCH_GIVEN
+    }
 
     $supervisor = if (Get-NssmPath) { "nssm" } else { "task" }
     & $bin upgrade-env --from $envFile --write --supervisor $supervisor | Out-Null
@@ -845,7 +855,22 @@ function Get-ReleaseBinary {
         Invoke-WebRequest -Uri "$base/SHA256SUMS" -OutFile $sums -UseBasicParsing -ErrorAction Stop
         Invoke-WebRequest -Uri "$base/$asset" -OutFile $file -UseBasicParsing -ErrorAction Stop
     } catch {
-        Print-Error "Download failed: $_"
+        $status = 0
+        if ($_.Exception.Response) { try { $status = [int]$_.Exception.Response.StatusCode } catch { $status = 0 } }
+        if (-not $status -and "$($_.Exception.Message)" -match '\b404\b') { $status = 404 }
+        if ($status -eq 404 -and -not $env:RELEASE_BASE_URL -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
+            Print-Error "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release yet"
+            Print-Info "Install the development build with -Channel dev, or a binary you have with -Binary FILE"
+        } elseif ($status -eq 404) {
+            Print-Error "There is no release at $base"
+            Print-Info "Install a binary you have with -Binary FILE"
+        } elseif (-not $status) {
+            Print-Error "Could not reach ${base}: $($_.Exception.Message)"
+            Print-Info "Check this machine's internet access, DNS and proxy settings,"
+            Print-Info "or install offline: download the binary elsewhere and run with -Binary FILE"
+        } else {
+            Print-Error "The download failed (HTTP $status); try again later, or use -Binary FILE"
+        }
         return $null
     }
     $expected = $null
@@ -2974,9 +2999,13 @@ function Do-Install {
 # GitHub repository configuration for online updates
 $script:UPDATE_GITHUB_OWNER = if ($env:UPDATE_GITHUB_OWNER) { $env:UPDATE_GITHUB_OWNER } else { "trybetterdesk" }
 $script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_REPO } else { "betterdesk" }
-$script:UPDATE_GITHUB_BRANCH = if ($env:UPDATE_GITHUB_BRANCH) { $env:UPDATE_GITHUB_BRANCH } else { "main" }
+# A channel given to the installer (-Channel, else UPDATE_GITHUB_BRANCH) wins
+# over .env and is written into it
+$script:UPDATE_GITHUB_BRANCH_GIVEN = if ($Channel -eq "dev") { "dev" } elseif ($Channel -eq "stable") { "main" } elseif ($env:UPDATE_GITHUB_BRANCH) { $env:UPDATE_GITHUB_BRANCH } else { "" }
+$script:UPDATE_GITHUB_BRANCH = if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { $script:UPDATE_GITHUB_BRANCH_GIVEN } else { "main" }
 
 function Read-UpdateGitHubBranchFromEnv {
+    if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { return }
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
     if ($script:CONSOLE_PATH -and (Test-Path $envFile)) {
         $line = Get-Content $envFile -ErrorAction SilentlyContinue |
@@ -3014,6 +3043,7 @@ function Write-UpdateGitHubBranchToEnv {
     }
     Set-Content -Path $envFile -Value $updated -Encoding UTF8
     $script:UPDATE_GITHUB_BRANCH = $Branch
+    if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { $script:UPDATE_GITHUB_BRANCH_GIVEN = $Branch }
     $env:UPDATE_GITHUB_BRANCH = $Branch
     Print-Success "Update channel saved (GitHub branch: $Branch)"
     return $true

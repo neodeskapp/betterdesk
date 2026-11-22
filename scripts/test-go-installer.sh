@@ -357,6 +357,36 @@ test_releases_come_from_the_fork() (
     rm -rf "$TEST_DIR"
 )
 
+# L140: --channel picks the update channel, and a failed download says
+# what to do: no stable release yet, or no way out to the internet.
+test_channel_and_download_errors() (
+    unset UPDATE_GITHUB_BRANCH RELEASE_BASE_URL UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO
+    set -- --channel dev
+    # shellcheck disable=SC1091
+    source "$SCRIPT_ROOT/betterdesk.sh"
+    [ "$UPDATE_GITHUB_BRANCH" = dev ] && [ "$UPDATE_GITHUB_BRANCH_GIVEN" = dev ] \
+        || fail "--channel dev gives the channel '$UPDATE_GITHUB_BRANCH' (given '$UPDATE_GITHUB_BRANCH_GIVEN')"
+    load
+    print_info() { echo "$1"; }
+    unset UPDATE_GITHUB_BRANCH_GIVEN
+    UPDATE_GITHUB_BRANCH=main
+    local out
+    curl() { printf '404'; }
+    out=$(download_release_binary "$TEST_DIR" 2>&1) && fail "a download that found nothing succeeded"
+    case "$out" in
+        *"no stable release"*"--channel dev"*"--binary"*) ;;
+        *) fail "a missing stable release says: $out" ;;
+    esac
+    curl() { printf '000'; return 6; }
+    out=$(download_release_binary "$TEST_DIR" 2>&1) && fail "a download without network succeeded"
+    case "$out" in
+        *"Could not reach"*"--binary"*) ;;
+        *) fail "a download without network says: $out" ;;
+    esac
+    if bash "$SCRIPT_ROOT/betterdesk.sh" --channel nightly >/dev/null 2>&1; then fail "--channel nightly was taken"; fi
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -371,4 +401,5 @@ test_server_folder_mode
 test_console_home_copies_no_console_files
 test_releases_come_from_the_fork
 test_update_keeps_the_admins_ports
+test_channel_and_download_errors
 echo "Go installer unit checks passed"
