@@ -176,7 +176,7 @@ func main() {
 
 	if sqliteAuthConsolidationRollback != "" {
 		if err := db.RollbackSQLiteAuth(cfg.DBPath, sqliteAuthConsolidationRollback); err != nil {
-			log.Fatalf("SQLite auth consolidation rollback failed: %v", err)
+			logging.Fatalf("SQLite auth consolidation rollback failed: %v", err)
 		}
 		log.Printf("SQLite auth consolidation rollback completed")
 		return
@@ -185,18 +185,18 @@ func main() {
 		report, err := migrateSQLiteAuth(context.Background(), cfg.DBPath, cfg.AuthDBPath,
 			sqliteAuthConsolidationBackupDir, sqliteAuthConsolidationDryRun)
 		if err != nil {
-			log.Fatalf("SQLite auth consolidation failed: %v", err)
+			logging.Fatalf("SQLite auth consolidation failed: %v", err)
 		}
 		encoded, err := json.Marshal(report)
 		if err != nil {
-			log.Fatalf("Encode SQLite auth consolidation report: %v", err)
+			logging.Fatalf("Encode SQLite auth consolidation report: %v", err)
 		}
 		fmt.Println(string(encoded))
 		return
 	}
 	// Two listeners on one port: the start stops before anything listens
 	if err := checkStartPorts(cfg, os.Getenv); err != nil {
-		log.Fatalf("The start stops: %v", err)
+		logging.Fatalf("The start stops: %v", err)
 	}
 
 	log.Printf("========================================")
@@ -251,24 +251,25 @@ func main() {
 	// Load or generate Ed25519 keypair
 	kp, err := crypto.LoadOrGenerateKeyPair(cfg.KeyFile)
 	if err != nil {
-		log.Fatalf("Failed to initialize keypair: %v", err)
+		logging.Fatalf("Failed to initialize keypair: %v", err)
 	}
 	log.Printf("Server public key: %s", kp.PublicKeyBase64())
 
 	// Initialize database
 	swapRestoredDatabase(cfg.DBPath)
+	moveAsideRustDeskDatabase(cfg.DBPath)
 	database, err := db.Open(cfg.DBPath)
 	if err != nil {
-		log.Fatalf("Failed to open database: %v", err)
+		logging.Fatalf("Failed to open database: %v", err)
 	}
 	defer database.Close()
 
 	if err := database.Migrate(); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+		logging.Fatalf("Failed to run migrations: %v", err)
 	}
 	// Defensive: ensure client_sessions exists even if an older binary skipped #242 DDL (#284).
 	if err := database.EnsureClientSessionsSchema(); err != nil {
-		log.Fatalf("Failed to ensure client_sessions schema: %v", err)
+		logging.Fatalf("Failed to ensure client_sessions schema: %v", err)
 	}
 	applyPersistedTimeSyncConfig(cfg, database)
 	applyPersistedConnectionSettings(cfg, database)
@@ -320,7 +321,7 @@ func main() {
 	// Initialize security modules
 	blocklist, err := openBlocklist(cfg.BlocklistFile, database)
 	if err != nil {
-		log.Fatalf("Blocklist: %v", err)
+		logging.Fatalf("Blocklist: %v", err)
 	}
 
 	ipLimiter := ratelimit.NewIPLimiter(
@@ -345,7 +346,7 @@ func main() {
 	// Initialize JWT manager for API authentication
 	jwtSecret, err := loadJWTSecret(database, cfg.JWTSecret)
 	if err != nil {
-		log.Fatalf("JWT secret: %v", err)
+		logging.Fatalf("JWT secret: %v", err)
 	}
 	jwtExpiry := cfg.JWTExpiry
 	if jwtExpiry <= 0 {
@@ -375,7 +376,7 @@ func main() {
 		}
 		hash, err := auth.HashPassword(adminPass)
 		if err != nil {
-			log.Fatalf("Failed to hash initial admin password: %v", err)
+			logging.Fatalf("Failed to hash initial admin password: %v", err)
 		}
 		err = database.CreateUser(&db.User{
 			Username:     adminUser,
@@ -383,7 +384,7 @@ func main() {
 			Role:         auth.RoleAdmin,
 		})
 		if err != nil {
-			log.Fatalf("Failed to create initial admin user: %v", err)
+			logging.Fatalf("Failed to create initial admin user: %v", err)
 		}
 		log.Printf("========================================")
 		log.Printf("  INITIAL ADMIN CREDENTIALS")
@@ -392,7 +393,7 @@ func main() {
 			dbDir := bootstrapCredentialsDir(cfg.DBPath, cfg.KeyFile)
 			credsFile, wrote, err := writeBootstrapAdminCredentials(dbDir, adminUser, adminPass)
 			if err != nil {
-				log.Fatalf("Failed to write credentials file: %v", err)
+				logging.Fatalf("Failed to write credentials file: %v", err)
 			}
 			if wrote {
 				log.Printf("  Password: written to %s (mode 0600)", credsFile)
@@ -524,7 +525,7 @@ func main() {
 		sig.SetAuditLogger(auditLogger)
 		sig.SetBillingService(billingSvc)
 		if err := sig.Start(ctx); err != nil {
-			log.Fatalf("Failed to start signal server: %v", err)
+			logging.Fatalf("Failed to start signal server: %v", err)
 		}
 		defer sig.Stop()
 
@@ -543,7 +544,7 @@ func main() {
 			}
 		})
 		if err := relaySrv.Start(ctx); err != nil {
-			log.Fatalf("Failed to start relay server: %v", err)
+			logging.Fatalf("Failed to start relay server: %v", err)
 		}
 		defer relaySrv.Stop()
 
@@ -589,7 +590,7 @@ func main() {
 			cdapGw.SetAuditLogger(auditLogger)
 			cdapGw.SetJWTManager(jwtManager)
 			if err := cdapGw.SetSessionGrantPrivateKey(kp.PrivateKey); err != nil {
-				log.Fatalf("Failed to configure CDAP session grant signer: %v", err)
+				logging.Fatalf("Failed to configure CDAP session grant signer: %v", err)
 			}
 			cdapGw.SetVersion(Version)
 			apiSrv.SetCDAPGateway(cdapGw)
@@ -600,7 +601,7 @@ func main() {
 		if cfg.MeshCentralEnabled {
 			meshGw, err = meshcentral.NewGateway(cfg, database, sig.PeerMap(), sig.EventBus(), jwtSecret)
 			if err != nil {
-				log.Fatalf("Failed to init MeshCentral gateway: %v", err)
+				logging.Fatalf("Failed to init MeshCentral gateway: %v", err)
 			}
 			meshGw.SetBlocklist(blocklist)
 			meshGw.SetAuditLogger(auditLogger)
@@ -628,20 +629,20 @@ func main() {
 		}
 
 		if err := apiSrv.Start(ctx); err != nil {
-			log.Fatalf("Failed to start API server: %v", err)
+			logging.Fatalf("Failed to start API server: %v", err)
 		}
 		defer apiSrv.Stop()
 
 		if cdapGw != nil {
 			if err := cdapGw.Start(ctx); err != nil {
-				log.Fatalf("Failed to start CDAP gateway: %v", err)
+				logging.Fatalf("Failed to start CDAP gateway: %v", err)
 			}
 			defer cdapGw.Stop()
 		}
 
 		if meshGw != nil {
 			if err := meshGw.Start(ctx); err != nil {
-				log.Fatalf("Failed to start MeshCentral gateway: %v", err)
+				logging.Fatalf("Failed to start MeshCentral gateway: %v", err)
 			}
 			defer meshGw.Stop()
 		}
@@ -654,12 +655,12 @@ func main() {
 
 		stopConsole, err := startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofFor, sig.SetControllerFeatures, requestRestart)
 		if err != nil {
-			log.Fatalf("Failed to start console: %v", err)
+			logging.Fatalf("Failed to start console: %v", err)
 		}
 		defer stopConsole()
 
 	default:
-		log.Fatal(checkMode(cfg.Mode))
+		logging.Fatal(checkMode(cfg.Mode))
 	}
 
 	// Everything listens: a freshly installed binary has made it.
@@ -1195,7 +1196,7 @@ func isFile(path string) bool {
 func parseFlags() *config.Config {
 	cfg, showVersion, err := configure(flag.CommandLine, os.Args[1:])
 	if err != nil {
-		log.Fatal(err)
+		logging.Fatal(err)
 	}
 	if showVersion {
 		// The updater reads this line from a binary it is about to install.
@@ -1319,5 +1320,20 @@ func swapRestoredDatabase(dsn string) {
 	}
 	if swapped {
 		log.Printf("Restored database put in place: %s", dsn)
+	}
+}
+
+// moveAsideRustDeskDatabase moves a database RustDesk's hbbs left at the
+// server's SQLite path out of the way, before anything opens it, and says
+// where it went. A failed look or move is logged and the server starts on
+// the file as it is.
+func moveAsideRustDeskDatabase(dsn string) {
+	moved, err := db.MoveAsideRustDeskDatabase(dsn, time.Now())
+	if err != nil {
+		log.Printf("ERROR: could not check whether %s is RustDesk's database: %v", dsn, err)
+		return
+	}
+	if moved != "" {
+		log.Printf("WARN: %s was the database of a RustDesk server (hbbs). It is now %s, and BetterDesk starts with a database of its own. The key pair stays, so clients keep this server: each device comes back when it next connects, in Managed mode under Enrollment requests.", dsn, moved)
 	}
 }
