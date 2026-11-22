@@ -130,7 +130,7 @@
      "redirect_url": "",
      "scopes": "openid profile email",
      "token_url": "",
-     "use_pkce": false,
+     "use_pkce": true,
      "userinfo_url": ""
     }
    }
