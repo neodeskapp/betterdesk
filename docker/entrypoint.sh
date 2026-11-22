@@ -10,12 +10,24 @@ ensure_betterdesk_user
 # shellcheck source=docker/dsn.sh
 . /docker/dsn.sh
 
+# The ports the server listens on as SIGNAL_PORT and RELAY_PORT set them:
+# the NAT test one below the signal port, each WebSocket port two above
+# its TCP port, the API on 21121 (the image's -api-port). A value that is
+# no number is shown as it is.
+server_ports() {
+    signal="${SIGNAL_PORT:-21116}" relay="${RELAY_PORT:-21117}"
+    case "$signal$relay" in
+        *[!0-9]*) echo "signal $signal, relay $relay, API 21121"; return ;;
+    esac
+    echo "NAT test $((signal - 1)), signal $signal, WebSocket signal $((signal + 2)), relay $relay, WebSocket relay $((relay + 2)), API 21121"
+}
+
 echo "========================================"
 echo "  BetterDesk"
 echo "  Version: ${BETTERDESK_IMAGE_VERSION:-3.5.272}"
 echo "========================================"
 echo ""
-echo "  Server:       signal + relay + API (ports 21115-21121)"
+echo "  Server:       $(server_ports)"
 echo "  Web console:  port ${CONSOLE_PORT:-5000}"
 echo "  DATA_DIR:     ${DATA_DIR:-/app/data}"
 echo ""
