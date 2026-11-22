@@ -814,6 +814,8 @@
     "ldap_group_base_dn_hint": "Ana Base DN'yi kullanmak için boş bırakın",
     "ldap_group_filter": "Grup Filtresi",
     "ldap_group_attr_name": "Grup Adı Özelliği",
+    "ldap_allow_signup": "Kullanıcıları otomatik oluştur",
+    "ldap_allow_signup_hint": "Dizinin kabul ettiği bir kişi ilk oturum açışında hesap alır. Kapalı: dizin üzerinden yalnızca zaten hesabı olanlar oturum açabilir.",
     "ldap_default_role": "Varsayılan Rol",
     "ldap_default_role_hint": "LDAP grupları hiçbir eşlemeyle eşleşmeyen kullanıcılara atanan rol",
     "ldap_role_viewer": "Görüntüleyici",

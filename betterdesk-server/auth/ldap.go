@@ -44,6 +44,7 @@ type LDAPConfig struct {
 	DirectBind     bool   `json:"direct_bind"`      // true = skip search, bind directly with DN template
 	DirectBindDN   string `json:"direct_bind_dn"`   // DN template, e.g. "uid={{username}},ou=users,dc=example,dc=com"
 	ConnTimeoutSec int    `json:"conn_timeout_sec"` // connection timeout (default: 10)
+	AllowSignup    bool   `json:"allow_signup"`     // a person the directory accepts gets an account (default: true)
 }
 
 // LDAPResult represents the outcome of an LDAP authentication attempt.

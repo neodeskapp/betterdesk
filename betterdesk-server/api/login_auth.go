@@ -113,6 +113,13 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 				}
 			}
 
+			if user == nil && !s.ldapProvider.Config().AllowSignup {
+				log.Printf("[LDAP] No account for %s and Auto-create users is off", username)
+				if s.auditLog != nil {
+					s.auditLog.Log(audit.ActionAuthLoginFailed, clientIP, username, map[string]string{"method": "ldap", "reason": "no_account"})
+				}
+				return passwordLoginResult{Status: passwordLoginInvalid}
+			}
 			if user == nil {
 				randomSecret, randErr := auth.GenerateRandomString(32)
 				if randErr != nil {

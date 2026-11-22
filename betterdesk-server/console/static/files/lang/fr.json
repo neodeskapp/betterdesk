@@ -816,6 +816,8 @@
     "ldap_group_base_dn_hint": "Leer lassen, um die Haupt-Basis-DN zu verwenden",
     "ldap_group_filter": "Gruppenfilter",
     "ldap_group_attr_name": "Gruppennamen-Attribut",
+    "ldap_allow_signup": "Créer les utilisateurs automatiquement",
+    "ldap_allow_signup_hint": "Une personne acceptée par l'annuaire reçoit un compte à sa première connexion. Désactivé : seules les personnes qui ont déjà un compte peuvent se connecter via l'annuaire.",
     "ldap_default_role": "Standardrolle",
     "ldap_default_role_hint": "Rolle für Benutzer, deren LDAP-Gruppen keiner Zuordnung entsprechen",
     "ldap_role_viewer": "Betrachter",

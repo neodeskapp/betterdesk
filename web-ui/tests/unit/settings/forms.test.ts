@@ -131,6 +131,14 @@ describe('Sign-in', () => {
 		expect(ldapFromServer({ port: '636', enabled: 1 })).toMatchObject({ port: 636, enabled: true });
 	});
 
+	test('LDAP: Auto-create users is on unless the server says it is off, and is sent', () => {
+		expect(ldapFromServer({}).allow_signup).toBe(true);
+		const off = ldapFromServer({ allow_signup: false });
+		expect(off.allow_signup).toBe(false);
+		expect(ldapPayload(off).allow_signup).toBe(false);
+		expect(ldapPayload(ldapFromServer({})).allow_signup).toBe(true);
+	});
+
 	test('OIDC: defaults in, the console address when the panel URL is empty', () => {
 		const v0 = oidcFromServer({ auto_discovery: false, allow_signup: false }, 'https://desk.example.com');
 		expect(v0.panel_url).toBe('https://desk.example.com');

@@ -814,6 +814,8 @@
     "ldap_group_base_dn_hint": "Hagyja üresen a fő Base DN használatához",
     "ldap_group_filter": "Csoportszűrő",
     "ldap_group_attr_name": "Csoportnév Attribútum",
+    "ldap_allow_signup": "Felhasználók automatikus létrehozása",
+    "ldap_allow_signup_hint": "Akit a címtár elfogad, az első bejelentkezéskor fiókot kap. Kikapcsolva: a címtáron keresztül csak az jelentkezhet be, akinek már van fiókja.",
     "ldap_default_role": "Alapértelmezett szerep",
     "ldap_default_role_hint": "Olyan felhasználókhoz rendelt szerepkör, akiknek a LDAP csoportjai nem egyeznek semmilyen leképezéssel",
     "ldap_role_viewer": "Néző",

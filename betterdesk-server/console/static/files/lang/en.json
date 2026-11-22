@@ -887,6 +887,8 @@
         "ldap_group_base_dn_hint": "Leave empty to use the main Base DN",
         "ldap_group_filter": "Group filter",
         "ldap_group_attr_name": "Group name attribute",
+        "ldap_allow_signup": "Auto-create users",
+        "ldap_allow_signup_hint": "A person the directory accepts gets an account at their first sign-in. Off: only people who already have an account can sign in through the directory.",
         "ldap_default_role": "Default role",
         "ldap_default_role_hint": "Role assigned to users whose LDAP groups don't match any mapping",
         "ldap_role_viewer": "Viewer",

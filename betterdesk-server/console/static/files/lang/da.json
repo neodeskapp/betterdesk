@@ -814,6 +814,8 @@
     "ldap_group_base_dn_hint": "Lad være tom for at bruge hovedbase-DN",
     "ldap_group_filter": "Gruppefilter",
     "ldap_group_attr_name": "Gruppenavnsattribut",
+    "ldap_allow_signup": "Opret brugere automatisk",
+    "ldap_allow_signup_hint": "En person, som kataloget godkender, får en konto ved første login. Fra: kun personer, der allerede har en konto, kan logge ind via kataloget.",
     "ldap_default_role": "Standardrolle",
     "ldap_default_role_hint": "Rolle tildelt til brugere, hvis LDAP-grupper ikke matcher nogen tilknytning",
     "ldap_role_viewer": "Seer",

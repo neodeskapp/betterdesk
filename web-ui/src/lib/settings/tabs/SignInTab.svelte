@@ -1031,6 +1031,12 @@
 										bind:value={ldap.values.group_attr_name}
 									/>{/snippet}
 							</Field>
+							<Checkbox
+								id="ldap-allow-signup"
+								label={t('settings.ldap_allow_signup')}
+								hint={t('settings.ldap_allow_signup_hint')}
+								bind:checked={ldap.values.allow_signup}
+							/>
 							<Field
 								id="ldap-default-role"
 								label={t('settings.ldap_default_role')}

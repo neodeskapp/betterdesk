@@ -814,6 +814,8 @@
     "ldap_group_base_dn_hint": "Lăsați gol pentru a utiliza DN-ul de bază principal",
     "ldap_group_filter": "Filtru de grup",
     "ldap_group_attr_name": "Atribut Nume Grup",
+    "ldap_allow_signup": "Creează utilizatori automat",
+    "ldap_allow_signup_hint": "O persoană acceptată de director primește un cont la prima autentificare. Dezactivat: doar persoanele care au deja un cont se pot autentifica prin director.",
     "ldap_default_role": "Rol implicit",
     "ldap_default_role_hint": "Rol atribuit utilizatorilor ale căror grupuri LDAP nu se potrivesc cu nicio mapare",
     "ldap_role_viewer": "Vizualizator",

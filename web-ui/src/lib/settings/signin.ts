@@ -48,6 +48,8 @@ export interface LdapValues {
 	group_attr_name: string;
 	default_role: string;
 	group_role_map: string;
+	/** Auto-create users: a person the directory accepts gets an account */
+	allow_signup: boolean;
 }
 
 export function ldapFromServer(d: Record<string, unknown>): LdapValues {
@@ -72,7 +74,8 @@ export function ldapFromServer(d: Record<string, unknown>): LdapValues {
 		group_filter: str(d.group_filter),
 		group_attr_name: str(d.group_attr_name),
 		default_role: str(d.default_role, 'viewer'),
-		group_role_map: str(d.group_role_map)
+		group_role_map: str(d.group_role_map),
+		allow_signup: d.allow_signup !== false
 	};
 }
 
@@ -99,7 +102,8 @@ export function ldapPayload(v: LdapValues) {
 		group_role_map: v.group_role_map.trim(),
 		direct_bind: v.direct_bind,
 		direct_bind_dn: v.direct_bind_dn.trim(),
-		conn_timeout_sec: num(v.conn_timeout_sec, 10)
+		conn_timeout_sec: num(v.conn_timeout_sec, 10),
+		allow_signup: v.allow_signup
 	};
 }
 

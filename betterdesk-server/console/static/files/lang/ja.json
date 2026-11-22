@@ -808,6 +808,8 @@
     "ldap_group_base_dn_hint": "メインのベース DN を使用するには、空のままにしておきます。",
     "ldap_group_filter": "グループフィルター",
     "ldap_group_attr_name": "グループ名属性",
+    "ldap_allow_signup": "ユーザーを自動作成",
+    "ldap_allow_signup_hint": "ディレクトリが受け入れた人は、初回サインイン時にアカウントが作成されます。オフ: すでにアカウントを持つ人だけがディレクトリでサインインできます。",
     "ldap_default_role": "デフォルトの役割",
     "ldap_default_role_hint": "LDAP グループがどのマッピングにも一致しないユーザーに割り当てられたロール",
     "ldap_role_viewer": "ビューア",

@@ -808,6 +808,8 @@
     "ldap_group_base_dn_hint": "Lascia vuoto per usare il DN di base principale",
     "ldap_group_filter": "Filtro gruppi",
     "ldap_group_attr_name": "Attributo nome gruppo",
+    "ldap_allow_signup": "Crea utenti automaticamente",
+    "ldap_allow_signup_hint": "Una persona accettata dalla directory riceve un account al primo accesso. Disattivato: solo chi ha già un account può accedere tramite la directory.",
     "ldap_default_role": "Ruolo predefinito",
     "ldap_default_role_hint": "Ruolo per utenti i cui gruppi LDAP non corrispondono a nessuna mappatura",
     "ldap_role_viewer": "Visualizzatore",

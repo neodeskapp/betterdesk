@@ -808,6 +808,8 @@
     "ldap_group_base_dn_hint": "Leer lassen, um die Haupt-Basis-DN zu verwenden",
     "ldap_group_filter": "Gruppenfilter",
     "ldap_group_attr_name": "Gruppennamen-Attribut",
+    "ldap_allow_signup": "Benutzer automatisch anlegen",
+    "ldap_allow_signup_hint": "Eine Person, die das Verzeichnis akzeptiert, erhält bei der ersten Anmeldung ein Konto. Aus: Nur Personen, die bereits ein Konto haben, können sich über das Verzeichnis anmelden.",
     "ldap_default_role": "Standardrolle",
     "ldap_default_role_hint": "Rolle für Benutzer, deren LDAP-Gruppen keiner Zuordnung entsprechen",
     "ldap_role_viewer": "Betrachter",

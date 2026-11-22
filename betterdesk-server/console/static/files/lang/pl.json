@@ -812,6 +812,8 @@
     "ldap_group_base_dn_hint": "Pozostaw puste, aby użyć głównego Base DN",
     "ldap_group_filter": "Filtr grup",
     "ldap_group_attr_name": "Atrybut nazwy grupy",
+    "ldap_allow_signup": "Automatycznie twórz użytkowników",
+    "ldap_allow_signup_hint": "Osoba zaakceptowana przez katalog otrzymuje konto przy pierwszym logowaniu. Wyłączone: przez katalog mogą się logować tylko osoby, które już mają konto.",
     "ldap_default_role": "Domyślna rola",
     "ldap_default_role_hint": "Rola przypisywana użytkownikom, których grupy LDAP nie pasują do żadnego mapowania",
     "ldap_role_viewer": "Przeglądający",

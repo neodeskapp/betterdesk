@@ -814,6 +814,8 @@
     "ldap_group_base_dn_hint": "Để trống để sử dụng Base DN chính",
     "ldap_group_filter": "Bộ lọc nhóm",
     "ldap_group_attr_name": "Thuộc tính tên nhóm",
+    "ldap_allow_signup": "Tự động tạo người dùng",
+    "ldap_allow_signup_hint": "Người được thư mục chấp nhận sẽ có tài khoản ở lần đăng nhập đầu tiên. Tắt: chỉ những người đã có tài khoản mới đăng nhập được qua thư mục.",
     "ldap_default_role": "Vai trò mặc định",
     "ldap_default_role_hint": "Vai trò được chỉ định cho người dùng có nhóm LDAP không khớp với bất kỳ ánh xạ nào",
     "ldap_role_viewer": "Người xem",

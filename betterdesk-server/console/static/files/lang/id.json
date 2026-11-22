@@ -814,6 +814,8 @@
     "ldap_group_base_dn_hint": "Biarkan kosong untuk menggunakan Base DN utama",
     "ldap_group_filter": "Filter Grup",
     "ldap_group_attr_name": "Atribut Nama Grup",
+    "ldap_allow_signup": "Buat pengguna secara otomatis",
+    "ldap_allow_signup_hint": "Orang yang diterima direktori mendapat akun saat pertama kali masuk. Mati: hanya orang yang sudah punya akun yang dapat masuk melalui direktori.",
     "ldap_default_role": "Peran Default",
     "ldap_default_role_hint": "Peran ditetapkan kepada pengguna yang grup LDAP-nya tidak cocok dengan pemetaan apa pun",
     "ldap_role_viewer": "Penampil",
