@@ -641,6 +641,10 @@ type Database interface {
 	DeleteUser(id int64) error
 	// SetUserDisabled disables or enables an account.
 	SetUserDisabled(id int64, disabled bool) error
+	// UpdateUserFromProvider stores the email address and display name a
+	// directory or single sign-on gave at sign-in in the web console's
+	// profile columns; an empty value leaves its column as it is.
+	UpdateUserFromProvider(id int64, email, displayName string) error
 	UpdateUserLogin(id int64) error
 	UserCount() (int, error)
 

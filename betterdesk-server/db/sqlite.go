@@ -2408,6 +2408,24 @@ func (s *SQLiteDB) DeleteUser(id int64) error {
 	return err
 }
 
+// UpdateUserFromProvider stores the email address and display name of a
+// directory or single sign-on in the web console's profile columns. A
+// database without those columns (the server without its console) is left
+// as it is.
+func (s *SQLiteDB) UpdateUserFromProvider(id int64, email, displayName string) error {
+	sets, values := providerProfile(email, displayName, func(column string) bool { return s.hasColumn("users", column) })
+	if len(sets) == 0 {
+		return nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	query := "UPDATE users SET " + strings.Join(sets, " = ?, ") + " = ? WHERE id = ?"
+	if _, err := s.db.Exec(query, append(values, id)...); err != nil {
+		return fmt.Errorf("db: UpdateUserFromProvider: %w", err)
+	}
+	return nil
+}
+
 // SetUserDisabled disables or enables an account.
 func (s *SQLiteDB) SetUserDisabled(id int64, disabled bool) error {
 	s.mu.Lock()

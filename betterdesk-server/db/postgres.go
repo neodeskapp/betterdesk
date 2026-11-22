@@ -2077,6 +2077,32 @@ func (pg *PostgresDB) DeleteUser(id int64) error {
 	return err
 }
 
+// UpdateUserFromProvider stores the email address and display name of a
+// directory or single sign-on in the web console's profile columns. A
+// database without those columns (the server without its console) is left
+// as it is.
+func (pg *PostgresDB) UpdateUserFromProvider(id int64, email, displayName string) error {
+	has := func(column string) bool {
+		var n int
+		err := pg.pool.QueryRow(pg.ctx, `SELECT COUNT(*) FROM information_schema.columns
+			WHERE table_schema = current_schema() AND table_name = 'users' AND column_name = $1`, column).Scan(&n)
+		return err == nil && n > 0
+	}
+	sets, values := providerProfile(email, displayName, has)
+	if len(sets) == 0 {
+		return nil
+	}
+	parts := make([]string, len(sets))
+	for i, column := range sets {
+		parts[i] = fmt.Sprintf("%s = $%d", column, i+1)
+	}
+	query := fmt.Sprintf("UPDATE users SET %s WHERE id = $%d", strings.Join(parts, ", "), len(sets)+1)
+	if _, err := pg.pool.Exec(pg.ctx, query, append(values, id)...); err != nil {
+		return fmt.Errorf("db: UpdateUserFromProvider: %w", err)
+	}
+	return nil
+}
+
 // SetUserDisabled disables or enables an account.
 func (pg *PostgresDB) SetUserDisabled(id int64, disabled bool) error {
 	if _, err := pg.pool.Exec(pg.ctx, `UPDATE users SET disabled = $1 WHERE id = $2`, disabled, id); err != nil {

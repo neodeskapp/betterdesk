@@ -53,6 +53,15 @@ const (
 	passwordLoginDisabled
 )
 
+// storeProviderFields keeps the email address and display name the
+// directory or single sign-on gave at this sign-in on the account; a
+// failure is logged and does not stop the sign-in.
+func (s *Server) storeProviderFields(user *db.User, email, displayName string) {
+	if err := s.db.UpdateUserFromProvider(user.ID, strings.TrimSpace(email), strings.TrimSpace(displayName)); err != nil {
+		log.Printf("[auth] Storing the email and name of %s from the provider failed: %v", user.Username, err)
+	}
+}
+
 // writeAccountDisabled answers a sign-in of a disabled account.
 func writeAccountDisabled(w http.ResponseWriter) {
 	writeJSON(w, http.StatusForbidden, map[string]string{"error": "This account is disabled", "code": "account_disabled"})
@@ -170,6 +179,7 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 					return passwordLoginResult{Status: passwordLoginInternal}
 				}
 				log.Printf("[LDAP] Auto-provisioned user %s with role %s", username, role)
+				s.storeProviderFields(user, ldapResult.Email, ldapResult.DisplayName)
 			} else {
 				changed := false
 				if ldapResult.Role != "" && ldapResult.Role != user.Role {
@@ -184,6 +194,7 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 				if changed {
 					_ = s.db.UpdateUser(user)
 				}
+				s.storeProviderFields(user, ldapResult.Email, ldapResult.DisplayName)
 			}
 
 			if s.auditLog != nil {

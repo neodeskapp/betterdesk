@@ -211,6 +211,7 @@ func (s *Server) ensureOIDCUser(result *auth.OIDCResult, cfg *auth.OIDCConfig) (
 			return nil, "oidc_error"
 		}
 		log.Printf("[OIDC] Auto-provisioned user %s with role %s", result.Username, role)
+		s.storeProviderFields(user, result.Email, result.DisplayName)
 		return user, ""
 	}
 
@@ -238,6 +239,7 @@ func (s *Server) ensureOIDCUser(result *auth.OIDCResult, cfg *auth.OIDCConfig) (
 	if changed {
 		_ = s.db.UpdateUser(user)
 	}
+	s.storeProviderFields(user, result.Email, result.DisplayName)
 	return user, ""
 }
 
