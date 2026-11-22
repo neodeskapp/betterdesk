@@ -253,6 +253,14 @@ function Test-PostgreSQLSwitchMovesTheWholeInstall {
     $runs = Invoke-Switch 0 $false @('y', 'n')
     if ("$runs" -ne "-mode sqlite2pg -src $src -dst $uri") { Fail "the switch after a declined replace ran as: $runs" }
 
+    # L60: a declined move keeps the install on SQLite
+    $runs = Invoke-Switch 0 $false @('n')
+    if ($runs.Count -ne 0) { Fail "the switch moved the data although the move was declined: $runs" }
+    if ($script:USE_POSTGRESQL -or $script:POSTGRESQL_URI) { Fail "after a declined move the install still uses PostgreSQL ($($script:USE_POSTGRESQL), $($script:POSTGRESQL_URI))" }
+    if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'sqlite' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne $src -or (Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne '') {
+        Fail "after a declined move .env does not point at the SQLite file: $(Get-Content $envFile)"
+    }
+
     $runs = Invoke-Switch 1 $true @()
     if ($script:USE_POSTGRESQL -or $script:POSTGRESQL_URI) { Fail "after a failed move the install still uses PostgreSQL ($($script:USE_POSTGRESQL), $($script:POSTGRESQL_URI))" }
     if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'sqlite' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne $src -or (Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne '') {

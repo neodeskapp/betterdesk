@@ -350,6 +350,14 @@ FAKE_MIGRATE
     [ "$(moves)" = "-mode sqlite2pg -src $src -dst $uri" ] \
         || fail "the switch after a declined replace ran as: $(moves)"
 
+    # L60: a declined move keeps the install on SQLite
+    run_switch 0 true false $'n'
+    [ -z "$(moves)" ] || fail "the switch moved the data although the move was declined: $(moves)"
+    [ "$USE_POSTGRESQL" = false ] && [ -z "$POSTGRESQL_URI" ] \
+        || fail "after a declined move the install still uses PostgreSQL ($USE_POSTGRESQL, $POSTGRESQL_URI)"
+    grep -qxF "DB_URL=$src" "$env" && grep -qx "DB_TYPE=sqlite" "$env" && grep -qx "DATABASE_URL=" "$env" \
+        || fail "after a declined move .env does not point at the SQLite file: $(cat "$env")"
+
     # a failed move leaves the install on SQLite
     run_switch 1 true true ""
     [ "$USE_POSTGRESQL" = false ] && [ -z "$POSTGRESQL_URI" ] \

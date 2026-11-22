@@ -3677,7 +3677,8 @@ migrate_sqlite_to_postgresql() {
     fi
     
     if [ "$AUTO_MODE" != true ] && ! confirm "Move the existing SQLite install (every server and console table) to PostgreSQL?"; then
-        print_info "The SQLite data stays where it is; PostgreSQL starts empty"
+        print_info "The install stays on SQLite ($sqlite_db); move it later with the menu's Database migration"
+        keep_sqlite_install "$sqlite_db"
         return 0
     fi
 

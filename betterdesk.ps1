@@ -2489,7 +2489,8 @@ function Migrate-SQLiteToPostgreSQL {
     }
 
     if (-not $script:AUTO_MODE -and -not (Confirm-Action "Move the existing SQLite install (every server and console table) to PostgreSQL?")) {
-        Print-Info "The SQLite data stays where it is; PostgreSQL starts empty"
+        Print-Info "The install stays on SQLite ($sqliteDb); move it later with the menu's Database migration"
+        Use-SQLiteInstall $sqliteDb
         return
     }
 
