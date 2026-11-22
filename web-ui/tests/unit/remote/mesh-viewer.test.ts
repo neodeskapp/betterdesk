@@ -244,6 +244,29 @@ describe('remote viewer with a mesh session', () => {
 		for (const call of keyListeners) expect(remove).toHaveBeenCalledWith(...call);
 	});
 
+	test.each([
+		['the operator ends it', (ms: InstanceType<typeof g.MeshSession>) => ms.disconnect()],
+		['the relay closes the socket', () => FakeSocket.made[0]!.onclose?.()]
+	])('a mesh session says once that it ended: %s', async (_how, end) => {
+		FakeSocket.made = [];
+		vi.stubGlobal('WebSocket', FakeSocket);
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => ({ ok: true, json: async () => ({ browser_url: '/ws/mesh/relay' }) }))
+		);
+		const ms = new g.MeshSession(document.createElement('canvas'), { deviceId: 'mesh01' });
+		const said: string[] = [];
+		ms.on('state', (st: string) => said.push('state ' + st));
+		ms.on('disconnected', () => said.push('disconnected'));
+		await ms.connect();
+		FakeSocket.made[0]!.receive('c');
+		said.length = 0;
+		end(ms);
+		// The socket's own close event comes after
+		FakeSocket.made[0]!.onclose?.();
+		expect(said).toEqual(['state disconnected', 'disconnected']);
+	});
+
 	test('a listener that throws does not stop the mesh client or the desktop viewer', () => {
 		const err = vi.spyOn(console, 'error').mockImplementation(() => {});
 		const bv = new g.BetterViewer(document.createElement('canvas'), {});
