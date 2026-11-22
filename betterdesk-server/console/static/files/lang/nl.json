@@ -1167,7 +1167,7 @@
       "conn_saved_in": "Opgeslagen in {place}.",
       "conn_running": "De server draait met: {mode}, directe poging {ms} ms.",
       "scope_open": "Open",
-      "scope_open_desc": "Gebruikers zien alle apparaten totdat u ze toegang geeft tot mappen, groepen of apparaten.",
+      "scope_open_desc": "Gebruikers zien alle apparaten behalve die in mappen en groepen met een toegangslijst; die zien alleen de mensen op de lijst.",
       "scope_restricted": "Beperkt",
       "scope_restricted_desc": "Gebruikers zien alleen de apparaten waartoe ze toegang hebben gekregen.",
       "scope_effect": "Geldt direct voor iedereen die geen beheerder is.",

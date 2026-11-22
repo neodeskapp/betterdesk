@@ -1167,7 +1167,7 @@
       "conn_saved_in": "Salvato in {place}.",
       "conn_running": "Il server è in esecuzione con: {mode}, tentativo diretto {ms} ms.",
       "scope_open": "Aperto",
-      "scope_open_desc": "Gli utenti vedono tutti i dispositivi finché non viene concesso loro l'accesso a cartelle, gruppi o dispositivi.",
+      "scope_open_desc": "Gli utenti vedono tutti i dispositivi tranne quelli in cartelle e gruppi con un elenco di accesso, che vedono solo le persone dell'elenco.",
       "scope_restricted": "Limitato",
       "scope_restricted_desc": "Gli utenti vedono solo i dispositivi a cui hanno ricevuto l'accesso.",
       "scope_effect": "Si applica subito a tutti coloro che non sono amministratori.",

@@ -1173,7 +1173,7 @@
       "conn_saved_in": "Đã lưu trong {place}.",
       "conn_running": "Máy chủ đang chạy với: {mode}, thử trực tiếp {ms} ms.",
       "scope_open": "Mở",
-      "scope_open_desc": "Người dùng thấy tất cả thiết bị cho đến khi bạn cấp cho họ quyền truy cập vào thư mục, nhóm hoặc thiết bị.",
+      "scope_open_desc": "Người dùng thấy mọi thiết bị trừ các thiết bị trong thư mục và nhóm có danh sách truy cập; chỉ người trong danh sách mới thấy chúng.",
       "scope_restricted": "Hạn chế",
       "scope_restricted_desc": "Người dùng chỉ thấy các thiết bị mà họ được cấp quyền truy cập.",
       "scope_effect": "Áp dụng ngay cho tất cả những người không phải quản trị viên.",

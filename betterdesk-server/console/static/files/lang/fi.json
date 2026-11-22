@@ -1173,7 +1173,7 @@
       "conn_saved_in": "Tallennettu kohteeseen {place}.",
       "conn_running": "Palvelimen asetus: {mode}, suora yritys {ms} ms.",
       "scope_open": "Avoin",
-      "scope_open_desc": "Käyttäjät näkevät kaikki laitteet, kunnes annat heille käyttöoikeuden kansioihin, ryhmiin tai laitteisiin.",
+      "scope_open_desc": "Käyttäjät näkevät kaikki laitteet paitsi kansioissa ja ryhmissä, joilla on käyttöoikeusluettelo; ne näkevät vain luettelossa olevat.",
       "scope_restricted": "Rajoitettu",
       "scope_restricted_desc": "Käyttäjät näkevät vain laitteet, joihin heille on annettu käyttöoikeus.",
       "scope_effect": "Koskee heti kaikkia, jotka eivät ole järjestelmänvalvojia.",

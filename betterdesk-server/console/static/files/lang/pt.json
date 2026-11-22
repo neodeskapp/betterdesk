@@ -1167,7 +1167,7 @@
       "conn_saved_in": "Guardado em {place}.",
       "conn_running": "O servidor está a funcionar com: {mode}, tentativa direta {ms} ms.",
       "scope_open": "Aberto",
-      "scope_open_desc": "Os utilizadores veem todos os dispositivos até lhes dar acesso a pastas, grupos ou dispositivos.",
+      "scope_open_desc": "Os utilizadores veem todos os dispositivos, exceto os de pastas e grupos com lista de acesso, que só as pessoas da lista veem.",
       "scope_restricted": "Restrito",
       "scope_restricted_desc": "Os utilizadores veem apenas os dispositivos a que lhes foi dado acesso.",
       "scope_effect": "Aplica-se de imediato a todos os que não são administradores.",

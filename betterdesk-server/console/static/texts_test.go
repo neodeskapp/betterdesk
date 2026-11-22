@@ -60,3 +60,13 @@ func TestEnrollmentModesSayMeshAgentsWait(t *testing.T) {
 		t.Errorf("tokens.mode_notice_open is %q", text)
 	}
 }
+
+// Under the Open visibility default, a folder or group with an access list
+// is seen only by the accounts on its list; everyone else still sees every
+// other device (BUGS L106).
+func TestOpenVisibilitySaysListsHideTheirDevices(t *testing.T) {
+	text := english(t, "settings.general.scope_open_desc")
+	if strings.Contains(text, "until you give them access") || !strings.Contains(text, "access list") {
+		t.Errorf("settings.general.scope_open_desc is %q", text)
+	}
+}

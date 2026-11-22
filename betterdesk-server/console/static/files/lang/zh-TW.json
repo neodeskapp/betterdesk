@@ -1171,7 +1171,7 @@
       "conn_saved_in": "儲存在 {place}。",
       "conn_running": "伺服器目前執行：{mode}，直接連線嘗試 {ms} 毫秒。",
       "scope_open": "開放",
-      "scope_open_desc": "在您授予資料夾、群組或裝置的存取權之前，使用者可以看到所有裝置。",
+      "scope_open_desc": "使用者可以看到所有裝置，但有存取清單的資料夾和群組中的裝置除外，這些只有清單中的人看得到。",
       "scope_restricted": "受限",
       "scope_restricted_desc": "使用者只能看到已獲授權存取的裝置。",
       "scope_effect": "立即套用至所有非管理員。",

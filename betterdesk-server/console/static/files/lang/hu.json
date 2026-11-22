@@ -1173,7 +1173,7 @@
       "conn_saved_in": "Mentve ide: {place}.",
       "conn_running": "A szerver beállítása: {mode}, közvetlen próbálkozás {ms} ms.",
       "scope_open": "Nyitott",
-      "scope_open_desc": "A felhasználók minden eszközt látnak, amíg hozzáférést nem ad nekik mappákhoz, csoportokhoz vagy eszközökhöz.",
+      "scope_open_desc": "A felhasználók minden eszközt látnak, kivéve a hozzáférési listával rendelkező mappák és csoportok eszközeit; azokat csak a listán szereplők látják.",
       "scope_restricted": "Korlátozott",
       "scope_restricted_desc": "A felhasználók csak azokat az eszközöket látják, amelyekhez hozzáférést kaptak.",
       "scope_effect": "Azonnal érvényes mindenkire, aki nem rendszergazda.",

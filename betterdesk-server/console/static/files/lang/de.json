@@ -1167,7 +1167,7 @@
       "conn_saved_in": "Gespeichert in {place}.",
       "conn_running": "Der Server läuft mit: {mode}, direkter Versuch {ms} ms.",
       "scope_open": "Offen",
-      "scope_open_desc": "Benutzer sehen alle Geräte, bis Sie ihnen Zugriff auf Ordner, Gruppen oder Geräte geben.",
+      "scope_open_desc": "Benutzer sehen alle Geräte außer denen in Ordnern und Gruppen mit Zugriffsliste; diese sehen nur die Personen auf der Liste.",
       "scope_restricted": "Eingeschränkt",
       "scope_restricted_desc": "Benutzer sehen nur die Geräte, für die sie Zugriff erhalten haben.",
       "scope_effect": "Gilt sofort für alle, die keine Administratoren sind.",

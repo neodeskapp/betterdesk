@@ -1171,7 +1171,7 @@
       "conn_saved_in": "Enregistré dans {place}.",
       "conn_running": "Le serveur fonctionne avec : {mode}, tentative directe {ms} ms.",
       "scope_open": "Ouvert",
-      "scope_open_desc": "Les utilisateurs voient tous les appareils jusqu'à ce que vous leur donniez accès à des dossiers, des groupes ou des appareils.",
+      "scope_open_desc": "Les utilisateurs voient tous les appareils sauf ceux des dossiers et groupes dotés d'une liste d'accès, que seules les personnes de la liste voient.",
       "scope_restricted": "Restreint",
       "scope_restricted_desc": "Les utilisateurs ne voient que les appareils auxquels ils ont reçu l'accès.",
       "scope_effect": "S'applique immédiatement à tous ceux qui ne sont pas administrateurs.",

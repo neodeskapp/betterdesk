@@ -1175,7 +1175,7 @@
             "conn_saved_in": "Stored in {place}.",
             "conn_running": "The server runs with: {mode}, direct attempt {ms} ms.",
             "scope_open": "Open",
-            "scope_open_desc": "People see all devices until you give them access to folders, groups or devices.",
+            "scope_open_desc": "People see every device except those in folders and groups with an access list, which only the people on the list see.",
             "scope_restricted": "Restricted",
             "scope_restricted_desc": "People see only the devices they were given access to.",
             "scope_effect": "Applies right away to everyone who is not an administrator.",

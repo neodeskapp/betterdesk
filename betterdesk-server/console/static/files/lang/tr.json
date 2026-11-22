@@ -1173,7 +1173,7 @@
       "conn_saved_in": "{place} içinde kayıtlı.",
       "conn_running": "Sunucu şu ayarla çalışıyor: {mode}, doğrudan deneme {ms} ms.",
       "scope_open": "Açık",
-      "scope_open_desc": "Kullanıcılar, siz onlara klasörlere, gruplara veya cihazlara erişim verene kadar tüm cihazları görür.",
+      "scope_open_desc": "Kullanıcılar, erişim listesi olan klasör ve gruplardakiler dışında tüm cihazları görür; onları yalnızca listedekiler görür.",
       "scope_restricted": "Kısıtlı",
       "scope_restricted_desc": "Kullanıcılar yalnızca erişim verilen cihazları görür.",
       "scope_effect": "Yönetici olmayan herkese hemen uygulanır.",

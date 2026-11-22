@@ -1173,7 +1173,7 @@
       "conn_saved_in": "Salvat în {place}.",
       "conn_running": "Serverul rulează cu: {mode}, încercare directă {ms} ms.",
       "scope_open": "Deschis",
-      "scope_open_desc": "Utilizatorii văd toate dispozitivele până când le acordați acces la foldere, grupuri sau dispozitive.",
+      "scope_open_desc": "Utilizatorii văd toate dispozitivele, în afară de cele din folderele și grupurile cu listă de acces, pe care le văd doar persoanele de pe listă.",
       "scope_restricted": "Restricționat",
       "scope_restricted_desc": "Utilizatorii văd doar dispozitivele la care au primit acces.",
       "scope_effect": "Se aplică imediat tuturor celor care nu sunt administratori.",

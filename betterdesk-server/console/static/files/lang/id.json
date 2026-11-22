@@ -1173,7 +1173,7 @@
       "conn_saved_in": "Disimpan di {place}.",
       "conn_running": "Server berjalan dengan: {mode}, percobaan langsung {ms} ms.",
       "scope_open": "Terbuka",
-      "scope_open_desc": "Pengguna melihat semua perangkat sampai Anda memberi mereka akses ke folder, grup, atau perangkat.",
+      "scope_open_desc": "Pengguna melihat semua perangkat kecuali yang ada di folder dan grup dengan daftar akses; perangkat itu hanya dilihat orang dalam daftar.",
       "scope_restricted": "Terbatas",
       "scope_restricted_desc": "Pengguna hanya melihat perangkat yang aksesnya telah diberikan kepada mereka.",
       "scope_effect": "Langsung berlaku untuk semua orang yang bukan administrator.",

@@ -1173,7 +1173,7 @@
       "conn_saved_in": "Lagret i {place}.",
       "conn_running": "Serveren kjører med: {mode}, direkte forsøk {ms} ms.",
       "scope_open": "Åpen",
-      "scope_open_desc": "Brukere ser alle enheter til du gir dem tilgang til mapper, grupper eller enheter.",
+      "scope_open_desc": "Brukere ser alle enheter unntatt dem i mapper og grupper med en tilgangsliste; dem ser bare personene på listen.",
       "scope_restricted": "Begrenset",
       "scope_restricted_desc": "Brukere ser bare enhetene de har fått tilgang til.",
       "scope_effect": "Gjelder umiddelbart for alle som ikke er administratorer.",

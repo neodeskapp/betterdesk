@@ -1167,7 +1167,7 @@
       "conn_saved_in": "Zapisano w: {place}.",
       "conn_running": "Serwer działa z ustawieniem: {mode}, próba bezpośrednia {ms} ms.",
       "scope_open": "Otwarty",
-      "scope_open_desc": "Użytkownicy widzą wszystkie urządzenia, dopóki nie otrzymają dostępu do folderów, grup lub urządzeń.",
+      "scope_open_desc": "Użytkownicy widzą wszystkie urządzenia oprócz tych w folderach i grupach z listą dostępu; te widzą tylko osoby z listy.",
       "scope_restricted": "Ograniczony",
       "scope_restricted_desc": "Użytkownicy widzą tylko urządzenia, do których otrzymali dostęp.",
       "scope_effect": "Obowiązuje od razu dla wszystkich, którzy nie są administratorami.",

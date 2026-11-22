@@ -1167,7 +1167,7 @@
       "conn_saved_in": "{place}에 저장되어 있습니다.",
       "conn_running": "서버 실행 설정: {mode}, 직접 연결 시도 {ms}ms.",
       "scope_open": "공개",
-      "scope_open_desc": "폴더, 그룹 또는 기기에 대한 접근 권한을 주기 전까지 사용자는 모든 기기를 봅니다.",
+      "scope_open_desc": "접근 목록이 있는 폴더와 그룹의 기기를 빼고 모든 기기를 봅니다. 그 기기는 목록에 있는 사람만 봅니다.",
       "scope_restricted": "제한",
       "scope_restricted_desc": "사용자는 접근 권한을 받은 기기만 봅니다.",
       "scope_effect": "관리자가 아닌 모든 사용자에게 바로 적용됩니다.",

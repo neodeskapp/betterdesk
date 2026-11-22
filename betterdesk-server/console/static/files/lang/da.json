@@ -1173,7 +1173,7 @@
       "conn_saved_in": "Gemt i {place}.",
       "conn_running": "Serveren kører med: {mode}, direkte forsøg {ms} ms.",
       "scope_open": "Åben",
-      "scope_open_desc": "Brugere ser alle enheder, indtil du giver dem adgang til mapper, grupper eller enheder.",
+      "scope_open_desc": "Brugere ser alle enheder undtagen dem i mapper og grupper med en adgangsliste; dem ser kun personerne på listen.",
       "scope_restricted": "Begrænset",
       "scope_restricted_desc": "Brugere ser kun de enheder, de har fået adgang til.",
       "scope_effect": "Gælder med det samme for alle, der ikke er administratorer.",

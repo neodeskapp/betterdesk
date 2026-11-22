@@ -1167,7 +1167,7 @@
       "conn_saved_in": "保存在 {place}。",
       "conn_running": "服务器当前运行：{mode}，直连尝试 {ms} 毫秒。",
       "scope_open": "开放",
-      "scope_open_desc": "在您授予文件夹、分组或设备的访问权限之前，用户可以看到所有设备。",
+      "scope_open_desc": "用户可以看到所有设备，但带访问列表的文件夹和分组中的设备除外，这些只有列表中的人能看到。",
       "scope_restricted": "受限",
       "scope_restricted_desc": "用户只能看到已获授权访问的设备。",
       "scope_effect": "立即应用于所有非管理员。",

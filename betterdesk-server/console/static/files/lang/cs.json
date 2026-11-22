@@ -1167,7 +1167,7 @@
       "conn_saved_in": "Uloženo v {place}.",
       "conn_running": "Server běží s nastavením: {mode}, přímý pokus {ms} ms.",
       "scope_open": "Otevřený",
-      "scope_open_desc": "Uživatelé vidí všechna zařízení, dokud jim neudělíte přístup ke složkám, skupinám nebo zařízením.",
+      "scope_open_desc": "Uživatelé vidí všechna zařízení kromě zařízení ve složkách a skupinách se seznamem přístupu; ta vidí jen lidé na seznamu.",
       "scope_restricted": "Omezený",
       "scope_restricted_desc": "Uživatelé vidí jen zařízení, ke kterým dostali přístup.",
       "scope_effect": "Platí ihned pro všechny, kdo nejsou správci.",
