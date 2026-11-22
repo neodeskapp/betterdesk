@@ -40,6 +40,8 @@ export interface FileSheetTransfer {
 	uploadFolder?(walk: LocalWalk, remoteDest: string): unknown;
 	downloadFile(remotePath: string, entry: FileSheetEntry): unknown;
 	downloadFolder?(remotePath: string, entry: FileSheetEntry, localRoot: string): unknown;
+	/** The browser: the folder as one ZIP archive (RustDesk sessions) */
+	downloadFolderAsZip?(remotePath: string, entry: FileSheetEntry): unknown;
 	cancelTransfer(id: number): unknown;
 	resumeTransfer?(id: number): void;
 	/** Saves a finished download into the chosen local folder; null leaves it to the browser */
@@ -1191,22 +1193,10 @@ export class FileTransferModal {
 					if (!picked || !pickedPath) return;
 					localRoot = String(pickedPath);
 				}
-			} else if (this._local.hasRoot && this._local._mode === 'fsa') {
-				// Browser FSA folder download streams via per-file save hooks; not supported as tree yet.
-				window.alert(
-					t(
-						'remote.file_folder_download_desktop_only',
-						'Folder download requires RdClient desktop. Download files individually, or use RdClient desktop.'
-					)
-				);
-				return;
 			} else {
-				window.alert(
-					t(
-						'remote.file_folder_download_desktop_only',
-						'Folder download requires RdClient desktop. Download files individually, or use RdClient desktop.'
-					)
-				);
+				// The browser saves the folder as <name>.zip: into the local folder when one
+				// is open here, else as a download
+				ft.downloadFolderAsZip?.(ft.currentPath || '', entry);
 				return;
 			}
 			ft.downloadFolder?.(ft.currentPath || '', entry, localRoot);

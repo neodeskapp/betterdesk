@@ -14,6 +14,7 @@ import { LocalFiles } from './local-files.ts';
 import { debugLog } from './log.ts';
 import { page, tauriInvoke } from './page.ts';
 import type { RDProtocol } from './protocol.ts';
+import { buildZip, type ZipEntry } from './zip.ts';
 import type {
 	FileDirectory,
 	FileResponse,
@@ -218,6 +219,8 @@ export interface RDFolderDownloadJob extends RDFolderJobBase {
 	folderEntry: RDFolderEntry;
 	localRoot: string;
 	pendingFiles: RDRemoteTreeFile[];
+	/** Browser: fetch every file into memory and save the folder as one ZIP archive */
+	asZip?: boolean;
 }
 
 export type RDFolderJob = RDFolderUploadJob | RDFolderDownloadJob;
@@ -1265,6 +1268,39 @@ export class RDFileTransfer {
 		return id;
 	}
 
+	/**
+	 * Download a remote folder tree in the browser: every file of it is
+	 * fetched through the file transfer session, then the folder is saved as
+	 * one ZIP archive (<name>.zip, into the sheet's local folder when one is
+	 * open, else as a browser download).
+	 * @returns Folder job id
+	 */
+	downloadFolderAsZip(
+		remotePath: string | null | undefined,
+		folderEntry: RDFolderEntry | null | undefined
+	): number {
+		if (!this._enabled || !folderEntry) return -1;
+		const id = this._nextId++;
+		this._enqueueFolderJob({
+			id: id,
+			type: 'download',
+			isFolder: true,
+			fileName: folderEntry.name,
+			fileSize: 0,
+			transferred: 0,
+			status: 'queued',
+			remotePath: remotePath || '',
+			folderEntry: folderEntry,
+			localRoot: '',
+			currentFile: null,
+			childId: null,
+			pendingFiles: [],
+			fileIndex: 0,
+			asZip: true
+		});
+		return id;
+	}
+
 	_enqueueFolderJob(job: RDFolderJob): void {
 		this._emit('file_transfer_start', {
 			id: job.id,
@@ -1512,7 +1548,78 @@ export class RDFileTransfer {
 	 * Fetch a remote folder into localRoot on the desktop (the file sheet
 	 * refuses folder downloads in a browser before it gets here).
 	 */
+	/** Fetch a remote folder into memory and save it as <name>.zip (downloadFolderAsZip) */
+	async _runZipFolderDownload(job: RDFolderDownloadJob): Promise<void> {
+		job.startTime = Date.now();
+		const name = job.folderEntry.name;
+		const remoteFolder = RDFileTransfer.buildRemoteFilePath(job.remotePath || '', name);
+		try {
+			job.currentFile = '';
+			this._emitFolderProgress(job);
+			const tree = await this._expandRemoteFolder(remoteFolder);
+			if (isCancelled(job)) return this._finishFolderJob(job, false);
+			job.fileSize = tree.totalSize;
+			job.pendingFiles = tree.files;
+			this._emitFolderProgress(job);
+
+			const entries: ZipEntry[] = [{ path: name + '/' }];
+			for (const dir of tree.dirs) entries.push({ path: `${name}/${dir.relativePath}/` });
+			for (const [i, item] of tree.files.entries()) {
+				if (isCancelled(job)) return this._finishFolderJob(job, false);
+				job.currentFile = item.relativePath;
+				job.fileIndex = i;
+				this._emitFolderProgress(job);
+				let data: Blob | null = null;
+				const childId = this.downloadFile(
+					item.parentPath,
+					item.entry || { name: item.name, size: item.size, modifiedTime: item.modifiedTime },
+					{
+						folderJobId: job.id,
+						silent: true,
+						localFileName: item.relativePath,
+						forceBuffer: true,
+						captureBlob: true,
+						captureResolve: (blob) => {
+							data = blob;
+						}
+					}
+				);
+				job.childId = childId;
+				const ok = await this._waitForChildTransfer(childId);
+				job.childId = null;
+				if (isCancelled(job)) return this._finishFolderJob(job, false);
+				if (!ok || !data) throw new Error('Failed to download ' + item.relativePath);
+				entries.push({ path: `${name}/${item.relativePath}`, data, modifiedTime: item.modifiedTime });
+				job.transferred += Number(item.size || 0);
+				this._emitFolderProgress(job);
+			}
+
+			const zip = await buildZip(entries);
+			if (isCancelled(job)) return this._finishFolderJob(job, false);
+			// A failed save already reported its error for this job
+			if (!(await this._saveBlob(job.id, name + '.zip', zip))) {
+				job.status = 'error';
+				return this._finishFolderJob(job, false);
+			}
+			this._finishFolderJob(job, true);
+		} catch (err) {
+			if (isCancelled(job)) return this._finishFolderJob(job, false);
+			job.status = 'error';
+			this._emit('file_transfer_error', {
+				id: job.id,
+				fileName: job.fileName,
+				error: errorMessage(err) || String(err),
+				resumable: false,
+				type: 'download',
+				isFolder: true,
+				currentFile: job.currentFile
+			} satisfies RDFileTransferErrorEvent);
+			this._finishFolderJob(job, false);
+		}
+	}
+
 	async _runFolderDownload(job: RDFolderDownloadJob): Promise<void> {
+		if (job.asZip) return this._runZipFolderDownload(job);
 		job.startTime = Date.now();
 		const remoteFolder = RDFileTransfer.buildRemoteFilePath(job.remotePath || '', job.folderEntry.name);
 		const localFolder = RDFileTransfer.joinLocalPath(job.localRoot, job.folderEntry.name);
@@ -2337,6 +2444,46 @@ export class RDFileTransfer {
 	// ---- Browser download trigger ----
 
 	/**
+	 * Save a finished file: into the file sheet's local folder when its save
+	 * hook takes it, else as a browser download. A failed save is reported as
+	 * a file_transfer_error of the transfer and resolves false. A browser
+	 * download that cannot start throws.
+	 */
+	_saveBlob(id: number, fileName: string, blob: Blob): Promise<boolean> {
+		const finishBrowserDownload = (): void => {
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = fileName;
+			a.style.display = 'none';
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(() => {
+				URL.revokeObjectURL(url);
+				a.remove();
+			}, 5000);
+		};
+
+		if (typeof this._saveDownload === 'function') {
+			return Promise.resolve(this._saveDownload(fileName, blob))
+				.then((savedToFolder) => {
+					if (!savedToFolder) finishBrowserDownload();
+					return true;
+				})
+				.catch((err: unknown) => {
+					this._emit('file_transfer_error', {
+						id: id,
+						fileName: fileName,
+						error: 'Failed to save file: ' + (errorMessage(err) || 'unknown error')
+					} satisfies RDFileTransferErrorEvent);
+					return false;
+				});
+		}
+		finishBrowserDownload();
+		return Promise.resolve(true);
+	}
+
+	/**
 	 * Assemble received blocks into a Blob and trigger download
 	 */
 	_triggerDownload(transfer: RDDownloadTransfer): void {
@@ -2345,35 +2492,7 @@ export class RDFileTransfer {
 
 		try {
 			const blob = new Blob(blobParts(blocks), { type: 'application/octet-stream' });
-			const finishBrowserDownload = (): void => {
-				const url = URL.createObjectURL(blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = transfer.fileName;
-				a.style.display = 'none';
-				document.body.appendChild(a);
-				a.click();
-				setTimeout(() => {
-					URL.revokeObjectURL(url);
-					a.remove();
-				}, 5000);
-			};
-
-			if (typeof this._saveDownload === 'function') {
-				Promise.resolve(this._saveDownload(transfer.fileName, blob))
-					.then((savedToFolder) => {
-						if (!savedToFolder) finishBrowserDownload();
-					})
-					.catch((err: unknown) => {
-						this._emit('file_transfer_error', {
-							id: transfer.id,
-							fileName: transfer.fileName,
-							error: 'Failed to save file: ' + (errorMessage(err) || 'unknown error')
-						} satisfies RDFileTransferErrorEvent);
-					});
-				return;
-			}
-			finishBrowserDownload();
+			void this._saveBlob(transfer.id, transfer.fileName, blob);
 		} catch (err) {
 			this._emit('file_transfer_error', {
 				id: transfer.id,
