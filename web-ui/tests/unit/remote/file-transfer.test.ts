@@ -266,6 +266,25 @@ describe('a folder walk and the sheet listing at the same time', () => {
 		expect(t.named('file_dir')).toHaveLength(1);
 	});
 
+	// L234: RustDesk answers a send request with the job's files as a FileDirectory
+	// under the transfer's id and the file's path
+	test("a download's file list does not move the sheet into the file", async () => {
+		const t = await setup();
+		t.ft.browseDir('C:\\data');
+		t.respond({ dir: { id: 0, path: 'C:\\data', entries: [{ name: 'a.txt', entryType: 4, size: 3 }] } });
+		await tick();
+		const id = t.ft.downloadFile('C:\\data', { name: 'a.txt', size: 3 });
+		t.respond({ dir: { id, path: 'C:\\data\\a.txt', entries: [{ name: '', entryType: 4, size: 3 }] } });
+		t.respond({ digest: { id, fileNum: 0, fileSize: 3 } });
+		t.respond({ block: { id, data: enc('abc'), compressed: false } });
+		t.respond({ done: { id } });
+		await vi.waitFor(() => expect(t.saved).toEqual([{ name: 'a.txt', text: 'abc' }]));
+		expect(t.named('file_dir')).toEqual([
+			{ path: 'C:\\data', entries: [expect.objectContaining({ name: 'a.txt' })] }
+		]);
+		expect(t.ft.currentPath).toBe('C:\\data');
+	});
+
 	test('a device that names the folder a little differently still answers the walk', async () => {
 		const t = await setup();
 		let walked: string[] | null = null;

@@ -1802,6 +1802,10 @@ export class RDFileTransfer {
 			return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
 		});
 
+		// The device answers a send request with the job's files under the
+		// transfer's id (folder listings come with id 0): not a folder to show
+		if (dir.id && this._transfers.has(Number(dir.id))) return;
+
 		const pathKey = this._normalizeRemotePathKey(dir.path || '');
 		// The sheet's listing of this folder, or of the home folder (the device answers with its path)
 		const forSheet =
