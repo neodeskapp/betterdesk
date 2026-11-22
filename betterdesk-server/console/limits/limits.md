@@ -28,6 +28,7 @@ read" is a GET or HEAD with a session.
 | `Upload` | `uploadLimiter` | 60 s | `UPLOAD_RATE_LIMIT_MAX`, 30 | address | nothing | Too many upload requests. Please try again later. |
 | `FileAccess` | `fileAccessLimiter` | 60 s | `FILE_ACCESS_RATE_LIMIT_MAX`, 120 | address | nothing | Too many file requests. Please try again later. |
 | `Register` | `registerLimiter` | 60 s | `BD_REGISTER_RATE_LIMIT_MAX`, 20 | address | nothing | Too many registration requests. Please slow down. |
+| `Invitation` | `invitationLimiter` (Go only) | 15 min | 20, fixed | address | nothing | Too many invitation requests. Please try again later. |
 
 Every 429 body is `{"success":false,"error":"<text>"}`.
 

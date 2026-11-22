@@ -1,6 +1,7 @@
 /** Words for enrollment requests, shared by the page and its sheet */
 
 import { ApiError } from '#lib/api/client.ts';
+import type { ExistingDevice } from '#lib/api/registrations.ts';
 import {
 	SOURCE_ENROLLMENT,
 	isMeshRequest,
@@ -24,6 +25,12 @@ export function statusLabel(status: RequestStatus): string {
 
 export function statusToneOf(status: RequestStatus): 'good' | 'neutral' | 'waiting' {
 	return status === 'approved' ? 'good' : status === 'rejected' ? 'neutral' : 'waiting';
+}
+
+/** The device a request's ID already is, as the hint and the dialog name it: its name or ID, marked when deleted */
+export function existingName(device: ExistingDevice): string {
+	const name = device.name || device.id;
+	return device.deleted ? t('registrations.existing_deleted_name', { name }) : name;
 }
 
 /** "by anna, 9 Nov 2026, 10:12", "device banned" added when it was banned */

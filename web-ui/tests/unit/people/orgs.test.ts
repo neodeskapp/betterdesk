@@ -14,27 +14,15 @@ import {
 	importDevices,
 	openInvitations,
 	orgContracts,
-	orgRoleLabel,
 	parseBook,
-	readSessionSettings,
-	sessionSettingRows,
-	SETTING_DEFAULTS,
 	slugify
 } from '../../../src/lib/people/orgs.ts';
-
-const t = (key: string) => ({ 'organizations.role_user': 'Member' })[key] ?? key;
 
 describe('organization basics', () => {
 	test('a name suggests a slug: lowercase, hyphens, at most 64 characters', () => {
 		expect(slugify('Harbor Logistics GmbH')).toBe('harbor-logistics-gmbh');
 		expect(slugify('  --Ärzte & Co.--  ')).toBe('rzte-co');
 		expect(slugify('x'.repeat(80))).toHaveLength(64);
-	});
-
-	test('roles inside an organization: "user" reads as Member, unknown roles as they are', () => {
-		expect(orgRoleLabel('user', t)).toBe('Member');
-		expect(orgRoleLabel('auditor', t)).toBe('auditor');
-		expect(orgRoleLabel('', t)).toBe('');
 	});
 
 	test('open invitations leave out used and expired ones', () => {
@@ -86,43 +74,6 @@ describe('organization basics', () => {
 		});
 		expect(v.parse(AddressBook, { data: '{}', enabled: null }).enabled).toBe(true);
 		expect(v.parse(AddressBook, { data: '{}', enabled: false }).enabled).toBe(false);
-	});
-});
-
-describe('stored connection settings', () => {
-	test('missing keys take the defaults; stored text becomes values', () => {
-		expect(readSessionSettings([])).toEqual(SETTING_DEFAULTS);
-		expect(
-			readSessionSettings([
-				{ key: 'connection_policy', value: 'attended' },
-				{ key: 'allow_file_transfer', value: 'false' },
-				{ key: 'allow_clipboard', value: 'yes' },
-				{ key: 'max_session_duration_min', value: '45' },
-				{ key: 'policy_security', value: '{}' }
-			])
-		).toEqual({
-			connection_policy: 'attended',
-			allow_file_transfer: false,
-			allow_clipboard: true,
-			max_session_duration_min: 45
-		});
-	});
-
-	test('saving writes the four keys as the server stores them, and reads back the same', () => {
-		const s = {
-			connection_policy: 'ask_always',
-			allow_file_transfer: false,
-			allow_clipboard: true,
-			max_session_duration_min: 0
-		};
-		const rows = sessionSettingRows(s);
-		expect(rows).toEqual([
-			['connection_policy', 'ask_always'],
-			['allow_file_transfer', 'false'],
-			['allow_clipboard', 'true'],
-			['max_session_duration_min', '0']
-		]);
-		expect(readSessionSettings(rows.map(([key, value]) => ({ key, value })))).toEqual(s);
 	});
 });
 

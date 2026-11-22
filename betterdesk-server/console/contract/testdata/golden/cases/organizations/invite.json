@@ -148,10 +148,6 @@
     {
      "path": "org_id",
      "pattern": "^[9aA+/_=-]{36}$"
-    },
-    {
-     "path": "token",
-     "pattern": "^[9aA+/_=-]{64}$"
     }
    ],
    "body": {
@@ -162,7 +158,7 @@
      "id": "<volatile>",
      "org_id": "<volatile>",
      "role": "user",
-     "token": "<volatile>"
+     "token": "{secret:invitation_code}"
     }
    }
   }

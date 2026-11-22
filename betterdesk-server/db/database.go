@@ -161,6 +161,12 @@ var (
 	ErrPeerIDSoftDeleted = errors.New("db: peer ID belongs to a deleted peer")
 	// ErrUsernameTaken is returned by RenameUser when the target name is in use.
 	ErrUsernameTaken = errors.New("db: username already exists")
+	// ErrInvitationNotOpen is RedeemOrgInvitation's answer for an
+	// invitation that does not exist, is used or has expired.
+	ErrInvitationNotOpen = errors.New("db: invitation is not open")
+	// ErrOrgUsernameTaken is RedeemOrgInvitation's answer when the
+	// organization already has the username.
+	ErrOrgUsernameTaken = errors.New("db: username already exists in this organization")
 	// ErrInvalidUsername is returned by RenameUser for a name that fails the
 	// account-name format check.
 	ErrInvalidUsername = errors.New("db: invalid username")
@@ -349,11 +355,13 @@ type OrgDevice struct {
 	Tags           string `json:"tags,omitempty"`
 }
 
-// OrgInvitation represents a pending invitation to join an organization.
+// OrgInvitation is an invitation to a sign-in in an organization. The
+// table's token column holds the SHA-256 of the invitation's code; Token
+// carries the code itself only in the answer that creates the invitation.
 type OrgInvitation struct {
 	ID        string     `json:"id"`
 	OrgID     string     `json:"org_id"`
-	Token     string     `json:"token"`
+	Token     string     `json:"token,omitempty"`
 	Email     string     `json:"email,omitempty"`
 	Role      string     `json:"role"` // default: "user"
 	ExpiresAt time.Time  `json:"expires_at"`
@@ -396,49 +404,16 @@ type AccessPolicy struct {
 	UpdatedBy         string `json:"updated_by,omitempty"` // Admin/operator who last changed the policy
 }
 
-// OrgRole constants
+// Organization roles as rows hold them. The routes give every new account,
+// membership and invitation OrgRoleUser; the other roles are in rows
+// stored earlier, where they still widen what an organization sign-in
+// reads (the member list, the invitations).
 const (
 	OrgRoleOwner    = "owner"
 	OrgRoleAdmin    = "admin"
 	OrgRoleOperator = "operator"
 	OrgRoleUser     = "user"
 )
-
-// OrgRoleLevel returns the numeric privilege level for an org-scoped role.
-// Higher = more privileges. Used for role boundary enforcement.
-func OrgRoleLevel(role string) int {
-	switch role {
-	case OrgRoleOwner:
-		return 40
-	case OrgRoleAdmin:
-		return 30
-	case OrgRoleOperator:
-		return 20
-	case OrgRoleUser:
-		return 10
-	default:
-		return 0
-	}
-}
-
-// OrgCanAssignRole checks whether a caller with callerOrgRole may assign targetOrgRole.
-// Owner → any; Admin → operator, user; Operator/User → none.
-func OrgCanAssignRole(callerOrgRole, targetOrgRole string) bool {
-	switch callerOrgRole {
-	case OrgRoleOwner:
-		// Owner can assign admin, operator, user (not another owner — handled in API)
-		return targetOrgRole == OrgRoleAdmin || targetOrgRole == OrgRoleOperator || targetOrgRole == OrgRoleUser
-	case OrgRoleAdmin:
-		return targetOrgRole == OrgRoleOperator || targetOrgRole == OrgRoleUser
-	default:
-		return false
-	}
-}
-
-// ValidOrgRole returns true if the given string is a recognized org role.
-func ValidOrgRole(r string) bool {
-	return r == OrgRoleOwner || r == OrgRoleAdmin || r == OrgRoleOperator || r == OrgRoleUser
-}
 
 // AuditConnection records a remote-control session event reported by a RustDesk client.
 // Mirrors the Node.js console's audit_connections table for API-port consolidation.
@@ -767,7 +742,12 @@ type Database interface {
 	CreateOrgInvitation(inv *OrgInvitation) error
 	GetOrgInvitationByToken(token string) (*OrgInvitation, error)
 	ListOrgInvitations(orgID string) ([]*OrgInvitation, error)
-	UseOrgInvitation(token string) error
+	// RedeemOrgInvitation uses the invitation whose token column is
+	// tokenHash and creates user in its organization, in one transaction.
+	// ErrInvitationNotOpen: no such invitation, or it is used or expired.
+	// ErrOrgUsernameTaken: the organization has user's username. Neither
+	// uses the invitation.
+	RedeemOrgInvitation(tokenHash string, user *OrgUser) (*OrgInvitation, error)
 	DeleteOrgInvitation(id string) error
 
 	// Org Settings

@@ -131,7 +131,7 @@
        "name": "Demo Northwind Clinic",
        "org_id": "<volatile>",
        "org_name": "Demo Northwind Clinic",
-       "role": "admin",
+       "role": "user",
        "settings": "{}",
        "slug": "demo-northwind-clinic"
       }

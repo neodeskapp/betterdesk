@@ -99,12 +99,46 @@ func init() {
 		contract.Case{Name: "unlink-member-text", Method: "DELETE", Path: "/api/panel/org/{created}/members/someone"},
 		contract.Case{Name: "unlink-member-invalid", Method: "DELETE", Path: "/api/panel/org/{created}/members/bad$id"},
 
-		// Invitations
+		// Invitations. The answer of invite carries the invitation's code
+		// once; the list does not
 		contract.Case{
 			Name: "invite", Method: "POST", Path: "/api/panel/org/{created}/invite",
-			Body: map[string]any{"email": "invitee@contract.example.invalid", "role": "user"},
+			Body:          map[string]any{"email": "invitee@contract.example.invalid", "role": "user"},
+			Capture:       map[string]string{"invitation": "id"},
+			CaptureSecret: map[string]string{"invitation_code": "token"},
 		},
 		contract.Case{Name: "created-invitations", Path: "/api/panel/org/{created}/invitations"},
+		// Redeeming one makes a sign-in for the BetterDesk client in the
+		// organization (BUGS L42; recorded from Go, Node had no such
+		// routes). The page's routes need no session and allow 20 requests
+		// per address in 15 minutes, so the chain runs in the admin's turn
+		contract.Case{
+			Name: "invitation-lookup-not-a-code", Method: "POST", Path: "/api/invitations/lookup",
+			Body: map[string]any{"token": "contract"}, Roles: contract.Roles("signed-out"),
+		},
+		contract.Case{
+			Name: "invitation-lookup", Method: "POST", Path: "/api/invitations/lookup",
+			Body: map[string]any{"token": "{secret:invitation_code}"}, Roles: contract.Roles("admin"),
+		},
+		contract.Case{
+			Name: "invitation-redeem-short-password", Method: "POST", Path: "/api/invitations/redeem",
+			Body:  map[string]any{"token": "{secret:invitation_code}", "username": "contract.invitee", "password": "short"},
+			Roles: contract.Roles("admin"),
+		},
+		contract.Case{
+			Name: "invitation-redeem", Method: "POST", Path: "/api/invitations/redeem",
+			Body:  map[string]any{"token": "{secret:invitation_code}", "username": "contract.invitee", "password": "Contract-Invitee-42!"},
+			Roles: contract.Roles("admin"),
+		},
+		contract.Case{
+			Name: "invitation-redeem-again", Method: "POST", Path: "/api/invitations/redeem",
+			Body:  map[string]any{"token": "{secret:invitation_code}", "username": "contract.other", "password": "Contract-Invitee-42!"},
+			Roles: contract.Roles("admin"),
+		},
+		// Revoking: the admin's invitation is used (409), the other roles'
+		// is open (204) or was never made
+		contract.Case{Name: "revoke-invitation", Method: "DELETE", Path: "/api/panel/org/{created}/invitations/{invitation}"},
+		contract.Case{Name: "revoke-invitation-unknown", Method: "DELETE", Path: "/api/panel/org/{created}/invitations/999999999"},
 
 		// Devices
 		contract.Case{

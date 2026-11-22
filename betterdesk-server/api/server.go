@@ -443,6 +443,10 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("DELETE /api/org/{id}/users/{uid}", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleDeleteOrgUser)))
 	mux.HandleFunc("POST /api/org/{id}/invite", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleCreateOrgInvitation)))
 	mux.HandleFunc("GET /api/org/{id}/invitations", s.requireOrgMembership("id", s.requireOrgManager("id", s.handleListOrgInvitations)))
+	mux.HandleFunc("DELETE /api/org/{id}/invitations/{invId}", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleRevokeOrgInvitation)))
+	// Redeeming an invitation: the console's /invite page, through the console only
+	mux.HandleFunc("POST /api/org-invitations/lookup", s.requireConsoleCaller(s.handleLookupOrgInvitation))
+	mux.HandleFunc("POST /api/org-invitations/redeem", s.requireConsoleCaller(s.handleRedeemOrgInvitation))
 	mux.HandleFunc("POST /api/org/{id}/devices", s.requirePermission(auth.PermOrgManageDevices, s.requireOrgMembership("id", s.handleAssignOrgDevice)))
 	mux.HandleFunc("GET /api/org/{id}/devices", s.requireOrgMembership("id", s.handleListOrgDevices))
 	mux.HandleFunc("DELETE /api/org/{id}/devices/{did}", s.requirePermission(auth.PermOrgManageDevices, s.requireOrgMembership("id", s.handleUnassignOrgDevice)))

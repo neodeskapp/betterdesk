@@ -33,10 +33,11 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
+	"unicode/utf16"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/unitronix/betterdesk-server/audit"
 	"github.com/unitronix/betterdesk-server/auth"
@@ -292,12 +293,13 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// An organization role changes nothing, so a role in the body is not
+	// read: the account gets the default role.
 	var body struct {
 		Username    string `json:"username"`
 		DisplayName string `json:"display_name"`
 		Email       string `json:"email"`
 		Password    string `json:"password"`
-		Role        string `json:"role"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
@@ -313,29 +315,6 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
-	if body.Role == "" {
-		body.Role = db.OrgRoleUser
-	}
-	if !db.ValidOrgRole(body.Role) {
-		http.Error(w, `{"error":"invalid role (owner, admin, operator, user)"}`, http.StatusBadRequest)
-		return
-	}
-
-	// Org role boundary: check caller's authority within this org.
-	callerRole := getRoleFromCtx(r)
-
-	// Super/global admins can assign any org role.
-	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerOrgUser := s.callerOrgUser(r, orgID)
-		if callerOrgUser == nil {
-			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
-			return
-		}
-		if !db.OrgCanAssignRole(callerOrgUser.Role, body.Role) {
-			http.Error(w, `{"error":"cannot assign a role higher than your org-level authority"}`, http.StatusForbidden)
-			return
-		}
-	}
 
 	// Check duplicate
 	existing, _ := s.db.GetOrgUserByUsername(orgID, body.Username)
@@ -344,7 +323,7 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	hash, err := auth.HashPassword(body.Password)
 	if err != nil {
 		http.Error(w, `{"error":"password hashing failed"}`, http.StatusInternalServerError)
 		return
@@ -356,8 +335,8 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		Username:     body.Username,
 		DisplayName:  body.DisplayName,
 		Email:        body.Email,
-		PasswordHash: string(hash),
-		Role:         body.Role,
+		PasswordHash: hash,
+		Role:         db.OrgRoleUser,
 		CreatedAt:    time.Now().UTC(),
 	}
 
@@ -419,10 +398,10 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A role in the body is not read: the stored role stays as it is.
 	var body struct {
 		DisplayName *string `json:"display_name"`
 		Email       *string `json:"email"`
-		Role        *string `json:"role"`
 		Password    *string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -442,54 +421,22 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 	if body.Email != nil {
 		user.Email = *body.Email
 	}
-	if body.Role != nil {
-		if !db.ValidOrgRole(*body.Role) {
-			http.Error(w, `{"error":"invalid role"}`, http.StatusBadRequest)
+	if body.Password != nil && *body.Password != "" {
+		if problem := orgPasswordProblem(*body.Password); problem != "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
 			return
 		}
-
-		// Self-modification block: cannot change own org role.
-		if self := s.callerOrgUser(r, user.OrgID); self != nil && self.ID == user.ID {
-			http.Error(w, `{"error":"cannot modify your own org role"}`, http.StatusForbidden)
+		hash, err := auth.HashPassword(*body.Password)
+		if err != nil {
+			http.Error(w, `{"error":"password hashing failed"}`, http.StatusInternalServerError)
 			return
 		}
-
-		// Org role boundary: check caller's authority.
-		callerRole := getRoleFromCtx(r)
-		if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-			callerOrgUser := s.callerOrgUser(r, user.OrgID)
-			if callerOrgUser == nil {
-				http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
-				return
-			}
-			// Cannot promote higher than own org role.
-			if !db.OrgCanAssignRole(callerOrgUser.Role, *body.Role) {
-				http.Error(w, `{"error":"cannot assign a role higher than your org-level authority"}`, http.StatusForbidden)
-				return
-			}
-			// Cannot demote someone at or above own level.
-			if db.OrgRoleLevel(user.Role) >= db.OrgRoleLevel(callerOrgUser.Role) {
-				http.Error(w, `{"error":"cannot modify a user at or above your org-level authority"}`, http.StatusForbidden)
-				return
-			}
-		}
-
-		user.Role = *body.Role
+		user.PasswordHash = hash
 	}
-
 	if err := s.db.UpdateOrgUser(user); err != nil {
 		log.Printf("[org] UpdateOrgUser error: %v", err)
 		http.Error(w, `{"error":"failed to update user"}`, http.StatusInternalServerError)
 		return
-	}
-
-	// Handle password change separately (requires re-hashing)
-	if body.Password != nil && *body.Password != "" {
-		hash, err := bcrypt.GenerateFromPassword([]byte(*body.Password), bcrypt.DefaultCost)
-		if err == nil {
-			user.PasswordHash = string(hash)
-			s.db.UpdateOrgUser(user)
-		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -602,20 +549,22 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// A role in the body is not read: an invitation has the default role.
+	// It is valid for 72 hours unless the body says 1 to 720.
 	var body struct {
 		Email     string `json:"email"`
-		Role      string `json:"role"`
-		ExpiresIn int    `json:"expires_in_hours"` // default 72 hours
+		ExpiresIn int    `json:"expires_in_hours"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	if body.Role == "" {
-		body.Role = db.OrgRoleUser
-	}
-	if body.ExpiresIn <= 0 {
+	if body.ExpiresIn == 0 {
 		body.ExpiresIn = 72
+	}
+	if body.ExpiresIn < 1 || body.ExpiresIn > 720 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "expires_in_hours must be 1 to 720"})
+		return
 	}
 
 	tokenBytes := make([]byte, 32)
@@ -625,12 +574,13 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 	}
 	token := hex.EncodeToString(tokenBytes)
 
+	// The table keeps the code's hash; the answer carries the code, once
 	inv := &db.OrgInvitation{
 		ID:        uuid.New().String(),
 		OrgID:     orgID,
-		Token:     token,
+		Token:     invitationHash(token),
 		Email:     body.Email,
-		Role:      body.Role,
+		Role:      db.OrgRoleUser,
 		ExpiresAt: time.Now().UTC().Add(time.Duration(body.ExpiresIn) * time.Hour),
 	}
 
@@ -639,6 +589,7 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 		http.Error(w, `{"error":"failed to create invitation"}`, http.StatusInternalServerError)
 		return
 	}
+	inv.Token = token
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -656,6 +607,10 @@ func (s *Server) handleListOrgInvitations(w http.ResponseWriter, r *http.Request
 	}
 	if invs == nil {
 		invs = []*db.OrgInvitation{}
+	}
+	// The stored hash is no business of anyone's
+	for _, inv := range invs {
+		inv.Token = ""
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{"invitations": invs})
@@ -681,6 +636,17 @@ func (s *Server) handleListOrgSettings(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"settings": settings})
 }
 
+// retiredOrgSettings are the connection settings an organization once
+// stored (connection policy, file transfer, clipboard, session length).
+// Nothing applied them; connection rules come from the policies and the
+// client feature switches. Values stored before stay readable.
+var retiredOrgSettings = map[string]bool{
+	"connection_policy":        true,
+	"allow_file_transfer":      true,
+	"allow_clipboard":          true,
+	"max_session_duration_min": true,
+}
+
 // PUT /api/org/{id}/settings
 func (s *Server) handleSetOrgSetting(w http.ResponseWriter, r *http.Request) {
 	orgID := r.PathValue("id")
@@ -695,6 +661,10 @@ func (s *Server) handleSetOrgSetting(w http.ResponseWriter, r *http.Request) {
 	}
 	if body.Key == "" {
 		http.Error(w, `{"error":"key is required"}`, http.StatusBadRequest)
+		return
+	}
+	if retiredOrgSettings[body.Key] {
+		http.Error(w, `{"error":"this setting is no longer stored"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -773,6 +743,29 @@ func (s *Server) handleSetOrgAddressBook(w http.ResponseWriter, r *http.Request)
 //  Org User Login
 // ---------------------------------------------------------------------------
 
+// orgLoginDummyHash is a hash of the server's kind that no account has,
+// checked when the name is unknown.
+var orgLoginDummyHash = sync.OnceValue(func() string {
+	hash, err := auth.HashPassword("no account has this password")
+	if err != nil {
+		return ""
+	}
+	return hash
+})
+
+// orgPasswordProblem says what is wrong with a new password of an
+// organization account, "" when nothing: the server's rule of 8 to 128
+// characters, counted in UTF-16 units as the console counts them.
+func orgPasswordProblem(password string) string {
+	switch n := len(utf16.Encode([]rune(password))); {
+	case n < 8:
+		return "Password must be at least 8 characters"
+	case n > 128:
+		return "Password must be at most 128 characters"
+	}
+	return ""
+}
+
 // POST /api/org/login
 func (s *Server) handleOrgLogin(w http.ResponseWriter, r *http.Request) {
 	clientIP := s.remoteIP(r)
@@ -816,16 +809,14 @@ func (s *Server) handleOrgLogin(w http.ResponseWriter, r *http.Request) {
 
 	user, _ := s.db.GetOrgUserByUsername(orgID, body.Username)
 	if user == nil {
-		// Timing-safe: compare against dummy hash
-		bcrypt.CompareHashAndPassword(
-			[]byte("$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-			[]byte(body.Password),
-		)
+		// The same work as for an account, so the answer's time does not
+		// tell which names exist
+		auth.VerifyPassword(orgLoginDummyHash(), body.Password)
 		http.Error(w, `{"error":"invalid credentials"}`, http.StatusUnauthorized)
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(body.Password)); err != nil {
+	if !auth.VerifyPassword(user.PasswordHash, body.Password) {
 		http.Error(w, `{"error":"invalid credentials"}`, http.StatusUnauthorized)
 		return
 	}
@@ -1082,9 +1073,9 @@ func (s *Server) handleLinkUserToOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A role in the body is not read: the membership gets the default role.
 	var body struct {
-		UserID int64  `json:"user_id"`
-		Role   string `json:"role"`
+		UserID int64 `json:"user_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
@@ -1095,31 +1086,9 @@ func (s *Server) handleLinkUserToOrg(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"user_id is required"}`, http.StatusBadRequest)
 		return
 	}
-	if body.Role == "" {
-		body.Role = db.OrgRoleUser
-	}
-	if !db.ValidOrgRole(body.Role) {
-		http.Error(w, `{"error":"invalid role (owner, admin, operator, user)"}`, http.StatusBadRequest)
-		return
-	}
-
-	// Org role boundary: check caller's authority within this org.
-	callerRole := getRoleFromCtx(r)
-
-	if !auth.IsSuperAdminRole(callerRole) && callerRole != auth.RoleGlobalAdmin {
-		callerOrgUser := s.callerOrgUser(r, orgID)
-		if callerOrgUser == nil {
-			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
-			return
-		}
-		if !db.OrgCanAssignRole(callerOrgUser.Role, body.Role) {
-			http.Error(w, `{"error":"cannot assign a role higher than your org-level authority"}`, http.StatusForbidden)
-			return
-		}
-	}
 
 	// Link user
-	orgUser, err := s.db.LinkUserToOrg(orgID, body.UserID, body.Role)
+	orgUser, err := s.db.LinkUserToOrg(orgID, body.UserID, db.OrgRoleUser)
 	if err != nil {
 		log.Printf("[org] LinkUserToOrg error: %v", err)
 		if strings.Contains(err.Error(), "already linked") {
@@ -1143,7 +1112,7 @@ func (s *Server) handleLinkUserToOrg(w http.ResponseWriter, r *http.Request) {
 		s.auditLog.Log("org_user_linked", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"org_id":  orgID,
 			"user_id": fmt.Sprintf("%d", body.UserID),
-			"role":    body.Role,
+			"role":    db.OrgRoleUser,
 		})
 	}
 
@@ -1303,9 +1272,9 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A role in the body is not read: the membership gets the default role.
 	var body struct {
 		OrgID orgIDInput `json:"org_id"`
-		Role  string     `json:"role"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
@@ -1317,14 +1286,6 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"org_id is required"}`, http.StatusBadRequest)
 		return
 	}
-	if body.Role == "" {
-		body.Role = db.OrgRoleUser
-	}
-	if !db.ValidOrgRole(body.Role) {
-		http.Error(w, `{"error":"invalid role (owner, admin, operator, user)"}`, http.StatusBadRequest)
-		return
-	}
-
 	// Verify org exists
 	org, _ := s.db.GetOrganization(orgID)
 	if org == nil {
@@ -1341,13 +1302,9 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"you are not a member of this organization"}`, http.StatusForbidden)
 			return
 		}
-		if !db.OrgCanAssignRole(callerOrgUser.Role, body.Role) {
-			http.Error(w, `{"error":"cannot assign a role higher than your org-level authority"}`, http.StatusForbidden)
-			return
-		}
 	}
 
-	orgUser, err := s.db.LinkUserToOrg(orgID, userID, body.Role)
+	orgUser, err := s.db.LinkUserToOrg(orgID, userID, db.OrgRoleUser)
 	if err != nil {
 		log.Printf("[org] LinkUserToOrg (from users) error: %v", err)
 		if strings.Contains(err.Error(), "already linked") {
@@ -1367,7 +1324,7 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 		s.auditLog.Log("user_org_assigned", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"user_id": userIDStr,
 			"org_id":  orgID,
-			"role":    body.Role,
+			"role":    db.OrgRoleUser,
 		})
 	}
 

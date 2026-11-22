@@ -5,7 +5,12 @@
  * tests/unit/clients/registrations.test.ts.
  */
 
-import type { EnrollmentDecision, LanRegistration, PendingEnrollment } from '#lib/api/registrations.ts';
+import type {
+	EnrollmentDecision,
+	ExistingDevice,
+	LanRegistration,
+	PendingEnrollment
+} from '#lib/api/registrations.ts';
 import { parseDate } from '#lib/i18n/format.ts';
 
 /** The console's own queue: BetterDesk clients on the local network */
@@ -33,6 +38,8 @@ export interface RequestRow {
 	decided_by: string;
 	reason: string;
 	banned: boolean;
+	/** A waiting LAN request whose ID is already a device: that device */
+	existing: ExistingDevice | null;
 }
 
 function status(s: string): RequestStatus {
@@ -55,7 +62,8 @@ export function fromLan(item: LanRegistration): RequestRow {
 		decided_at: item.approved_at || (st === 'rejected' ? item.updated_at : ''),
 		decided_by: item.approved_by,
 		reason: item.rejected_reason,
-		banned: false
+		banned: false,
+		existing: st === 'pending' ? item.existing_device : null
 	};
 }
 
@@ -74,7 +82,8 @@ export function fromPending(item: PendingEnrollment): RequestRow {
 		decided_at: '',
 		decided_by: '',
 		reason: '',
-		banned: false
+		banned: false,
+		existing: null
 	};
 }
 
@@ -94,7 +103,8 @@ export function fromHistory(item: EnrollmentDecision): RequestRow {
 		// The Go server records the console's API key, not the person
 		decided_by: /^apikey:/.test(item.actor) ? '' : item.actor,
 		reason: '',
-		banned: item.banned
+		banned: item.banned,
+		existing: null
 	};
 }
 

@@ -1,31 +1,33 @@
 <!--
   Members tab: the people in the organization and the invitations. Both
   lists and every action need org.manage_users (the members list also
-  user.view); without, the tab says the role cannot see them.
+  user.view); without, the tab says the role cannot see them. An account
+  that exists only in the organization (no server account behind it) is
+  a sign-in for the BetterDesk client and carries a tag that says so.
+  An invitation makes such a sign-in: the dialog shows its link once, the
+  list shows when it ends and when it was used, and an open one can be
+  revoked.
 -->
 <script lang="ts">
-	import { removeOrgUser, type OrgInvitation, type OrgUser } from '#lib/api/orgs.ts';
+	import { removeOrgUser, revokeInvitation, type OrgInvitation, type OrgUser } from '#lib/api/orgs.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { orgRoleLabel } from '#lib/people/orgs.ts';
+	import { invitationState } from '#lib/people/orgs.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
-	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Table from '#lib/ui/Table.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import User from '#lib/ui/User.svelte';
-	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import AddMemberDialog from './AddMemberDialog.svelte';
 	import InviteDialog from './InviteDialog.svelte';
-	import MemberRoleDialog from './MemberRoleDialog.svelte';
 
 	interface Props {
 		orgId: string;
@@ -45,7 +47,26 @@
 
 	let adding = $state(false);
 	let inviting = $state(false);
-	let roleFor = $state.raw<OrgUser | null>(null);
+
+	async function revoke(i: OrgInvitation) {
+		const ok = await confirm({
+			title: t('organizations.revoke_invitation_title'),
+			message: t('organizations.revoke_invitation_text'),
+			confirmLabel: t('organizations.revoke_invitation'),
+			confirmIcon: ICONS.revoke,
+			danger: true
+		});
+		if (!ok) return;
+		try {
+			await revokeInvitation(orgId, i.id);
+			toast.success(t('organizations.invitation_revoked'));
+			oninvitations();
+		} catch (err) {
+			toast.error(
+				`${t('organizations.invitation_revoke_failed')} ${err instanceof Error ? err.message : ''}`.trim()
+			);
+		}
+	}
 
 	async function remove(m: OrgUser) {
 		const ok = await confirm({
@@ -73,7 +94,6 @@
 			sortValue: (m) => m.username.toLowerCase()
 		},
 		{ id: 'email', label: t('organizations.email'), cell: emailCell },
-		{ id: 'role', label: t('organizations.role'), cell: roleCell, sortValue: (m) => m.role },
 		{
 			id: 'last_login',
 			label: t('organizations.last_login'),
@@ -94,46 +114,49 @@
 	]);
 
 	const inviteColumns = $derived<Column<OrgInvitation>[]>([
-		{ id: 'token', label: t('organizations.token'), cell: tokenCell },
 		{ id: 'email', label: t('organizations.email'), cell: inviteEmailCell },
-		{ id: 'role', label: t('organizations.role'), cell: inviteRoleCell },
 		{
 			id: 'expires',
 			label: t('organizations.expires'),
 			cell: expiresCell,
 			sortValue: (i) => i.expires_at ?? ''
 		},
-		{ id: 'used', label: t('organizations.used'), cell: usedCell, sortValue: (i) => i.used_at ?? '' }
+		{ id: 'used', label: t('organizations.used'), cell: usedCell, sortValue: (i) => i.used_at ?? '' },
+		{
+			id: 'actions',
+			label: t('organizations.actions'),
+			labelHidden: true,
+			cell: inviteActions,
+			align: 'actions' as const
+		}
 	]);
 </script>
 
-{#snippet nameCell(m: OrgUser)}<User user={m.username} avatar />{#if m.display_name}<span class="cell-sub"
+{#snippet nameCell(m: OrgUser)}<User user={m.username} avatar />{#if !m.server_user_id}
+		<Tag label={t('organizations.client_signin')} />{/if}{#if m.display_name}<span class="cell-sub"
 			>{m.display_name}</span
 		>{/if}{/snippet}
 {#snippet emailCell(m: OrgUser)}{#if m.email}{m.email}{:else}<Empty />{/if}{/snippet}
-{#snippet roleCell(m: OrgUser)}<Tag label={orgRoleLabel(m.role, t)} />{/snippet}
 {#snippet lastCell(m: OrgUser)}<Time value={m.last_login} empty={t('users.never')} />{/snippet}
 {#snippet memberMenu(m: OrgUser)}<MenuButton
 		kebab
 		label={t('organizations.actions_for', { name: m.username })}
 	>
-		<MenuItem class="act-role" icon={ICONS.edit} onselect={() => (roleFor = m)}
-			>{t('organizations.edit_role')}</MenuItem
-		>
-		<MenuDivider />
 		<MenuItem class="act-remove" icon={ICONS.unlink} danger onselect={() => void remove(m)}
 			>{t('organizations.remove_from_org')}</MenuItem
 		>
 	</MenuButton>{/snippet}
 
-{#snippet tokenCell(i: OrgInvitation)}<ValueCopy
-		value={i.token ? `${i.token.substring(0, 16)}…` : ''}
-		copy={false}
-	/>{/snippet}
 {#snippet inviteEmailCell(i: OrgInvitation)}{#if i.email}{i.email}{:else}<Empty />{/if}{/snippet}
-{#snippet inviteRoleCell(i: OrgInvitation)}<Tag label={orgRoleLabel(i.role, t)} />{/snippet}
 {#snippet expiresCell(i: OrgInvitation)}<Time value={i.expires_at} relative={false} />{/snippet}
 {#snippet usedCell(i: OrgInvitation)}<Time value={i.used_at} empty={t('organizations.not_used')} />{/snippet}
+{#snippet inviteActions(i: OrgInvitation)}{#if invitationState(i) !== 'used'}<Button
+			size="sm"
+			variant="danger-quiet"
+			class="act-revoke"
+			aria-label="{t('organizations.revoke_invitation')}: {i.email || i.id}"
+			onclick={() => void revoke(i)}>{t('organizations.revoke_invitation')}</Button
+		>{/if}{/snippet}
 
 <section class="section" aria-label={t('organizations.users')}>
 	{#if canUsers}
@@ -169,6 +192,7 @@
 			>
 		{/if}
 	</div>
+	<p class="section-note">{t('organizations.invitations_note')}</p>
 	{#if !canUsers}
 		<States message={t('organizations.no_permission')} />
 	{:else if invitationsError}
@@ -203,17 +227,6 @@
 		onsaved={() => {
 			inviting = false;
 			oninvitations();
-		}}
-	/>
-{/if}
-{#if roleFor}
-	<MemberRoleDialog
-		{orgId}
-		member={roleFor}
-		onclose={() => (roleFor = null)}
-		onsaved={() => {
-			roleFor = null;
-			onmembers();
 		}}
 	/>
 {/if}

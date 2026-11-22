@@ -125,6 +125,12 @@
        "console_url": null,
        "created_at": "<volatile>",
        "device_id": "900100021",
+       "existing_device": {
+        "deleted": false,
+        "id": "900100021",
+        "in_scope": true,
+        "name": "demo-kiosk-canteen"
+       },
        "hostname": "contract-lan-kiosk",
        "id": 29,
        "ip_address": "<client-ip>",
@@ -193,6 +199,12 @@
        "console_url": null,
        "created_at": "<volatile>",
        "device_id": "900100021",
+       "existing_device": {
+        "deleted": false,
+        "id": "900100021",
+        "in_scope": true,
+        "name": "demo-kiosk-canteen"
+       },
        "hostname": "contract-lan-kiosk",
        "id": 39,
        "ip_address": "<client-ip>",
@@ -261,6 +273,12 @@
        "console_url": null,
        "created_at": "<volatile>",
        "device_id": "900100021",
+       "existing_device": {
+        "deleted": false,
+        "id": "900100021",
+        "in_scope": true,
+        "name": "demo-kiosk-canteen"
+       },
        "hostname": "contract-lan-kiosk",
        "id": 44,
        "ip_address": "<client-ip>",

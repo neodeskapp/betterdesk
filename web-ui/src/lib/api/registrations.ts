@@ -30,6 +30,20 @@ const Bool = v.optional(
 	false
 );
 
+/**
+ * The device a waiting LAN request's ID already names, also a deleted one:
+ * approving the request moves and renames it. Outside the approver's
+ * device scope only the ID is told (in_scope false), and the server
+ * refuses the approval.
+ */
+export const ExistingDevice = v.object({
+	id: Text,
+	name: Text,
+	deleted: Bool,
+	in_scope: v.optional(v.boolean(), true)
+});
+export type ExistingDevice = v.InferOutput<typeof ExistingDevice>;
+
 /* The stored row also carries the device's access token and key; the schema
    keeps only what the page shows, so they never reach the page's state */
 export const LanRegistration = v.object({
@@ -45,7 +59,8 @@ export const LanRegistration = v.object({
 	approved_at: Text,
 	rejected_reason: Text,
 	created_at: Text,
-	updated_at: Text
+	updated_at: Text,
+	existing_device: v.optional(v.nullable(ExistingDevice), null)
 });
 export type LanRegistration = v.InferOutput<typeof LanRegistration>;
 
@@ -137,9 +152,23 @@ export interface ApproveInput {
 	group_guids: string[];
 	/** RustDesk clients only */
 	sync_mode?: SyncMode;
+	/** LAN requests only: the approver confirmed that the request's ID is meant to be the existing device */
+	confirm_existing_device?: boolean;
 }
 
 const Result = v.looseObject({ success: v.optional(v.boolean()), error: v.optional(v.unknown()) });
+
+/**
+ * The device the server named when it refused a LAN approval for an ID
+ * that is already a device (409, code existing_device); null for any
+ * other error.
+ */
+export function refusedForExisting(err: unknown): ExistingDevice | null {
+	if (!(err instanceof ApiError) || err.status !== 409 || err.code !== 'existing_device') return null;
+	const data = err.data && typeof err.data === 'object' ? (err.data as Record<string, unknown>) : {};
+	const parsed = v.safeParse(ExistingDevice, data.existing_device);
+	return parsed.success ? parsed.output : null;
+}
 
 export async function approveLan(id: string, body: ApproveInput): Promise<void> {
 	await request(`/api/registrations/${encodeURIComponent(id)}/approve`, { method: 'PUT', body });

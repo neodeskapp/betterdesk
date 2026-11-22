@@ -175,14 +175,14 @@
        "email": "manager@northwind.example.invalid",
        "id": "<volatile>",
        "org_id": "<volatile>",
-       "role": "operator",
+       "role": "user",
        "username": "demo.practice"
       },
       {
        "created_at": "<volatile>",
        "id": "<volatile>",
        "org_id": "<volatile>",
-       "role": "admin",
+       "role": "user",
        "server_user_id": 2,
        "username": "demo_operator"
       },

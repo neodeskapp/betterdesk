@@ -1,22 +1,11 @@
 /**
- * The organization pages' rules without a DOM: labels, the slug a name
- * suggests, the stored settings the Settings tab edits, the shared
- * address book (parse, edit as rows, check the JSON), open invitations and
- * the support packages that belong to an organization.
+ * The organization pages' rules without a DOM: the slug a name suggests,
+ * the shared address book (parse, edit as rows, check the JSON), open
+ * invitations and the support packages that belong to an organization.
  */
 
-import type { Contract, OrgInvitation, OrgSetting } from '#lib/api/orgs.ts';
+import type { Contract, OrgInvitation } from '#lib/api/orgs.ts';
 import { parseDate } from '#lib/i18n/format.ts';
-
-type T = (key: string, params?: Record<string, string | number>) => string;
-
-/** A role inside an organization ("user" reads as Member); unknown roles as they are */
-export function orgRoleLabel(role: string, t: T): string {
-	if (!role) return '';
-	const key = `organizations.role_${role}`;
-	const text = t(key);
-	return text === key ? role : text;
-}
 
 /** "Harbor Logistics GmbH" → "harbor-logistics-gmbh" (at most 64 characters) */
 export function slugify(name: string): string {
@@ -27,61 +16,45 @@ export function slugify(name: string): string {
 		.substring(0, 64);
 }
 
-/* ── Stored settings (Settings tab) ── */
-
-export interface OrgSessionSettings {
-	connection_policy: string;
-	allow_file_transfer: boolean;
-	allow_clipboard: boolean;
-	max_session_duration_min: number;
-}
-
-export const CONNECTION_POLICIES = ['unattended', 'attended', 'ask_always'] as const;
-
-export const SETTING_DEFAULTS: OrgSessionSettings = {
-	connection_policy: 'unattended',
-	allow_file_transfer: true,
-	allow_clipboard: true,
-	max_session_duration_min: 120
-};
-
-/** The four settings the tab edits, from the stored key/value rows (missing keys take the defaults) */
-export function readSessionSettings(rows: readonly OrgSetting[]): OrgSessionSettings {
-	const out = { ...SETTING_DEFAULTS };
-	for (const { key, value } of rows) {
-		if (key === 'connection_policy' && value) out.connection_policy = value;
-		else if (key === 'allow_file_transfer') out.allow_file_transfer = String(value) !== 'false';
-		else if (key === 'allow_clipboard') out.allow_clipboard = String(value) !== 'false';
-		else if (key === 'max_session_duration_min') {
-			const n = Number.parseInt(value, 10);
-			out.max_session_duration_min = Number.isFinite(n) ? n : SETTING_DEFAULTS.max_session_duration_min;
-		}
-	}
-	return out;
-}
-
-/** The key/value pairs the server stores, in the old order */
-export function sessionSettingRows(s: OrgSessionSettings): [string, string][] {
-	return [
-		['connection_policy', s.connection_policy || SETTING_DEFAULTS.connection_policy],
-		['allow_file_transfer', s.allow_file_transfer ? 'true' : 'false'],
-		['allow_clipboard', s.allow_clipboard ? 'true' : 'false'],
-		[
-			'max_session_duration_min',
-			String(Number.isFinite(s.max_session_duration_min) ? s.max_session_duration_min : 120)
-		]
-	];
-}
-
 /* ── Invitations ── */
+
+export type InvitationState = 'open' | 'used' | 'expired';
+
+/** Used, expired (at or after its time), or open */
+export function invitationState(i: OrgInvitation, now = Date.now()): InvitationState {
+	if (i.used_at && parseDate(i.used_at)) return 'used';
+	const exp = parseDate(i.expires_at);
+	return exp && exp.getTime() <= now ? 'expired' : 'open';
+}
 
 /** Invitations nobody used yet that have not expired */
 export function openInvitations(list: readonly OrgInvitation[], now = Date.now()): number {
-	return list.filter((i) => {
-		if (i.used_at && parseDate(i.used_at)) return false;
-		const exp = parseDate(i.expires_at);
-		return !(exp && exp.getTime() < now);
-	}).length;
+	return list.filter((i) => invitationState(i, now) === 'open').length;
+}
+
+/**
+ * The link an invitation is sent as: the console's /invite page with the
+ * code after #, so the code is not sent to the server with the page, nor
+ * written into its logs or a Referer.
+ */
+export function invitationLink(origin: string, token: string): string {
+	return `${origin}/invite#${encodeURIComponent(token)}`;
+}
+
+/**
+ * The code in what someone pasted or opened: the part after # of an
+ * invitation link, or the code itself; "" when there is none.
+ */
+export function invitationCode(text: string): string {
+	let raw = text.trim();
+	const hash = raw.indexOf('#');
+	if (hash >= 0) raw = raw.slice(hash + 1);
+	try {
+		raw = decodeURIComponent(raw);
+	} catch {
+		return '';
+	}
+	return /^[0-9a-f]{64}$/i.test(raw) ? raw.toLowerCase() : '';
 }
 
 /* ── Support packages ── */

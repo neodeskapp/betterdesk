@@ -2,7 +2,8 @@
 // /api/panel/org: organizations, their users and members, invitations,
 // devices, settings, the shared address book and the peer credential
 // vault, all kept by the API server, and the device and user groups the
-// console links to an organization.
+// console links to an organization; and the two routes under
+// /api/invitations that redeem an invitation (invitations.go).
 //
 // Most routes pass the request on to the API server and answer with what
 // it said. Reading needs user.view, which the roles of the pages that read
@@ -24,11 +25,17 @@ type handlers struct {
 	groups  *devicegroups.Service
 	backend *goapi.Backend
 	log     *kit.Logger
+	// logAction writes the audit log (kit.Deps.LogAction); nil writes
+	// nothing.
+	logAction func(r *http.Request, action, details string) error
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
 	h := &handlers{api: d.GoAPI, groups: d.DeviceGroups, backend: d.Backend, log: d.Log}
+	if d.Audit != nil {
+		h.logAction = d.LogAction
+	}
 	r := d.Router
 	auth := d.RequireAuth
 	can := d.RequirePermission
@@ -51,9 +58,13 @@ func Register(d *kit.Deps) {
 	r.Post("/api/panel/org/{id}/members", h.pass("POST", orgPath("/members"), true), auth, can("org.manage_users"))
 	r.Delete("/api/panel/org/{id}/members/{userId}", h.removeMember, auth, can("org.manage_users"))
 
-	// Invitations
-	r.Post("/api/panel/org/{id}/invite", h.pass("POST", orgPath("/invite"), true), auth, can("org.manage_users"))
+	// Invitations, and the two routes of the page that redeems one
+	// (invitations.go), which need no session
+	r.Post("/api/panel/org/{id}/invite", h.invite, auth, can("org.manage_users"))
 	r.Get("/api/panel/org/{id}/invitations", h.pass("GET", orgPath("/invitations"), false), auth, can("org.manage_users"))
+	r.Delete("/api/panel/org/{id}/invitations/{invId}", h.revokeInvitation, auth, can("org.manage_users"))
+	r.Post("/api/invitations/lookup", h.lookupInvitation, invitationLimit(d)...)
+	r.Post("/api/invitations/redeem", h.redeemInvitation, invitationLimit(d)...)
 
 	// Devices
 	r.Post("/api/panel/org/{id}/devices", h.assignDevice, auth, can("org.manage_devices"))
@@ -74,6 +85,15 @@ func Register(d *kit.Deps) {
 	r.Delete("/api/panel/org/{id}/peer-credentials/{peerId}", h.setCredential, auth, can("org.edit"))
 
 	r.Get("/api/panel/org/{id}/device-groups", h.deviceGroups, auth, can("user.view"))
+}
+
+// invitationLimit is the limit of the invitation page's routes; none for a
+// Deps without limiters.
+func invitationLimit(d *kit.Deps) []kit.Middleware {
+	if d.Limits == nil || d.Limits.Invitation == nil {
+		return nil
+	}
+	return []kit.Middleware{d.Limits.Invitation.Middleware}
 }
 
 // unreachable is the answer's error when the API server gave no body.
