@@ -1065,7 +1065,7 @@
     "connection_mode_logged_in_only_initiator": "Richiedi il login del client per gli iniziatori",
     "connection_mode_logged_in_only_initiator_hint": "Opzionale. I client RustDesk standard richiedono una sessione valida dell'account BetterDesk per avviare connessioni PunchHole o relay. Web Remote resta disponibile tramite l'autenticazione del pannello; la password o l'approvazione del dispositivo di destinazione resta necessaria.",
     "connection_mode_operator_only_outbound": "Consenti sessioni in uscita solo ad amministratori e operatori",
-    "connection_mode_operator_only_outbound_hint": "Opzionale. I client RustDesk standard devono usare una sessione BetterDesk attiva con il permesso device.connect per avviare connessioni PunchHole o relay. I dispositivi approvati senza questo accesso non possono avviare connessioni; Web Remote resta disponibile tramite l?autenticazione del pannello.",
+    "connection_mode_operator_only_outbound_hint": "Opzionale. I client RustDesk standard devono usare una sessione BetterDesk attiva con il permesso device.connect per avviare connessioni PunchHole o relay. I dispositivi approvati senza questo accesso non possono avviare connessioni; Web Remote resta disponibile tramite l'autenticazione del pannello.",
     "restart_required_title": "Redèmarrer le(s) servizio(s) BetterDesk concernè(s) ? Les connessiones actives peuvent ètre brevemente interrotte.",
     "restart_required_message": "Configurazione enregistrèe. Redèmarrer le servizio concernè maintenant pour que le modifiche entrino in vigore ?",
     "restart_required_waiting": "En attesa du indietro en ligne de la console…",
