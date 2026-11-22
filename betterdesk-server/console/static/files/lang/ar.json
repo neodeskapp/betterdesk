@@ -941,7 +941,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml (التنسيق)",
     "advanced_restart_none": "لا تتطلب هذا الملف إعادة تشغيل الخدمة.",
     "enrollment_title": "تسجيل الأجهزة (RustDesk)",
-    "enrollment_desc": "كيف يوافق المشغلون على عملاء RustDesk الجدد في صفحة طلبات التسجيل.",
+    "enrollment_desc": "كيف تتم الموافقة على عملاء RustDesk الجدد في صفحة طلبات التسجيل.",
     "enrollment_rich_approve": "نموذج موافقة كامل (الاسم، المجلد، المجموعات، العلامات)",
     "enrollment_rich_approve_hint": "يعرض مربع حوار تفصيلي عند الموافقة على طلبات التسجيل أو تسجيل الشبكة المحلية.",
     "enrollment_tag_picker": "اختر علامات من علامات الأجهزة الموجودة",

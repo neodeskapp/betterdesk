@@ -934,7 +934,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml（编排）",
     "advanced_restart_none": "此文件无需重启服务。",
     "enrollment_title": "设备注册（RustDesk）",
-    "enrollment_desc": "操作员如何在注册请求页面批准新的 RustDesk 客户端。",
+    "enrollment_desc": "如何在注册请求页面批准新的 RustDesk 客户端。",
     "enrollment_rich_approve": "完整审批表单（名称、文件夹、分组、标签）",
     "enrollment_rich_approve_hint": "在审批注册或 LAN 注册请求时显示详细对话框。",
     "enrollment_tag_picker": "从现有设备标签中选择标签",

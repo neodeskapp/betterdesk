@@ -934,7 +934,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml (orchestrazione)",
     "advanced_restart_none": "Nessuno redèmarrage de servizio è richiesto pour ce file.",
     "enrollment_title": "Inscription de il dispositivo (RustDesk)",
-    "enrollment_desc": "Come gli operatori approvano i nuovi client RustDesk nella pagina Richieste di registrazione.",
+    "enrollment_desc": "Come vengono approvati i nuovi client RustDesk nella pagina Richieste di registrazione.",
     "enrollment_rich_approve": "Formulaire d'approbation complet (nome, cartella, groupes, tags)",
     "enrollment_rich_approve_hint": "Affiche un dialogue dètaillè lors de l'approbation des demandes d'inscription ou d'enregistrement LAN.",
     "enrollment_tag_picker": "Sèlectionner des tags parmi les tags d'dispositivi existants",

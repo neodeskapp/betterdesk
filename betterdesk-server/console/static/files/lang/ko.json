@@ -934,7 +934,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml (오케스트레이션)",
     "advanced_restart_none": "이 파일은 서비스 재시작이 필요하지 않습니다.",
     "enrollment_title": "기기 등록(RustDesk)",
-    "enrollment_desc": "운영자가 등록 요청 페이지에서 새 RustDesk 클라이언트를 승인하는 방식입니다.",
+    "enrollment_desc": "등록 요청 페이지에서 새 RustDesk 클라이언트를 승인하는 방식입니다.",
     "enrollment_rich_approve": "전체 승인 양식(이름, 폴더, 그룹, 태그)",
     "enrollment_rich_approve_hint": "등록 또는 LAN 등록 요청 승인 시 상세 대화상자를 표시합니다.",
     "enrollment_tag_picker": "기존 기기 태그에서 태그 선택",

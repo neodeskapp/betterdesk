@@ -838,7 +838,7 @@
         "advanced_file_docker-compose": "Docker: docker-compose.yml",
         "advanced_restart_none": "No service restart is required for this file.",
         "enrollment_title": "Device enrollment (RustDesk)",
-        "enrollment_desc": "How operators approve new RustDesk clients on the Enrollment requests page.",
+        "enrollment_desc": "How new RustDesk clients are approved on the Enrollment requests page.",
         "enrollment_rich_approve": "Full approval form (name, folder, groups, tags)",
         "enrollment_rich_approve_hint": "Shows a detailed dialog when approving enrollment or LAN registration requests.",
         "enrollment_tag_picker": "Pick tags from existing device tags",

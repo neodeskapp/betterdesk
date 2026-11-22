@@ -922,7 +922,7 @@
     "advanced_error_invalid": "Ogiltigt filinnehåll",
     "advanced_error_not_writable": "Filen är inte skrivbar av konsolprocessen",
     "enrollment_title": "Enhetsregistrering (RustDesk)",
-    "enrollment_desc": "Hur operatörer godkänner nya RustDesk-klienter på sidan Registreringsförfrågningar.",
+    "enrollment_desc": "Hur nya RustDesk-klienter godkänns på sidan Registreringsförfrågningar.",
     "enrollment_rich_approve": "Fullständigt godkännandeformulär (namn, mapp, grupper, taggar)",
     "enrollment_rich_approve_hint": "Visar en detaljerad dialog vid godkännande av registreringsförfrågningar.",
     "enrollment_tag_picker": "Välj taggar från befintliga enhetstaggar",

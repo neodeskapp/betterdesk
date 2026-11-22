@@ -940,7 +940,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml (điều phối)",
     "advanced_restart_none": "Tệp này không cần khởi động lại dịch vụ.",
     "enrollment_title": "Đăng ký thiết bị (RustDesk)",
-    "enrollment_desc": "Cách người vận hành duyệt ứng dụng RustDesk mới trên trang Yêu cầu đăng ký.",
+    "enrollment_desc": "Cách duyệt ứng dụng RustDesk mới trên trang Yêu cầu đăng ký.",
     "enrollment_rich_approve": "Biểu mẫu phê duyệt đầy đủ (tên, thư mục, nhóm, thẻ)",
     "enrollment_rich_approve_hint": "Hiển thị hộp thoại chi tiết khi phê duyệt yêu cầu đăng ký hoặc đăng ký LAN.",
     "enrollment_tag_picker": "Chọn thẻ từ thẻ thiết bị hiện có",

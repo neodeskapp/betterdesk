@@ -934,7 +934,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml (orkestratie)",
     "advanced_restart_none": "Fur diese Bestand ist kein Serviceherstart erforderlich.",
     "enrollment_title": "Gerateregistrierung (RustDesk)",
-    "enrollment_desc": "Hoe operators nieuwe RustDesk-clients goedkeuren op de pagina Registratieverzoeken.",
+    "enrollment_desc": "Hoe nieuwe RustDesk-clients worden goedgekeurd op de pagina Registratieverzoeken.",
     "enrollment_rich_approve": "Vollstandiges Goedkeuringsformular (Name, Map, Groepen, Tags)",
     "enrollment_rich_approve_hint": "Zeigt einen detaillierten Dialog bei der Goedkeuring von Registrierungs- oder LAN-Registrierungsanfragen an.",
     "enrollment_tag_picker": "Tags aus vorhandenen Gerate-Tags auswahlen",

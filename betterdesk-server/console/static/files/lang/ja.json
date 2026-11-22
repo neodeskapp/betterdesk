@@ -934,7 +934,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml（オーケストレーション）",
     "advanced_restart_none": "このファイルにはサービスの再起動は不要です。",
     "enrollment_title": "デバイス登録（RustDesk）",
-    "enrollment_desc": "オペレーターが登録リクエストページで新しい RustDesk クライアントを承認する方法です。",
+    "enrollment_desc": "登録リクエストページで新しい RustDesk クライアントを承認する方法です。",
     "enrollment_rich_approve": "完全な承認フォーム（名前、フォルダー、グループ、タグ）",
     "enrollment_rich_approve_hint": "登録または LAN 登録リクエストを承認する際に詳細ダイアログを表示します。",
     "enrollment_tag_picker": "既存のデバイスタグからタグを選択",

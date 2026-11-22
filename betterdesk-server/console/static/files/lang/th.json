@@ -940,7 +940,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml (การ orchestration)",
     "advanced_restart_none": "ไฟล์นี้ไม่ต้องรีสตาร์ทบริการ",
     "enrollment_title": "การลงทะเบียนอุปกรณ์ (RustDesk)",
-    "enrollment_desc": "วิธีที่ผู้ดำเนินการอนุมัติไคลเอนต์ RustDesk ใหม่ในหน้าคำขอลงทะเบียน",
+    "enrollment_desc": "วิธีอนุมัติไคลเอนต์ RustDesk ใหม่ในหน้าคำขอลงทะเบียน",
     "enrollment_rich_approve": "แบบฟอร์มอนุมัติเต็มรูปแบบ (ชื่อ, โฟลเดอร์, กลุ่ม, แท็ก)",
     "enrollment_rich_approve_hint": "แสดงกล่องโต้ตอบโดยละเอียดเมื่ออนุมัติคำขอลงทะเบียนหรือ LAN",
     "enrollment_tag_picker": "เลือกแท็กจากแท็กอุปกรณ์ที่มีอยู่",

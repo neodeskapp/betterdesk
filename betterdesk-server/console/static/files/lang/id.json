@@ -940,7 +940,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml (orkestrasi)",
     "advanced_restart_none": "File ini tidak memerlukan restart layanan.",
     "enrollment_title": "Pendaftaran perangkat (RustDesk)",
-    "enrollment_desc": "Cara operator menyetujui klien RustDesk baru di halaman Permintaan pendaftaran.",
+    "enrollment_desc": "Cara klien RustDesk baru disetujui di halaman Permintaan pendaftaran.",
     "enrollment_rich_approve": "Formulir persetujuan lengkap (nama, folder, grup, tag)",
     "enrollment_rich_approve_hint": "Menampilkan dialog terperinci saat menyetujui permintaan pendaftaran atau pendaftaran LAN.",
     "enrollment_tag_picker": "Pilih tag dari tag perangkat yang ada",

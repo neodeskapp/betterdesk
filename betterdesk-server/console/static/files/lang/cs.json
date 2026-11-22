@@ -934,7 +934,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml (orkiestracja)",
     "advanced_restart_none": "Ten soubor nie vyžaduje restart uslugi.",
     "enrollment_title": "Rejestracja urzadzen (RustDesk)",
-    "enrollment_desc": "Jak operátoři schvalují nové klienty RustDesk na stránce Žádosti o registraci.",
+    "enrollment_desc": "Jak se schvalují noví klienti RustDesk na stránce Žádosti o registraci.",
     "enrollment_rich_approve": "Pelny formularz przy akceptacji (nazwa, složka, skupiny, štítky)",
     "enrollment_rich_approve_hint": "Pokazuje rozbudowany dialog przy zatwierdzaniu rejestracji enrollment i LAN.",
     "enrollment_tag_picker": "Wybor tagow z listy istniejacych",

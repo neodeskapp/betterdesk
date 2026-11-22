@@ -927,7 +927,7 @@
     "advanced_error_invalid": "Ugyldigt filindhold",
     "advanced_error_not_writable": "Filen er ikke skrivbar af konsolprocessen",
     "enrollment_title": "Enhedstilmelding (RustDesk)",
-    "enrollment_desc": "Hvordan operatører godkender nye RustDesk-klienter på siden Tilmeldingsanmodninger.",
+    "enrollment_desc": "Hvordan nye RustDesk-klienter godkendes på siden Tilmeldingsanmodninger.",
     "enrollment_rich_approve": "Fuld godkendelsesformular (navn, mappe, grupper, tags)",
     "enrollment_rich_approve_hint": "Viser en detaljeret dialog ved godkendelse af tilmeldings- eller LAN-registreringsanmodninger.",
     "enrollment_tag_picker": "Vælg tags fra eksisterende enhedstags",

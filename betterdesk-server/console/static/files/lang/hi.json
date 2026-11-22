@@ -940,7 +940,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml (ऑर्केस्ट्रेशन)",
     "advanced_restart_none": "इस फ़ाइल के लिए सेवा पुनः प्रारंभ की आवश्यकता नहीं है।",
     "enrollment_title": "डिवाइस नामांकन (RustDesk)",
-    "enrollment_desc": "ऑपरेटर नामांकन अनुरोध पेज पर नए RustDesk क्लाइंट को कैसे मंज़ूरी देते हैं।",
+    "enrollment_desc": "नामांकन अनुरोध पेज पर नए RustDesk क्लाइंट को कैसे मंज़ूरी दी जाती है।",
     "enrollment_rich_approve": "पूर्ण स्वीकृति फ़ॉर्म (नाम, फ़ोल्डर, समूह, टैग)",
     "enrollment_rich_approve_hint": "नामांकन या LAN पंजीकरण अनुरोध स्वीकृत करते समय विस्तृत संवाद दिखाता है।",
     "enrollment_tag_picker": "मौजूदा डिवाइस टैग से टैग चुनें",

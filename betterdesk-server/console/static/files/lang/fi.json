@@ -922,7 +922,7 @@
     "advanced_error_invalid": "Virheellinen tiedoston sisältö",
     "advanced_error_not_writable": "Tiedosto ei ole konsoliprosessin kirjoitettavissa",
     "enrollment_title": "Laitteen rekisteröinti (RustDesk)",
-    "enrollment_desc": "Miten operaattorit hyväksyvät uudet RustDesk-asiakkaat Liittymispyynnöt-sivulla.",
+    "enrollment_desc": "Miten uudet RustDesk-asiakkaat hyväksytään Liittymispyynnöt-sivulla.",
     "enrollment_rich_approve": "Täydellinen hyväksyntälomake (nimi, kansio, ryhmät, tunnisteet)",
     "enrollment_rich_approve_hint": "Näyttää yksityiskohtaisen valintaikkunan rekisteröintipyyntöjä hyväksyttäessä.",
     "enrollment_tag_picker": "Valitse tunnisteet olemassa olevista laitetunnisteista",

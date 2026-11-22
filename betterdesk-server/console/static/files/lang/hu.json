@@ -922,7 +922,7 @@
     "advanced_error_invalid": "Érvénytelen fájltartalom",
     "advanced_error_not_writable": "A fájl nem írható a konzol folyamat által",
     "enrollment_title": "Eszközregisztráció (RustDesk)",
-    "enrollment_desc": "Hogyan hagyják jóvá az operátorok az új RustDesk-klienseket a Regisztrációs kérelmek oldalon.",
+    "enrollment_desc": "Hogyan történik az új RustDesk-kliensek jóváhagyása a Regisztrációs kérelmek oldalon.",
     "enrollment_rich_approve": "Teljes jóváhagyási form (név, mappa, csoportok, címkék)",
     "enrollment_rich_approve_hint": "Részletes párbeszédpanelt mutat a regisztrációs kérések jóváhagyásakor.",
     "enrollment_tag_picker": "Válasszon meglévő eszközcímkékből",

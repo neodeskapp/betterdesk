@@ -922,7 +922,7 @@
     "advanced_error_invalid": "Невірний вміст файлу",
     "advanced_error_not_writable": "Файл недоступний для запису процесом консолі",
     "enrollment_title": "Реєстрація пристрою (RustDesk)",
-    "enrollment_desc": "Як оператори схвалюють нових клієнтів RustDesk на сторінці Запити на реєстрацію.",
+    "enrollment_desc": "Як схвалюються нові клієнти RustDesk на сторінці Запити на реєстрацію.",
     "enrollment_rich_approve": "Повна форма затвердження (імʼя, папка, групи, теги)",
     "enrollment_rich_approve_hint": "Показує детальний діалог при затвердженні запитів на реєстрацію.",
     "enrollment_tag_picker": "Вибирайте з існуючих тегів пристроїв",

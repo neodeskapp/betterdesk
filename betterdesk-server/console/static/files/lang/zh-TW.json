@@ -776,7 +776,7 @@
     "advanced_file_docker-compose": "Docker: docker-compose.yml（編排）",
     "advanced_restart_none": "此文件無需重啓服務。",
     "enrollment_title": "設備註冊（RustDesk）",
-    "enrollment_desc": "操作員如何在註冊請求頁面批准新的 RustDesk 用戶端。",
+    "enrollment_desc": "如何在註冊請求頁面批准新的 RustDesk 用戶端。",
     "enrollment_rich_approve": "完整審批表單（名稱、文件夾、分組、標籤）",
     "enrollment_rich_approve_hint": "在審批註冊或 LAN 註冊請求時顯示詳細對話框。",
     "enrollment_tag_picker": "從現有設備標籤中選擇標籤",
