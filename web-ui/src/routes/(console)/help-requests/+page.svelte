@@ -9,6 +9,9 @@
   visible, on Refresh and on a help_request panel event. The list and its
   actions need chat.access (P17): without it the page says so in one line
   instead of a list that fails.
+
+  Quick support (device.connect): a button that opens the Quick support
+  dialog, and the account's open quick support sessions above the list.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -45,6 +48,8 @@
 	import { ICONS } from '#lib/util/display.ts';
 	import { readPref, writePref } from '#lib/util/storage.ts';
 	import ShareFilter, { type ShareFilterPart } from '#lib/support/ShareFilter.svelte';
+	import { openQuickSupport } from '#lib/onboard/open.svelte.ts';
+	import QuickSupportSessions from '#lib/onboard/QuickSupportSessions.svelte';
 	import {
 		countWaiting,
 		mergeFresh,
@@ -383,7 +388,19 @@
 						href={link('/tickets')}>{t('nav.tickets')}</a
 					>{:else if part === '{chat}'}<a href={link('/chat')}>{t('nav.chat')}</a>{:else}{part}{/if}{/each}
 		</p>
+		{#if can('device.connect')}
+			<div class="page-actions">
+				<Button
+					variant="primary"
+					icon={ICONS.help_request}
+					class="quick-support"
+					onclick={() => openQuickSupport()}>{t('onboard.support.button')}</Button
+				>
+			</div>
+		{/if}
 	</div>
+
+	{#if can('device.connect')}<QuickSupportSessions />{/if}
 
 	{#if !allowed}
 		<Notice

@@ -50,16 +50,16 @@ var configKeyRegexp = regexp.MustCompile(`^[A-Za-z0-9_.\-]{1,64}$`)
 
 // configKeyIsSecret reports whether a server_config key holds a secret or a
 // credential: the token signing secret, private keys, passwords, device
-// keys and second-factor secrets, pairing codes and share links. The
-// generic config routes neither answer nor write such a key; the routes
-// that own them do.
+// keys and second-factor secrets, pairing codes, quick support sessions
+// and share links. The generic config routes neither answer nor write such
+// a key; the routes that own them do.
 func configKeyIsSecret(key string) bool {
 	k := strings.ToLower(key)
 	switch k {
 	case "jwt_secret", "api_key", telemetryPrivateKeyConfig:
 		return true
 	}
-	for _, prefix := range []string{"device_totp_secret_", bdMgmtPublicKeyConfigPref, pairingCodePrefix, "mesh_share_"} {
+	for _, prefix := range []string{"device_totp_secret_", bdMgmtPublicKeyConfigPref, pairingCodePrefix, supportSessionPrefix, "mesh_share_"} {
 		if strings.HasPrefix(k, prefix) {
 			return true
 		}
@@ -106,6 +106,9 @@ type Server struct {
 	// Short-code pairing: redeem is public and guessable, so it gets its own budget
 	// separate from enrollment (a paired device must not consume the enrollment budget).
 	pairingLimiter *ratelimit.IPLimiter
+	// onboardMu makes making, spending and pruning join and support codes
+	// one step each (onboard_codes.go).
+	onboardMu sync.Mutex
 	// The single sign-on start routes are public and each call keeps a
 	// pending entry for minutes.
 	oidcStartLimiter  *ratelimit.IPLimiter
@@ -683,6 +686,8 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/pairing/codes", s.requirePermission(auth.PermEnrollmentApprove, s.handleCreatePairingCode))
 	mux.HandleFunc("GET /api/pairing/codes", s.requirePermission(auth.PermEnrollmentApprove, s.handleListPairingCodes))
 	mux.HandleFunc("DELETE /api/pairing/codes/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleDeletePairingCode))
+	// Join and support codes, for the console in this process only.
+	s.onboardRoutes(mux)
 
 	// CDAP device management (requires CDAP gateway to be enabled)
 	mux.HandleFunc("GET /api/cdap/status", s.requirePermission(auth.PermCDAPView, s.handleCDAPStatus))

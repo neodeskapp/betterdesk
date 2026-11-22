@@ -43,7 +43,9 @@ const (
 	pairingAlphabet = "23456789ABCDEFGHJKMNPQRSTVWXYZ"
 )
 
-// pairingRecord is what persists under `pairing_code_<hash>`.
+// pairingRecord is what persists under `pairing_code_<hash>`. A code of
+// the pairing routes has no kind; join and support codes (onboard_codes.go)
+// carry their kind and the fields after it.
 type pairingRecord struct {
 	ID        string `json:"id"`
 	Label     string `json:"label,omitempty"`
@@ -52,6 +54,13 @@ type pairingRecord struct {
 	CreatedBy string `json:"created_by,omitempty"`
 	UsesLeft  int    `json:"uses_left"`
 	Attempts  int    `json:"attempts,omitempty"`
+
+	Kind        string `json:"kind,omitempty"`
+	MaxUses     int    `json:"max_uses,omitempty"`
+	Name        string `json:"name,omitempty"`
+	FolderID    int64  `json:"folder_id,omitempty"`
+	Email       string `json:"email,omitempty"`
+	CreatedByID int64  `json:"created_by_id,omitempty"`
 }
 
 // normalizePairingCode upper-cases and drops separators. The alphabet deliberately
@@ -90,11 +99,16 @@ func pairingCodeHash(code string) string {
 // generatePairingCode samples crypto/rand with rejection so the distribution is uniform
 // (256 is not a multiple of 32, so a plain modulo would bias the first symbols).
 func generatePairingCode() (string, error) {
+	return generateCodeOfLength(pairingCodeLen)
+}
+
+// generateCodeOfLength is generatePairingCode for a code of n symbols.
+func generateCodeOfLength(n int) (string, error) {
 	const alphabetLen = len(pairingAlphabet)
 	const maxAcceptable = 256 - (256 % alphabetLen)
-	out := make([]byte, 0, pairingCodeLen)
-	buf := make([]byte, pairingCodeLen*2)
-	for len(out) < pairingCodeLen {
+	out := make([]byte, 0, n)
+	buf := make([]byte, n*2)
+	for len(out) < n {
 		if _, err := rand.Read(buf); err != nil {
 			return "", fmt.Errorf("pairing code entropy: %w", err)
 		}
@@ -103,7 +117,7 @@ func generatePairingCode() (string, error) {
 				continue
 			}
 			out = append(out, pairingAlphabet[int(value)%alphabetLen])
-			if len(out) == pairingCodeLen {
+			if len(out) == n {
 				break
 			}
 		}
@@ -156,8 +170,9 @@ func (s *Server) pairingRecords() []pairingEntry {
 	return out
 }
 
-// prunePairingRecords deletes expired/spent codes and caps the number of live ones, so an
-// operator cannot fill server_config and old codes stop being redeemable.
+// prunePairingRecords deletes expired/spent codes of every kind and caps the number of
+// live pairing codes, so an operator cannot fill server_config and old codes stop being
+// redeemable. Join and support codes have their own cap (onboardMaxLive).
 func (s *Server) prunePairingRecords() {
 	now := time.Now().UTC()
 	var live []pairingEntry
@@ -165,6 +180,9 @@ func (s *Server) prunePairingRecords() {
 		expires, err := time.Parse(time.RFC3339, entry.Record.ExpiresAt)
 		if err != nil || now.After(expires) || entry.Record.UsesLeft <= 0 {
 			s.deletePairingRecord(entry.Hash)
+			continue
+		}
+		if entry.Record.Kind != "" {
 			continue
 		}
 		live = append(live, entry)
@@ -345,6 +363,9 @@ func (s *Server) handleListPairingCodes(w http.ResponseWriter, r *http.Request) 
 	s.prunePairingRecords()
 	items := make([]map[string]any, 0)
 	for _, entry := range s.pairingRecords() {
+		if entry.Record.Kind != "" {
+			continue
+		}
 		items = append(items, map[string]any{
 			"id":         entry.Record.ID,
 			"label":      entry.Record.Label,
@@ -369,7 +390,7 @@ func (s *Server) handleDeletePairingCode(w http.ResponseWriter, r *http.Request)
 	}
 	removed := false
 	for _, entry := range s.pairingRecords() {
-		if entry.Record.ID == id {
+		if entry.Record.ID == id && entry.Record.Kind == "" {
 			s.deletePairingRecord(entry.Hash)
 			removed = true
 			break
@@ -395,7 +416,7 @@ func pairingReject(w http.ResponseWriter) {
 }
 
 // lookupPairingCode verifies a code without spending it. Returns nil after writing the
-// rejection response.
+// rejection response. Join and support codes are redeemed through the console only.
 func (s *Server) lookupPairingCode(w http.ResponseWriter, code string) *pairingRecord {
 	if !validPairingCodeFormat(code) {
 		pairingReject(w)
@@ -403,7 +424,7 @@ func (s *Server) lookupPairingCode(w http.ResponseWriter, code string) *pairingR
 	}
 	hash := pairingCodeHash(code)
 	record := s.loadPairingRecord(hash)
-	if record == nil {
+	if record == nil || record.Kind != "" {
 		pairingReject(w)
 		return nil
 	}

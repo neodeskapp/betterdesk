@@ -31,6 +31,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/routes/languages"
 	"github.com/unitronix/betterdesk-server/console/routes/meshcentral"
 	"github.com/unitronix/betterdesk-server/console/routes/network"
+	"github.com/unitronix/betterdesk-server/console/routes/onboard"
 	"github.com/unitronix/betterdesk-server/console/routes/organizations"
 	"github.com/unitronix/betterdesk-server/console/routes/pages"
 	"github.com/unitronix/betterdesk-server/console/routes/pairing"
@@ -163,4 +164,5 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	serverattestation.Register(d)             // routes/server-attestation.routes.js, with the job that runs the capacity tests
 	phase45.Register(d)                       // routes/phase4_5.routes.js
 	pairing.Register(d)                       // routes/pairing.routes.js
+	onboard.Register(d)                       // Add a computer and Quick support: invites, sessions, client packages
 }

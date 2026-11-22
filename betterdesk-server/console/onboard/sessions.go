@@ -1,0 +1,562 @@
+package onboard
+
+import (
+	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"net/http"
+	"sort"
+	"sync"
+	"time"
+
+	"github.com/unitronix/betterdesk-server/console/goapi"
+)
+
+// The states of a quick support session.
+const (
+	// StatusWaiting: the link is out, nobody opened it yet.
+	StatusWaiting = "waiting"
+	// StatusOpened: the quick support app redeemed the code.
+	StatusOpened = "opened"
+	// StatusAsking: the app reported its device and asks the person.
+	StatusAsking = "asking"
+	// StatusAllowed: the person let the supporter in.
+	StatusAllowed = "allowed"
+	// StatusDeclined: the person said no. The session is over.
+	StatusDeclined = "declined"
+	// StatusEnded: the app closed, the supporter ended it, or the app
+	// stopped calling in.
+	StatusEnded = "ended"
+	// StatusExpired: nobody opened the link in time.
+	StatusExpired = "expired"
+)
+
+// Who ended a session.
+const (
+	EndedBySupporter = "supporter"
+	EndedByCustomer  = "customer"
+	EndedByTimeout   = "timeout"
+)
+
+const (
+	// SupportLifetime is how long a quick support link works.
+	SupportLifetime = time.Hour
+	// IdleLimit is how long an open session waits for the app to call in
+	// before it ends.
+	IdleLimit = 3 * time.Minute
+	// DeviceRemoveAfter is how long a session's temporary device stays
+	// after the session ended.
+	DeviceRemoveAfter = 10 * time.Minute
+	// seenEvery is how often a call of the app is written down.
+	seenEvery = 30 * time.Second
+)
+
+// ErrState is a step the session's state does not allow.
+var ErrState = errors.New("wrong_state")
+
+// ErrNotYours is a supporter's step on a session another account made.
+var ErrNotYours = errors.New("not_yours")
+
+// ErrNoPassword is a password asked for that the app has not handed over.
+var ErrNoPassword = errors.New("no_password")
+
+// Session is one quick support session. The token's hash is kept; the
+// token and the session password never are.
+type Session struct {
+	ID              string `json:"id"`
+	Status          string `json:"status"`
+	Name            string `json:"name"`
+	Email           string `json:"email"`
+	FolderID        int64  `json:"folder_id"`
+	CreatedBy       string `json:"created_by"`
+	CreatedByID     int64  `json:"created_by_id"`
+	TokenHash       string `json:"token_hash,omitempty"`
+	DeviceID        string `json:"device_id"`
+	Hostname        string `json:"hostname"`
+	Platform        string `json:"platform"`
+	TemporaryDevice bool   `json:"temporary_device"`
+	DeviceRemoved   bool   `json:"device_removed"`
+	// Granted is true when the session gave its supporter the device
+	// (user_peer_grants); the grant goes with the device.
+	Granted    bool   `json:"granted"`
+	EndedBy    string `json:"ended_by"`
+	CreatedAt  string `json:"created_at"`
+	ExpiresAt  string `json:"expires_at"`
+	RedeemedAt string `json:"redeemed_at"`
+	ConsentAt  string `json:"consent_at"`
+	LastSeenAt string `json:"last_seen_at"`
+	EndedAt    string `json:"ended_at"`
+}
+
+// Open reports whether the session has not ended.
+func (s Session) Open() bool {
+	switch s.Status {
+	case StatusWaiting, StatusOpened, StatusAsking, StatusAllowed:
+		return true
+	}
+	return false
+}
+
+// Sessions keeps the quick support sessions: in memory while the console
+// runs, each change written to the API server's store, and the session
+// passwords in memory only.
+type Sessions struct {
+	api *goapi.Client
+	now func() time.Time
+
+	loadMu sync.Mutex
+	loaded bool
+
+	mu        sync.Mutex
+	byID      map[string]*Session
+	byToken   map[string]string
+	passwords map[string]string
+}
+
+// NewSessions returns the sessions stored through api.
+func NewSessions(api *goapi.Client, now func() time.Time) *Sessions {
+	if now == nil {
+		now = time.Now
+	}
+	return &Sessions{api: api, now: now, byID: map[string]*Session{}, byToken: map[string]string{}, passwords: map[string]string{}}
+}
+
+func stamp(t time.Time) string { return t.UTC().Format(time.RFC3339) }
+
+func parseStamp(s string) (time.Time, bool) {
+	t, err := time.Parse(time.RFC3339, s)
+	return t, err == nil
+}
+
+// load reads the stored sessions once.
+func (s *Sessions) load(ctx context.Context) error {
+	s.loadMu.Lock()
+	defer s.loadMu.Unlock()
+	if s.loaded {
+		return nil
+	}
+	resp, err := s.api.Request(ctx, http.MethodGet, "/onboard/sessions")
+	if err != nil {
+		return fmt.Errorf("load quick support sessions: %w", err)
+	}
+	var out struct {
+		Sessions []Session `json:"sessions"`
+	}
+	if err := resp.Decode(&out); err != nil {
+		return fmt.Errorf("load quick support sessions: %w", err)
+	}
+	s.mu.Lock()
+	for i := range out.Sessions {
+		sess := out.Sessions[i]
+		if sess.ID == "" {
+			continue
+		}
+		if _, known := s.byID[sess.ID]; known {
+			continue
+		}
+		s.byID[sess.ID] = &sess
+		if sess.TokenHash != "" && sess.Open() {
+			s.byToken[sess.TokenHash] = sess.ID
+		}
+	}
+	s.mu.Unlock()
+	s.loaded = true
+	return nil
+}
+
+// save writes a session to the store.
+func (s *Sessions) save(ctx context.Context, sess Session) error {
+	if _, err := s.api.Request(ctx, http.MethodPut, "/onboard/sessions/"+sess.ID, goapi.Body(sess)); err != nil {
+		return fmt.Errorf("store quick support session %s: %w", sess.ID, err)
+	}
+	return nil
+}
+
+// change applies fn to the session under the lock and stores the result.
+// fn returns an error to change nothing.
+func (s *Sessions) change(ctx context.Context, id string, fn func(sess *Session) error) (Session, error) {
+	if err := s.load(ctx); err != nil {
+		return Session{}, err
+	}
+	s.mu.Lock()
+	cur, ok := s.byID[id]
+	if !ok {
+		s.mu.Unlock()
+		return Session{}, ErrNotFound
+	}
+	next := *cur
+	if err := fn(&next); err != nil {
+		s.mu.Unlock()
+		return Session{}, err
+	}
+	*cur = next
+	if !next.Open() {
+		delete(s.byToken, next.TokenHash)
+		delete(s.passwords, next.ID)
+	}
+	s.mu.Unlock()
+	return next, s.save(ctx, next)
+}
+
+// Create stores a new waiting session for a support code.
+func (s *Sessions) Create(ctx context.Context, code Code) (Session, error) {
+	if err := s.load(ctx); err != nil {
+		return Session{}, err
+	}
+	sess := Session{
+		ID: code.ID, Status: StatusWaiting, Name: code.Name, Email: code.Email, FolderID: code.FolderID,
+		CreatedBy: code.CreatedBy, CreatedByID: code.CreatedByID, CreatedAt: code.CreatedAt, ExpiresAt: code.ExpiresAt,
+	}
+	s.mu.Lock()
+	s.byID[sess.ID] = &sess
+	s.mu.Unlock()
+	return sess, s.save(ctx, sess)
+}
+
+// Get returns a session.
+func (s *Sessions) Get(ctx context.Context, id string) (Session, error) {
+	if err := s.load(ctx); err != nil {
+		return Session{}, err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if sess, ok := s.byID[id]; ok {
+		return *sess, nil
+	}
+	return Session{}, ErrNotFound
+}
+
+// OpenOf returns the open sessions an account made, newest first.
+func (s *Sessions) OpenOf(ctx context.Context, userID int64) ([]Session, error) {
+	if err := s.load(ctx); err != nil {
+		return nil, err
+	}
+	s.mu.Lock()
+	out := []Session{}
+	for _, sess := range s.byID {
+		if sess.Open() && sess.CreatedByID == userID {
+			out = append(out, *sess)
+		}
+	}
+	s.mu.Unlock()
+	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt > out[j].CreatedAt })
+	return out, nil
+}
+
+// HasPassword reports whether a session password waits for the supporter.
+func (s *Sessions) HasPassword(id string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, ok := s.passwords[id]
+	return ok
+}
+
+func newToken() (token, hash string, err error) {
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", "", fmt.Errorf("session token: %w", err)
+	}
+	token = hex.EncodeToString(raw)
+	return token, HashToken(token), nil
+}
+
+// HashToken is the hash a session token is kept and found by.
+func HashToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
+// Redeem opens a waiting session for the app and returns the session
+// token, which only this answer carries. A session that is missing (the
+// code was made while the store could not be written) is made from the
+// code.
+func (s *Sessions) Redeem(ctx context.Context, code Code) (string, Session, error) {
+	if _, err := s.Get(ctx, code.ID); errors.Is(err, ErrNotFound) {
+		if _, err := s.Create(ctx, code); err != nil {
+			return "", Session{}, err
+		}
+	} else if err != nil {
+		return "", Session{}, err
+	}
+	token, hash, err := newToken()
+	if err != nil {
+		return "", Session{}, err
+	}
+	now := stamp(s.now())
+	sess, err := s.change(ctx, code.ID, func(sess *Session) error {
+		if sess.Status != StatusWaiting {
+			return ErrState
+		}
+		sess.Status, sess.TokenHash, sess.RedeemedAt, sess.LastSeenAt = StatusOpened, hash, now, now
+		return nil
+	})
+	if err != nil {
+		return "", Session{}, err
+	}
+	s.mu.Lock()
+	s.byToken[hash] = sess.ID
+	s.mu.Unlock()
+	return token, sess, nil
+}
+
+// ByToken returns the open session of a session token and notes the
+// app's call. Any other token, and the token of a session that ended, is
+// ErrNotFound.
+func (s *Sessions) ByToken(ctx context.Context, token string) (Session, error) {
+	if len(token) != 64 {
+		return Session{}, ErrNotFound
+	}
+	if err := s.load(ctx); err != nil {
+		return Session{}, err
+	}
+	hash := HashToken(token)
+	s.mu.Lock()
+	id, ok := s.byToken[hash]
+	var sess *Session
+	if ok {
+		sess = s.byID[id]
+	}
+	if sess == nil || !sess.Open() || subtle.ConstantTimeCompare([]byte(sess.TokenHash), []byte(hash)) != 1 {
+		s.mu.Unlock()
+		return Session{}, ErrNotFound
+	}
+	now := s.now()
+	last, _ := parseStamp(sess.LastSeenAt)
+	write := now.Sub(last) >= seenEvery
+	if write {
+		sess.LastSeenAt = stamp(now)
+	}
+	out := *sess
+	s.mu.Unlock()
+	if write {
+		if err := s.save(ctx, out); err != nil {
+			return out, err
+		}
+	}
+	return out, nil
+}
+
+// SetDevice records the device the app runs on and moves the session to
+// asking. temporary marks a device the session made; granted a peer grant
+// it gave the supporter.
+func (s *Sessions) SetDevice(ctx context.Context, id string, dev Device, temporary, granted bool) (Session, error) {
+	return s.change(ctx, id, func(sess *Session) error {
+		if sess.Status != StatusOpened {
+			return ErrState
+		}
+		sess.Status = StatusAsking
+		sess.DeviceID, sess.Hostname, sess.Platform = dev.DeviceID, dev.Hostname, dev.Platform
+		sess.TemporaryDevice, sess.Granted = temporary, granted
+		return nil
+	})
+}
+
+// Consent records the person's answer: allowed, or declined, which ends
+// the session.
+func (s *Sessions) Consent(ctx context.Context, id string, allowed bool) (Session, error) {
+	now := stamp(s.now())
+	return s.change(ctx, id, func(sess *Session) error {
+		if sess.Status != StatusAsking {
+			return ErrState
+		}
+		sess.ConsentAt = now
+		if allowed {
+			sess.Status = StatusAllowed
+			return nil
+		}
+		sess.Status, sess.EndedAt, sess.EndedBy = StatusDeclined, now, EndedByCustomer
+		return nil
+	})
+}
+
+// SetPassword keeps the session password the app hands over, in memory,
+// for the supporter. It replaces one the supporter has not taken.
+func (s *Sessions) SetPassword(ctx context.Context, id, password string) error {
+	sess, err := s.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if cur := s.byID[id]; cur == nil || cur.Status != StatusAllowed || sess.Status != StatusAllowed {
+		return ErrState
+	}
+	s.passwords[id] = password
+	return nil
+}
+
+// TakePassword hands the session password to the account that made the
+// session, once: it is forgotten as it is handed over.
+func (s *Sessions) TakePassword(ctx context.Context, id string, userID int64) (string, error) {
+	if err := s.load(ctx); err != nil {
+		return "", err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	sess, ok := s.byID[id]
+	if !ok {
+		return "", ErrNotFound
+	}
+	if sess.CreatedByID != userID {
+		return "", ErrNotYours
+	}
+	password, ok := s.passwords[id]
+	if !ok || sess.Status != StatusAllowed {
+		return "", ErrNoPassword
+	}
+	delete(s.passwords, id)
+	return password, nil
+}
+
+// TakePasswordForDevice is TakePassword for the allowed session of the
+// account on a device: what the browser viewer asks when the device wants
+// a password. ErrNoPassword when there is none.
+func (s *Sessions) TakePasswordForDevice(ctx context.Context, deviceID string, userID int64) (string, error) {
+	if err := s.load(ctx); err != nil {
+		return "", err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for id, sess := range s.byID {
+		if sess.Status != StatusAllowed || sess.DeviceID != deviceID || sess.CreatedByID != userID {
+			continue
+		}
+		if password, ok := s.passwords[id]; ok {
+			delete(s.passwords, id)
+			return password, nil
+		}
+	}
+	return "", ErrNoPassword
+}
+
+// End ends an open session; by says who. The token stops working and the
+// password is forgotten.
+func (s *Sessions) End(ctx context.Context, id, by string) (Session, error) {
+	now := stamp(s.now())
+	return s.change(ctx, id, func(sess *Session) error {
+		if !sess.Open() {
+			return ErrState
+		}
+		if sess.Status == StatusWaiting {
+			sess.Status = StatusExpired
+		} else {
+			sess.Status = StatusEnded
+		}
+		sess.EndedAt, sess.EndedBy = now, by
+		return nil
+	})
+}
+
+// Sweep ends what time ends: a waiting session whose link expired, an
+// open one whose app stopped calling in for IdleLimit. It returns the
+// sessions whose temporary device is due for removal (DeviceRemoveAfter
+// after the end).
+func (s *Sessions) Sweep(ctx context.Context) ([]Session, error) {
+	if err := s.load(ctx); err != nil {
+		return nil, err
+	}
+	now := s.now()
+	var expire, idle []string
+	var due []Session
+	s.mu.Lock()
+	for id, sess := range s.byID {
+		switch {
+		case sess.Status == StatusWaiting:
+			if t, ok := parseStamp(sess.ExpiresAt); !ok || !now.Before(t) {
+				expire = append(expire, id)
+			}
+		case sess.Open():
+			if t, ok := parseStamp(sess.LastSeenAt); !ok || now.Sub(t) >= IdleLimit {
+				idle = append(idle, id)
+			}
+		case sess.TemporaryDevice && !sess.DeviceRemoved:
+			if t, ok := parseStamp(sess.EndedAt); !ok || now.Sub(t) >= DeviceRemoveAfter {
+				due = append(due, *sess)
+			}
+		}
+	}
+	// A device a later session uses again is that session's to remove
+	var handed []string
+	kept := due[:0]
+	for _, d := range due {
+		if s.deviceTakenOver(d) {
+			handed = append(handed, d.ID)
+		} else {
+			kept = append(kept, d)
+		}
+	}
+	due = kept
+	s.mu.Unlock()
+	var errs []error
+	for _, id := range handed {
+		if err := s.DeviceRemoved(ctx, id); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	for _, id := range expire {
+		if _, err := s.End(ctx, id, EndedByTimeout); err != nil && !errors.Is(err, ErrState) {
+			errs = append(errs, err)
+		}
+	}
+	for _, id := range idle {
+		if _, err := s.End(ctx, id, EndedByTimeout); err != nil && !errors.Is(err, ErrState) {
+			errs = append(errs, err)
+		}
+	}
+	return due, errors.Join(errs...)
+}
+
+// deviceTakenOver reports whether another session that has not given up
+// the ended session's device uses it now. The caller holds s.mu.
+func (s *Sessions) deviceTakenOver(ended Session) bool {
+	for id, other := range s.byID {
+		later := other.CreatedAt > ended.CreatedAt || (other.CreatedAt == ended.CreatedAt && id > ended.ID)
+		if later && other.DeviceID == ended.DeviceID && (other.Open() || (other.TemporaryDevice && !other.DeviceRemoved)) {
+			return true
+		}
+	}
+	return false
+}
+
+// DeviceRemoved notes that a session's temporary device is gone.
+func (s *Sessions) DeviceRemoved(ctx context.Context, id string) error {
+	_, err := s.change(ctx, id, func(sess *Session) error {
+		sess.DeviceRemoved = true
+		return nil
+	})
+	return err
+}
+
+// Prune deletes the records of sessions that ended more than keep ago.
+func (s *Sessions) Prune(ctx context.Context, keep time.Duration) error {
+	if err := s.load(ctx); err != nil {
+		return err
+	}
+	now := s.now()
+	var old []string
+	s.mu.Lock()
+	for id, sess := range s.byID {
+		if sess.Open() || (sess.TemporaryDevice && !sess.DeviceRemoved) {
+			continue
+		}
+		if t, ok := parseStamp(sess.EndedAt); !ok || now.Sub(t) > keep {
+			old = append(old, id)
+		}
+	}
+	s.mu.Unlock()
+	var errs []error
+	for _, id := range old {
+		if _, err := s.api.Request(ctx, http.MethodDelete, "/onboard/sessions/"+id); err != nil {
+			errs = append(errs, fmt.Errorf("delete quick support session %s: %w", id, err))
+			continue
+		}
+		s.mu.Lock()
+		delete(s.byID, id)
+		s.mu.Unlock()
+	}
+	return errors.Join(errs...)
+}

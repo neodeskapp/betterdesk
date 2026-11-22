@@ -1,0 +1,46 @@
+{
+ "id": "onboard/run-script",
+ "request": {
+  "method": "GET",
+  "path": "/s/{secret:support_code}/run.sh",
+  "notes": [
+   "no CSRF token",
+   "no cookies"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "text/x-shellscript; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "20",
+    "ratelimit-policy": "20;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "bytes",
+    "type": "text/x-shellscript",
+    "length": 756,
+    "sha256": "8d016abdd584d0f09e26f3e940d5855407e6aa00adb15516d8d54ad500cef83b",
+    "head": "#!/bin/sh\n# Starts BetterDesk Quick Support for <base>. Nothing is installed: the\n# app runs from a folder in your cache and asks you before anyone sees\n# your screen.\nset -eu\n\nBASE='<base>'\nCODE='{secret:support_code}'\n\ncase \"$(uname -m)\" in\n\tx86_64 | amd64) arch=x64 ;;\n\taarch64 | arm64) arch=arm64"
+   }
+  }
+ ]
+}

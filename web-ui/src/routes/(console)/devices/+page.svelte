@@ -79,6 +79,7 @@
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import type { Column, SortState } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import AddComputerDialog from '#lib/onboard/AddComputerDialog.svelte';
 	import { ICONS } from '#lib/util/display.ts';
 	import { readJsonPref, readPref, writeJsonPref, writePref } from '#lib/util/storage.ts';
 	import AccessRules from './AccessRules.svelte';
@@ -96,6 +97,8 @@
 	let loaded = $state(false);
 	let loadError = $state<string | null>(null);
 	let folders = $state.raw<Folder[]>([]);
+	/** The Add a computer dialog is open */
+	let addComputer = $state(false);
 	let groups = $state.raw<DeviceGroup[]>([]);
 	let knownTags = $state.raw<string[]>([]);
 	let syncing = $state(false);
@@ -674,12 +677,17 @@
 			<Button class="sync-btn" icon={ICONS.refresh} busy={syncing} onclick={sync}
 				>{t('devices.sync_status')}</Button
 			>
-			{#if can('remote_target.edit')}
+			{#if can('enrollment.approve')}
 				<Button
-					class="add-target-btn"
+					class="add-computer-btn"
 					variant="primary"
 					icon={ICONS.add}
-					onclick={() => void act.addRemoteTarget()}>{t('devices.add_remote_target')}</Button
+					onclick={() => (addComputer = true)}>{t('onboard.invite.button')}</Button
+				>
+			{/if}
+			{#if can('remote_target.edit')}
+				<Button class="add-target-btn" icon={ICONS.add} onclick={() => void act.addRemoteTarget()}
+					>{t('devices.add_remote_target')}</Button
 				>
 			{/if}
 		</div>
@@ -899,6 +907,8 @@
 		/>
 	{/await}
 {/if}
+
+{#if addComputer}<AddComputerDialog {folders} onclose={() => (addComputer = false)} />{/if}
 
 <style>
 	/* The count sits right after the title; the page's buttons stay at the end */

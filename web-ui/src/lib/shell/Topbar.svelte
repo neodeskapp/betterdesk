@@ -1,17 +1,20 @@
 <!--
   The top bar (views/partials/ux35-topbar.ejs): the drawer button and the
   logo mark below 1100 px, the breadcrumb (section, page), the global
-  search, Help, then notifications, refresh, theme, accessibility,
-  language, and the account menu below 1100 px. On phones (767 px and
-  below) those last actions fold behind a "More" button into a row under
-  the bar; menus open from there.
+  search, Quick support (device.connect), Help, then notifications,
+  refresh, theme, accessibility, language, and the account menu below
+  1100 px. On phones (767 px and below) those last actions fold behind a
+  "More" button into a row under the bar; menus open from there.
 -->
 <script lang="ts">
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
-	import { session } from '#lib/state/session.svelte.ts';
+	import { closeQuickSupport, openQuickSupport, quickSupport } from '#lib/onboard/open.svelte.ts';
+	import QuickSupportDialog from '#lib/onboard/QuickSupportDialog.svelte';
+	import { can, session } from '#lib/state/session.svelte.ts';
 	import { cycleTheme, theme } from '#lib/state/theme.svelte.ts';
 	import IconButton from '#lib/ui/IconButton.svelte';
+	import { ICONS } from '#lib/util/display.ts';
 	import Icon from '#lib/ui/Icon.svelte';
 	import AccountMenu from './AccountMenu.svelte';
 	import BrandLogo from './BrandLogo.svelte';
@@ -149,6 +152,17 @@
 	</button>
 
 	<div class="topbar-actions">
+		{#if can('device.connect')}
+			<button
+				type="button"
+				class="topbar-text-btn quick-support-btn"
+				aria-haspopup="dialog"
+				onclick={() => openQuickSupport()}
+				><Icon name={ICONS.help_request} /><span class="quick-support-label"
+					>{t('onboard.support.button')}</span
+				></button
+			>
+		{/if}
 		<button
 			bind:this={helpButton}
 			type="button"
@@ -188,7 +202,18 @@
 	</div>
 </header>
 
+{#if quickSupport.open}
+	{#key quickSupport.session}
+		<QuickSupportDialog session={quickSupport.session} onclose={closeQuickSupport} />
+	{/key}
+{/if}
+
 <style>
+	.quick-support-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+	}
 	.shell-topbar {
 		/* The bar's icon buttons are the default control height, like Help and search */
 		--icon-btn-size: var(--control-h);
