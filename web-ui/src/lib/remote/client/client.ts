@@ -244,8 +244,6 @@ export class RDClient {
 	_recorder?: MediaRecorder | null;
 	_recordedChunks?: Blob[];
 	_recordingStartTime?: number;
-	/** Never set: the cursor-ready callback reads it (see _startSession) */
-	declare canvas: HTMLCanvasElement | undefined;
 
 	constructor(canvas: HTMLCanvasElement, opts: RDClientOptions = { deviceId: '' }) {
 		if (!canvas) throw new Error('Canvas element required');
@@ -1481,7 +1479,7 @@ export class RDClient {
 
 		// Signal CSS when remote cursor data is available (hide local crosshair)
 		this.renderer.onCursorReady = (ready) => {
-			const container = this.canvas?.parentElement;
+			const container = this.renderer.canvas.parentElement;
 			if (container) {
 				container.classList.toggle('has-remote-cursor', !!ready);
 			}
