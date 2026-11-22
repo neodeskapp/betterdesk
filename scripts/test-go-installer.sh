@@ -534,6 +534,20 @@ test_update_asks_the_fork() (
     rm -rf "$TEST_DIR"
 )
 
+# L67: both installers open the same ports: RustDesk's (21115 to 21117 TCP,
+# 21116 UDP), the client API port, 21122 while CDAP is on, and the
+# console's ports unless TLS ends at a reverse proxy.
+test_firewall_ports() (
+    load
+    printf 'API_PORT=21121\nCONSOLE_PORT=5000\nHTTPS_ENABLED=true\nHTTPS_PORT=5443\nCDAP_ENABLED=Y\nTRUST_PROXY=false\n' > "$CONSOLE_PATH/.env"
+    [ "$(firewall_ports | tr '\n' ' ')" = "21115/tcp 21116/tcp 21116/udp 21117/tcp 21121/tcp 21122/tcp 5000/tcp 5443/tcp " ] \
+        || fail "the firewall ports: $(firewall_ports | tr '\n' ' ')"
+    printf 'API_PORT=21121\nCONSOLE_PORT=5000\nHTTPS_ENABLED=false\nCDAP_ENABLED=N\nTRUST_PROXY=Y\n' > "$CONSOLE_PATH/.env"
+    [ "$(firewall_ports | tr '\n' ' ')" = "21115/tcp 21116/tcp 21116/udp 21117/tcp 21121/tcp " ] \
+        || fail "the firewall ports behind a reverse proxy without CDAP: $(firewall_ports | tr '\n' ' ')"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -555,4 +569,5 @@ test_panel_public_host
 test_install_summary
 test_uninstall_says_what_stays
 test_update_asks_the_fork
+test_firewall_ports
 echo "Go installer unit checks passed"

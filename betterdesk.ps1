@@ -3052,9 +3052,8 @@ function Do-Install {
     Write-Host ""
     
     Show-InstallSummary
-    # Auto-configure firewall rules
-    Write-Host "  Configuring Windows Firewall rules..." -ForegroundColor Cyan
-    Configure-Firewall
+    $ports = (Get-FirewallPorts | ForEach-Object { "$($_.Port)/$($_.Proto)" }) -join ' '
+    Write-Host "  A firewall outside this machine (your network's or cloud provider's) needs these ports: $ports"
     Write-Host ""
     
     # Offer HTTPS Enterprise configuration for fresh installs
@@ -3511,17 +3510,47 @@ function Check-PortStatus {
     return $result
 }
 
+# The ports the installers open: RustDesk's (NAT test, signal TCP and UDP,
+# relay), the client API port, the CDAP gateway (21122) while CDAP is on,
+# and the console's ports unless TLS ends at a reverse proxy (TRUST_PROXY).
+function Get-FirewallPorts {
+    $signal = [int](Get-SignalPort)
+    $relay = [int](Get-RelayPort)
+    $ports = @(
+        @{Port = $signal - 1; Proto = "TCP"; Name = "BetterDesk NAT test"},
+        @{Port = $signal; Proto = "TCP"; Name = "BetterDesk ID server TCP"},
+        @{Port = $signal; Proto = "UDP"; Name = "BetterDesk ID server UDP"},
+        @{Port = $relay; Proto = "TCP"; Name = "BetterDesk relay"}
+    )
+    $api = Get-ConsoleEnvValue -Key "API_PORT"
+    if (-not $api) { $api = $script:CLIENT_API_PORT }
+    $ports += @{Port = [int]$api; Proto = "TCP"; Name = "BetterDesk client API"}
+    if ((Get-ConsoleEnvValue -Key "CDAP_ENABLED") -notmatch '^(?i)(n|no|0|false|off)$') {
+        $ports += @{Port = 21122; Proto = "TCP"; Name = "BetterDesk CDAP gateway"}
+    }
+    if ((Get-ConsoleEnvValue -Key "TRUST_PROXY") -match '^(?i)(y|yes|1|true|on)$') { return $ports }
+    $http = Get-ConsoleEnvValue -Key "CONSOLE_PORT"
+    if (-not $http) { $http = "5000" }
+    if ($http -ne "0") { $ports += @{Port = [int]$http; Proto = "TCP"; Name = "BetterDesk web console"} }
+    if ((Get-ConsoleEnvValue -Key "HTTPS_ENABLED") -eq "true") {
+        $https = Get-ConsoleEnvValue -Key "HTTPS_PORT"
+        if (-not $https) { $https = "5443" }
+        $ports += @{Port = [int]$https; Proto = "TCP"; Name = "BetterDesk web console HTTPS"}
+    }
+    return $ports
+}
+
 function Check-FirewallRules {
     Write-Host ""
     Write-Host "=== Windows Firewall ===" -ForegroundColor White
     Write-Host ""
-    
+
     $firewallProfile = Get-NetFirewallProfile -ErrorAction SilentlyContinue
     if (-not $firewallProfile) {
         Print-Warning "  Unable to query Windows Firewall"
         return
     }
-    
+
     $activeProfiles = $firewallProfile | Where-Object { $_.Enabled -eq $true }
     if ($activeProfiles) {
         $profileNames = ($activeProfiles | ForEach-Object { $_.Name }) -join ", "
@@ -3530,16 +3559,8 @@ function Check-FirewallRules {
         Write-Host "  Firewall: Disabled" -ForegroundColor Green
         return
     }
-    
-    # Check for BetterDesk firewall rules. Minimum WAN set from docs/CONNECTION_PORTS.md;
-    # the panel ports stay local and WebSocket ports are optional.
-    $requiredPorts = @(
-        @{Port=21116; Proto="TCP";  Name="ID Server TCP"},
-        @{Port=21116; Proto="UDP";  Name="ID Server UDP"},
-        @{Port=21117; Proto="TCP";  Name="Relay Server"},
-        @{Port=[int]$script:GO_API_PORT; Proto="TCP";  Name="Go API (default, direct)"}
-    )
-    
+
+    $requiredPorts = Get-FirewallPorts
     $missingRules = @()
     
     foreach ($p in $requiredPorts) {
@@ -3565,16 +3586,7 @@ function Configure-Firewall {
     param([array]$MissingRules = @())
     
     if ($MissingRules.Count -eq 0) {
-        # Minimum WAN set from docs/CONNECTION_PORTS.md. The panel (5000/5443) and the
-        # WebSocket ports (21118/21119) are not required: the panel stays local and native
-        # TCP/UDP works without WS.
-        $requiredPorts = @(
-            @{Port=21116; Proto="TCP";  Name="BetterDesk ID Server TCP"},
-            @{Port=21116; Proto="UDP";  Name="BetterDesk ID Server UDP"},
-            @{Port=21117; Proto="TCP";  Name="BetterDesk Relay Server"},
-            @{Port=[int]$script:GO_API_PORT; Proto="TCP";  Name="BetterDesk Go API (default)"}
-        )
-        
+        $requiredPorts = Get-FirewallPorts
         foreach ($p in $requiredPorts) {
             $rules = Get-NetFirewallRule -Direction Inbound -Enabled True -ErrorAction SilentlyContinue | 
                 Where-Object { $_.Action -eq 'Allow' } |

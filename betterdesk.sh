@@ -6184,80 +6184,61 @@ do_build_legacy_rust() {
 # Firewall Configuration
 #===============================================================================
 
+# firewall_ports: the ports the installers open, one PORT/PROTO a line:
+# RustDesk's (NAT test, signal TCP and UDP, relay), the client API port,
+# the CDAP gateway (21122) while CDAP is on, and the console's ports
+# unless TLS ends at a reverse proxy (TRUST_PROXY).
+firewall_ports() {
+    local signal relay value port
+    signal=$(signal_port)
+    relay=$(relay_port)
+    printf '%s\n' "$((signal - 1))/tcp" "$signal/tcp" "$signal/udp" "$relay/tcp"
+    echo "$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")/tcp"
+    value=$(read_effective_console_setting CDAP_ENABLED Y | tr '[:upper:]' '[:lower:]')
+    case "$value" in n|no|0|false|off) ;; *) echo "21122/tcp" ;; esac
+    value=$(read_effective_console_setting TRUST_PROXY false | tr '[:upper:]' '[:lower:]')
+    case "$value" in y|yes|1|true|on) return 0 ;; esac
+    port=$(resolve_panel_http_port)
+    [ "$port" != 0 ] && echo "$port/tcp"
+    if [ "$(read_effective_console_setting HTTPS_ENABLED false | tr '[:upper:]' '[:lower:]')" = "true" ]; then
+        echo "$(resolve_panel_https_port)/tcp"
+    fi
+    return 0
+}
+
+# configure_firewall_rules: opens firewall_ports in ufw or firewalld when
+# one of them is active, else with iptables, and names the ports a
+# firewall outside this machine needs.
 configure_firewall_rules() {
-    local required_ports="${GO_API_PORT:-21114} ${CLIENT_API_PORT:-21121} 21115 21116 21117 21118 21119 5000 5443"
-    local created=0
-    local total=0
-    
-    if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "active"; then
-        print_info "Configuring UFW firewall rules..."
-        
-        for port in $required_ports; do
-            total=$((total + 1))
-            if ! ufw status 2>/dev/null | grep -qE "^${port}[/ ]"; then
-                if [ "$port" = "21116" ]; then
-                    ufw allow 21116/tcp comment "BetterDesk ID Server TCP" 2>/dev/null && created=$((created + 1))
-                    ufw allow 21116/udp comment "BetterDesk ID Server UDP" 2>/dev/null && created=$((created + 1))
-                    total=$((total + 1))
-                else
-                    ufw allow "${port}/tcp" comment "BetterDesk port ${port}" 2>/dev/null && created=$((created + 1))
-                fi
-            fi
+    local entries entry created=0
+    mapfile -t entries < <(firewall_ports)
+    if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
+        print_info "Opening the BetterDesk ports in ufw..."
+        for entry in "${entries[@]}"; do
+            ufw allow "$entry" comment "BetterDesk" >/dev/null 2>&1 && created=$((created + 1))
         done
-        
-        ufw reload 2>/dev/null
-        
     elif command -v firewall-cmd &>/dev/null && systemctl is-active --quiet firewalld 2>/dev/null; then
-        print_info "Configuring firewalld rules..."
-        
-        for port in $required_ports; do
-            total=$((total + 1))
-            local open_ports=$(firewall-cmd --list-ports 2>/dev/null)
-            if ! echo "$open_ports" | grep -qE "${port}/tcp"; then
-                if [ "$port" = "21116" ]; then
-                    firewall-cmd --permanent --add-port=21116/tcp 2>/dev/null && created=$((created + 1))
-                    firewall-cmd --permanent --add-port=21116/udp 2>/dev/null && created=$((created + 1))
-                    total=$((total + 1))
-                else
-                    firewall-cmd --permanent --add-port="${port}/tcp" 2>/dev/null && created=$((created + 1))
-                fi
-            fi
+        print_info "Opening the BetterDesk ports in firewalld..."
+        for entry in "${entries[@]}"; do
+            firewall-cmd --permanent --add-port="$entry" >/dev/null 2>&1 && created=$((created + 1))
         done
-        
-        firewall-cmd --reload 2>/dev/null
-        
+        firewall-cmd --reload >/dev/null 2>&1 || true
     elif command -v iptables &>/dev/null; then
-        print_info "Configuring iptables rules..."
-        
-        for port in $required_ports; do
-            total=$((total + 1))
-            if ! iptables -L INPUT -n 2>/dev/null | grep -qE "dpt:${port}\b"; then
-                if [ "$port" = "21116" ]; then
-                    iptables -A INPUT -p tcp --dport 21116 -j ACCEPT 2>/dev/null && created=$((created + 1))
-                    iptables -A INPUT -p udp --dport 21116 -j ACCEPT 2>/dev/null && created=$((created + 1))
-                    total=$((total + 1))
-                else
-                    iptables -A INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null && created=$((created + 1))
-                fi
-            fi
+        print_info "Opening the BetterDesk ports with iptables..."
+        for entry in "${entries[@]}"; do
+            iptables -C INPUT -p "${entry#*/}" --dport "${entry%/*}" -j ACCEPT 2>/dev/null \
+                || iptables -A INPUT -p "${entry#*/}" --dport "${entry%/*}" -j ACCEPT 2>/dev/null
+            created=$((created + 1))
         done
-        
-        # Try to persist iptables rules
         if command -v iptables-save &>/dev/null; then
             iptables-save > /etc/iptables/rules.v4 2>/dev/null || \
             iptables-save > /etc/sysconfig/iptables 2>/dev/null || true
         fi
     else
-        print_info "No active firewall detected — no rules to configure"
-        return 0
+        print_info "No firewall is active on this machine"
     fi
-    
-    if [ $created -gt 0 ]; then
-        print_success "Created $created firewall rule(s)"
-    else
-        print_success "All firewall rules already configured"
-    fi
-    
+    [ "$created" -gt 0 ] && print_success "Open: ${entries[*]}"
+    print_info "A firewall outside this machine (your cloud provider's) needs the same ports: ${entries[*]}"
     return 0
 }
 
