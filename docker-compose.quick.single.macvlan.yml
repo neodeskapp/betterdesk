@@ -43,6 +43,11 @@ services:
     volumes:
       - betterdesk-data:/opt/rustdesk
       - console-data:/app/data
+    # Every KEY=value of .env next to this file reaches the server; the
+    # entries under environment below win over it.
+    env_file:
+      - path: .env
+        required: false
     environment:
       - NODE_ENV=production
       # Set TRUST_PROXY=1 when the panel is behind one reverse proxy.
