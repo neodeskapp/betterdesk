@@ -92,10 +92,15 @@ type Filters struct {
 	From, To jsbind.Value
 	// Scope holds the devices the account may see; nil sees every device.
 	// The devices outside it, and their activity, data guard events,
-	// inventories and alerts, are left out of the reports. The alert
-	// rules, the audit log, the tickets and the network targets are read
-	// whole.
+	// inventories, alerts and tickets, are left out of the reports; the
+	// tickets of no device stay. The alert rules and the network targets
+	// are read whole.
 	Scope *access.DeviceScope
+	// Outside holds the ids of the devices outside a limited Scope,
+	// deleted ones included: an entry of the audit log whose details name
+	// one is left out of the security report (namesADevice). nil keeps
+	// every entry.
+	Outside map[string]bool
 	// from and to are the range as the statements bind it (see bound),
 	// set by Generate.
 	from, to string
@@ -406,6 +411,15 @@ func (e *Engine) security(ctx context.Context, f Filters) (*goapi.Object, error)
 	if len(audit) > 100 {
 		audit = audit[:100]
 	}
+	if len(f.Outside) > 0 {
+		var kept []*goapi.Object
+		for _, entry := range audit {
+			if details, _ := entry.Get("details").(string); !namesADevice(details, f.Outside) {
+				kept = append(kept, entry)
+			}
+		}
+		audit = kept
+	}
 
 	return goapi.NewObject(
 		"dlp", goapi.NewObject("stats", stats, "recent_events", objects(recent, 20)),
@@ -413,6 +427,31 @@ func (e *Engine) security(ctx context.Context, f Filters) (*goapi.Object, error)
 		"audit_log_count", float64(len(audit)),
 		"recent_audit", objects(audit, 20),
 	), nil
+}
+
+// namesADevice reports whether a text names one of the devices: one of
+// its words, the runs of the characters a device id is made of (letters,
+// digits, "_" and "-"), is the id of such a device.
+func namesADevice(text string, devices map[string]bool) bool {
+	start := -1
+	for i := 0; i <= len(text); i++ {
+		if i < len(text) && isIDChar(text[i]) {
+			if start < 0 {
+				start = i
+			}
+			continue
+		}
+		if start >= 0 && devices[text[start:i]] {
+			return true
+		}
+		start = -1
+	}
+	return false
+}
+
+// isIDChar reports whether c can be part of a device id.
+func isIDChar(c byte) bool {
+	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_' || c == '-'
 }
 
 // withParsedDetails is the events with details as
@@ -450,22 +489,22 @@ func objects(rows []*goapi.Object, n int) []any {
 	return out
 }
 
-// tickets is generateTicketReport.
-func (e *Engine) tickets(ctx context.Context, _ Filters) (*goapi.Object, error) {
-	stats, err := e.ticketStats(ctx)
+// tickets is generateTicketReport over the tickets of the scope.
+func (e *Engine) tickets(ctx context.Context, f Filters) (*goapi.Object, error) {
+	stats, err := e.ticketStats(ctx, f.Scope)
 	if err != nil {
 		stats = goapi.NewObject("total", 0.0, "open", 0.0, "closed", 0.0, "in_progress", 0.0)
 	}
 	categories, priorities := newTally(), newTally()
 	var total float64
-	if byCategory, err := e.ticketsBy(ctx, "category"); err == nil {
+	if byCategory, err := e.ticketsBy(ctx, "category", f.Scope); err == nil {
 		for _, group := range byCategory {
 			n := e.clock.Number(group.Get("n"))
 			categories.addN(e.clock.String(or(group.Get("name"), true, "uncategorized")), n)
 			total += n
 		}
 	}
-	if byPriority, err := e.ticketsBy(ctx, "priority"); err == nil {
+	if byPriority, err := e.ticketsBy(ctx, "priority", f.Scope); err == nil {
 		for _, group := range byPriority {
 			priorities.addN(e.clock.String(or(group.Get("name"), true, "normal")), e.clock.Number(group.Get("n")))
 		}

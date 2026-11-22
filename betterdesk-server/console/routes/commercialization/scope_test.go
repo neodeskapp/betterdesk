@@ -14,10 +14,12 @@ import (
 // The operator lists the sessions, work reports and device contracts of
 // device b alone, is refused the contract state and pending session of
 // another device and the work report of another device's session without
-// a call reaching the API server, and gets no export. A work report's
-// session is looked up by its id, so a session older than the newest 500
-// is no longer refused. The admin gets the API server's answers as they
-// are.
+// a call reaching the API server. A work report's session is looked up by
+// its id, so a session older than the newest 500 is no longer refused.
+// The contracts of device groups and folders are listed when the group is
+// open to the operator, those of an organization when it holds device b,
+// and the exports hold the rows of device b, which the API server gets as
+// device_ids (L48). The admin gets the API server's answers as they are.
 func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 	sessions := `{"sessions":[{"id":"s1","device_id":"a","status":"pending_report"},{"id":"s2","device_id":"b","status":"pending_report"},{"id":"s3","device_id":"c","status":"closed"}]}`
 	api := routetest.NewAPI()
@@ -31,8 +33,13 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 	}
 	api.On("GET /api/billing/sessions/s9", 404, `{"error":"billing session not found"}`)
 	api.On("GET /api/billing/reports", 200, `{"reports":[{"id":1,"session_id":"s1"},{"id":2,"session_id":"s2"},{"id":3,"session_id":"s9"}]}`)
-	api.On("GET /api/billing/contracts", 200,
-		`{"contracts":[{"id":"k1","target_type":"device","target_key":"a"},{"id":"k2","target_type":"device","target_key":"b"},{"id":"k3","target_type":"org","target_key":"o1"}]}`)
+	api.On("GET /api/billing/contracts", 200, `{"contracts":[{"id":"k1","target_type":"device","target_key":"a"},{"id":"k2","target_type":"device","target_key":"b"},`+
+		`{"id":"k3","target_type":"org","target_key":"o1"},{"id":"k4","target_type":"org","target_key":"o2"},{"id":"k5","target_type":"org","target_key":"o3"},`+
+		`{"id":"k6","target_type":"device_group","target_key":"closed"},{"id":"k7","target_type":"device_group","target_key":"open"},{"id":"k8","target_type":"device_group","target_key":"gone"},`+
+		`{"id":"k9","target_type":"folder","target_key":"7"},{"id":"k10","target_type":"folder","target_key":"8"},{"id":"k11","target_type":"other","target_key":"b"}]}`)
+	api.On("GET /api/org/o1/devices", 200, `{"devices":[{"org_id":"o1","device_id":"a"},{"org_id":"o1","device_id":"b"}]}`)
+	api.On("GET /api/org/o2/devices", 200, `{"devices":[{"org_id":"o2","device_id":"c"}]}`)
+	api.On("GET /api/org/o3/devices", 404, `{"error":"organization not found"}`)
 	for _, id := range []string{"a", "b"} {
 		api.On("GET /api/billing/check?device_id="+id, 200, `{"allowed":true,"device":"`+id+`"}`)
 		api.On("GET /api/billing/sessions/pending?device_id="+id, 200, `{"session":{"device":"`+id+`"}}`)
@@ -42,11 +49,17 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 	}
 	api.On("GET /api/billing/sessions/export?format=csv", 200, "id,device_id\ns1,a")
 	api.On("GET /api/billing/reports/export?format=csv", 200, "id,session_id\n1,s1")
+	api.On("GET /api/billing/sessions/export?format=csv&device_ids=b", 200, "id,device_id\ns2,b")
+	api.On("GET /api/billing/reports/export?format=pdf&device_ids=b", 200, "%PDF report of s2")
 	w := routetest.New(t, routetest.Options{API: api, Roles: routetest.Overrides{"operator": {"billing.export": true}}})
 	for _, statement := range []string{
 		"INSERT INTO device_groups (id, guid, name) VALUES (90, 'closed', 'Closed')",
 		"INSERT INTO device_group_members (device_group_id, peer_id) VALUES (90, 'a'), (90, 'c')",
 		"INSERT INTO device_group_user_access (device_group_id, user_id) VALUES (90, 6)",
+		"INSERT INTO device_groups (id, guid, name) VALUES (91, 'open', 'Open')",
+		// folder 8 is closed to the operator, folder 7 has no list
+		"INSERT INTO device_groups (id, guid, name) VALUES (92, 'folder_8', 'Folder 8')",
+		"INSERT INTO device_group_user_access (device_group_id, user_id) VALUES (92, 6)",
 	} {
 		if _, err := w.DB.Exec(context.Background(), statement); err != nil {
 			t.Fatal(err)
@@ -63,7 +76,8 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 		{"GET", "/api/panel/billing/sessions", 200, `{"sessions":[{"id":"s2","device_id":"b","status":"pending_report"}]}`, "GET /api/billing/sessions"},
 		{"GET", "/api/panel/billing/reports", 200, `{"reports":[{"id":2,"session_id":"s2"}]}`, "GET /api/billing/reports"},
 		{"GET", "/api/panel/billing/contracts", 200,
-			`{"contracts":[{"id":"k2","target_type":"device","target_key":"b"},{"id":"k3","target_type":"org","target_key":"o1"}]}`, "GET /api/billing/contracts"},
+			`{"contracts":[{"id":"k2","target_type":"device","target_key":"b"},{"id":"k3","target_type":"org","target_key":"o1"},` +
+				`{"id":"k7","target_type":"device_group","target_key":"open"},{"id":"k9","target_type":"folder","target_key":"7"}]}`, "GET /api/billing/contracts"},
 		{"GET", "/api/panel/billing/check?device_id=b", 200, `{"allowed":true,"device":"b"}`, "GET /api/billing/check?device_id=b"},
 		{"GET", "/api/panel/billing/check?device_id=a", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
 		{"GET", "/api/panel/billing/check?device_id=b&device_id=a", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
@@ -76,8 +90,8 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 		{"POST", "/api/panel/billing/sessions/s9/report", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
 		{"POST", "/api/panel/billing/sessions/s6/report", 200, `{"ok":"true"}`, "POST /api/billing/sessions/s6/report"},
 		{"POST", "/api/panel/billing/sessions/s7/report", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
-		{"GET", "/api/panel/billing/sessions/export?format=csv", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
-		{"GET", "/api/panel/billing/reports/export?format=csv", 403, `{"success":false,"error":"errors.forbidden"}`, ""},
+		{"GET", "/api/panel/billing/sessions/export?format=csv", 200, "id,device_id\ns2,b", "GET /api/billing/sessions/export?format=csv&device_ids=b"},
+		{"GET", "/api/panel/billing/reports/export?format=pdf&device_ids=a", 200, "%PDF report of s2", "GET /api/billing/reports/export?format=pdf&device_ids=b"},
 	} {
 		body := ""
 		if c.method == "POST" {
@@ -105,7 +119,7 @@ func TestBillingKeepsToTheDeviceScope(t *testing.T) {
 	for path, want := range map[string]string{
 		"/api/panel/billing/sessions":                   sessions,
 		"/api/panel/billing/reports":                    `"session_id":"s9"`,
-		"/api/panel/billing/contracts":                  `"target_key":"a"`,
+		"/api/panel/billing/contracts":                  `"target_key":"closed"`,
 		"/api/panel/billing/check?device_id=a":          `"device":"a"`,
 		"/api/panel/billing/sessions/export?format=csv": "s1,a",
 	} {

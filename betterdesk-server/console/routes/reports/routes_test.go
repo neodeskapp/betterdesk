@@ -464,6 +464,70 @@ func TestReportsKeepToTheDeviceScope(t *testing.T) {
 	})
 }
 
+// TestReportsKeepTicketsAndAuditToTheDeviceScope closes the devices
+// 100100001 and 100100003 to the viewer with a device group whose access
+// list names the operator (L48). The viewer's ticket report counts the
+// tickets of 100100002 and the one of no device; its security report
+// leaves out the audit entries that name a device outside its scope, the
+// deleted 100100004 included, and keeps those about the open device and
+// about no device. The admin's reports count everything.
+func TestReportsKeepTicketsAndAuditToTheDeviceScope(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		api := routetest.NewAPI()
+		api.On("GET /api/peers", 200, `[{"id":"100100001"},{"id":"100100002"},{"id":"100100003"}]`)
+		api.On("GET /api/peers?include_deleted=true", 200, `[{"id":"100100001"},{"id":"100100002"},{"id":"100100003"},{"id":"100100004","soft_deleted":true}]`)
+		w := routetest.New(t, routetest.Options{DB: db, API: api})
+		ctx := context.Background()
+		for _, statement := range []string{
+			"INSERT INTO device_groups (id, guid, name) VALUES (90, 'closed', 'Closed')",
+			"INSERT INTO device_group_members (device_group_id, peer_id) VALUES (90, '100100001'), (90, '100100003')",
+			"INSERT INTO device_group_user_access (device_group_id, user_id) VALUES (90, 5)",
+			`INSERT INTO tickets (title, status, priority, category, device_id, created_by, created_at) VALUES
+				('Alpha broke', 'open', 'high', 'alpha-cat', '100100001', 'e2e_admin', '2019-11-01 10:00:00'),
+				('Beta broke', 'in_progress', 'low', 'beta-cat', '100100002', 'e2e_admin', '2019-11-01 11:00:00'),
+				('Printer', 'closed', 'normal', 'general', NULL, 'e2e_admin', '2019-11-01 12:00:00'),
+				('Gamma broke', 'resolved', 'urgent', 'gamma-cat', '100100003', 'e2e_admin', '2019-11-01 13:00:00')`,
+			`INSERT INTO audit_log (user_id, action, details, ip_address, created_at) VALUES
+				(1, 'device_banned', 'Device 100100001 banned', '127.0.0.1', '2019-11-01 10:00:00'),
+				(1, 'note_added', 'Note added to device 100100002', '127.0.0.1', '2019-11-01 11:00:00'),
+				(1, 'user_created', 'Created user: bob (operator)', '127.0.0.1', '2019-11-01 12:00:00'),
+				(1, 'device_id_changed', 'Device ID changed from 100100002 to 100100003', '127.0.0.1', '2019-11-01 13:00:00'),
+				(1, 'device_restored', 'Device 100100004 restored', '127.0.0.1', '2019-11-01 14:00:00'),
+				(1, 'device_group_membership_updated', 'Device 100100002 groups set to [Lab]', '127.0.0.1', '2019-11-01 15:00:00')`,
+		} {
+			if _, err := db.Exec(ctx, statement); err != nil {
+				t.Fatalf("%s: %v", statement, err)
+			}
+		}
+		check := func(role, body string, has, lacks []string) {
+			t.Helper()
+			got := w.As(role).Do("POST", "/api/reports/generate", body)
+			if got.Status != 200 {
+				t.Fatalf("%s %s: %d %s", role, body, got.Status, got.Body)
+			}
+			for _, part := range has {
+				if !strings.Contains(got.Body, part) {
+					t.Errorf("%s %s lacks %s: %s", role, body, part, got.Body)
+				}
+			}
+			for _, part := range lacks {
+				if strings.Contains(got.Body, part) {
+					t.Errorf("%s %s holds %s: %s", role, body, part, got.Body)
+				}
+			}
+		}
+		check("viewer", `{"type":"tickets"}`, []string{
+			`"stats":{"total":2,"open":0,"in_progress":1,"resolved":0,"closed":1}`,
+			`"total_tickets":2,"category_distribution":{"general":1,"beta-cat":1},"priority_distribution":{"normal":1,"low":1}`,
+		}, []string{"alpha-cat", "gamma-cat"})
+		check("viewer", `{"type":"security"}`, []string{
+			`"audit_log_count":3,`, "Note added to device 100100002", "Created user: bob", "groups set to [Lab]",
+		}, []string{"100100001", "100100003", "100100004"})
+		check("admin", `{"type":"tickets"}`, []string{`"stats":{"total":4,"open":1,"in_progress":1,"resolved":1,"closed":1}`, `"total_tickets":4,`, "alpha-cat", "gamma-cat"}, nil)
+		check("admin", `{"type":"security"}`, []string{`"audit_log_count":6,`, "Device 100100001 banned", "Device 100100004 restored"}, nil)
+	})
+}
+
 func jsonNumber(n int) string {
 	out, _ := json.Marshal(n)
 	return string(out)
