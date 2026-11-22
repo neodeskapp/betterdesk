@@ -94,6 +94,14 @@ type Options struct {
 	// AttachmentsDir is the folder of the ticket attachments
 	// (CONSOLE_DIR/data/attachments).
 	AttachmentsDir string
+	// FontsDir is the folder of the installed fonts (DATA_DIR/fonts).
+	FontsDir string
+	// CertFile, KeyFile and CAFile are the console's TLS certificate, its
+	// private key and its CA (SSL_CERT_PATH, SSL_KEY_PATH, SSL_CA_PATH).
+	CertFile, KeyFile, CAFile string
+	// EndpointsFile is the file the console keeps the public client
+	// endpoints in (DATA_DIR/public-endpoints.env).
+	EndpointsFile string
 	// AppVersion is the product version the archive names.
 	AppVersion string
 	// Now is the clock; nil is time.Now.
@@ -121,6 +129,7 @@ func New(o Options) *Service {
 // paths are the files a full backup holds, resolveBackupPaths.
 type paths struct {
 	env, sessionSecret, uploadsDir, chatFilesDir, attachmentsDir, consoleDB, goPrivKey, goPubKey, goAPIKey, goDB, meshAgentCert string
+	fontsDir, certFile, keyFile, caFile, endpointsFile                                                                          string
 }
 
 func (s *Service) paths() paths {
@@ -135,6 +144,11 @@ func (s *Service) paths() paths {
 		goAPIKey:       s.o.APIKeyPath,
 		goDB:           s.serverDBFile(),
 		meshAgentCert:  filepath.Join(s.o.KeysPath, "mesh_agent_server.pem"),
+		fontsDir:       s.o.FontsDir,
+		certFile:       s.o.CertFile,
+		keyFile:        s.o.KeyFile,
+		caFile:         s.o.CAFile,
+		endpointsFile:  s.o.EndpointsFile,
 	}
 	p.consoleDB = p.goDB
 	return p
@@ -308,6 +322,11 @@ type Manifest struct {
 //	console/uploads/...              every file below DATA_DIR/uploads
 //	console/chat-files/...           the chat files and their .links
 //	console/attachments/...          the ticket attachments
+//	console/fonts/...                the installed fonts
+//	console/public-endpoints.env     the public client endpoints saved in the console
+//	console/tls/certificate.pem      the console's TLS certificate (SSL_CERT_PATH)
+//	console/tls/private-key.pem      its private key (SSL_KEY_PATH)
+//	console/tls/ca.pem               its CA (SSL_CA_PATH)
 //	goserver/id_ed25519(.pub)        the server's key pair
 //	goserver/.api_key                the API key
 //	goserver/db_v2.sqlite3           the same copy as the server's database
@@ -387,6 +406,11 @@ func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) 
 	addFolder(uploadsPrefix, p.uploadsDir)
 	addFolder(chatFilesPrefix, p.chatFilesDir)
 	addFolder(attachmentsPrefix, p.attachmentsDir)
+	addFolder(fontsPrefix, p.fontsDir)
+	addFile(endpointsEntry, p.endpointsFile)
+	for _, f := range tlsEntries(p) {
+		addFile(f.name, f.target)
+	}
 	addFile("goserver/id_ed25519", p.goPrivKey)
 	addFile("goserver/id_ed25519.pub", p.goPubKey)
 	addFile("goserver/.api_key", p.goAPIKey)
@@ -478,6 +502,9 @@ func recoveryReadme(m Manifest) string {
 		"     console/uploads/*       -> <dataDir>/uploads/",
 		"     console/chat-files/*    -> <consoleDir>/data/chat-files/",
 		"     console/attachments/*   -> <consoleDir>/data/attachments/",
+		"     console/fonts/*         -> <dataDir>/fonts/",
+		"     console/public-endpoints.env -> <dataDir>/public-endpoints.env",
+		"     console/tls/*.pem       -> SSL_CERT_PATH, SSL_KEY_PATH, SSL_CA_PATH",
 		"     goserver/id_ed25519     -> <keysPath>/id_ed25519",
 		"     goserver/id_ed25519.pub -> <keysPath>/id_ed25519.pub",
 		"     goserver/.api_key       -> <keysPath>/.api_key",
@@ -560,10 +587,10 @@ func (e *ErrInvalidArchive) Error() string {
 //  1. the logical dump, table by table (ImportAllTables); the branding
 //     cache is loaded again when branding_config came back, the list of
 //     who has a picture is dropped when users or user_avatars did; the
-//     chat files and the ticket attachments go with the dump, when it is
-//     chosen,
-//  2. the uploads, below DATA_DIR/uploads,
-//  3. the secrets, each to its own path,
+//     chat files, the ticket attachments and the public endpoints file go
+//     with the dump, when it is chosen,
+//  2. the uploads, below DATA_DIR/uploads, and the installed fonts,
+//  3. the secrets, each to its own path, with the console's TLS files,
 //  4. the .env,
 //  5. the server's SQLite file, when the server has one (serverDBFile):
 //     checked (SQLite's header, PRAGMA integrity_check) and written next
@@ -592,6 +619,14 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 	if o.Database {
 		s.restoreFolderPart(files, &res, chatFilesPrefix, p.chatFilesDir, "chat files", "Chat files")
 		s.restoreFolderPart(files, &res, attachmentsPrefix, p.attachmentsDir, "attachments", "Attachments")
+		if data, ok := files.Get(endpointsEntry); ok && p.endpointsFile != "" {
+			if err := writeFile(p.endpointsFile, data, 0o600); err != nil {
+				res.Warnings = append(res.Warnings, "Public endpoints restore failed: "+err.Error())
+			} else {
+				res.Restored = append(res.Restored, "public endpoints")
+				res.RequiresRestart = true
+			}
+		}
 	}
 
 	if o.Uploads {
@@ -604,22 +639,20 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 		default:
 			res.Skipped = append(res.Skipped, "uploads")
 		}
+		s.restoreFolderPart(files, &res, fontsPrefix, p.fontsDir, "fonts", "Fonts")
 	} else {
 		res.Skipped = append(res.Skipped, "uploads")
 	}
 
 	if o.Secrets {
 		restoredAny := false
-		for _, f := range []struct {
-			name, target string
-			mode         os.FileMode
-		}{
+		for _, f := range append([]fileEntry{
 			{"console/.session_secret", p.sessionSecret, 0o600},
 			{"goserver/id_ed25519", p.goPrivKey, 0o600},
 			{"goserver/id_ed25519.pub", p.goPubKey, 0o644},
 			{"goserver/.api_key", p.goAPIKey, 0o600},
 			{"goserver/mesh_agent_server.pem", p.meshAgentCert, 0o600},
-		} {
+		}, tlsEntries(p)...) {
 			data, ok := files.Get(f.name)
 			if !ok || f.target == "" {
 				continue
@@ -689,7 +722,28 @@ const (
 	uploadsPrefix     = "console/uploads/"
 	chatFilesPrefix   = "console/chat-files/"
 	attachmentsPrefix = "console/attachments/"
+	fontsPrefix       = "console/fonts/"
 )
+
+// endpointsEntry is the public endpoints file in an archive.
+const endpointsEntry = "console/public-endpoints.env"
+
+// fileEntry is a file of an archive, the path it goes back to and the
+// mode a new file gets.
+type fileEntry struct {
+	name, target string
+	mode         os.FileMode
+}
+
+// tlsEntries are the console's TLS files in an archive: they go with the
+// secrets.
+func tlsEntries(p paths) []fileEntry {
+	return []fileEntry{
+		{"console/tls/certificate.pem", p.certFile, 0o644},
+		{"console/tls/private-key.pem", p.keyFile, 0o600},
+		{"console/tls/ca.pem", p.caFile, 0o644},
+	}
+}
 
 // forgetPictures drops the avatar service's list of who has a picture
 // after a restore replaced the accounts or their pictures.
