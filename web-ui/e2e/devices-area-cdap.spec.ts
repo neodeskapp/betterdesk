@@ -1,7 +1,8 @@
 /**
  * IoT devices (CDAP): the list and a device page, once per role. The demo
  * data has no CDAP device, so the gateway's answers and the device's sockets
- * are mocked. Each role is offered exactly what its permissions let through
+ * are mocked. A role without cdap.view (server_admin) gets the "no access"
+ * page. Each other role is offered exactly what its permissions let through
  * (the routes check cdap.command and server.config, the sockets cdap.terminal,
  * cdap.files and cdap.command), commands carry what the control says, the
  * device's clipboard is never written into the browser's, and axe finds
@@ -80,6 +81,9 @@ async function permissions(page: Page): Promise<(p: string) => boolean> {
 	return (p) => boot.isSuperAdmin || boot.permissions.includes(p);
 }
 
+const forbidden = (page: Page) =>
+	page.getByRole('heading', { level: 1, name: "You don't have access to this page" });
+
 for (const role of ROLES) {
 	test.describe(`IoT devices as ${role}`, () => {
 		test.use({ role });
@@ -87,8 +91,13 @@ for (const role of ROLES) {
 		test('the list and the gateway switch follow the permissions', async ({ page }) => {
 			await mock(page);
 			await page.goto(`${UI}/cdap`);
-			await expect(page.getByRole('link', { name: 'Boiler room controller' })).toBeVisible();
 			const can = await permissions(page);
+			if (!can('cdap.view')) {
+				await expect(forbidden(page)).toBeVisible();
+				await expectNoAxeViolations(page);
+				return;
+			}
+			await expect(page.getByRole('link', { name: 'Boiler room controller' })).toBeVisible();
 			await expect(page.getByRole('button', { name: /disable gateway/i })).toHaveCount(
 				can('server.config') ? 1 : 0
 			);
@@ -111,9 +120,14 @@ for (const role of ROLES) {
 					};
 			});
 			await page.goto(`${UI}/cdap/devices/${ID}`);
+			const can = await permissions(page);
+			if (!can('cdap.view')) {
+				await expect(forbidden(page)).toBeVisible();
+				expect(sent.commands).toEqual([]);
+				return;
+			}
 			await expect(page.getByRole('heading', { level: 1 })).toHaveText('Boiler room controller');
 			await expect(page.locator('[data-widget-id="pump"]')).toBeVisible();
-			const can = await permissions(page);
 			await expect(page.getByRole('button', { name: /connect terminal/i })).toHaveCount(
 				can('cdap.terminal') ? 1 : 0
 			);
@@ -172,6 +186,10 @@ for (const role of ROLES) {
 		test('an unknown device says so', async ({ page }) => {
 			await mock(page);
 			await page.goto(`${UI}/cdap/devices/CDAP-NOPE01`);
+			if (!(await permissions(page))('cdap.view')) {
+				await expect(forbidden(page)).toBeVisible();
+				return;
+			}
 			// The page's own message (the shell's toast region is an alert too)
 			await expect(page.locator('#main-content').getByRole('alert')).toContainText('CDAP-NOPE01');
 		});
