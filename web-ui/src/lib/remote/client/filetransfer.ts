@@ -2234,7 +2234,20 @@ export class RDFileTransfer {
 					phase: 'saving'
 				} satisfies RDFileTransferProgressEvent);
 			}
-			this._triggerDownload(transfer);
+			// Complete once the file is saved; a failed save already reported its error
+			void this._triggerDownload(transfer).then((saved) => {
+				if (saved) {
+					finishComplete();
+					return;
+				}
+				if (typeof transfer._folderWait === 'function') {
+					const resolve = transfer._folderWait;
+					transfer._folderWait = null;
+					resolve(false);
+				}
+				this._transfers.delete(id);
+			});
+			return;
 		}
 
 		finishComplete();
@@ -2507,21 +2520,23 @@ export class RDFileTransfer {
 	}
 
 	/**
-	 * Assemble received blocks into a Blob and trigger download
+	 * Assemble received blocks into a Blob and save it. Resolves false when
+	 * the save failed, after its file_transfer_error.
 	 */
-	_triggerDownload(transfer: RDDownloadTransfer): void {
-		if (transfer.streamDownload) return;
+	_triggerDownload(transfer: RDDownloadTransfer): Promise<boolean> {
+		if (transfer.streamDownload) return Promise.resolve(true);
 		const blocks = transfer.blocks || [];
 
 		try {
 			const blob = new Blob(blobParts(blocks), { type: 'application/octet-stream' });
-			void this._saveBlob(transfer.id, transfer.fileName, blob);
+			return this._saveBlob(transfer.id, transfer.fileName, blob);
 		} catch (err) {
 			this._emit('file_transfer_error', {
 				id: transfer.id,
 				fileName: transfer.fileName,
 				error: 'Failed to save file: ' + (errorMessage(err) || 'unknown error')
 			} satisfies RDFileTransferErrorEvent);
+			return Promise.resolve(false);
 		}
 	}
 

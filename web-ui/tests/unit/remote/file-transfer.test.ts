@@ -214,3 +214,36 @@ describe('a file for another device (downloadFileToBlob)', () => {
 		expect(await (await blob).text()).toBe('abc');
 	});
 });
+
+describe('saving a download into the chosen local folder', () => {
+	async function downloaded(save: () => Promise<boolean>) {
+		const t = await setup();
+		t.ft._saveDownload = save;
+		const id = t.ft.downloadFile('/data', { name: 'a.txt', size: 3 });
+		t.respond({ digest: { id, fileNum: 0, fileSize: 3 } });
+		t.respond({ block: { id, data: enc('abc') } });
+		t.respond({ done: { id } });
+		const outcome = () =>
+			t.events.filter(([e, a]) => a.id === id && /complete|error/.test(e)).map(([e]) => e);
+		return { t, id, outcome };
+	}
+
+	test('reports the download complete only once the file is saved', async () => {
+		let finish: (ok: boolean) => void = () => {};
+		const d = await downloaded(() => new Promise<boolean>((r) => (finish = r)));
+		await tick(10);
+		expect(d.outcome()).toEqual([]);
+		finish(true);
+		await vi.waitFor(() => expect(d.outcome()).toEqual(['file_transfer_complete']));
+	});
+
+	test('a save that fails is an error of the download, not a completion followed by an error', async () => {
+		const d = await downloaded(async () => {
+			throw new Error('disk full');
+		});
+		await vi.waitFor(() => expect(d.outcome()).toContain('file_transfer_error'));
+		await tick(10);
+		expect(d.outcome()).toEqual(['file_transfer_error']);
+		expect(d.t.named('file_transfer_error')[0]?.error).toBe('Failed to save file: disk full');
+	});
+});
