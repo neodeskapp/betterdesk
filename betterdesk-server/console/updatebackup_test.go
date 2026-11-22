@@ -65,13 +65,13 @@ func newReleaseFiles(t *testing.T) releaseFiles {
 	sum := sha256.Sum256(binary)
 	manifest, err := json.Marshal(updater.Manifest{
 		SchemaVersion: 1, Product: updater.Product, Version: "3.6.0", Channel: updater.ChannelOf(updater.BranchStable),
-		Created: "2026-11-18T10:00:00Z", Owner: "UNITRONIX", Repo: "BetterDesk", Branch: updater.BranchStable, SHA: releaseCommit,
+		Created: "2026-11-18T10:00:00Z", Owner: "trybetterdesk", Repo: "betterdesk", Branch: updater.BranchStable, SHA: releaseCommit,
 		Files: []updater.ManifestFile{{Path: asset, SHA256: hex.EncodeToString(sum[:]), Size: int64(len(binary))}},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	const download = "github.com/UNITRONIX/BetterDesk/releases/download/v3.6.0/"
+	const download = "github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/"
 	files := releaseFiles{download + "manifest.json": manifest, download + asset: binary}
 	type ghAsset struct {
 		Name string `json:"name"`
@@ -89,7 +89,7 @@ func newReleaseFiles(t *testing.T) releaseFiles {
 	if err != nil {
 		t.Fatal(err)
 	}
-	files["api.github.com/repos/UNITRONIX/BetterDesk/releases/latest"] = release
+	files["api.github.com/repos/trybetterdesk/betterdesk/releases/latest"] = release
 	return files
 }
 

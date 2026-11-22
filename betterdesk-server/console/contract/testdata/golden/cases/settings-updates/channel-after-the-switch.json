@@ -41,8 +41,8 @@
       "branch": "dev",
       "channel": "development",
       "label": "Development",
-      "owner": "UNITRONIX",
-      "repo": "BetterDesk"
+      "owner": "trybetterdesk",
+      "repo": "betterdesk"
      },
      "success": true
     }

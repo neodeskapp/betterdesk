@@ -17,7 +17,7 @@
 //
 //	{"schema_version": 1, "product": "betterdesk-server", "version": "3.6.0",
 //	 "channel": "stable", "created": "<RFC 3339>", "min_rollback_version": "3.5.0",
-//	 "owner": "UNITRONIX", "repo": "BetterDesk", "branch": "main", "sha": "<commit>",
+//	 "owner": "trybetterdesk", "repo": "betterdesk", "branch": "main", "sha": "<commit>",
 //	 "files": [{"path": "betterdesk-server-linux-amd64", "sha256": "<hex>", "size": 41234567,
 //	            "os": "linux", "arch": "amd64"}, ...]}
 //

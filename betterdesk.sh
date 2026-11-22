@@ -4165,7 +4165,7 @@ write_server_unit() {
     cat << EOF | grep -v '^__EMPTY__$' > "$SERVER_UNIT"
 [Unit]
 Description=BetterDesk server and web console v$VERSION
-Documentation=https://github.com/UNITRONIX/BetterDesk
+Documentation=https://github.com/trybetterdesk/betterdesk
 After=network-online.target postgresql.service
 Wants=network-online.target
 
@@ -4984,8 +4984,8 @@ do_install() {
 #===============================================================================
 
 # GitHub repository configuration for online updates
-UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-UNITRONIX}"
-UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-BetterDesk}"
+UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-trybetterdesk}"
+UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-betterdesk}"
 # A channel given to the installer (install.sh passes the branch it
 # installed) wins over .env and is written into it
 UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"

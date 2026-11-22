@@ -262,12 +262,36 @@ function Test-PostgreSQLSwitchMovesTheWholeInstall {
     Remove-Item -Recurse -Force $dir
 }
 
+# L31: releases come from the fork's repository. The defaults are set at
+# the script's top level, so those lines are run here as they are.
+function Test-ReleasesComeFromTheFork {
+    $saved = @{}
+    foreach ($k in 'UPDATE_GITHUB_OWNER', 'UPDATE_GITHUB_REPO', 'UPDATE_GITHUB_BRANCH', 'RELEASE_BASE_URL') {
+        $saved[$k] = [Environment]::GetEnvironmentVariable($k)
+        [Environment]::SetEnvironmentVariable($k, $null)
+    }
+    $defaults = $ast.FindAll({
+        $args[0] -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+        $args[0].Left.Extent.Text -like '$script:UPDATE_GITHUB_*'
+    }, $false)
+    if ($defaults.Count -lt 2) { Fail "the installer sets no repository for releases ($($defaults.Count) lines)" }
+    foreach ($a in $defaults) { . ([scriptblock]::Create($a.Extent.Text)) }
+    $base = Get-ReleaseBaseUrl
+    if ($base -ne 'https://github.com/trybetterdesk/betterdesk/releases/latest/download') { Fail "the stable channel downloads from $base" }
+    $script:UPDATE_GITHUB_BRANCH = 'dev'
+    $base = Get-ReleaseBaseUrl
+    if ($base -ne 'https://github.com/trybetterdesk/betterdesk/releases/download/dev') { Fail "the development channel downloads from $base" }
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    foreach ($k in $saved.Keys) { [Environment]::SetEnvironmentVariable($k, $saved[$k]) }
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
 Test-ConsoleHomeCopiesNoConsoleFiles
 Test-MigrationMenusPassOverwrite
 Test-PostgreSQLSwitchMovesTheWholeInstall
+Test-ReleasesComeFromTheFork
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'
 # The stand-ins set LASTEXITCODE, and a caller such as GitHub's pwsh step

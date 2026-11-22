@@ -304,6 +304,25 @@ test_console_home_copies_no_console_files() (
     rm -rf "$TEST_DIR"
 )
 
+# L31: releases, the update channel and the unit's documentation link
+# name the fork's repository.
+test_releases_come_from_the_fork() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO UPDATE_GITHUB_BRANCH RELEASE_BASE_URL
+    load
+    local base
+    base=$(release_base_url)
+    [ "$base" = "https://github.com/trybetterdesk/betterdesk/releases/latest/download" ] \
+        || fail "the stable channel downloads from $base"
+    UPDATE_GITHUB_BRANCH=dev
+    base=$(release_base_url)
+    [ "$base" = "https://github.com/trybetterdesk/betterdesk/releases/download/dev" ] \
+        || fail "the development channel downloads from $base"
+    write_server_unit "-mode all" ""
+    grep -qx "Documentation=https://github.com/trybetterdesk/betterdesk" "$SERVER_UNIT" \
+        || fail "the unit's documentation link: $(grep '^Documentation=' "$SERVER_UNIT")"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -316,4 +335,5 @@ test_update_channel_before_server_update
 test_update_channel_kept_without_one
 test_server_folder_mode
 test_console_home_copies_no_console_files
+test_releases_come_from_the_fork
 echo "Go installer unit checks passed"

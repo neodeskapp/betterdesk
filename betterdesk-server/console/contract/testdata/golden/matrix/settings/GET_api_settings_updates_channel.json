@@ -114,8 +114,8 @@
       "branch": "main",
       "channel": "stable",
       "label": "Stable",
-      "owner": "UNITRONIX",
-      "repo": "BetterDesk"
+      "owner": "trybetterdesk",
+      "repo": "betterdesk"
      },
      "success": true
     }

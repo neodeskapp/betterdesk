@@ -358,9 +358,23 @@ FAKE_MIGRATE
         || fail "after a failed move .env does not point at the SQLite file: $(cat "$env")"
 )
 
+# L31: the one-line installer clones and downloads from the fork.
+test_install_sh_uses_the_fork() (
+    unset BETTERDESK_REPO BETTERDESK_RAW_BASE BETTERDESK_BRANCH
+    set --
+    # shellcheck disable=SC1091
+    source "$SCRIPT_ROOT/install.sh"
+    [ "$BETTERDESK_REPO" = trybetterdesk/betterdesk ] || fail "install.sh clones $BETTERDESK_REPO"
+    case "$BETTERDESK_RAW_BASE" in
+        https://raw.githubusercontent.com/trybetterdesk/betterdesk/*) ;;
+        *) fail "install.sh downloads from $BETTERDESK_RAW_BASE" ;;
+    esac
+)
+
 test_bounded_go_commands
 test_dirty_native_clone
 test_native_update_channel
 test_migration_menus
 test_postgresql_switch
+test_install_sh_uses_the_fork
 printf 'PASS: native installer regression tests\n'

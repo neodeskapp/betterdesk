@@ -187,12 +187,12 @@ func TestInstallFailuresLeaveTheInstall(t *testing.T) {
 		want  string
 	}{
 		{"release lookup fails", func(in *install, _ *testRelease) {
-			in.gh.on("GET https://api.github.com/repos/UNITRONIX/BetterDesk/releases/latest", func(*http.Request) *http.Response {
+			in.gh.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/releases/latest", func(*http.Request) *http.Response {
 				return respond(500, "boom", nil)
 			})
 		}, newCommit, "GitHub API 500: boom"},
 		{"rate limit", func(in *install, _ *testRelease) {
-			in.gh.on("GET https://api.github.com/repos/UNITRONIX/BetterDesk/releases/latest", func(*http.Request) *http.Response {
+			in.gh.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/releases/latest", func(*http.Request) *http.Response {
 				return respond(403, "API rate limit exceeded", http.Header{"X-Ratelimit-Reset": {"1795000000"}})
 			})
 		}, newCommit, "rate limit exceeded for unauthenticated requests"},
@@ -210,7 +210,7 @@ func TestInstallFailuresLeaveTheInstall(t *testing.T) {
 			rel.manifest.Owner = "evil"
 			rel.render()
 			in.gh.serve(rel)
-		}, newCommit, `owner "evil" is not UNITRONIX`},
+		}, newCommit, `owner "evil" is not trybetterdesk`},
 		{"manifest of another branch", func(in *install, rel *testRelease) {
 			rel.manifest.Branch, rel.manifest.Channel = "dev", "development"
 			rel.render()
@@ -237,17 +237,17 @@ func TestInstallFailuresLeaveTheInstall(t *testing.T) {
 			})
 		}, newCommit, "HTTP 503"},
 		{"redirect to another host", func(in *install, rel *testRelease) {
-			in.gh.on("GET https://github.com/UNITRONIX/BetterDesk/releases/download/"+rel.tag+"/"+asset, func(*http.Request) *http.Response {
+			in.gh.on("GET https://github.com/trybetterdesk/betterdesk/releases/download/"+rel.tag+"/"+asset, func(*http.Request) *http.Response {
 				return redirect("https://evil.example/file")
 			})
 		}, newCommit, "not GitHub's"},
 		{"redirect to plain http", func(in *install, rel *testRelease) {
-			in.gh.on("GET https://github.com/UNITRONIX/BetterDesk/releases/download/"+rel.tag+"/"+asset, func(*http.Request) *http.Response {
+			in.gh.on("GET https://github.com/trybetterdesk/betterdesk/releases/download/"+rel.tag+"/"+asset, func(*http.Request) *http.Response {
 				return redirect("http://objects.githubusercontent.com/x")
 			})
 		}, newCommit, "not GitHub's"},
 		{"redirect loop", func(in *install, rel *testRelease) {
-			loop := "https://github.com/UNITRONIX/BetterDesk/releases/download/" + rel.tag + "/" + asset
+			loop := "https://github.com/trybetterdesk/betterdesk/releases/download/" + rel.tag + "/" + asset
 			in.gh.on("GET "+loop, func(*http.Request) *http.Response { return redirect(loop) })
 		}, newCommit, "too many redirects"},
 		{"checksum mismatch", func(in *install, rel *testRelease) {

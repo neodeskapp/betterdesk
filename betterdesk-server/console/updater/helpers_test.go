@@ -119,7 +119,7 @@ func newTestRelease(version, commit, branch string) *testRelease {
 		"betterdesk-server-windows-amd64.exe": []byte("MZ windows " + version),
 	}}
 	r.manifest = &Manifest{SchemaVersion: 1, Product: Product, Version: version, Channel: ChannelOf(branch), Created: "2026-11-18T10:00:00Z",
-		Owner: "UNITRONIX", Repo: "BetterDesk", Branch: branch, SHA: commit}
+		Owner: "trybetterdesk", Repo: "betterdesk", Branch: branch, SHA: commit}
 	for _, name := range []string{asset, "betterdesk-server-windows-amd64.exe"} {
 		r.manifest.Files = append(r.manifest.Files, ManifestFile{Path: name, SHA256: sum(r.binaries[name]), Size: int64(len(r.binaries[name]))})
 	}
@@ -138,9 +138,9 @@ func (r *testRelease) sign(private ed25519.PrivateKey) {
 // serve puts the release on the fake GitHub: the API's answer and every
 // file, each on github.com with a redirect to the file host.
 func (f *fakeGitHub) serve(r *testRelease) {
-	path := "/repos/UNITRONIX/BetterDesk/releases/latest"
+	path := "/repos/trybetterdesk/betterdesk/releases/latest"
 	if r.branch == BranchDevelopment {
-		path = "/repos/UNITRONIX/BetterDesk/releases/tags/dev"
+		path = "/repos/trybetterdesk/betterdesk/releases/tags/dev"
 	}
 	type ghAsset struct {
 		Name string `json:"name"`
@@ -156,7 +156,7 @@ func (f *fakeGitHub) serve(r *testRelease) {
 	}
 	var assets []ghAsset
 	for name, body := range files {
-		url := "https://github.com/UNITRONIX/BetterDesk/releases/download/" + r.tag + "/" + name
+		url := "https://github.com/trybetterdesk/betterdesk/releases/download/" + r.tag + "/" + name
 		assets = append(assets, ghAsset{Name: name, Size: len(body), URL: url})
 		content := body
 		target := "https://objects.githubusercontent.com/github-production-release-asset/" + name
@@ -169,7 +169,7 @@ func (f *fakeGitHub) serve(r *testRelease) {
 	})
 	f.on("GET https://api.github.com"+path, func(*http.Request) *http.Response { return respond(200, string(release), nil) })
 	if r.tag != "dev" {
-		f.on("GET https://api.github.com/repos/UNITRONIX/BetterDesk/releases/tags/"+r.tag, func(*http.Request) *http.Response { return respond(200, string(release), nil) })
+		f.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/releases/tags/"+r.tag, func(*http.Request) *http.Response { return respond(200, string(release), nil) })
 	}
 	compare, _ := json.Marshal(map[string]any{
 		"total_commits": 3,
@@ -185,7 +185,7 @@ func (f *fakeGitHub) serve(r *testRelease) {
 			{"filename": "betterdesk.sh"},
 		},
 	})
-	f.on("GET https://api.github.com/repos/UNITRONIX/BetterDesk/compare/"+oldCommit+"..."+r.commit, func(*http.Request) *http.Response {
+	f.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/compare/"+oldCommit+"..."+r.commit, func(*http.Request) *http.Response {
 		return respond(200, string(compare), nil)
 	})
 }

@@ -49,8 +49,8 @@ type Options struct {
 	Version, Commit string
 	// Docker is set inside a container (DOCKER=true or /.dockerenv).
 	Docker bool
-	// Getenv reads UPDATE_GITHUB_OWNER (UNITRONIX), UPDATE_GITHUB_REPO
-	// (BetterDesk), UPDATE_GITHUB_BRANCH (main), UPDATE_GITHUB_TOKEN or
+	// Getenv reads UPDATE_GITHUB_OWNER (trybetterdesk), UPDATE_GITHUB_REPO
+	// (betterdesk), UPDATE_GITHUB_BRANCH (main), UPDATE_GITHUB_TOKEN or
 	// GITHUB_TOKEN, UPDATE_GITHUB_CACHE_MS (120000), UPDATE_MIN_FREE_MB
 	// (512), UPDATE_MANIFEST_PUBLIC_KEY, UPDATE_REQUIRE_SIGNED_MANIFEST,
 	// BETTERDESK_SUPERVISOR, BETTERDESK_UPDATE_MODE, BETTERDESK_IMAGE_TAG,
@@ -215,11 +215,11 @@ func firstNonEmpty(values ...string) string {
 
 // Owner and Repo are the repository releases come from.
 func (s *Service) Owner() string {
-	return firstNonEmpty(s.getenv("UPDATE_GITHUB_OWNER"), "UNITRONIX")
+	return firstNonEmpty(s.getenv("UPDATE_GITHUB_OWNER"), "trybetterdesk")
 }
 
 // Repo is the repository's name.
-func (s *Service) Repo() string { return firstNonEmpty(s.getenv("UPDATE_GITHUB_REPO"), "BetterDesk") }
+func (s *Service) Repo() string { return firstNonEmpty(s.getenv("UPDATE_GITHUB_REPO"), "betterdesk") }
 
 // Branch is the branch of the update channel: what the channel was last
 // switched to in this process, else UPDATE_GITHUB_BRANCH, else main.

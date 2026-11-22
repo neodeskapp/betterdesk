@@ -3,16 +3,16 @@
 # BetterDesk — one-line installer (Linux)
 #
 # Docker (default — official GHCR image, one container, fully automated):
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash
 #
 # Docker, move a two-container (split) install to the one container:
 #   curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
 #
 # Native stable (git clone + betterdesk.sh --auto):
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash -s -- --native
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash -s -- --native
 #
 # Native Development channel (this file on the `dev` branch defaults to --branch dev):
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/install.sh | sudo bash -s -- --native
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/install.sh | sudo bash -s -- --native
 #
 # Options (pass after "bash -s --"):
 #   --docker | --native          Installation mode (default: docker)
@@ -43,7 +43,7 @@
 set -euo pipefail
 
 VERSION="1.0.0"
-BETTERDESK_REPO="${BETTERDESK_REPO:-UNITRONIX/BetterDesk}"
+BETTERDESK_REPO="${BETTERDESK_REPO:-trybetterdesk/betterdesk}"
 # Must match the GitHub branch that serves this install.sh URL
 # (.../dev/install.sh → dev, .../main/install.sh → main). Override with
 # --branch / BETTERDESK_BRANCH. Flip to "main" when releasing this file on main.

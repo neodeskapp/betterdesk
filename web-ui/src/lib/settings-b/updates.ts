@@ -3,9 +3,14 @@
  * result (old settings.js, "Self-Update"). No DOM, no requests.
  */
 
-import type { Changes, InstallResult, Preflight, ServerInfo, UpdateCheck } from '#lib/api/settings-system.ts';
+import type { Changes, Channel, InstallResult, Preflight, ServerInfo, UpdateCheck } from '#lib/api/settings-system.ts';
 
 export type UpdateState = 'idle' | 'checking' | 'uptodate' | 'available' | 'baseline' | 'error';
+
+/** owner/repo the channel's releases come from; the project's repository when the server names none */
+export function channelRepo(channel: Pick<Channel, 'owner' | 'repo'>): string {
+	return `${channel.owner || 'trybetterdesk'}/${channel.repo || 'betterdesk'}`;
+}
 
 /** Docker image installs update on the host, not from the page */
 export function isDockerMode(check: Pick<UpdateCheck, 'deploymentMode' | 'dockerImageMode'> | null): boolean {
