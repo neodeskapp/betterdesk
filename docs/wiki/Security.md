@@ -44,8 +44,6 @@ Stock RustDesk clients show a **green lock** when E2E is up (P2P or relay). That
 
 Optional TLS on signal / relay / API — see [[TLS / SSL Certificates|TLS-SSL]]. Dual-mode listeners accept TLS or plain on the same port when configured.
 
-Chat crypto details: [[Chat E2E Encryption|Chat-E2E]] (operator summary up front; protocol appendix for developers).
-
 ---
 
 ## Authentication
@@ -262,6 +260,5 @@ The web console sets standard security headers:
 ## See also
 
 - [[TLS / SSL Certificates|TLS-SSL]] — transport encryption
-- [[Chat E2E Encryption|Chat-E2E]] — operator chat crypto
 - [[User Management|User-Management]] — 2FA and sessions
 - [[Licensing]] — AGPL and Commercial Grant

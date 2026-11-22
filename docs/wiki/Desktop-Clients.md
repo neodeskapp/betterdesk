@@ -65,7 +65,7 @@ BetterDesk provides two Tauri v2 desktop applications and a headless Go agent fo
 | **Remote desktop** | H.264/VP9 video decode, multi-monitor, session recording |
 | **Input forwarding** | Keyboard (40+ keys, F1-F12, modifiers), mouse, text |
 | **File transfer** | Local file browser, drag-and-drop transfer |
-| **Chat** | E2E encrypted operator ↔ end-user messaging |
+| **Chat** | Operator and end-user messages (not end-to-end encrypted) |
 | **Wake-on-LAN** | Send WOL packets to offline devices |
 | **Server management** | Health, clients, operators, audit, API keys, config |
 | **Notification center** | Real-time push with type filtering |

@@ -22,7 +22,7 @@ BetterDesk is an independent, open-source project that provides features beyond 
 - Web management console with dashboard
 - RBAC with 6–7 server roles + organizations and 28 granular permissions
 - TOTP 2FA
-- E2E encrypted chat
+- Chat between console users and the people at a device (not end-to-end encrypted)
 - Browser-based remote desktop
 - Device metrics and monitoring
 - CDAP IoT protocol
@@ -184,7 +184,8 @@ Yes, at multiple layers:
 1. **NaCl encryption** — Signal protocol uses Ed25519 key exchange
 2. **E2E encryption** — Peer-to-peer traffic is encrypted end-to-end
 3. **TLS** — Optional TLS wrapping for all TCP connections
-4. **Chat E2E** — ECDH P-256 + AES-256-GCM for chat messages
+
+Chat messages are not end-to-end encrypted: the server stores and relays them as they are.
 
 ### Can the server read my remote desktop stream?
 

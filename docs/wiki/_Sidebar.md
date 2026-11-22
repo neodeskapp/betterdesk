@@ -35,7 +35,6 @@
 - [[Alpha Software Notice|Alpha-Software-Notice]]
 - [[Desktop Clients|Desktop-Clients]]
 - [[MeshAgent]]
-- [[Chat E2E Encryption|Chat-E2E]]
 - [[Licensing]]
 
 ---
