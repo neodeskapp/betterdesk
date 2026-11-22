@@ -620,11 +620,24 @@ function Resolve-RelayIp {
     return $ip
 }
 
+# Letters and digits from the system's cryptographic generator, for
+# passwords and secrets.
 function Generate-RandomPassword {
     param([int]$Length = 16)
     $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    $password = -join ((1..$Length) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
-    return $password
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $byte = New-Object byte[] 1
+    $out = New-Object System.Text.StringBuilder
+    try {
+        while ($out.Length -lt $Length) {
+            $rng.GetBytes($byte)
+            # 248 is 4 times 62: a byte above it would favour the first characters
+            if ($byte[0] -lt 248) { [void]$out.Append($chars[$byte[0] % $chars.Length]) }
+        }
+    } finally {
+        $rng.Dispose()
+    }
+    return $out.ToString()
 }
 
 # Write or merge the console's .env from the template built into the server
@@ -656,17 +669,17 @@ function Merge-ConsoleEnv {
         if (-not $adminPassword) {
             $adminPassword = Generate-RandomPassword
         }
-        $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+        $sessionSecret = Generate-RandomPassword -Length 64
     } else {
         $sessionSecret = Get-ConsoleEnvValue -Key "SESSION_SECRET"
         if (-not $adminPassword) { $adminPassword = Get-ConsoleEnvValue -Key "DEFAULT_ADMIN_PASSWORD" }
         if (-not $sessionSecret) {
-            $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+            $sessionSecret = Generate-RandomPassword -Length 64
         }
     }
     $remoteTargetVaultKey = Get-ConsoleEnvValue -Key "REMOTE_TARGET_VAULT_KEY"
     if (-not $remoteTargetVaultKey) {
-        $remoteTargetVaultKey = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+        $remoteTargetVaultKey = Generate-RandomPassword -Length 64
     }
 
     $goPort = if ($script:GO_API_PORT) { $script:GO_API_PORT } else { 21114 }

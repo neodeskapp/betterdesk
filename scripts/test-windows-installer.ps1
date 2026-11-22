@@ -615,6 +615,20 @@ function Test-CertificateFromTheBinary {
     Remove-Item -Recurse -Force $dir
 }
 
+# L161: passwords and secrets come from the system's cryptographic
+# generator, with repeats allowed, never from Get-Random.
+function Test-SecretsAreRandom {
+    function script:Get-Random { throw 'Get-Random was used for a secret' }
+    $a = Generate-RandomPassword -Length 64
+    $b = Generate-RandomPassword -Length 64
+    Remove-Item function:Get-Random -ErrorAction SilentlyContinue
+    if ($a.Length -ne 64 -or $a -notmatch '^[A-Za-z0-9]+$') { Fail "a secret of 64 is '$a'" }
+    if ($a -eq $b) { Fail 'two secrets are the same' }
+    $repeats = @($a.ToCharArray() | Group-Object -CaseSensitive | Where-Object { $_.Count -gt 1 }).Count
+    if ($repeats -eq 0) { Fail 'a secret of 64 has no character twice, which a shuffle of the alphabet gives' }
+    if ((Get-Content $installer -Raw) -match 'Get-Random -Count') { Fail 'the installer still draws secrets with Get-Random -Count' }
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -631,6 +645,7 @@ Test-WindowsFirstHour
 Test-UpdateAsksTheFork
 Test-FirewallPorts
 Test-CertificateFromTheBinary
+Test-SecretsAreRandom
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'
