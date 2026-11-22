@@ -84,6 +84,7 @@
     "kind": "json",
     "json": {
      "created_by": "e2e_guest_issuer",
+     "created_by_id": 11,
      "expires_at": "<volatile>",
      "id": "<volatile>",
      "label": "Contract link",
@@ -135,6 +136,7 @@
     "kind": "json",
     "json": {
      "created_by": "e2e_operator",
+     "created_by_id": 9,
      "expires_at": "<volatile>",
      "id": "<volatile>",
      "label": "Contract link",
@@ -186,6 +188,7 @@
     "kind": "json",
     "json": {
      "created_by": "e2e_global_admin",
+     "created_by_id": 8,
      "expires_at": "<volatile>",
      "id": "<volatile>",
      "label": "Contract link",
@@ -237,6 +240,7 @@
     "kind": "json",
     "json": {
      "created_by": "e2e_super_admin",
+     "created_by_id": 6,
      "expires_at": "<volatile>",
      "id": "<volatile>",
      "label": "Contract link",
@@ -288,6 +292,7 @@
     "kind": "json",
     "json": {
      "created_by": "e2e_admin",
+     "created_by_id": 5,
      "expires_at": "<volatile>",
      "id": "<volatile>",
      "label": "Contract link",
