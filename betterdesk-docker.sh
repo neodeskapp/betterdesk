@@ -241,7 +241,11 @@ compose_quiet() {
 # settings_fingerprint: a hash of what the container is made from: the
 # compose files and .env
 settings_fingerprint() {
-    cat "$(compose_file)" "$BETTERDESK_DIR/docker-compose.override.yml" "$(env_file)" 2>/dev/null | sha256sum | cut -d' ' -f1
+    local f files=()
+    for f in "$(compose_file)" "$BETTERDESK_DIR/docker-compose.override.yml" "$(env_file)"; do
+        [ ! -f "$f" ] || files+=("$f")
+    done
+    cat "${files[@]}" | sha256sum | cut -d' ' -f1
 }
 
 # remember_applied: the settings the running container was made from
@@ -1009,15 +1013,15 @@ do_uninstall() {
         compose stop -t 30 >/dev/null 2>&1 || true
         file=$(backup_volumes)
         ok "Backup: $file"
-        compose --profile postgres down -v --remove-orphans >/dev/null
+        compose_quiet --profile postgres down -v --remove-orphans
         docker volume rm "$DATA_VOLUME" "$CONSOLE_VOLUME" "$PG_VOLUME" >/dev/null 2>&1 || true
         ok "BetterDesk's containers and volumes are removed."
     else
-        compose --profile postgres down --remove-orphans >/dev/null
+        compose_quiet --profile postgres down --remove-orphans
         ok "BetterDesk's containers are removed."
         say "Left on this machine:"
         say "  volumes:  $DATA_VOLUME (database, server key), $CONSOLE_VOLUME$(docker volume inspect "$PG_VOLUME" >/dev/null 2>&1 && printf ', %s' "$PG_VOLUME" || true)"
-        say "            an install uses them again; delete them: docker volume rm $DATA_VOLUME $CONSOLE_VOLUME"
+        say "            an install uses them again; delete them: docker volume rm $DATA_VOLUME $CONSOLE_VOLUME$(docker volume inspect "$PG_VOLUME" >/dev/null 2>&1 && printf ' %s' "$PG_VOLUME" || true)"
     fi
     say "  image:    $(image_ref)   (delete: docker image rm $(image_ref))"
     say "  folder:   $BETTERDESK_DIR with .env and the backups   (delete: sudo rm -rf $BETTERDESK_DIR)"
