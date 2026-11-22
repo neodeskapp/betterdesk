@@ -20,7 +20,11 @@ func TestOneViewersStopLeavesTheOthersWatching(t *testing.T) {
 	}
 	b := dial(t, addr, "/ws/remote-viewer/dev1", operator)
 	b.Wait(time.Second, func(f []wstest.Frame, _ bool) bool { return len(f) == 1 })
-	a.Wait(time.Second, func(f []wstest.Frame, _ bool) bool { return len(f) == 2 })
+	// The agent may register after a joined, so a gets agent-ready before
+	// stream-started; wait for stream-started itself, not a frame count.
+	if !a.Wait(time.Second, func(f []wstest.Frame, _ bool) bool { return hasText(f, `{"type":"stream-started"}`) }) {
+		t.Fatalf("the first viewer got %q", texts(a.Frames()))
+	}
 	before := map[*wstest.Client]int{a: len(a.Frames()), b: len(b.Frames()), agent: len(agent.Frames())}
 	since := func(c *wstest.Client) []string { return texts(c.Frames()[before[c]:]) }
 
@@ -59,4 +63,14 @@ func TestOneViewersStopLeavesTheOthersWatching(t *testing.T) {
 	b.Close(1000)
 	stop()
 	check()
+}
+
+// hasText reports whether one of the frames is the text message want.
+func hasText(frames []wstest.Frame, want string) bool {
+	for _, got := range texts(frames) {
+		if got == want {
+			return true
+		}
+	}
+	return false
 }
