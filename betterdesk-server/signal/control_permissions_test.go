@@ -15,6 +15,8 @@ import (
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/peer"
 	pb "github.com/unitronix/betterdesk-server/proto"
+	"google.golang.org/protobuf/encoding/protowire"
+	"google.golang.org/protobuf/proto"
 )
 
 // signedInController makes an account with a client login session and
@@ -153,17 +155,17 @@ func TestSessionPermissionsByController(t *testing.T) {
 	addr := udpAddr("203.0.113.72", 51000)
 	userID, token := signedInController(t, database, "feat-kinds")
 
-	if got := srv.sessionPermissions(token, addr); got != nil {
+	if got := srv.sessionPermissions(token, addr, false); got != nil {
 		t.Errorf("before the console sets the lookup: %#x", got.GetPermissions())
 	}
 	srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: {"client_actions"}}))
-	if got := srv.sessionPermissions(token, addr); got != nil {
+	if got := srv.sessionPermissions(token, addr, false); got != nil {
 		t.Errorf("every feature on: %#x", got.GetPermissions())
 	}
-	if got := srv.sessionPermissions("", addr); got != nil {
+	if got := srv.sessionPermissions("", addr, false); got != nil {
 		t.Errorf("no token: %#x", got.GetPermissions())
 	}
-	if got := srv.sessionPermissions(strings.Repeat("cd", 32), addr); got != nil {
+	if got := srv.sessionPermissions(strings.Repeat("cd", 32), addr, false); got != nil {
 		t.Errorf("a token nobody holds: %#x", got.GetPermissions())
 	}
 	everything := []string{}
@@ -171,15 +173,15 @@ func TestSessionPermissionsByController(t *testing.T) {
 		everything = append(everything, f.Key)
 	}
 	srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: everything}))
-	if got := srv.sessionPermissions(token, addr).GetPermissions(); got != allOff {
+	if got := srv.sessionPermissions(token, addr, false).GetPermissions(); got != allOff {
 		t.Errorf("every feature off: %#x, want %#x", got, allOff)
 	}
 	srv.SetControllerFeatures(func(context.Context, int64) ([]string, error) { return nil, errors.New("store down") })
-	if got := srv.sessionPermissions(token, addr).GetPermissions(); got != allOff {
+	if got := srv.sessionPermissions(token, addr, false).GetPermissions(); got != allOff {
 		t.Errorf("failed lookup: %#x, want %#x", got, allOff)
 	}
 	srv.SetControllerFeatures(nil)
-	if got := srv.sessionPermissions(token, addr); got != nil {
+	if got := srv.sessionPermissions(token, addr, false); got != nil {
 		t.Errorf("after the console stopped: %#x", got.GetPermissions())
 	}
 }
@@ -239,5 +241,70 @@ func TestRelayRequestToTheDeviceDropsTheControllersPermissionsAndToken(t *testin
 				t.Errorf("the device got the controller's token %q", got.GetToken())
 			}
 		})
+	}
+}
+
+// The console's web client names the signed-in account in its panel
+// proof: the account's features apply to the sessions it starts. A
+// guest's proof names none, so the device decides alone.
+func TestWebClientSessionsCarryTheAccountsFeatures(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeManaged)
+	recv, targetAddr := attachTestUDPPair(t, srv)
+	putOnlinePeer(srv, "WEBFEAT01", targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
+	srv.SetControllerFeatures(featuresOf(map[int64][]string{9: {"clipboard", "reboot"}}))
+	addr := serveTCPOnLoopback(t, srv)
+
+	if rr, err := relayRequestOverTCP(t, addr, srv.PanelProofFor(9), "WEBFEAT01"); err != nil || rr.RefuseReason != "" {
+		t.Fatalf("account's web client: %+v, %v", rr, err)
+	}
+	want := bitsOff(pb.ControlPermissions_clipboard, pb.ControlPermissions_restart)
+	if got := permissionsAtTarget(t, recv); got.GetPermissions() != want {
+		t.Fatalf("account's web client: control_permissions = %#x, want %#x", got.GetPermissions(), want)
+	}
+
+	if rr, err := relayRequestOverTCP(t, addr, srv.PanelProof(), "WEBFEAT01"); err != nil || rr.RefuseReason != "" {
+		t.Fatalf("guest's web client: %+v, %v", rr, err)
+	}
+	if got := permissionsAtTarget(t, recv); got != nil {
+		t.Fatalf("guest's web client: control_permissions = %#x, want none", got.GetPermissions())
+	}
+}
+
+// The proof is the secret, then nothing or the account's id; anything
+// else after the secret is not a proof.
+func TestReadPanelProof(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	message := func(frame []byte) *pb.RendezvousMessage {
+		t.Helper()
+		var msg pb.RendezvousMessage
+		if err := proto.Unmarshal(frame[1:], &msg); err != nil {
+			t.Fatalf("unmarshal: %v", err)
+		}
+		return &msg
+	}
+	withField := func(field []byte) *pb.RendezvousMessage {
+		var msg pb.RendezvousMessage
+		msg.ProtoReflect().SetUnknown(append(append([]byte(nil), srv.panelProof...), field...))
+		return &msg
+	}
+	for _, c := range []struct {
+		name   string
+		msg    *pb.RendezvousMessage
+		userID int64
+		ok     bool
+	}{
+		{"guest", message(srv.PanelProof()), 0, true},
+		{"account", message(srv.PanelProofFor(9)), 9, true},
+		{"large account id", message(srv.PanelProofFor(1 << 40)), 1 << 40, true},
+		{"account 0", withField(protowire.AppendVarint(protowire.AppendTag(nil, panelAccountField, protowire.VarintType), 0)), 0, false},
+		{"another field", withField(protowire.AppendVarint(protowire.AppendTag(nil, 1002, protowire.VarintType), 9)), 0, false},
+		{"account as bytes", withField(protowire.AppendBytes(protowire.AppendTag(nil, panelAccountField, protowire.BytesType), []byte{9})), 0, false},
+		{"bytes after the account", withField(append(protowire.AppendVarint(protowire.AppendTag(nil, panelAccountField, protowire.VarintType), 9), 0x08, 0x01)), 0, false},
+		{"another secret", message(New(config.DefaultConfig(), nil, nil).PanelProofFor(9)), 0, false},
+	} {
+		userID, ok := srv.readPanelProof(c.msg)
+		if userID != c.userID || ok != c.ok {
+			t.Errorf("%s: (%d, %v), want (%d, %v)", c.name, userID, ok, c.userID, c.ok)
+		}
 	}
 }

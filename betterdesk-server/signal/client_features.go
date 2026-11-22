@@ -14,7 +14,9 @@ import (
 // sheet: remote control, file transfer, clipboard and the rest) apply to
 // the remote sessions the account starts. The signal server knows the
 // account behind a punch or relay request when the RustDesk client sends
-// its login token, asks the console which features the account may not
+// its login token, or when the request comes from the console's web
+// client of a signed-in account (the account its panel proof names, see
+// panel_proof.go). It asks the console which features the account may not
 // use, and tells the device in control_permissions on every message that
 // starts a session there (PunchHole, RequestRelay, FetchLocalAddr).
 // RustDesk 1.4.5 and later apply control_permissions on the controlled
@@ -92,9 +94,13 @@ func allFeatureKeys() []string {
 const accountUnknown int64 = -1
 
 // controllerAccount is the console account behind a punch or relay
-// request: the user of the client's login token, 0 when there is none,
-// or accountUnknown when the token could not be looked up.
-func (s *Server) controllerAccount(token string) int64 {
+// request: on the web client's connection (panel) the account its proof
+// named, else the user of the client's login token; 0 when there is none,
+// accountUnknown when the token could not be looked up.
+func (s *Server) controllerAccount(token string, raddr *net.UDPAddr, panel bool) int64 {
+	if panel {
+		return s.panelAccount(raddr)
+	}
 	token = strings.ToLower(strings.TrimSpace(token))
 	if token == "" || s.db == nil || !opaqueClientTokenRegexp.MatchString(token) {
 		return 0
@@ -113,12 +119,12 @@ func (s *Server) controllerAccount(token string) int64 {
 // controllerFeaturesOff returns the client features the account behind a
 // request may not use, and whether the request has an account. A lookup
 // that fails turns every feature off.
-func (s *Server) controllerFeaturesOff(token string, raddr *net.UDPAddr) ([]string, bool) {
+func (s *Server) controllerFeaturesOff(token string, raddr *net.UDPAddr, panel bool) ([]string, bool) {
 	lookup := s.controllerFeatures.Load()
 	if lookup == nil {
 		return nil, false
 	}
-	userID := s.controllerAccount(token)
+	userID := s.controllerAccount(token, raddr, panel)
 	switch {
 	case userID == 0:
 		return nil, false
@@ -138,7 +144,7 @@ func (s *Server) controllerFeaturesOff(token string, raddr *net.UDPAddr) ([]stri
 // sessionPermissions is the control_permissions the device gets for a
 // session the request starts: the features the account may not use
 // turned off, or nil for a request without an account.
-func (s *Server) sessionPermissions(token string, raddr *net.UDPAddr) *pb.ControlPermissions {
-	off, _ := s.controllerFeaturesOff(token, raddr)
+func (s *Server) sessionPermissions(token string, raddr *net.UDPAddr, panel bool) *pb.ControlPermissions {
+	off, _ := s.controllerFeaturesOff(token, raddr, panel)
 	return disabledPermissions(off)
 }

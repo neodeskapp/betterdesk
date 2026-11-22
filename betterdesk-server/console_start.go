@@ -25,11 +25,12 @@ import (
 // its own connections to the same file. The returned function stops the
 // console and everything it started. requestRestart ends the process to
 // be started again; the console calls it only under a supervisor.
-// signalProof is the panel proof of the signal server in this process
-// (signal.Server.PanelProof), which the web client's bridge presents.
+// signalProof returns the panel proof of the signal server in this process
+// for an account (signal.Server.PanelProofFor), which the web client's
+// bridge presents.
 // While the console runs, the signal server takes the client features of
 // accounts from it through setFeatures (signal.Server.SetControllerFeatures).
-func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof []byte, setFeatures func(signal.ControllerFeatures), requestRestart func()) (func(), error) {
+func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof func(userID int64) []byte, setFeatures func(signal.ControllerFeatures), requestRestart func()) (func(), error) {
 	ccfg, err := consoleconfig.LoadEnv()
 	if err != nil {
 		return nil, fmt.Errorf("console configuration: %w", err)

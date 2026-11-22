@@ -1078,7 +1078,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		return
 	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole")
-	permissions := s.sessionPermissions(msg.GetToken(), raddr)
+	permissions := s.sessionPermissions(msg.GetToken(), raddr, false)
 
 	target := s.peers.Get(targetID)
 
@@ -1301,7 +1301,7 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 		return s.punchHoleUnauthorizedResponse()
 	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole")
-	permissions := s.sessionPermissions(msg.GetToken(), raddr)
+	permissions := s.sessionPermissions(msg.GetToken(), raddr, panel)
 
 	target := s.peers.Get(targetID)
 	if target == nil || target.IsExpired(config.RegTimeout) {
@@ -1683,7 +1683,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		return
 	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "request_relay")
-	permissions := s.sessionPermissions(msg.GetToken(), raddr)
+	permissions := s.sessionPermissions(msg.GetToken(), raddr, false)
 
 	target := s.peers.Get(targetID)
 
@@ -1837,7 +1837,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 		return s.relayUnauthorizedResponse(relayServer)
 	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "request_relay")
-	permissions := s.sessionPermissions(msg.GetToken(), raddr)
+	permissions := s.sessionPermissions(msg.GetToken(), raddr, panel)
 
 	target := s.peers.Get(targetID)
 
