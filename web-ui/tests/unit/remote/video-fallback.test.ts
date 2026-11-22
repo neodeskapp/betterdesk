@@ -40,7 +40,7 @@ describe('the JMuxer path', () => {
 });
 
 describe('the hidden video element', () => {
-	const elementErrors = (spy: ReturnType<typeof vi.spyOn>) =>
+	const elementErrors = (spy: { mock: { calls: unknown[][] } }) =>
 		spy.mock.calls.filter((c) => String(c[0]).includes('Video element error'));
 
 	test('closing the path reports no error for the element it lets go', async () => {

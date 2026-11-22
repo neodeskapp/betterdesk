@@ -10,6 +10,7 @@ import { RDClient } from '../../../src/lib/remote/client/client.ts';
 import { RDClipboard } from '../../../src/lib/remote/client/clipboard.ts';
 import { RDCompress } from '../../../src/lib/remote/client/compress.ts';
 import { RDFileConnection } from '../../../src/lib/remote/client/file-connection.ts';
+import { LoginResponse } from '../../../src/lib/remote/client/generated/protos.ts';
 import { RemoteTargetSession } from '../../../src/lib/remote/client/remote-target.ts';
 
 const g = { RDClient, RDFileConnection, RDClipboard, RDCompress };
@@ -441,7 +442,7 @@ describe('the file transfer session asks for a second factor', () => {
 
 	test('a device that asks for the verification code gets the code prompt, not a login error', async () => {
 		const t = await fileLogin();
-		t.f._handleLoginResponse({ error: 'Please enter the verification code' });
+		t.f._handleLoginResponse(LoginResponse.fromObject({ error: 'Please enter the verification code' }));
 		await Promise.resolve();
 		expect(t.seen).toEqual(['2fa_required']);
 		expect(t.outcome()).toBe('pending');
@@ -451,18 +452,18 @@ describe('the file transfer session asks for a second factor', () => {
 		vi.useFakeTimers();
 		try {
 			const t = await fileLogin();
-			t.f._handleLoginResponse({ error: '2FA Required' });
+			t.f._handleLoginResponse(LoginResponse.fromObject({ error: '2FA Required' }));
 			await vi.advanceTimersByTimeAsync(120_000);
 			expect(t.outcome()).toBe('pending');
 			t.f.submit2FA('123456');
 			await vi.advanceTimersByTimeAsync(29_000);
 			expect(t.outcome()).toBe('pending');
-			t.f._handleLoginResponse({});
+			t.f._handleLoginResponse(LoginResponse.fromObject({}));
 			await t.login;
 			expect(t.outcome()).toBe('signed in');
 
 			const silent = await fileLogin();
-			silent.f._handleLoginResponse({ error: '2FA Required' });
+			silent.f._handleLoginResponse(LoginResponse.fromObject({ error: '2FA Required' }));
 			silent.f.submit2FA('123456');
 			await vi.advanceTimersByTimeAsync(30_000);
 			expect(silent.outcome()).toBe('File transfer login timeout (30s)');
