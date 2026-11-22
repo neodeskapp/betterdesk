@@ -106,6 +106,39 @@ test_compose_reads_env_file() (
     done
 )
 
+# L81: the health check reaches the API over HTTPS when TLS_API=Y and the
+# console over HTTPS when HTTPS_ENABLED=true; the images and the compose
+# files use it.
+test_healthcheck_follows_tls() (
+    local dir out
+    dir=$(mktemp -d)
+    # curl that answers only the URLs listed in $dir/up
+    cat > "$dir/curl" <<'STUB'
+#!/bin/sh
+for a in "$@"; do url="$a"; done
+grep -qxF "$url" "$(dirname "$0")/up"
+STUB
+    chmod +x "$dir/curl"
+    printf '%s\n' https://127.0.0.1:21121/api/health http://127.0.0.1:5000/health > "$dir/up"
+    PATH="$dir:$PATH" TLS_API=Y sh "$SCRIPT_ROOT/docker/healthcheck.sh" || fail "unhealthy with TLS_API=Y and the API on HTTPS"
+    printf '%s\n' http://127.0.0.1:21121/api/health https://127.0.0.1:5443/health > "$dir/up"
+    PATH="$dir:$PATH" HTTPS_ENABLED=true sh "$SCRIPT_ROOT/docker/healthcheck.sh" || fail "unhealthy with HTTPS_ENABLED=true and the console on 5443"
+    printf '%s\n' http://127.0.0.1:21121/api/health > "$dir/up"
+    if PATH="$dir:$PATH" sh "$SCRIPT_ROOT/docker/healthcheck.sh"; then fail "healthy without the console"; fi
+    PATH="$dir:$PATH" CONSOLE_PORT=0 sh "$SCRIPT_ROOT/docker/healthcheck.sh" || fail "unhealthy with the console off"
+    : > "$dir/up"
+    if PATH="$dir:$PATH" CONSOLE_PORT=0 sh "$SCRIPT_ROOT/docker/healthcheck.sh"; then fail "healthy without the API"; fi
+    rm -rf "$dir"
+    for out in Dockerfile Dockerfile.server; do
+        grep -qE '^[[:space:]]+CMD /usr/local/bin/betterdesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not use the health check script"
+        grep -q 'COPY docker/healthcheck.sh /usr/local/bin/betterdesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not copy the health check script"
+        grep -qE '^RUN chmod [+]x .*/usr/local/bin/betterdesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not make the health check script executable"
+    done
+    for out in "$SCRIPT_ROOT"/docker-compose*.yml; do
+        if grep -A1 -E '^[[:space:]]+healthcheck:' "$out" | grep -q 'curl'; then fail "$(basename "$out") checks health with plain curl"; fi
+    done
+)
+
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
@@ -113,4 +146,5 @@ test_enrollment_mode_is_not_forced
 test_quick_compose_pulls_the_published_image
 test_cdap_port_is_published
 test_compose_reads_env_file
+test_healthcheck_follows_tls
 echo "Docker entrypoint checks passed"

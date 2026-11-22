@@ -84,9 +84,10 @@ ENV BETTERDESK_IMAGE_VERSION=${BETTERDESK_IMAGE_VERSION}
 COPY docker/ensure-app-user.sh /ensure-app-user.sh
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/dsn.sh /docker/dsn.sh
+COPY docker/healthcheck.sh /usr/local/bin/betterdesk-healthcheck
 COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.sh
 COPY docker/show-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
-RUN chmod +x /ensure-app-user.sh /entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
+RUN chmod +x /ensure-app-user.sh /entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials /usr/local/bin/betterdesk-healthcheck
 
 # The console on 5000 (DECISIONS A27), the API on 21121. The console's own
 # client API listener stays off: the API serves RustDesk clients on 21121.
@@ -124,9 +125,10 @@ EXPOSE 5000 5443 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 # The server writes files of its own (mesh_agent_server.pem) in its folder
 WORKDIR /opt/rustdesk
 
-# The API and the web console of the one process
+# The API and the web console of the one process, over HTTPS where they
+# serve it (TLS_API, HTTPS_ENABLED)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -sf http://localhost:21121/api/health && curl -sf http://localhost:5000/health || exit 1
+    CMD /usr/local/bin/betterdesk-healthcheck
 
 ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
 CMD ["/usr/local/bin/betterdesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/rustdesk/id_ed25519"]

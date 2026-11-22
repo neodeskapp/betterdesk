@@ -141,7 +141,7 @@ services:
       - CHOWN
       - FOWNER
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:21121/api/health && curl -sf http://localhost:5000/health"]
+      test: ["CMD", "/usr/local/bin/betterdesk-healthcheck"]
       interval: 30s
       timeout: 10s
       retries: 3
