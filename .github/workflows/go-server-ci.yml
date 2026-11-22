@@ -4,7 +4,7 @@ name: Go Server CI
 
 on:
   push:
-    branches: [main, ci-shard-test]
+    branches: [main]
     paths:
       - 'betterdesk-server/**'
       - 'web-ui/**'
