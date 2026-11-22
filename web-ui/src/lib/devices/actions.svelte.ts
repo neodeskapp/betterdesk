@@ -33,6 +33,7 @@
  *   chooseFolder(devices)        dialog to pick the folder, then moveToFolder
  *   manageGroups(d)              dialog: the device's manual groups
  *   editAccessPolicy(d)          sheet: unattended access, password, schedule, operators
+ *                                (not offered while OFFER_ACCESS_POLICY is off)
  *   setConnectionMode(d, mode, reason)   (device.connection_mode)
  *
  * Ban, delete, ID
@@ -80,7 +81,7 @@ import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
 import { toast } from '#lib/ui/toasts.svelte.ts';
 import { ICONS } from '#lib/util/display.ts';
 import { ask } from './ask.svelte.ts';
-import { deviceLabel, deviceName, isMesh, watchable, type DeviceLike } from './model.ts';
+import { OFFER_ACCESS_POLICY, deviceLabel, deviceName, isMesh, watchable, type DeviceLike } from './model.ts';
 
 export type { DeviceLike } from './model.ts';
 
@@ -986,9 +987,10 @@ export function deviceMenu(d: DeviceLike, opts: { knownTags?: readonly string[] 
 				chooseFolder([d])
 			)
 		);
-		manage.push(
-			item('access-policy', t('devices.access_policy'), ICONS.access_policy, () => editAccessPolicy(d))
-		);
+		if (OFFER_ACCESS_POLICY)
+			manage.push(
+				item('access-policy', t('devices.access_policy'), ICONS.access_policy, () => editAccessPolicy(d))
+			);
 	}
 	if (can('device.change_id'))
 		manage.push(item('change-id', t('devices.change_id'), ICONS.rename, () => changeId(d)));

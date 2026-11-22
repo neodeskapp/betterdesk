@@ -75,16 +75,20 @@ describe('permission gates per role', () => {
 		expect(footerSlots(device(), can)).toEqual({ edit: true, editTarget: false, connect: true });
 		const a = panelActions(device(), can);
 		expect(a.connect).toEqual(['connect-web', 'connect-desktop', 'cdap-viewer', 'guest-access']);
-		expect(a.manage).toEqual(['edit', 'groups', 'access-policy', 'issue-token']);
+		expect(a.manage).toEqual(['edit', 'groups', 'issue-token']);
 		expect(a.danger).toEqual([]);
 	});
 
 	test('admin: every action, ban turns into unban on a banned device', () => {
 		const can = canFor('admin');
 		const a = panelActions(device(), can);
-		expect(a.manage).toEqual(['edit', 'groups', 'access-policy', 'change-id', 'issue-token', 'ban']);
+		expect(a.manage).toEqual(['edit', 'groups', 'change-id', 'issue-token', 'ban']);
 		expect(a.danger).toEqual(['delete']);
 		expect(panelActions(device({ banned: true }), can).manage).toContain('unban');
+	});
+
+	test('no Access policy action while the server does not enforce the policy (L221)', () => {
+		expect(panelActions(device(), canFor('admin')).manage).not.toContain('access-policy');
 	});
 
 	test('a new token needs device.edit; a banned, deleted or RDP/VNC device gets none', () => {
@@ -96,7 +100,6 @@ describe('permission gates per role', () => {
 		expect(panelActions(device({ banned: true }), admin).manage).toEqual([
 			'edit',
 			'groups',
-			'access-policy',
 			'change-id',
 			'unban'
 		]);

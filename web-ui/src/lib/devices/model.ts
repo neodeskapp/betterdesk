@@ -14,6 +14,13 @@ export type DeviceLike = Pick<Device, 'id'> & Partial<Device>;
 /** Show deleted devices in the list (same storage key as the old page) */
 export const PREF_SHOW_DELETED = 'bd_devices_show_deleted';
 
+/**
+ * Whether the device menu and the panel offer the Access policy sheet. The
+ * server stores a device's policy but no connection checks it yet, so the
+ * sheet stays out of both; the stored policies and their API remain.
+ */
+export const OFFER_ACCESS_POLICY = false;
+
 /* ── Status, name, type ── */
 
 export type DeviceState = 'deleted' | 'disabled' | 'banned' | 'online' | 'no_signal' | 'offline';
