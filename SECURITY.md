@@ -5,13 +5,13 @@ do.
 
 ## Supported versions
 
-Security fixes go into the `dev` branch and the next release. Older
+Security fixes go into the `main` branch and the next release. Older
 releases may get a backport for a critical issue at the maintainers'
 discretion.
 
 | Version | Supported |
 | ------- | --------- |
-| `dev` | Yes |
+| `main` | Yes |
 | Newest release | Yes |
 | Older releases | Best effort |
 
