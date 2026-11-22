@@ -3,9 +3,10 @@
 // the help requests of the last days, as times in milliseconds that the
 // browser sorts into its own days.
 //
-// Sessions are read per device, six devices at a time, for at most 500
-// devices. The result is kept for five minutes, for every account; an
-// account limited to some devices sees the sessions and counts of those.
+// The sessions of every device come from one query of the signal
+// server's table. The result is kept for five minutes, for every account;
+// an account limited to some devices sees the sessions and counts of
+// those.
 package trends
 
 import (
@@ -21,12 +22,9 @@ import (
 )
 
 const (
-	maxPeers     = 500
-	perPeerLimit = 500
-	concurrency  = 6
-	cacheFor     = 5 * time.Minute
-	helpLimit    = 5000
-	dayMillis    = 86400000
+	cacheFor  = 5 * time.Minute
+	helpLimit = 5000
+	dayMillis = 86400000
 
 	defaultDays = 14
 	minDays     = 1
@@ -36,7 +34,6 @@ const (
 // source is the part of the API client the collection reads from.
 type source interface {
 	GetAllPeers(ctx context.Context, includeDeleted bool) []*goapi.Object
-	GetPeerConnectionSessions(ctx context.Context, id string, limit any) *goapi.Object
 	ListHelpRequests(ctx context.Context, filter any) *goapi.Object
 }
 
@@ -45,10 +42,11 @@ type source interface {
 type scopeFunc func(r *http.Request) (*access.DeviceScope, error)
 
 type handlers struct {
-	api   source
-	scope scopeFunc
-	log   *kit.Logger
-	now   func() time.Time
+	api      source
+	sessions sessionSource
+	scope    scopeFunc
+	log      *kit.Logger
+	now      func() time.Time
 
 	mu    sync.Mutex
 	cache *cached
@@ -73,7 +71,7 @@ type cached struct {
 
 // Register adds the group's route.
 func Register(d *kit.Deps) {
-	h := &handlers{api: d.GoAPI, scope: scopeOf(d), log: d.Log.Child("TRENDS"), now: time.Now}
+	h := &handlers{api: d.GoAPI, sessions: sessionsSince(d.Store), scope: scopeOf(d), log: d.Log.Child("TRENDS"), now: time.Now}
 	d.Router.Get("/api/reports/trends", h.trends, d.RequireAuth, d.RequirePermission("audit.view"))
 }
 
@@ -153,7 +151,7 @@ func (h *handlers) collected(ctx context.Context, days int) (*cached, error) {
 	h.mu.Unlock()
 
 	if !joined {
-		data, err := collect(context.WithoutCancel(ctx), h.api, days, at)
+		data, err := collect(context.WithoutCancel(ctx), h.api, h.sessions, days, at)
 		h.mu.Lock()
 		delete(h.running, days)
 		if err == nil {

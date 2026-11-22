@@ -490,7 +490,10 @@ export interface HelpTrend {
 	stillOpen: number;
 }
 
-/** A help request counts as resolved on the day it was last changed */
+/**
+ * A help request counts as resolved on the day it was resolved: its last
+ * change, as only a change of status changes it
+ */
 export function helpTrend(
 	help: readonly { created: number; updated: number | null; status: string }[],
 	days: readonly Date[]

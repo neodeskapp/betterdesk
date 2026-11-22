@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -51,13 +52,19 @@ func loadScenarios(t *testing.T) []scenario {
 	return out
 }
 
-// fakeSource answers like the API client did in a scenario.
+// fakeSource answers like the API client did in a scenario. Its
+// sessions are the rows the signal server's table would hold for the
+// devices' lists of the scenario: each session once, on the first device
+// whose list had it, read as the old route read the lists.
 type fakeSource struct {
 	t  *testing.T
 	sc scenario
 
 	mu    sync.Mutex
 	calls []string
+	// malformed says a list had a shape the old route could not read,
+	// which no row of the table can have
+	malformed bool
 }
 
 func (f *fakeSource) note(call string) {
@@ -88,14 +95,85 @@ func (f *fakeSource) GetAllPeers(_ context.Context, includeDeleted bool) []*goap
 	return peers
 }
 
-func (f *fakeSource) GetPeerConnectionSessions(_ context.Context, id string, limit any) *goapi.Object {
-	f.note("getPeerConnectionSessions " + id + " " + jsreq.String(limit))
-	raw, ok := f.sc.Sessions[id]
-	if !ok {
-		return goapi.NewObject("success", true, "data", goapi.NewObject("peer_id", id, "count", float64(0), "sessions", []any{}))
+func (f *fakeSource) stored(_ context.Context, _ int64) ([]storedSession, error) {
+	list, _ := f.parse(f.sc.Peers).([]any)
+	seen := map[string]bool{}
+	var out []storedSession
+	for _, p := range list {
+		peer, _ := p.(*goapi.Object)
+		if peer == nil {
+			return nil, nil
+		}
+		id := peer.Get("id")
+		if !goapi.Truthy(id) {
+			id = peer.Get("peer_id")
+		}
+		raw, ok := f.sc.Sessions[jsreq.String(id)]
+		if !goapi.Truthy(id) || !ok {
+			continue
+		}
+		answer, _ := f.parse(raw).(*goapi.Object)
+		rows, err := oldIterable(oldSessionList(answer))
+		if err != nil {
+			f.malformed = true
+			continue
+		}
+		for _, row := range rows {
+			s, _ := row.(*goapi.Object)
+			if row == nil {
+				f.malformed = true
+				continue
+			}
+			start, ok := toTime(s.Get("started_at"))
+			key := oldSessionKey(s)
+			if !ok || seen[key] {
+				continue
+			}
+			seen[key] = true
+			session := storedSession{ID: int64(len(out)), HostID: jsreq.String(id), Start: start}
+			if end, ok := toTime(s.Get("ended_at")); ok {
+				session.End = &end
+			}
+			out = append(out, session)
+		}
 	}
-	o, _ := f.parse(raw).(*goapi.Object)
-	return o
+	return out, nil
+}
+
+// oldSessionList is the list inside one answer of the API client, as the
+// route read the lists of the devices one by one: data or sessions when
+// that is a list, else its "sessions".
+func oldSessionList(r *goapi.Object) any {
+	rows := r.Get("data")
+	if !goapi.Truthy(rows) {
+		rows = r.Get("sessions")
+	}
+	if !goapi.Truthy(rows) {
+		return nil
+	}
+	if list, ok := rows.([]any); ok {
+		return list
+	}
+	inner, _ := rows.(*goapi.Object)
+	return inner.Get("sessions")
+}
+
+// oldIterable is iterable for the lists of sessions.
+func oldIterable(v any) ([]any, error) { return iterable(v) }
+
+// oldSessionKey named a session for the check against doubles: its id, or
+// its two devices and its start when it has none.
+func oldSessionKey(s *goapi.Object) string {
+	if id := s.Get("id"); id != nil {
+		return "id:" + jsreq.String(id)
+	}
+	parts := make([]string, 3)
+	for i, name := range []string{"host_id", "peer_id", "started_at"} {
+		if v := s.Get(name); v != nil {
+			parts[i] = jsreq.String(v)
+		}
+	}
+	return strings.Join(parts, "|")
 }
 
 func (f *fakeSource) ListHelpRequests(_ context.Context, filter any) *goapi.Object {
@@ -125,11 +203,7 @@ func wantCalls(t *testing.T, sc scenario) []string {
 			}
 			out = append(out, "getAllPeers")
 		case "getPeerConnectionSessions":
-			id, err := goapi.FromGo(call[1])
-			if err != nil {
-				t.Fatal(err)
-			}
-			out = append(out, "getPeerConnectionSessions "+jsreq.String(id)+" "+jsreq.String(call[2].(map[string]any)["limit"]))
+			// The sessions are no call of the API client (BUGS L103)
 		case "listHelpRequests":
 			out = append(out, "listHelpRequests "+jsreq.String(call[1].(map[string]any)["limit"]))
 		}
@@ -137,14 +211,35 @@ func wantCalls(t *testing.T, sc scenario) []string {
 	return out
 }
 
+// The sessions come from one query of the signal server's table, where
+// Node asked the API server for the list of each device, of at most 500
+// devices (BUGS L103). The scenarios give the lists; fakeSource makes the
+// table's rows of them. So:
+//   - Node's calls for the lists are one query here.
+//   - A list of a shape Node could not read has no rows here: those
+//     scenarios are no failure and are not compared.
+//   - "more devices than are asked" counts every device: the session of
+//     the 501st device is in, and all 503 devices were read.
+//   - The sessions are compared in any order.
 func TestCollectMatchesNode(t *testing.T) {
+	skipped := 0
+	defer func() {
+		if skipped > 10 {
+			t.Errorf("%d scenarios had lists Node could not read; the comparison skipped too many", skipped)
+		}
+	}()
 	for _, sc := range loadScenarios(t) {
 		src := &fakeSource{t: t, sc: sc}
 		days := daysOf(jsreq.QueryValue(sc.Query, "days"))
-		got, err := collect(context.Background(), src, days, sc.Now)
+		got, err := collect(context.Background(), src, src.stored, days, sc.Now)
+		if src.malformed {
+			skipped++
+			if err != nil {
+				t.Errorf("%s: %v; a list Node could not read has no rows in the table", sc.Name, err)
+			}
+			continue
+		}
 
-		// Node asked for the sessions in the order of the devices; here
-		// six workers share them, so the order between them is free
 		want := wantCalls(t, sc)
 		sort.Strings(want)
 		sort.Strings(src.calls)
@@ -176,13 +271,43 @@ func TestCollectMatchesNode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if string(encoded) != string(sc.Answer.Body.Data) {
-			t.Errorf("%s:\n got %s\nNode %s", sc.Name, encoded, sc.Answer.Body.Data)
+		node := sc.Answer.Body.Data
+		if sc.Name == "more devices than are asked" {
+			node = json.RawMessage(strings.Replace(strings.Replace(string(node),
+				`"end":null}]`, `"end":null},{"start":1794279600000,"end":null}]`, 1),
+				`"devicesChecked":500`, `"devicesChecked":503`, 1))
+		}
+		if a, b := anyOrder(t, encoded), anyOrder(t, node); a != b {
+			t.Errorf("%s:\n got %s\nNode %s", sc.Name, a, b)
 		}
 		if sc.Answer.Body.GeneratedAt != sc.Now {
 			t.Errorf("%s: Node's generatedAt is %d, the clock said %d", sc.Name, sc.Answer.Body.GeneratedAt, sc.Now)
 		}
 	}
+}
+
+// anyOrder is a collection as JSON with its sessions sorted.
+func anyOrder(t *testing.T, raw []byte) string {
+	t.Helper()
+	var c map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &c); err != nil {
+		t.Fatal(err)
+	}
+	var sessions []json.RawMessage
+	if err := json.Unmarshal(c["sessions"], &sessions); err != nil {
+		t.Fatal(err)
+	}
+	sort.Slice(sessions, func(i, j int) bool { return string(sessions[i]) < string(sessions[j]) })
+	sorted, err := json.Marshal(sessions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c["sessions"] = sorted
+	out, err := json.Marshal(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(out)
 }
 
 // TestParseDateMatchesNode replays the scenario that sends every kind of
@@ -274,14 +399,13 @@ func (b *blockingSource) GetAllPeers(context.Context, bool) []*goapi.Object {
 	return []*goapi.Object{goapi.NewObject("id", "a")}
 }
 
-// GetPeerConnectionSessions answers one session, and fails as the API
-// client does once the context has ended.
-func (b *blockingSource) GetPeerConnectionSessions(ctx context.Context, _ string, _ any) *goapi.Object {
+// stored has one session of device a, and fails once the context has
+// ended.
+func (b *blockingSource) stored(ctx context.Context, _ int64) ([]storedSession, error) {
 	if ctx.Err() != nil {
-		return goapi.NewObject("success", false, "error", ctx.Err().Error())
+		return nil, ctx.Err()
 	}
-	session := goapi.NewObject("id", float64(1), "started_at", time.Now().UTC().Format(time.RFC3339))
-	return goapi.NewObject("success", true, "data", goapi.NewObject("sessions", []any{session}))
+	return []storedSession{{ID: 1, HostID: "a", Start: time.Now().UnixMilli()}}, nil
 }
 
 func (b *blockingSource) ListHelpRequests(context.Context, any) *goapi.Object {
@@ -293,7 +417,7 @@ func (b *blockingSource) ListHelpRequests(context.Context, any) *goapi.Object {
 // collection instead of starting its own, and both get its result.
 func TestRequestsDuringACollectionShareIt(t *testing.T) {
 	src := &blockingSource{entered: make(chan struct{}, 2), release: make(chan struct{})}
-	h := &handlers{api: src, now: time.Now}
+	h := &handlers{api: src, sessions: src.stored, now: time.Now}
 	type outcome struct {
 		entry *cached
 		err   error
@@ -330,7 +454,7 @@ func TestRequestsDuringACollectionShareIt(t *testing.T) {
 // that waited for it gets its result.
 func TestACollectionOutlivesTheRequestThatStartedIt(t *testing.T) {
 	src := &blockingSource{entered: make(chan struct{}, 2), release: make(chan struct{})}
-	h := &handlers{api: src, now: time.Now}
+	h := &handlers{api: src, sessions: src.stored, now: time.Now}
 	ctx, cancel := context.WithCancel(context.Background())
 	waited := make(chan error, 1)
 	go func() {
