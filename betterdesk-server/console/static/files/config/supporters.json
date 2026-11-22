@@ -31,10 +31,10 @@
     }
   ],
   "links": {
-    "repo": "https://github.com/UNITRONIX/BetterDesk",
-    "issues": "https://github.com/UNITRONIX/BetterDesk/issues",
+    "repo": "https://github.com/trybetterdesk/betterdesk",
+    "issues": "https://github.com/trybetterdesk/betterdesk/issues",
     "sponsors": "https://github.com/sponsors/UNITRONIX",
     "buyMeACoffee": "https://buymeacoffee.com/unitronix",
-    "sponsorsMd": "https://github.com/UNITRONIX/BetterDesk/blob/main/SPONSORS.md"
+    "sponsorsMd": "https://github.com/trybetterdesk/betterdesk/blob/main/SPONSORS.md"
   }
 }

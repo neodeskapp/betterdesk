@@ -210,6 +210,8 @@ def build_issue_body(
     audit_doc: str,
 ) -> str:
     title_component = "client" if component_id == "client" else "OSS server"
+    # The docs are linked in the repository the workflow runs in
+    this_repo = os.environ.get("GITHUB_REPOSITORY", "").strip() or "trybetterdesk/betterdesk"
     return f"""## RustDesk upstream watch
 
 New **{title_component}** release needs a BetterDesk compatibility review.
@@ -222,7 +224,7 @@ New **{title_component}** release needs a BetterDesk compatibility review.
 
 ### Checklist
 
-Follow [`{checklist_doc}`](https://github.com/UNITRONIX/BetterDesk/blob/dev/{checklist_doc}) end-to-end (manual lab + code review). Record findings in [`{audit_doc}`](https://github.com/UNITRONIX/BetterDesk/blob/dev/{audit_doc}).
+Follow [`{checklist_doc}`](https://github.com/{this_repo}/blob/dev/{checklist_doc}) end-to-end (manual lab + code review). Record findings in [`{audit_doc}`](https://github.com/{this_repo}/blob/dev/{audit_doc}).
 
 - [ ] Bootstrap / deploy string / deep-link / no public fallback
 - [ ] RegisterPk / enrollment modes

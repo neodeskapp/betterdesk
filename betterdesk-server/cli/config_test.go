@@ -187,15 +187,20 @@ func TestConfigCheckLikeNode(t *testing.T) {
 			continue
 		}
 		root, env := managementSetup(t, c)
+		var got, want updater.Capabilities
+		if err := json.Unmarshal([]byte(c.Stdout), &want); err != nil {
+			t.Fatalf("%s: %v", c.Name, err)
+		}
+		// Node ran in a container for the recording. DOCKER=true gives Go
+		// the same on a host without /.dockerenv, such as a CI runner.
+		if want.Docker {
+			env["DOCKER"] = "true"
+		}
 		vars, out, _ := testEnv(env)
 		Config([]string{"check"}, vars)
 		replayed++
-		var got, want updater.Capabilities
 		gotText := strings.ReplaceAll(out.String(), root, "{ROOT}")
 		if err := json.Unmarshal([]byte(gotText), &got); err != nil {
-			t.Fatalf("%s: %v", c.Name, err)
-		}
-		if err := json.Unmarshal([]byte(c.Stdout), &want); err != nil {
 			t.Fatalf("%s: %v", c.Name, err)
 		}
 		if got.Paths != want.Paths || got.Platform != want.Platform || got.Docker != want.Docker || got.Success != want.Success {

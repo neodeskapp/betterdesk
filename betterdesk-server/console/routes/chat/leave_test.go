@@ -31,6 +31,17 @@ func TestReplacedAgentLeavesAfterItsSuccessor(t *testing.T) {
 	if _, err := io.ReadFull(first, head); err != nil || !strings.HasPrefix(string(head), "HTTP/1.1 101") {
 		t.Fatalf("first socket: %q %v", head, err)
 	}
+	// The handshake's answer goes out before the relay puts the socket in
+	// its room. The second socket replaces the first only when it comes
+	// after that; otherwise the late first socket replaces the second.
+	if !waitFor(func() bool {
+		relay.relay.mu.Lock()
+		defer relay.relay.mu.Unlock()
+		rm := relay.relay.rooms["dev1"]
+		return rm != nil && rm.agent != nil
+	}) {
+		t.Fatal("the first socket never became its room's agent")
+	}
 
 	second := relay.agent(t, "dev1")
 	second.sync(t)
@@ -55,5 +66,5 @@ func TestReplacedAgentLeavesAfterItsSuccessor(t *testing.T) {
 	}
 	op := relay.open(t, "anna", "dev1")
 	op.sync(t)
-	want(t, "a new operator", op.take(), `{"type":"status","agent_connected":false}`, `{"type":"history","messages":[]}`)
+	want(t, "a new operator", op.takeAtLeast(2), `{"type":"status","agent_connected":false}`, `{"type":"history","messages":[]}`)
 }

@@ -232,7 +232,7 @@
 		branding?.logoUrl && /^(\/(?!\/)|https?:\/\/)/i.test(branding.logoUrl) ? branding.logoUrl : ''
 	);
 	const showPoweredBy = $derived(branding ? branding.showPoweredBy : true);
-	const PROJECT_URL = 'https://github.com/UNITRONIX/BetterDesk';
+	const PROJECT_URL = 'https://github.com/trybetterdesk/betterdesk';
 	const footerText = $derived(branding?.footerText ?? '');
 </script>
 

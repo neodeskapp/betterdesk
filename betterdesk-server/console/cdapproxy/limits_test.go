@@ -180,7 +180,9 @@ func TestSocketsPerAccount(t *testing.T) {
 // closed after two ping intervals; one whose client answers stays open
 // although it sends nothing.
 func TestSilentSocketIsClosed(t *testing.T) {
-	const interval = 30 * time.Millisecond
+	// Long enough that a client slowed down by the race detector on a busy
+	// machine still answers a ping within one interval
+	const interval = 100 * time.Millisecond
 	addr := proxyAt(t, Options{Devices: knownDevices{}, CanAccess: everyDevice, PingInterval: interval})
 
 	quiet, status := open(t, addr, "/api/cdap/devices/dev1/terminal", as(5, "anna"))

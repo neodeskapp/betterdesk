@@ -3,16 +3,16 @@
 # BetterDesk — one-line installer (Linux)
 #
 # Docker (default — official GHCR image, one container, fully automated):
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash
 #
 # Docker, move a two-container (split) install to the one container:
 #   curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
 #
 # Native stable (git clone + betterdesk.sh --auto):
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash -s -- --native
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash -s -- --native
 #
 # Native Development channel (this file on the `dev` branch defaults to --branch dev):
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/dev/install.sh | sudo bash -s -- --native
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/install.sh | sudo bash -s -- --native
 #
 # Options (pass after "bash -s --"):
 #   --docker | --native          Installation mode (default: docker)
@@ -43,7 +43,7 @@
 set -euo pipefail
 
 VERSION="1.0.0"
-BETTERDESK_REPO="${BETTERDESK_REPO:-UNITRONIX/BetterDesk}"
+BETTERDESK_REPO="${BETTERDESK_REPO:-trybetterdesk/betterdesk}"
 # Must match the GitHub branch that serves this install.sh URL
 # (.../dev/install.sh → dev, .../main/install.sh → main). Override with
 # --branch / BETTERDESK_BRANCH. Flip to "main" when releasing this file on main.
@@ -218,7 +218,8 @@ fetch_url_to_file() {
 validate_compose_quick() {
     local file="$1"
     grep -q 'services:' "$file" || die "Invalid compose file (missing services:)"
-    grep -q 'ghcr.io/unitronix/betterdesk:' "$file" || die "Invalid compose file (unexpected content)"
+    # Any owner's image, so a fork's compose file passes too
+    grep -Eq 'ghcr\.io/[a-z0-9._-]+/betterdesk:' "$file" || die "Invalid compose file (unexpected content)"
     grep -q 'BETTERDESK_DOCKER_LAYOUT=single' "$file" || die "Invalid compose file (missing single layout marker)"
 }
 
@@ -409,7 +410,7 @@ print_docker_summary() {
 is_split_install() {
     local compose_dir="$1"
     grep -qs '^BETTERDESK_DOCKER_LAYOUT=split' "${compose_dir}/.env" \
-        || grep -qs 'ghcr.io/unitronix/betterdesk-console' "${compose_dir}/docker-compose.yml"
+        || grep -Eqs 'ghcr\.io/[a-z0-9._-]+/betterdesk-console' "${compose_dir}/docker-compose.yml"
 }
 
 # Stops the split install's containers. The named volumes (betterdesk-data,

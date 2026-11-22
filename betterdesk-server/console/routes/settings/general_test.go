@@ -157,7 +157,10 @@ func TestRestartStatus(t *testing.T) {
 	res := s.SignedOut().Do("GET", "/api/settings/restart-status", "")
 	got := decode(t, res.Body)
 	data := got["data"].(map[string]any)
-	if data["status"] != "ok" || !strings.HasPrefix(data["cacheVersion"].(string), "4.5.6.") || data["uptime"] != float64(0) {
+	// uptime is whole seconds since the start, which on a busy machine
+	// can be past the first second when the request arrives
+	uptime, isNumber := data["uptime"].(float64)
+	if data["status"] != "ok" || !strings.HasPrefix(data["cacheVersion"].(string), "4.5.6.") || !isNumber || uptime < 0 || uptime > 30 || uptime != float64(int(uptime)) {
 		t.Errorf("liveness: %s", res.Body)
 	}
 	for _, query := range []string{"?job=a&token=b", "?job=a&job=b&token=t", "?job[x]=1&token=t"} {

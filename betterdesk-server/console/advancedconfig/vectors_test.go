@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -325,9 +326,13 @@ func TestNodeVectors(t *testing.T) {
 					t.Errorf("%s: error %v", name, err)
 				case op != "restore":
 					got := cleanJSON(t, asJSON(t, result), root)
-					if !reflect.DeepEqual(got, step.Result) {
+					want := step.Result
+					if op == "list" && runtime.GOOS != "windows" && os.Geteuid() != 0 {
+						want = listAsNonRoot(want, step.Tree)
+					}
+					if !reflect.DeepEqual(got, want) {
 						gb, _ := json.Marshal(got)
-						wb, _ := json.Marshal(step.Result)
+						wb, _ := json.Marshal(want)
 						t.Errorf("%s:\n got  %.600s\n want %.600s", name, gb, wb)
 					}
 				}
@@ -343,6 +348,32 @@ func TestNodeVectors(t *testing.T) {
 	if fixed == 0 {
 		t.Error("no restore of the vectors failed in its copy (BUGS SE3)")
 	}
+}
+
+// listAsNonRoot turns a file list that Node recorded as root into the one
+// a user without root's rights gets: root may write a file that has no
+// write bit for its owner, any other user may not.
+func listAsNonRoot(list any, tree []vectorFile) any {
+	readOnly := map[string]bool{}
+	for _, f := range tree {
+		if mode, err := strconv.ParseUint(f.Mode, 8, 32); f.Type == "file" && err == nil && mode&0o200 == 0 {
+			readOnly["<root>/"+f.Path] = true
+		}
+	}
+	entries, _ := list.([]any)
+	out := make([]any, len(entries))
+	for i, entry := range entries {
+		out[i] = entry
+		if m, ok := entry.(map[string]any); ok && readOnly[fmt.Sprint(m["path"])] {
+			changed := make(map[string]any, len(m))
+			for k, v := range m {
+				changed[k] = v
+			}
+			changed["writable"] = false
+			out[i] = changed
+		}
+	}
+	return out
 }
 
 // failedCopyKeepsTheFile is BUGS SE3 in the replay: a restore whose copy

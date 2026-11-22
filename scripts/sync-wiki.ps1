@@ -1,7 +1,7 @@
 # Sync docs/wiki/ to GitHub Wiki (BetterDesk.wiki.git)
 param(
     [string]$CommitMessage = "Sync wiki from docs/wiki/",
-    [string]$WikiRepo = "https://github.com/UNITRONIX/BetterDesk.wiki.git",
+    [string]$WikiRepo = "https://github.com/trybetterdesk/betterdesk.wiki.git",
     [string]$WikiDir = "$env:TEMP\BetterDesk-wiki-sync"
 )
 

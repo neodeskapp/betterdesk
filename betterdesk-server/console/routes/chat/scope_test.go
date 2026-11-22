@@ -112,18 +112,19 @@ func TestScopedOperator(t *testing.T) {
 
 		anna := relay.open(t, "anna", "panel")
 		ben := relay.open(t, "ben", "panel")
-		want(t, "anna's inbox", anna.take(), `{"type":"status","agent_connected":false}`,
+		want(t, "anna's inbox", anna.takeAtLeast(2), `{"type":"status","agent_connected":false}`,
 			`{"type":"contacts","contacts":[{"id":"dev1"},{"id":"operator:admin"}]}`)
-		want(t, "ben's inbox", ben.take(), `{"type":"status","agent_connected":false}`,
+		want(t, "ben's inbox", ben.takeAtLeast(2), `{"type":"status","agent_connected":false}`,
 			`{"type":"contacts","contacts":[{"id":"dev2"},{"id":"operator:admin"}]}`)
 
 		dev1 := relay.agent(t, "dev1")
 		dev2 := relay.agent(t, "dev2")
-		dev1.take()
-		dev2.take()
-		want(t, "anna sees dev1 come", anna.take(), `{"type":"status","device_id":"dev1","agent_connected":true}`,
+		// Each agent's history and contacts
+		dev1.takeAtLeast(2)
+		dev2.takeAtLeast(2)
+		want(t, "anna sees dev1 come", anna.takeAtLeast(2), `{"type":"status","device_id":"dev1","agent_connected":true}`,
 			`{"type":"presence","device_id":"dev1","online":true}`)
-		want(t, "ben sees dev2 come", ben.take(), `{"type":"status","device_id":"dev2","agent_connected":true}`,
+		want(t, "ben sees dev2 come", ben.takeAtLeast(2), `{"type":"status","device_id":"dev2","agent_connected":true}`,
 			`{"type":"presence","device_id":"dev2","online":true}`)
 
 		dev1.send(t, `{"type":"typing"}`)
@@ -159,7 +160,7 @@ func TestScopedOperator(t *testing.T) {
 		// Without the API server's contacts, the connected devices she sees
 		anna.send(t, `{"type":"get_contacts","device_id":"operator:anna"}`)
 		anna.sync(t)
-		if got := anna.take(); len(got) != 1 || !strings.Contains(got[0], `"id":"dev1"`) || strings.Contains(got[0], `"id":"dev2"`) {
+		if got := anna.takeAtLeast(1); len(got) != 1 || !strings.Contains(got[0], `"id":"dev1"`) || strings.Contains(got[0], `"id":"dev2"`) {
 			t.Errorf("anna's contacts without the API server: %q, want dev1 and not dev2", got)
 		}
 
@@ -167,11 +168,11 @@ func TestScopedOperator(t *testing.T) {
 		anna.send(t, `{"type":"typing","conversation_id":"group:team"}`)
 		anna.send(t, `{"type":"get_history","conversation_id":"operator"}`)
 		anna.sync(t)
-		if got := dev1.take(); len(got) != 1 || !strings.Contains(got[0], `"text":"to dev1"`) {
+		if got := dev1.takeAtLeast(1); len(got) != 1 || !strings.Contains(got[0], `"text":"to dev1"`) {
 			t.Errorf("dev1 got %q, want anna's message", got)
 		}
-		want(t, "ben gets the typing of a group", ben.take(), `{"type":"typing","from":"operator","operator":"anna","conversation_id":"group:team"}`)
-		got := anna.take()
+		want(t, "ben gets the typing of a group", ben.takeAtLeast(1), `{"type":"typing","from":"operator","operator":"anna","conversation_id":"group:team"}`)
+		got := anna.takeAtLeast(2)
 		if len(got) != 2 || got[1] != `{"type":"history","conversation_id":"operator","messages":[{"id":1,"from_id":"dev1"},{"id":4,"from_id":"operator:admin"}]}` {
 			t.Errorf("anna got %q, want her message and the history without dev2", got)
 		}
@@ -187,7 +188,8 @@ func TestAgentReadsItsOwnConversations(t *testing.T) {
 	relay.api.answer("GET /chat/history/dev2?limit=100", `{"messages":[{"id":2}]}`)
 	relay.api.answer("GET /chat/contacts/dev1", `{"contacts":[{"id":"dev2"}]}`)
 	dev1 := relay.agent(t, "dev1")
-	dev1.take()
+	// its history, contacts and groups
+	dev1.takeAtLeast(3)
 	for _, frame := range []string{
 		`{"type":"get_history","conversation_id":"dev2"}`,
 		`{"type":"get_history","conversation_id":"operator"}`,
@@ -475,6 +477,19 @@ func (s *testSocket) take() []string {
 	got := s.got
 	s.got = nil
 	return got
+}
+
+// takeAtLeast is take once n messages are there, waiting up to five
+// seconds for them. What answers an API call (history, contacts, groups)
+// goes out from the socket's queue of calls, after sync's welcome and on a
+// busy machine later than take's 150 ms.
+func (s *testSocket) takeAtLeast(n int) []string {
+	waitFor(func() bool {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		return len(s.got) >= n
+	})
+	return s.take()
 }
 
 // sync waits until the relay has handled what the socket sent before: it

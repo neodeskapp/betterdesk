@@ -114,8 +114,17 @@ func TestHostZoneVectors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fixed := 0
+	fixed, replayed := 0, 0
 	for _, v := range vectors {
+		// A target this machine's zoneinfo folder lacks cannot be replayed:
+		// Ubuntu, for one, keeps right/, posix/ and the old names such as
+		// US/Pacific in the tzdata-legacy package
+		if v.Link != nil {
+			if _, err := os.Stat(*v.Link); err != nil {
+				continue
+			}
+		}
+		replayed++
 		host := HostFS{
 			LookupEnv: func(name string) (string, bool) {
 				if name != "TZ" || v.TZ == nil {
@@ -163,9 +172,10 @@ func TestHostZoneVectors(t *testing.T) {
 			t.Errorf("TZ %s: DetectOSTimezone = %q, Node %q, want %q", name, got, v.Detected, detected)
 		}
 	}
-	if fixed == 0 || fixed == len(vectors) {
-		t.Errorf("%d of %d detected zones the server's loader cannot load", fixed, len(vectors))
+	if fixed == 0 || fixed == replayed {
+		t.Errorf("%d of %d detected zones the server's loader cannot load", fixed, replayed)
 	}
+	t.Logf("%d of %d vectors replayed", replayed, len(vectors))
 }
 
 // outcome is a value or the message of what was thrown.

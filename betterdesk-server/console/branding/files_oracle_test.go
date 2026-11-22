@@ -666,6 +666,15 @@ func (r *filesReplay) themes() {
 	}
 }
 
+// forkLinks turns the built-in project links of Node's answers, which
+// pointed at upstream, into the fork's that the console has instead
+// (BUGS L32). A file that names its own links keeps them.
+var forkLinks = strings.NewReplacer(
+	`"https://github.com/UNITRONIX/BetterDesk"`, `"https://github.com/trybetterdesk/betterdesk"`,
+	`"https://github.com/UNITRONIX/BetterDesk/issues"`, `"https://github.com/trybetterdesk/betterdesk/issues"`,
+	`"https://github.com/UNITRONIX/BetterDesk/blob/main/SPONSORS.md"`, `"https://github.com/trybetterdesk/betterdesk/blob/main/SPONSORS.md"`,
+)
+
 func (r *filesReplay) supporters() {
 	t, s := r.t, r.s
 	steps, _ := property(r.data, "supporters").([]any)
@@ -681,7 +690,11 @@ func (r *filesReplay) supporters() {
 		}
 		s.ResetSupportersCache()
 		first := Stringify(s.LoadSupporters())
-		if want := toString(property(step, "r")); first != want {
+		want := toString(property(step, "r"))
+		if text, _ := property(step, "text").(string); !strings.Contains(text, "github.com/UNITRONIX/BetterDesk") {
+			want = forkLinks.Replace(want)
+		}
+		if first != want {
 			t.Errorf("supporters file %d %s\n got  %s\n want %s", i, clip(Stringify(property(step, "text"))), clip(first), clip(want))
 		}
 		// the answer is kept until the cache is reset

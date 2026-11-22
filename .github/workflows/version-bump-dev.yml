@@ -56,20 +56,26 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add $(node scripts/bump-version.js --list-paths)
+          node scripts/bump-version.js --list-paths | xargs git add --
           if git diff --cached --quiet; then
             echo "No version files changed — skipping commit"
             echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git commit -m "chore: bump version to ${NEW_VERSION} [version-bump]"
+          # The branch by its full name: the dev release has a tag named dev,
+          # and a bare "dev" would fetch or push that tag
           for attempt in 1 2 3 4 5; do
-            if git push; then
+            if git push origin HEAD:refs/heads/dev; then
               echo "pushed=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "Push failed (attempt ${attempt}/5) — rebasing and retrying..."
-            git pull --rebase origin dev
+            if ! git pull --rebase origin refs/heads/dev; then
+              git rebase --abort || true
+              echo "The bump does not rebase onto dev without conflicts"
+              exit 1
+            fi
           done
           echo "Version bump push failed after retries"
           exit 1

@@ -60,9 +60,6 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  # GHCR repository names are lowercase; github.repository_owner preserves
-  # the display casing ("UNITRONIX") and cannot be lowercased in expressions.
-  IMAGE_PREFIX: ghcr.io/unitronix
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -73,6 +70,8 @@ jobs:
       contents: read
     outputs:
       version: ${{ steps.ver.outputs.version }}
+      image_prefix: ${{ steps.ver.outputs.image_prefix }}
+      owner: ${{ steps.ver.outputs.owner }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Validate manual publish tag
@@ -89,6 +88,12 @@ jobs:
           else
             echo "version=dev" >> "$GITHUB_OUTPUT"
           fi
+          # The images live under the repository's owner. GHCR names are
+          # lowercase, and expressions cannot lowercase the owner's display
+          # name, so the shell does it here.
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "owner=${owner}" >> "$GITHUB_OUTPUT"
+          echo "image_prefix=${REGISTRY}/${owner}" >> "$GITHUB_OUTPUT"
 
   # Guard against GHCR authorization outages. On 2026-11-18 a publish failed with
   # "permission_denied ... circuit breaker is open" from GitHub's authzd service —
@@ -114,6 +119,7 @@ jobs:
         env:
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ needs.read-version.outputs.owner }}
         run: |
           set -uo pipefail
           attempt=1
@@ -122,7 +128,7 @@ jobs:
             echo "GHCR auth probe attempt $attempt/$max"
             if token=$(curl -fsS -m 20 \
                  -u "${GHCR_USER}:${GHCR_TOKEN}" \
-                 "https://${REGISTRY}/token?scope=repository%3Aunitronix%2Fbetterdesk-server%3Apush&service=${REGISTRY}" \
+                 "https://${REGISTRY}/token?scope=repository%3A${OWNER}%2Fbetterdesk-server%3Apush&service=${REGISTRY}" \
                  | sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'); then
               if [ -n "$token" ]; then
                 echo "GHCR preflight OK — registry issued a push token."
@@ -174,7 +180,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
-          images: ${{ env.IMAGE_PREFIX }}/betterdesk-server
+          images: ${{ needs.read-version.outputs.image_prefix }}/betterdesk-server
           # Prefer product VERSION over tag name (dispatch with tag=latest must not label as "latest")
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
@@ -194,7 +200,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.server
-          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/betterdesk-server,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/betterdesk-server,push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             BETTERDESK_COMMIT_SHA=${{ github.sha }}
@@ -259,7 +265,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
-          images: ${{ env.IMAGE_PREFIX }}/betterdesk
+          images: ${{ needs.read-version.outputs.image_prefix }}/betterdesk
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
@@ -278,7 +284,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/betterdesk,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/betterdesk,push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             BETTERDESK_COMMIT_SHA=${{ github.sha }}
@@ -347,7 +353,7 @@ jobs:
         with:
           context: .
           file: ./${{ matrix.file }}
-          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -409,7 +415,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          outputs: type=image,name=${{ env.IMAGE_PREFIX }}/betterdesk,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/betterdesk,push-by-digest=true,name-canonical=true,push=true
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -485,7 +491,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
-          images: ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
+          images: ${{ needs.read-version.outputs.image_prefix }}/${{ matrix.image }}
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           tags: |
@@ -501,7 +507,7 @@ jobs:
 
       - name: Create multi-architecture manifest
         env:
-          IMAGE: ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
+          IMAGE: ${{ needs.read-version.outputs.image_prefix }}/${{ matrix.image }}
           TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           set -euo pipefail
@@ -560,7 +566,7 @@ jobs:
           severity: CRITICAL,HIGH
 
   update-description:
-    needs: merge-images
+    needs: [read-version, merge-images]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     if: |
@@ -575,6 +581,7 @@ jobs:
       - name: Summary
         env:
           IMAGE_TAG: ${{ github.event.inputs.tag }}
+          IMAGE_PREFIX: ${{ needs.read-version.outputs.image_prefix }}
         run: |
           pin_ver="$(tr -d '\n\r' < VERSION 2>/dev/null || echo VERSION)"
           requested_tag="${IMAGE_TAG:-automatic}"
@@ -584,8 +591,8 @@ jobs:
             echo "Requested tag: \`${requested_tag}\`"
             echo "Product version: \`${pin_ver}\`"
             echo ""
-            echo "- \`ghcr.io/${{ github.repository_owner }}/betterdesk-server\`"
-            echo "- \`ghcr.io/${{ github.repository_owner }}/betterdesk\`"
+            echo "- \`${IMAGE_PREFIX}/betterdesk-server\`"
+            echo "- \`${IMAGE_PREFIX}/betterdesk\`"
             echo ""
             echo "### Pin a version (production — recommended)"
             echo "\`\`\`bash"
