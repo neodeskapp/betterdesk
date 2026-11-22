@@ -480,7 +480,7 @@ print_header() {
 print_success() { echo -e "${GREEN}✓${NC} $1"; log "SUCCESS: $1"; }
 print_error() { echo -e "${RED}✗${NC} $1"; log "ERROR: $1"; }
 print_warning() { echo -e "${YELLOW}!${NC} $1"; log "WARNING: $1"; }
-print_info() { echo -e "${CYAN}ℹ${NC} $1"; log "INFO: $1"; }
+print_info() { echo -e "${CYAN}i${NC} $1"; log "INFO: $1"; }
 print_step() { echo -e "${BOLD}▶${NC} $1"; log "STEP: $1"; }
 
 #===============================================================================
@@ -3352,7 +3352,7 @@ _run_go_command_bounded() {
                 break
             fi
             heartbeat_elapsed=$((heartbeat_elapsed + heartbeat_interval))
-            printf 'ℹ  still %s... %ss elapsed (watchdog active)\n' \
+            printf 'i  still %s... %ss elapsed (watchdog active)\n' \
                 "$label" "$heartbeat_elapsed" >&2
         done
     ) &
@@ -3417,7 +3417,7 @@ _run_go_mod_download_bounded() {
         while true; do
             sleep 15
             elapsed=$((elapsed + 15))
-            printf 'ℹ  still downloading Go modules... %ss elapsed (watchdog active)\n' "$elapsed" >&2
+            printf 'i  still downloading Go modules... %ss elapsed (watchdog active)\n' "$elapsed" >&2
         done
     ) &
     heartbeat_pid=$!
