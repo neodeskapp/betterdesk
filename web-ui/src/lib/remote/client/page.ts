@@ -24,6 +24,8 @@ export interface PageGlobals {
 		t?: (key: string) => string;
 		/** Verbose relay and sign-in logging (set by hand in the browser console) */
 		debugRelay?: boolean;
+		/** Verbose CDAP session logging (set by hand in the browser console) */
+		debugRemote?: boolean;
 	};
 	/** Translation: the key comes back when there is no string for it */
 	t?: (key: string) => string;
