@@ -43,3 +43,20 @@ func TestDeleteActionSaysItHidesTheDevice(t *testing.T) {
 		t.Errorf("device_detail.action_delete_desc is %q; Delete hides the device by default", text)
 	}
 }
+
+// The enrollment mode decides how RustDesk clients join; new mesh agents
+// always wait for approval, also under Open and Locked (BUGS L101).
+func TestEnrollmentModesSayMeshAgentsWait(t *testing.T) {
+	if text := english(t, "tokens.mode_open_desc"); strings.Contains(text, "Any device") || !strings.Contains(text, "RustDesk") || !strings.Contains(text, "Mesh agents") {
+		t.Errorf("tokens.mode_open_desc is %q", text)
+	}
+	if text := english(t, "tokens.mode_locked_desc"); !strings.Contains(text, "RustDesk") || !strings.Contains(text, "Mesh agents") {
+		t.Errorf("tokens.mode_locked_desc is %q", text)
+	}
+	if text := english(t, "tokens.enrollment_mode_note"); !strings.Contains(text, "mesh agents always wait") {
+		t.Errorf("tokens.enrollment_mode_note is %q", text)
+	}
+	if text := english(t, "tokens.mode_notice_open"); strings.Contains(text, "new devices join") {
+		t.Errorf("tokens.mode_notice_open is %q", text)
+	}
+}
