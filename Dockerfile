@@ -4,8 +4,10 @@
 # betterdesk-server serves the signal and relay server, the API and the web
 # console (DECISIONS A32). The web app is built into the binary.
 #
-# Build:  docker build -t betterdesk:local .
-# Run:    docker compose -f docker-compose.single.yml up -d
+# Published as ghcr.io/trybetterdesk/betterdesk (docker-compose.quick.single.yml
+# runs it). Build it from a checkout instead:
+#   docker build -t betterdesk:local .
+#   docker compose -f docker-compose.single.yml up -d
 #
 # Ports:
 #   5000  - Web console (5443 with HTTPS_ENABLED)
@@ -57,8 +59,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath \
 # ============= Runtime =============
 FROM alpine:3.22
 
-LABEL maintainer="UNITRONIX"
+LABEL maintainer="trybetterdesk"
 LABEL description="BetterDesk — server and web console in one process"
+LABEL org.opencontainers.image.source="https://github.com/trybetterdesk/betterdesk"
 LABEL version="3.5.270"
 
 # Runtime packages (retry for transient DNS failures). sqlite stays for the

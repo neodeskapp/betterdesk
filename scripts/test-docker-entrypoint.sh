@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Checks of the image's start scripts (docker/) without Docker.
+# Checks of the image's start scripts (docker/), the Dockerfiles and the
+# compose files, without Docker.
 #
 #   bash scripts/test-docker-entrypoint.sh
 set -euo pipefail
@@ -64,8 +65,24 @@ test_enrollment_mode_is_not_forced() (
     done
 )
 
+# The compose file the docs show first runs the published image, builds
+# nothing and follows releases; every compose file says which one is which.
+test_quick_compose_pulls_the_published_image() (
+    local quick="$SCRIPT_ROOT/docker-compose.quick.single.yml" f other
+    grep -q 'image: ghcr.io/trybetterdesk/betterdesk:${BETTERDESK_IMAGE_TAG:-latest}' "$quick"         || fail "docker-compose.quick.single.yml does not run ghcr.io/trybetterdesk/betterdesk:latest"
+    if grep -qE '^[[:space:]]+build:' "$quick"; then fail "docker-compose.quick.single.yml builds an image"; fi
+    if grep -qE 'pull_policy:[[:space:]]*never' "$quick"; then fail "docker-compose.quick.single.yml never pulls"; fi
+    for f in "$SCRIPT_ROOT"/docker-compose*.yml; do
+        for other in docker-compose.quick.single.yml docker-compose.quick.single.macvlan.yml docker-compose.single.yml; do
+            sed -n '1,20p' "$f" | grep -q "$other" || fail "the comment at the top of $(basename "$f") does not name $other"
+        done
+        if grep -qi 'ghcr.io/unitronix' "$f"; then fail "$(basename "$f") names the upstream image"; fi
+    done
+)
+
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
 test_enrollment_mode_is_not_forced
+test_quick_compose_pulls_the_published_image
 echo "Docker entrypoint checks passed"

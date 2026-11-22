@@ -1,36 +1,43 @@
 # =============================================================================
-# BetterDesk — Official Quick Start (Single Container, MACVLAN / shared LAN IP)
+# BetterDesk with Docker on a macvlan network (its own LAN address)
 # =============================================================================
-# Use when the stack must appear on your LAN with a dedicated IP (macvlan),
-# not via host port mappings. All services run in one container on MACVLAN_IPV4.
+# The published image, as docker-compose.quick.single.yml runs it, but on a
+# macvlan network instead of ports on the host: the container gets its own
+# address on your LAN (MACVLAN_IPV4). It builds nothing.
+#
+# Which compose file is which:
+#   docker-compose.quick.single.yml          the published image, ports on
+#                                            the host (start from this one)
+#   docker-compose.quick.single.macvlan.yml  this file
+#   docker-compose.single.yml                builds the image from a checkout
+#                                            of the repository (development)
 #
 # Prerequisites:
 #   - External macvlan network already created on the Docker host (example below).
 #   - A free IPv4 on that subnet (MACVLAN_IPV4).
 #
-# Create macvlan (once per host — adjust parent interface and subnet):
-#   docker network create -d macvlan \
-#     --subnet=192.168.1.0/24 --gateway=192.168.1.1 \
-#     -o parent=eth0 LAN
+# Create macvlan (once per host; adjust parent interface and subnet):
+#   docker network create -d macvlan #     --subnet=192.168.1.0/24 --gateway=192.168.1.1 #     -o parent=eth0 LAN
 #
-# Usage:
+# Usage (MACVLAN_IPV4 and RELAY_SERVERS can also go into .env):
 #   export MACVLAN_IPV4=192.168.1.51
 #   export RELAY_SERVERS=${MACVLAN_IPV4}:21117
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.macvlan.yml -o docker-compose.yml
-#   docker compose pull && docker compose up -d
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/docker-compose.quick.single.macvlan.yml -o docker-compose.yml
+#   docker compose up -d
 #
 # Web console: http://MACVLAN_IPV4:5000
 # RustDesk client API: http://MACVLAN_IPV4:21121
 # Admin password:
 #   docker compose exec betterdesk betterdesk-show-admin-credentials
 #
-# Image tag (aligned with CHANGELOG / git tag):
-#   Default: 3.3.112  |  Rolling: BETTERDESK_IMAGE_TAG=latest
+# Image: ghcr.io/trybetterdesk/betterdesk with the tag "latest", the newest
+# release. Update: docker compose pull && docker compose up -d
+# Pin a release: BETTERDESK_IMAGE_TAG=<version> in .env.
 # =============================================================================
 
 services:
   betterdesk:
-    image: ghcr.io/unitronix/betterdesk:${BETTERDESK_IMAGE_TAG:-3.5.270}
+    image: ghcr.io/trybetterdesk/betterdesk:${BETTERDESK_IMAGE_TAG:-latest}
     container_name: betterdesk
     hostname: betterdesk
     volumes:
@@ -67,7 +74,7 @@ services:
       - PGID=${PGID:-10001}
       - BETTERDESK_UPDATE_MODE=image
       - BETTERDESK_DOCKER_LAYOUT=single
-      - BETTERDESK_IMAGE_TAG=${BETTERDESK_IMAGE_TAG:-3.5.270}
+      - BETTERDESK_IMAGE_TAG=${BETTERDESK_IMAGE_TAG:-latest}
       - AUTH_DB_PATH=/app/data/auth.db
       # Do NOT comment these out — host ADMIN_PASSWORD only reaches the container when mapped (issue #385).
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}

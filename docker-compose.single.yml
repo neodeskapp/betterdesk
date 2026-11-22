@@ -1,22 +1,23 @@
-# BetterDesk — Simplified Docker Compose (Single Container, source build)
-# ===========================================================
-#
-# One container, one process: betterdesk-server serves signal, relay, API and the web console.
-# THIS FILE builds betterdesk:local (pull_policy: never).
-# `docker compose pull` does NOT refresh BetterDesk — rebuild after git pull:
+# =============================================================================
+# BetterDesk with Docker, built from this checkout (for development)
+# =============================================================================
+# This file builds the image betterdesk:local from the repository and runs
+# it: one container, one process (signal, relay, API and the web console).
+# `docker compose pull` does not update it; rebuild after git pull:
 #   git pull && docker compose -f docker-compose.single.yml up -d --build
 #
-# PREBUILT GHCR (no local build) — prefer:
-#   curl -fsSL …/docker-compose.quick.single.yml -o docker-compose.yml
-#   docker compose pull && docker compose up -d
+# Which compose file is which:
+#   docker-compose.quick.single.yml          the published image, builds
+#                                            nothing: start from this one
+#   docker-compose.quick.single.macvlan.yml  the published image on a macvlan
+#                                            network, with its own LAN address
+#   docker-compose.single.yml                this file
 #
-# Quick start (SQLite — default):
+# Quick start (SQLite, the default):
 #   docker compose -f docker-compose.single.yml up -d --build
 #
 # With PostgreSQL:
-#   PG_PASSWORD=YourStrongPasswordHere \
-#   DB_TYPE=postgres DATABASE_URL=postgres://betterdesk:YourStrongPasswordHere@postgres:5432/betterdesk \
-#     docker compose -f docker-compose.single.yml --profile postgres up -d --build
+#   PG_PASSWORD=YourStrongPasswordHere #   DB_TYPE=postgres DATABASE_URL=postgres://betterdesk:YourStrongPasswordHere@postgres:5432/betterdesk #     docker compose -f docker-compose.single.yml --profile postgres up -d --build
 #
 #   Or create a .env file:
 #     DB_TYPE=postgres
@@ -27,7 +28,9 @@
 # Access:
 #   Web Console: http://localhost:5000
 #   Client API:  http://localhost:21121  (not panel :5000)
-#   Admin password: auto-generated unless ADMIN_PASSWORD is set before first start
+#   Admin password: docker compose -f docker-compose.single.yml exec betterdesk betterdesk-show-admin-credentials
+#   (random unless ADMIN_PASSWORD is set before the first start)
+# =============================================================================
 
 services:
   # BetterDesk: signal, relay, API and web console in one process
