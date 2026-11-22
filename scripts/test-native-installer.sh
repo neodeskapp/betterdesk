@@ -187,6 +187,31 @@ FAKE_GIT
         [ "$got" = "$expected" ] \
             || fail "native install from $branch passes update channel '$got', expected '$expected'"
     done
+
+    # Without --branch the default branch's files install and betterdesk.sh
+    # picks the channel (stable, or dev while there is no stable release);
+    # --channel names one
+    local args
+    for args in "" "--channel dev" "--channel stable"; do
+        case "$args" in
+            *dev) expected=dev ;;
+            *stable) expected=main ;;
+            *) expected="" ;;
+        esac
+        rm -f "$temp_dir/channel"
+        (
+            unset BETTERDESK_BRANCH
+            export INSTALL_DIR="$temp_dir/install-default"
+            # shellcheck disable=SC2086
+            set -- $args
+            # shellcheck disable=SC1091
+            source "$SCRIPT_ROOT/install.sh"
+            [ "$BETTERDESK_BRANCH" = dev ] || fail "install.sh installs the files of $BETTERDESK_BRANCH"
+            install_native_mode
+        ) >/dev/null
+        got=$(cat "$temp_dir/channel" 2>/dev/null || echo "(betterdesk.sh did not run)")
+        [ "$got" = "$expected" ] || fail "install.sh $args passes update channel '$got', expected '$expected'"
+    done
 )
 
 # RV83: the migrate tool replaces an existing SQLite destination only with
@@ -393,6 +418,26 @@ test_install_sh_uses_the_fork() (
         https://raw.githubusercontent.com/trybetterdesk/betterdesk/*) ;;
         *) fail "install.sh downloads from $BETTERDESK_RAW_BASE" ;;
     esac
+    # The one-liners and the installers' own downloads name the fork's
+    # default branch, dev: its main branch holds upstream's older installer
+    [ "$BETTERDESK_RAW_BASE" = https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev ] \
+        || fail "install.sh downloads from $BETTERDESK_RAW_BASE"
+    local hits
+    hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(trybetterdesk/betterdesk/main|UNITRONIX/BetterDesk/main/(install\.sh|betterdesk(-docker)?\.(sh|ps1)|docker-compose))' \
+        install.sh betterdesk.sh betterdesk.ps1 betterdesk-docker.sh docker-compose*.yml README.md docs/docker/*.md docs/wiki/*.md || true)
+    [ -z "$hits" ] || fail "one-liners name a branch without the current installers: $hits"
+    local docker_base
+    docker_base=$(
+        unset BETTERDESK_RAW_BASE BETTERDESK_BRANCH
+        BETTERDESK_DOCKER_SOURCED=1
+        # shellcheck disable=SC1091
+        source "$SCRIPT_ROOT/betterdesk-docker.sh"
+        printf '%s\n' "$BETTERDESK_RAW_BASE"
+    )
+    [ "$docker_base" = https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev ] \
+        || fail "betterdesk-docker.sh downloads from $docker_base"
+    grep -qF '$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "dev" }' "$SCRIPT_ROOT/betterdesk.ps1" \
+        || fail "betterdesk.ps1 does not fetch itself from dev"
 )
 
 test_bounded_go_commands

@@ -454,10 +454,20 @@ function Test-ChannelAndDownloadErrors {
     $script:UPDATE_GITHUB_BRANCH = 'main'
     Remove-Item -Force $envFile
     function script:Invoke-WebRequest { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
-    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String)
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String -Width 4096)
     if ($out -notmatch 'no stable release' -or $out -notmatch '-Channel dev' -or $out -notmatch '-Binary') { Fail "a missing stable release says: $out" }
+    # Without a channel given or saved, no stable release yet: the
+    # development build, its channel kept; a given channel gets the error
+    if ($out -notmatch 'installing the development build' -or $out -notmatch '-Update -Channel stable') { Fail "no stable release does not fall back to the development build: $out" }
+    if ($script:UPDATE_GITHUB_BRANCH -ne 'dev' -or $script:UPDATE_GITHUB_BRANCH_GIVEN -ne 'dev') { Fail "the fallback does not keep the development channel: $($script:UPDATE_GITHUB_BRANCH)" }
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = 'main'
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String -Width 4096)
+    if ($out -match 'installing the development build' -or $out -notmatch 'no stable release yet') { Fail "-Channel stable without a release says: $out" }
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
     function script:Invoke-WebRequest { throw [System.Net.WebException]::new('The remote name could not be resolved: github.com') }
-    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String)
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String -Width 4096)
     if ($out -notmatch 'Could not reach' -or $out -notmatch '-Binary') { Fail "a download without network says: $out" }
     Remove-Item function:Invoke-WebRequest -ErrorAction SilentlyContinue
     $script:UPDATE_GITHUB_BRANCH = 'main'
@@ -753,7 +763,7 @@ function Test-ReleaseSignatureOnWindows {
 
     # A first install: no installed binary
     $script:downloads = @()
-    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
     if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "a first install with a matching SHA-256 installed nothing: $out" }
     if ($out -notmatch 'checked from the second install on') { Fail "a first install does not say when the signature is checked: $out" }
     if ($script:downloads -contains 'manifest.sig') { Fail 'a first install fetched a signature it cannot check' }
@@ -769,25 +779,25 @@ function Test-ReleaseSignatureOnWindows {
     }
     $script:refuse = $false
     Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
-    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
     if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "a release the installed binary checked was not installed: $out" }
     $want = "verify-release --manifest $(Join-Path $stage 'manifest.json') --signature $(Join-Path $stage 'manifest.sig') --name $asset $(Join-Path $stage $asset)"
     if (($script:verifyArgs -join ' ') -ne $want) { Fail "verify-release ran as: $($script:verifyArgs -join ' ')" }
     if ($out -notmatch 'checked by the installed betterdesk-server') { Fail "the download does not say who checked the signature: $out" }
     $script:refuse = $true
     Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
-    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
     if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail 'a release the installed binary refused was installed' }
     if ($out -notmatch 'does not verify' -or $out -notmatch '-SkipVerify') { Fail "the refusal does not say why and what to do: $out" }
     $script:refuse = $false
     $script:UPDATE_GITHUB_BRANCH = 'dev'
     Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
-    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
     if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail "a stable release was installed for the development channel: $out" }
     $script:UPDATE_GITHUB_BRANCH = 'main'
     Remove-Item -Force (Join-Path $rel 'manifest.sig')
     Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
-    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
     if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail 'a release without a signature was installed' }
     if ($out -notmatch 'no signed manifest') { Fail "a release without a signature says: $out" }
 

@@ -61,7 +61,8 @@
 
 .PARAMETER Channel
     Release channel: 'stable' (default, the newest release) or 'dev' (the
-    development build). The install keeps it for later updates.
+    development build). The install keeps it for later updates. Without
+    it, a repository with no stable release yet installs 'dev'.
 
 .PARAMETER Protocol
     Set protocol mode: 'http' or 'https'
@@ -951,18 +952,38 @@ function Get-ReleaseBinary {
     # The repository given to the installer, else the one .env names
     if (-not $script:UPDATE_GITHUB_OWNER_GIVEN -and (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER")) { $script:UPDATE_GITHUB_OWNER = Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER" }
     if (-not $script:UPDATE_GITHUB_REPO_GIVEN -and (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_REPO")) { $script:UPDATE_GITHUB_REPO = Get-ConsoleEnvValue -Key "UPDATE_GITHUB_REPO" }
-    $base = Get-ReleaseBaseUrl
-    Print-Info "Downloading $asset ($($script:UPDATE_GITHUB_BRANCH) channel) from $base"
     $sums = Join-Path $Dir "SHA256SUMS"
     $file = Join-Path $Dir $asset
-    try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -Uri "$base/SHA256SUMS" -OutFile $sums -UseBasicParsing -ErrorAction Stop
-        Invoke-WebRequest -Uri "$base/$asset" -OutFile $file -UseBasicParsing -ErrorAction Stop
-    } catch {
+    $status = 0
+    $failure = $null
+    $fallback = -not $env:RELEASE_BASE_URL -and -not $script:UPDATE_GITHUB_BRANCH_GIVEN -and -not (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_BRANCH")
+    while ($true) {
+        $base = Get-ReleaseBaseUrl
+        Print-Info "Downloading $asset ($($script:UPDATE_GITHUB_BRANCH) channel) from $base"
         $status = 0
-        if ($_.Exception.Response) { try { $status = [int]$_.Exception.Response.StatusCode } catch { $status = 0 } }
-        if (-not $status -and "$($_.Exception.Message)" -match '\b404\b') { $status = 404 }
+        $failure = $null
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest -Uri "$base/SHA256SUMS" -OutFile $sums -UseBasicParsing -ErrorAction Stop
+            Invoke-WebRequest -Uri "$base/$asset" -OutFile $file -UseBasicParsing -ErrorAction Stop
+        } catch {
+            $failure = $_
+            if ($_.Exception.Response) { try { $status = [int]$_.Exception.Response.StatusCode } catch { $status = 0 } }
+            if (-not $status -and "$($_.Exception.Message)" -match '\b404\b') { $status = 404 }
+        }
+        # No channel given or saved, and no stable release yet: the
+        # development build, and its channel for later updates
+        if ($failure -and $status -eq 404 -and $fallback -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
+            Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release yet: installing the development build (-Channel dev) instead"
+            Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1')' -Update -Channel stable"
+            $script:UPDATE_GITHUB_BRANCH = "dev"
+            $script:UPDATE_GITHUB_BRANCH_GIVEN = "dev"
+            $env:UPDATE_GITHUB_BRANCH = "dev"
+            continue
+        }
+        break
+    }
+    if ($failure) {
         if ($status -eq 404 -and -not $env:RELEASE_BASE_URL -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
             Print-Error "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release yet"
             Print-Info "Install the development build with -Channel dev, or a binary you have with -Binary FILE"
@@ -970,7 +991,7 @@ function Get-ReleaseBinary {
             Print-Error "There is no release at $base"
             Print-Info "Install a binary you have with -Binary FILE"
         } elseif (-not $status) {
-            Print-Error "Could not reach ${base}: $($_.Exception.Message)"
+            Print-Error "Could not reach ${base}: $($failure.Exception.Message)"
             Print-Info "Check this machine's internet access, DNS and proxy settings,"
             Print-Info "or install offline: download the binary elsewhere and run with -Binary FILE"
         } else {
@@ -2262,14 +2283,14 @@ function Remove-FirstAdminPassword {
 
 # This script as C:\BetterDesk\betterdesk.ps1, for updates, repairs and the
 # uninstall later. Run from that copy (an update), it takes the newest one
-# of the update channel; run from Invoke-Expression, it fetches itself.
+# of INSTALLER_REF; run from Invoke-Expression, it fetches itself.
 function Install-ManagerScript {
     $target = Join-Path $script:RUSTDESK_PATH "betterdesk.ps1"
     try {
         if ($script:SELF_PATH -and (Test-Path $script:SELF_PATH) -and ((Resolve-Path $script:SELF_PATH).Path -ne $target)) {
             Copy-Item -Path $script:SELF_PATH -Destination $target -Force -ErrorAction Stop
         } else {
-            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:UPDATE_GITHUB_BRANCH)/betterdesk.ps1"
+            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:INSTALLER_REF)/betterdesk.ps1"
             $tmp = "$target.download"
             Invoke-WebRequest -Uri $url -OutFile $tmp -UseBasicParsing -ErrorAction Stop
             if (-not (Select-String -Path $tmp -Pattern 'function Install-ManagerScript' -SimpleMatch -Quiet)) { throw "not the installer" }
@@ -3252,6 +3273,10 @@ $script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_R
 # over .env and is written into it
 $script:UPDATE_GITHUB_BRANCH_GIVEN = if ($Channel -eq "dev") { "dev" } elseif ($Channel -eq "stable") { "main" } elseif ($env:UPDATE_GITHUB_BRANCH) { $env:UPDATE_GITHUB_BRANCH } else { "" }
 $script:UPDATE_GITHUB_BRANCH = if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { $script:UPDATE_GITHUB_BRANCH_GIVEN } else { "main" }
+# The branch the installer itself comes from for its copy in the install
+# folder: the repository's default branch, dev (its main branch still holds
+# upstream's older installer). The release channel above is separate.
+$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "dev" }
 
 function Read-UpdateGitHubBranchFromEnv {
     if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { return }

@@ -506,6 +506,72 @@ test_one_command_install() (
     install_manager_command >/dev/null
     [ -x "$MANAGER_COMMAND" ] || fail "no betterdesk command was left behind"
     cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/betterdesk.sh" || fail "the betterdesk command is not this installer"
+    # Piped from curl, it fetches itself from the repository's default
+    # branch, whatever the release channel: main holds upstream's older
+    # installer
+    rm -f "$MANAGER_COMMAND"
+    BETTERDESK_SELF=""
+    UPDATE_GITHUB_BRANCH=main
+    curl() {
+        local a prev="" dest=""
+        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
+        printf '%s\n' "${!#}" > "$TEST_DIR/fetched"
+        cp "$SCRIPT_ROOT/betterdesk.sh" "$dest"
+    }
+    install_manager_command >/dev/null
+    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/betterdesk.sh" ] \
+        || fail "the betterdesk command came from $(cat "$TEST_DIR/fetched")"
+    unset -f curl
+    rm -rf "$TEST_DIR"
+)
+
+# A fresh install from the one-liner without --channel takes the stable
+# channel, and while the repository has no stable release it installs the
+# development build, says so and keeps that channel. A channel given
+# (--channel stable) or saved in .env gets no fallback but the error.
+test_no_stable_release_installs_dev() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO RELEASE_BASE_URL
+    load
+    print_info() { echo "$1"; }
+    print_warning() { echo "$1"; }
+    print_error() { echo "$1"; }
+    release_asset_name() { echo betterdesk-server-linux-amd64; }
+    unset UPDATE_GITHUB_BRANCH_GIVEN
+    UPDATE_GITHUB_BRANCH=main
+    SKIP_VERIFY=true
+    # curl: no stable release, a development build
+    curl() {
+        local a prev="" dest="" url="${!#}"
+        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
+        case "$url" in
+            */releases/latest/download/*) printf '404' ;;
+            */releases/download/dev/SHA256SUMS)
+                printf '%s  betterdesk-server-linux-amd64\n' "$(printf 'dev build\n' | sha256sum | cut -d' ' -f1)" > "$dest"
+                printf '200' ;;
+            */releases/download/dev/betterdesk-server-linux-amd64) printf 'dev build\n' > "$dest"; printf '200' ;;
+            *) printf '404' ;;
+        esac
+    }
+    download_release_binary "$TEST_DIR" > "$TEST_DIR/out" 2>&1 || fail "no stable release and no fallback: $(cat "$TEST_DIR/out")"
+    [ -f "$TEST_DIR/betterdesk-server" ] || fail "the development build is not staged"
+    grep -q 'no stable release yet: installing the development build' "$TEST_DIR/out" || fail "the fallback is not said: $(cat "$TEST_DIR/out")"
+    grep -q -- '--update --channel stable' "$TEST_DIR/out" || fail "the fallback does not say how to go back to stable: $(cat "$TEST_DIR/out")"
+    [ "$UPDATE_GITHUB_BRANCH" = dev ] && [ "$UPDATE_GITHUB_BRANCH_GIVEN" = dev ] \
+        || fail "the fallback does not keep the development channel ($UPDATE_GITHUB_BRANCH, given ${UPDATE_GITHUB_BRANCH_GIVEN:-none})"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    save_given_update_channel
+    grep -qx 'UPDATE_GITHUB_BRANCH=dev' "$CONSOLE_PATH/.env" || fail "the development channel does not reach .env"
+
+    local out
+    rm -f "$TEST_DIR/betterdesk-server"
+    UPDATE_GITHUB_BRANCH=main
+    UPDATE_GITHUB_BRANCH_GIVEN=main
+    out=$(download_release_binary "$TEST_DIR" 2>&1) && fail "--channel stable installed the development build: $out"
+    case "$out" in *"no stable release yet"*"--channel dev"*) ;; *) fail "--channel stable without a release says: $out" ;; esac
+    case "$out" in *"installing the development build"*) fail "--channel stable fell back: $out" ;; esac
+    unset UPDATE_GITHUB_BRANCH_GIVEN
+    printf 'UPDATE_GITHUB_BRANCH=main\n' > "$CONSOLE_PATH/.env"
+    out=$(download_release_binary "$TEST_DIR" 2>&1) && fail "the channel saved in .env fell back: $out"
     rm -rf "$TEST_DIR"
 )
 
@@ -926,6 +992,7 @@ test_releases_come_from_the_fork
 test_update_keeps_the_admins_ports
 test_channel_and_download_errors
 test_one_command_install
+test_no_stable_release_installs_dev
 test_rerun_updates_and_forgets_the_password
 test_panel_public_host
 test_install_summary

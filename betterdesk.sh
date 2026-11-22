@@ -212,7 +212,8 @@ while [[ $# -gt 0 ]]; do
             echo "                   after an upgrade"
             echo "  --binary FILE    Install this betterdesk-server binary instead of the release"
             echo "  --channel C      Release channel: 'stable' (default, the newest release) or"
-            echo "                   'dev' (the development build); kept for later updates"
+            echo "                   'dev' (the development build); kept for later updates. Without"
+            echo "                   it, a repository with no stable release yet installs 'dev'"
             echo "  --from-source    Build betterdesk-server from this checkout (needs Go, and"
             echo "                   Node.js unless web-ui/build exists)"
             echo "  --uninstall      Stop and remove the service, after a backup; the data stays,"
@@ -252,7 +253,7 @@ while [[ $# -gt 0 ]]; do
             echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
-            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh | sudo bash"
+            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/betterdesk.sh | sudo bash"
             echo "Later:                     sudo betterdesk (menu), sudo betterdesk --update, sudo betterdesk --uninstall"
             exit 0
             ;;
@@ -567,15 +568,15 @@ default_to_auto_without_terminal() {
 
 # install_manager_command: this installer as the command betterdesk, for
 # updates, repairs and the uninstall later. Run from the command itself
-# (an update), it takes the newest one of the update channel; piped from
-# curl, it fetches itself from the same place.
+# (an update), it takes the newest one of INSTALLER_REF; piped from curl,
+# it fetches itself from the same place.
 install_manager_command() {
     local self="$BETTERDESK_SELF" tmp
     tmp=$(mktemp) || return 0
     if [ -n "$self" ] && [ -f "$self" ] && [ "$(readlink -f "$self")" != "$(readlink -f "$MANAGER_COMMAND" 2>/dev/null)" ]; then
         cp "$self" "$tmp"
     elif ! curl -fsSL --retry 2 --connect-timeout 20 -o "$tmp" \
-        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${UPDATE_GITHUB_BRANCH}/betterdesk.sh" \
+        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${INSTALLER_REF}/betterdesk.sh" \
         || ! grep -q '^BETTERDESK_SH_REVISION=' "$tmp"; then
         rm -f "$tmp"
         [ -x "$MANAGER_COMMAND" ] || print_warning "Could not save the betterdesk command; run this installer again for updates"
@@ -3870,7 +3871,9 @@ fetch_release_file() {
 
 # download_release_binary DIR: the release binary for this machine into
 # DIR/betterdesk-server, checked against the release's SHA256SUMS and the
-# signature of its manifest (verify_release_files).
+# signature of its manifest (verify_release_files). The stable channel
+# falls back to the development build while the repository has no stable
+# release, unless a channel was given or saved.
 download_release_binary() {
     local dir="$1" asset base expected actual code
     asset=$(release_asset_name) || {
@@ -3884,6 +3887,19 @@ download_release_binary() {
     base=$(release_base_url)
     print_info "Downloading $asset ($UPDATE_GITHUB_BRANCH channel) from $base"
     code=$(fetch_release_file "$base" SHA256SUMS "$dir/SHA256SUMS")
+    # No channel given or saved, and no stable release yet: the
+    # development build, and its channel for later updates
+    if [ "$code" = 404 ] && [ -z "${RELEASE_BASE_URL:-}" ] && [ "$UPDATE_GITHUB_BRANCH" != dev ] \
+        && [ -z "${UPDATE_GITHUB_BRANCH_GIVEN:-}" ] && [ -z "$(env_file_value "${CONSOLE_PATH:-}/.env" UPDATE_GITHUB_BRANCH)" ]; then
+        print_warning "${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO} has no stable release yet: installing the development build (--channel dev) instead"
+        print_info "Updates follow the development channel; once a stable release is out: sudo $(basename "$MANAGER_COMMAND") --update --channel stable"
+        UPDATE_GITHUB_BRANCH=dev
+        UPDATE_GITHUB_BRANCH_GIVEN=dev
+        export UPDATE_GITHUB_BRANCH
+        base=$(release_base_url)
+        print_info "Downloading $asset (dev channel) from $base"
+        code=$(fetch_release_file "$base" SHA256SUMS "$dir/SHA256SUMS")
+    fi
     case "$code" in
         200) ;;
         000)
@@ -5438,6 +5454,10 @@ UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-betterdesk}"
 # installed) wins over .env and is written into it
 UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"
 UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
+# The branch the installer itself comes from for the betterdesk command:
+# the repository's default branch, dev (its main branch still holds
+# upstream's older installer). The release channel above is separate.
+INSTALLER_REF="${INSTALLER_REF:-dev}"
 
 # save_given_update_channel: the channel the installer was given goes into
 # .env, where the server's updater reads it

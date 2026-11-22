@@ -42,7 +42,7 @@ Pick **1** for a new install, or `sudo ./betterdesk.sh --auto` for non-interacti
 All-in-one container (server + relay + console) — recommended:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/docker-compose.quick.single.yml -o docker-compose.yml
 docker compose pull && docker compose up -d
 docker compose exec betterdesk betterdesk-show-admin-credentials
 ```

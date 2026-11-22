@@ -9,7 +9,7 @@ Run BetterDesk in containers. Quickest path uses pre-built GHCR images.
 Use the official **all-in-one** image (no build required). One container runs `betterdesk-server`, which serves signal, relay, API and the web console in one process:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml \
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/docker-compose.quick.single.yml \
   -o docker-compose.yml
 docker compose pull && docker compose up -d
 ```

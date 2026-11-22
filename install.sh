@@ -2,17 +2,16 @@
 # =============================================================================
 # BetterDesk — one-line installer (Linux)
 #
-# Docker (default — official GHCR image, one container, fully automated):
-#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash
+# Docker (default: the published image in one container, betterdesk-docker.sh):
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/install.sh | sudo bash
 #
 # Docker, move a two-container (split) install to the one container:
 #   curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
 #
-# Native stable (git clone + betterdesk.sh --auto):
-#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash -s -- --native
-#
-# Native Development channel (this file on the `dev` branch defaults to --branch dev):
+# Native (git clone + betterdesk.sh --auto): the newest stable release, or
+# the development build while the repository has none:
 #   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/install.sh | sudo bash -s -- --native
+# Native, the development build: add --channel dev
 #
 # Options (pass after "bash -s --"):
 #   --docker | --native          Installation mode (default: docker)
@@ -20,7 +19,8 @@
 #                                with the one container, which takes its data over
 #   --install-dir PATH             Install directory (default: /opt/betterdesk)
 #   --version TAG                  Docker image tag to pin (default: latest, the newest release)
-#   --branch BRANCH                Git branch for native install (default: this installer channel)
+#   --branch BRANCH                Git branch of the installer files (default: dev)
+#   --channel stable|dev           Native: release channel (default: stable)
 #   --relay-mode auto|local|public Relay auto-detection strategy
 #   --relay-servers IP[:port]      Fixed relay address (overrides --relay-mode)
 #   --admin-password PASS          Set admin password (Docker: ADMIN_PASSWORD env)
@@ -44,11 +44,15 @@ set -euo pipefail
 
 VERSION="1.0.0"
 BETTERDESK_REPO="${BETTERDESK_REPO:-trybetterdesk/betterdesk}"
-# Must match the GitHub branch that serves this install.sh URL
-# (.../dev/install.sh → dev, .../main/install.sh → main). Override with
-# --branch / BETTERDESK_BRANCH. Flip to "main" when releasing this file on main.
+# The branch whose files this installer fetches (betterdesk.sh for a native
+# install, betterdesk-docker.sh for Docker): the repository's default
+# branch, dev. Override with --branch / BETTERDESK_BRANCH.
 BETTERDESK_INSTALLER_CHANNEL="dev"
+BETTERDESK_BRANCH_GIVEN="${BETTERDESK_BRANCH:-}"
 BETTERDESK_BRANCH="${BETTERDESK_BRANCH:-$BETTERDESK_INSTALLER_CHANNEL}"
+# The release channel of a native install: stable or dev; empty leaves it
+# to betterdesk.sh (stable, or dev while there is no stable release)
+RELEASE_CHANNEL=""
 # An image tag given (--version, BETTERDESK_VERSION) pins it; without one
 # the install runs latest, the newest release (DECISIONS A163)
 BETTERDESK_VERSION_GIVEN="${BETTERDESK_VERSION:-}"
@@ -93,7 +97,7 @@ warn() { echo -e "${C_YELLOW}!${C_RESET} $*" >&2; }
 die()  { echo -e "${C_RED}✗${C_RESET} $*" >&2; exit 1; }
 
 usage() {
-    sed -n '4,36p' "$0" | sed 's/^# \?//'
+    sed -n '4,/^#   --help/p' "$0" | sed 's/^# \?//'
     exit 0
 }
 
@@ -107,7 +111,13 @@ while [ $# -gt 0 ]; do
         --native) INSTALL_MODE="native"; shift ;;
         --install-dir) INSTALL_DIR="$2"; shift 2 ;;
         --version) BETTERDESK_VERSION="$2"; BETTERDESK_VERSION_GIVEN="$2"; shift 2 ;;
-        --branch) BETTERDESK_BRANCH="$2"; BETTERDESK_RAW_BASE="https://raw.githubusercontent.com/${BETTERDESK_REPO}/${BETTERDESK_BRANCH}"; shift 2 ;;
+        --branch) BETTERDESK_BRANCH="$2"; BETTERDESK_BRANCH_GIVEN="$2"; BETTERDESK_RAW_BASE="https://raw.githubusercontent.com/${BETTERDESK_REPO}/${BETTERDESK_BRANCH}"; shift 2 ;;
+        --channel)
+            case "${2:-}" in
+                stable|main|dev|development) RELEASE_CHANNEL="$2" ;;
+                *) die "--channel must be stable or dev" ;;
+            esac
+            shift 2 ;;
         --relay-mode) RELAY_MODE="$2"; shift 2 ;;
         --relay-servers) RELAY_SERVERS="$2"; shift 2 ;;
         --admin-password) ADMIN_PASSWORD="$2"; shift 2 ;;
@@ -514,14 +524,14 @@ install_native_mode() {
     if [ -n "$ADMIN_PASSWORD" ]; then
         export ADMIN_PASSWORD
     fi
-    # The update channel is the branch installed: dev updates from the dev
-    # pre-release, main from the newest release
-    case "$BETTERDESK_BRANCH" in
-        main|dev)
-            export UPDATE_GITHUB_BRANCH="$BETTERDESK_BRANCH"
-            log "Update channel: ${BETTERDESK_BRANCH}"
-            ;;
+    # The release channel: --channel, else the branch given with --branch
+    # (dev updates from the dev pre-release, main from the newest release),
+    # else betterdesk.sh's own choice
+    case "${RELEASE_CHANNEL:-$BETTERDESK_BRANCH_GIVEN}" in
+        stable|main) export UPDATE_GITHUB_BRANCH=main ;;
+        dev|development) export UPDATE_GITHUB_BRANCH=dev ;;
     esac
+    [ -z "${UPDATE_GITHUB_BRANCH:-}" ] || log "Update channel: ${UPDATE_GITHUB_BRANCH}"
     (cd "$repo_dir" && ./betterdesk.sh --auto --relay-servers "$relay")
 
     ok "Native installation finished. See ${repo_dir} for logs and credentials."

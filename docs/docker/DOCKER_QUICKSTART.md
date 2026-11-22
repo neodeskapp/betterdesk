@@ -17,7 +17,7 @@ Versioned tags match [CHANGELOG.md](../../CHANGELOG.md) and git releases (e.g. `
 Fully automated: installs Docker if missing, downloads the **official all-in-one** compose + image (`ghcr.io/unitronix/betterdesk`), auto-detects relay IP, configures firewall, waits for health checks, prints credentials.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/install.sh | sudo bash
 ```
 
 **Common variants:**
@@ -45,7 +45,7 @@ Files are stored under `/opt/betterdesk/docker/` (`docker-compose.yml`, `.env`).
 
 ```bash
 # 1. Download docker-compose file
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/docker-compose.quick.single.yml -o docker-compose.yml
 
 # 2. Pull pinned image and start (default tag matches VERSION in repo)
 docker compose pull
@@ -273,7 +273,7 @@ docker network create -d macvlan \
 
 export MACVLAN_IPV4=192.168.1.51
 export RELAY_SERVERS=${MACVLAN_IPV4}:21117
-curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.macvlan.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/dev/docker-compose.quick.single.macvlan.yml -o docker-compose.yml
 docker compose pull && docker compose up -d
 ```
 
