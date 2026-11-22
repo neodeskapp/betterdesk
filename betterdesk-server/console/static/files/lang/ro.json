@@ -2698,7 +2698,7 @@
     "read_status": "Rezultatul citirii",
     "hardware_refresh_requested": "Dispozitivului i s-a cerut să trimită din nou detaliile hardware.",
     "agent_pending": "Solicitat de la dispozitiv.",
-    "agent_pending_hint": "Datele apar după ce dispozitivul se conectează din nou. Reîmprospătați peste un minut.",
+    "agent_pending_hint": "Datele apar aici de la sine după ce dispozitivul se conectează din nou.",
     "agent_empty": "Dispozitivul nu a trimis nimic pentru această vizualizare.",
     "service_start_action": "Porniți",
     "service_stop_action": "Opriți",

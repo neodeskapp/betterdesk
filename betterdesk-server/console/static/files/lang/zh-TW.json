@@ -2714,7 +2714,7 @@
     "read_status": "讀取結果",
     "hardware_refresh_requested": "已要求裝置重新傳送硬體資訊。",
     "agent_pending": "已向裝置請求。",
-    "agent_pending_hint": "裝置再次回報後就會顯示資料。請一分鐘後重新整理。",
+    "agent_pending_hint": "裝置再次回報後，資料會自動顯示在這裡。",
     "agent_empty": "裝置沒有為此檢視傳送任何內容。",
     "service_start_action": "啟動",
     "service_stop_action": "停止",

@@ -2698,7 +2698,7 @@
     "read_status": "Hasil pembacaan",
     "hardware_refresh_requested": "Perangkat diminta mengirim ulang detail perangkat kerasnya.",
     "agent_pending": "Sudah diminta dari perangkat.",
-    "agent_pending_hint": "Data muncul setelah perangkat melapor lagi. Muat ulang dalam semenit.",
+    "agent_pending_hint": "Data muncul di sini dengan sendirinya setelah perangkat melapor lagi.",
     "agent_empty": "Perangkat tidak mengirim apa pun untuk tampilan ini.",
     "service_start_action": "Mulai",
     "service_stop_action": "Hentikan",

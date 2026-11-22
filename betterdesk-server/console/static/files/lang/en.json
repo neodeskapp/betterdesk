@@ -2771,7 +2771,7 @@
         "read_status": "Read result",
         "hardware_refresh_requested": "Asked the device to send its hardware details again.",
         "agent_pending": "Requested from the device.",
-        "agent_pending_hint": "The data appears after the device checks in again. Refresh in a minute.",
+        "agent_pending_hint": "The data shows here by itself when the device checks in again.",
         "agent_empty": "The device sent nothing for this view.",
         "service_start_action": "Start",
         "service_stop_action": "Stop",

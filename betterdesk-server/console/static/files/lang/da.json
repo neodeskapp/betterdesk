@@ -2698,7 +2698,7 @@
     "read_status": "Resultat af læsning",
     "hardware_refresh_requested": "Enheden er bedt om at sende sine hardwareoplysninger igen.",
     "agent_pending": "Anmodet fra enheden.",
-    "agent_pending_hint": "Dataene vises, når enheden melder sig igen. Opdater om et minut.",
+    "agent_pending_hint": "Dataene vises her af sig selv, når enheden melder sig igen.",
     "agent_empty": "Enheden sendte intet til denne visning.",
     "service_start_action": "Start",
     "service_stop_action": "Stop",

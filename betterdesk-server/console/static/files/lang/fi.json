@@ -2698,7 +2698,7 @@
     "read_status": "Lukemisen tulos",
     "hardware_refresh_requested": "Laitetta pyydettiin lähettämään laitteistotietonsa uudelleen.",
     "agent_pending": "Pyydetty laitteelta.",
-    "agent_pending_hint": "Tiedot näkyvät, kun laite ilmoittautuu taas. Päivitä minuutin kuluttua.",
+    "agent_pending_hint": "Tiedot näkyvät tässä itsestään, kun laite ilmoittautuu taas.",
     "agent_empty": "Laite ei lähettänyt tähän näkymään mitään.",
     "service_start_action": "Käynnistä",
     "service_stop_action": "Pysäytä",

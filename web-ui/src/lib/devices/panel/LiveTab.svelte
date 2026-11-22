@@ -1,7 +1,8 @@
 <!--
   Live data: the views read from the device's agent when they are opened
   (services, processes, events, activity, files). Each view has its own
-  loading, waiting ("requested from the device"), error and empty state.
+  loading, waiting ("requested from the device"), error and empty state; a
+  waiting view loads again by itself once the device answered (PanelData).
   Starting and stopping services, ending processes and browsing files need
   device.edit.
 -->
@@ -49,6 +50,13 @@
 	const st = $derived(data.views[current]);
 	const editable = $derived(!device.soft_deleted && can('device.edit'));
 	let busy = $state<string | null>(null);
+
+	// The device as the panel loads it again: a view waiting for the device
+	// loads again once the device can have answered
+	$effect.pre(() => {
+		const d = device;
+		untrack(() => data.deviceChanged(d));
+	});
 
 	$effect(() => {
 		const v = current;

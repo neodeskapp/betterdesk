@@ -2692,7 +2692,7 @@
     "read_status": "Esito della lettura",
     "hardware_refresh_requested": "Il dispositivo invierà di nuovo i dati hardware.",
     "agent_pending": "Richiesto al dispositivo.",
-    "agent_pending_hint": "I dati compaiono dopo il prossimo contatto del dispositivo. Aggiorna tra un minuto.",
+    "agent_pending_hint": "I dati compaiono qui da soli al prossimo contatto del dispositivo.",
     "agent_empty": "Il dispositivo non ha inviato nulla per questa vista.",
     "service_start_action": "Avvia",
     "service_stop_action": "Arresta",

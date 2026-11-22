@@ -2692,7 +2692,7 @@
     "read_status": "读取结果",
     "hardware_refresh_requested": "已要求设备重新发送硬件信息。",
     "agent_pending": "已向设备请求。",
-    "agent_pending_hint": "设备再次上报后会显示数据。请一分钟后刷新。",
+    "agent_pending_hint": "设备再次上报后，数据会自动显示在这里。",
     "agent_empty": "设备没有为此视图发送任何内容。",
     "service_start_action": "启动",
     "service_stop_action": "停止",

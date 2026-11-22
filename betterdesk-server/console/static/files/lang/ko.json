@@ -2692,7 +2692,7 @@
     "read_status": "읽기 결과",
     "hardware_refresh_requested": "장치에 하드웨어 정보를 다시 보내도록 요청했습니다.",
     "agent_pending": "장치에 요청했습니다.",
-    "agent_pending_hint": "장치가 다시 접속하면 데이터가 표시됩니다. 1분 후에 새로 고치세요.",
+    "agent_pending_hint": "장치가 다시 접속하면 데이터가 여기에 자동으로 표시됩니다.",
     "agent_empty": "장치가 이 보기에 대해 아무것도 보내지 않았습니다.",
     "service_start_action": "시작",
     "service_stop_action": "중지",

@@ -2698,7 +2698,7 @@
     "read_status": "Kết quả đọc",
     "hardware_refresh_requested": "Đã yêu cầu thiết bị gửi lại thông tin phần cứng.",
     "agent_pending": "Đã yêu cầu từ thiết bị.",
-    "agent_pending_hint": "Dữ liệu sẽ hiện sau khi thiết bị kết nối lại. Hãy làm mới sau một phút.",
+    "agent_pending_hint": "Dữ liệu sẽ tự hiện ở đây khi thiết bị kết nối lại.",
     "agent_empty": "Thiết bị không gửi gì cho mục này.",
     "service_start_action": "Khởi động",
     "service_stop_action": "Dừng",

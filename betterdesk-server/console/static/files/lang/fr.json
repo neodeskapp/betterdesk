@@ -2714,7 +2714,7 @@
     "read_status": "Résultat de la lecture",
     "hardware_refresh_requested": "L’appareil doit renvoyer ses informations matérielles.",
     "agent_pending": "Demandé à l’appareil.",
-    "agent_pending_hint": "Les données s’affichent quand l’appareil se manifeste de nouveau. Actualisez dans une minute.",
+    "agent_pending_hint": "Les données s’affichent ici d’elles-mêmes quand l’appareil se manifeste de nouveau.",
     "agent_empty": "L’appareil n’a rien envoyé pour cette vue.",
     "service_start_action": "Démarrer",
     "service_stop_action": "Arrêter",

@@ -2692,7 +2692,7 @@
     "read_status": "Ergebnis des Auslesens",
     "hardware_refresh_requested": "Das Gerät wurde gebeten, seine Hardwaredaten erneut zu senden.",
     "agent_pending": "Beim Gerät angefragt.",
-    "agent_pending_hint": "Die Daten erscheinen, sobald sich das Gerät wieder meldet. Aktualisieren Sie in einer Minute.",
+    "agent_pending_hint": "Die Daten erscheinen hier von selbst, sobald sich das Gerät wieder meldet.",
     "agent_empty": "Das Gerät hat für diese Ansicht nichts gesendet.",
     "service_start_action": "Starten",
     "service_stop_action": "Beenden",

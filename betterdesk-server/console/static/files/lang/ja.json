@@ -2692,7 +2692,7 @@
     "read_status": "読み取り結果",
     "hardware_refresh_requested": "ハードウェア情報の再送をデバイスに依頼しました。",
     "agent_pending": "デバイスに要求しました。",
-    "agent_pending_hint": "デバイスが次に接続するとデータが表示されます。1 分ほどしてから更新してください。",
+    "agent_pending_hint": "デバイスが次に接続すると、データがここに自動で表示されます。",
     "agent_empty": "この表示についてデバイスから何も送られていません。",
     "service_start_action": "開始",
     "service_stop_action": "停止",

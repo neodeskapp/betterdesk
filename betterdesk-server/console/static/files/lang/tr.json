@@ -2698,7 +2698,7 @@
     "read_status": "Okuma sonucu",
     "hardware_refresh_requested": "Cihazdan donanım bilgilerini yeniden göndermesi istendi.",
     "agent_pending": "Cihazdan istendi.",
-    "agent_pending_hint": "Veriler cihaz yeniden bağlandıktan sonra görünür. Bir dakika sonra yenileyin.",
+    "agent_pending_hint": "Cihaz yeniden bağlandığında veriler burada kendiliğinden görünür.",
     "agent_empty": "Cihaz bu görünüm için hiçbir şey göndermedi.",
     "service_start_action": "Başlat",
     "service_stop_action": "Durdur",

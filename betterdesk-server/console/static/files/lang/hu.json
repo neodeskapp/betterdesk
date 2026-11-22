@@ -2698,7 +2698,7 @@
     "read_status": "Beolvasás eredménye",
     "hardware_refresh_requested": "Az eszköz kérést kapott, hogy küldje el újra a hardveradatait.",
     "agent_pending": "Lekérve az eszköztől.",
-    "agent_pending_hint": "Az adatok akkor jelennek meg, amikor az eszköz újra jelentkezik. Frissítsen egy perc múlva.",
+    "agent_pending_hint": "Az adatok maguktól megjelennek itt, amikor az eszköz újra jelentkezik.",
     "agent_empty": "Az eszköz ehhez a nézethez nem küldött semmit.",
     "service_start_action": "Indítás",
     "service_stop_action": "Leállítás",

@@ -2698,7 +2698,7 @@
     "read_status": "Resultat av läsning",
     "hardware_refresh_requested": "Enheten har ombetts att skicka sina maskinvaruuppgifter igen.",
     "agent_pending": "Begärt från enheten.",
-    "agent_pending_hint": "Uppgifterna visas när enheten hör av sig igen. Uppdatera om en minut.",
+    "agent_pending_hint": "Uppgifterna visas här av sig själva när enheten hör av sig igen.",
     "agent_empty": "Enheten skickade inget för den här vyn.",
     "service_start_action": "Starta",
     "service_stop_action": "Stoppa",

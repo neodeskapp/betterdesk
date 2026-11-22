@@ -42,6 +42,16 @@ export function snapshot(d: PanelDevice, kind: string): Snapshot | null {
 	return { status: str(o.status), collectedAt: str(o.collected_at), data: obj(o.data) };
 }
 
+/** What a pending live view waits for: the device online, or a newer snapshot of the view */
+export interface WaitMark {
+	online: boolean;
+	collectedAt: string;
+}
+
+export function waitMark(d: PanelDevice, view: LiveView): WaitMark {
+	return { online: deviceState(d) === 'online', collectedAt: snapshot(d, view)?.collectedAt ?? '' };
+}
+
 export function identityOf(d: PanelDevice): Obj {
 	return snapshot(d, 'identity')?.data ?? {};
 }

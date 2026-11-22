@@ -2699,7 +2699,7 @@
     "read_status": "نتيجة القراءة",
     "hardware_refresh_requested": "طُلب من الجهاز إرسال تفاصيل العتاد مجددًا.",
     "agent_pending": "طُلبت من الجهاز.",
-    "agent_pending_hint": "تظهر البيانات بعد أن يتصل الجهاز مجددًا. حدّث بعد دقيقة.",
+    "agent_pending_hint": "تظهر البيانات هنا تلقائيًا عندما يتصل الجهاز مجددًا.",
     "agent_empty": "لم يرسل الجهاز شيئًا لهذا العرض.",
     "service_start_action": "تشغيل",
     "service_stop_action": "إيقاف",

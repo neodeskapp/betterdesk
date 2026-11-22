@@ -2692,7 +2692,7 @@
     "read_status": "Resultaat van uitlezen",
     "hardware_refresh_requested": "Het apparaat is gevraagd de hardwaregegevens opnieuw te sturen.",
     "agent_pending": "Opgevraagd bij het apparaat.",
-    "agent_pending_hint": "De gegevens verschijnen zodra het apparaat zich weer meldt. Vernieuw over een minuut.",
+    "agent_pending_hint": "De gegevens verschijnen hier vanzelf zodra het apparaat zich weer meldt.",
     "agent_empty": "Het apparaat heeft niets gestuurd voor deze weergave.",
     "service_start_action": "Starten",
     "service_stop_action": "Stoppen",

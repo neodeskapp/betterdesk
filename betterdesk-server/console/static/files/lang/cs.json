@@ -2692,7 +2692,7 @@
     "read_status": "Výsledek načtení",
     "hardware_refresh_requested": "Zařízení bylo požádáno o nové odeslání údajů o hardwaru.",
     "agent_pending": "Vyžádáno ze zařízení.",
-    "agent_pending_hint": "Data se zobrazí, až se zařízení znovu ohlásí. Obnovte za minutu.",
+    "agent_pending_hint": "Data se tu zobrazí sama, až se zařízení znovu ohlásí.",
     "agent_empty": "Zařízení pro toto zobrazení nic neposlalo.",
     "service_start_action": "Spustit",
     "service_stop_action": "Zastavit",

@@ -2710,7 +2710,7 @@
     "read_status": "Wynik odczytu",
     "hardware_refresh_requested": "Poproszono urządzenie o ponowne przesłanie danych sprzętu.",
     "agent_pending": "Wysłano żądanie do urządzenia.",
-    "agent_pending_hint": "Dane pojawią się, gdy urządzenie znów się zgłosi. Odśwież za minutę.",
+    "agent_pending_hint": "Dane pojawią się tu same, gdy urządzenie znów się zgłosi.",
     "agent_empty": "Urządzenie nic nie przesłało dla tego widoku.",
     "service_start_action": "Uruchom",
     "service_stop_action": "Zatrzymaj",
