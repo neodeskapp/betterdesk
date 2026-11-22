@@ -322,7 +322,7 @@ func main() {
 	if cfg.CDAPEnabled && !cdapBefore {
 		// The gateway's port joins the listeners the start checked
 		if err := checkStartPorts(cfg, os.Getenv); err != nil {
-			log.Fatalf("The start stops: %v", err)
+			logging.Fatalf("The start stops: %v", err)
 		}
 	}
 
