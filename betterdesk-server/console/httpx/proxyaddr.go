@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/unitronix/betterdesk-server/internal/clientaddr"
 )
 
 // TrustProxy decides which hops in front of the console may speak for the
@@ -120,30 +122,14 @@ func SocketIP(r *http.Request) string {
 // ClientIP is the client's address: the socket address, or with trusted
 // proxies the first address in the chain (socket, then X-Forwarded-For from
 // right to left) that is not a trusted hop. When every hop is trusted it is
-// the leftmost address.
+// the leftmost address. The API server takes its client address with the
+// same rule (clientaddr.Rightmost).
 func (tp TrustProxy) ClientIP(r *http.Request) string {
 	socket := SocketIP(r)
 	if !tp.Enabled() {
 		return socket
 	}
-	var forwarded []string
-	for _, part := range strings.Split(strings.Join(r.Header.Values("X-Forwarded-For"), ","), ",") {
-		if part = strings.TrimSpace(part); part != "" {
-			forwarded = append(forwarded, part)
-		}
-	}
-	// The socket first, then X-Forwarded-For from right to left
-	chain := make([]string, 0, len(forwarded)+1)
-	chain = append(chain, socket)
-	for i := len(forwarded) - 1; i >= 0; i-- {
-		chain = append(chain, forwarded[i])
-	}
-	for i, addr := range chain {
-		if i == len(chain)-1 || !tp.trusts(addr, i) {
-			return addr
-		}
-	}
-	return socket
+	return clientaddr.Rightmost(socket, clientaddr.Forwarded(r.Header), tp.trusts)
 }
 
 // Scheme is "https" when the connection is TLS. Behind a trusted proxy it
