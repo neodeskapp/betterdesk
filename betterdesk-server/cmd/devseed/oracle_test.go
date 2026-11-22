@@ -22,7 +22,7 @@ import (
 )
 
 // testdata/rows.json.gz holds the rows the Node seed wrote straight into
-// the database at six times (testdata/nodeoracle/rows.js). The tests seed
+// the database at six times (testdata/README.md). The tests seed
 // a fresh database at each time and compare what is in the tables, on
 // SQLite as the Node seed left it and on PostgreSQL in that database's
 // forms.
@@ -65,7 +65,7 @@ func loadOracle(t *testing.T) []oracleCase {
 	return data.Cases
 }
 
-// oracleContracts are the contracts rows.js gave the billing part.
+// oracleContracts are the contracts the recording gave the billing part.
 var oracleContracts = []struct {
 	org, id, pkg             string
 	included, rate, rounding float64
@@ -75,9 +75,9 @@ var oracleContracts = []struct {
 	{"lab", "contract-lab", "pkg-payg", 0, 75, 5},
 }
 
-// oracleBilling is what the API part hands the billing part in rows.js:
-// the organizations' ids and the contracts with their packages, as the
-// console's answers have them.
+// oracleBilling is what the API part handed the billing part in the
+// recording: the organizations' ids and the contracts with their
+// packages, as the console's answers have them.
 func oracleBilling() (map[string]any, []contractTerms) {
 	orgIDs := map[string]any{}
 	var made []contractTerms
@@ -437,8 +437,8 @@ func TestSeedingTwiceKeepsOneSetOfRows(t *testing.T) {
 	})
 }
 
-// The row builders at 200 more times, against the fingerprints rows.js
-// took of the Node seed's rows: each table's rows as lists of values in
+// The row builders at 200 more times, against the fingerprints the
+// recording took of the Node seed's rows: each table's rows as lists of values in
 // the order of the INSERT's columns, as JSON, hashed.
 func TestBuildersMatchTheNodeSeedAtManyTimes(t *testing.T) {
 	f, err := os.Open("testdata/rows.json.gz")
