@@ -163,6 +163,11 @@ type Server struct {
 	// Used for LAN relay advertisements when both peers are on the same network.
 	lanIP atomic.Value // stores string
 
+	// lanGateway is the gateway of the server's default route (Linux
+	// routing table, defaultGateway); "" where there is none. A peer at
+	// this address reaches the server through the gateway's NAT.
+	lanGateway atomic.Value // stores string
+
 	// lanNet is the optional LAN CIDR from MASK / -mask (issue #404). When nil,
 	// peer subnet checks fall back to the historic IPv4 /24 comparison.
 	lanNet *net.IPNet
@@ -280,6 +285,10 @@ func (s *Server) detectLocalIP() {
 		s.lanIP.Store(lanIP)
 		conn.Close()
 		log.Printf("[signal] Detected LAN IP: %s (used for local relay advertisements)", lanIP)
+	}
+	if gw := defaultGateway(); gw != nil {
+		s.lanGateway.Store(gw.String())
+		log.Printf("[signal] Detected gateway: %s (its peers get the configured relay, not the LAN IP)", gw)
 	}
 
 	// Try to detect public IP via external HTTP service.

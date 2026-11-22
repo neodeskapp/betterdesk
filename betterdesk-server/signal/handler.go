@@ -3221,6 +3221,17 @@ func (s *Server) getLANRelayServer(defaultRelay string, peers ...*net.UDPAddr) s
 		defaultRelay = s.getRelayServer()
 	}
 
+	// A peer at the gateway of the server's network comes through that
+	// gateway's NAT, so whether it reaches the LAN IP is unknown: on Docker
+	// Desktop every client comes from the bridge gateway and none reaches
+	// the container's own address. Such a pair gets the named relay only
+	// when RELAY_SERVERS or the console's Public relay server names one;
+	// otherwise the LAN IP rule below applies as for any peer.
+	if gw := s.peerAtGateway(peers...); gw != "" && len(s.cfg.GetRelayServers()) > 0 {
+		log.Printf("[signal] peer at the gateway %s; using configured relay=%s, not the LAN IP", gw, defaultRelay)
+		return defaultRelay
+	}
+
 	// For LAN peers, prefer the server's LAN IP only when it is actually in the
 	// peers' private subnet. NAT hairpin (LAN → public IP → LAN) is unreliable
 	// on many routers (#102), but Docker bridge IPs are not reachable from LAN
@@ -3246,6 +3257,22 @@ func (s *Server) getLANRelayServer(defaultRelay string, peers ...*net.UDPAddr) s
 	}
 	// LAN IP unknown — fall back to configured/default relay.
 	return defaultRelay
+}
+
+// peerAtGateway is the gateway of the server's network (lanGateway) when
+// one of the peers has its address, else "".
+func (s *Server) peerAtGateway(peers ...*net.UDPAddr) string {
+	gw, _ := s.lanGateway.Load().(string)
+	gwIP := net.ParseIP(gw)
+	if gwIP == nil {
+		return ""
+	}
+	for _, p := range peers {
+		if p != nil && p.IP.Equal(gwIP) {
+			return gw
+		}
+	}
+	return ""
 }
 
 func (s *Server) selectPeerRelayServer(defaultRelay string, a, b *net.UDPAddr) (relay string, sameLAN bool, samePublicIP bool) {
