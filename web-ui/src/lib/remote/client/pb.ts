@@ -4,8 +4,8 @@
  *
  * 64-bit fields read as plain numbers and byte fields as Uint8Array in
  * every environment, as protobuf.js does in a browser without long.js or
- * Node's Buffer. The bundle carries long.js (protobuf.js requires it), and
- * Node tests have Buffer, so both are switched off here before the
+ * Node's Buffer. The build leaves long.js out (no-long.ts), Node tests may
+ * still find it and have Buffer, so both are switched off here before the
  * generated code runs.
  */
 import * as $protobuf from 'protobufjs/minimal.js';

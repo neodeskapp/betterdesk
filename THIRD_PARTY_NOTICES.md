@@ -78,8 +78,7 @@ its license, and the resolved versions are in `web-ui/package-lock.json`.
   authors, SourceLair Private Company and Christopher Jeffrey
 - qrcode-generator, copyright Kazuhiko Arase
 - protobuf.js (`protobufjs` and its `@protobufjs/*` parts), BSD-3-Clause,
-  copyright Daniel Wirtz, and long.js, Apache-2.0, copyright Daniel Wirtz
-  (the remote desktop viewer's RustDesk messages)
+  copyright Daniel Wirtz (the remote desktop viewer's RustDesk messages)
 - JMuxer, MIT, copyright Samir Das (the remote desktop viewer's H.264
   playback without WebCodecs)
 

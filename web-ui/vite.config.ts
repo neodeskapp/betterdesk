@@ -1,6 +1,7 @@
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { Agent } from 'node:http';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import { licenses } from './vite-plugins/licenses.ts';
 import { protos } from './vite-plugins/protos.ts';
@@ -147,5 +148,14 @@ export default defineConfig({
 		// byte arrays with instanceof
 		server: { deps: { inline: ['protobufjs', /@protobufjs[\\/]/, 'tweetnacl', 'jmuxer'] } }
 	},
-	resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined
+	resolve: {
+		// protobuf.js asks for long.js, which the remote viewer does without (see the file)
+		alias: [
+			{
+				find: /^long$/,
+				replacement: fileURLToPath(new URL('./src/lib/remote/client/no-long.ts', import.meta.url))
+			}
+		],
+		...(process.env.VITEST ? { conditions: ['browser'] } : {})
+	}
 });
