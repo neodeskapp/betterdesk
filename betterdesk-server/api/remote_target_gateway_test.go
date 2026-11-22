@@ -41,6 +41,7 @@ func TestRewriteRemoteTargetConnectPinsServerValues(t *testing.T) {
 		[]string{"hostname", "port", "username", "password", "ignore-cert"},
 		target,
 		"secret",
+		remoteTargetLimits{},
 	)
 	want := []string{"192.168.10.5", "3389", "operator", "secret", "false"}
 	for index := range want {

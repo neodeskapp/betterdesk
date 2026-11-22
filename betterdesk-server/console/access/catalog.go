@@ -139,17 +139,58 @@ var SectionGroups = []SectionGroup{
 }
 
 // ClientFeatures lists the remote client features a policy can switch.
+// RustDesk has one permission for tunnels and port forwarding, so one
+// switch stands for both (DECISIONS A162).
 var ClientFeatures = []ClientFeature{
 	{"remote_control", "Remote control", false},
 	{"file_transfer", "File transfer", false},
 	{"clipboard", "Clipboard", false},
 	{"audio", "Audio", false},
-	{"tunnel", "Tunnel", false},
+	{"tunnel", "Tunnels and port forwarding", false},
 	{"terminal", "Terminal", false},
-	{"port_forwarding", "Port forwarding", false},
 	{"reboot", "Remote reboot", false},
 	{"privacy_mode", "Privacy mode", false},
-	{"client_actions", "Client actions", true},
+}
+
+// featureSuccessors are stored feature keys that are no client feature
+// any more, with the feature that took their place: a subject's row of
+// the old key counts for the new one when the subject has no row of the
+// new one. Rows of other keys that are no feature are left out.
+var featureSuccessors = map[string]string{
+	"port_forwarding": "tunnel",
+}
+
+// currentFeatureRows reads a subject's stored feature rows as rows of the
+// client features there are: a row of a key in featureSuccessors stands
+// for its successor when the subject has no row of that one, and rows of
+// other keys that are no feature are left out. The order of rows stays.
+func currentFeatureRows(rows []FeatureRow) []FeatureRow {
+	features := make(map[string]bool, len(ClientFeatures))
+	for _, f := range ClientFeatures {
+		features[f.Key] = true
+	}
+	stored := make(map[string]bool, len(rows))
+	for _, row := range rows {
+		stored[row.FeatureKey] = true
+	}
+	out := make([]FeatureRow, 0, len(rows))
+	taken := make(map[string]bool, len(rows))
+	for _, row := range rows {
+		key := row.FeatureKey
+		if !features[key] {
+			successor, ok := featureSuccessors[key]
+			if !ok || !features[successor] || stored[successor] {
+				continue
+			}
+			key = successor
+		}
+		if taken[key] {
+			continue
+		}
+		taken[key] = true
+		out = append(out, FeatureRow{FeatureKey: key, Enabled: row.Enabled})
+	}
+	return out
 }
 
 // NormalizeLevel reads a level from a stored or submitted value. A number 2

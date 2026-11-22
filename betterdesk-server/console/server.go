@@ -96,11 +96,12 @@ type Options struct {
 	// SQLite file a data backup holds and a restore of the server's
 	// database is left next to. Empty takes DB_PATH.
 	ServerDB string
-	// SignalProof is the frame the web client's bridge writes first on its
-	// connection to the signal server of this process
-	// (signal.Server.PanelProof). nil: the bridge sends none, and the
+	// SignalProof returns the frame the web client's bridge writes first on
+	// its connection to the signal server of this process, for the bridge
+	// of the account with the id, 0 for a guest
+	// (signal.Server.PanelProofFor). nil: the bridge sends none, and the
 	// signal server treats it as any client.
-	SignalProof []byte
+	SignalProof func(userID int64) []byte
 	// PublicRelay is told the relay the console's settings name after each
 	// save of the public endpoints, so the signal server of this process
 	// gives devices that relay (config.Config.SetPublicRelayServer). nil
@@ -402,6 +403,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth,
 		DB:           opts.Store,
 		CanAccess:    s.deps.DeviceGroups.UserCanAccessDevice,
+		FeaturesOff:  s.deps.Access.ClientFeaturesOff,
 	})
 	// Server management and its terminal. Relative paths and the console's
 	// folder are CONSOLE_DIR, the old console's working directory. A

@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -27,7 +28,7 @@ func TestRewriteRemoteTargetConnectAllowlist(t *testing.T) {
 		"gateway-hostname", "dest-host", "wol-send-packet", "ignore-cert", "disable-copy"}
 	values := []string{"VERSION_1_5_0", "127.0.0.1", "6379", "alice", "pw", "1280", "96",
 		"true", "/", "/etc/cron.d", "true", "evil.example", "evil.example", "127.0.0.1", "true", "true", "true", "extra"}
-	got := rewriteRemoteTargetConnect(values, names, target, "")
+	got := rewriteRemoteTargetConnect(values, names, target, "", remoteTargetLimits{})
 	want := []string{"VERSION_1_5_0", "10.9.9.9", "5900", "alice", "pw", "1280", "96",
 		"", "", "", "", "", "", "", "", "false", "true"}
 	if strings.Join(got, "|") != strings.Join(want, "|") {
@@ -165,6 +166,41 @@ func TestRemoteTargetTunnelOutlivesTheHandshake(t *testing.T) {
 		}
 		if strings.Contains(string(data), "sync") && time.Since(start) > remoteTargetDialTimeout+2*time.Second {
 			return
+		}
+	}
+}
+
+// TestRemoteTargetLimitsOverTheBrowser: the limits of the account's
+// client features set read-only, disable-copy, disable-paste and
+// disable-audio to true whatever the browser sent, in any letter case of
+// guacd's names; without limits the browser's values stay.
+func TestRemoteTargetLimitsOverTheBrowser(t *testing.T) {
+	target := &db.RemoteTarget{Host: "10.9.9.9", Port: 3389, CredentialMode: "prompt"}
+	names := []string{"hostname", "read-only", "Disable-Copy", "disable-paste", "disable-audio", "width"}
+	values := []string{"x", "false", "false", "", "false", "1280"}
+	for _, c := range []struct {
+		name   string
+		limits remoteTargetLimits
+		want   string
+	}{
+		{"none", remoteTargetLimits{}, "10.9.9.9|false|false||false|1280"},
+		{"read only", remoteTargetLimits{readOnly: true}, "10.9.9.9|true|false||false|1280"},
+		{"no clipboard", remoteTargetLimits{noClipboard: true}, "10.9.9.9|false|true|true|false|1280"},
+		{"no audio", remoteTargetLimits{noAudio: true}, "10.9.9.9|false|false||true|1280"},
+	} {
+		if got := strings.Join(rewriteRemoteTargetConnect(values, names, target, "", c.limits), "|"); got != c.want {
+			t.Errorf("%s: %q, want %q", c.name, got, c.want)
+		}
+	}
+	for query, want := range map[string]remoteTargetLimits{
+		"":                                      {},
+		"read_only=1":                           {readOnly: true},
+		"read_only=true&no_clipboard=0":         {},
+		"read_only=1&no_clipboard=1&no_audio=1": {readOnly: true, noClipboard: true, noAudio: true},
+	} {
+		values, _ := url.ParseQuery(query)
+		if got := remoteTargetLimitsOf(values); got != want {
+			t.Errorf("%q: %+v, want %+v", query, got, want)
 		}
 	}
 }

@@ -10,13 +10,19 @@
 // server's handler in the same process (ws.DialHandler on
 // goapi.Client.Handler), which carries the console's identity, as the
 // CDAP proxies do. The account is not named to the tunnel: the API server
-// reads no X-Username or X-Role (BUGS G7).
+// reads no X-Username or X-Role (BUGS G7). The account's client features
+// narrow the session: without remote control it is read only, without
+// the clipboard guacd copies nothing either way, without audio there is
+// no sound (tunnelPath). The gateway never maps drives or printers, so
+// there is no file transfer to switch off.
 package remotetarget
 
 import (
 	"context"
 	"net/http"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -42,6 +48,9 @@ type Options struct {
 	// (deviceGroupService.userCanAccessDevice;
 	// devicegroups.Service.UserCanAccessDevice). An error answers 502.
 	CanAccess func(ctx context.Context, user *session.User, device *goapi.Object) (bool, error)
+	// FeaturesOff returns the client features the account may not use
+	// (access.Service.ClientFeaturesOff); nil turns no feature off.
+	FeaturesOff func(ctx context.Context, userID int64) ([]string, error)
 	// API is the API server's handler the tunnel is opened on
 	// (goapi.Client.Handler).
 	API http.Handler
@@ -119,7 +128,7 @@ func (g *Gateway) serve(u *ws.Upgrade) {
 	defer browser.Wait()
 	stopWatch := g.watch(u, browser, sn.UserID(), id)
 	defer stopWatch()
-	tunnel := "/api/remote-targets/" + goapi.EncodeURIComponent(id) + "/tunnel"
+	tunnel := g.tunnelPath(u.R.Context(), sn.UserID(), id)
 	// Messages wait while the tunnel opens; a failed tunnel or one that
 	// ends closes the browser's socket without a status code, and the
 	// browser's end closes the tunnel the same way. Close codes are not
@@ -187,4 +196,36 @@ func (g *Gateway) stillAllowed(u *ws.Upgrade, parent context.Context, userID int
 	}
 	visible, err := g.opts.CanAccess(ctx, sn.User(), target)
 	return err == nil && visible
+}
+
+// everyFeature is what an account may not use when its features cannot be
+// looked up.
+var everyFeature = []string{"remote_control", "file_transfer", "clipboard", "audio", "tunnel", "terminal", "reboot", "privacy_mode"}
+
+// tunnelPath is the API server's tunnel of the target, with the limits the
+// account's client features set: read_only without remote control,
+// no_clipboard without the clipboard, no_audio without audio. A failed
+// lookup sets them all.
+func (g *Gateway) tunnelPath(ctx context.Context, userID int64, id string) string {
+	path := "/api/remote-targets/" + goapi.EncodeURIComponent(id) + "/tunnel"
+	if g.opts.FeaturesOff == nil {
+		return path
+	}
+	off, err := g.opts.FeaturesOff(ctx, userID)
+	if err != nil {
+		logging.Logf("console", "WARN: [remote-target] client features of user %d: %v; the session is read only", userID, err)
+		off = everyFeature
+	}
+	var limits []string
+	for _, l := range []struct{ feature, param string }{
+		{"remote_control", "read_only"}, {"clipboard", "no_clipboard"}, {"audio", "no_audio"},
+	} {
+		if slices.Contains(off, l.feature) {
+			limits = append(limits, l.param+"=1")
+		}
+	}
+	if len(limits) == 0 {
+		return path
+	}
+	return path + "?" + strings.Join(limits, "&")
 }

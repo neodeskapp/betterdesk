@@ -17,7 +17,7 @@ import (
 // set its websocket services up. An upgrade to any other path passes the
 // pipeline like a plain request. signalProof is what the web client's
 // bridge presents to the signal server (Options.SignalProof).
-func registerSockets(d *kit.Deps, signalProof []byte) {
+func registerSockets(d *kit.Deps, signalProof func(userID int64) []byte) {
 	// services/wsRelay.js: /ws/rendezvous, /ws/relay. A guest link that is
 	// taken back ends its bridges at once; an account with a device scope
 	// reaches the devices of its scope only, looked up as the remote
@@ -40,7 +40,7 @@ func registerSockets(d *kit.Deps, signalProof []byte) {
 	chat.NewRelay(chat.RelayOptions{API: d.GoAPI, VerifyDevice: d.Authn.VerifyDeviceWSAuth, Scope: chat.ScopeOf(d), FilesDir: chat.FilesDir(d.Config)}).Register(d.Sockets)
 	d.RemoteRelay.Register(d.Sockets) // services/remoteRelay.js: /ws/remote-agent/<id>, /ws/remote-viewer/<id>
 	// services/cdapTerminalProxy.js, services/cdapMediaProxy.js: /api/cdap/devices/<id>/terminal, desktop, video, files, audio
-	cdapproxy.New(cdapproxy.Options{API: d.GoAPI.Handler(), Devices: d.Backend, CanAccess: d.DeviceGroups.UserCanAccessDevice}).Register(d.Sockets)
+	cdapproxy.New(cdapproxy.Options{API: d.GoAPI.Handler(), Devices: d.Backend, CanAccess: d.DeviceGroups.UserCanAccessDevice, FeaturesOff: d.Access.ClientFeaturesOff}).Register(d.Sockets)
 	d.ServerMgmt.Register(d.Sockets) // services/serverTerminalProxy.js: /ws/server-management/terminal
 	// services/meshAshxProxy.js: /agent.ashx, /meshrelay.ashx, /control.ashx
 	meshproxy.New(meshproxy.Options{API: d.GoAPI.ForwardHandler(), ClientIP: d.Config.TrustProxy.ClientIP}).Register(d.Sockets)
@@ -49,6 +49,7 @@ func registerSockets(d *kit.Deps, signalProof []byte) {
 	remotetarget.New(remotetarget.Options{
 		RemoteTarget: d.GoAPI.GetRemoteTarget,
 		CanAccess:    d.DeviceGroups.UserCanAccessDevice,
+		FeaturesOff:  d.Access.ClientFeaturesOff,
 		API:          d.GoAPI.Handler(),
 	}).Register(d.Sockets)
 	// services/deviceStatusPush.js: /ws/device-status, /ws/panel-events. A

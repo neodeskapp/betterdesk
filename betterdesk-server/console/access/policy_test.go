@@ -194,9 +194,6 @@ func TestResolveForUserPrecedence(t *testing.T) {
 	if clipboard, _ := policy.Features.Get("clipboard"); clipboard != (FeatureAccess{Enabled: true, Source: SourceUser}) {
 		t.Errorf("clipboard: %+v", clipboard)
 	}
-	if locked, _ := policy.Features.Get("client_actions"); locked != (FeatureAccess{Enabled: false, Source: SourceDefault, HardLock: true}) {
-		t.Errorf("client_actions: %+v", locked)
-	}
 	if policy.SubjectType != "user" || policy.SubjectID != "7" || len(policy.Groups) != 1 || policy.Groups[0] != (GroupRef{GUID: "ops", Name: "Operators"}) {
 		t.Errorf("policy head: %+v", policy)
 	}
@@ -302,6 +299,8 @@ func TestMergeUserPolicyRules(t *testing.T) {
 }
 
 func TestMergeFeatures(t *testing.T) {
+	// Node's features have a hard locked one, client_actions.
+	withNodeFeatures(t)
 	rows := userPolicyRows{
 		features: []FeatureRow{{"audio", false}, {"client_actions", true}},
 		groupFeatures: []FeatureRow{
@@ -352,7 +351,7 @@ func TestPolicyJSON(t *testing.T) {
 	if !strings.HasPrefix(body, wantStart) {
 		t.Errorf("user policy starts with\n %s", body[:len(wantStart)+20])
 	}
-	if !strings.HasSuffix(body, `"client_actions":{"enabled":false,"source":"default","hard_lock":true}},"groups":[]}`) {
+	if !strings.HasSuffix(body, `"privacy_mode":{"enabled":true,"source":"default","hard_lock":false}},"groups":[]}`) {
 		t.Errorf("user policy ends with\n %s", body[len(body)-120:])
 	}
 	if got, want := user.Sections.Keys(), catalogKeys(); strings.Join(got, ",") != strings.Join(want, ",") {
@@ -439,12 +438,13 @@ func TestNormalizePolicyRows(t *testing.T) {
 		map[string]any{"key": "privacy_mode"},
 		map[string]any{"key": "clipboard", "enabled": false}, // a repeat
 		map[string]any{"key": "nope", "enabled": true},       // an unknown key
+		// no features since A162
 		map[string]any{"key": "client_actions", "enabled": true},
+		map[string]any{"key": "port_forwarding", "enabled": true},
 	})
 	wantFeatures := `[{"feature_key":"clipboard","enabled":true},{"feature_key":"audio","enabled":true},` +
 		`{"feature_key":"tunnel","enabled":true},{"feature_key":"terminal","enabled":false},` +
-		`{"feature_key":"reboot","enabled":false},{"feature_key":"privacy_mode","enabled":false},` +
-		`{"feature_key":"client_actions","enabled":true}]`
+		`{"feature_key":"reboot","enabled":false},{"feature_key":"privacy_mode","enabled":false}]`
 	if got := jsJSON(t, features); got != wantFeatures {
 		t.Errorf("features:\n got  %s\n want %s", got, wantFeatures)
 	}

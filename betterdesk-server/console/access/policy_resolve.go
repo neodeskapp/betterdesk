@@ -133,15 +133,6 @@ func mergeUserPolicy(subjectID string, ceiling map[string]Level, rows userPolicy
 	for _, row := range rows.sections {
 		direct[row.ResourceKey] = row.AccessLevel
 	}
-	directFeatures := make(map[string]bool, len(rows.features))
-	for _, row := range rows.features {
-		directFeatures[row.FeatureKey] = row.Enabled
-	}
-	inheritedFeatures := make(map[string]bool, len(rows.groupFeatures))
-	for _, row := range rows.groupFeatures {
-		inheritedFeatures[row.FeatureKey] = inheritedFeatures[row.FeatureKey] || row.Enabled
-	}
-
 	policy := &Policy{SubjectType: SubjectUser, SubjectID: subjectID, Groups: make([]GroupRef, 0, len(rows.groups))}
 	for _, entry := range Catalog {
 		roleLevel := ceiling[entry.Key]
@@ -163,25 +154,43 @@ func mergeUserPolicy(subjectID string, ceiling map[string]Level, rows userPolicy
 		resolved.Access = clampToCeiling(resolved.Access, roleLevel)
 		policy.Sections.Set(entry.Key, resolved)
 	}
-	for _, feature := range ClientFeatures {
-		own, hasOwn := directFeatures[feature.Key]
-		inherited, hasInherited := inheritedFeatures[feature.Key]
-		resolved := FeatureAccess{Enabled: true, Source: SourceDefault, HardLock: feature.HardLock}
-		switch {
-		case hasOwn:
-			resolved.Enabled, resolved.Source = own, SourceUser
-		case hasInherited:
-			resolved.Enabled, resolved.Source = inherited, SourceGroup
-		}
-		if feature.HardLock {
-			resolved.Enabled = false
-		}
-		policy.Features.Set(feature.Key, resolved)
-	}
+	policy.Features = mergeUserFeatures(rows.features, rows.groupFeatures)
 	for _, group := range rows.groups {
 		policy.Groups = append(policy.Groups, GroupRef{GUID: group.GUID, Name: group.Name})
 	}
 	return policy
+}
+
+// mergeUserFeatures resolves an account's client features from its own
+// rows and the rows of all its groups together: the account's row, else
+// on when any of its groups turns the feature on, else on. A hard locked
+// feature is always off.
+func mergeUserFeatures(own, inherited []FeatureRow) Features {
+	direct := make(map[string]bool, len(own))
+	for _, row := range own {
+		direct[row.FeatureKey] = row.Enabled
+	}
+	fromGroups := make(map[string]bool, len(inherited))
+	for _, row := range inherited {
+		fromGroups[row.FeatureKey] = fromGroups[row.FeatureKey] || row.Enabled
+	}
+	var features Features
+	for _, feature := range ClientFeatures {
+		value, hasOwn := direct[feature.Key]
+		group, hasGroup := fromGroups[feature.Key]
+		resolved := FeatureAccess{Enabled: true, Source: SourceDefault, HardLock: feature.HardLock}
+		switch {
+		case hasOwn:
+			resolved.Enabled, resolved.Source = value, SourceUser
+		case hasGroup:
+			resolved.Enabled, resolved.Source = group, SourceGroup
+		}
+		if feature.HardLock {
+			resolved.Enabled = false
+		}
+		features.Set(feature.Key, resolved)
+	}
+	return features
 }
 
 // mergeGroupPolicy fills a group's stored rows up with defaults.
@@ -240,7 +249,7 @@ func (s *Service) ResolveForUser(ctx context.Context, user PolicyUser) (*Policy,
 	if rows.sections, err = s.data.PanelAccessPolicies(ctx, SubjectUser, subjectID); err != nil {
 		return nil, err
 	}
-	if rows.features, err = s.data.ClientFeaturePolicies(ctx, SubjectUser, subjectID); err != nil {
+	if rows.features, err = s.ClientFeatureRows(ctx, SubjectUser, subjectID); err != nil {
 		return nil, err
 	}
 	if rows.groups, err = s.data.UserGroupsForUser(ctx, user.ID); err != nil {
@@ -251,7 +260,7 @@ func (s *Service) ResolveForUser(ctx context.Context, user PolicyUser) (*Policy,
 		if err != nil {
 			return nil, err
 		}
-		features, err := s.data.ClientFeaturePolicies(ctx, SubjectGroup, group.GUID)
+		features, err := s.ClientFeatureRows(ctx, SubjectGroup, group.GUID)
 		if err != nil {
 			return nil, err
 		}
@@ -274,7 +283,7 @@ func (s *Service) ResolveForGroup(ctx context.Context, groupGUID string) (*Polic
 	if err != nil {
 		return nil, err
 	}
-	featureRows, err := s.data.ClientFeaturePolicies(ctx, SubjectGroup, groupGUID)
+	featureRows, err := s.ClientFeatureRows(ctx, SubjectGroup, groupGUID)
 	if err != nil {
 		return nil, err
 	}

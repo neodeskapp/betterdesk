@@ -94,6 +94,10 @@ type Options struct {
 	// (deviceGroupService.userCanAccessDevice;
 	// devicegroups.Service.UserCanAccessDevice).
 	CanAccess func(ctx context.Context, user *session.User, device *goapi.Object) (bool, error)
+	// FeaturesOff returns the client features the account may not use
+	// (access.Service.ClientFeaturesOff). A viewer whose account may not
+	// use remote_control watches without input. nil turns no feature off.
+	FeaturesOff func(ctx context.Context, userID int64) ([]string, error)
 	// Clock is real time when nil.
 	Clock Clock
 	// Random is crypto/rand when nil: the agent tokens.

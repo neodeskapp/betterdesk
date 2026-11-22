@@ -227,10 +227,10 @@ func TestLANExchangeKeepsParallelInitiatorsSeparate(t *testing.T) {
 	}
 	srv.peers.Put(target)
 
-	if _, ok := srv.beginLANExchange(targetID, target, "LANINITA481", addrA, peer.ConnUDP, "relay.example:21117", nil); !ok {
+	if _, ok := srv.beginLANExchange(targetID, target, "LANINITA481", addrA, peer.ConnUDP, "relay.example:21117", nil, nil); !ok {
 		t.Fatal("first LAN exchange did not start")
 	}
-	if _, ok := srv.beginLANExchange(targetID, target, "LANINITB481", addrB, peer.ConnUDP, "relay.example:21117", nil); !ok {
+	if _, ok := srv.beginLANExchange(targetID, target, "LANINITB481", addrB, peer.ConnUDP, "relay.example:21117", nil, nil); !ok {
 		t.Fatal("second LAN exchange did not start")
 	}
 

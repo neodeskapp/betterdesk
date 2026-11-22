@@ -126,7 +126,7 @@ func (h *handlers) user(w http.ResponseWriter, r *http.Request) {
 	var err error
 	subject := jsreq.String(float64(user.ID))
 	if out.Sections, err = h.d.Access.PanelAccessPolicies(r.Context(), access.SubjectUser, subject); err == nil {
-		if out.Features, err = h.d.Access.ClientFeaturePolicies(r.Context(), access.SubjectUser, subject); err == nil {
+		if out.Features, err = h.d.Access.ClientFeatureRows(r.Context(), access.SubjectUser, subject); err == nil {
 			out.Effective, err = h.d.Access.ResolveForUser(r.Context(), *user)
 		}
 	}
@@ -263,7 +263,7 @@ func (h *handlers) group(w http.ResponseWriter, r *http.Request) {
 	out := groupPolicy{GroupGUID: guid}
 	var err error
 	if out.Sections, err = h.d.Access.PanelAccessPolicies(r.Context(), access.SubjectGroup, guid); err == nil {
-		if out.Features, err = h.d.Access.ClientFeaturePolicies(r.Context(), access.SubjectGroup, guid); err == nil {
+		if out.Features, err = h.d.Access.ClientFeatureRows(r.Context(), access.SubjectGroup, guid); err == nil {
 			out.Effective, err = h.d.Access.ResolveForGroup(r.Context(), group.GUID)
 		}
 	}

@@ -20,8 +20,10 @@
 // proof (Options.SignalProof), a secret the signal server made at start:
 // with it, from an address of PANEL_SIGNAL_PROXY_CIDRS (default loopback),
 // the signal server lets the bridge start connections as the panel's web
-// client without a registered peer. A signal server in another process
-// does not know the secret and treats the bridge as any client. The relay
+// client without a registered peer. The proof of a signed-in account's
+// bridge names the account, so the signal server applies the account's
+// client features to the sessions it starts. A signal server in another
+// process does not know the secret and treats the bridge as any client. The relay
 // counts and pairs connections by their remote address, so a connection
 // handed over in memory would change its decisions; for the same reason a
 // relay address on loopback is replaced by the machine's first other IPv4
@@ -107,12 +109,14 @@ type Options struct {
 	// (WS_HBBS_HOST, default localhost; WS_HBBS_PORT, default 21116).
 	SignalHost string
 	SignalPort int
-	// SignalProof is the frame a bridge writes to the signal server before
-	// anything of the browser's (signal.Server.PanelProof of this
-	// process): by it the signal server takes the connection for the
-	// panel's web client, which needs no registered peer. nil writes none,
-	// and the signal server treats the bridge as any client.
-	SignalProof []byte
+	// SignalProof returns the frame a bridge writes to the signal server
+	// before anything of the browser's (signal.Server.PanelProofFor of
+	// this process), for the bridge of the account with the id, 0 for a
+	// guest: by it the signal server takes the connection for the panel's
+	// web client, which needs no registered peer, and knows the account.
+	// nil, or an empty frame, writes none, and the signal server treats
+	// the bridge as any client.
+	SignalProof func(userID int64) []byte
 	// RelayHost and RelayPort are the relay server's TCP address
 	// (WS_HBBR_HOST, default localhost; WS_HBBR_PORT, default 21117). A
 	// loopback host is replaced at New by the first IPv4 address of

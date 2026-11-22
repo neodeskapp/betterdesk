@@ -2100,6 +2100,11 @@
     "access_source_default": "par défaut",
     "access_role_limit": "Le rôle autorise {level} ici ; cette limite s'applique toujours.",
     "access_locked": "Toujours désactivé",
+    "access_features_note": "These switches apply to remote sessions started while signed in. For RustDesk sessions, from the RustDesk app or the web client, the device must run the BetterDesk client or RustDesk 1.4.5 or later, not on Android. In the web client they also apply to CDAP, MeshCentral and RDP or VNC sessions. To keep people from connecting without signing in, turn on Only signed-in RustDesk apps can start sessions in Settings.",
+    "access_feature_hint_remote_control": "Off: the session shows the screen, without mouse and keyboard.",
+    "access_feature_hint_file_transfer": "Off also stops printing from the device to the printer of the person who connects.",
+    "access_feature_hint_tcp_tunnel": "Includes RDP through RustDesk: RustDesk has one setting for all TCP tunnels.",
+    "access_feature_hint_privacy_mode": "Needs the BetterDesk client or RustDesk 1.4.7 or later on the device.",
     "access_load_failed": "Impossible de charger l'accès à la console.",
     "access_saved": "Accès à la console enregistré.",
     "access_keep_own_write": "Vous ne pouvez pas retirer votre propre accès en écriture aux Utilisateurs : vous ne pourriez plus modifier l’accès au panneau.",
@@ -2155,10 +2160,8 @@
     "access_feature_audio": "Audio",
     "access_feature_tunnel": "Tunnel",
     "access_feature_terminal": "Terminal",
-    "access_feature_port_forwarding": "Redirection de ports",
     "access_feature_reboot": "Redémarrage à distance",
     "access_feature_privacy_mode": "Mode confidentialité",
-    "access_feature_client_actions": "Actions du client",
     "access_now_role": "Actuellement : {level}, {source}. Limite du rôle : {limit}"
   },
   "folders": {

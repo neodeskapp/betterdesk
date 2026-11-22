@@ -652,7 +652,7 @@ func main() {
 		}
 		defer adminSrv.Stop()
 
-		stopConsole, err := startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProof(), requestRestart)
+		stopConsole, err := startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofFor, sig.SetControllerFeatures, requestRestart)
 		if err != nil {
 			log.Fatalf("Failed to start console: %v", err)
 		}

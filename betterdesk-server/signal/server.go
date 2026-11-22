@@ -188,7 +188,11 @@ type Server struct {
 	// first (see panel_proof.go); panelConns holds the open TCP
 	// connections that sent it, by normalizeAddrKey of their address.
 	panelProof []byte
-	panelConns sync.Map // map[string]net.Conn
+	panelConns sync.Map // map[string]*panelConn
+
+	// controllerFeatures looks up the client features of a console
+	// account (see client_features.go); nil until the console sets it.
+	controllerFeatures atomic.Pointer[ControllerFeatures]
 }
 
 // New creates a new signal server instance.
@@ -656,12 +660,13 @@ func (s *Server) handlePlainTCPConn(conn net.Conn, addrKey string, firstMsg *pb.
 	}()
 
 	panel := false
-	if s.isPanelProof(firstMsg) {
+	if userID, ok := s.readPanelProof(firstMsg); ok {
 		firstMsg = nil
 		if s.panelSourceAllowed(conn.RemoteAddr()) {
 			panel = true
-			s.panelConns.Store(addrKey, conn)
-			defer s.panelConns.CompareAndDelete(addrKey, conn)
+			pc := &panelConn{conn: conn, userID: userID}
+			s.panelConns.Store(addrKey, pc)
+			defer s.panelConns.CompareAndDelete(addrKey, pc)
 			log.Printf("[signal] TCP session %s is the console's web client", addrKey)
 		} else {
 			log.Printf("[signal] console proof from %s, which is outside PANEL_SIGNAL_PROXY_CIDRS: treated as any client", addrKey)

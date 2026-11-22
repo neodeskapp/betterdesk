@@ -124,9 +124,6 @@ func TestCatalogContents(t *testing.T) {
 			t.Errorf("no client feature %q", key)
 		}
 	}
-	if !features["client_actions"] {
-		t.Error("client_actions must be hard locked")
-	}
 
 	// Every key is listed once; toolkit is in the operations group.
 	toolkit, _ := CatalogEntry("toolkit")
@@ -153,7 +150,7 @@ func TestCatalogContents(t *testing.T) {
 		}
 	}
 	view := GetCatalog()
-	if len(view.Levels) != 3 || view.Levels[0] != LevelNone || view.Levels[2] != LevelWrite || len(view.Groups) != 6 || len(view.Features) != 10 {
+	if len(view.Levels) != 3 || view.Levels[0] != LevelNone || view.Levels[2] != LevelWrite || len(view.Groups) != 6 || len(view.Features) != 8 {
 		t.Errorf("catalog view: %+v", view)
 	}
 }

@@ -2084,6 +2084,11 @@
     "access_source_default": "ค่าเริ่มต้น",
     "access_role_limit": "บทบาทอนุญาตเพียง {level} ที่นี่ และข้อจำกัดนั้นยังมีผล",
     "access_locked": "ปิดเสมอ",
+    "access_features_note": "These switches apply to remote sessions started while signed in. For RustDesk sessions, from the RustDesk app or the web client, the device must run the BetterDesk client or RustDesk 1.4.5 or later, not on Android. In the web client they also apply to CDAP, MeshCentral and RDP or VNC sessions. To keep people from connecting without signing in, turn on Only signed-in RustDesk apps can start sessions in Settings.",
+    "access_feature_hint_remote_control": "Off: the session shows the screen, without mouse and keyboard.",
+    "access_feature_hint_file_transfer": "Off also stops printing from the device to the printer of the person who connects.",
+    "access_feature_hint_tcp_tunnel": "Includes RDP through RustDesk: RustDesk has one setting for all TCP tunnels.",
+    "access_feature_hint_privacy_mode": "Needs the BetterDesk client or RustDesk 1.4.7 or later on the device.",
     "access_load_failed": "โหลดสิทธิ์เข้าถึงแผงควบคุมไม่ได้",
     "access_saved": "บันทึกสิทธิ์เข้าถึงแผงควบคุมแล้ว",
     "access_keep_own_write": "คุณเอาสิทธิ์เขียนของตัวเองในผู้ใช้ออกไม่ได้ เพราะจะเปลี่ยนสิทธิ์เข้าถึงแผงควบคุมไม่ได้อีก",
@@ -2139,10 +2144,8 @@
     "access_feature_audio": "เสียง",
     "access_feature_tunnel": "อุโมงค์",
     "access_feature_terminal": "เทอร์มินัล",
-    "access_feature_port_forwarding": "การส่งต่อพอร์ต",
     "access_feature_reboot": "รีบูตระยะไกล",
     "access_feature_privacy_mode": "โหมดความเป็นส่วนตัว",
-    "access_feature_client_actions": "การดำเนินการไคลเอนต์",
     "access_now_role": "ตอนนี้: {level}, {source} ขีดจำกัดของบทบาท: {limit}"
   },
   "folders": {

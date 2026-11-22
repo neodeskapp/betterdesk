@@ -40,6 +40,11 @@ type PassOptions struct {
 	FailText string
 	// OnFail is told why the upstream failed, for the log.
 	OnFail func(err error)
+	// ToUpstream and ToSocket see each message on its way to the upstream
+	// and to the socket, binary as it arrived; a message they return
+	// false for is dropped. nil passes every message.
+	ToUpstream func(binary bool, data []byte) bool
+	ToSocket   func(binary bool, data []byte) bool
 }
 
 // Pass carries messages between conn and an upstream until both have
@@ -63,6 +68,9 @@ func Pass(conn *Conn, opts PassOptions) {
 		binary, data, err := conn.Read()
 		if err != nil {
 			break
+		}
+		if opts.ToUpstream != nil && !opts.ToUpstream(binary, data) {
+			continue
 		}
 		p.push(passMessage{binary: binary || opts.Binary, data: data})
 	}
@@ -180,6 +188,9 @@ func (p *passing) connect(ctx context.Context) {
 				p.conn.Close(CloseNoStatus, "")
 			}
 			break
+		}
+		if p.opts.ToSocket != nil && !p.opts.ToSocket(binary, data) {
+			continue
 		}
 		p.conn.Send(binary || p.opts.Binary, data)
 	}

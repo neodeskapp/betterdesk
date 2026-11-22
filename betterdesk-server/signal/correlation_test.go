@@ -268,7 +268,7 @@ func TestRelayResponseForwardHonorsPanelWebClient(t *testing.T) {
 			createdAt: time.Now(),
 		})
 		if addr == initiatorAddr {
-			srv.panelConns.Store(normalizeAddrKey(addr.String()), server)
+			srv.panelConns.Store(normalizeAddrKey(addr.String()), &panelConn{conn: server})
 		}
 	}
 

@@ -2,6 +2,7 @@ package meshcentral
 
 import (
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -22,7 +23,9 @@ import (
 //     watching sets view_only=1, whatever the query says.
 //   - Someone signed in with device.connect. Of the query only the
 //     tunnel's flags record and relay_base go on (sessionParameters),
-//     each one text: a list or an object among them is 400.
+//     each one text: a list or an object among them is 400. An account
+//     that may not use remote control gets a view-only tunnel
+//     (view_only=1).
 //
 // A share token wins over a guest token; the guest token is then not
 // checked here. A token that cannot be turned into text is refused with
@@ -91,12 +94,18 @@ var linkParameters = []string{"mesh_share", "guest", "view_only", "record", "rel
 // the relay is reached at.
 var sessionParameters = []string{"record", "relay_base"}
 
-// desktopTunnel opens the tunnel for a signed-in account.
+// desktopTunnel opens the tunnel for a signed-in account, view only when
+// the account may not use remote control.
 func (h *handlers) desktopTunnel(w http.ResponseWriter, r *http.Request) {
-	search, bad := requestQuery(r).only(sessionParameters...)
+	query := requestQuery(r)
+	search, bad := query.only(sessionParameters...)
 	if bad != "" {
 		badParameter(w, r, bad)
 		return
+	}
+	if slices.Contains(h.featuresOff(r), "remote_control") {
+		query.set("view_only", "1")
+		search, _ = query.only(append(sessionParameters, "view_only")...)
 	}
 	h.pass(w, r, http.MethodPost, withSearch(devicePath(r.PathValue("id"), "desktop"), search))
 }
