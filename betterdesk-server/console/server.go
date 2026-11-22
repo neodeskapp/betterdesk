@@ -129,6 +129,15 @@ type Server struct {
 	apiListener http.Handler
 }
 
+// clientAPIPort is the client API port while the console listens on it
+// (API_PORT while API_ENABLED is on), 0 otherwise.
+func clientAPIPort(cfg *config.Config) int {
+	if !cfg.APIEnabled {
+		return 0
+	}
+	return cfg.APIPort
+}
+
 // New builds the console server: its services, the pipeline and the
 // routes of every group. Nothing runs before Start.
 func New(ctx context.Context, opts Options) (*Server, error) {
@@ -252,19 +261,22 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Jobs:  s.jobs,
 	}
 	s.deps.ServerInfo = serverinfo.New(serverinfo.Options{
-		PubKeyPath:    cfg.PubKeyPath,
-		APIKeyPath:    cfg.APIKeyPath,
-		DBPath:        cfg.DBPath,
-		APIURL:        cfg.APIURL,
-		GoAPIPort:     cfg.GoAPIPort,
-		APIPort:       cfg.APIPort,
-		DataDir:       cfg.DataDir,
-		EnvPath:       cfg.EnvPath,
-		OnPublicRelay: opts.PublicRelay,
-		IsDocker:      cfg.Docker,
-		Getenv:        getenv,
-		ComposePath:   cfg.ComposePath,
-		GoAPI:         api,
+		PubKeyPath: cfg.PubKeyPath,
+		APIKeyPath: cfg.APIKeyPath,
+		DBPath:     cfg.DBPath,
+		APIURL:     cfg.APIURL,
+		GoAPIPort:  cfg.GoAPIPort,
+		APIPort:    cfg.APIPort,
+		// clients are given the client API port while it is on (A166)
+		ClientAPIPort:  clientAPIPort(cfg),
+		ClientAPIHTTPS: cfg.APIEnabled && s.net.apiCert != nil,
+		DataDir:        cfg.DataDir,
+		EnvPath:        cfg.EnvPath,
+		OnPublicRelay:  opts.PublicRelay,
+		IsDocker:       cfg.Docker,
+		Getenv:         getenv,
+		ComposePath:    cfg.ComposePath,
+		GoAPI:          api,
 		QR: func(text string) (string, error) {
 			return qr.PNGDataURL(text, qr.Options{Width: 256, Margin: 2})
 		},
