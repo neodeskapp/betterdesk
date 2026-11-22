@@ -751,6 +751,10 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Username and password required"})
 		return
 	}
+	if err := auth.CheckNewPassword(body.Password); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
 	if body.Role == "" {
 		body.Role = auth.RoleViewer
 	}
@@ -784,7 +788,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionUserCreated, s.remoteIP(r), body.Username, map[string]string{"role": body.Role})
+		s.auditLog.Log(audit.ActionUserCreated, s.eventActor(r), body.Username, map[string]string{"role": body.Role})
 	}
 
 	writeJSON(w, http.StatusCreated, map[string]any{
@@ -862,7 +866,7 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if s.auditLog != nil {
-			s.auditLog.Log(audit.ActionUserUpdated, s.remoteIP(r), newUsername, map[string]string{
+			s.auditLog.Log(audit.ActionUserUpdated, s.eventActor(r), newUsername, map[string]string{
 				"renamed_from": user.Username,
 			})
 		}
@@ -878,6 +882,10 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 		if provider != db.AuthProviderLocal {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Cannot set a local password on an LDAP/OIDC account"})
+			return
+		}
+		if err := auth.CheckNewPassword(body.Password); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
 		hash, err := auth.HashPassword(body.Password)
@@ -947,7 +955,7 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionUserUpdated, s.remoteIP(r), user.Username, nil)
+		s.auditLog.Log(audit.ActionUserUpdated, s.eventActor(r), user.Username, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"status": "updated", "id": user.ID})
@@ -1009,7 +1017,7 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionUserDeleted, s.remoteIP(r), user.Username, nil)
+		s.auditLog.Log(audit.ActionUserDeleted, s.eventActor(r), user.Username, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
@@ -1235,7 +1243,7 @@ func (s *Server) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionAPIKeyCreated, s.remoteIP(r), body.Name, map[string]string{"role": body.Role})
+		s.auditLog.Log(audit.ActionAPIKeyCreated, s.eventActor(r), body.Name, map[string]string{"role": body.Role})
 	}
 
 	writeJSON(w, http.StatusCreated, map[string]any{
@@ -1264,7 +1272,7 @@ func (s *Server) handleDeleteAPIKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionAPIKeyRevoked, s.remoteIP(r), fmt.Sprintf("key:%d", id), nil)
+		s.auditLog.Log(audit.ActionAPIKeyRevoked, s.eventActor(r), fmt.Sprintf("key:%d", id), nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "revoked"})

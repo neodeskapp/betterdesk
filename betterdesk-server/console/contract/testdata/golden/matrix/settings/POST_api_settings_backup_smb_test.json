@@ -12,7 +12,7 @@
     "signed-out",
     "pro"
    ],
-   "status": 401,
+   "status": 404,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -35,8 +35,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "code": "session_required",
-     "error": "Unauthorized. Please log in.",
+     "error": "Not Found",
      "success": false
     }
    }
@@ -80,7 +79,7 @@
     "super_admin",
     "admin"
    ],
-   "status": 400,
+   "status": 404,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -104,7 +103,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "SMB host contains invalid characters",
+     "error": "Not Found",
      "success": false
     }
    }

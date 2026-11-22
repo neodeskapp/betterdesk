@@ -85,7 +85,7 @@ export function providerOf(user: Pick<ConsoleUser, 'auth_provider'>): string {
 
 export type Strength = 'weak' | 'medium' | 'strong';
 
-/** Same scoring as authService.validatePasswordStrength: weak passwords are refused */
+/** A rough strength for the line under the field; the server refuses none for it */
 export function passwordStrength(password: string): Strength {
 	let score = 0;
 	if (password.length >= 8) score++;
@@ -101,7 +101,6 @@ export function passwordStrength(password: string): Strength {
 export function passwordProblem(password: string, required: boolean): string | null {
 	if (!password) return required ? 'users.password_required' : null;
 	if (password.length < 8) return 'users.password_too_short';
-	if (passwordStrength(password) === 'weak') return 'users.password_weak_hint';
 	return null;
 }
 

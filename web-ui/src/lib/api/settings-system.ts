@@ -106,32 +106,6 @@ export function runScheduledBackup() {
 	);
 }
 
-export const Smb = v.looseObject({
-	host: Text,
-	share: Text,
-	domain: Text,
-	username: Text,
-	password: Text,
-	mountPath: Text
-});
-export type Smb = v.InferOutput<typeof Smb>;
-
-export function getSmb(signal?: AbortSignal) {
-	return api(wrapped(Smb), '/api/settings/backup/smb', { signal });
-}
-
-export function saveSmb(input: Smb) {
-	return api(wrapped(Any), '/api/settings/backup/smb', { method: 'PUT', body: input });
-}
-
-export function testSmb(input: Smb) {
-	return api(
-		wrapped(v.optional(v.nullable(v.looseObject({ target: Text })))),
-		'/api/settings/backup/smb/test',
-		{ method: 'POST', body: input }
-	);
-}
-
 export const RestoreResult = v.looseObject({
 	type: Text,
 	restored: v.optional(v.array(v.string()), []),

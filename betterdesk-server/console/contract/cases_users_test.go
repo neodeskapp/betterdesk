@@ -20,8 +20,8 @@ import (
 // and deleted at the end of that turn. Every other request to the two
 // routes is one the guards refuse before the limit counts it. What the
 // roles that may create accounts are refused (a role above their own,
-// weak passwords, the limit itself) is in the recorded Node answers of
-// console/routes/users (TestNodeAnswers).
+// passwords under 8 characters, the limit itself) is in the recorded Node
+// answers of console/routes/users (TestNodeAnswers).
 //
 // The seeded accounts are admin (1), demo_operator (2), demo_viewer (3),
 // demo_serveradmin (4) and e2e_<role> from 5 (admin) to 12 (pro). Writes
@@ -164,9 +164,11 @@ func init() {
 			Body:     map[string]any{"role": "viewer", "groupGuids": []any{}, "peerIds": []any{"900100003"}},
 			Volatile: []string{"data.id", "data.created_at"},
 		},
+		// A password that rates weak is taken: 8 characters are the rule (L94)
 		contract.Case{
 			Name: "account-weak-password", Method: "PATCH", Path: "/api/users/{account}", As: "admin", Roles: signedOut,
-			Body: map[string]any{"password": "alllower"},
+			Body:     map[string]any{"password": "alllower"},
+			Volatile: []string{"data.id", "data.created_at"},
 		},
 		contract.Case{
 			Name: "account-password", Method: "PATCH", Path: "/api/users/{account}", As: "admin", Roles: signedOut,

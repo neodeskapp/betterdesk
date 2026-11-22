@@ -319,7 +319,7 @@ func (s *Server) handleCreatePairingCode(w http.ResponseWriter, r *http.Request)
 	}
 	if s.auditLog != nil {
 		// The code itself is never logged: an audit trail containing codes is a code leak.
-		s.auditLog.Log("pairing_code_created", s.remoteIP(r), record.CreatedBy, map[string]string{
+		s.auditLog.Log("pairing_code_created", s.eventActor(r), record.CreatedBy, map[string]string{
 			"id": record.ID, "label": label,
 		})
 	}
@@ -375,7 +375,7 @@ func (s *Server) handleDeletePairingCode(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log("pairing_code_revoked", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{"id": id})
+		s.auditLog.Log("pairing_code_revoked", s.eventActor(r), getUsernameFromCtx(r), map[string]string{"id": id})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "id": id})
 }
@@ -503,7 +503,7 @@ func (s *Server) handlePairingRedeem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log("pairing_code_redeemed", s.remoteIP(r), body.DeviceID, map[string]string{
+		s.auditLog.Log("pairing_code_redeemed", s.eventActor(r), body.DeviceID, map[string]string{
 			"id": record.ID, "label": record.Label,
 		})
 	}
@@ -595,7 +595,7 @@ func (s *Server) enrollPairedDevice(r *http.Request, req *EnrollmentRequest) Enr
 	}
 	resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
 	if s.auditLog != nil {
-		s.auditLog.Log("device_enrolled", s.remoteIP(r), req.DeviceID, map[string]string{
+		s.auditLog.Log("device_enrolled", s.eventActor(r), req.DeviceID, map[string]string{
 			"mode": "pairing", "hostname": req.Hostname,
 		})
 	}

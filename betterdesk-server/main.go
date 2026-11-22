@@ -145,6 +145,11 @@ func main() {
 	if code, handled := runSubcommand(os.Args[1:]); handled {
 		os.Exit(code)
 	}
+	// The env file gets the settings a new release added, as after the
+	// installers' update, also when the console's Updates page installed it
+	if !printsOnly(os.Args[1:]) {
+		applyEnvDefaultsFromOS()
+	}
 	// Before anything else: count this start of a freshly installed binary,
 	// and put the previous one back when it is the fourth.
 	pending := updater.StartupCheck(updater.StartupOptions{
@@ -313,11 +318,9 @@ func main() {
 	}
 
 	// Initialize security modules
-	blocklist := security.NewBlocklist()
-	if cfg.BlocklistFile != "" {
-		if err := blocklist.LoadFromFile(cfg.BlocklistFile); err != nil {
-			log.Printf("WARN: Failed to load blocklist from %s: %v", cfg.BlocklistFile, err)
-		}
+	blocklist, err := openBlocklist(cfg.BlocklistFile, database)
+	if err != nil {
+		log.Fatalf("Blocklist: %v", err)
 	}
 
 	ipLimiter := ratelimit.NewIPLimiter(
@@ -357,7 +360,7 @@ func main() {
 		if adminUser == "" {
 			adminUser = "admin"
 		}
-		adminPass := cfg.InitAdminPass
+		adminPass := initialAdminPassword(cfg.InitAdminPass)
 		adminPasswordGenerated := false
 		adminPasswordFromFile := false
 		if adminPass == "" {
@@ -425,7 +428,7 @@ func main() {
 	}
 
 	// Initialize audit logger
-	auditLogger := audit.NewLogger(cfg.AuditLogFile)
+	auditLogger := openAuditLog(cfg.AuditLogFile, database)
 	defer auditLogger.Close()
 	auditLogger.Log(audit.ActionServerStart, "system", "", map[string]string{
 		"version": Version, "mode": cfg.Mode,
@@ -736,6 +739,47 @@ func applyEnrollmentMode(cfg *config.Config, database db.Database) (string, erro
 		}
 	}
 	return source, nil
+}
+
+// openAuditLog is the server's event log: it keeps the events in the
+// database for audit.RetentionDays, so the Server events tab has them
+// after a restart, and appends them to file when one is named.
+func openAuditLog(file string, database db.Database) *audit.Logger {
+	l := audit.NewLogger(file)
+	l.UseStore(database)
+	return l
+}
+
+// openBlocklist is the blocklist of the start: the entries of the file,
+// when one is named, and the ones kept in the database, where what is
+// blocked at run time (an admin's block, Revoke device) goes from then on;
+// without them a revoked device could come back after a restart.
+func openBlocklist(file string, database db.Database) (*security.Blocklist, error) {
+	blocklist := security.NewBlocklist()
+	if file != "" {
+		if err := blocklist.LoadFromFile(file); err != nil {
+			log.Printf("WARN: Failed to load blocklist from %s: %v", file, err)
+		}
+	}
+	if err := blocklist.UseStore(database); err != nil {
+		return nil, err
+	}
+	return blocklist, nil
+}
+
+// initialAdminPassword is the password the first account gets from
+// INIT_ADMIN_PASS: the given one when it keeps the password rule
+// (auth.CheckNewPassword), else "" with an error line, and the account
+// gets a made-up password as when none is given.
+func initialAdminPassword(given string) string {
+	if given == "" {
+		return ""
+	}
+	if err := auth.CheckNewPassword(given); err != nil {
+		log.Printf("ERROR: INIT_ADMIN_PASS is not used (%v); the first account gets a made-up password", err)
+		return ""
+	}
+	return given
 }
 
 // runAvailabilityHistoryCleanup deletes expired peer_availability_events when

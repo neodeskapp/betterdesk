@@ -5,10 +5,11 @@
 # manual run with channel=development) replaces the pre-release tagged "dev",
 # which the development channel installs. Each release holds the binary for
 # linux amd64, arm64 and armv7 and windows amd64, manifest.json, SHA256SUMS
-# (bare file names, for "sha256sum -c") and, when the secret
-# BETTERDESK_RELEASE_SIGNING_KEY is set (the ed25519 seed in base64),
-# manifest.sig. The variable BETTERDESK_RELEASE_PUBLIC_KEY, when set, is the
-# key the signature is checked against before anything is published.
+# (bare file names, for "sha256sum -c") and manifest.sig, signed with the
+# secret RELEASE_SIGNING_KEY (the ed25519 private key as PKCS#8 PEM). The
+# signature is checked against the release key compiled into the updater,
+# and against the variable BETTERDESK_RELEASE_PUBLIC_KEY when it is set,
+# before anything is published; without the secret nothing is published.
 name: Release Go server
 
 on:
@@ -158,7 +159,7 @@ jobs:
       - name: Manifest, signature and checksums
         working-directory: ${{ env.SERVER_DIR }}
         env:
-          BETTERDESK_RELEASE_SIGNING_KEY: ${{ secrets.BETTERDESK_RELEASE_SIGNING_KEY }}
+          BETTERDESK_RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
           PUBLIC_KEY: ${{ vars.BETTERDESK_RELEASE_PUBLIC_KEY }}
         run: |
           set -euo pipefail

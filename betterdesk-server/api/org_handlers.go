@@ -309,6 +309,10 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"username and password are required"}`, http.StatusBadRequest)
 		return
 	}
+	if err := auth.CheckNewPassword(body.Password); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
 	if body.Role == "" {
 		body.Role = db.OrgRoleUser
 	}
@@ -424,6 +428,12 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
 		return
+	}
+	if body.Password != nil && *body.Password != "" {
+		if err := auth.CheckNewPassword(*body.Password); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
 	}
 
 	if body.DisplayName != nil {
@@ -940,7 +950,7 @@ func (s *Server) handleSetOrgPolicy(w http.ResponseWriter, r *http.Request) {
 
 	// Record audit
 	if s.auditLog != nil {
-		s.auditLog.Log("org_policy_changed", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("org_policy_changed", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"org_id":   orgID,
 			"category": category,
 		})
@@ -1130,7 +1140,7 @@ func (s *Server) handleLinkUserToOrg(w http.ResponseWriter, r *http.Request) {
 
 	// Audit
 	if s.auditLog != nil {
-		s.auditLog.Log("org_user_linked", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("org_user_linked", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"org_id":  orgID,
 			"user_id": fmt.Sprintf("%d", body.UserID),
 			"role":    body.Role,
@@ -1187,7 +1197,7 @@ func (s *Server) handleUnlinkUserFromOrg(w http.ResponseWriter, r *http.Request)
 
 	// Audit
 	if s.auditLog != nil {
-		s.auditLog.Log("org_user_unlinked", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("org_user_unlinked", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"org_id":  orgID,
 			"user_id": userIDStr,
 		})
@@ -1354,7 +1364,7 @@ func (s *Server) handleAssignUserToOrg(w http.ResponseWriter, r *http.Request) {
 
 	// Audit
 	if s.auditLog != nil {
-		s.auditLog.Log("user_org_assigned", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("user_org_assigned", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"user_id": userIDStr,
 			"org_id":  orgID,
 			"role":    body.Role,

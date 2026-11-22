@@ -132,26 +132,6 @@ func TestHashVectors(t *testing.T) {
 	}
 }
 
-func TestStrengthVectors(t *testing.T) {
-	var vectors []struct {
-		Password string          `json:"password"`
-		Result   json.RawMessage `json:"result"`
-	}
-	loadVectors(t, "strength.json", &vectors)
-	if len(vectors) < 3000 {
-		t.Fatalf("only %d vectors", len(vectors))
-	}
-	for i, v := range vectors {
-		got, err := json.Marshal(ValidatePasswordStrength(v.Password))
-		if err != nil {
-			t.Fatal(err)
-		}
-		if string(got) != string(v.Result) {
-			t.Errorf("vector %d: strength of %q = %s, Node says %s", i, v.Password, got, v.Result)
-		}
-	}
-}
-
 func TestTOTPVectors(t *testing.T) {
 	var vectors struct {
 		Codes []struct {

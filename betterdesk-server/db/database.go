@@ -599,6 +599,17 @@ type Database interface {
 	// implicitly (GHSA-3v82-3gf8-fxx8).
 	RestorePeer(id string) error
 
+	// Blocklist entries added at run time (security.Blocklist.UseStore)
+	SaveBlocklistEntry(e *BlocklistEntry) error
+	DeleteBlocklistEntry(kind, value string) error
+	ListBlocklistEntries() ([]*BlocklistEntry, error)
+
+	// Server events (package audit), kept for audit.RetentionDays
+	AddServerEvents(events []*ServerEvent) error
+	ListServerEvents(action string, limit, offset int) ([]*ServerEvent, error)
+	CountServerEvents(action string) (int64, error)
+	PruneServerEvents(cutoff time.Time) (int64, error)
+
 	// ID change
 	ChangePeerID(oldID, newID, reason string) error
 	GetIDChangeHistory(id string) ([]*IDChangeHistory, error)

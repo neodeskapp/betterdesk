@@ -9,11 +9,11 @@
 // nothing ties it to a session or a person. Both go into one cookie,
 //
 //	__csrf_h=<token>|<hash>       HTTP setup
-//	__csrf=<token>|<hash>         HTTPS setup (HTTPS_ENABLED=true), with Secure
-//	                              when the console serves HTTPS
+//	__csrf=<token>|<hash>         HTTPS setup (HTTPS_ENABLED=true)
 //
 // with "|" written as %7C, Path=/, HttpOnly and SameSite=Lax, and no
-// expiry. The page cannot read the cookie; it gets the token from the API
+// expiry. It is Secure when the console serves HTTPS, and in either setup
+// for a request that came over HTTPS through a proxy the console trusts. The page cannot read the cookie; it gets the token from the API
 // and sends it back in the X-CSRF-Token header (or the field _csrf of a
 // JSON or form body). A write passes when the token it sends is the one in
 // the cookie and the hash in the cookie fits that token.
@@ -66,7 +66,8 @@ type Options struct {
 	HTTPS bool
 	// Secure marks the cookie Secure: set it when the console serves
 	// HTTPS. In HTTPS mode without a usable certificate the console serves
-	// plain HTTP, and the cookie keeps its HTTPS name without Secure.
+	// plain HTTP, and the cookie keeps its HTTPS name; SecureRequest then
+	// decides.
 	Secure bool
 	// SecureRequest, when set, marks the cookie Secure also for a request
 	// it says came over HTTPS (through a proxy the console trusts), as the

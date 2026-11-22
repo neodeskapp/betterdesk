@@ -27,6 +27,7 @@ import (
 	"github.com/unitronix/betterdesk-server/crypto/peervault"
 	"github.com/unitronix/betterdesk-server/db"
 	eventsModule "github.com/unitronix/betterdesk-server/events"
+	"github.com/unitronix/betterdesk-server/internal/clientaddr"
 	"github.com/unitronix/betterdesk-server/meshcentral"
 	"github.com/unitronix/betterdesk-server/metrics"
 	"github.com/unitronix/betterdesk-server/peer"
@@ -1355,7 +1356,7 @@ func (s *Server) handleUpdatePeerFields(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUpdated, s.remoteIP(r), id, nil)
+		s.auditLog.Log(audit.ActionPeerUpdated, s.eventActor(r), id, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "updated", "id": id})
@@ -1392,6 +1393,16 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Revocation: the device ID goes on the blocklist first, which keeps it
+	// in the database, so the ban survives a restart also after a hard
+	// delete. A ban that cannot be stored leaves the device as it is.
+	if revoke && s.blocklist != nil {
+		if err := s.blocklist.BlockID(id, "revoked via panel"); err != nil {
+			writeInternalError(w, err, "RevokePeer")
+			return
+		}
+	}
+
 	var err error
 	if hard {
 		err = s.db.HardDeletePeer(id)
@@ -1414,11 +1425,6 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 
 	// Remove from memory (closes TCP/WS connections — Phase 3.9).
 	s.peers.Remove(id)
-
-	// Revocation: add device ID to blocklist to prevent re-registration.
-	if revoke && s.blocklist != nil {
-		s.blocklist.BlockID(id, "revoked via panel")
-	}
 
 	// CDAP revocation: send revoke message and disconnect CDAP device.
 	if revoke && s.cdapGw != nil {
@@ -1444,7 +1450,9 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 			}
 			s.peers.Remove(lid)
 			if revoke && s.blocklist != nil {
-				s.blocklist.BlockID(lid, "revoked via cascade")
+				if err := s.blocklist.BlockID(lid, "revoked via cascade"); err != nil {
+					log.Printf("[API] RevokePeer: the ban of linked device %s was not stored: %v", lid, err)
+				}
 			}
 			if revoke && s.cdapGw != nil {
 				s.cdapGw.SendRevoke(r.Context(), lid, "revoked via cascade")
@@ -1484,7 +1492,7 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 		if len(cascadedIDs) > 0 {
 			details["cascaded_ids"] = fmt.Sprintf("%v", cascadedIDs)
 		}
-		s.auditLog.Log(action, s.remoteIP(r), id, details)
+		s.auditLog.Log(action, s.eventActor(r), id, details)
 	}
 
 	resp := map[string]interface{}{
@@ -1526,7 +1534,7 @@ func (s *Server) handleBanPeer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerBanned, s.remoteIP(r), id, map[string]string{"reason": body.Reason})
+		s.auditLog.Log(audit.ActionPeerBanned, s.eventActor(r), id, map[string]string{"reason": body.Reason})
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "banned", "id": id})
@@ -1553,7 +1561,7 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if s.auditLog != nil {
-			s.auditLog.Log(audit.ActionPeerUnbanned, s.remoteIP(r), id, map[string]string{
+			s.auditLog.Log(audit.ActionPeerUnbanned, s.eventActor(r), id, map[string]string{
 				"peer_removed": "true",
 				"reason":       enrollmentRejectBanReason,
 			})
@@ -1573,7 +1581,7 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 	s.clearEnrollmentRejectionState(id)
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUnbanned, s.remoteIP(r), id, nil)
+		s.auditLog.Log(audit.ActionPeerUnbanned, s.eventActor(r), id, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "unbanned", "id": id})
@@ -1626,7 +1634,7 @@ func (s *Server) handleRestorePeer(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerRestored, s.remoteIP(r), id, nil)
+		s.auditLog.Log(audit.ActionPeerRestored, s.eventActor(r), id, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "restored", "id": id})
@@ -1691,7 +1699,7 @@ func (s *Server) handleChangePeerID(w http.ResponseWriter, r *http.Request) {
 	s.peers.Rename(oldID, body.NewID)
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerIDChanged, s.remoteIP(r), oldID, map[string]string{"new_id": body.NewID})
+		s.auditLog.Log(audit.ActionPeerIDChanged, s.eventActor(r), oldID, map[string]string{"new_id": body.NewID})
 	}
 
 	if s.eventBus != nil {
@@ -1763,7 +1771,7 @@ func (s *Server) handleSetConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionConfigChanged, s.remoteIP(r), key, nil)
+		s.auditLog.Log(audit.ActionConfigChanged, s.eventActor(r), key, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "key": key})
@@ -2000,13 +2008,23 @@ func (s *Server) handleAddBlocklist(w http.ResponseWriter, r *http.Request) {
 
 	switch body.Type {
 	case "ip":
-		s.blocklist.BlockIP(body.Value, body.Reason)
+		if err := s.blocklist.BlockIP(body.Value, body.Reason); err != nil {
+			writeInternalError(w, err, "BlockIP")
+			return
+		}
 	case "id":
-		s.blocklist.BlockID(body.Value, body.Reason)
+		if err := s.blocklist.BlockID(body.Value, body.Reason); err != nil {
+			writeInternalError(w, err, "BlockID")
+			return
+		}
 	case "cidr":
-		if err := s.blocklist.BlockCIDR(body.Value, body.Reason); err != nil {
+		if _, _, err := net.ParseCIDR(body.Value); err != nil {
 			log.Printf("[API] Invalid CIDR %s: %v", body.Value, err)
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid CIDR notation"})
+			return
+		}
+		if err := s.blocklist.BlockCIDR(body.Value, body.Reason); err != nil {
+			writeInternalError(w, err, "BlockCIDR")
 			return
 		}
 	default:
@@ -2015,7 +2033,7 @@ func (s *Server) handleAddBlocklist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionBlocklistAdd, s.remoteIP(r), body.Value, map[string]string{
+		s.auditLog.Log(audit.ActionBlocklistAdd, s.eventActor(r), body.Value, map[string]string{
 			"type": body.Type, "reason": body.Reason,
 		})
 	}
@@ -2041,7 +2059,7 @@ func (s *Server) handleRemoveBlocklist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionBlocklistRemove, s.remoteIP(r), entry, nil)
+		s.auditLog.Log(audit.ActionBlocklistRemove, s.eventActor(r), entry, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "unblocked", "entry": entry})
@@ -2075,46 +2093,57 @@ func (s *Server) forwardedHeader(r *http.Request, name string) string {
 	return r.Header.Get(name)
 }
 
-// remoteIP extracts the client IP from a request.
-// When TrustProxy is enabled and the direct peer is in TRUSTED_PROXIES,
-// respects X-Forwarded-For and X-Real-IP headers. Otherwise uses RemoteAddr.
+// remoteIP is the client's address. Behind a trusted proxy (TRUST_PROXY
+// and TRUSTED_PROXIES) it is the rightmost X-Forwarded-For entry that is
+// not a trusted proxy (clientaddr.Rightmost), else X-Real-IP; the socket's
+// address otherwise, and when neither header holds an address.
 func (s *Server) remoteIP(r *http.Request) string {
-	if s.cfg != nil && s.cfg.ShouldHonorForwardedHeaders(r.RemoteAddr) {
-		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-			// Use the first (leftmost) IP — the original client
-			client := strings.TrimSpace(xff)
-			if idx := strings.Index(client, ","); idx != -1 {
-				client = strings.TrimSpace(client[:idx])
-			}
-			// Strip optional :port and reject non-IP / port 0.
-			if host, port, err := net.SplitHostPort(client); err == nil {
-				if port != "0" {
-					if ip := net.ParseIP(host); ip != nil {
-						return ip.String()
-					}
-				}
-			} else if ip := net.ParseIP(client); ip != nil {
-				return ip.String()
-			}
-		}
-		if xri := r.Header.Get("X-Real-IP"); xri != "" {
-			client := strings.TrimSpace(xri)
-			if host, port, err := net.SplitHostPort(client); err == nil {
-				if port != "0" {
-					if ip := net.ParseIP(host); ip != nil {
-						return ip.String()
-					}
-				}
-			} else if ip := net.ParseIP(client); ip != nil {
-				return ip.String()
-			}
+	socket := r.RemoteAddr
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		socket = host
+	}
+	if s.cfg == nil || !s.cfg.ShouldHonorForwardedHeaders(r.RemoteAddr) {
+		return socket
+	}
+	if forwarded := clientaddr.Forwarded(r.Header); len(forwarded) > 0 {
+		client := clientaddr.Rightmost(socket, forwarded, func(addr string, _ int) bool {
+			return s.cfg.RemoteAddrIsTrustedProxy(addr)
+		})
+		if ip := forwardedIP(client); ip != "" {
+			return ip
 		}
 	}
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return r.RemoteAddr
+	if ip := forwardedIP(r.Header.Get("X-Real-IP")); ip != "" {
+		return ip
 	}
-	return host
+	return socket
+}
+
+// eventActor names who acted, for a server event: the account the console
+// acts for on an in-process call, else the caller's account or API key
+// (actorFromCtx), else the client's address, where no account acted (a
+// sign-in, a device).
+func (s *Server) eventActor(r *http.Request) string {
+	if actor := actorFromCtx(r); actor != "" {
+		return actor
+	}
+	return s.remoteIP(r)
+}
+
+// forwardedIP is the address of a forwarded entry with or without a port,
+// "" when it is no address or names port 0.
+func forwardedIP(entry string) string {
+	entry = strings.TrimSpace(entry)
+	if host, port, err := net.SplitHostPort(entry); err == nil {
+		if port == "0" {
+			return ""
+		}
+		entry = host
+	}
+	if ip := net.ParseIP(entry); ip != nil {
+		return ip.String()
+	}
+	return ""
 }
 
 // --- Tags Handlers ---
@@ -2164,7 +2193,7 @@ func (s *Server) handleSetPeerTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerTagsUpdated, s.remoteIP(r), id, map[string]string{"tags": tagsStr})
+		s.auditLog.Log(audit.ActionPeerTagsUpdated, s.eventActor(r), id, map[string]string{"tags": tagsStr})
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "updated", "id": id, "tags": tagsStr})
@@ -2206,8 +2235,10 @@ func (s *Server) handlePeersByTag(w http.ResponseWriter, r *http.Request) {
 
 // --- Audit Handler ---
 
-// handleAuditEvents returns recent audit events.
-// GET /api/audit/events?limit=50&action=peer_banned
+// handleAuditEvents returns the server events newest first, those of one
+// action when it is given, from offset on, and how many there are of them
+// (total): the events kept in the database for audit.RetentionDays.
+// GET /api/audit/events?limit=50&offset=0&action=peer_banned
 func (s *Server) handleAuditEvents(w http.ResponseWriter, r *http.Request) {
 	if s.auditLog == nil {
 		writeJSON(w, http.StatusOK, map[string]any{
@@ -2227,17 +2258,26 @@ func (s *Server) handleAuditEvents(w http.ResponseWriter, r *http.Request) {
 		limit = 1000
 	}
 
+	offset := 0
+	if v := r.URL.Query().Get("offset"); v != "" {
+		if n, err := fmt.Sscanf(v, "%d", &offset); err != nil || n != 1 || offset < 0 {
+			offset = 0
+		}
+	}
+
 	action := r.URL.Query().Get("action")
-	var events []audit.Event
-	if action != "" {
-		events = s.auditLog.RecentByAction(audit.Action(action), limit)
-	} else {
-		events = s.auditLog.Recent(limit)
+	events, total, err := s.auditLog.Page(audit.Action(action), limit, offset)
+	if err != nil {
+		writeInternalError(w, err, "audit events")
+		return
+	}
+	if events == nil && action != "" {
+		events = []audit.Event{}
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"enabled": true,
-		"total":   s.auditLog.Total(),
+		"total":   total,
 		"count":   len(events),
 		"events":  events,
 	})
@@ -2392,7 +2432,7 @@ func (s *Server) handleWakeOnLan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUpdated, s.remoteIP(r), id, map[string]string{"action": "wol", "mac": mac})
+		s.auditLog.Log(audit.ActionPeerUpdated, s.eventActor(r), id, map[string]string{"action": "wol", "mac": mac})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "mac": mac})
 }
@@ -2539,7 +2579,7 @@ func (s *Server) handleSaveAccessPolicy(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUpdated, s.remoteIP(r), id, map[string]string{
+		s.auditLog.Log(audit.ActionPeerUpdated, s.eventActor(r), id, map[string]string{
 			"action":     "access_policy_updated",
 			"unattended": fmt.Sprintf("%v", body.UnattendedEnabled),
 			"schedule":   fmt.Sprintf("%v", body.ScheduleEnabled),
@@ -2562,7 +2602,7 @@ func (s *Server) handleDeleteAccessPolicy(w http.ResponseWriter, r *http.Request
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUpdated, s.remoteIP(r), id, map[string]string{
+		s.auditLog.Log(audit.ActionPeerUpdated, s.eventActor(r), id, map[string]string{
 			"action": "access_policy_deleted",
 		})
 	}

@@ -717,6 +717,10 @@ func (pg *PostgresDB) Migrate() error {
 			raw_json TEXT NOT NULL DEFAULT '{}',
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
+		postgresBlocklistTable,
+		postgresServerEventsTable,
+		serverEventsCreatedIndex,
+		serverEventsActionIndex,
 	}
 
 	for _, stmt := range statements {

@@ -80,7 +80,7 @@ func (s *Server) handleSetOrgPeerCredential(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionOrgPeerCredentialSet, s.remoteIP(r), peerID, map[string]string{
+		s.auditLog.Log(audit.ActionOrgPeerCredentialSet, s.eventActor(r), peerID, map[string]string{
 			"org_id": orgID,
 			"actor":  username,
 			"key_id": keyID,
@@ -106,7 +106,7 @@ func (s *Server) handleClearOrgPeerCredential(w http.ResponseWriter, r *http.Req
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionOrgPeerCredentialClear, s.remoteIP(r), peerID, map[string]string{
+		s.auditLog.Log(audit.ActionOrgPeerCredentialClear, s.eventActor(r), peerID, map[string]string{
 			"org_id": orgID,
 			"actor":  username,
 			"action": "clear",
@@ -173,7 +173,7 @@ func (s *Server) handleGetPeerConnectPassword(w http.ResponseWriter, r *http.Req
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionOrgPeerCredentialFetch, s.remoteIP(r), peerID, map[string]string{
+		s.auditLog.Log(audit.ActionOrgPeerCredentialFetch, s.eventActor(r), peerID, map[string]string{
 			"org_id": orgID,
 			"actor":  username,
 			"action": "fetch",

@@ -454,7 +454,7 @@ func (s *Server) handleCDAPDelegateCreate(w http.ResponseWriter, r *http.Request
 	log.Printf("[cdap-api] Delegation created: %s granted %s role=%s on device=%s by %s", delegationID, body.Grantee, body.Role, body.DeviceID, grantor)
 
 	if s.auditLog != nil {
-		s.auditLog.Log("cdap_delegation_created", s.remoteIP(r), grantor, map[string]string{
+		s.auditLog.Log("cdap_delegation_created", s.eventActor(r), grantor, map[string]string{
 			"delegation_id": delegationID,
 			"grantee":       body.Grantee,
 			"device_id":     body.DeviceID,
@@ -492,7 +492,7 @@ func (s *Server) handleCDAPDelegateRevoke(w http.ResponseWriter, r *http.Request
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log("cdap_delegation_revoked", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("cdap_delegation_revoked", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"delegation_id": id,
 		})
 	}

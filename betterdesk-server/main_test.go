@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/audit"
 	"github.com/unitronix/betterdesk-server/config"
 	"github.com/unitronix/betterdesk-server/db"
 )
@@ -237,5 +238,62 @@ func TestReloadKeepsPanelEnrollmentModeOverEnvironmentDefault(t *testing.T) {
 	}
 	if cfg.EnrollmentMode != config.EnrollmentModeLocked {
 		t.Fatalf("enrollment mode after reload = %q, want the panel's %q", cfg.EnrollmentMode, config.EnrollmentModeLocked)
+	}
+}
+
+// TestBlocklistOfTheStartHoldsTheStoredBans: the blocklist main starts
+// with has the bans kept in the database, such as a revoked device's
+// (L127).
+func TestBlocklistOfTheStartHoldsTheStoredBans(t *testing.T) {
+	database, err := db.OpenSQLite(filepath.Join(t.TempDir(), "db_v2.sqlite3"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	if err := database.Migrate(); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SaveBlocklistEntry(&db.BlocklistEntry{Kind: "id", Value: "123456789", Reason: "revoked via panel"}); err != nil {
+		t.Fatal(err)
+	}
+	blocklist, err := openBlocklist("", database)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !blocklist.IsIDBlocked("123456789") {
+		t.Fatal("the stored ban is not in the blocklist of the start")
+	}
+}
+
+// TestInitialAdminPasswordKeepsThePasswordRule: an INIT_ADMIN_PASS under
+// 8 characters is not given to the first account (L94).
+func TestInitialAdminPasswordKeepsThePasswordRule(t *testing.T) {
+	for given, want := range map[string]string{"": "", "sixsix7": "", "alllower": "alllower", "Long-Pass-1": "Long-Pass-1"} {
+		if got := initialAdminPassword(given); got != want {
+			t.Errorf("initialAdminPassword(%q) = %q, want %q", given, got, want)
+		}
+	}
+}
+
+// TestServerEventsOutliveARestart: the event log main starts with keeps
+// its events in the database, so the next start reads them (L91).
+func TestServerEventsOutliveARestart(t *testing.T) {
+	database, err := db.OpenSQLite(filepath.Join(t.TempDir(), "db_v2.sqlite3"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	if err := database.Migrate(); err != nil {
+		t.Fatal(err)
+	}
+	first := openAuditLog("", database)
+	first.Log(audit.ActionAuthLoginFailed, "203.0.113.7", "alice", nil)
+	if err := first.Close(); err != nil {
+		t.Fatal(err)
+	}
+	next := openAuditLog("", database)
+	defer next.Close()
+	if events := next.Recent(5); len(events) != 1 || events[0].Target != "alice" {
+		t.Fatalf("after a restart: %+v", events)
 	}
 }

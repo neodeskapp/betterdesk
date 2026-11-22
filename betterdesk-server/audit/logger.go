@@ -1,6 +1,7 @@
 // Package audit provides structured audit logging for admin-visible operations.
 // Each event is recorded with a timestamp, actor, action type, and details.
-// Events are stored in memory (ring buffer) and optionally written to a file.
+// Events are kept in the database for RetentionDays (UseStore), or in
+// memory (ring buffer) without one, and optionally written to a file.
 package audit
 
 import (
@@ -83,7 +84,9 @@ type Event struct {
 }
 
 // Logger is the audit event logger.
-// It maintains a ring buffer of recent events and optionally writes to a file.
+// With a store it queues events for a writer that keeps them in the
+// database; without one it maintains a ring buffer of recent events. It
+// optionally writes to a file.
 type Logger struct {
 	mu       sync.RWMutex
 	events   []Event
@@ -92,6 +95,14 @@ type Logger struct {
 	total    int64
 	file     *os.File
 	filePath string
+
+	// qmu guards the store and the queue: Log and the readers send under
+	// the read lock, Close closes the queue under the write lock.
+	qmu        sync.RWMutex
+	store      Store
+	queue      chan queued
+	closed     bool
+	writerDone chan struct{}
 }
 
 const defaultMaxEvents = 10000
@@ -133,10 +144,14 @@ func (l *Logger) Log(action Action, actor, target string, details map[string]str
 		Details:   details,
 	}
 
+	stored := l.enqueue(event)
+
 	l.mu.Lock()
-	l.events[l.cursor] = event
-	l.cursor = (l.cursor + 1) % l.maxSize
-	l.total++
+	if !stored {
+		l.events[l.cursor] = event
+		l.cursor = (l.cursor + 1) % l.maxSize
+		l.total++
+	}
 
 	// Write to file if configured (inside lock to prevent interleaved writes)
 	if l.file != nil {
@@ -177,61 +192,82 @@ func clampRecentLimit(n int) int {
 	return n
 }
 
-// Recent returns the most recent n events (newest first).
-func (l *Logger) Recent(n int) []Event {
+// Page returns the events newest first, those of action when it is not
+// "", skipping offset and at most limit (up to 500), and how many there
+// are of them: the stored ones with a store, else the ones in memory (all
+// logged since start without an action).
+func (l *Logger) Page(action Action, limit, offset int) ([]Event, int64, error) {
+	limit = clampRecentLimit(limit)
+	if offset < 0 {
+		offset = 0
+	}
+	if store := l.storeOf(); store != nil {
+		return storedPage(store, action, limit, offset)
+	}
+
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-
-	n = clampRecentLimit(n)
+	if action == "" && limit == 0 {
+		return nil, l.total, nil
+	}
 	count := int(l.total)
 	if count > l.maxSize {
 		count = l.maxSize
 	}
-	if n > count {
-		n = count
+	var events []Event
+	matching := int64(0)
+	for i := 0; i < count; i++ {
+		e := l.events[(l.cursor-1-i+l.maxSize)%l.maxSize]
+		if action != "" && e.Action != action {
+			continue
+		}
+		matching++
+		if matching > int64(offset) && len(events) < limit {
+			events = append(events, e)
+		}
 	}
-	if n <= 0 {
-		return nil
+	if action == "" {
+		matching = l.total
 	}
+	return events, matching, nil
+}
 
-	result := make([]Event, n)
-	for i := 0; i < n; i++ {
-		idx := (l.cursor - 1 - i + l.maxSize) % l.maxSize
-		result[i] = l.events[idx]
+// Recent returns the most recent n events (newest first). A store that
+// fails gives none, with a log line.
+func (l *Logger) Recent(n int) []Event {
+	events, _, err := l.Page("", n, 0)
+	if err != nil {
+		log.Printf("[audit] reading the server events: %v", err)
 	}
-	return result
+	return events
 }
 
 // RecentByAction returns the most recent n events filtered by action type.
 func (l *Logger) RecentByAction(action Action, n int) []Event {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
-
-	n = clampRecentLimit(n)
-	count := int(l.total)
-	if count > l.maxSize {
-		count = l.maxSize
+	events, _, err := l.Page(action, n, 0)
+	if err != nil {
+		log.Printf("[audit] reading the server events: %v", err)
 	}
-
-	result := make([]Event, 0, n)
-	for i := 0; i < count && len(result) < n; i++ {
-		idx := (l.cursor - 1 - i + l.maxSize) % l.maxSize
-		if l.events[idx].Action == action {
-			result = append(result, l.events[idx])
-		}
+	if events == nil {
+		events = []Event{}
 	}
-	return result
+	return events
 }
 
-// Total returns the total number of events logged since start.
+// Total returns the number of events: the stored ones with a store, else
+// the ones logged since start.
 func (l *Logger) Total() int64 {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
-	return l.total
+	_, total, err := l.Page("", 0, 0)
+	if err != nil {
+		log.Printf("[audit] counting the server events: %v", err)
+	}
+	return total
 }
 
-// Close flushes and closes the audit log file.
+// Close stores what is queued, stops the writer and closes the audit log
+// file.
 func (l *Logger) Close() error {
+	l.stopWriter()
 	if l.file != nil {
 		return l.file.Close()
 	}

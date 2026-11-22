@@ -71,9 +71,6 @@ var routes = []struct{ method, path, body string }{
 	{"PUT", "/api/settings/backup/schedule", "{}"},
 	{"POST", "/api/settings/backup/schedule/run", "{}"},
 	{"POST", "/api/settings/backup/destination/test", "{}"},
-	{"GET", "/api/settings/backup/smb", ""},
-	{"PUT", "/api/settings/backup/smb", "{}"},
-	{"POST", "/api/settings/backup/smb/test", "{}"},
 	{"POST", "/api/settings/restore", "{}"},
 	{"GET", "/api/settings/backup/retention", ""},
 	{"PUT", "/api/settings/backup/retention", `{"count":1}`},
@@ -530,22 +527,23 @@ func TestSchedule(t *testing.T) {
 	}
 }
 
-func TestSMB(t *testing.T) {
+// The network share login is gone: backups go to a folder, where the
+// operating system mounts a share. Its three routes are unknown paths, and
+// a save of the schedule stores no share (L122).
+func TestNoNetworkShareLogin(t *testing.T) {
 	w := newWorld(t, nil, nil)
 	admin := w.As("admin")
-	if got := admin.Do("GET", "/api/settings/backup/smb", "").Body; got != `{"success":true,"data":{"password":""}}` {
-		t.Errorf("empty: %s", got)
-	}
-	res := admin.Do("PUT", "/api/settings/backup/smb", `{"host":"nas","share":"b","password":"hunter2"}`)
-	if res.Body != `{"success":true,"data":{"host":"nas","share":"b","domain":"","username":"","password":"********","mountPath":""}}` {
-		t.Errorf("save: %s", res.Body)
-	}
-	if res := admin.Do("PUT", "/api/settings/backup/smb", `{"host":"n a s","share":"b"}`); res.Status != 400 || res.Body != `{"success":false,"error":"SMB host contains invalid characters"}` {
-		t.Errorf("bad host: %d %s", res.Status, res.Body)
-	}
-	for _, path := range []string{"/api/settings/backup/smb", "/api/settings/backup/schedule"} {
-		if strings.Contains(admin.Do("GET", path, "").Body, "hunter2") {
-			t.Errorf("%s shows the password", path)
+	for _, r := range []struct{ method, path, body string }{
+		{"GET", "/api/settings/backup/smb", ""},
+		{"PUT", "/api/settings/backup/smb", `{"host":"nas","share":"b","password":"hunter2"}`},
+		{"POST", "/api/settings/backup/smb/test", `{"host":"nas","share":"b","password":"hunter2"}`},
+	} {
+		if res := admin.Do(r.method, r.path, r.body); res.Status != http.StatusNotFound {
+			t.Errorf("%s %s: %d %s", r.method, r.path, res.Status, shown(res))
 		}
+	}
+	var n int
+	if err := w.DB.QueryRow(context.Background(), `SELECT COUNT(*) FROM settings WHERE key = 'scheduled_backup_smb'`).Scan(&n); err != nil || n != 0 {
+		t.Errorf("stored shares: %d %v", n, err)
 	}
 }

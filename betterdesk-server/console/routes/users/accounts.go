@@ -9,8 +9,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
@@ -63,19 +63,7 @@ func isSessionAccount(r *http.Request, id int64) bool {
 var errRoleAboveOwn = say(http.StatusForbidden, "Cannot assign a role higher than your own")
 
 // errPasswordTooLong is the reply to a password the sign-in would refuse.
-var errPasswordTooLong = say(http.StatusBadRequest, string(authn.ErrPasswordTooLong))
-
-// weakPassword is the reply to a password that rates weak, with what it
-// lacks.
-func weakPassword(rating authn.PasswordStrength) error {
-	return &reply{write: func(w http.ResponseWriter, r *http.Request) {
-		answer(w, r, http.StatusBadRequest, struct {
-			Success  bool     `json:"success"`
-			Error    string   `json:"error"`
-			Feedback []string `json:"feedback"`
-		}{Error: kit.T(r, "users.weak_password", nil), Feedback: rating.Feedback})
-	}}
-}
+var errPasswordTooLong = say(http.StatusBadRequest, auth.ErrPasswordTooLong.Error())
 
 // sayKey is the reply {"success":false,"error":<text of key>}.
 func sayKey(r *http.Request, status int, key string) error {
@@ -294,18 +282,8 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if groups == nil {
 		groups = []string{}
 	}
-	rating, err := strength(password)
-	if err != nil {
+	if err := passwordRefusal(r, password); err != nil {
 		return nil, err
-	}
-	if rating.Strength == "weak" {
-		return nil, weakPassword(rating)
-	}
-	if password.IsString() && rating.TooShort() {
-		return nil, sayKey(r, http.StatusBadRequest, "users.password_too_short")
-	}
-	if password.IsString() && rating.TooLong() {
-		return nil, errPasswordTooLong
 	}
 	assigned := "viewer"
 	if validRole(role) {
@@ -465,19 +443,10 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	}
 	hash := ""
 	if password.Truthy() {
-		rating, err := strength(password)
-		if err != nil {
+		if err := passwordRefusal(r, password); err != nil {
 			return nil, err
 		}
-		if rating.Strength == "weak" {
-			return nil, weakPassword(rating)
-		}
-		if password.IsString() && rating.TooShort() {
-			return nil, sayKey(r, http.StatusBadRequest, "users.password_too_short")
-		}
-		if password.IsString() && rating.TooLong() {
-			return nil, errPasswordTooLong
-		}
+		var err error
 		if hash, err = h.hash(ctx, password); err != nil {
 			return nil, err
 		}
@@ -702,21 +671,8 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		failKey(w, r, http.StatusBadRequest, "users.password_required")
 		return
 	}
-	rating, err := strength(password)
-	if err != nil {
-		h.serverError(w, r, "Reset password error:", err)
-		return
-	}
-	if rating.Strength == "weak" {
-		sent(w, r, weakPassword(rating))
-		return
-	}
-	if password.IsString() && rating.TooShort() {
-		failKey(w, r, http.StatusBadRequest, "users.password_too_short")
-		return
-	}
-	if password.IsString() && rating.TooLong() {
-		sent(w, r, errPasswordTooLong)
+	if refusal := passwordRefusal(r, password); refusal != nil {
+		sent(w, r, refusal)
 		return
 	}
 	hash, err := h.hash(ctx, password)

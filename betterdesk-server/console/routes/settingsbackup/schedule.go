@@ -82,40 +82,6 @@ func (h *handlers) testDestination(w http.ResponseWriter, r *http.Request) {
 	writeData(w, r, branding.Stringify(data))
 }
 
-// smb answers GET /api/settings/backup/smb with the password masked.
-func (h *handlers) smb(w http.ResponseWriter, r *http.Request) {
-	data, err := h.scheduled.GetSMB(r.Context())
-	if err != nil {
-		kit.Fail(w, r, http.StatusInternalServerError, errText(err))
-		return
-	}
-	writeData(w, r, data)
-}
-
-// saveSMB answers PUT /api/settings/backup/smb.
-func (h *handlers) saveSMB(w http.ResponseWriter, r *http.Request) {
-	data, err := h.scheduled.SaveSMB(r.Context(), body(r))
-	if err != nil {
-		kit.Fail(w, r, http.StatusBadRequest, errText(err))
-		return
-	}
-	writeData(w, r, data)
-}
-
-// testSMB answers POST /api/settings/backup/smb/test: it saves the share,
-// then lists it.
-func (h *handlers) testSMB(w http.ResponseWriter, r *http.Request) {
-	target, err := h.scheduled.TestSMB(r.Context(), body(r))
-	if err != nil {
-		kit.Fail(w, r, http.StatusBadRequest, errText(err))
-		return
-	}
-	data := branding.NewObject()
-	data.Set("valid", true)
-	data.Set("target", target)
-	writeData(w, r, branding.Stringify(data))
-}
-
 type retentionData struct {
 	Count  float64 `json:"count"`
 	Source string  `json:"source,omitempty"`

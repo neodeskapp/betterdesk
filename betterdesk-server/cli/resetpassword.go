@@ -118,10 +118,11 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 	if !ok {
 		return usage("")
 	}
-	// Checked before the database is opened, so a refused password
-	// leaves nothing behind
-	if utf16Length(password) < 6 {
-		fmt.Fprintln(e, "Password must be at least 6 characters")
+	// The password rule of every path (auth.CheckNewPassword), checked
+	// before the database is opened, so a refused password leaves nothing
+	// behind
+	if err := auth.CheckNewPassword(password); err != nil {
+		fmt.Fprintln(e, err.Error())
 		return 1
 	}
 

@@ -34,3 +34,31 @@ func TestFirstAdminLogsTheCredentialsPath(t *testing.T) {
 		}
 	})
 }
+
+// TestForcedAdminPasswordKeepsThePasswordRule: an installer's forced
+// update does not write a DEFAULT_ADMIN_PASSWORD under 8 characters over
+// the admin's password, and the log says why (L94).
+func TestForcedAdminPasswordKeepsThePasswordRule(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		s, _, logs := testService(t, db, func(o *Options) {
+			o.Settings = Settings{DefaultAdminUsername: "admin", DefaultAdminPassword: "short7!", ForcePasswordUpdate: true}
+		})
+		addUser(t, s, "admin", "Long-Pass-1", "admin", "local")
+		before, err := getUserByUsername(ctx, db, "admin")
+		if err != nil || before == nil {
+			t.Fatalf("admin: %v, %v", before, err)
+		}
+		if _, err := s.EnsureDefaultAdmin(ctx); err != nil {
+			t.Fatal(err)
+		}
+		after, _ := getUserByUsername(ctx, db, "admin")
+		if after.PasswordHash.String != before.PasswordHash.String {
+			t.Fatal("a forced update wrote the 7-character password")
+		}
+		want := []string{"error", "[AUTH] The configured admin password is not used: Password must be at least 8 characters"}
+		if lines := logs.take(); !slices.ContainsFunc(lines, func(line []string) bool { return slices.Equal(line, want) }) {
+			t.Errorf("no line %q among %q", want[1], lines)
+		}
+	})
+}

@@ -78,6 +78,9 @@ func importAllTables(ctx context.Context, db *store.DB, dump any, now func() tim
 		if err != nil {
 			return res, fmt.Errorf("columns of %s: %w", e.key, err)
 		}
+		if e.key == "settings" {
+			rows = withoutShareLogin(rows)
+		}
 		jobs = append(jobs, &tableJob{name: e.key, cols: cols, rows: rows})
 	}
 
@@ -113,6 +116,19 @@ func importAllTables(ctx context.Context, db *store.DB, dump any, now func() tim
 		res.Restored = append(res.Restored, j.name)
 	}
 	return res, nil
+}
+
+// withoutShareLogin is the dumped rows of settings without the network
+// share login of an older console (shareLoginSetting).
+func withoutShareLogin(rows []any) []any {
+	out := make([]any, 0, len(rows))
+	for _, row := range rows {
+		if key, _ := prop(row, "key").(string); key == shareLoginSetting {
+			continue
+		}
+		out = append(out, row)
+	}
+	return out
 }
 
 // tableJob is a table of the dump to replace: its columns, the dumped

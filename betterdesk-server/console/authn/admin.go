@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -188,11 +189,14 @@ func (s *Service) waitForDockerBootstrapAdmin(ctx context.Context) (bool, error)
 //
 // The name is Settings.DefaultAdminUsername. The password is
 // Settings.DefaultAdminPassword, else the one in a .admin_credentials
-// file.
+// file. The server makes the first account before the console starts,
+// from INIT_ADMIN_PASS under the password rule (main.go), so this creates
+// one only on a database the server did not set up.
 //
 // When there are users it creates nothing. If the password is known and
 // an account of that name exists, its hash is overwritten only when an
-// installer asked for it (checkForcePasswordUpdate).
+// installer asked for it (checkForcePasswordUpdate) and the password keeps
+// the password rule (auth.CheckNewPassword).
 //
 // When there are none it creates the account with the role "admin". With
 // no password known it first waits for the signal server's credentials
@@ -301,6 +305,9 @@ func (s *Service) reviewExistingAdmin(ctx context.Context, username, password st
 		return err
 	}
 	if force {
+		if s.keepingRule(password) == "" {
+			return nil
+		}
 		s.log.Info("[AUTH] Force password update requested — updating admin password")
 		hash, err := s.HashPassword(ctx, password)
 		if err != nil {
@@ -360,6 +367,20 @@ func (s *Service) removeFirstPassword(username string) {
 		}
 		s.log.Info("[AUTH] Removed the first password in " + path + " after " + username + " changed it")
 	}
+}
+
+// keepingRule is password when it keeps the password rule
+// (auth.CheckNewPassword), else "" with an error in the log, so the admin
+// account never gets a configured password that the rule refuses.
+func (s *Service) keepingRule(password string) string {
+	if password == "" {
+		return ""
+	}
+	if err := auth.CheckNewPassword(password); err != nil {
+		s.log.Error("[AUTH] The configured admin password is not used: " + err.Error())
+		return ""
+	}
+	return password
 }
 
 // writeCredentials writes the made-up password where the user and the

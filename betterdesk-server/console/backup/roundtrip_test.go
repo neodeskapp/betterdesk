@@ -550,6 +550,18 @@ var fixtureTables = map[string]map[string][]string{
 	},
 }
 
+// withoutShareLoginRow is the settings rows Node restored without the
+// scheduled backup's network share login, which Go leaves out (L123).
+func withoutShareLoginRow(rows []string) []string {
+	var out []string
+	for _, row := range rows {
+		if !strings.Contains(row, shareLoginSetting) {
+			out = append(out, row)
+		}
+	}
+	return out
+}
+
 // Archives the Node console made, restored by Go: the database must hold
 // what the Node console's own restore put there, table by table, but for
 // refusedByNodeOnly and fixtureTables.
@@ -586,6 +598,9 @@ func TestNodeArchiveFixtures(t *testing.T) {
 			for table, rows := range want.Tables {
 				if fixed, ok := fixtureTables[dialect][table]; ok {
 					rows = fixed
+				}
+				if table == "settings" {
+					rows = withoutShareLoginRow(rows)
 				}
 				if strings.Join(rows, "\n") != strings.Join(got[table], "\n") {
 					t.Errorf("table %s:\n  got  %q\n  want %q", table, got[table], rows)

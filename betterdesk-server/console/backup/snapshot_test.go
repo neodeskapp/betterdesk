@@ -182,51 +182,41 @@ func TestTheSnapshotHasNoSMTPPassword(t *testing.T) {
 	})
 }
 
-// BK16: the scheduled backup's SMB password stays out of the snapshot as
-// the SMTP password does, and a restore keeps the stored one.
-func TestTheSnapshotHasNoSMBPassword(t *testing.T) {
+// The network share login of an older console, with its password in
+// clear, never comes back: a settings file that holds it restores
+// everything else, and so does a full backup whose dump holds the row
+// (L123).
+func TestOlderShareLoginIsLeftOut(t *testing.T) {
 	dialects(t, func(t *testing.T, dialect string) {
+		ctx := context.Background()
 		in := newInstall(t, dialect)
-		setValue(t, in, "scheduled_backup_smb", `{"host":"nas","share":"backups$","domain":"WORK","username":"backup","password":"hunter2","mountPath":"/mnt/nas"}`)
 		s := in.snapshotService(t)
-		snap, err := s.CreateBackup(context.Background())
-		if err != nil {
-			t.Fatal(err)
-		}
-		text, err := SnapshotJSON(snap)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if strings.Contains(string(text), "hunter2") {
-			t.Fatal("the snapshot holds the SMB password")
-		}
-		share := snap.Object("console").Object("settings").Str("scheduled_backup_smb")
-		if share != `{"host":"nas","share":"backups$","domain":"WORK","username":"backup","mountPath":"/mnt/nas"}` {
-			t.Errorf("SMB share in the snapshot: %s", share)
-		}
-
-		setValue(t, in, "scheduled_backup_smb", `{"host":"old","share":"s","password":"newer"}`)
-		if res := restoreSettings(t, s, string(text)); len(res.Warnings) != 0 {
+		older := `{"_format":"betterdesk-backup","_version":1,"console":{"settings":{"scheduled_backup_smb":"{\"host\":\"h\",\"password\":\"from-the-file\"}","backup_retention_count":"4"}}}`
+		if res := restoreSettings(t, s, older); len(res.Warnings) != 0 || !slices.Contains(res.Restored, "settings") {
 			t.Fatalf("restore: %+v", res)
 		}
-		if got := storedValue(t, in, "scheduled_backup_smb"); got != `{"host":"nas","share":"backups$","domain":"WORK","username":"backup","mountPath":"/mnt/nas","password":"newer"}` {
-			t.Errorf("after the restore: %s", got)
+		if got := storedValue(t, in, "backup_retention_count"); got != "4" {
+			t.Errorf("the other setting: %q", got)
+		}
+		var n int
+		if err := in.db.QueryRow(ctx, `SELECT COUNT(*) FROM settings WHERE key = 'scheduled_backup_smb'`).Scan(&n); err != nil || n != 0 {
+			t.Errorf("share logins after the settings file: %d %v", n, err)
 		}
 
-		older := `{"_format":"betterdesk-backup","_version":1,"console":{"settings":{"scheduled_backup_smb":"{\"host\":\"h\",\"password\":\"from-the-file\"}"}}}`
-		restoreSettings(t, s, older)
-		if got := storedValue(t, in, "scheduled_backup_smb"); got != `{"host":"h","password":"from-the-file"}` {
-			t.Errorf("after an older snapshot: %s", got)
-		}
-
-		// a member named like the other setting's secret is no secret here
-		setValue(t, in, "scheduled_backup_smb", `{"host":"nas","pass":"x"}`)
-		snap, err = s.CreateBackup(context.Background())
+		setValue(t, in, "scheduled_backup_smb", `{"host":"nas","password":"hunter2"}`)
+		archive, _, err := in.service(t, "x").CreateFullBackup(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got := snap.Object("console").Object("settings").Str("scheduled_backup_smb"); got != `{"host":"nas","pass":"x"}` {
-			t.Errorf("SMB share with a member pass: %s", got)
+		mustExec(t, in.db, `DELETE FROM settings WHERE key = 'scheduled_backup_smb'`)
+		if res, err := in.service(t, "x").RestoreFullBackup(ctx, archive, RestoreOptions{Database: true}); err != nil || len(res.Warnings) != 0 {
+			t.Fatalf("full restore: %+v %v", res, err)
+		}
+		if err := in.db.QueryRow(ctx, `SELECT COUNT(*) FROM settings WHERE key = 'scheduled_backup_smb'`).Scan(&n); err != nil || n != 0 {
+			t.Errorf("share logins after the full restore: %d %v", n, err)
+		}
+		if got := storedValue(t, in, "backup_retention_count"); got != "4" {
+			t.Errorf("the other setting after the full restore: %q", got)
 		}
 	})
 }

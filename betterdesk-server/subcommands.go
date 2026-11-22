@@ -57,6 +57,10 @@ var subcommands = map[string]subcommand{
 		usage: "cert --out DIR [--host NAME]... [--days N] [--force]   make an install's self-signed certificate",
 		run:   withEnv(cli.Cert),
 	},
+	"verify-release": {
+		usage: verifyReleaseUsage,
+		run:   runVerifyRelease,
+	},
 }
 
 // withEnv runs a command of package cli with the process's environment

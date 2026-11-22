@@ -130,10 +130,7 @@
 	});
 	const rules = $derived(passwordRules(password.values.next));
 	const RULE_LABEL: Record<string, string> = {
-		length: 'settings.req_length',
-		uppercase: 'settings.req_uppercase',
-		lowercase: 'settings.req_lowercase',
-		number: 'settings.req_number'
+		length: 'settings.req_length'
 	};
 
 	/* ── Two-factor sign-in ── */

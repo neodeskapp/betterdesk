@@ -2,8 +2,8 @@
   Server events tab: what the BetterDesk server recorded itself, 25 a page,
   filtered by kind on the server. Above the table, events per day for the
   last 14 days, drawn only when the loaded events reach back that far (the
-  server keeps its events since it last started); otherwise one sentence
-  says which range they cover.
+  server keeps its events for 90 days); otherwise one sentence says which
+  range they cover.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -57,8 +57,8 @@
 				action: filter || undefined
 			});
 			events = out.events.map((e, i) => ({ ...e, key: `${pageNo}-${i}` }));
-			// The server reports the unfiltered total even when filtering: only trusted without a filter
-			total = filter ? null : out.total;
+			// The server counts the events of the filter
+			total = out.total;
 		} catch {
 			loadError = t('security_audit.events_load_failed');
 		} finally {

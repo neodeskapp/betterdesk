@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -452,110 +451,6 @@ func TestDestinationBelowProc(t *testing.T) {
 		}
 	case <-time.After(10 * time.Second):
 		t.Fatal("no answer")
-	}
-}
-
-func TestSMBPasswordIsNeverAnswered(t *testing.T) {
-	s, _, _, _ := newTestService(t)
-	ctx := context.Background()
-	saved, err := s.SaveSMB(ctx, mustParse(t, `{"host":"nas","share":"b","username":"u","password":"hunter2"}`))
-	if err != nil || strings.Contains(saved, "hunter2") || !strings.Contains(saved, `"password":"********"`) {
-		t.Fatalf("save answered %s %v", saved, err)
-	}
-	got, err := s.GetSMB(ctx)
-	if err != nil || strings.Contains(got, "hunter2") || got != `{"host":"nas","share":"b","domain":"","username":"u","password":"********","mountPath":""}` {
-		t.Errorf("get answered %s %v", got, err)
-	}
-	// the mask keeps the stored password; the test then uses it
-	if _, err := s.SaveSMB(ctx, mustParse(t, `{"host":"nas","share":"b","username":"u","password":"********"}`)); err != nil {
-		t.Fatal(err)
-	}
-	stored, _ := s.getSetting(ctx, SMBKey)
-	if !strings.Contains(stored.String, `"password":"hunter2"`) {
-		t.Errorf("stored %s", stored.String)
-	}
-	var ran Command
-	s.o.Run = func(_ context.Context, c Command) (int, error) { ran = c; return 0, nil }
-	f := false
-	s.o.Windows = &f
-	target, err := s.TestSMB(ctx, mustParse(t, `{"host":"nas","share":"b","username":"u","password":"********"}`))
-	if err != nil || target != "//nas/b" || strings.Join(ran.Args, " ") != "//nas/b -U u -c dir" || strings.Join(ran.Env, " ") != "PASSWD=hunter2" {
-		t.Errorf("test: %q %v %q %d variables", target, err, ran.Args, len(ran.Env))
-	}
-	// an empty password clears it
-	if out, _ := s.SaveSMB(ctx, mustParse(t, `{"host":"nas","share":"b","password":""}`)); !strings.Contains(out, `"password":""`) {
-		t.Errorf("cleared: %s", out)
-	}
-}
-
-func TestSMBTimeout(t *testing.T) {
-	s, _, _, _ := newTestService(t)
-	s.o.SMBTimeout = 20 * time.Millisecond
-	f := false
-	s.o.Windows = &f
-	s.o.Run = func(ctx context.Context, _ Command) (int, error) {
-		<-ctx.Done()
-		return -1, ctx.Err()
-	}
-	if _, err := s.TestSMBConnection(context.Background(), mustParse(t, `{"host":"nas","share":"b"}`)); err == nil || err.Error() != "SMB connection test timed out" {
-		t.Errorf("timeout: %v", err)
-	}
-}
-
-// BK10: the SMB test hands the password to smbclient in PASSWD and to
-// net use on stdin, never in an argument, where every local user could
-// read it in the process list.
-func TestSMBPasswordStaysOffTheCommandLine(t *testing.T) {
-	ctx := context.Background()
-	for _, windows := range []bool{false, true} {
-		var ran []Command
-		s := New(Options{Windows: &windows, Run: func(_ context.Context, c Command) (int, error) {
-			ran = append(ran, c)
-			return 0, nil
-		}})
-		if _, err := s.TestSMBConnection(ctx, mustParse(t, `{"host":"nas","share":"b","domain":"dom","username":"u","password":"hunter2"}`)); err != nil {
-			t.Fatalf("windows %v: %v", windows, err)
-		}
-		for _, c := range ran {
-			if strings.Contains(strings.Join(c.Args, " "), "hunter2") {
-				t.Errorf("windows %v: %s has the password in its arguments", windows, c.Name)
-			}
-		}
-		first := ran[0]
-		if !windows {
-			if first.Name != "smbclient" || strings.Join(first.Args, " ") != `//nas/b -U dom\u -c dir` ||
-				len(first.Env) != 1 || first.Env[0] != "PASSWD=hunter2" || first.Stdin != "" {
-				t.Errorf("smbclient: %q, %d variables, %d bytes on stdin", first.Args, len(first.Env), len(first.Stdin))
-			}
-			continue
-		}
-		if len(ran) != 2 || first.Name != "net" || strings.Join(first.Args, " ") != `use \\nas\b * /user:dom\u` ||
-			first.Stdin != "hunter2\r\n" || len(first.Env) != 0 {
-			t.Errorf("net use: %q, %d variables, %d bytes on stdin", first.Args, len(first.Env), len(first.Stdin))
-		}
-		if strings.Join(ran[1].Args, " ") != `use \\nas\b /delete /y` || ran[1].Stdin != "" {
-			t.Errorf("net use /delete: %q", ran[1].Args)
-		}
-	}
-}
-
-// The program gets the variables on top of the console's environment and
-// reads what Stdin holds.
-func TestRunProgramPassesEnvironmentAndStdin(t *testing.T) {
-	if _, err := exec.LookPath("sh"); err != nil {
-		t.Skip("needs sh")
-	}
-	t.Setenv("BK10_INHERITED", "kept")
-	script := `test "$PASSWD" = "pa ss" && test "$BK10_INHERITED" = kept && read line && test "$line" = "from stdin"`
-	ctx := context.Background()
-	if code, err := runProgram(ctx, Command{Name: "sh", Args: []string{"-c", script}, Env: []string{"PASSWD=pa ss"}, Stdin: "from stdin\n"}); err != nil || code != 0 {
-		t.Errorf("exit %d %v", code, err)
-	}
-	if code, err := runProgram(ctx, Command{Name: "sh", Args: []string{"-c", script}, Stdin: "from stdin\n"}); err != nil || code == 0 {
-		t.Errorf("without PASSWD: exit %d %v", code, err)
-	}
-	if code, err := runProgram(ctx, Command{Name: "sh", Args: []string{"-c", script}, Env: []string{"PASSWD=pa ss"}}); err != nil || code == 0 {
-		t.Errorf("without stdin: exit %d %v", code, err)
 	}
 }
 

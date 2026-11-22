@@ -2,12 +2,11 @@ package users
 
 import (
 	"errors"
-	"math"
 	"net/http"
 	"regexp"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/devicegroups"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
@@ -247,82 +246,18 @@ func normalizeEmail(v jsbind.Value) (*string, error) {
 
 // ---- Passwords ----
 
-// strength rates a password as validatePasswordStrength did for whatever
-// value it got. Text is rated by authn. For another value JavaScript read
-// value.length (a list's elements, an object's length member) and looked
-// for the kinds of characters in String(value); authn then rates a
-// stand-in text with those kinds and a length on the same side of 8 and
-// 12.
-func strength(v jsbind.Value) (authn.PasswordStrength, error) {
-	if v.IsString() {
-		return authn.ValidatePasswordStrength(v.Str()), nil
+// passwordRefusal is the reply to a new password that breaks the password
+// rule (auth.CheckNewPassword): no text, shorter than 8 or longer than 128
+// UTF-16 units. nil for one that keeps it.
+func passwordRefusal(r *http.Request, password jsbind.Value) error {
+	if !password.IsString() {
+		return sayKey(r, http.StatusBadRequest, "users.password_too_short")
 	}
-	length, err := lengthOf(v)
-	if err != nil {
-		return authn.PasswordStrength{}, err
+	switch auth.CheckNewPassword(password.Str()) {
+	case auth.ErrPasswordTooShort:
+		return sayKey(r, http.StatusBadRequest, "users.password_too_short")
+	case auth.ErrPasswordTooLong:
+		return errPasswordTooLong
 	}
-	s, err := text(v)
-	if err != nil {
-		return authn.PasswordStrength{}, err
-	}
-	return authn.ValidatePasswordStrength(standIn(s, length)), nil
-}
-
-// lengthOf is value.length as a number for a value that is no text: the
-// number of elements of a list, Number() of an object's length member,
-// NaN for the rest.
-func lengthOf(v jsbind.Value) (float64, error) {
-	switch {
-	case v.IsArray():
-		return float64(len(v.Items())), nil
-	case v.IsObject():
-		n := v.Member("length")
-		if hidesToString(n) {
-			return 0, errNotPrimitive
-		}
-		return n.ToNumber(), nil
-	}
-	return math.NaN(), nil
-}
-
-// standIn is a text with one character of each kind s has (a lower-case
-// letter, an upper-case letter, a digit, anything else) and a length that
-// is 12 or more, 8 to 11, or below 8 as length is.
-func standIn(s string, length float64) string {
-	var kinds []byte
-	add := func(c byte) {
-		for _, k := range kinds {
-			if k == c {
-				return
-			}
-		}
-		kinds = append(kinds, c)
-	}
-	for i := 0; i < len(s); i++ {
-		switch c := s[i]; {
-		case c >= 'a' && c <= 'z':
-			add('a')
-		case c >= 'A' && c <= 'Z':
-			add('A')
-		case c >= '0' && c <= '9':
-			add('0')
-		default:
-			add('!')
-		}
-	}
-	if len(kinds) == 0 {
-		return ""
-	}
-	target := len(kinds)
-	switch {
-	case length >= 12:
-		target = 12
-	case length >= 8:
-		target = 8
-	}
-	out := string(kinds)
-	for len(out) < target {
-		out += string(kinds[0])
-	}
-	return out
+	return nil
 }

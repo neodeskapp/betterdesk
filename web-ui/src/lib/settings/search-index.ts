@@ -1007,26 +1007,6 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		['backup.schedule_destination_path_hint'],
 		'server.config'
 	],
-	['backup', 'backup-smb-host', 'backup.smb_host', '', [], 'server.config'],
-	['backup', 'backup-smb-share', 'backup.smb_share', '', [], 'server.config'],
-	[
-		'backup',
-		'backup-smb-domain',
-		'backup.smb_domain',
-		'',
-		['settings.backup_tab.smb_domain_hint'],
-		'server.config'
-	],
-	['backup', 'backup-smb-username', 'backup.smb_username', '', [], 'server.config'],
-	['backup', 'backup-smb-password', 'backup.smb_password', '', ['backup.smb_password_hint'], 'server.config'],
-	[
-		'backup',
-		'backup-smb-mount-path',
-		'settings.backup_tab.smb_mount_path',
-		'',
-		['settings.backup_tab.smb_mount_path_hint'],
-		'server.config'
-	],
 	[
 		'backup',
 		'backup-restore',

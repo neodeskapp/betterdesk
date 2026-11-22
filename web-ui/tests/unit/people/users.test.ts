@@ -66,18 +66,19 @@ describe('roles a person may give (canAssignUserRole on the server)', () => {
 });
 
 describe('passwords and usernames (the server rules)', () => {
-	test('strength scores like authService: weak, medium, strong', () => {
+	test('the strength line scores weak, medium, strong', () => {
 		expect(passwordStrength('abc')).toBe('weak');
 		expect(passwordStrength('abcdefgh')).toBe('weak');
 		expect(passwordStrength('abcdefgH1')).toBe('medium');
 		expect(passwordStrength('abcdefgH1!xyz')).toBe('strong');
 	});
 
-	test('a password is refused when missing (and required), short or weak', () => {
+	test('a password is refused when missing (and required) or under 8 characters, not when weak (L94)', () => {
 		expect(passwordProblem('', true)).toBe('users.password_required');
 		expect(passwordProblem('', false)).toBeNull();
 		expect(passwordProblem('Ab1!', true)).toBe('users.password_too_short');
-		expect(passwordProblem('abcdefgh', false)).toBe('users.password_weak_hint');
+		expect(passwordProblem('sixsix7', true)).toBe('users.password_too_short');
+		expect(passwordProblem('abcdefgh', false)).toBeNull();
 		expect(passwordProblem('Correct-Horse-9', true)).toBeNull();
 	});
 

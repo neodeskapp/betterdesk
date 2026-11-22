@@ -18,6 +18,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 	"github.com/unitronix/betterdesk-server/console/scheduledbackup"
+	"github.com/unitronix/betterdesk-server/console/serverinfo"
 )
 
 // maxUpload is the largest backup a restore takes, 200 MB.
@@ -89,6 +90,11 @@ func NewBackups(d *kit.Deps, serverDB string) *backup.Service {
 		ChatFilesDir: filepath.Join(cfg.ConsoleDir, "data", "chat-files"),
 		// the folder of the ticket routes (tickets.uploadsDir)
 		AttachmentsDir: attachmentsDir(cfg),
+		FontsDir:       cfg.FontsDir,
+		CertFile:       cfg.CertFile,
+		KeyFile:        cfg.KeyFile,
+		CAFile:         cfg.CAFile,
+		EndpointsFile:  filepath.Join(cfg.DataDir, serverinfo.DurableBasename),
 		AppVersion:     cfg.Version,
 		Limits:         archiveLimits(cfg.Getenv, d.Log.Child("SETTINGS").Warn),
 	})
@@ -143,9 +149,6 @@ func register(d *kit.Deps, backups *backup.Service, scheduled *scheduledbackup.S
 	r.Put("/api/settings/backup/schedule", h.saveSchedule, auth, config)
 	r.Post("/api/settings/backup/schedule/run", h.runSchedule, auth, config)
 	r.Post("/api/settings/backup/destination/test", h.testDestination, auth, config)
-	r.Get("/api/settings/backup/smb", h.smb, auth, config)
-	r.Put("/api/settings/backup/smb", h.saveSMB, auth, config)
-	r.Post("/api/settings/backup/smb/test", h.testSMB, auth, config)
 	r.Post("/api/settings/restore", h.restore, auth, config)
 	r.Get("/api/settings/backup/retention", h.retention, auth, config)
 	r.Put("/api/settings/backup/retention", h.saveRetention, auth, config)
