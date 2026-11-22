@@ -1005,13 +1005,15 @@ export class RDFileTransfer {
 			return Promise.reject(new Error('Remote-to-remote browser transfer is limited to 256 MB per file'));
 		}
 		return new Promise((resolve, reject) => {
-			this.downloadFile(remotePath, fileEntry, {
+			const id = this.downloadFile(remotePath, fileEntry, {
 				forceBuffer: true,
 				captureBlob: true,
 				silent: true,
 				captureResolve: resolve,
 				captureReject: reject
 			});
+			// No transfer started, so nothing would ever call back
+			if (id < 0) reject(new Error('File transfer not enabled'));
 		});
 	}
 

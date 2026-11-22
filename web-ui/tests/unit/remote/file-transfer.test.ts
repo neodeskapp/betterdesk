@@ -193,3 +193,24 @@ describe('resuming a download on the desktop', () => {
 		expect(disk.join('')).toBe('AAABBBCCCDDD');
 	});
 });
+
+describe('a file for another device (downloadFileToBlob)', () => {
+	test('fails at once when file transfer is off for the session', async () => {
+		const t = await setup();
+		t.ft.disable();
+		await expect(t.ft.downloadFileToBlob('/data', { name: 'a.txt', size: 3 })).rejects.toThrow(
+			'File transfer not enabled'
+		);
+		expect(t.sent).toEqual([]);
+	});
+
+	test('gives the file once the device sent it', async () => {
+		const t = await setup();
+		const blob = t.ft.downloadFileToBlob('/data', { name: 'a.txt', size: 3 });
+		const id = Number(t.sent[0]?.fileAction?.send?.id);
+		t.respond({ digest: { id, fileNum: 0, fileSize: 3 } });
+		t.respond({ block: { id, data: enc('abc') } });
+		t.respond({ done: { id } });
+		expect(await (await blob).text()).toBe('abc');
+	});
+});
