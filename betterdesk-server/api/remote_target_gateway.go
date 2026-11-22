@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,9 +29,11 @@ const (
 
 // handleRemoteTargetTunnel is a narrow browser -> guacd bridge. The browser
 // never receives the target host or stored password; the bridge rewrites the
-// Guacamole connect instruction from the server-side target record.
+// Guacamole connect instruction from the server-side target record. The
+// query can only narrow the session (remoteTargetLimitsOf).
 func (s *Server) handleRemoteTargetTunnel(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimSpace(r.PathValue("id"))
+	limits := remoteTargetLimitsOf(r.URL.Query())
 	target, err := s.db.GetRemoteTarget(id)
 	if err != nil || target == nil || !target.Enabled {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "remote target not found"})
@@ -82,7 +85,7 @@ func (s *Server) handleRemoteTargetTunnel(w http.ResponseWriter, r *http.Request
 	args := newGuacdArgs()
 
 	go func() {
-		errCh <- s.remoteTargetBrowserToGuacd(ctx, ws, guacd, target, args)
+		errCh <- s.remoteTargetBrowserToGuacd(ctx, ws, guacd, target, args, limits)
 	}()
 	go func() {
 		errCh <- s.remoteTargetGuacdToBrowser(ctx, guacd, ws, args)
@@ -128,7 +131,7 @@ func (a *guacdArgs) wait(ctx context.Context) ([]string, error) {
 	}
 }
 
-func (s *Server) remoteTargetBrowserToGuacd(ctx context.Context, ws *websocket.Conn, guacd net.Conn, target *db.RemoteTarget, args *guacdArgs) error {
+func (s *Server) remoteTargetBrowserToGuacd(ctx context.Context, ws *websocket.Conn, guacd net.Conn, target *db.RemoteTarget, args *guacdArgs, limits remoteTargetLimits) error {
 	parser := &guacInstructionParser{}
 	for {
 		messageType, data, err := ws.Read(ctx)
@@ -155,7 +158,7 @@ func (s *Server) remoteTargetBrowserToGuacd(ctx context.Context, ws *websocket.C
 				if err != nil {
 					return err
 				}
-				instruction.args = rewriteRemoteTargetConnect(instruction.args, names, target, password)
+				instruction.args = rewriteRemoteTargetConnect(instruction.args, names, target, password, limits)
 			}
 			_ = guacd.SetWriteDeadline(time.Now().Add(remoteTargetIdleTimeout))
 			if _, err := guacd.Write(encodeGuacInstruction(instruction)); err != nil {
@@ -228,13 +231,45 @@ var remoteTargetBrowserArgs = map[string]bool{
 	"disable-bitmap-caching": true, "disable-offscreen-caching": true, "disable-glyph-caching": true,
 }
 
+// remoteTargetLimits narrow a session for the account that opens it (the
+// console sets them from the account's client features): read only, no
+// clipboard either way, no sound. They can only take away.
+type remoteTargetLimits struct {
+	readOnly, noClipboard, noAudio bool
+}
+
+// remoteTargetLimitsOf reads the limits of a tunnel request: read_only,
+// no_clipboard and no_audio, each set by "1".
+func remoteTargetLimitsOf(query url.Values) remoteTargetLimits {
+	return remoteTargetLimits{
+		readOnly:    query.Get("read_only") == "1",
+		noClipboard: query.Get("no_clipboard") == "1",
+		noAudio:     query.Get("no_audio") == "1",
+	}
+}
+
+// forced is the value limits give a guacd parameter, and whether they set
+// one.
+func (l remoteTargetLimits) forced(name string) (string, bool) {
+	switch {
+	case l.readOnly && name == "read-only":
+		return "true", true
+	case l.noClipboard && (name == "disable-copy" || name == "disable-paste"):
+		return "true", true
+	case l.noAudio && name == "disable-audio":
+		return "true", true
+	}
+	return "", false
+}
+
 // rewriteRemoteTargetConnect builds the values of the connect instruction
 // for guacd's parameter names: the server's values for host, port,
 // account and certificate check, the browser's for the protocol version
 // and the parameters in remoteTargetBrowserArgs, and empty for every other
 // name, so the browser cannot map folders, write recordings or reach
-// other hosts through the gateway.
-func rewriteRemoteTargetConnect(values, names []string, target *db.RemoteTarget, savedPassword string) []string {
+// other hosts through the gateway. limits set their parameters over the
+// browser's values.
+func rewriteRemoteTargetConnect(values, names []string, target *db.RemoteTarget, savedPassword string, limits remoteTargetLimits) []string {
 	out := make([]string, len(names))
 	for index, name := range names {
 		browser := ""
@@ -242,6 +277,10 @@ func rewriteRemoteTargetConnect(values, names []string, target *db.RemoteTarget,
 			browser = values[index]
 		}
 		lower := strings.ToLower(name)
+		if value, ok := limits.forced(lower); ok {
+			out[index] = value
+			continue
+		}
 		switch {
 		case strings.HasPrefix(name, "VERSION_"):
 			out[index] = browser

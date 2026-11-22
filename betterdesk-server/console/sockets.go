@@ -49,6 +49,7 @@ func registerSockets(d *kit.Deps, signalProof func(userID int64) []byte) {
 	remotetarget.New(remotetarget.Options{
 		RemoteTarget: d.GoAPI.GetRemoteTarget,
 		CanAccess:    d.DeviceGroups.UserCanAccessDevice,
+		FeaturesOff:  d.Access.ClientFeaturesOff,
 		API:          d.GoAPI.Handler(),
 	}).Register(d.Sockets)
 	// services/deviceStatusPush.js: /ws/device-status, /ws/panel-events. A
