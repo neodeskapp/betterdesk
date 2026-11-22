@@ -8,12 +8,14 @@ Usage example:
         server="ws://203.0.113.10:21122/cdap",
         auth_method="api_key",
         api_key="your-key",
+        device_id="sensor-1",
         device_name="Temperature Sensor",
         device_type="iot",
     )
 
     temp = bridge.add_widget(gauge("temp", "Temperature", unit="°C", max_val=50))
     heater = bridge.add_widget(toggle("heater", "Heater"))
+    bridge.add_alert("hot", "temp > 40", label="Too hot", severity="critical")
 
     @bridge.on_command("heater")
     async def handle_heater(action, value, **kw):
@@ -26,19 +28,34 @@ Usage example:
 from __future__ import annotations
 
 import asyncio
-import json
+import inspect
 import logging
 import random
+import re
 import time
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable
 
 import websockets
 import websockets.exceptions
 
-from betterdesk_cdap.protocol import Message, auth_payload_api_key, auth_payload_device_token, auth_payload_user_password
+from betterdesk_cdap.protocol import (
+    SEVERITY_CRITICAL,
+    SEVERITY_INFO,
+    SEVERITY_WARNING,
+    SUBPROTOCOL,
+    Message,
+    auth_payload_api_key,
+    auth_payload_device_token,
+    auth_payload_user_password,
+)
 from betterdesk_cdap.widgets import Widget
 
 logger = logging.getLogger("betterdesk_cdap")
+
+# A device id the gateway takes
+DEVICE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+SEVERITIES = (SEVERITY_CRITICAL, SEVERITY_WARNING, SEVERITY_INFO)
 
 
 class CDAPBridge:
@@ -66,10 +83,13 @@ class CDAPBridge:
         max_reconnect: int = 300,
         # Bridge metadata (optional)
         bridge_name: str = "",
+        bridge_version: str = "",
         bridge_protocol: str = "",
         target_host: str = "",
         target_port: int = 0,
     ):
+        if not DEVICE_ID_PATTERN.match(device_id):
+            raise ValueError("device_id is required: 1 to 64 letters, digits, - and _")
         self.server = server
         self.auth_method = auth_method
         self.api_key = api_key
@@ -89,13 +109,15 @@ class CDAPBridge:
         self.max_reconnect = max(reconnect_sec, max_reconnect)
 
         self.bridge_name = bridge_name
+        self.bridge_version = bridge_version or firmware
         self.bridge_protocol = bridge_protocol
         self.target_host = target_host
         self.target_port = target_port
 
         # Internal state
-        self._ws: websockets.WebSocketClientProtocol | None = None
+        self._ws: Any = None
         self._widgets: list[Widget] = []
+        self._alerts: list[dict[str, str]] = []
         self._widget_values: dict[str, Any] = {}
         self._command_handlers: dict[str, Callable] = {}
         self._global_command_handler: Callable | None = None
@@ -114,9 +136,39 @@ class CDAPBridge:
             self._widget_values[widget.id] = widget.value
         return widget
 
+    def add_alert(
+        self,
+        alert_id: str,
+        condition: str,
+        *,
+        label: str = "",
+        severity: str = SEVERITY_WARNING,
+        message: str = "",
+    ) -> None:
+        """Add an alert to the manifest, before the bridge runs.
+
+        The gateway raises it under Active alerts while the condition holds
+        and clears it when it no longer does. The condition is
+        ``<widget id> <operator> <value>`` with ==, !=, >, <, >= or <=, such
+        as ``temp < 2`` or ``door == 'open'``. ``{widget id}`` in the message
+        is replaced with the widget's value.
+        """
+        if severity not in SEVERITIES:
+            raise ValueError(f"alert {alert_id}: severity must be critical, warning or info")
+        self._alerts.append({
+            "id": alert_id,
+            "label": label or alert_id,
+            "severity": severity,
+            "condition": condition,
+            "message": message,
+        })
+
     def on_command(self, widget_id: str | None = None):
-        """Decorator to register a command handler for a widget (or all widgets)."""
-        def decorator(fn: Callable[..., Coroutine]):
+        """Decorator to register a command handler for a widget (or all widgets).
+
+        The handler may be a coroutine function or a plain function.
+        """
+        def decorator(fn: Callable[..., Any]):
             if widget_id:
                 self._command_handlers[widget_id] = fn
             else:
@@ -125,10 +177,15 @@ class CDAPBridge:
         return decorator
 
     # ── State Updates ─────────────────────────────────────────────────
+    #
+    # Values set before the bridge is registered are kept and go out with
+    # the heartbeat right after registration.
 
     async def update_state(self, widget_id: str, value: Any) -> None:
         """Push a single widget state update to the server."""
         self._widget_values[widget_id] = value
+        if not self._connected:
+            return
         await self._send("state_update", {
             "widget_id": widget_id,
             "value": value,
@@ -139,6 +196,8 @@ class CDAPBridge:
         """Push multiple widget state updates."""
         for wid, val in updates.items():
             self._widget_values[wid] = val
+        if not self._connected:
+            return
         await self._send("bulk_update", {
             "updates": [
                 {"widget_id": wid, "value": val}
@@ -146,38 +205,15 @@ class CDAPBridge:
             ],
         })
 
-    # ── Alerts ────────────────────────────────────────────────────────
-
-    async def fire_alert(
-        self,
-        alert_id: str,
-        severity: str = "warning",
-        message: str = "",
-        data: Any = None,
-    ) -> None:
-        """Fire an alert to the server."""
-        payload: dict[str, Any] = {
-            "alert_id": alert_id,
-            "severity": severity,
-            "message": message,
-        }
-        if data is not None:
-            payload["data"] = data
-        await self._send("event", {"event_type": "alert_fire", "data": payload})
-
-    async def resolve_alert(self, alert_id: str) -> None:
-        """Resolve a previously fired alert."""
-        await self._send("event", {
-            "event_type": "alert_resolve",
-            "data": {"alert_id": alert_id},
-        })
-
     # ── Logging ───────────────────────────────────────────────────────
 
     async def send_log(
         self, level: str, message: str, context: Any = None
     ) -> None:
-        """Send a log entry to the server."""
+        """Send a log entry to the server; level is debug, info, warning,
+        error or critical. Dropped while the bridge is not registered."""
+        if not self._connected:
+            return
         payload: dict[str, Any] = {"level": level, "message": message}
         if context is not None:
             payload["context"] = context
@@ -188,6 +224,11 @@ class CDAPBridge:
     def run(self) -> None:
         """Blocking entry point — connect and run the message loop."""
         asyncio.run(self._run_forever())
+
+    async def run_async(self) -> None:
+        """Connect and run the message loop in a running event loop, with
+        the same reconnects as run()."""
+        await self._run_forever()
 
     async def _run_forever(self) -> None:
         self._running = True
@@ -213,6 +254,7 @@ class CDAPBridge:
         logger.info("Connecting to %s...", self.server)
         async with websockets.connect(
             self.server,
+            subprotocols=[SUBPROTOCOL],
             max_size=4 * 1024 * 1024,
             open_timeout=30,
         ) as ws:
@@ -255,6 +297,8 @@ class CDAPBridge:
 
         await self._send("auth", payload)
         msg = await self._recv()
+        if msg.type == "error":
+            raise RuntimeError(f"Sign-in refused: {msg.payload.get('message', 'unknown')}")
         if msg.type != "auth_result":
             raise RuntimeError(f"Expected auth_result, got {msg.type}")
         if not msg.payload.get("success"):
@@ -269,6 +313,11 @@ class CDAPBridge:
     async def _register(self) -> None:
         manifest = self._build_manifest()
         await self._send("register", {"manifest": manifest})
+        msg = await self._recv()
+        if msg.type == "error":
+            raise RuntimeError(f"Registration refused: {msg.payload.get('message', 'unknown')}")
+        if msg.type != "registered":
+            raise RuntimeError(f"Expected registered, got {msg.type}")
 
     def _build_manifest(self) -> dict[str, Any]:
         device: dict[str, Any] = {
@@ -291,11 +340,13 @@ class CDAPBridge:
             "heartbeat_interval": self.heartbeat_sec,
             "widgets": [w.to_dict() for w in self._widgets],
         }
+        if self._alerts:
+            m["alerts"] = list(self._alerts)
 
         if self.bridge_name:
             m["bridge"] = {
                 "name": self.bridge_name,
-                "version": self.firmware,
+                "version": self.bridge_version,
                 "protocol": self.bridge_protocol,
                 "target_host": self.target_host,
                 "target_port": self.target_port,
@@ -332,12 +383,13 @@ class CDAPBridge:
             code = msg.payload.get("code", 0)
             error_msg = msg.payload.get("message", "")
             logger.error("Server error %d: %s", code, error_msg)
-        elif msg.type == "registered":
-            logger.debug("Registration confirmed: %s", msg.payload)
         else:
             logger.debug("Unhandled message type: %s", msg.type)
 
     async def _handle_command(self, payload: dict[str, Any]) -> None:
+        """Runs the widget's handler and answers the command. After a set,
+        the new value goes to the server at once, so the console shows the
+        control's new state."""
         command_id = payload.get("command_id", "")
         widget_id = payload.get("widget_id", "")
         action = payload.get("action", "")
@@ -352,32 +404,38 @@ class CDAPBridge:
             resp["error_message"] = f"No handler for widget {widget_id}"
         else:
             try:
-                result = await handler(
+                result = handler(
                     action=action,
                     value=value,
                     widget_id=widget_id,
                     operator=payload.get("operator", ""),
                     reason=payload.get("reason", ""),
                 )
+                if inspect.isawaitable(result):
+                    result = await result
                 resp["status"] = "ok"
                 resp["result"] = result
-                # Auto-update widget value on set
-                if action == "set" and value is not None:
-                    self._widget_values[widget_id] = value
             except Exception as exc:
                 resp["status"] = "error"
                 resp["error_message"] = str(exc)
 
         resp["execution_time_ms"] = int((time.monotonic() - start) * 1000)
         await self._send("command_response", resp)
+        if resp["status"] == "ok" and action == "set" and value is not None:
+            await self.update_state(widget_id, value)
 
     # ── Wire I/O ──────────────────────────────────────────────────────
 
     async def _send(self, msg_type: str, payload: dict[str, Any]) -> None:
+        """Sends a message; on a connection that just closed it sends
+        nothing, and the message loop reconnects."""
         if not self._ws:
             return
         msg = Message(type=msg_type, payload=payload)
-        await self._ws.send(msg.to_json())
+        try:
+            await self._ws.send(msg.to_json())
+        except websockets.exceptions.ConnectionClosed:
+            logger.debug("Not sent, the connection is closed: %s", msg_type)
 
     async def _recv(self) -> Message:
         if not self._ws:

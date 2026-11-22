@@ -2,6 +2,12 @@
  * CDAP protocol constants, message helpers, and auth payload builders.
  */
 
+/** The WebSocket subprotocol the gateway offers */
+export const SUBPROTOCOL = 'cdap-v1';
+
+/** A device id the gateway takes: 1 to 64 letters, digits, - and _ */
+export const DEVICE_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+
 // ── Widget types ─────────────────────────────────────────────────────
 
 export const WidgetType = Object.freeze({

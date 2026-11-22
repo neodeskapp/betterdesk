@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from betterdesk_cdap import CDAPBridge, gauge, toggle, slider, textWidget
+from betterdesk_cdap import CDAPBridge, gauge, slider, text_widget, toggle
 
 logger = logging.getLogger("bridge_modbus")
 
@@ -51,7 +51,9 @@ def encode_value(value: float, data_type: str, scale: float, offset: float) -> l
     """Convert a scaled float back to raw register values."""
     raw = (value - offset) / scale if scale else value
     fmt = DATA_FORMATS.get(data_type, ">H")
-    packed = struct.pack(fmt, int(raw))
+    # Integer registers take the nearest whole number; a float32 register
+    # takes the value as it is.
+    packed = struct.pack(fmt, raw if fmt == ">f" else round(raw))
     regs = []
     for i in range(0, len(packed), 2):
         regs.append(struct.unpack(">H", packed[i : i + 2])[0])
@@ -76,10 +78,12 @@ class ModbusBridge:
             server=cdap["server"],
             auth_method="api_key",
             api_key=cdap.get("api_key", ""),
+            device_id=cdap.get("device_id", ""),
             device_name=cdap.get("device_name", "Modbus Bridge"),
-            device_type=cdap.get("device_type", "bridge"),
+            device_type=cdap.get("device_type", "scada"),
             bridge_name=cdap.get("bridge_name", "modbus"),
             bridge_version="1.0.0",
+            bridge_protocol="modbus-" + self.mcfg.get("transport", "tcp"),
             heartbeat_sec=cdap.get("heartbeat_sec", 15),
         )
 
@@ -102,7 +106,7 @@ class ModbusBridge:
             elif wtype == "slider":
                 self.bridge.add_widget(slider(wid, label, min_val=reg.get("min", 0), max_val=reg.get("max", 100), step=reg.get("step", 1), unit=reg.get("unit", "")))
             else:
-                self.bridge.add_widget(textWidget(wid, label, readonly=ro))
+                self.bridge.add_widget(text_widget(wid, label, readonly=ro))
 
     def _register_handlers(self) -> None:
         for reg in self.registers:
@@ -145,15 +149,15 @@ class ModbusBridge:
         count = reg.get("count", 1)
 
         if rtype == "coil":
-            result = await self.client.read_coils(addr, count, slave=unit)
+            result = await self.client.read_coils(addr, count=count, device_id=unit)
             return bool(result.bits[0]) if not result.isError() else None
         elif rtype == "discrete":
-            result = await self.client.read_discrete_inputs(addr, count, slave=unit)
+            result = await self.client.read_discrete_inputs(addr, count=count, device_id=unit)
             return bool(result.bits[0]) if not result.isError() else None
         elif rtype == "input":
-            result = await self.client.read_input_registers(addr, count, slave=unit)
+            result = await self.client.read_input_registers(addr, count=count, device_id=unit)
         else:
-            result = await self.client.read_holding_registers(addr, count, slave=unit)
+            result = await self.client.read_holding_registers(addr, count=count, device_id=unit)
 
         if result.isError():
             return None
@@ -166,13 +170,15 @@ class ModbusBridge:
         )
 
     async def _write_register(self, reg: dict, value: Any) -> Any:
+        """Writes a command's value; raises when the device refuses it, so
+        the command is answered with an error."""
         unit = self.mcfg.get("unit_id", 1)
         rtype = reg.get("type", "holding")
         addr = reg["address"]
 
         if rtype == "coil":
-            result = await self.client.write_coil(addr, bool(value), slave=unit)
-            return bool(value) if not result.isError() else None
+            result = await self.client.write_coil(addr, bool(value), device_id=unit)
+            written: Any = bool(value)
         else:
             regs = encode_value(
                 float(value),
@@ -180,8 +186,11 @@ class ModbusBridge:
                 reg.get("scale", 1.0),
                 reg.get("offset", 0.0),
             )
-            result = await self.client.write_registers(addr, regs, slave=unit)
-            return float(value) if not result.isError() else None
+            result = await self.client.write_registers(addr, regs, device_id=unit)
+            written = float(value)
+        if result.isError():
+            raise RuntimeError(f"the device refused the write to {rtype} {addr}: {result}")
+        return written
 
     # ── Poll loop ─────────────────────────────────────────────────
 
@@ -201,7 +210,7 @@ class ModbusBridge:
                     logger.warning("Read %s failed: %s", reg["widget_id"], exc)
 
             if updates:
-                self.bridge.bulk_update(updates)
+                await self.bridge.bulk_update(updates)
 
             await asyncio.sleep(interval)
 
@@ -214,7 +223,7 @@ class ModbusBridge:
         # Start poll loop alongside CDAP bridge
         async def _main() -> None:
             poll_task = asyncio.create_task(self._poll_loop())
-            cdap_task = asyncio.create_task(self.bridge._run_forever())
+            cdap_task = asyncio.create_task(self.bridge.run_async())
             done, pending = await asyncio.wait(
                 [poll_task, cdap_task], return_when=asyncio.FIRST_EXCEPTION
             )

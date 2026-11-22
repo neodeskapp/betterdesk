@@ -8,6 +8,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
+# The WebSocket subprotocol the gateway offers
+SUBPROTOCOL = "cdap-v1"
+
 # ── Message envelope ──────────────────────────────────────────────────
 
 @dataclass

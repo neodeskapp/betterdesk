@@ -1,7 +1,17 @@
 import { EventEmitter } from 'node:events';
 import os from 'node:os';
 import WebSocket from 'ws';
-import { authApiKey, authDeviceToken, authUserPassword, createMessage, parseMessage, type Message } from './protocol.js';
+import {
+  DEVICE_ID_PATTERN,
+  SUBPROTOCOL,
+  Severity,
+  authApiKey,
+  authDeviceToken,
+  authUserPassword,
+  createMessage,
+  parseMessage,
+  type Message,
+} from './protocol.js';
 import type { Widget } from './widgets.js';
 
 export interface CDAPBridgeOptions {
@@ -13,9 +23,10 @@ export interface CDAPBridgeOptions {
   deviceToken?: string;
   username?: string;
   password?: string;
-  deviceId?: string;
+  /** The id the device registers under: 1 to 64 letters, digits, - and _ */
+  deviceId: string;
   deviceName?: string;
-  /** default bridge */
+  /** scada, iot, os_agent, network, camera, desktop or custom (default custom) */
   deviceType?: string;
   bridgeName?: string;
   /** default 1.0.0 */
@@ -28,16 +39,41 @@ export interface CDAPBridgeOptions {
   maxReconnect?: number;
 }
 
-/** What a command handler receives */
+/** What a command handler receives: the command the gateway sent */
 export interface CommandPayload {
+  command_id: string;
   widget_id: string;
-  action?: string;
+  /** set, trigger, execute, reset or query */
+  action: string;
   value?: unknown;
-  params?: unknown;
+  /** the console account that sent it */
+  operator?: string;
+  reason?: string;
 }
 
-/** A command handler; what it returns (or resolves to) becomes the widget's state */
+/** A command handler; what it returns (or resolves to) becomes the widget's value */
 export type CommandHandler = (command: CommandPayload) => unknown;
+
+/** The optional parts of an alert */
+export interface AlertOptions {
+  /** shown with the alert (default the alert's id) */
+  label?: string;
+  /** critical, warning or info (default warning) */
+  severity?: string;
+  /** the alert's text; {widget id} in it is replaced with the widget's value */
+  message?: string;
+}
+
+/** An alert of the manifest, as the gateway takes it */
+export interface AlertDefinition {
+  id: string;
+  label: string;
+  severity: string;
+  condition: string;
+  message: string;
+}
+
+const SEVERITIES: readonly string[] = Object.values(Severity);
 
 /**
  * CDAPBridge — connects a Node.js process to BetterDesk CDAP Gateway.
@@ -62,9 +98,11 @@ export class CDAPBridge extends EventEmitter {
   maxReconnect: number;
 
   private _widgets = new Map<string, Widget>();
+  private _alerts = new Map<string, AlertDefinition>();
   private _state = new Map<string, unknown>();
   private _handlers = new Map<string, CommandHandler>();
   private _ws: WebSocket | null = null;
+  private _registered = false;
   private _heartbeatTimer: NodeJS.Timeout | null = null;
   private _token: string | null = null;
   private _running = false;
@@ -80,20 +118,39 @@ export class CDAPBridge extends EventEmitter {
     this.password = options.password || '';
     this.deviceId = options.deviceId || '';
     this.deviceName = options.deviceName || os.hostname();
-    this.deviceType = options.deviceType || 'bridge';
+    this.deviceType = options.deviceType || 'custom';
     this.bridgeName = options.bridgeName || '';
     this.bridgeVersion = options.bridgeVersion || '1.0.0';
     this.heartbeatSec = options.heartbeatSec || 15;
     this.reconnectSec = options.reconnectSec || 5;
     this.maxReconnect = options.maxReconnect || 120;
     this._backoff = this.reconnectSec;
+    if (!DEVICE_ID_PATTERN.test(this.deviceId)) {
+      throw new Error('deviceId is required: 1 to 64 letters, digits, - and _');
+    }
   }
 
-  // ── Widget registration ──────────────────────────────────────────
+  // ── Manifest ─────────────────────────────────────────────────────
 
-  /** Add a widget to the manifest. Must be called before connect(). */
+  /** Add a widget to the manifest. Must be called before run(). */
   addWidget(widget: Widget): this {
     this._widgets.set(widget.id, widget);
+    if (widget.value !== undefined) this._state.set(widget.id, widget.value);
+    return this;
+  }
+
+  /**
+   * Add an alert to the manifest. Must be called before run(). The gateway
+   * raises it under Active alerts while the condition holds, and clears it
+   * when it no longer does. The condition is `<widget id> <operator> <value>`
+   * with ==, !=, >, <, >= or <=, such as `temp < 2` or `door == 'open'`.
+   */
+  addAlert(id: string, condition: string, opts: AlertOptions = {}): this {
+    const severity = opts.severity ?? Severity.WARNING;
+    if (!SEVERITIES.includes(severity)) {
+      throw new Error(`alert ${id}: severity must be critical, warning or info`);
+    }
+    this._alerts.set(id, { id, label: opts.label ?? id, severity, condition, message: opts.message ?? '' });
     return this;
   }
 
@@ -103,39 +160,31 @@ export class CDAPBridge extends EventEmitter {
     return this;
   }
 
-  // ── State updates ────────────────────────────────────────────────
+  // ── Values and logs ──────────────────────────────────────────────
+  //
+  // Values set before the device is registered are kept and go out with
+  // the heartbeat right after registration.
 
-  /** Update a single widget value and push to server. */
+  /** Set a widget's value and send it to the server. */
   updateState(widgetId: string, value: unknown): void {
     this._state.set(widgetId, value);
-    this._send('state_update', { widget_id: widgetId, value });
+    if (this._registered) this._send('state_update', { widget_id: widgetId, value });
   }
 
-  /** Bulk-update multiple widget values: { widgetId: value, ... } */
+  /** Set several widgets' values at once: { widgetId: value, ... } */
   bulkUpdate(updates: Record<string, unknown>): void {
-    const values: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(updates)) {
-      this._state.set(k, v);
-      values[k] = v;
+    const list: { widget_id: string; value: unknown }[] = [];
+    for (const [widgetId, value] of Object.entries(updates)) {
+      this._state.set(widgetId, value);
+      list.push({ widget_id: widgetId, value });
     }
-    this._send('state_update', { values });
+    if (this._registered) this._send('bulk_update', { updates: list });
   }
 
-  // ── Alerts & logging ─────────────────────────────────────────────
-
-  /** Fire an alert; severity is critical, warning or info. */
-  fireAlert(alertId: string, severity: string, message: string, details?: Record<string, unknown>): void {
-    this._send('alert', { alert_id: alertId, severity, message, details: details || {} });
-  }
-
-  /** Resolve a previously fired alert. */
-  resolveAlert(alertId: string): void {
-    this._send('alert_resolve', { alert_id: alertId });
-  }
-
-  /** Send a log entry; level is debug, info, warn or error. */
-  sendLog(level: string, message: string, data?: Record<string, unknown>): void {
-    this._send('log', { level, message, data: data || {} });
+  /** Send a log entry; level is debug, info, warning, error or critical. Dropped while not registered. */
+  sendLog(level: string, message: string, context?: Record<string, unknown>): void {
+    if (!this._registered) return;
+    this._send('log', context === undefined ? { level, message } : { level, message, context });
   }
 
   // ── Connection lifecycle ─────────────────────────────────────────
@@ -170,6 +219,7 @@ export class CDAPBridge extends EventEmitter {
   /** Stop the bridge gracefully. */
   stop(): void {
     this._running = false;
+    this._registered = false;
     this._clearHeartbeat();
     if (this._ws && this._ws.readyState === WebSocket.OPEN) {
       this._ws.close(1000, 'bridge stopping');
@@ -181,7 +231,7 @@ export class CDAPBridge extends EventEmitter {
 
   private async _connectOnce(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(this.server, 'cdap', {
+      const ws = new WebSocket(this.server, SUBPROTOCOL, {
         headers: { 'User-Agent': `betterdesk-cdap-nodejs/${this.bridgeVersion}` },
         handshakeTimeout: 10000,
       });
@@ -219,16 +269,13 @@ export class CDAPBridge extends EventEmitter {
             break;
 
           case 'registered':
+            this._registered = true;
             this.emit('registered', msg.payload);
             this._startHeartbeat();
             break;
 
           case 'command':
             this._handleCommand(msg);
-            break;
-
-          case 'heartbeat_ack':
-            // noop
             break;
 
           case 'error':
@@ -243,6 +290,7 @@ export class CDAPBridge extends EventEmitter {
       });
 
       ws.on('close', (code, reason) => {
+        this._registered = false;
         this._clearHeartbeat();
         this._ws = null;
         this.emit('disconnected', { code, reason: reason.toString() });
@@ -284,42 +332,27 @@ export class CDAPBridge extends EventEmitter {
       widgets.push(typeof w.toJSON === 'function' ? w.toJSON() : w);
     }
 
-    const capabilities = ['telemetry', 'commands', 'alerts', 'logs'];
     const manifest: Record<string, unknown> = {
       manifest_version: '1.0',
-      device: {
-        id: this.deviceId,
-        name: this.deviceName,
-        type: this.deviceType,
-        firmware_version: this.bridgeVersion,
-        hostname: os.hostname(),
-        os: `${os.type()} ${os.release()}`,
-        platform: os.platform(),
-      },
-      capabilities,
+      device: { name: this.deviceName, type: this.deviceType },
+      capabilities: ['telemetry', 'commands', 'alerts', 'logs'],
       widgets,
       heartbeat_interval: this.heartbeatSec,
     };
-
+    if (this._alerts.size > 0) manifest.alerts = [...this._alerts.values()];
     if (this.bridgeName) {
       manifest.bridge = { name: this.bridgeName, version: this.bridgeVersion };
     }
 
-    this._send('register', manifest);
+    this._send('register', { manifest });
   }
 
+  /** Sends a heartbeat with every known value now, then every heartbeatSec. */
   private _startHeartbeat(): void {
     this._clearHeartbeat();
-    this._heartbeatTimer = setInterval(() => {
-      const widgetValues: Record<string, unknown> = {};
-      for (const [k, v] of this._state) {
-        widgetValues[k] = v;
-      }
-      this._send('heartbeat', {
-        uptime: Math.floor(process.uptime()),
-        widget_values: widgetValues,
-      });
-    }, this.heartbeatSec * 1000);
+    const beat = () => this._send('heartbeat', { widget_values: Object.fromEntries(this._state) });
+    beat();
+    this._heartbeatTimer = setInterval(beat, this.heartbeatSec * 1000);
   }
 
   private _clearHeartbeat(): void {
@@ -329,60 +362,55 @@ export class CDAPBridge extends EventEmitter {
     }
   }
 
+  /**
+   * Runs the widget's handler and answers the command. A value the handler
+   * returns becomes the widget's value and goes to the server at once, so
+   * the console shows the control's new state.
+   */
   private _handleCommand(msg: Pick<Message, 'id' | 'payload'>): void {
-    const { widget_id, action, value, params } = msg.payload as unknown as CommandPayload;
-    const handler = this._handlers.get(widget_id);
+    const command = msg.payload as unknown as CommandPayload;
+    const commandId = command.command_id || msg.id || '';
+    const widgetId = command.widget_id;
+    const handler = this._handlers.get(widgetId);
 
-    this.emit('command', msg.payload);
+    this.emit('command', command);
 
     if (!handler) {
-      this._send('command_response', {
-        id: msg.id,
-        widget_id,
-        success: false,
-        error: `No handler for widget ${widget_id}`,
-      });
+      this._sendCommandResponse(commandId, 'error', undefined, 0, `No handler for widget ${widgetId}`);
       return;
     }
 
     const start = Date.now();
+    const done = (value: unknown) => {
+      this._sendCommandResponse(commandId, 'ok', value, Date.now() - start);
+      if (value !== undefined) this.updateState(widgetId, value);
+    };
+    const fail = (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      this._sendCommandResponse(commandId, 'error', undefined, Date.now() - start, message);
+    };
     try {
-      const result = handler({ widget_id, action, value, params });
-
-      // Handle both sync and async handlers
+      const result = handler(command);
       if (isThenable(result)) {
-        result
-          .then((val) => {
-            this._sendCommandResponse(msg.id, widget_id, true, val, Date.now() - start);
-            if (val !== undefined) {
-              this._state.set(widget_id, val);
-            }
-          })
-          .catch((err: Error) => {
-            this._sendCommandResponse(msg.id, widget_id, false, null, Date.now() - start, err.message);
-          });
+        result.then(done, fail);
       } else {
-        this._sendCommandResponse(msg.id, widget_id, true, result, Date.now() - start);
-        if (result !== undefined) {
-          this._state.set(widget_id, result);
-        }
+        done(result);
       }
     } catch (err) {
-      this._sendCommandResponse(msg.id, widget_id, false, null, Date.now() - start, (err as Error).message);
+      fail(err);
     }
   }
 
   private _sendCommandResponse(
-    id: string | null,
-    widgetId: string,
-    success: boolean,
-    value: unknown,
+    commandId: string,
+    status: 'ok' | 'error',
+    result: unknown,
     durationMs: number,
     error?: string,
   ): void {
-    const payload: Record<string, unknown> = { id, widget_id: widgetId, success, duration_ms: durationMs };
-    if (value !== undefined && value !== null) payload.value = value;
-    if (error) payload.error = error;
+    const payload: Record<string, unknown> = { command_id: commandId, status, execution_time_ms: durationMs };
+    if (result !== undefined) payload.result = result;
+    if (error) payload.error_message = error;
     this._send('command_response', payload);
   }
 

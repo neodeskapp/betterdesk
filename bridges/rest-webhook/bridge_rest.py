@@ -22,7 +22,7 @@ from typing import Any
 import aiohttp
 from aiohttp import web
 
-from betterdesk_cdap import CDAPBridge, gauge, toggle, textWidget
+from betterdesk_cdap import CDAPBridge, gauge, text_widget, toggle
 
 logger = logging.getLogger("bridge_rest")
 
@@ -64,10 +64,12 @@ class RESTBridge:
             server=cdap["server"],
             auth_method="api_key",
             api_key=cdap.get("api_key", ""),
+            device_id=cdap.get("device_id", ""),
             device_name=cdap.get("device_name", "REST Bridge"),
-            device_type=cdap.get("device_type", "bridge"),
+            device_type=cdap.get("device_type", "iot"),
             bridge_name=cdap.get("bridge_name", "rest"),
             bridge_version="1.0.0",
+            bridge_protocol="http",
             heartbeat_sec=cdap.get("heartbeat_sec", 15),
         )
 
@@ -87,11 +89,22 @@ class RESTBridge:
             elif wtype == "toggle":
                 self.bridge.add_widget(toggle(wid, label))
             else:
-                self.bridge.add_widget(textWidget(wid, label))
+                self.bridge.add_widget(text_widget(wid, label))
 
         for wh in self.webhooks:
             wid = wh["widget_id"]
-            self.bridge.add_widget(textWidget(wid, wh.get("label", wid)))
+            label = wh.get("label", wid)
+            self.bridge.add_widget(text_widget(wid, label))
+            # The gateway raises the alert once a webhook has set the widget,
+            # and it stays under Active alerts until the bridge reconnects.
+            if wh.get("alert_severity"):
+                self.bridge.add_alert(
+                    f"wh_{wid}",
+                    f"{wid} != ''",
+                    label=label,
+                    severity=wh["alert_severity"],
+                    message=wh.get("alert_message", "{" + wid + "}"),
+                )
 
     def _register_handlers(self) -> None:
         for src in self.sources:
@@ -119,7 +132,8 @@ class RESTBridge:
             return extract_path(data, path) if path else data
 
     async def _write_source(self, src: dict, action: str, value: Any) -> Any:
-        """Write command back to REST API."""
+        """Write command back to REST API; raises when the API refuses it, so
+        the command is answered with an error."""
         url = src["write_url"]
 
         # Resolve {action} placeholder for HA-style services
@@ -133,8 +147,7 @@ class RESTBridge:
 
         async with self._session.request(method, url, headers=headers, json=body) as resp:
             if resp.status >= 400:
-                logger.warning("Write HTTP %d to %s", resp.status, url)
-                return None
+                raise RuntimeError(f"HTTP {resp.status} from {url}")
             return value
 
     async def _poll_loop(self) -> None:
@@ -169,7 +182,7 @@ class RESTBridge:
                     except Exception as exc:
                         logger.warning("Poll %s failed: %s", src["widget_id"], exc)
                 if updates:
-                    self.bridge.bulk_update(updates)
+                    await self.bridge.bulk_update(updates)
                 await asyncio.sleep(interval)
 
         tasks = [asyncio.create_task(_poll_group(srcs, iv)) for iv, srcs in intervals.items()]
@@ -198,14 +211,7 @@ class RESTBridge:
 
                 value_field = wh.get("value_field", "")
                 val = extract_path(data, value_field) if value_field else json.dumps(data)
-                self.bridge.update_state(wh["widget_id"], str(val))
-
-                if wh.get("alert_severity"):
-                    self.bridge.fire_alert(
-                        f"wh_{wh['widget_id']}",
-                        wh["alert_severity"],
-                        wh.get("alert_message", str(val)),
-                    )
+                await self.bridge.update_state(wh["widget_id"], str(val))
 
             return web.Response(status=200, text="ok")
 
@@ -227,7 +233,7 @@ class RESTBridge:
             await self._start_webhook_server()
             tasks = [
                 asyncio.create_task(self._poll_loop()),
-                asyncio.create_task(self.bridge._run_forever()),
+                asyncio.create_task(self.bridge.run_async()),
             ]
             done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
             for t in done:

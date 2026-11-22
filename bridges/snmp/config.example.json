@@ -3,7 +3,8 @@
     "server": "ws://203.0.113.10:21122/cdap",
     "api_key": "YOUR_API_KEY",
     "device_name": "SNMP Bridge",
-    "device_type": "bridge",
+    "device_id": "snmp-bridge",
+    "device_type": "network",
     "bridge_name": "snmp",
     "heartbeat_sec": 15
   },
