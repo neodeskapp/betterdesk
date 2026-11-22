@@ -2171,7 +2171,10 @@ function Show-InstallSummary {
     Write-Host "  RustDesk clients (Settings > Network > ID/Relay server):"
     Write-Host "    ID server:     " -NoNewline; Write-Host $idServer -ForegroundColor White
     Write-Host "    Relay server:  " -NoNewline; Write-Host $relayServer -ForegroundColor White
-    Write-Host "    API server:    " -NoNewline; Write-Host "http://${hostName}:$($script:GO_API_PORT)" -ForegroundColor White
+    $apiPort = Get-ConsoleEnvValue -Key "API_PORT"
+    if (-not $apiPort) { $apiPort = $script:CLIENT_API_PORT }
+    $apiScheme = if ((Get-ConsoleEnvValue -Key "RUSTDESK_API_TLS") -match '^(?i)(true|1|on|https)$') { "https" } else { "http" }
+    Write-Host "    API server:    " -NoNewline; Write-Host "${apiScheme}://${hostName}:$apiPort" -ForegroundColor White
     Write-Host "    Key:           " -NoNewline; Write-Host $key -ForegroundColor White
     Write-Host "  Log:           $(Get-ServerLogPath)"
     Write-Host "  Settings:      $envFile (then: Restart-Service $($script:SERVER_SERVICE))"
@@ -2797,6 +2800,8 @@ function Generate-SSLCertificates {
         
         # HTTPS for the web console (5443, a redirect on its HTTP port)
         Update-EnvForTLS -CertPath $certPath -KeyPath $keyPath
+        # RustDesk clients refuse a self-signed certificate: the client API port stays on HTTP
+        Set-ConsoleEnvValue -Key "RUSTDESK_API_TLS" -Value "false"
         
         Print-Success "Self-signed TLS certificate generated"
         Print-Info "Certificate: $sslDir"
@@ -2819,6 +2824,8 @@ function Generate-SSLCertificates {
                 
                 if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
                     Update-EnvForTLS -CertPath $certPath -KeyPath $keyPath
+                    # RustDesk clients refuse a self-signed certificate: the client API port stays on HTTP
+                    Set-ConsoleEnvValue -Key "RUSTDESK_API_TLS" -Value "false"
                     Print-Success "Self-signed TLS certificate generated (openssl)"
                     return $true
                 }

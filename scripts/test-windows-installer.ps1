@@ -517,6 +517,9 @@ function Test-WindowsFirstHour {
     Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'id_ed25519.pub') -Value 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ='
     Set-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST' -Value 'desk.example.org'
     $out = (Show-InstallSummary 6>&1 | Out-String)
+    Set-ConsoleEnvValue -Key 'API_PORT' -Value '21121'
+    $out = (Show-InstallSummary 6>&1 | Out-String)
+    if (-not $out.Contains('http://desk.example.org:21121')) { Fail "the summary gives clients another API address (L76): $out" }
     foreach ($want in 'desk.example.org', 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=', (Get-ServerLogPath), $envFile, '-Update', '-Uninstall', 'admin') {
         if (-not $out.Contains($want)) { Fail "the summary does not name $want" }
     }

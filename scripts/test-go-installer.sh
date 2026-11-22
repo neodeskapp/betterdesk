@@ -477,6 +477,11 @@ test_install_summary() (
     ADMIN_PASSWORD='Summary-Pass-1'
     local out
     out=$(print_install_summary 2>&1)
+    # L76: clients get the client API port, plain HTTP while the
+    # certificate is self-signed (RustDesk refuses it)
+    printf 'API_PORT=21121\nRUSTDESK_API_TLS=false\n' >> "$CONSOLE_PATH/.env"
+    out=$(print_install_summary 2>&1)
+    case "$out" in *"API server:    "*"http://desk.example.org:21121"*) ;; *) fail "the summary gives clients another API address: $out" ;; esac
     for want in "https://desk.example.org:5443" "admin" "ID server" "desk.example.org" \
         "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=" "journalctl -u betterdesk-server" "$CONSOLE_PATH/.env" \
         "betterdesk --update" "betterdesk --uninstall"; do
@@ -548,6 +553,21 @@ test_firewall_ports() (
     rm -rf "$TEST_DIR"
 )
 
+# L76: a self-signed certificate keeps the client API port on HTTP, which
+# RustDesk clients accept; the console gets HTTPS.
+test_self_signed_keeps_the_client_api_on_http() (
+    load
+    command -v openssl >/dev/null || { echo "skipped: no openssl"; exit 0; }
+    get_public_ip() { echo 203.0.113.7; }
+    deploy_ssl_material_to_rustdesk_dir() { return 0; }
+    print_success() { :; }
+    printf 'HTTPS_ENABLED=false\nSSL_CERT_PATH=\nSSL_KEY_PATH=\nRUSTDESK_API_TLS=auto\n' > "$CONSOLE_PATH/.env"
+    generate_ssl_certificates >/dev/null 2>&1 || fail "no certificate was made"
+    grep -qx 'HTTPS_ENABLED=true' "$CONSOLE_PATH/.env" || fail "HTTPS is not on"
+    grep -qx 'RUSTDESK_API_TLS=false' "$CONSOLE_PATH/.env" || fail "the client API port takes the self-signed certificate: $(grep RUSTDESK_API_TLS "$CONSOLE_PATH/.env")"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -570,4 +590,5 @@ test_install_summary
 test_uninstall_says_what_stays
 test_update_asks_the_fork
 test_firewall_ports
+test_self_signed_keeps_the_client_api_on_http
 echo "Go installer unit checks passed"

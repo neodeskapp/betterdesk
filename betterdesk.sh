@@ -4132,6 +4132,9 @@ generate_ssl_certificates() {
             sed -i "s|^HTTPS_ENABLED=.*|HTTPS_ENABLED=true|" "$env_file"
             sed -i "s|^SSL_CERT_PATH=.*|SSL_CERT_PATH=$ssl_dir/betterdesk.crt|" "$env_file"
             sed -i "s|^SSL_KEY_PATH=.*|SSL_KEY_PATH=$ssl_dir/betterdesk.key|" "$env_file"
+            # RustDesk clients refuse a self-signed certificate: the client
+            # API port stays on HTTP until a trusted certificate is set up
+            _upsert_env_line "$env_file" RUSTDESK_API_TLS false
             # The internal API URLs stay http://: API TLS breaks RustDesk clients.
 
             # Enterprise TLS compatibility: Go API must remain HTTP because
@@ -5024,7 +5027,9 @@ print_install_summary() {
     echo "  RustDesk clients (Settings > Network > ID/Relay server):"
     echo -e "    ID server:     ${WHITE}$id_server${NC}"
     echo -e "    Relay server:  ${WHITE}$relay_server${NC}"
-    echo -e "    API server:    ${WHITE}http://$host:${GO_API_PORT:-21114}${NC}"
+    local api_scheme=http
+    client_api_should_use_tls && api_scheme=https
+    echo -e "    API server:    ${WHITE}$api_scheme://$host:$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")${NC}"
     echo -e "    Key:           ${WHITE}$key${NC}"
     echo "  Log:           sudo journalctl -u betterdesk-server -f"
     echo "  Settings:      $env_file (then: sudo systemctl restart betterdesk-server)"
