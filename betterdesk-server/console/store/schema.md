@@ -280,8 +280,7 @@ Every 3.x release. Checked with the schemas the releases 3.0.0, 3.4.0 and
 3.5.200 create with their own start code (`testdata/old`): after `Migrate`
 they have the tables, columns, constraints and indexes of a fresh install, in
 another column order, with the SQLite exception above, and every row is still
-there. With the build tag `nodeschema` the same upgrade is done by the current
-Node console and the two results are compared.
+there.
 
 Steps that only matter for installs older than 3.0.0 are kept because Node
 kept them: the `peer` columns, `users.last_login` to `totp_recovery_codes`,
@@ -319,8 +318,6 @@ with type, nullability and default, keys, constraints, indexes, sequences,
 triggers, on PostgreSQL functions, on SQLite the stored statement text)
 equals the one in the dumps taken from a real Node console and signal server
 (`testdata/dumps/shared-*.sql`), with no difference besides `panel_sessions`.
-With the build tag `nodeschema` the comparison runs against the real Node
-console.
 
 The signal server gives `users` the column `credentials_changed_at` and the
 trigger `users_credentials_changed` that stamps it when the password or the
@@ -449,9 +446,10 @@ Writing:
 
 ### What the drivers return
 
-Measured with `testdata/nodeschema/vectors.js` (pg 8.23.1 with pg-types 2.2.0,
-better-sqlite3 13.0.3) and `TestDriverValueTypes` (pgx 5.10 through
-`database/sql`, modernc.org/sqlite 1.55). The JSON column is
+Recorded from the Node console before it was removed (pg 8.23.1 with
+pg-types 2.2.0, better-sqlite3 13.0.3) and measured with
+`TestDriverValueTypes` (pgx 5.10 through `database/sql`, modernc.org/sqlite
+1.55). The JSON column is
 `JSON.stringify` of what Node's driver returned; the files in
 `testdata/vectors` have every case.
 
@@ -515,7 +513,6 @@ from JavaScript's by the hour that is skipped or repeated.
 ## Tests
 
     tools/gotest.sh "./console/store/... -count=1 -race"
-    tools/gotest.sh "-tags nodeschema ./console/store/ -run TestNode -count=1"
     DEV_DOCKER_ARGS="-e TZ=Europe/Berlin" tools/gotest.sh "./console/store/ -run 'TestValues|TestSelect|TestDriver' -count=1"
 
 | File | What it checks |
@@ -526,7 +523,6 @@ from JavaScript's by the hour that is skipped or repeated.
 | `steps_test.go` | every column step, the token hashes, slugs, product types, default groups, two migrations at once, the PostgreSQL lock, the log lines, failing steps, this file's step tables |
 | `shape_test.go` | the shape of every variant: console first, signal server first, Node first, the four shared dumps, the signal server alone; what the Go drivers return |
 | `values_test.go` | the value types against Node's driver output |
-| `nodeschema_test.go` (tag `nodeschema`) | the same comparisons against the running Node console, and that Node still starts and reads the same rows after `Migrate` |
 
 `storetest` gives other packages these databases: `Migrated(t)`,
 `EachMigrated(t, fn)`, and `EachOrigin(t, fn)` for code that touches a shared

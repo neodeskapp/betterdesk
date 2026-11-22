@@ -127,7 +127,7 @@ func vectorsFor(t *testing.T, db *store.DB) valueVectors {
 
 // Every value type gives the JSON the Node console sent for the same
 // stored value, on both databases. The expected JSON is what its drivers
-// returned, recorded by testdata/nodeschema/vectors.js.
+// returned (testdata/vectors, recorded while the Node console existed).
 func TestValuesMatchNode(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		v := vectorsFor(t, db)

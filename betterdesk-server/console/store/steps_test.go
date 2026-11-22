@@ -303,7 +303,7 @@ type backfillVectors struct {
 }
 
 // readBackfillVectors reads what the Node console's own code gave for a
-// list of inputs (testdata/nodeschema/vectors.js writes the file).
+// list of inputs (testdata/vectors/backfills.json, a fixed recording).
 func readBackfillVectors(t *testing.T) backfillVectors {
 	t.Helper()
 	var v backfillVectors
