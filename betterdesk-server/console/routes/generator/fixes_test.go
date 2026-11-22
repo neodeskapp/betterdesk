@@ -1,5 +1,7 @@
 package generator_test
 
+import "strings"
+
 // fix is a recorded step that the Go console answers otherwise on
 // purpose: Node's answer was a bug that is fixed here (bug names the row
 // of BUGS.md). The answer is the same on both databases.
@@ -41,6 +43,10 @@ var fixes = map[string]fix{
 	"131 POST /api/generator/generate-config": tomlWithRelay("r:21117"),
 	"133 POST /api/generator/generate-config": tomlWithRelay("r:21117"),
 }
+
+// clientRepoFix names the client fork in the module status where the
+// recordings named upstream's repository as the default (L238).
+var clientRepoFix = strings.NewReplacer(`"clientRepo":"UNITRONIX/BetterDesk-Client"`, `"clientRepo":"trybetterdesk/betterdesk-client"`)
 
 // tomlWithRelay is the old toml generator's answer for the host h with
 // the relay given (UM4).

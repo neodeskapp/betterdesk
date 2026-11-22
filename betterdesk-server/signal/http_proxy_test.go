@@ -3,7 +3,9 @@ package signal
 import (
 	"crypto/ed25519"
 	"crypto/rand"
+	"io"
 	"net"
+	"net/http"
 	"testing"
 	"time"
 
@@ -16,18 +18,17 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TestHandleMessageHttpProxyRequestRejected(t *testing.T) {
-	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
-	msg := &pb.RendezvousMessage{
+func httpProxyMessage(method, path string, body []byte, headers ...*pb.HeaderEntry) *pb.RendezvousMessage {
+	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_HttpProxyRequest{
-			HttpProxyRequest: &pb.HttpProxyRequest{
-				Method: "POST",
-				Path:   "/api/login",
-				Body:   []byte(`{}`),
-			},
+			HttpProxyRequest: &pb.HttpProxyRequest{Method: method, Path: path, Body: body, Headers: headers},
 		},
 	}
-	resp := srv.handleMessage(msg, udpAddr("203.0.113.10", 52001))
+}
+
+func TestHandleMessageHttpProxyRequestWithoutAPI(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	resp := srv.handleMessage(httpProxyMessage("POST", "/api/login", []byte(`{}`)), udpAddr("203.0.113.10", 52001))
 	if resp == nil {
 		t.Fatal("expected HttpProxyResponse, got nil")
 	}
@@ -37,6 +38,89 @@ func TestHandleMessageHttpProxyRequestRejected(t *testing.T) {
 	}
 	if hr.GetError() != "not supported" {
 		t.Fatalf("error = %q, want %q", hr.GetError(), "not supported")
+	}
+}
+
+// TestHttpProxyRequestServedByTheAPI: a client with an empty API server
+// sends its API calls through the signal connection (L246). The signal
+// server answers them with the API port's handler in this process, with
+// the client's address, method, headers and body.
+func TestHttpProxyRequestServedByTheAPI(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	type seen struct {
+		method, uri, remote, auth, forwarded, body string
+	}
+	var got []seen
+	srv.SetAPIProxy(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		got = append(got, seen{r.Method, r.RequestURI, r.RemoteAddr, r.Header.Get("Authorization"), r.Header.Get("X-Forwarded-For"), string(b)})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	from := udpAddr("203.0.113.10", 52001)
+	resp := srv.handleMessage(httpProxyMessage("POST", "/api/sysinfo?x=1", []byte(`{"id":"123456789"}`),
+		&pb.HeaderEntry{Name: "Authorization", Value: "Bearer abc"},
+		&pb.HeaderEntry{Name: "X-Forwarded-For", Value: "10.0.0.1"}), from).GetHttpProxyResponse()
+	if resp == nil || resp.GetError() != "" || resp.GetStatus() != http.StatusCreated || string(resp.GetBody()) != `{"ok":true}` {
+		t.Fatalf("answer %+v", resp)
+	}
+	contentType := ""
+	for _, h := range resp.GetHeaders() {
+		if h.GetName() == "Content-Type" {
+			contentType = h.GetValue()
+		}
+	}
+	if contentType != "application/json" {
+		t.Fatalf("headers %v", resp.GetHeaders())
+	}
+	want := seen{"POST", "/api/sysinfo?x=1", from.String(), "Bearer abc", "", `{"id":"123456789"}`}
+	if len(got) != 1 || got[0] != want {
+		t.Fatalf("API saw %+v, want %+v", got, want)
+	}
+}
+
+// TestHttpProxyRequestOnlyForTheServersAPI: nothing but this server's
+// /api/ paths is answered, and nothing reaches another host.
+func TestHttpProxyRequestOnlyForTheServersAPI(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	calls := 0
+	srv.SetAPIProxy(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls++ }))
+	for _, c := range []struct{ method, path string }{
+		{"GET", "http://169.254.169.254/api/latest"},
+		{"GET", "//evil.example/api/x"},
+		{"GET", "/api/../console/settings"},
+		{"GET", "/api/%2e%2e/console"},
+		{"GET", "/api/x/..%2Fy"},
+		{"GET", "/console/api/x"},
+		{"GET", "/api"},
+		{"GET", "api/heartbeat"},
+		{"GET", "/api/x#frag"},
+		{"GET", `/api/x\..\y`},
+		{"CONNECT", "/api/x"},
+		{"TRACE", "/api/x"},
+		{"", "/api/x"},
+	} {
+		resp := srv.handleMessage(httpProxyMessage(c.method, c.path, nil), udpAddr("203.0.113.10", 52001)).GetHttpProxyResponse()
+		if resp == nil || resp.GetError() == "" || resp.GetStatus() != 0 {
+			t.Errorf("%s %q: answer %+v, want an error", c.method, c.path, resp)
+		}
+	}
+	if calls != 0 {
+		t.Fatalf("the API got %d of the refused requests", calls)
+	}
+}
+
+// TestHttpProxyAnswerTooLarge: an answer that does not fit one signal
+// frame is an error, not a cut body.
+func TestHttpProxyAnswerTooLarge(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	srv.SetAPIProxy(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write(make([]byte, codec.MaxFrameSize))
+	}))
+	resp := srv.handleMessage(httpProxyMessage("GET", "/api/ab", nil), udpAddr("203.0.113.10", 52001)).GetHttpProxyResponse()
+	if resp == nil || resp.GetError() == "" || len(resp.GetBody()) != 0 {
+		t.Fatalf("answer error %q with %d bytes", resp.GetError(), len(resp.GetBody()))
 	}
 }
 

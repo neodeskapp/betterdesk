@@ -461,7 +461,7 @@ func TestInstallFromGitHub(t *testing.T) {
 	sum := sha256.Sum256(archive)
 	release := func(digest string) []byte {
 		return []byte(`{"tag_name":"v1.2.3","assets":[{"name":"generator-templates-1.2.3.tar.gz","digest":"` + digest +
-			`","browser_download_url":"https://github.com/UNITRONIX/BetterDesk-Client/releases/download/v1.2.3/generator-templates-1.2.3.tar.gz"}]}`)
+			`","browser_download_url":"https://github.com/trybetterdesk/betterdesk-client/releases/download/v1.2.3/generator-templates-1.2.3.tar.gz"}]}`)
 	}
 	for _, c := range []struct {
 		name     string
@@ -477,7 +477,7 @@ func TestInstallFromGitHub(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			gh := &fakeGitHub{answer: func(r *http.Request) *http.Response {
 				switch {
-				case r.URL.Host == "api.github.com" && r.URL.Opaque == "//api.github.com/repos/UNITRONIX/BetterDesk-Client/releases/latest":
+				case r.URL.Host == "api.github.com" && r.URL.Opaque == "//api.github.com/repos/trybetterdesk/betterdesk-client/releases/latest":
 					return reply(200, release(c.digest))
 				case r.URL.Host == "github.com":
 					return reply(302, nil, "Location", c.location)
@@ -547,7 +547,7 @@ func TestInstallNeedsTerms(t *testing.T) {
 func TestSyncSource(t *testing.T) {
 	commit := strings.Repeat("c", 40)
 	gh := &fakeGitHub{answer: func(r *http.Request) *http.Response {
-		if r.URL.Opaque == "//api.github.com/repos/UNITRONIX/BetterDesk-Client/commits/master" {
+		if r.URL.Opaque == "//api.github.com/repos/trybetterdesk/betterdesk-client/commits/master" {
 			return reply(200, []byte(`{"sha":"`+commit+`"}`))
 		}
 		return nil
@@ -576,7 +576,7 @@ func TestSyncSource(t *testing.T) {
 		t.Fatalf("sync: %+v %v", result, err)
 	}
 	want := [][]string{
-		{"clone", "--filter=blob:none", "--no-tags", "--no-checkout", "https://github.com/UNITRONIX/BetterDesk-Client.git"},
+		{"clone", "--filter=blob:none", "--no-tags", "--no-checkout", "https://github.com/trybetterdesk/betterdesk-client.git"},
 		{"-C", "", "checkout", "--detach", commit},
 		{"-C", "", "submodule", "update", "--init", "--recursive"},
 	}

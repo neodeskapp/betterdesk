@@ -116,7 +116,7 @@
      "data": {
       "binariesPresent": false,
       "buildsPossible": false,
-      "clientRepo": "UNITRONIX/BetterDesk-Client",
+      "clientRepo": "trybetterdesk/betterdesk-client",
       "error": null,
       "installedAt": null,
       "installedVersion": null,

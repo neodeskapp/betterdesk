@@ -60,7 +60,7 @@ var (
 )
 
 // NormalizeRepo checks a repository name: owner/name, and one of
-// BETTERDESK_CLIENT_ALLOWED_REPOS (default UNITRONIX/BetterDesk-Client).
+// BETTERDESK_CLIENT_ALLOWED_REPOS (default trybetterdesk/betterdesk-client).
 // value is the request's value as it came; nil or "" take the setting.
 func (s *Service) NormalizeRepo(value any) (string, error) {
 	repo := jsTrim(jsString(or(or(value, s.getenv("BETTERDESK_CLIENT_REPO")), defaultClientRepo)))

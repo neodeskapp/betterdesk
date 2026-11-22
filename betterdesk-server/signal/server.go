@@ -198,6 +198,9 @@ type Server struct {
 	// controllerFeatures looks up the client features of a console
 	// account (see client_features.go); nil until the console sets it.
 	controllerFeatures atomic.Pointer[ControllerFeatures]
+	// apiProxy answers HttpProxyRequest (see http_proxy.go); nil until
+	// the API is set.
+	apiProxy atomic.Pointer[http.Handler]
 }
 
 // New creates a new signal server instance.

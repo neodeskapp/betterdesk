@@ -27,7 +27,7 @@ import (
 
 const (
 	moduleID          = "betterdesk-support-generator"
-	defaultClientRepo = "UNITRONIX/BetterDesk-Client"
+	defaultClientRepo = "trybetterdesk/betterdesk-client"
 	signingSeedName   = "custom-client-signing.seed"
 	minBinarySize     = 32 * 1024
 )
@@ -281,7 +281,7 @@ func sortedStrings(list []string) []string {
 }
 
 // ClientRepo is the GitHub repository the templates come from
-// (BETTERDESK_CLIENT_REPO, default UNITRONIX/BetterDesk-Client).
+// (BETTERDESK_CLIENT_REPO, default trybetterdesk/betterdesk-client).
 func (s *Service) ClientRepo() string {
 	repo := jsTrim(s.getenv("BETTERDESK_CLIENT_REPO"))
 	if s.getenv("BETTERDESK_CLIENT_REPO") == "" || repo == "" {

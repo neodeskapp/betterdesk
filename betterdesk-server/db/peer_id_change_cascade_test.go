@@ -81,3 +81,33 @@ func TestChangePeerIDMovesAccessAndGroups(t *testing.T) {
 		}
 	})
 }
+
+// TestChangePeerIDBackDropsStalePending: a device changed from A to B
+// that enrolled under A meanwhile left pending_device_A; when the console
+// changes it back to A, that entry goes, so the approved device takes
+// sessions and leaves the pending list. Other pending entries stay (L241).
+func TestChangePeerIDBackDropsStalePending(t *testing.T) {
+	freshStores(t, func(t *testing.T, database Database) {
+		const idA, idB, other = "L241AAAA", "L241BBBB", "L241OTHER"
+		if err := database.UpsertPeer(&Peer{ID: idA, Status: "ONLINE"}); err != nil {
+			t.Fatal(err)
+		}
+		if err := database.ChangePeerID(idA, idB, "panel"); err != nil {
+			t.Fatalf("ChangePeerID A to B: %v", err)
+		}
+		for _, id := range []string{idA, other} {
+			if err := database.SetConfig("pending_device_"+id, `{"device_id":"`+id+`"}`); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := database.ChangePeerID(idB, idA, "panel"); err != nil {
+			t.Fatalf("ChangePeerID B to A: %v", err)
+		}
+		if v, err := database.GetConfig("pending_device_" + idA); err != nil || v != "" {
+			t.Fatalf("pending_device_%s = %q, %v after the change back", idA, v, err)
+		}
+		if v, err := database.GetConfig("pending_device_" + other); err != nil || v == "" {
+			t.Fatalf("pending_device_%s = %q, %v, want it kept", other, v, err)
+		}
+	})
+}

@@ -701,7 +701,10 @@ func main() {
 		}
 		defer adminSrv.Stop()
 
-		stopConsole, err := startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofFor, sig.SetControllerFeatures, requestRestart)
+		// HttpProxyRequest from clients without an API server setting: the
+		// API port's handler, the console's client API port when it runs
+		sig.SetAPIProxy(apiSrv.ListenerHandler())
+		stopConsole, err := startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofFor, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart)
 		if err != nil {
 			logging.Fatalf("Failed to start console: %v", err)
 		}
