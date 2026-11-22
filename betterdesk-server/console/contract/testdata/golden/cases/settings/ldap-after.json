@@ -39,6 +39,7 @@
    "body": {
     "kind": "json",
     "json": {
+     "allow_signup": true,
      "base_dn": "dc=example,dc=org",
      "bind_dn": "cn=contract,dc=example,dc=org",
      "bind_password": "••••••••",

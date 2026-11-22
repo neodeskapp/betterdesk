@@ -110,6 +110,7 @@
    "body": {
     "kind": "json",
     "json": {
+     "allow_signup": true,
      "base_dn": "",
      "bind_dn": "",
      "bind_password": "",
