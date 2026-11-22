@@ -90,3 +90,66 @@ describe('a download with compressed blocks', () => {
 		expect(disk.join('')).toBe('AAABBBCCC<closed>');
 	});
 });
+
+/** The device's folders: each lists its files (name and text) */
+const TREE: Record<string, { name: string; text: string }[]> = {
+	'/data/docs': [{ name: 'a.txt', text: 'abc' }],
+	'/data/other': [{ name: 'b.txt', text: 'xyz' }]
+};
+
+/** A device that lists folders but never starts sending a file */
+function silentSender(t: Awaited<ReturnType<typeof setup>>) {
+	t.ft._sendMessage = (msg) => {
+		t.sent.push(msg);
+		const path = msg.fileAction?.readDir?.path;
+		if (path != null) {
+			const entries = (TREE[path] ?? []).map((f) => ({ name: f.name, entryType: 4, size: f.text.length }));
+			queueMicrotask(() => t.respond({ dir: { id: 0, path, entries } }));
+		}
+	};
+}
+
+const readDirs = (t: Awaited<ReturnType<typeof setup>>) =>
+	t.sent.map((m) => m.fileAction?.readDir?.path).filter((p) => p != null);
+const sendIds = (t: Awaited<ReturnType<typeof setup>>) =>
+	t.sent.map((m) => m.fileAction?.send?.id).filter((p) => p != null);
+
+describe('a folder transfer whose file does not go through', () => {
+	test('a file the device never starts fails the folder after the stall time, and the next folder runs', async () => {
+		const t = await setup();
+		silentSender(t);
+		t.ft.TRANSFER_STALL_MS = 20;
+		const first = t.ft.downloadFolderAsZip('/data', { name: 'docs', isDir: true });
+		t.ft.downloadFolderAsZip('/data', { name: 'other', isDir: true });
+		await vi.waitFor(() =>
+			expect(t.named('file_transfer_error').filter((e) => e.id === first && e.isFolder)).toHaveLength(1)
+		);
+		await vi.waitFor(() => expect(readDirs(t)).toEqual(['/data/docs', '/data/other']));
+	});
+
+	test('cancelling the file of a folder ends that folder, and the next folder runs', async () => {
+		const t = await setup();
+		silentSender(t);
+		const first = t.ft.downloadFolderAsZip('/data', { name: 'docs', isDir: true });
+		t.ft.downloadFolderAsZip('/data', { name: 'other', isDir: true });
+		await vi.waitFor(() => expect(sendIds(t)).toHaveLength(1));
+		t.ft.cancelTransfer(Number(sendIds(t)[0]));
+		await vi.waitFor(() =>
+			expect(t.named('file_transfer_error').filter((e) => e.id === first && e.isFolder)).toHaveLength(1)
+		);
+		await vi.waitFor(() => expect(readDirs(t)).toEqual(['/data/docs', '/data/other']));
+	});
+
+	test('on the desktop, a download the device never starts closes and removes its file', async () => {
+		const t = await setup();
+		silentSender(t);
+		t.ft.TRANSFER_STALL_MS = 20;
+		vi.spyOn(t.ft, '_supportsStreamDownload').mockReturnValue(true);
+		vi.spyOn(LocalFiles, 'beginDownload').mockResolvedValue({ started: true, handle: 7, path: '/tmp/a.txt' });
+		const abort = vi.spyOn(LocalFiles, 'abortDownload').mockResolvedValue(undefined);
+		const id = t.ft.downloadFile('/data/docs', { name: 'a.txt', size: 3 });
+		await vi.waitFor(() => expect(t.named('file_transfer_error')).toHaveLength(1));
+		expect(t.named('file_transfer_error')[0]).toMatchObject({ id, error: 'Remote did not start transfer' });
+		expect(abort).toHaveBeenCalledWith(7, true);
+	});
+});

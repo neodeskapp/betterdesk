@@ -686,20 +686,11 @@ export class RDFileTransfer {
 		transfer.stallTimer = setTimeout(() => {
 			const t = this._transfers.get(id);
 			if (!t || t.status !== 'pending') return;
-			t.status = 'error';
-			t.resumable =
+			const resumable =
 				(t.type === 'upload' && (t.sentBytes || 0) > 0) ||
 				(t.type === 'download' && (t.receivedBytes || 0) > 0);
-			if (!t.resumable) {
-				this._transfers.delete(id);
-			}
-			this._emit('file_transfer_error', {
-				id: id,
-				fileName: t.fileName,
-				error: 'Remote did not start transfer',
-				resumable: t.resumable,
-				type: t.type
-			} satisfies RDFileTransferErrorEvent);
+			// As any failure: the folder job waiting for the file goes on, a desktop file is closed
+			this._failTransfer(id, 'Remote did not start transfer', { resumable });
 		}, this.TRANSFER_STALL_MS);
 	}
 
@@ -1122,8 +1113,11 @@ export class RDFileTransfer {
 			fileName: transfer.fileName,
 			folderJobId: transfer.folderJobId || null
 		} satisfies RDFileTransferCancelledEvent);
-		if (transfer.folderJobId) {
-			this._onChildTransferSettled(transfer.folderJobId, id, false);
+		// The folder job waiting for this file goes on (it stops when it was cancelled itself)
+		if (typeof transfer._folderWait === 'function') {
+			const resolve = transfer._folderWait;
+			transfer._folderWait = null;
+			resolve(false);
 		}
 	}
 
@@ -1410,17 +1404,6 @@ export class RDFileTransfer {
 			}
 			transfer._folderWait = resolve;
 		});
-	}
-
-	_onChildTransferSettled(folderJobId: number, childId: number, ok: boolean): void {
-		const job = this._activeFolderJob;
-		if (!job || job.id !== folderJobId) return;
-		const transfer = this._transfers.get(childId);
-		if (transfer && typeof transfer._folderWait === 'function') {
-			const resolve = transfer._folderWait;
-			transfer._folderWait = null;
-			resolve(ok);
-		}
 	}
 
 	async _runFolderUpload(job: RDFolderUploadJob): Promise<void> {
