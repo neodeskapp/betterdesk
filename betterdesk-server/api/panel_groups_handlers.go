@@ -297,7 +297,7 @@ func (s *Server) handlePanelDeviceGroupsDelete(w http.ResponseWriter, r *http.Re
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group not found"})
 		return
 	}
-	if !s.panelGroupOpenTo(w, r, guid) {
+	if !s.panelGroupOpenTo(w, r, guid) || !s.mayDropAccessList(w, r, guid) {
 		return
 	}
 	if err := s.db.DeleteDeviceGroup(guid); err != nil {
@@ -543,7 +543,7 @@ func (s *Server) handlePanelFoldersDelete(w http.ResponseWriter, r *http.Request
 	if !ok {
 		return
 	}
-	if !s.panelFolderOpenTo(w, r, id) {
+	if !s.panelFolderOpenTo(w, r, id) || !s.mayDropAccessList(w, r, fmt.Sprintf("folder_%d", id)) {
 		return
 	}
 	if err := store.DeletePanelFolder(id); err != nil {
@@ -705,6 +705,27 @@ func (s *Server) panelFolderOpenTo(w http.ResponseWriter, r *http.Request, folde
 	return true
 }
 
+// mayDropAccessList reports whether the caller may delete the device group
+// guid (a folder's is folder_<id>): a group with an access list asks
+// user.edit, because its devices open to everyone when the list goes, and
+// is refused with 403. A group without a list, or a database without
+// access lists, passes.
+func (s *Server) mayDropAccessList(w http.ResponseWriter, r *http.Request, guid string) bool {
+	store, err := s.panelGroupStore()
+	if err != nil {
+		return true
+	}
+	acl, err := store.GetDeviceGroupACL(guid)
+	if err != nil {
+		writeInternalError(w, err, "GetDeviceGroupACL")
+		return false
+	}
+	if acl == nil || len(accessNames(acl.AllowedUsers)) == 0 && len(accessNames(acl.AllowedUserGroups)) == 0 {
+		return true
+	}
+	return s.permitted(w, r, auth.PermUserEdit)
+}
+
 // panelCaller is the caller as the device group access lists name it.
 func (s *Server) panelCaller(r *http.Request) (*db.User, string) {
 	username, role := getUsernameFromCtx(r), getRoleFromCtx(r)
@@ -724,8 +745,9 @@ func parsePanelID(w http.ResponseWriter, raw string) (int64, bool) {
 // registerPanelGroupRoutes mounts the grouping endpoints. Writes need
 // device.edit (groups, members, folders) or user.edit (grants and the
 // access lists, which decide who sees a group's or folder's devices: the
-// ACL route, and the lists in a group save); reads need device.view or
-// user.view, so a viewer can see the folders but not change them.
+// ACL route, the lists in a group save, and deleting a group or folder
+// that has a list); reads need device.view or user.view, so a viewer can
+// see the folders but not change them.
 func (s *Server) registerPanelGroupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/panel/device-groups",
 		s.requirePermission(auth.PermDeviceView, s.handlePanelDeviceGroupsList))

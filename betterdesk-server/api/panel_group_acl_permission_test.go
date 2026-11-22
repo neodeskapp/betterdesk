@@ -2,7 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/auth"
@@ -66,5 +68,67 @@ func TestPanelGroupAccessListsAskUserEdit(t *testing.T) {
 	}
 	if status, body := call(http.MethodPut, "/api/panel/device-groups/"+guid+"/acl", `{"allowed_users":["rv_boss","tadmin"]}`); status != http.StatusOK {
 		t.Errorf("PUT acl with user.edit granted: %d %s, want 200", status, body)
+	}
+}
+
+// TestPanelDeletesOfGroupsWithAnAccessListAskUserEdit: deleting a device
+// group or a folder whose folder_<id> group has an access list opens its
+// devices to everyone, so it asks user.edit; groups and folders without a
+// list stay with device.edit (L47).
+func TestPanelDeletesOfGroupsWithAnAccessListAskUserEdit(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	if err := database.CreateUser(&db.User{Username: "rv_boss", PasswordHash: "hash", Role: auth.RoleOperator}); err != nil {
+		t.Fatal(err)
+	}
+	create := func(path, body string) map[string]any {
+		t.Helper()
+		status, answer := asConsole(t, srv, http.MethodPost, path, body)
+		var out map[string]any
+		if err := json.Unmarshal([]byte(answer), &out); err != nil || status != http.StatusCreated {
+			t.Fatalf("POST %s %s in process: %d %s", path, body, status, answer)
+		}
+		return out
+	}
+	listed := create("/api/panel/device-groups", `{"name":"Office","allowed_users":["rv_boss"]}`)["guid"].(string)
+	plain := create("/api/panel/device-groups", `{"name":"Lab"}`)["guid"].(string)
+	folder := fmt.Sprintf("%.0f", create("/api/panel/folders", `{"name":"Office folder"}`)["id"].(float64))
+	emptyFolder := fmt.Sprintf("%.0f", create("/api/panel/folders", `{"name":"Lab folder"}`)["id"].(float64))
+	if err := database.CreateDeviceGroup(&db.DeviceGroup{GUID: "folder_" + folder, Name: "Office folder", SourceType: "manual"}); err != nil {
+		t.Fatal(err)
+	}
+	if status, body := asConsole(t, srv, http.MethodPut, "/api/panel/device-groups/folder_"+folder+"/acl", `{"allowed_users":["rv_boss"]}`); status != http.StatusOK {
+		t.Fatalf("the folder's access list in process: %d %s", status, body)
+	}
+	operator := map[string]string{"X-API-Key": testOperatorKey}
+	call := func(method, path string) (int, string) {
+		return listenerCall(t, srv, method, path, "", operator)
+	}
+	const refusal = `{"error":"Insufficient permissions"}`
+
+	for _, path := range []string{"/api/panel/device-groups/" + listed, "/api/panel/folders/" + folder} {
+		if status, body := call(http.MethodDelete, path); status != http.StatusForbidden || body != refusal {
+			t.Errorf("DELETE %s with an access list as an operator: %d %s, want 403", path, status, body)
+		}
+	}
+	if status, body := asConsole(t, srv, http.MethodGet, "/api/panel/device-groups/"+listed+"/acl", ""); status != http.StatusOK || body != `{"allowed_users":["rv_boss"],"allowed_user_groups":[]}` {
+		t.Errorf("the group after the refused delete: %d %s", status, body)
+	}
+	if status, body := asConsole(t, srv, http.MethodGet, "/api/panel/folders", ""); status != http.StatusOK || !strings.Contains(body, `"Office folder"`) {
+		t.Errorf("the folder after the refused delete: %d %s", status, body)
+	}
+	for _, path := range []string{"/api/panel/device-groups/" + plain, "/api/panel/folders/" + emptyFolder} {
+		if status, body := call(http.MethodDelete, path); status != http.StatusOK {
+			t.Errorf("DELETE %s without an access list as an operator: %d %s, want 200", path, status, body)
+		}
+	}
+
+	// user.edit granted by an override deletes them.
+	if err := database.SetRolePermission(auth.RoleOperator, auth.PermUserEdit, true); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"/api/panel/device-groups/" + listed, "/api/panel/folders/" + folder} {
+		if status, body := call(http.MethodDelete, path); status != http.StatusOK {
+			t.Errorf("DELETE %s with user.edit granted: %d %s, want 200", path, status, body)
+		}
 	}
 }

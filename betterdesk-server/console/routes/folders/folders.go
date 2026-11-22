@@ -457,7 +457,9 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 }
 
 // remove answers DELETE /api/folders/{id}: the folder goes, its devices
-// are in no folder any more and its device group goes too.
+// are in no folder any more and its device group goes too. A folder with
+// an access list goes only for an account that may change the list
+// (access.GroupRights.Delete).
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id, ok := folderID(w, r)
@@ -476,7 +478,7 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	if _, rights, err := h.folderRights(ctx, r, id); err != nil {
 		h.serverError(w, r, "Delete folder error:", err)
 		return
-	} else if !rights.Change {
+	} else if !rights.Delete {
 		fail(w, r, http.StatusForbidden, "errors.no_permission")
 		return
 	}

@@ -128,6 +128,76 @@ func TestGroupWritesKeepTheScope(t *testing.T) {
 	}
 }
 
+// TestDeletingAGroupWithAnAccessListNeedsUserEdit: deleting a device group
+// that has an access list opens its devices to everyone, so an operator
+// (device.edit, no user.edit) deletes only a group without a list, also
+// when the list is open to it; the refusal is 403, writes nothing and
+// calls no write on the API server. A global admin deletes the group with
+// a list (L47).
+func TestDeletingAGroupWithAnAccessListNeedsUserEdit(t *testing.T) {
+	for _, node := range []bool{false, true} {
+		storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+			w, api := world(t, db, nil, func(cfg *config.Config) { cfg.PanelGroupingNode = node })
+			operator, globalAdmin := w.As("operator"), w.As("global_admin")
+			for _, q := range []string{
+				`DELETE FROM device_group_user_access`,
+				`INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('g-lab', 'Lab', '', '', 'manual', ''), ('g-team', 'Team', '', '', 'manual', '')`,
+				// g-viewer's list names e2e_operator, g-team's a user group
+				// it is in: both are open to it
+				`INSERT INTO device_group_user_access (device_group_id, user_id) SELECT id, 5 FROM device_groups WHERE guid = 'g-viewer'`,
+				`INSERT INTO user_groups (guid, name, note, team_id) VALUES ('ug-1', 'Support', '', '')`,
+				`INSERT INTO user_group_members (user_group_id, user_id) SELECT id, 5 FROM user_groups WHERE guid = 'ug-1'`,
+				`INSERT INTO device_group_user_group_access (device_group_id, user_group_id) SELECT d.id, u.id FROM device_groups d, user_groups u WHERE d.guid = 'g-team' AND u.guid = 'ug-1'`,
+			} {
+				if _, err := db.Exec(context.Background(), q); err != nil {
+					t.Fatalf("%s: %v", q, err)
+				}
+			}
+			forbidden := `{"success":false,"error":"You don't have access to this device."}`
+			for _, guid := range []string{"g-viewer", "g-team"} {
+				api.Calls()
+				if got := operator.Do("DELETE", "/api/device-groups/"+guid, ""); got.Status != http.StatusForbidden || got.Body != forbidden {
+					t.Errorf("delete %s as operator (console writer %v): %d %s, want 403 %s", guid, node, got.Status, got.Body, forbidden)
+				}
+				for _, call := range api.Calls() {
+					if !strings.HasPrefix(call, "GET ") {
+						t.Errorf("delete %s as operator (console writer %v) reached the server: %s", guid, node, call)
+					}
+				}
+			}
+			if got := groupGUIDs(t, db); got != "g-lab,g-team,g-viewer" {
+				t.Errorf("groups after the refusals (console writer %v): %s", node, got)
+			}
+			if got := operator.Do("DELETE", "/api/device-groups/g-lab", ""); got.Status != http.StatusOK {
+				t.Errorf("delete the group without a list as operator (console writer %v): %d %s", node, got.Status, got.Body)
+			}
+			if got := globalAdmin.Do("DELETE", "/api/device-groups/g-viewer", ""); got.Status != http.StatusOK {
+				t.Errorf("delete the group with a list as global admin (console writer %v): %d %s", node, got.Status, got.Body)
+			}
+		})
+	}
+}
+
+// groupGUIDs lists the guids of the test's device groups (g-...), in
+// order.
+func groupGUIDs(t *testing.T, db *store.DB) string {
+	t.Helper()
+	res, err := db.Query(context.Background(), `SELECT guid FROM device_groups WHERE guid LIKE 'g-%' ORDER BY guid`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Close()
+	var out []string
+	for res.Next() {
+		var guid string
+		if err := res.Scan(&guid); err != nil {
+			t.Fatal(err)
+		}
+		out = append(out, guid)
+	}
+	return strings.Join(out, ",")
+}
+
 // TestGroupAccessListsNeedUserEdit: an operator who sees every device
 // (device.edit, no user.edit) renames a device group and saves it with
 // its lists as they are, but sets, changes and clears no access list; a

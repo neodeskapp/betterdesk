@@ -464,11 +464,15 @@ func (s *Service) DeviceScopeForUser(ctx context.Context, user *ScopeUser, devic
 // GroupRights is what an account may do with a device group, a folder's
 // group included.
 type GroupRights struct {
-	// Change is renaming, restyling or deleting the group (or its folder),
-	// and changing its members.
+	// Change is renaming or restyling the group (or its folder), and
+	// changing its members.
 	Change bool
 	// ChangeAccess is changing the group's access lists.
 	ChangeAccess bool
+	// Delete is deleting the group (or its folder): Change, and for a
+	// group with an access list also ChangeAccess, because its devices
+	// open to everyone when the list goes with it.
+	Delete bool
 	// Limited says the account's device scope is limited: it makes no tag
 	// group, whose devices would join its scope.
 	Limited bool
@@ -487,7 +491,18 @@ type GroupRights struct {
 // scope without a limit: an access list opens devices to accounts and
 // closes them to others, which is managing accounts. An account with
 // device.edit alone changes names and members only.
+//
+// Delete is Change for a group without an access list, and Change with
+// ChangeAccess for a group with one.
 func (s *Service) GroupRightsForUser(ctx context.Context, user *ScopeUser, group *DeviceGroup) (GroupRights, error) {
+	rights, err := s.groupRights(ctx, user, group)
+	listed := group != nil && hasAccessList(*group)
+	rights.Delete = rights.Change && (rights.ChangeAccess || !listed)
+	return rights, err
+}
+
+// groupRights is GroupRightsForUser without Delete.
+func (s *Service) groupRights(ctx context.Context, user *ScopeUser, group *DeviceGroup) (GroupRights, error) {
 	scope, err := s.DeviceScopeForUser(ctx, user, nil)
 	if err != nil {
 		return GroupRights{}, err
