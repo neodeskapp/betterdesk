@@ -210,7 +210,7 @@ jobs:
                && curl -fsS -o /dev/null \
                     -H "Authorization: Bearer ${GH_TOKEN}" \
                     -H "Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json" \
-                    "https://ghcr.io/v2/unitronix/betterdesk-server/manifests/${NEW_VERSION}" 2>/dev/null; then
+                    "https://ghcr.io/v2/${GITHUB_REPOSITORY_OWNER,,}/betterdesk-server/manifests/${NEW_VERSION}" 2>/dev/null; then
               echo "GHCR betterdesk-server:${NEW_VERSION} published"
               images_ok=true
               break
