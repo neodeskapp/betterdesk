@@ -68,3 +68,25 @@ describe('the hidden video element', () => {
 		v.close();
 	});
 });
+
+describe('codecs JMuxer cannot play', () => {
+	test('frames of another codec than H.264 are dropped, not fed to JMuxer', async () => {
+		vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const v = new RDVideo();
+		await v.init('vp9');
+		v._jmuxerReady = true;
+		await v.decode({ data: new Uint8Array([1, 2, 3, 4]), key: true });
+		expect(muxers[0]?.fed).toEqual([]);
+		expect(v.droppedFrames).toBe(1);
+		v.close();
+	});
+
+	test('H.264 frames go to JMuxer', async () => {
+		const v = new RDVideo();
+		await v.init('h264');
+		v._jmuxerReady = true;
+		await v.decode({ data: new Uint8Array([0, 0, 0, 1, 0x65]), key: true });
+		expect(muxers[0]?.fed).toHaveLength(1);
+		v.close();
+	});
+});

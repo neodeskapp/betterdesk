@@ -915,7 +915,8 @@ export class RDVideo {
 	 * Annex-B formatted NAL units (with 00 00 00 01 start codes).
 	 */
 	_decodeFallback(frameData: RDVideoChunk): void {
-		if (!frameData.data || frameData.data.length === 0) {
+		// JMuxer plays H.264 only: frames of another codec are dropped
+		if (!frameData.data || frameData.data.length === 0 || this.currentCodec !== 'h264') {
 			this.droppedFrames++;
 			return;
 		}
