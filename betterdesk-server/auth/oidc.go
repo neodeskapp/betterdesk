@@ -69,7 +69,7 @@ type OIDCResult struct {
 	DisplayName   string
 	Email         string
 	Role          string
-	RoleFromGroup bool
+	RoleFromGroup bool // the group map decided Role (a map is set)
 	Groups        []string
 	IDToken       string // raw ID token for audit
 	ReturnURL     string // post-login relative path from OAuth state
@@ -806,17 +806,16 @@ func (p *OIDCProvider) resolveRole(groups []string) string {
 	return role
 }
 
-// resolveRoleWithSource maps groups to a role and reports whether a configured
-// group mapping matched. The fallback role is an initial/default role only;
-// callers can preserve an administrator's local override when no group matched.
+// resolveRoleWithSource maps groups to a role and reports whether the group
+// map decided it. With a map set it always does: the highest role of the
+// person's mapped groups, or the default role for a person in none of them,
+// so a person who leaves a group at the provider loses its role at the next
+// sign-in. Without a map the default role is only the role of a new
+// account, and callers keep the role an administrator gave.
 func (p *OIDCProvider) resolveRoleWithSource(groups []string) (string, bool) {
 	p.mu.RLock()
 	cfg := *p.config
 	p.mu.RUnlock()
-
-	if len(groups) == 0 || cfg.GroupRoleMap == "" {
-		return cfg.DefaultRole, false
-	}
 
 	roleMap := parseGroupRoleMap(cfg.GroupRoleMap)
 	if len(roleMap) == 0 {
@@ -824,20 +823,19 @@ func (p *OIDCProvider) resolveRoleWithSource(groups []string) (string, bool) {
 	}
 
 	bestRole := cfg.DefaultRole
+	if bestRole == "" {
+		bestRole = RoleViewer
+	}
 	bestLevel := roleLevel(bestRole)
-	matched := false
-
 	for _, group := range groups {
 		if role, ok := roleMap[group]; ok {
-			matched = true
 			if lvl := roleLevel(role); lvl > bestLevel {
 				bestRole = role
 				bestLevel = lvl
 			}
 		}
 	}
-
-	return bestRole, matched
+	return bestRole, true
 }
 
 // dropExpired deletes the entries of m older than lifetime. The caller

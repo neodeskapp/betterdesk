@@ -217,9 +217,10 @@ func (s *Server) ensureOIDCUser(result *auth.OIDCResult, cfg *auth.OIDCConfig) (
 	}
 
 	changed := false
-	// A group mapping is an explicit IdP authorization decision. The default
-	// role is only for provisioning and must not undo a role chosen by a
-	// BetterDesk administrator on later logins.
+	// With a group map set the map decides the role at every sign-in, the
+	// default role for a person in none of its groups included. Without
+	// one the default role is only for provisioning and must not undo a
+	// role chosen by a BetterDesk administrator on later logins.
 	if result.RoleFromGroup && result.Role != "" && result.Role != user.Role {
 		user.Role = result.Role
 		changed = true
