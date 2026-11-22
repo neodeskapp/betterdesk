@@ -4,7 +4,7 @@
 # This file builds the image betterdesk:local from the repository and runs
 # it: one container, one process (signal, relay, API and the web console).
 # `docker compose pull` does not update it; rebuild after git pull:
-#   git pull && docker compose -f docker-compose.single.yml up -d --build
+#   git pull && BETTERDESK_COMMIT_SHA=$(git rev-parse HEAD) docker compose -f docker-compose.single.yml up -d --build
 #
 # Which compose file is which:
 #   docker-compose.quick.single.yml          the published image, builds
@@ -38,6 +38,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # The commit the binary reports (-version, the update check):
+      #   BETTERDESK_COMMIT_SHA=$(git rev-parse HEAD) docker compose -f docker-compose.single.yml up -d --build
+      args:
+        BETTERDESK_COMMIT_SHA: ${BETTERDESK_COMMIT_SHA:-}
     image: betterdesk:local
     pull_policy: never
     container_name: betterdesk

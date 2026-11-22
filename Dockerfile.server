@@ -38,11 +38,19 @@ COPY betterdesk-server/ .
 COPY --from=web-ui-builder /web-ui/build /web-ui-build
 RUN go run ./cmd/embed-webui -from /web-ui-build
 
-ARG BETTERDESK_PRODUCT_VERSION=dev
+# The binary's version, build date and commit (-version, the update check).
+# Without build arguments: the version in VERSION and the time of the build;
+# the commit only when BETTERDESK_COMMIT_SHA names it (the publish workflow
+# and docker-compose.single.yml pass it).
+ARG BETTERDESK_PRODUCT_VERSION=
+ARG BETTERDESK_COMMIT_SHA=
+ARG BETTERDESK_BUILD_DATE=
 
 # Build static binary (modernc.org/sqlite is pure Go — no CGO needed)
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build \
-    -ldflags="-s -w -X main.Version=${BETTERDESK_PRODUCT_VERSION}" \
+RUN version="${BETTERDESK_PRODUCT_VERSION:-$(tr -d '[:space:]' < VERSION)}" && \
+    built="${BETTERDESK_BUILD_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath \
+    -ldflags="-s -w -X main.Version=${version} -X main.Commit=${BETTERDESK_COMMIT_SHA} -X main.BuildDate=${built}" \
     -tags "netgo osusergo" \
     -o /betterdesk-server .
 

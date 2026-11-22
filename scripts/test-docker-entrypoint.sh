@@ -139,6 +139,21 @@ STUB
     done
 )
 
+# L82: the images' binary knows its version, build date and commit: the
+# Dockerfiles pass all three to the linker (the version from VERSION and
+# the date of the build when no build argument names them), and the compose
+# file that builds passes the commit on.
+test_image_binary_knows_its_build() (
+    local df
+    for df in Dockerfile Dockerfile.server; do
+        grep -qF -- '-X main.Commit=${BETTERDESK_COMMIT_SHA}' "$SCRIPT_ROOT/$df" || fail "$df builds without the commit"
+        grep -qF -- '-X main.BuildDate=${built}' "$SCRIPT_ROOT/$df" || fail "$df builds without the build date"
+        grep -qF -- 'version="${BETTERDESK_PRODUCT_VERSION:-$(tr -d' "$SCRIPT_ROOT/$df" || fail "$df does not take the version from VERSION"
+    done
+    grep -qE '^[[:space:]]+BETTERDESK_COMMIT_SHA: \$\{BETTERDESK_COMMIT_SHA:-\}' "$SCRIPT_ROOT/docker-compose.single.yml" \
+        || fail "docker-compose.single.yml does not pass the commit to the build"
+)
+
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
@@ -147,4 +162,5 @@ test_quick_compose_pulls_the_published_image
 test_cdap_port_is_published
 test_compose_reads_env_file
 test_healthcheck_follows_tls
+test_image_binary_knows_its_build
 echo "Docker entrypoint checks passed"
