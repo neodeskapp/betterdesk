@@ -139,7 +139,7 @@ test.describe('system settings tasks', () => {
 		await expect(page.locator('#restore-start-btn')).toBeEnabled();
 	});
 
-	test('schedule details and the network share login show when they apply', async ({ page }) => {
+	test('schedule details show when they apply; no network share login', async ({ page }) => {
 		// The switch shows the saved schedule once it has loaded
 		const loaded = page.waitForResponse((r) => r.url().endsWith('/api/settings/backup/schedule'), START);
 		await page.goto(`${UI}/settings?tab=backup`);
@@ -152,9 +152,15 @@ test.describe('system settings tasks', () => {
 		await expect(enabled).toHaveAttribute('aria-expanded', String(!on));
 		await expect(page.locator('#scheduled-backup-details')).toBeVisible({ visible: !on });
 		await expect(page.getByText('Unsaved changes')).toBeVisible();
+		if (!on) {
+			// A folder destination asks for its path
+			await page.locator('#scheduled-backup-destination-type').selectOption('path');
+			await expect(page.locator('#scheduled-backup-path')).toBeVisible();
+		}
 		await enabled.click();
-		await page.getByRole('heading', { name: 'Network share login (SMB)' }).click();
-		await expect(page.locator('#backup-smb-host')).toBeVisible();
+		// A155: backups go to a folder path; the network share login is gone
+		await expect(page.getByRole('heading', { name: 'Network share login (SMB)' })).toHaveCount(0);
+		await expect(page.locator('#backup-smb-host')).toHaveCount(0);
 		await expectNoAxeViolations(page);
 	});
 
