@@ -65,8 +65,8 @@ V8 engine, copyright the V8 project authors, BSD 3-Clause License.
 ## Web console code
 
 The Svelte console in `web-ui/` bundles these npm packages into the code the
-browser loads. All are under the MIT License; each package ships its license,
-and the resolved versions are in `web-ui/package-lock.json`.
+browser loads. They are under the MIT License unless noted; each package ships
+its license, and the resolved versions are in `web-ui/package-lock.json`.
 
 - Svelte, copyright Svelte contributors
 - SvelteKit (`@sveltejs/kit`, its client runtime), copyright SvelteKit
@@ -77,21 +77,20 @@ and the resolved versions are in `web-ui/package-lock.json`.
 - xterm.js (`@xterm/xterm` and `@xterm/addon-fit`), copyright the xterm.js
   authors, SourceLair Private Company and Christopher Jeffrey
 - qrcode-generator, copyright Kazuhiko Arase
+- protobuf.js (`protobufjs` and its `@protobufjs/*` parts), BSD-3-Clause,
+  copyright Daniel Wirtz, and long.js, Apache-2.0, copyright Daniel Wirtz
+  (the remote desktop viewer's RustDesk messages)
+- JMuxer, MIT, copyright Samir Das (the remote desktop viewer's H.264
+  playback without WebCodecs)
 
 Each build writes the full license text of every bundled package to
 `licenses.txt` next to the code (served at `/app/licenses.txt`), and the build
 fails when a bundled package is under a license other than MIT, ISC, 0BSD,
-BSD-2-Clause, BSD-3-Clause or Apache-2.0 (`web-ui/vite-plugins/licenses.ts`).
-Keep this list in step with that file.
+BSD-2-Clause, BSD-3-Clause, Apache-2.0 or the Unlicense
+(`web-ui/vite-plugins/licenses.ts`). Keep this list in step with that file.
 
-The browser remote desktop client (`web-ui/static/rdclient/`) is served as
-plain files, not bundled, so `licenses.txt` doesn't cover the libraries in its
-`vendor/` folder:
-
-- protobuf.js 7.6.5, BSD-3-Clause, copyright Daniel Wirtz
-- TweetNaCl-js (`nacl.min.js`) and tweetnacl-util (`nacl-util.min.js`), public
-  domain under the Unlicense
-- JMuxer (`jmuxer.min.js`), MIT, copyright Samir Das
+TweetNaCl-js (`tweetnacl`, the remote desktop viewer's encryption) is public
+domain under the Unlicense.
 
 Build and test tools in `web-ui/package.json` (Vite, TypeScript, Vitest,
 Playwright, ESLint and others) are not part of what the console serves.

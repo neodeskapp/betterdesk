@@ -37,6 +37,7 @@ import {
 	type Monitor,
 	type RemoteClient,
 	type TouchInput,
+	type TouchRenderer,
 	type VirtualDisplaySupport,
 	type WindowsSessions
 } from './rdclient.ts';
@@ -60,6 +61,16 @@ import {
 	type Transport,
 	type View
 } from './states.ts';
+
+/** Whether a client's renderer maps touches to the remote screen (the RustDesk renderer does) */
+function isTouchRenderer(renderer: unknown): renderer is TouchRenderer {
+	return (
+		typeof renderer === 'object' &&
+		renderer !== null &&
+		'canvasToRemote' in renderer &&
+		typeof renderer.canvasToRemote === 'function'
+	);
+}
 
 export type SheetName = 'chat' | 'files' | 'info';
 
@@ -1192,8 +1203,9 @@ export class Viewer {
 		if (typeof s.client.input?.sendMessage !== 'function') return;
 		const Touch = touchInput();
 		if (!Touch) return;
-		if (!s.touch)
-			s.touch = new Touch(s.canvas, s.client.renderer, (msg) => {
+		const renderer = s.client.renderer;
+		if (!s.touch && isTouchRenderer(renderer))
+			s.touch = new Touch(s.canvas, renderer, (msg) => {
 				s.client?.input?.sendMessage?.(msg);
 			});
 		this.syncTouch();

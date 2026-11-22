@@ -1,21 +1,26 @@
 /**
- * The mesh desktop viewer (static/rdclient/betterviewer.js, MNG_KVM over
- * the mesh relay, wrapped by mesh-adapter.js) fed by a fake agent: binary
+ * The mesh desktop viewer (src/lib/remote/client/betterviewer.ts, MNG_KVM
+ * over the mesh relay, wrapped by mesh-adapter.ts) fed by a fake agent: binary
  * messages go straight into its stream parser, and the remote viewer runs
  * the real mesh client over a fake relay socket. No relay or agent runs.
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { loadScripts, type Loaded } from './rdclient-scripts.ts';
+import { BetterViewer } from '../../../src/lib/remote/client/betterviewer.ts';
+import { FileTransferModal } from '../../../src/lib/remote/client/file-modal.ts';
+import { MeshFileTransfer } from '../../../src/lib/remote/client/mesh-files.ts';
+import { MeshSession, type MeshSessionOptions } from '../../../src/lib/remote/client/mesh-adapter.ts';
 
-const g: Loaded = loadScripts(['betterviewer.js', 'mesh-adapter.js'], ['BetterViewer', 'MeshSession']);
+const g = { BetterViewer, MeshSession };
 
-vi.mock('../../../src/lib/remote/rdclient.ts', () => ({
-	createClient: (canvas: HTMLCanvasElement, opts: Record<string, unknown>) =>
-		new (window as unknown as { MeshSession: new (...a: unknown[]) => unknown }).MeshSession(canvas, opts),
-	fileSheet: () => null,
-	touchInput: () => null,
-	videoDecodingSupported: () => true
-}));
+vi.mock('../../../src/lib/remote/rdclient.ts', async () => {
+	const mesh = await import('../../../src/lib/remote/client/mesh-adapter.ts');
+	return {
+		createClient: (canvas: HTMLCanvasElement, opts: MeshSessionOptions) => new mesh.MeshSession(canvas, opts),
+		fileSheet: () => null,
+		touchInput: () => null,
+		videoDecodingSupported: () => true
+	};
+});
 vi.mock('../../../src/lib/api/devices.ts', () => ({ getDevice: vi.fn(async () => ({})) }));
 vi.mock('../../../src/lib/api/remote.ts', () => ({
 	acceptCertificate: vi.fn(),
@@ -90,10 +95,7 @@ describe('mesh stream parser', () => {
 });
 
 describe('mesh file transfer list', () => {
-	const f: Loaded = loadScripts(
-		['mesh-files.js', 'file-modal.js'],
-		['MeshFileTransfer', 'FileTransferModal']
-	);
+	const f = { MeshFileTransfer, FileTransferModal };
 	const planted = '"><meta http-equiv="refresh" content="0;url=https://evil.example">';
 
 	test('an agent error names our own transfer, never an id the agent made up', () => {
@@ -101,7 +103,17 @@ describe('mesh file transfer list', () => {
 		const ft = new f.MeshFileTransfer('900100012', (ev: string, data: Record<string, unknown>) =>
 			events.push([ev, data])
 		);
-		ft._transfers.set(7, { id: 7, type: 'download', reqid: 3, status: 'transferring', chunks: [] });
+		ft._transfers.set(7, {
+			id: 7,
+			type: 'download',
+			reqid: 3,
+			status: 'transferring',
+			chunks: [],
+			remotePath: '/x',
+			fileName: 'x',
+			fileSize: 0,
+			receivedBytes: 0
+		});
 		ft._onJson(JSON.stringify({ action: 'downloaderror', reqid: planted }));
 		expect(events).toEqual([]);
 		ft._onJson(JSON.stringify({ action: 'downloaderror', reqid: 3 }));
@@ -113,14 +125,18 @@ describe('mesh file transfer list', () => {
 		const modal = new f.FileTransferModal();
 		const host = document.createElement('div');
 		host.innerHTML = modal._renderTransferRowHtml({
-			id: planted,
+			// An id the page did not make: it must end up as text
+			id: planted as unknown as number,
 			fileName: 'report.pdf',
 			type: 'download',
 			phase: 'error',
 			percent: 0,
 			transferred: 0,
 			total: 0,
-			error: 'downloaderror'
+			error: 'downloaderror',
+			resumable: false,
+			isFolder: false,
+			currentFile: null
 		});
 		expect(host.querySelector('meta')).toBeNull();
 		expect(host.querySelectorAll('.ft-transfer-row')).toHaveLength(1);
@@ -252,7 +268,7 @@ describe('remote viewer with a mesh session', () => {
 });
 
 describe('mesh file transfer', () => {
-	const f: Loaded = loadScripts(['mesh-files.js'], ['MeshFileTransfer']);
+	const f = { MeshFileTransfer };
 
 	test('the files tunnel request carries the CSRF token', async () => {
 		(window as unknown as { BetterDesk: Record<string, unknown> }).BetterDesk = { csrfToken: 'csrf-1' };
@@ -270,7 +286,7 @@ describe('mesh file transfer', () => {
 		const ft = new f.MeshFileTransfer('mesh01', (ev: string, data: Record<string, unknown>) =>
 			events.push([ev, data])
 		);
-		ft._ws = { readyState: WebSocket.OPEN, send: (d: unknown) => sent.push(d) };
+		ft._ws = { readyState: WebSocket.OPEN, send: (d: unknown) => sent.push(d) } as unknown as WebSocket;
 		ft._relayReady = true;
 		ft.enable();
 		const bytes = new Uint8Array(150 * 1024).map((_, i) => i % 251);
@@ -300,21 +316,31 @@ describe('mesh file transfer', () => {
 });
 
 describe('file sheet: a second factor for the file transfer session', () => {
-	const f: Loaded = loadScripts(['file-modal.js'], ['FileTransferModal']);
+	const f = { FileTransferModal };
 
 	test('asks for the code inside the sheet and sends it to the file transfer session', () => {
-		const listeners = new Map<string, ((...a: unknown[]) => void)[]>();
+		const listeners = new Map<string, ((...a: never[]) => void)[]>();
 		const client = {
-			on: (ev: string, fn: (...a: unknown[]) => void) =>
-				listeners.set(ev, [...(listeners.get(ev) ?? []), fn]),
-			fileTransfer: { browseDir: vi.fn(), enabled: true, currentPath: '' },
+			on(ev: string, fn: (...a: never[]) => void) {
+				listeners.set(ev, [...(listeners.get(ev) ?? []), fn]);
+			},
+			fileTransfer: {
+				browseDir: vi.fn(),
+				browseParent: vi.fn(),
+				uploadFile: vi.fn(),
+				downloadFile: vi.fn(),
+				cancelTransfer: vi.fn(),
+				enabled: true,
+				currentPath: ''
+			},
 			submitFile2FA: vi.fn()
 		};
-		const emit = (ev: string, ...a: unknown[]) => (listeners.get(ev) ?? []).forEach((fn) => fn(...a));
+		const emit = (ev: string, ...a: unknown[]) =>
+			(listeners.get(ev) ?? []).forEach((fn) => fn(...(a as never[])));
 		const modal = new f.FileTransferModal();
 		modal.open({ deviceId: '900100012', client });
 		emit('file_2fa_required');
-		const list = modal._el.querySelector('.ft-remote-list') as HTMLElement;
+		const list = modal._el?.querySelector('.ft-remote-list') as HTMLElement;
 		const input = list.querySelector('input') as HTMLInputElement;
 		expect(input).not.toBeNull();
 		input.value = '123 456';

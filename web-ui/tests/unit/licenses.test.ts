@@ -66,6 +66,19 @@ describe('licenses.txt', () => {
 			'odd: license "" is not one the console ships'
 		]);
 	});
+
+	test('the remote viewer libraries pass: tweetnacl (Unlicense) and jmuxer, whose package names no license', () => {
+		const nacl = pkg(
+			'tweetnacl',
+			{ license: 'Unlicense' },
+			{ LICENSE: 'This is free and unencumbered software' }
+		);
+		const jmuxer = pkg('jmuxer', {}, { LICENSE: 'MIT License\n\nCopyright (c) Samir Das' });
+		const { text, problems } = licenseText([nacl, jmuxer]);
+		expect(problems).toEqual([]);
+		expect(text).toContain('jmuxer 1.0.0 (MIT)\n\nMIT License');
+		expect(text).toContain('tweetnacl 1.0.0 (Unlicense)');
+	});
 });
 
 describe('packageOf', () => {

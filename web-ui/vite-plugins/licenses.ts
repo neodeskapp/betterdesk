@@ -9,7 +9,23 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Plugin } from 'vite';
 
-export const ALLOWED = new Set(['MIT', 'ISC', '0BSD', 'BSD-2-Clause', 'BSD-3-Clause', 'Apache-2.0']);
+export const ALLOWED = new Set([
+	'MIT',
+	'ISC',
+	'0BSD',
+	'BSD-2-Clause',
+	'BSD-3-Clause',
+	'Apache-2.0',
+	// tweetnacl (the remote viewer's encryption): public domain
+	'Unlicense'
+]);
+
+/**
+ * Packages whose package.json names no license, with the license their
+ * own license file grants: jmuxer 2.0.5 (the remote viewer's H.264 muxer)
+ * ships an MIT LICENSE file
+ */
+export const UNNAMED = new Map([['jmuxer', 'MIT']]);
 
 interface Pkg {
 	name: string;
@@ -52,7 +68,7 @@ export function licenseText(ids: Iterable<string>): { text: string; problems: st
 	const problems: string[] = [];
 	for (const [name, dir] of [...dirs].sort(([a], [b]) => a.localeCompare(b))) {
 		const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')) as Pkg;
-		const license = typeof pkg.license === 'string' ? pkg.license : '';
+		const license = typeof pkg.license === 'string' ? pkg.license : (UNNAMED.get(name) ?? '');
 		if (!ALLOWED.has(license)) problems.push(`${name}: license "${license}" is not one the console ships`);
 		const file = fs.readdirSync(dir).find((f) => /^licen[cs]e/i.test(f));
 		const text = file ? fs.readFileSync(path.join(dir, file), 'utf8').trim() : leadingComment(dir, pkg);

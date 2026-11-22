@@ -1,60 +1,26 @@
 /**
  * The remote desktop client: the protocol, video, audio, input, clipboard
- * and file transfer code of the old console (public/js/rdclient, about
- * 16,700 lines of classic scripts that set globals), kept unchanged in
- * web-ui/static/rdclient and loaded here in the order the old viewer
- * layout used. This module is the typed edge around it: it sets the
- * globals those scripts read, loads them once, and hands out clients.
+ * and file transfer code in ./client/ (RDClient for RustDesk devices,
+ * CDAPSession, MeshSession and RemoteTargetSession for the other
+ * transports, the file transfer sheet). This module is the edge the viewer
+ * uses: it sets the page globals the client reads, loads the client once
+ * per page (a chunk of its own, so other pages never fetch it) and hands
+ * out clients.
  *
  * The dev-only mock device (/dev/mock-remote.js) loads only when the
  * viewer's data says the server has it on (BD_DEV_MOCK_REMOTE=1 and
- * ?mock=1); without the flag Express answers 404 for the script and the
- * viewer data has no mock.
+ * ?mock=1); without the flag the server answers 404 for the script and
+ * the viewer data has no mock. The mock is a classic script that draws
+ * through the global RDRenderer, so the loader puts RDRenderer on the page
+ * before it adds the script.
  */
 
-import { asset } from '$app/paths';
-import { version } from '$app/env';
 import { t } from '#lib/i18n/i18n.svelte.ts';
 import { installCapabilities } from './capabilities.ts';
 import type { ViewerCapabilities } from './access.ts';
+import type { MessageInit } from './client/generated/protos.ts';
+import type { RDInputRenderer } from './client/input.ts';
 import type { Transport } from './states.ts';
-
-/** Load order of public/js/rdclient (views/layouts/viewer.ejs): later scripts use earlier globals */
-export const RDCLIENT_SCRIPTS = [
-	'vendor/protobuf.min.js',
-	'generated/protos-static.js',
-	'vendor/nacl.min.js',
-	'vendor/nacl-util.min.js',
-	'vendor/jmuxer.min.js',
-	'connection.js',
-	'connection-params.js',
-	'punchhole-response.js',
-	'crypto.js',
-	'protocol.js',
-	'video.js',
-	'audio.js',
-	'renderer.js',
-	'keyboard-scancode.js',
-	'keyboard-encoder.js',
-	'input.js',
-	'touch.js',
-	'file-connection.js',
-	'local-files.js',
-	'desktop-dnd.js',
-	'compress.js',
-	'clipboard.js',
-	'cliprdr.js',
-	'filetransfer.js',
-	'file-modal.js',
-	'client.js',
-	'cdap-audio.js',
-	'cdap-filetransfer.js',
-	'cdap-adapter.js',
-	'betterviewer.js',
-	'mesh-files.js',
-	'mesh-adapter.js',
-	'remote-target.js'
-] as const;
 
 export const MOCK_SCRIPT = '/dev/mock-remote.js';
 
@@ -66,7 +32,8 @@ export interface Monitor {
 	width: number;
 	height: number;
 	primary: boolean;
-	current: boolean;
+	/** Not reported by CDAP sessions */
+	current?: boolean;
 }
 
 export interface VirtualDisplaySupport {
@@ -82,8 +49,15 @@ export interface WindowsSessions {
 }
 
 export interface ClientStats {
-	video?: { codec?: string; currentCodec?: string };
+	/** RDClient */
+	video?: { codec?: string | null; currentCodec?: string | null };
 	renderer?: { fps?: number; remoteWidth?: number; remoteHeight?: number };
+	/** CDAPSession */
+	frames?: number;
+	bytes?: number;
+	fps?: number;
+	kbps?: number;
+	transport?: string;
 }
 
 export interface RemoteClient {
@@ -97,7 +71,7 @@ export interface RemoteClient {
 	video?: { onAutoplayBlocked?: (() => void) | null; retryPlay?(): void };
 	audio?: { audioCtx?: AudioContext | null };
 	input?: {
-		sendMessage?(msg: unknown): void;
+		sendMessage?(msg: MessageInit): void;
 		_handleKeyDown?(e: KeyboardEvent): void;
 		_handleKeyUp?(e: KeyboardEvent): void;
 		resetKeyboard?(): void;
@@ -179,11 +153,20 @@ export interface TouchInput {
 	start(): void;
 	stop(): void;
 }
+export type TouchRenderer = RDInputRenderer;
 type TouchCtor = new (
 	canvas: HTMLCanvasElement,
-	renderer: unknown,
-	send: (msg: unknown) => void
+	renderer: TouchRenderer,
+	send: (msg: MessageInit) => void
 ) => TouchInput;
+
+/** What the viewer takes from the loaded client */
+interface ClientModules {
+	clients: Record<'rd' | 'cdap' | 'mesh' | 'target', ClientCtor>;
+	RDTouch: TouchCtor;
+	videoSupported(): boolean;
+	fileSheet(): FileSheet | null;
+}
 
 interface RdWindow {
 	BetterDesk?: Record<string, unknown>;
@@ -192,13 +175,8 @@ interface RdWindow {
 	__guestToken?: string;
 	__initialDeviceId?: string;
 	__mockRemote?: { scenario: string } | null;
-	RDClient?: ClientCtor;
-	CDAPSession?: ClientCtor;
-	MeshSession?: ClientCtor;
-	RemoteTargetSession?: ClientCtor;
 	MockRemoteSession?: ClientCtor;
-	RDVideo?: { isSupported(): boolean };
-	__fileTransferModal?: FileSheet | null;
+	RDRenderer?: unknown;
 }
 
 const w = () => window as unknown as RdWindow;
@@ -212,7 +190,7 @@ export interface LoadOptions {
 	mock: { scenario: string } | null;
 }
 
-/** Add one classic script; scripts added with async=false run in the order they were added */
+/** Add one classic script (the dev mock) */
 function addScript(src: string): Promise<void> {
 	return new Promise((resolve, reject) => {
 		const el = document.createElement('script');
@@ -225,17 +203,12 @@ function addScript(src: string): Promise<void> {
 	});
 }
 
-/** The URL of a wrapped script (cache-busted per console build) */
-export function scriptUrl(file: (typeof RDCLIENT_SCRIPTS)[number]): string {
-	return `${asset(`rdclient/${file}`)}?v=${encodeURIComponent(version)}`;
-}
-
-/** The globals the wrapped scripts read before and while they run */
+/** The globals the client reads before and while it runs */
 export function setGlobals(opts: LoadOptions): void {
 	installCapabilities();
 	const win = w();
 	win.BetterDesk = { ...(win.BetterDesk ?? {}), csrfToken: opts.csrfToken, t };
-	// file-modal.js, cdap and mesh code translate through window.t (key back when missing)
+	// The file sheet, CDAP and mesh code translate through window.t (key back when missing)
 	win.t = (key: string) => t(key);
 	win.__capabilities = opts.capabilities;
 	win.__guestToken = opts.guestToken;
@@ -243,22 +216,50 @@ export function setGlobals(opts: LoadOptions): void {
 	win.__mockRemote = opts.mock;
 }
 
+/** The client's modules: one chunk, fetched by the first viewer on the page */
+async function importClient(): Promise<ClientModules> {
+	const [client, cdap, mesh, target, touch, video, sheet] = await Promise.all([
+		import('./client/client.ts'),
+		import('./client/cdap-adapter.ts'),
+		import('./client/mesh-adapter.ts'),
+		import('./client/remote-target.ts'),
+		import('./client/touch.ts'),
+		import('./client/video.ts'),
+		import('./client/file-modal.ts')
+	]);
+	return {
+		clients: {
+			rd: client.RDClient,
+			cdap: cdap.CDAPSession,
+			mesh: mesh.MeshSession,
+			target: target.RemoteTargetSession
+		},
+		RDTouch: touch.RDTouch,
+		videoSupported: () => video.RDVideo.isSupported(),
+		fileSheet: sheet.fileTransferModal
+	};
+}
+
+let modules: ClientModules | null = null;
 let loading: Promise<void> | null = null;
 
 /** Load the client once per page; the mock script only when `mock` is set */
 export function loadRdClient(opts: LoadOptions): Promise<void> {
 	setGlobals(opts);
-	loading ??= Promise.all([
-		...RDCLIENT_SCRIPTS.map((f) => addScript(scriptUrl(f))),
-		...(opts.mock ? [addScript(MOCK_SCRIPT)] : [])
-	]).then(
-		() => undefined,
-		(err: unknown) => {
+	loading ??= importClient()
+		.then(async (m) => {
+			modules = m;
+			if (opts.mock) {
+				const { RDRenderer } = await import('./client/renderer.ts');
+				w().RDRenderer = RDRenderer;
+				await addScript(MOCK_SCRIPT);
+			}
+		})
+		.catch((err: unknown) => {
 			loading = null;
 			for (const el of document.head.querySelectorAll('script[data-rdclient]')) el.remove();
 			throw err;
-		}
-	);
+		});
 	return loading;
 }
 
@@ -269,37 +270,32 @@ export function createClient(
 	transport: Transport
 ): RemoteClient {
 	const win = w();
+	const clients = modules?.clients;
 	const Ctor: ClientCtor | undefined =
 		win.__mockRemote && win.MockRemoteSession
 			? win.MockRemoteSession
-			: transport === 'mesh' && win.MeshSession
-				? win.MeshSession
-				: transport === 'cdap' && win.CDAPSession
-					? win.CDAPSession
-					: (transport === 'rdp' || transport === 'vnc') && win.RemoteTargetSession
-						? win.RemoteTargetSession
-						: win.RDClient;
+			: transport === 'mesh'
+				? clients?.mesh
+				: transport === 'cdap'
+					? clients?.cdap
+					: transport === 'rdp' || transport === 'vnc'
+						? clients?.target
+						: clients?.rd;
 	if (!Ctor) throw new Error('Remote client not loaded');
 	return new Ctor(canvas, opts);
 }
 
 /** WebCodecs decoding (needs a secure context); without it the client falls back to slower H.264 */
 export function videoDecodingSupported(): boolean {
-	return w().RDVideo?.isSupported() ?? true;
+	return modules?.videoSupported() ?? true;
 }
 
-/** The file transfer sheet of the wrapped client (public/js/rdclient/file-modal.js) */
+/** The file transfer sheet of the client (client/file-modal.ts builds its own DOM) */
 export function fileSheet(): FileSheet | null {
-	return w().__fileTransferModal ?? null;
+	return modules?.fileSheet() ?? null;
 }
 
-/** RDTouch is a top-level class of touch.js (a global binding, not a window property) */
+/** The touch input of the RustDesk client */
 export function touchInput(): TouchCtor | null {
-	try {
-		return typeof RDTouch === 'function' ? (RDTouch as TouchCtor) : null;
-	} catch {
-		return null;
-	}
+	return modules?.RDTouch ?? null;
 }
-
-declare const RDTouch: unknown;
