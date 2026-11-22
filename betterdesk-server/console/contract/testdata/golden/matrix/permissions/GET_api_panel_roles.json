@@ -181,6 +181,7 @@
       ],
       "roles": [
        {
+        "fixed": {},
         "is_server_level": true,
         "is_super_admin": true,
         "level": 5,
@@ -232,6 +233,7 @@
         ]
        },
        {
+        "fixed": {},
         "is_server_level": true,
         "is_super_admin": true,
         "level": 5,
@@ -283,6 +285,10 @@
         ]
        },
        {
+        "fixed": {
+         "user.create": "assigns_no_role",
+         "user.delete": "assigns_no_role"
+        },
         "is_server_level": true,
         "is_super_admin": false,
         "level": 4,
@@ -301,6 +307,7 @@
         ]
        },
        {
+        "fixed": {},
         "is_server_level": true,
         "is_super_admin": false,
         "level": 4,
@@ -348,6 +355,10 @@
         ]
        },
        {
+        "fixed": {
+         "user.create": "assigns_no_role",
+         "user.delete": "assigns_no_role"
+        },
         "is_server_level": false,
         "is_super_admin": false,
         "level": 2,
@@ -374,6 +385,10 @@
         ]
        },
        {
+        "fixed": {
+         "user.create": "assigns_no_role",
+         "user.delete": "assigns_no_role"
+        },
         "is_server_level": false,
         "is_super_admin": false,
         "level": 1,
@@ -388,6 +403,10 @@
         ]
        },
        {
+        "fixed": {
+         "user.create": "assigns_no_role",
+         "user.delete": "assigns_no_role"
+        },
         "is_server_level": false,
         "is_super_admin": false,
         "level": 1,
@@ -398,6 +417,23 @@
         ]
        },
        {
+        "fixed": {
+         "device.ban": "pro_devices",
+         "device.change_id": "pro_devices",
+         "device.connect": "pro_devices",
+         "device.connection_mode": "pro_devices",
+         "device.delete": "pro_devices",
+         "device.edit": "pro_devices",
+         "device.view": "pro_devices",
+         "org.manage_devices": "pro_devices",
+         "remote_target.connect": "pro_devices",
+         "remote_target.delete": "pro_devices",
+         "remote_target.edit": "pro_devices",
+         "remote_target.test": "pro_devices",
+         "remote_target.view": "pro_devices",
+         "user.create": "assigns_no_role",
+         "user.delete": "assigns_no_role"
+        },
         "is_server_level": false,
         "is_super_admin": false,
         "level": 0,

@@ -612,7 +612,6 @@
   {"id":"GET /api/panel/security-audit/events","method":"GET","path":"/api/panel/security-audit/events","app":"console","group":"security-audit","csrf":"gate","file":"routes/security-audit.routes.js"},
   {"id":"GET /api/panel/security-audit/hardening","method":"GET","path":"/api/panel/security-audit/hardening","app":"console","group":"security-audit","csrf":"gate","file":"routes/security-audit.routes.js"},
   {"id":"GET /api/panel/security-audit/overview","method":"GET","path":"/api/panel/security-audit/overview","app":"console","group":"security-audit","csrf":"gate","file":"routes/security-audit.routes.js"},
-  {"id":"GET /api/panel/security-audit/vulnerabilities","method":"GET","path":"/api/panel/security-audit/vulnerabilities","app":"console","group":"security-audit","csrf":"gate","file":"routes/security-audit.routes.js"},
   {"id":"GET /api/public/server-attestation","method":"GET","path":"/api/public/server-attestation","app":"console","group":"server-attestation","csrf":"gate","file":"routes/server-attestation.routes.js"},
   {"id":"POST /api/server-attestation/abort","method":"POST","path":"/api/server-attestation/abort","app":"console","group":"server-attestation","csrf":"gate","file":"routes/server-attestation.routes.js"},
   {"id":"GET /api/server-attestation/badge-config","method":"GET","path":"/api/server-attestation/badge-config","app":"console","group":"server-attestation","csrf":"gate","file":"routes/server-attestation.routes.js"},

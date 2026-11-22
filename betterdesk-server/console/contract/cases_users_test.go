@@ -25,7 +25,8 @@ import (
 //
 // The seeded accounts are admin (1), demo_operator (2), demo_viewer (3),
 // demo_serveradmin (4) and e2e_<role> from 5 (admin) to 12 (pro). Writes
-// on demo_viewer are only ones that are refused before anything changes.
+// on demo_viewer are only ones that are refused before anything changes,
+// and the change to guest_issuer, which the case after it takes back.
 // A user group is created and deleted by admin in each turn.
 const (
 	usersTmpUser     = "contract_users_tmp"
@@ -73,6 +74,7 @@ func init() {
 		contract.Case{Name: "update-id-not-a-number", Method: "PATCH", Path: "/api/users/abc", Body: map[string]any{}, Roles: some},
 		contract.Case{Name: "update-invalid-role", Method: "PATCH", Path: "/api/users/3", Body: map[string]any{"role": "nonsense"}},
 		contract.Case{Name: "update-role-guest-issuer", Method: "PATCH", Path: "/api/users/3", Body: map[string]any{"role": "guest_issuer"}, Roles: some},
+		contract.Case{Name: "update-role-back-to-viewer", Method: "PATCH", Path: "/api/users/3", Body: map[string]any{"role": "viewer"}, As: "admin", Roles: some},
 		contract.Case{
 			Name: "update-role-above-own", Method: "PATCH", Path: "/api/users/3", Body: map[string]any{"role": "admin"},
 			Roles: contract.Roles("signed-out", "viewer", "operator", "server_admin", "global_admin"),

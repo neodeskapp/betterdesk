@@ -86,8 +86,11 @@ func New(opts Options) *Engine {
 }
 
 // Filters are the time range of a report as the request gave it, and the
-// devices of the account it is made for. Only the activity report reads
-// the range; it goes back in every report's filters.
+// devices of the account it is made for. The reports of dated rows read
+// the range (activity, data guard events and audit entries, tickets by
+// the day they were made, network checks, alerts); the device and
+// inventory reports show the current state. The range goes back in every
+// report's filters.
 type Filters struct {
 	From, To jsbind.Value
 	// Scope holds the devices the account may see; nil sees every device.
@@ -382,14 +385,14 @@ func (e *Engine) activity(ctx context.Context, f Filters) (*goapi.Object, error)
 
 // security is generateSecurityReport.
 func (e *Engine) security(ctx context.Context, f Filters) (*goapi.Object, error) {
-	stats, err := e.dlpEventStats(ctx, f.Scope)
+	stats, err := e.dlpEventStats(ctx, f)
 	if err != nil {
 		stats = goapi.NewObject("total", 0.0, "blocked", 0.0, "logged", 0.0, "usb_events", 0.0, "file_events", 0.0)
 	}
 
 	// The events with details parsed
 	var recent []*goapi.Object
-	if events, err := e.dlpEvents(ctx, 50, f.Scope); err == nil {
+	if events, err := e.dlpEvents(ctx, 50, f); err == nil {
 		recent = withParsedDetails(events)
 	}
 
@@ -404,7 +407,7 @@ func (e *Engine) security(ctx context.Context, f Filters) (*goapi.Object, error)
 		}
 	}
 
-	audit, err := e.auditLogs(ctx, 100, 0)
+	audit, err := e.auditLogs(ctx, 100, 0, f)
 	if err != nil {
 		audit = nil
 	}
@@ -489,22 +492,23 @@ func objects(rows []*goapi.Object, n int) []any {
 	return out
 }
 
-// tickets is generateTicketReport over the tickets of the scope.
+// tickets is generateTicketReport over the tickets of the scope made in
+// the period.
 func (e *Engine) tickets(ctx context.Context, f Filters) (*goapi.Object, error) {
-	stats, err := e.ticketStats(ctx, f.Scope)
+	stats, err := e.ticketStats(ctx, f)
 	if err != nil {
 		stats = goapi.NewObject("total", 0.0, "open", 0.0, "closed", 0.0, "in_progress", 0.0)
 	}
 	categories, priorities := newTally(), newTally()
 	var total float64
-	if byCategory, err := e.ticketsBy(ctx, "category", f.Scope); err == nil {
+	if byCategory, err := e.ticketsBy(ctx, "category", f); err == nil {
 		for _, group := range byCategory {
 			n := e.clock.Number(group.Get("n"))
 			categories.addN(e.clock.String(or(group.Get("name"), true, "uncategorized")), n)
 			total += n
 		}
 	}
-	if byPriority, err := e.ticketsBy(ctx, "priority", f.Scope); err == nil {
+	if byPriority, err := e.ticketsBy(ctx, "priority", f); err == nil {
 		for _, group := range byPriority {
 			priorities.addN(e.clock.String(or(group.Get("name"), true, "normal")), e.clock.Number(group.Get("n")))
 		}
@@ -517,11 +521,26 @@ func (e *Engine) tickets(ctx context.Context, f Filters) (*goapi.Object, error) 
 	), nil
 }
 
-// network is generateNetworkReport.
-func (e *Engine) network(ctx context.Context, _ Filters) (*goapi.Object, error) {
+// network is generateNetworkReport. With a period each target counts by
+// its newest check in the period, and as unknown without one there.
+func (e *Engine) network(ctx context.Context, f Filters) (*goapi.Object, error) {
 	targets, err := e.networkTargets(ctx)
 	if err != nil {
 		targets = nil
+	}
+	if f.from != "" || f.to != "" {
+		checks, err := e.lastChecks(ctx, f)
+		if err != nil {
+			return nil, err
+		}
+		for _, t := range targets {
+			check := checks[e.clock.String(t.Get("id"))]
+			if check == nil {
+				t.Set("last_status", nil).Set("last_rtt_ms", nil).Set("last_check_at", nil)
+				continue
+			}
+			t.Set("last_status", check.Get("status")).Set("last_rtt_ms", check.Get("rtt_ms")).Set("last_check_at", check.Get("checked_at"))
+		}
 	}
 	var up, down, unknown float64
 	list := make([]any, len(targets))
@@ -590,7 +609,7 @@ func (e *Engine) alerts(ctx context.Context, f Filters) (*goapi.Object, error) {
 	if err != nil {
 		rules = nil
 	}
-	history, err := e.alertHistory(ctx, f.Scope)
+	history, err := e.alertHistory(ctx, f)
 	if err != nil {
 		history = nil
 	}

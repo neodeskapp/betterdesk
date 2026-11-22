@@ -1,11 +1,11 @@
 package trends
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/access"
@@ -16,9 +16,9 @@ import (
 // collection is what the reports page gets: every time is in milliseconds
 // since 1970.
 //
-// One collection is kept for every account. It notes which devices
-// reported each session, which devices were read and which were listed, so
-// that visibleTo can cut it to the devices of an account.
+// One collection is kept for every account. It notes on which device each
+// session ran, which devices were read and which were listed, so that
+// visibleTo can cut it to the devices of an account.
 type collection struct {
 	Days           int            `json:"days"`
 	Since          int64          `json:"since"`
@@ -27,7 +27,7 @@ type collection struct {
 	DevicesChecked int            `json:"devicesChecked"`
 	DevicesTotal   int            `json:"devicesTotal"`
 
-	// reporters holds, for each session, the devices whose lists had it
+	// reporters holds, for each session, the device it ran on
 	reporters [][]string
 	// checked are the devices whose sessions were read
 	checked []string
@@ -83,14 +83,16 @@ type helpActivity struct {
 // or a single value where a list should be.
 var errShape = errors.New("the API server's answer has an entry or a list of the wrong kind")
 
-// collect reads the sessions of every device and the help requests, and
-// keeps what started (for a help request: was made or changed) in the days
-// before now. A session two devices both report counts once.
-func collect(ctx context.Context, api source, days int, now int64) (*collection, error) {
+// collect reads the sessions of every device the API server lists and the
+// help requests, and keeps what started (for a help request: was made or
+// changed) in the days before now. A help request changes only when its
+// status does, so a resolved one was changed when it was resolved.
+func collect(ctx context.Context, api source, stored sessionSource, days int, now int64) (*collection, error) {
 	since := now - int64(days)*dayMillis
 
 	peers := api.GetAllPeers(ctx, false)
 	var ids []string
+	known := map[string]bool{}
 	listed := make([]string, len(peers))
 	for i, p := range peers {
 		if p == nil {
@@ -102,42 +104,37 @@ func collect(ctx context.Context, api source, days int, now int64) (*collection,
 		}
 		if goapi.Truthy(id) {
 			listed[i] = jsreq.String(id)
-			if len(ids) < maxPeers {
-				ids = append(ids, listed[i])
-			}
+			ids = append(ids, listed[i])
+			known[listed[i]] = true
 		}
 	}
 
-	lists := sessionLists(ctx, api, ids)
-	seen := map[string]int{}
+	// The sessions of the listed devices, device by device in the order of
+	// the list, each device's newest first
+	found, err := stored(ctx, since)
+	if err != nil {
+		return nil, err
+	}
+	byHost := map[string][]storedSession{}
+	for _, s := range found {
+		if known[s.HostID] && s.Start >= since {
+			byHost[s.HostID] = append(byHost[s.HostID], s)
+		}
+	}
 	sessions := []sessionSpan{}
 	var reporters [][]string
-	for i, list := range lists {
-		rows, err := iterable(list)
-		if err != nil {
-			return nil, err
-		}
-		for _, row := range rows {
-			if row == nil {
-				return nil, errShape
+	for _, id := range ids {
+		list := byHost[id]
+		delete(byHost, id)
+		slices.SortStableFunc(list, func(a, b storedSession) int {
+			if a.Start != b.Start {
+				return cmp.Compare(b.Start, a.Start)
 			}
-			s, _ := row.(*goapi.Object)
-			start, ok := toTime(s.Get("started_at"))
-			if !ok || start < since {
-				continue
-			}
-			key := sessionKey(s)
-			if at, ok := seen[key]; ok {
-				reporters[at] = append(reporters[at], ids[i])
-				continue
-			}
-			seen[key] = len(sessions)
-			span := sessionSpan{Start: start}
-			if end, ok := toTime(s.Get("ended_at")); ok {
-				span.End = &end
-			}
-			sessions = append(sessions, span)
-			reporters = append(reporters, []string{ids[i]})
+			return cmp.Compare(b.ID, a.ID)
+		})
+		for _, s := range list {
+			sessions = append(sessions, sessionSpan{Start: s.Start, End: s.End})
+			reporters = append(reporters, []string{id})
 		}
 	}
 
@@ -173,48 +170,6 @@ func collect(ctx context.Context, api source, days int, now int64) (*collection,
 	}, nil
 }
 
-// sessionLists asks for the sessions of each device, a few devices at a
-// time, and returns what the answers hold as their list, in the order of
-// ids. The answer of the API client is {success, data: {sessions}} or, for
-// a refusal, whatever the API server sent.
-func sessionLists(ctx context.Context, api source, ids []string) []any {
-	lists := make([]any, len(ids))
-	next := make(chan int)
-	var wg sync.WaitGroup
-	for i := 0; i < min(concurrency, len(ids)); i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for idx := range next {
-				lists[idx] = sessionList(api.GetPeerConnectionSessions(ctx, ids[idx], float64(perPeerLimit)))
-			}
-		}()
-	}
-	for idx := range ids {
-		next <- idx
-	}
-	close(next)
-	wg.Wait()
-	return lists
-}
-
-// sessionList is the list inside one answer: data or sessions when that is
-// a list, else its "sessions".
-func sessionList(r *goapi.Object) any {
-	rows := r.Get("data")
-	if !goapi.Truthy(rows) {
-		rows = r.Get("sessions")
-	}
-	if !goapi.Truthy(rows) {
-		return nil
-	}
-	if list, ok := rows.([]any); ok {
-		return list
-	}
-	inner, _ := rows.(*goapi.Object)
-	return inner.Get("sessions")
-}
-
 // iterable returns the entries a JavaScript for-of loop walks over "v ||
 // []": the elements of a list, nothing for an empty value, and nothing a
 // row can be read from for text. Other values cannot be walked.
@@ -229,21 +184,6 @@ func iterable(v any) ([]any, error) {
 		return nil, nil
 	}
 	return nil, errShape
-}
-
-// sessionKey names a session for the check against doubles: its id, or its
-// two devices and its start when it has none.
-func sessionKey(s *goapi.Object) string {
-	if id := s.Get("id"); id != nil {
-		return "id:" + jsreq.String(id)
-	}
-	parts := make([]string, 3)
-	for i, name := range []string{"host_id", "peer_id", "started_at"} {
-		if v := s.Get(name); v != nil {
-			parts[i] = jsreq.String(v)
-		}
-	}
-	return strings.Join(parts, "|")
 }
 
 // toTime reads a time of the API server as milliseconds. Text without a

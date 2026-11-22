@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"reflect"
-	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -140,6 +139,22 @@ func fixScenarios(bug string, status int, answer func(node string) string, names
 	}
 	return true
 }
+
+// L104: the hardening list holds only what this server's settings decide:
+// the session timeouts (the defaults in the scenarios) and the session
+// limit as before; the fixed list of planned work is gone.
+var _ = fixScenarios("L104", 200, func(node string) string {
+	start := strings.Index(node, `{"id":"single_session"`)
+	if start < 0 {
+		return "a recorded answer without the session limit"
+	}
+	limit := node[start : start+strings.Index(node[start:], "}")+1]
+	return `{"priorities":[{"id":"session_timeout","name":"Panel Idle and Absolute Session Timeout","category":"auth","severity":"medium","implemented":true,` +
+		`"description":"A console session ends after 30 minutes without a request and 1440 minutes after sign-in (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE)."},` +
+		limit + `]}`
+}, "hardening, session limit undefined", `hardening, session limit "0"`, `hardening, session limit "1"`, `hardening, session limit "5"`,
+	`hardening, session limit "abc"`, `hardening, session limit "2000"`, `hardening, session limit " 3 "`, `hardening, session limit "-1"`,
+	`hardening, session limit "1.5"`, `hardening, session limit ""`, `hardening, session limit "007"`)
 
 // TH13: an API answer without a body, or with null, 0, false or "", is
 // no events, where Node failed with 502 trying to send the client's
@@ -346,28 +361,6 @@ func TestKeyAgeIsReadAsUTC(t *testing.T) {
 		h.overview(rec, httptest.NewRequest(http.MethodGet, "/api/panel/security-audit/overview", nil))
 		if !strings.Contains(rec.Body.String(), c.old) {
 			t.Errorf("a key created %s, now %s: %s, want %s", created, now.Format(time.DateTime), rec.Body.String(), c.old)
-		}
-	}
-}
-
-// TestDependenciesAreTheModulesOfTheBuild: dependencies.go.total is the
-// number of modules the build information lists besides the main one, 0
-// for a binary without build information (BUGS NL2, TH17).
-func TestDependenciesAreTheModulesOfTheBuild(t *testing.T) {
-	for _, c := range []struct {
-		info *debug.BuildInfo
-		ok   bool
-		want string
-	}{
-		{&debug.BuildInfo{Main: debug.Module{Path: "server"}, Deps: []*debug.Module{{Path: "a"}, {Path: "b"}, {Path: "c"}}}, true, `"go":{"total":3,`},
-		{&debug.BuildInfo{Main: debug.Module{Path: "server"}}, true, `"go":{"total":0,`},
-		{nil, false, `"go":{"total":0,`},
-	} {
-		h := &handlers{buildInfo: func() (*debug.BuildInfo, bool) { return c.info, c.ok }}
-		rec := httptest.NewRecorder()
-		h.vulnerabilities(rec, httptest.NewRequest(http.MethodGet, "/api/panel/security-audit/vulnerabilities", nil))
-		if body := rec.Body.String(); !strings.Contains(body, `"dependencies":{`+c.want) || strings.Contains(body, "nodejs") {
-			t.Errorf("build information %+v: %s, want %s", c.info, body, c.want)
 		}
 	}
 }

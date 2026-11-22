@@ -277,6 +277,37 @@ var fixes = map[string]fix{
 	"443 POST /api/users/14/reset-password": {bug: "L94", answer: is(passwordTooShort)},
 	"444 POST /api/users/14/reset-password": {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
 	"445 POST /api/users/14/reset-password": {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
+	// guest_issuer is given by the roles that give viewer, where Node made
+	// a viewer of it. The account is a viewer again for the steps after.
+	"256 POST /api/users": {bug: "L108", answer: replaced(`"role":"viewer"`, `"role":"guest_issuer"`), node: asViewer("by_global_admin_7")},
+	"268 POST /api/users": {bug: "L108", answer: replaced(`"role":"viewer"`, `"role":"guest_issuer"`), node: asViewer("by_super_admin_7")},
+	"280 POST /api/users": {bug: "L108", answer: replaced(`"role":"viewer"`, `"role":"guest_issuer"`), node: asViewer("by_admin_7")},
+	// global_admin makes an account guest_issuer, where Node refused the
+	// role. The account is a viewer again for the steps after, and the
+	// change leaves no audit entry.
+	"sqlite: 357 PATCH /api/users/18":      madeGuestIssuer(`{"success":true,"data":{"id":18,"username":"target_view","role":"guest_issuer","email":"","auth_provider":"local","created_at":"2026-11-18 16:47:14","last_login":null,"user_groups":[],"folder_ids":[],"peer_grants":[],"strategy_guid":"","totp_enabled":false}}`),
+	"sqlite-go: 357 PATCH /api/users/18":   madeGuestIssuer(`{"success":true,"data":{"id":18,"username":"target_view","role":"guest_issuer","email":"","auth_provider":"local","created_at":"2026-11-18 16:47:50","last_login":"","user_groups":[],"folder_ids":[],"peer_grants":[],"strategy_guid":"","totp_enabled":false}}`),
+	"postgres: 357 PATCH /api/users/18":    madeGuestIssuer(`{"success":true,"data":{"id":18,"username":"target_view","role":"guest_issuer","email":"","auth_provider":"local","created_at":"2026-11-18T16:48:29.026Z","last_login":null,"user_groups":[],"folder_ids":[],"peer_grants":[],"strategy_guid":"","totp_enabled":false}}`),
+	"postgres-go: 357 PATCH /api/users/18": madeGuestIssuer(`{"success":true,"data":{"id":"18","username":"target_view","role":"guest_issuer","email":"","auth_provider":"local","created_at":"2026-11-18T16:49:17.380Z","last_login":null,"user_groups":[],"folder_ids":[],"peer_grants":[],"strategy_guid":"","totp_enabled":false}}`),
+}
+
+// madeGuestIssuer is the fix of a role change to guest_issuer that Node
+// refused with 400: the Go console's answer, and the account and audit
+// log put back as Node left them.
+func madeGuestIssuer(answer string) fix {
+	return fix{bug: "L108", status: http.StatusOK, answer: is(answer), node: func(n *nodeWrites) {
+		n.exec(`UPDATE users SET role = 'viewer' WHERE id = 18`)
+		n.exec(`DELETE FROM audit_log WHERE id = (SELECT MAX(id) FROM audit_log WHERE action = 'user_updated')`)
+	}}
+}
+
+// asViewer makes the account a viewer, as Node's request left it, also in
+// the audit entry of its creation.
+func asViewer(username string) func(n *nodeWrites) {
+	return func(n *nodeWrites) {
+		n.exec(`UPDATE users SET role = 'viewer' WHERE username = ?`, username)
+		n.exec(`UPDATE audit_log SET details = REPLACE(details, '(guest_issuer)', '(viewer)') WHERE id = (SELECT MAX(id) FROM audit_log WHERE action = 'user_created')`)
+	}
 }
 
 // newViewer is the answer to a new account with a username and a password

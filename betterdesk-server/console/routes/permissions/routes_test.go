@@ -97,7 +97,7 @@ func TestCallsAndAnswers(t *testing.T) {
 		calls                []string
 	}{
 		{"roles", "GET", "/api/panel/roles", "", 200,
-			`{"success":true,"data":{"roles":[{"name":"viewer","level":1,"permissions":["device.view"]}],"all_permissions":["device.view"]}}`, []string{"GET /api/roles"}},
+			`{"success":true,"data":{"roles":[{"name":"viewer","level":1,"permissions":["device.view"],"fixed":{"user.create":"assigns_no_role","user.delete":"assigns_no_role"}}],"all_permissions":["device.view"]}}`, []string{"GET /api/roles"}},
 		{"permissions of a role", "GET", "/api/panel/roles/operator/permissions", "", 200,
 			`{"success":true,"data":{"role":"operator","permissions":["device.view"]}}`, []string{"GET /api/roles/operator/permissions"}},
 		{"the role is trimmed", "GET", "/api/panel/roles/%20operator%09/permissions", "", 200,

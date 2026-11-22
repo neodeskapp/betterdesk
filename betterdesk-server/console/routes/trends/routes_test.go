@@ -3,7 +3,6 @@ package trends_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -35,6 +34,33 @@ type answer struct {
 
 func stamp(t time.Time) string { return t.UTC().Format(time.RFC3339Nano) }
 
+// sessionsTable makes the signal server's table of remote sessions in the
+// console's database as the server makes it on SQLite, with the rows
+// given: host, start, end ("" while it runs).
+func sessionsTable(t *testing.T, w *routetest.World, rows ...[3]string) {
+	t.Helper()
+	ctx := context.Background()
+	if _, err := w.DB.Exec(ctx, `CREATE TABLE peer_connection_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, host_id TEXT NOT NULL,
+		peer_id TEXT NOT NULL DEFAULT '', started_at TEXT NOT NULL DEFAULT (datetime('now')), ended_at TEXT)`); err != nil {
+		t.Fatal(err)
+	}
+	for _, r := range rows {
+		var ended any
+		if r[2] != "" {
+			ended = r[2]
+		}
+		if _, err := w.DB.Exec(ctx, `INSERT INTO peer_connection_sessions (host_id, started_at, ended_at) VALUES (?, ?, ?)`, r[0], r[1], ended); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// stored is a time as the signal server stores it on SQLite.
+func stored(t time.Time) string { return t.UTC().Format(time.DateTime) }
+
+// TestTrends: the sessions of every listed device come from one query of
+// the signal server's table, not from the API server device by device
+// (BUGS L103); the help requests from the API server.
 func TestTrends(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	started, ended := now.Add(-2*time.Hour), now.Add(-time.Hour)
@@ -42,14 +68,10 @@ func TestTrends(t *testing.T) {
 
 	api := routetest.NewAPI()
 	api.On("GET /api/peers", 200, `[{"id":"a"},{"id":"b"}]`)
-	api.On("GET /api/peers/a/connection-sessions?limit=500", 200, `{"peer_id":"a","count":2,"sessions":[`+
-		`{"id":1,"host_id":"a","peer_id":"b","started_at":"`+stamp(started)+`","ended_at":"`+stamp(ended)+`"},`+
-		`{"id":2,"host_id":"a","peer_id":"b","started_at":"`+stamp(old)+`"}]}`)
-	api.On("GET /api/peers/b/connection-sessions?limit=500", 200, `{"peer_id":"b","count":2,"sessions":[`+
-		`{"id":1,"host_id":"a","peer_id":"b","started_at":"`+stamp(started)+`"},`+
-		`{"id":3,"host_id":"b","peer_id":"a","started_at":"`+stamp(ended)+`"}]}`)
 	api.On("GET /api/help/requests?limit=5000", 200, `{"requests":[{"id":1,"status":"pending","created_at":"`+stamp(started)+`","updated_at":"`+stamp(ended)+`"}]}`)
 	w := routetest.New(t, routetest.Options{API: api})
+	sessionsTable(t, w, [3]string{"a", stored(started), stored(ended)}, [3]string{"a", stored(old), ""},
+		[3]string{"b", stored(ended), ""}, [3]string{"gone", stored(ended), ""})
 
 	if got := w.SignedOut().Do("GET", "/api/reports/trends", ""); got.Status != 401 || got.Body != `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}` {
 		t.Errorf("signed out: %d %s", got.Status, got.Body)
@@ -79,7 +101,7 @@ func TestTrends(t *testing.T) {
 	if first.GeneratedAt < before || first.GeneratedAt > after || data.Since != first.GeneratedAt-14*86400000 {
 		t.Errorf("generatedAt %d (asked between %d and %d), since %d", first.GeneratedAt, before, after, data.Since)
 	}
-	// Session 1 is reported by both devices and counts once; session 2 is too old
+	// Session 2 is too old, and the device of the last one is not listed
 	if len(data.Sessions) != 2 || data.Sessions[0].Start != started.UnixMilli() || data.Sessions[0].End == nil || *data.Sessions[0].End != ended.UnixMilli() ||
 		data.Sessions[1].Start != ended.UnixMilli() || data.Sessions[1].End != nil {
 		t.Errorf("sessions: %s", got.Body)
@@ -92,8 +114,6 @@ func TestTrends(t *testing.T) {
 	want := []string{
 		"GET /api/help/requests?limit=5000",
 		"GET /api/peers",
-		"GET /api/peers/a/connection-sessions?limit=500",
-		"GET /api/peers/b/connection-sessions?limit=500",
 	}
 	if !reflect.DeepEqual(calls, want) {
 		t.Errorf("the API server was asked %q, want %q", calls, want)
@@ -117,7 +137,7 @@ func TestTrends(t *testing.T) {
 	if wide.Data.Days != 30 || len(wide.Data.Sessions) != 3 {
 		t.Errorf("30 days: %s", month.Body)
 	}
-	if calls := api.Calls(); len(calls) != 4 {
+	if calls := api.Calls(); len(calls) != 2 {
 		t.Errorf("30 days asked the API server %d times: %v", len(calls), calls)
 	}
 }
@@ -163,15 +183,13 @@ func TestTrendsNeedsAuditView(t *testing.T) {
 func TestTrendsCountOnlyDevicesInScope(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Second)
 	started := now.Add(-2 * time.Hour)
-	session := func(id int, host, peer string) string {
-		return fmt.Sprintf(`{"id":%d,"host_id":"%s","peer_id":"%s","started_at":"%s"}`, id, host, peer, stamp(started.Add(time.Duration(id)*time.Minute)))
+	session := func(minute int, host string) [3]string {
+		return [3]string{host, stored(started.Add(time.Duration(minute) * time.Minute)), ""}
 	}
 	api := routetest.NewAPI()
 	api.On("GET /api/peers", 200, `[{"id":"a"},{"id":"b"},{"id":"c"}]`)
-	api.On("GET /api/peers/a/connection-sessions?limit=500", 200, `{"sessions":[`+session(1, "a", "b")+`,`+session(2, "a", "c")+`]}`)
-	api.On("GET /api/peers/b/connection-sessions?limit=500", 200, `{"sessions":[`+session(1, "a", "b")+`]}`)
-	api.On("GET /api/peers/c/connection-sessions?limit=500", 200, `{"sessions":[`+session(2, "a", "c")+`,`+session(3, "c", "x")+`]}`)
 	w := routetest.New(t, routetest.Options{API: api})
+	sessionsTable(t, w, session(1, "a"), session(2, "b"), session(3, "c"))
 	ctx := context.Background()
 	for _, statement := range []string{
 		"INSERT INTO device_groups (id, guid, name) VALUES (90, 'closed', 'Closed')",
@@ -200,7 +218,7 @@ func TestTrendsCountOnlyDevicesInScope(t *testing.T) {
 	}
 	for i, role := range []string{"viewer", "admin", "viewer"} {
 		got := read(role)
-		wantSessions, wantDevices := []int64{1}, 1
+		wantSessions, wantDevices := []int64{2}, 1
 		if role == "admin" {
 			wantSessions, wantDevices = []int64{1, 2, 3}, 3
 		}

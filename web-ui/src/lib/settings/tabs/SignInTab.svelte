@@ -1,9 +1,11 @@
 <!--
   Settings › Sign-in. For everyone: their own password and two-factor
-  sign-in. With server.config also how everyone signs in: device
-  enrollment, client sessions, LDAP and single sign-on (OIDC). Each is its
-  own form with its own save (different endpoints; LDAP and SSO have a
-  test button and ask before a save that can lock people out).
+  sign-in. With server.config also how everyone signs in: how new devices
+  are approved, client sessions, LDAP and single sign-on (OIDC). Each is
+  its own form with its own save (different endpoints; LDAP and SSO have a
+  test button and ask before a save that can lock people out). The
+  enrollment mode shows here; it is changed on Device tokens, which the
+  section links to for accounts with enrollment.manage.
 
   Element ids are the old page's, for links and the settings search.
 -->
@@ -31,7 +33,6 @@
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
-	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import CodeBlock from '#lib/ui/CodeBlock.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
@@ -243,48 +244,26 @@
 	/* ── Device enrollment ── */
 
 	const enrollment = createForm({
-		initial: { mode: 'open', rich_approve: true, tag_picker: true },
+		initial: { rich_approve: true, tag_picker: true },
 		submit: async (v) => {
 			const saved = await saveEnrollment(v);
-			enrolledMode = saved.mode || v.mode;
-			return {
-				mode: enrolledMode,
-				rich_approve: saved.rich_approve !== false,
-				tag_picker: saved.tag_picker !== false
-			};
+			return { rich_approve: saved.rich_approve !== false, tag_picker: saved.tag_picker !== false };
 		}
 	});
-	let enrolledMode = $state('open');
+	let enrolledMode = $state('');
 	let pendingCount = $state(0);
+	/** The mode is changed on Device tokens, under the permission that page asks */
+	const canChangeMode = can('enrollment.manage');
 
 	async function loadEnrollment() {
 		try {
 			const d = await getEnrollment();
 			enrolledMode = d.mode || 'open';
 			pendingCount = Number(d.pending_count) || 0;
-			enrollment.reset({
-				mode: enrolledMode,
-				rich_approve: d.rich_approve !== false,
-				tag_picker: d.tag_picker !== false
-			});
+			enrollment.reset({ rich_approve: d.rich_approve !== false, tag_picker: d.tag_picker !== false });
 		} catch (err) {
 			enrollment.status = { state: 'error', message: errText(err) };
 		}
-	}
-
-	async function submitEnrollment(e: SubmitEvent) {
-		e.preventDefault();
-		if (enrollment.busy) return;
-		const mode = enrollment.values.mode;
-		if (mode !== enrolledMode) {
-			const ok = await confirm({
-				title: t('settings.confirm.enrollment_mode_title'),
-				message: t('settings.confirm.enrollment_mode', { mode: t(`tokens.mode_${mode}`) }),
-				confirmLabel: t('settings.signin.enrollment_save')
-			});
-			if (!ok) return;
-		}
-		await enrollment.submit();
 	}
 
 	/* ── Client sessions ── */
@@ -746,25 +725,18 @@
 					<form
 						id="enrollment-settings-section"
 						class="form-column settings-subgroup"
-						onsubmit={submitEnrollment}
+						onsubmit={enrollment.onsubmit}
 						novalidate
 					>
 						<h3>{t('settings.enrollment_title')}</h3>
 						<p class="form-hint">{t('settings.enrollment_desc')}</p>
-						<ChoiceList
-							name="settings_enrollment_mode"
-							label={t('tokens.enrollment_mode')}
-							bind:value={enrollment.values.mode}
-							choices={[
-								{ value: 'open', title: t('tokens.mode_open'), description: t('tokens.mode_open_desc') },
-								{
-									value: 'managed',
-									title: t('tokens.mode_managed'),
-									description: t('tokens.mode_managed_desc')
-								},
-								{ value: 'locked', title: t('tokens.mode_locked'), description: t('tokens.mode_locked_desc') }
-							]}
-						/>
+						{#if enrolledMode}
+							<p>
+								{t('tokens.enrollment_mode')}: <strong>{t(`tokens.mode_${enrolledMode}`)}</strong>.
+								{t(`tokens.mode_${enrolledMode}_desc`)}
+								{#if canChangeMode}<a href={link('/tokens')}>{t('settings.enrollment_mode_link')}</a>{/if}
+							</p>
+						{/if}
 						<Checkbox
 							id="enrollment-rich-approve"
 							label={t('settings.enrollment_rich_approve')}

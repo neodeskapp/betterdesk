@@ -50,10 +50,5 @@ func init() {
 		events("events-action-twice", url.Values{"action": {"peer_deleted", "peer_banned"}}, []string{"~total"}),
 		events("events-action-in-brackets", url.Values{"action[name]": {"peer_deleted"}}, all),
 		contract.Case{Name: "hardening", Path: "/api/panel/security-audit/hardening"},
-		// The modules built into the binary change with its dependencies
-		contract.Case{
-			Name: "vulnerabilities", Path: "/api/panel/security-audit/vulnerabilities",
-			Volatile: []string{"dependencies.go.total"},
-		},
 	)
 }

@@ -235,6 +235,17 @@ func (s *Server) updateHelpRequestStatus(w http.ResponseWriter, r *http.Request,
 	}
 
 	operator := actorFromCtx(r)
+	// A status the request has already is no change: the time of the last
+	// change stays, which is when a resolved request was resolved
+	if req.Status == status {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"id":         id,
+			"status":     status,
+			"handled_by": req.HandledBy,
+		})
+		return
+	}
 	if err := s.db.UpdateHelpRequestStatus(id, status, operator); err != nil {
 		log.Printf("[help] UpdateHelpRequestStatus error: %v", err)
 		http.Error(w, `{"error":"internal"}`, http.StatusInternalServerError)

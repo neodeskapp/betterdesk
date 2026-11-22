@@ -1,10 +1,7 @@
 package securityaudit_test
 
 import (
-	"os"
-	"path/filepath"
 	"reflect"
-	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -28,7 +25,7 @@ func newAPI() *routetest.API {
 func TestGuards(t *testing.T) {
 	api := newAPI()
 	w := routetest.New(t, routetest.Options{API: api})
-	for _, route := range []string{"overview", "events", "hardening", "vulnerabilities"} {
+	for _, route := range []string{"overview", "events", "hardening"} {
 		target := "/api/panel/security-audit/" + route
 		if got := w.SignedOut().Do("GET", target, ""); got.Status != 401 || got.Body != `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}` {
 			t.Errorf("%s signed out: %d %s", route, got.Status, got.Body)
@@ -103,38 +100,34 @@ func TestEventsWithoutABodyAreNoEvents(t *testing.T) {
 	}
 }
 
-func TestHardeningTellsTheSessionLimit(t *testing.T) {
-	for limit, want := range map[string]string{
-		"":  `{"id":"single_session","name":"Concurrent Panel Session Limit per Account","category":"auth","severity":"high","implemented":true,"description":"A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently 1) and records IP/User-Agent for audit."}`,
-		"0": `{"id":"single_session","name":"Concurrent Panel Session Limit per Account","category":"auth","severity":"high","implemented":false,"description":"A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently unlimited) and records IP/User-Agent for audit."}`,
-		"4": `"implemented":true,"description":"A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently 4) and records IP/User-Agent for audit."}`,
+// TestHardeningReadsThisServer: the Hardening tab lists only what this
+// server's settings decide, the session timeouts and the session limit per
+// account, with their values; the fixed list of planned work and the
+// dependency scan, which no scan stood behind, are gone (BUGS L104).
+func TestHardeningReadsThisServer(t *testing.T) {
+	timeouts := func(idle, absolute string) string {
+		return `{"id":"session_timeout","name":"Panel Idle and Absolute Session Timeout","category":"auth","severity":"medium","implemented":true,` +
+			`"description":"A console session ends after ` + idle + ` minutes without a request and ` + absolute + ` minutes after sign-in (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE)."}`
+	}
+	limit := func(on bool, count string) string {
+		return `{"id":"single_session","name":"Concurrent Panel Session Limit per Account","category":"auth","severity":"high","implemented":` + strconv.FormatBool(on) +
+			`,"description":"A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently ` + count + `) and records IP/User-Agent for audit."}`
+	}
+	for _, c := range []struct {
+		env  map[string]string
+		want string
+	}{
+		{map[string]string{}, timeouts("30", "1440") + "," + limit(true, "1")},
+		{map[string]string{"SESSION_MAX_PER_USER": "0"}, timeouts("30", "1440") + "," + limit(false, "unlimited")},
+		{map[string]string{"SESSION_MAX_PER_USER": "4", "SESSION_IDLE_TIMEOUT": "600000", "SESSION_MAX_AGE": "7200000"}, timeouts("10", "120") + "," + limit(true, "4")},
 	} {
-		w := routetest.New(t, routetest.Options{Env: map[string]string{"SESSION_MAX_PER_USER": limit}})
-		got := w.As("viewer").Do("GET", "/api/panel/security-audit/hardening", "")
-		if got.Status != 200 || !strings.Contains(got.Body, want) || !strings.HasPrefix(got.Body, `{"priorities":[{"id":"mutual_tls","name":"Mutual TLS Console ↔ Go Server","category":"network","severity":"high","implemented":false,"description":"Replace plain HTTP`) {
-			t.Errorf("SESSION_MAX_PER_USER=%q: %d %s", limit, got.Status, got.Body)
+		w := routetest.New(t, routetest.Options{Env: c.env})
+		viewer := w.As("viewer")
+		if got := viewer.Do("GET", "/api/panel/security-audit/hardening", ""); got.Status != 200 || got.Body != `{"priorities":[`+c.want+`]}` {
+			t.Errorf("%v: %d %s\nwant %s", c.env, got.Status, got.Body, `{"priorities":[`+c.want+`]}`)
 		}
-	}
-}
-
-// TestVulnerabilitiesCountTheGoModules: the dependencies are the Go
-// modules built into the binary, by its build information (a test binary
-// lists none); there is no block for Node's packages, and a package.json
-// the old console left in its folder is not read (BUGS NL2, TH17,
-// DECISIONS A63). TestDependenciesAreTheModulesOfTheBuild counts modules.
-func TestVulnerabilitiesCountTheGoModules(t *testing.T) {
-	modules := 0
-	if info, ok := debug.ReadBuildInfo(); ok {
-		modules = len(info.Deps)
-	}
-	want := `{"scan_available":false,"counts":{"critical":0,"high":0,"medium":0,"low":0,"total":0},"vulnerabilities":[],` +
-		`"dependencies":{"go":{"total":` + strconv.Itoa(modules) + `,"vulnerable":0,"items":[]}},"last_scan":null}`
-	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "package.json"), []byte(`{"dependencies":{"a":"1","b":"2"},"devDependencies":{"c":"3"}}`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	w := routetest.New(t, routetest.Options{Config: func(cfg *config.Config) { cfg.ConsoleDir = dir }})
-	if got := w.As("viewer").Do("GET", "/api/panel/security-audit/vulnerabilities", ""); got.Status != 200 || got.Body != want {
-		t.Errorf("vulnerabilities: %d %s\nwant %s", got.Status, got.Body, want)
+		if got := viewer.Do("GET", "/api/panel/security-audit/vulnerabilities", ""); got.Status != 404 {
+			t.Errorf("the dependency scan: %d %s", got.Status, got.Body)
+		}
 	}
 }

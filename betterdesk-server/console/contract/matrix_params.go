@@ -93,8 +93,6 @@ var (
 		"GET /api/settings/management/capabilities": {
 			"data.services", "data.groups.update", "~data.groups.restart.checks[0].error", "~data.checks[7].error", "data.checks[9]",
 		},
-		// The modules built into the binary change with its dependencies.
-		"GET /api/panel/security-audit/vulnerabilities": {"dependencies.go.total"},
 	}
 
 	matrixVolatileHeaders = map[string][]string{

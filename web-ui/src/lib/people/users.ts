@@ -9,11 +9,11 @@ import type { ConsoleUser, EffectiveScope, UserOrg } from '#lib/api/users.ts';
 
 /**
  * Roles in the order the picker shows them. "admin" is the older name of
- * super_admin (same permissions, see middleware/auth.js). guest_issuer is
- * left out on purpose: the server never assigns it from the console.
+ * super_admin (same permissions, see middleware/auth.js).
  */
 export const ROLE_ORDER = [
 	'viewer',
+	'guest_issuer',
 	'operator',
 	'global_admin',
 	'server_admin',
@@ -25,6 +25,7 @@ export const ROLE_ORDER = [
 /** The roles described in the side column, as the old page listed them */
 export const DESCRIBED_ROLES = [
 	'viewer',
+	'guest_issuer',
 	'operator',
 	'global_admin',
 	'server_admin',
@@ -41,14 +42,13 @@ export function isSuperRole(role: string | null | undefined): boolean {
 /** Roles the signed-in person may give (canAssignUserRole in routes/users.routes.js) */
 export function assignableRoles(myRole: string | null | undefined): string[] {
 	if (isSuperRole(myRole)) return [...ROLE_ORDER];
-	if (myRole === 'global_admin') return ['viewer', 'operator', 'pro'];
+	if (myRole === 'global_admin') return ['viewer', 'guest_issuer', 'operator', 'pro'];
 	return [];
 }
 
 /**
  * Whether the signed-in person may edit, reset or delete this account, as
- * mayChange on the server: their own, one whose role they may give, and
- * for a global admin also guest_issuer accounts.
+ * mayChange on the server: their own, or one whose role they may give.
  */
 export function mayChangeUser(
 	myRole: string | null | undefined,
@@ -56,9 +56,7 @@ export function mayChangeUser(
 	user: Pick<ConsoleUser, 'id' | 'role'>
 ): boolean {
 	if (String(user.id) === myId) return true;
-	return (
-		assignableRoles(myRole).includes(user.role) || (myRole === 'global_admin' && user.role === 'guest_issuer')
-	);
+	return assignableRoles(myRole).includes(user.role);
 }
 
 /**

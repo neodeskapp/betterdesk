@@ -11,7 +11,8 @@
   Rows decided here keep their new status until the filter changes.
 
   Needs enrollment.approve (the route and every call); deleting a record
-  needs enrollment.manage; the link to change the mode needs server.config.
+  needs enrollment.manage, and so does the link to Device tokens, where
+  the mode is changed.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -372,7 +373,7 @@
 		}
 	]);
 
-	const modeLinkShown = $derived(can('server.config'));
+	const modeLinkShown = $derived(can('enrollment.manage'));
 
 	// Phones: Reject moves from the row into the row menu
 	let narrow = $state(false);
@@ -530,7 +531,7 @@
 								</p>
 							{/if}
 							{#if modeLinkShown}
-								<p><a href={link('/settings#auth')}>{t('registrations.mode_link')}</a></p>
+								<p><a href={link('/tokens')}>{t('registrations.mode_link')}</a></p>
 							{/if}
 						</section>
 					{/if}

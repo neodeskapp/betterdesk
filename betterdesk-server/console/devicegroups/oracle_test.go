@@ -48,6 +48,19 @@ func loadVectors(t *testing.T, name string, into any) {
 // BUGS DGR4 changes: Node kept at most 20 tags, the fix keeps every one.
 func renameKeepsMore(tags any) bool { return len(NormalizeTags(tags)) > 20 }
 
+// deleteClearsGroups reports whether a delete of the tag is one the fix of
+// BUGS L99 changes: Node left the filter of the tag groups that select by
+// it, the fix empties it.
+func deleteClearsGroups(groups []*access.DeviceGroup, tag any) bool {
+	name := SanitizeTagName(tag)
+	for _, g := range groups {
+		if name != "" && g.SourceType == "tag" && TagsEqual(g.TagFilter, name) {
+			return true
+		}
+	}
+	return false
+}
+
 // fixedVectors are the answers to the vectors a bug fix changes on purpose,
 // in testdata/<name>_fixed.json: per vector ("rename 12") the bug and the
 // Go answer, which the tests compare instead of Node's. A vector the fix
@@ -349,6 +362,10 @@ func TestOracleTags(t *testing.T) {
 			}
 			groups = append(groups, group)
 		}
+		bug := "DGR4"
+		if run.Kind != "rename" && deleteClearsGroups(groups, parsed(t, run.From)) {
+			fixed, bug = true, "L99"
+		}
 		type call struct {
 			ID   any      `json:"id"`
 			Tags []string `json:"tags"`
@@ -360,19 +377,19 @@ func TestOracleTags(t *testing.T) {
 		}
 		type update struct{ guid, filter string }
 		var updates []update
+		updateGroup := func(_ context.Context, guid, filter string) error {
+			updates = append(updates, update{guid, filter})
+			return nil
+		}
 		var result any
 		if run.Kind == "rename" {
-			res, err := RenameTagAcrossScope(context.Background(), devices, groups, parsed(t, run.From), parsed(t, run.To), setPeerTags,
-				func(_ context.Context, guid, filter string) error {
-					updates = append(updates, update{guid, filter})
-					return nil
-				})
+			res, err := RenameTagAcrossScope(context.Background(), devices, groups, parsed(t, run.From), parsed(t, run.To), setPeerTags, updateGroup)
 			if err != nil {
 				t.Fatal(err)
 			}
 			result = res
 		} else {
-			res, err := DeleteTagAcrossScope(context.Background(), devices, groups, parsed(t, run.From), setPeerTags)
+			res, err := DeleteTagAcrossScope(context.Background(), devices, groups, parsed(t, run.From), setPeerTags, updateGroup)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -397,9 +414,9 @@ func TestOracleTags(t *testing.T) {
 				nodeWritten = append(nodeWritten, [2]string{u.GUID, u.Data.TagFilter})
 			}
 			node := map[string]any{"result": run.Result, "calls": run.Calls, "updates": nodeWritten, "devicesAfter": run.DevicesAfter, "filtersAfter": run.FiltersAfter}
-			if !fixes.matches("run "+strconv.Itoa(i), "DGR4", out, node) {
+			if !fixes.matches("run "+strconv.Itoa(i), bug, out, node) {
 				encoded, _ := json.Marshal(out)
-				t.Errorf("run %d (%s %s to %s): %s, not the recorded answer of DGR4", i, run.Kind, run.From, run.To, encoded)
+				t.Errorf("run %d (%s %s to %s): %s, not the recorded answer of %s", i, run.Kind, run.From, run.To, encoded, bug)
 			}
 			continue
 		}

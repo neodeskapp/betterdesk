@@ -5,13 +5,26 @@
  * its tab needs it and stays for the panel's life (switching tabs doesn't
  * load again; Retry and Refresh do). Results of an older request are dropped
  * when a newer one for the same part has started.
+ *
+ * A live view an offline device answers later ("pending") loads again by
+ * itself once the device can have answered: deviceChanged sees it come
+ * online, or sees a newer snapshot of that view than when it was asked.
+ * The panel reloads the device on every status push and every 15 s.
  */
 
 import { ApiError } from '#lib/api/client.ts';
 import * as agentApi from '#lib/api/device-agent.ts';
 import type { AgentResult, AgentView, Availability, ConnectionSession } from '#lib/api/device-agent.ts';
 import { listFolders, listTags, type Folder } from '#lib/api/devices.ts';
-import { inventoryView, localDay, type InventoryView, type LiveView } from './panel-logic.ts';
+import {
+	inventoryView,
+	localDay,
+	waitMark,
+	type InventoryView,
+	type LiveView,
+	type PanelDevice,
+	type WaitMark
+} from './panel-logic.ts';
 
 export type LoadState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -66,6 +79,10 @@ export class PanelData {
 	tags = $state.raw<string[]>([]);
 
 	#seq: Record<string, number> = {};
+	/** The device as the panel last loaded it */
+	#device: PanelDevice | null = null;
+	/** For each pending view, what the device looked like when it was asked */
+	#asked: Partial<Record<LiveView, WaitMark>> = {};
 	#tagsLoaded = false;
 	#foldersLoading: Promise<void> | null = null;
 
@@ -117,6 +134,7 @@ export class PanelData {
 	async loadView(view: LiveView, path?: string): Promise<void> {
 		const current = this.#next(`view:${view}`);
 		const where = path ?? this.views[view].path;
+		const asked = this.#device ? waitMark(this.#device, view) : null;
 		this.views[view] = { ...this.views[view], state: 'loading', problem: null, error: '', path: where };
 		try {
 			const result =
@@ -124,6 +142,8 @@ export class PanelData {
 					? await agentApi.browseFiles(this.id, where)
 					: await agentApi.getAgentView(this.id, view as AgentView);
 			if (!current()) return;
+			if (result.pending && asked) this.#asked[view] = asked;
+			else delete this.#asked[view];
 			this.views[view] = {
 				state: result.pending ? 'pending' : 'ready',
 				result,
@@ -135,6 +155,24 @@ export class PanelData {
 			if (!current()) return;
 			const p = agentProblem(err);
 			this.views[view] = { state: 'error', result: null, problem: p.problem, error: p.error, path: where };
+		}
+	}
+
+	/**
+	 * The device as the panel loaded it again: each pending view loads again
+	 * when the device came online or sent a newer snapshot of the view
+	 * since the view was asked
+	 */
+	deviceChanged(device: PanelDevice): void {
+		this.#device = device;
+		for (const view of Object.keys(this.#asked) as LiveView[]) {
+			const asked = this.#asked[view];
+			if (!asked || this.views[view].state !== 'pending') continue;
+			const now = waitMark(device, view);
+			if ((now.online && !asked.online) || now.collectedAt !== asked.collectedAt) {
+				delete this.#asked[view];
+				void this.loadView(view);
+			}
 		}
 	}
 
