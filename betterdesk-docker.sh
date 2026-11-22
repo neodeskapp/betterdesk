@@ -318,6 +318,14 @@ console_port() {
     printf '%s\n' "${port:-5000}"
 }
 
+# The host port of the console's HTTPS, which the compose file publishes
+# whether HTTPS is on or not
+console_https_port() {
+    local port
+    port="$(env_get BETTERDESK_CONSOLE_HTTPS_PORT)"
+    printf '%s\n' "${port:-5443}"
+}
+
 on_postgres() {
     case "$(env_get DATABASE_URL)" in
         postgres://*|postgresql://*) return 0 ;;
@@ -465,7 +473,7 @@ port_user() {
 
 check_ports() {
     local port user taken=()
-    for port in "$(console_port)" "${DOCKER_PORTS_TCP[@]}"; do
+    for port in "$(console_port)" "$(console_https_port)" "${DOCKER_PORTS_TCP[@]}"; do
         user=$(port_user tcp "$port")
         [ -z "$user" ] || taken+=("TCP $port: $user")
     done
@@ -480,6 +488,9 @@ check_ports() {
     fi
     if [ "${#taken[@]}" -eq 1 ] && [[ "${taken[0]}" == "TCP $(console_port):"* ]]; then
         hint="Stop it, or give the console another port: --console-port 5080"
+    fi
+    if [ "${#taken[@]}" -eq 1 ] && [[ "${taken[0]}" == "TCP $(console_https_port):"* ]]; then
+        hint="Stop it, or give the console's HTTPS another port: BETTERDESK_CONSOLE_HTTPS_PORT=5444 in $(env_file)"
     fi
     die "Ports BetterDesk needs are in use:" "${taken[@]}" "$hint"
 }

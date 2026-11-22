@@ -73,8 +73,8 @@ RESCUE_ACTION="rescue"
 CHECK_CAPABILITIES=false
 MANAGED_CONFIG_CHANGES=()
 
-# Docker ports: web console 5000, API 21121, CDAP 21122, signal and relay
-DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122 5000"
+# Docker ports: web console 5000 and 5443, API 21121, CDAP 21122, signal and relay
+DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122 5000 5443"
 
 # ── Output helpers ────────────────────────────────────────────────────────────
 

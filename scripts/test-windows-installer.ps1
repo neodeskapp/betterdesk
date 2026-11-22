@@ -377,6 +377,32 @@ function Test-PostgreSQLAddressIsKept {
     Remove-Item -Recurse -Force $dir
 }
 
+# L225: -PgUri means PostgreSQL as its help says, also without
+# -PostgreSQL, and an interactive install asks no database question for
+# it, where the menu's default made it SQLite again.
+function Test-PgUriMeansPostgreSQL {
+    $dir = New-TestInstall
+    $saved = $env:USE_POSTGRESQL
+    $env:USE_POSTGRESQL = $null
+    $uri = 'postgres://bd:Given-Pass@db.example:5433/desk?sslmode=require'
+    if (-not (Test-PostgreSQLWanted -Switch $false -Uri $uri)) { Fail '-PgUri alone does not mean PostgreSQL' }
+    if (Test-PostgreSQLWanted -Switch $false -Uri '') { Fail 'neither -PostgreSQL nor -PgUri means PostgreSQL' }
+    if (-not (Test-PostgreSQLWanted -Switch $true -Uri '')) { Fail '-PostgreSQL does not mean PostgreSQL' }
+    $script:menuShown = $false
+    function Invoke-MenuChoose { param($Title, $Subtitle, $Items, $Returns) $script:menuShown = $true; $script:MENU_CHOICE = '1' }
+    $script:AUTO_MODE = $false
+    $script:USE_POSTGRESQL = $true
+    $script:POSTGRESQL_URI = $uri
+    Choose-DatabaseType 6> $null
+    if ($script:menuShown) { Fail 'the database question was asked with an address given' }
+    if (-not $script:USE_POSTGRESQL -or $script:POSTGRESQL_URI -ne $uri) { Fail "the given address did not stay: $($script:USE_POSTGRESQL) $($script:POSTGRESQL_URI)" }
+    $script:AUTO_MODE = $true
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    $env:USE_POSTGRESQL = $saved
+    Remove-Item -Recurse -Force $dir
+}
+
 # L74: the server's log, which it writes to standard error, goes to
 # logs\server.log, as a service and as a scheduled task; an update of the
 # task keeps one redirect.
@@ -954,6 +980,7 @@ Test-MigrationMenusPassOverwrite
 Test-PostgreSQLSwitchMovesTheWholeInstall
 Test-ReleasesComeFromTheFork
 Test-PostgreSQLAddressIsKept
+Test-PgUriMeansPostgreSQL
 Test-ServerLogFile
 Test-UpdateKeepsTheAdminsPorts
 Test-ChannelAndDownloadErrors

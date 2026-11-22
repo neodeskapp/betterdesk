@@ -2270,6 +2270,8 @@ do_configure_reverse_proxy() {
     panel_bind="${REVERSE_PROXY_PANEL_BIND:-127.0.0.1}"
 
     apply_console_reverse_proxy_mode "$panel_host" "$server_id" "$ws_origins" "$panel_bind"
+    # A proxy on another machine still needs the console's port
+    [ "$panel_bind" = "0.0.0.0" ] || close_console_firewall_ports
 
     print_success "BetterDesk configured for external reverse proxy"
     echo ""
@@ -3673,7 +3675,24 @@ setup_postgresql_database() {
     return 0
 }
 
+# prepare_postgresql: a database given with --pg-uri (or POSTGRESQL_URI) is
+# used as it is; without one, PostgreSQL is installed on this machine with
+# a user and a database for BetterDesk.
+prepare_postgresql() {
+    if [ -n "$POSTGRESQL_URI" ]; then
+        print_info "PostgreSQL: the database given with --pg-uri; nothing is set up on this machine"
+        return 0
+    fi
+    install_postgresql || { print_error "PostgreSQL installation failed"; return 1; }
+    setup_postgresql_database || { print_error "PostgreSQL setup failed"; return 1; }
+}
+
 choose_database_type() {
+    # A database given with --pg-uri needs no question
+    if [ "$USE_POSTGRESQL" = "true" ] && [ -n "$POSTGRESQL_URI" ]; then
+        print_info "Using the PostgreSQL database given with --pg-uri"
+        return 0
+    fi
     if [ "$AUTO_MODE" = true ]; then
         # In auto mode, use environment variable or default to SQLite
         if [ "$USE_POSTGRESQL" = "true" ]; then
@@ -5437,8 +5456,7 @@ do_install() {
 
     # Install and configure PostgreSQL if selected
     if [ "$USE_POSTGRESQL" = "true" ]; then
-        install_postgresql || { print_error "PostgreSQL installation failed"; return 1; }
-        setup_postgresql_database || { print_error "PostgreSQL setup failed"; return 1; }
+        prepare_postgresql || return 1
     fi
 
     detect_architecture
@@ -6583,6 +6601,33 @@ configure_firewall_rules() {
     [ "$created" -gt 0 ] && print_success "Open: ${entries[*]}"
     print_info "A firewall outside this machine (your cloud provider's) needs the same ports: ${entries[*]}"
     return 0
+}
+
+# close_console_firewall_ports: TLS ends at a reverse proxy on this
+# machine, which reaches the console on loopback, so the console's ports
+# that configure_firewall_rules opened are closed again.
+close_console_firewall_ports() {
+    local entries=() entry port
+    port=$(resolve_panel_http_port)
+    [ "$port" != 0 ] && entries+=("$port/tcp")
+    entries+=("$(resolve_panel_https_port)/tcp")
+    if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
+        for entry in "${entries[@]}"; do
+            ufw delete allow "$entry" >/dev/null 2>&1 || true
+        done
+    elif command -v firewall-cmd &>/dev/null && systemctl is-active --quiet firewalld 2>/dev/null; then
+        for entry in "${entries[@]}"; do
+            firewall-cmd --permanent --remove-port="$entry" >/dev/null 2>&1 || true
+        done
+        firewall-cmd --reload >/dev/null 2>&1 || true
+    elif command -v iptables &>/dev/null; then
+        for entry in "${entries[@]}"; do
+            while iptables -D INPUT -p "${entry#*/}" --dport "${entry%/*}" -j ACCEPT 2>/dev/null; do :; done
+        done
+    else
+        return 0
+    fi
+    print_info "Closed the console's ports ${entries[*]}: the reverse proxy reaches the console on this machine"
 }
 
 #===============================================================================

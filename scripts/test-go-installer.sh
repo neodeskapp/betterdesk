@@ -874,6 +874,50 @@ test_firewall_ports() (
     rm -rf "$TEST_DIR"
 )
 
+# L225: the install opens the console's ports before it asks about a
+# reverse proxy; when TLS then ends at a proxy on this machine, the
+# console's ports are closed again. A proxy on another machine still needs
+# them.
+test_reverse_proxy_closes_the_console_ports() (
+    load
+    printf 'CONSOLE_PORT=5000\nHTTPS_ENABLED=true\nHTTPS_PORT=5443\n' > "$CONSOLE_PATH/.env"
+    ufw() { printf '%s\n' "$*" >> "$TEST_DIR/ufw"; [ "$1" != status ] || echo "Status: active"; }
+    generate_reverse_proxy_config() { REVERSE_PROXY_PANEL_BIND="$BIND"; }
+    apply_console_reverse_proxy_mode() { :; }
+    print_success() { :; }
+    print_step() { :; }
+    BIND=127.0.0.1 do_configure_reverse_proxy <<< "console.example.com" > /dev/null 2>&1 || fail "the reverse proxy set-up failed"
+    grep -qx 'delete allow 5000/tcp' "$TEST_DIR/ufw" && grep -qx 'delete allow 5443/tcp' "$TEST_DIR/ufw" \
+        || fail "a proxy on this machine left the console's ports open: $(cat "$TEST_DIR/ufw" 2>/dev/null)"
+    rm -f "$TEST_DIR/ufw"
+    BIND=0.0.0.0 do_configure_reverse_proxy <<< "console.example.com" > /dev/null 2>&1 || fail "the reverse proxy set-up failed"
+    if grep -q '^delete' "$TEST_DIR/ufw" 2>/dev/null; then fail "a proxy on another machine closed the console's ports: $(cat "$TEST_DIR/ufw")"; fi
+    rm -rf "$TEST_DIR"
+)
+
+# L225: --pg-uri (or POSTGRESQL_URI with PostgreSQL chosen) is the
+# database as given: the install asks no database question and sets up no
+# PostgreSQL of its own, which made a new address and dropped the given
+# one. Without an address it sets PostgreSQL up on this machine.
+test_pg_uri_is_used_as_given() (
+    load
+    local uri='postgres://bd:Given-Pass@db.example:5433/desk?sslmode=require'
+    menu_choose() { echo menu >> "$TEST_DIR/calls"; MENU_CHOICE=1; }
+    install_postgresql() { echo install_postgresql >> "$TEST_DIR/calls"; }
+    setup_postgresql_database() { echo setup_postgresql_database >> "$TEST_DIR/calls"; POSTGRESQL_URI=postgres://made-here; }
+    AUTO_MODE=false USE_POSTGRESQL=true POSTGRESQL_URI="$uri"
+    choose_database_type > /dev/null
+    [ "$USE_POSTGRESQL" = true ] || fail "the database question dropped the given PostgreSQL address"
+    prepare_postgresql > /dev/null || fail "the PostgreSQL step failed"
+    [ ! -s "$TEST_DIR/calls" ] || fail "with an address given the install still ran: $(tr '\n' ' ' < "$TEST_DIR/calls")"
+    [ "$POSTGRESQL_URI" = "$uri" ] || fail "the given address became $POSTGRESQL_URI"
+    POSTGRESQL_URI=""
+    prepare_postgresql > /dev/null || fail "the PostgreSQL step without an address failed"
+    [ "$(tr '\n' ' ' < "$TEST_DIR/calls")" = "install_postgresql setup_postgresql_database " ] \
+        || fail "without an address PostgreSQL was not set up here: $(tr '\n' ' ' < "$TEST_DIR/calls" 2>/dev/null)"
+    rm -rf "$TEST_DIR"
+)
+
 # L76: a self-signed certificate keeps the client API port on HTTP, which
 # RustDesk clients accept; the console gets HTTPS.
 test_self_signed_keeps_the_client_api_on_http() (
@@ -1162,6 +1206,8 @@ test_install_summary
 test_uninstall_says_what_stays
 test_update_asks_the_fork
 test_firewall_ports
+test_reverse_proxy_closes_the_console_ports
+test_pg_uri_is_used_as_given
 test_self_signed_keeps_the_client_api_on_http
 test_port_taken_by_another_program
 test_release_signature

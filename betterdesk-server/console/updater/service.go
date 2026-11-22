@@ -282,29 +282,24 @@ type DockerUpdate struct {
 	Layout        string            `json:"layout"`
 }
 
-// DockerInstructions are the commands and images for a Docker install.
-// The layout is BETTERDESK_DOCKER_LAYOUT (single or split, split when
-// unset).
+// DockerInstructions are the commands and the image for a Docker install.
+// A Docker install with the console runs the one image
+// ghcr.io/<owner>/betterdesk, whatever BETTERDESK_DOCKER_LAYOUT says: the
+// split images are not published.
 func (s *Service) DockerInstructions() DockerUpdate {
 	tag := firstNonEmpty(strings.TrimSpace(s.getenv("BETTERDESK_IMAGE_TAG")), "latest")
 	owner := strings.ToLower(s.Owner())
-	out := DockerUpdate{
+	return DockerUpdate{
 		ChannelNote:   "Panel “Update channel” does not change GHCR images. Use BETTERDESK_IMAGE_TAG=latest (stable) or BETTERDESK_IMAGE_TAG=dev (development), then pull/recreate.",
 		SuggestedTags: map[string]string{"stable": "latest", "development": "dev"},
 		CurrentTag:    tag,
 		UpdateChannel: ChannelOf(s.Branch()),
+		Summary:       "Pull and recreate the official all-in-one container image.",
 		Commands:      []string{"docker compose pull", "docker compose up -d"},
+		Images:        []string{"ghcr.io/" + owner + "/betterdesk:" + tag},
+		ComposeHint:   "docker-compose.quick.single.yml",
+		Layout:        "single",
 	}
-	if strings.ToLower(strings.TrimSpace(s.getenv("BETTERDESK_DOCKER_LAYOUT"))) == "single" {
-		out.Summary = "Pull and recreate the official all-in-one container image."
-		out.Images = []string{"ghcr.io/" + owner + "/betterdesk:" + tag}
-		out.ComposeHint, out.Layout = "docker-compose.quick.single.yml", "single"
-		return out
-	}
-	out.Summary = "Pull and recreate the published container images."
-	out.Images = []string{"ghcr.io/" + owner + "/betterdesk-console:" + tag, "ghcr.io/" + owner + "/betterdesk-server:" + tag}
-	out.ComposeHint, out.Layout = "docker-compose.quick.yml", "split"
-	return out
 }
 
 // DockerHint is the commands of DockerInstructions joined with " && ".
