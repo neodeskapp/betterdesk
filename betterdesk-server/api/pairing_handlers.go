@@ -200,8 +200,12 @@ func (s *Server) connectionEndpoints(r *http.Request) map[string]any {
 		}
 		relayServers = strings.Join(s.cfg.GetRelayServers(), ",")
 	}
-	scheme := "https"
-	if r != nil && r.TLS == nil {
+	// The API address has the scheme the request came with: https over TLS
+	// or behind a trusted proxy that says so, http otherwise.
+	scheme := "http"
+	if r != nil && r.TLS != nil {
+		scheme = "https"
+	} else if r != nil {
 		if proto := strings.TrimSpace(s.forwardedHeader(r, "X-Forwarded-Proto")); proto != "" {
 			scheme = strings.ToLower(proto)
 		}

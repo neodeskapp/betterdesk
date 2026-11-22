@@ -31,11 +31,11 @@ func TestForceHTTPSHonoursForwardedProtoOnlyFromATrustedProxy(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/pairing/config", nil)
 	req.Host = "api.example.org"
-	req.Header.Set("X-Forwarded-Proto", "http")
+	req.Header.Set("X-Forwarded-Proto", "https")
 	req.Header.Set("X-Forwarded-Host", "evil.example")
 	req.RemoteAddr = "198.51.100.9:1234"
 	endpoints := srv.connectionEndpoints(req)
-	if got, want := endpoints["api"], "https://api.example.org:"+itoa(uint64(srv.cfg.APIPort)); got != want {
+	if got, want := endpoints["api"], "http://api.example.org:"+itoa(uint64(srv.cfg.APIPort)); got != want {
 		t.Errorf("api endpoint from an untrusted address: %v, want %s", got, want)
 	}
 }
