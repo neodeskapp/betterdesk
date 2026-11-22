@@ -7,12 +7,10 @@
  * per page (a chunk of its own, so other pages never fetch it) and hands
  * out clients.
  *
- * The dev-only mock device (/dev/mock-remote.js) loads only when the
- * viewer's data says the server has it on (BD_DEV_MOCK_REMOTE=1 and
- * ?mock=1); without the flag the server answers 404 for the script and
- * the viewer data has no mock. The mock is a classic script that draws
- * through the global RDRenderer, so the loader puts RDRenderer on the page
- * before it adds the script.
+ * The dev-only mock device (./client/mock-session.ts, a chunk of its own)
+ * loads only when the viewer's data says the server has it on
+ * (BD_DEV_MOCK_REMOTE=1, then ?mock=1 or a seeded demo device); without
+ * the flag the viewer data has no mock and the chunk is never fetched.
  */
 
 import { t } from '#lib/i18n/i18n.svelte.ts';
@@ -21,8 +19,6 @@ import type { ViewerCapabilities } from './access.ts';
 import type { MessageInit } from './client/generated/protos.ts';
 import type { RDInputRenderer } from './client/input.ts';
 import type { Transport } from './states.ts';
-
-export const MOCK_SCRIPT = '/dev/mock-remote.js';
 
 /* ── The client's surface (RDClient; CDAPSession, MeshSession, RemoteTargetSession and the mock copy it) ── */
 
@@ -175,8 +171,6 @@ interface RdWindow {
 	__guestToken?: string;
 	__initialDeviceId?: string;
 	__mockRemote?: { scenario: string } | null;
-	MockRemoteSession?: ClientCtor;
-	RDRenderer?: unknown;
 }
 
 const w = () => window as unknown as RdWindow;
@@ -188,19 +182,6 @@ export interface LoadOptions {
 	csrfToken: string;
 	/** Set only when the server has the dev mock on for this request */
 	mock: { scenario: string } | null;
-}
-
-/** Add one classic script (the dev mock) */
-function addScript(src: string): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const el = document.createElement('script');
-		el.src = src;
-		el.async = false;
-		el.dataset.rdclient = '';
-		el.onload = () => resolve();
-		el.onerror = () => reject(new Error(`Could not load ${src}`));
-		document.head.appendChild(el);
-	});
 }
 
 /** The globals the client reads before and while it runs */
@@ -242,22 +223,19 @@ async function importClient(): Promise<ClientModules> {
 
 let modules: ClientModules | null = null;
 let loading: Promise<void> | null = null;
+/** The dev mock device, once loaded */
+let mockClient: ClientCtor | null = null;
 
-/** Load the client once per page; the mock script only when `mock` is set */
+/** Load the client once per page; the mock only when `mock` is set */
 export function loadRdClient(opts: LoadOptions): Promise<void> {
 	setGlobals(opts);
 	loading ??= importClient()
 		.then(async (m) => {
+			if (opts.mock) mockClient = (await import('./client/mock-session.ts')).MockRemoteSession;
 			modules = m;
-			if (opts.mock) {
-				const { RDRenderer } = await import('./client/renderer.ts');
-				w().RDRenderer = RDRenderer;
-				await addScript(MOCK_SCRIPT);
-			}
 		})
 		.catch((err: unknown) => {
 			loading = null;
-			for (const el of document.head.querySelectorAll('script[data-rdclient]')) el.remove();
 			throw err;
 		});
 	return loading;
@@ -272,8 +250,8 @@ export function createClient(
 	const win = w();
 	const clients = modules?.clients;
 	const Ctor: ClientCtor | undefined =
-		win.__mockRemote && win.MockRemoteSession
-			? win.MockRemoteSession
+		win.__mockRemote && mockClient
+			? mockClient
 			: transport === 'mesh'
 				? clients?.mesh
 				: transport === 'cdap'
