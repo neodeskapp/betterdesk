@@ -573,6 +573,8 @@
     "remote_password": "Password salvata",
     "remote_password_hint": "Salvata cifrata su questo server e inserita a ogni connessione.",
     "remote_password_keep_hint": "Lascia vuoto per mantenere la password salvata.",
+    "remote_guacd_missing": "Le connessioni non possono ancora avviarsi: guacd, il gateway RDP e VNC di questo server, non risponde. Un amministratore deve configurarlo.",
+    "remote_vault_missing": "Questo server non può ancora salvare le password: la sua chiave per le password salvate (REMOTE_TARGET_VAULT_KEY) non è impostata. Scegli «Chiedi a ogni connessione» oppure chiedi a un amministratore di impostare la chiave.",
     "remote_password_required": "Inserisci la password da salvare.",
     "remote_section_security": "Sicurezza",
     "remote_tls": "Crittografia TLS",

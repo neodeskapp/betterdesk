@@ -577,6 +577,8 @@
     "remote_password": "已儲存的密碼",
     "remote_password_hint": "以加密方式儲存在此伺服器，每次連線時自動填入。",
     "remote_password_keep_hint": "留空即保留已儲存的密碼。",
+    "remote_guacd_missing": "暫時無法開始連線：此伺服器的 RDP 與 VNC 閘道 guacd 沒有回應。需要管理員進行設定。",
+    "remote_vault_missing": "此伺服器暫時無法儲存密碼：用於儲存密碼的金鑰（REMOTE_TARGET_VAULT_KEY）尚未設定。請選擇「每次連線時詢問」，或請管理員設定該金鑰。",
     "remote_password_required": "請輸入要儲存的密碼。",
     "remote_section_security": "安全性",
     "remote_tls": "TLS 加密",

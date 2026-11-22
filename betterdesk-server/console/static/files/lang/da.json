@@ -579,6 +579,8 @@
     "remote_password": "Gemt adgangskode",
     "remote_password_hint": "Gemmes krypteret på denne server og udfyldes ved hver forbindelse.",
     "remote_password_keep_hint": "Lad feltet stå tomt for at beholde den gemte adgangskode.",
+    "remote_guacd_missing": "Forbindelser kan ikke starte endnu: guacd, RDP- og VNC-gatewayen på denne server, svarer ikke. En administrator skal sætte den op.",
+    "remote_vault_missing": "Denne server kan ikke gemme adgangskoder endnu: dens nøgle til gemte adgangskoder (REMOTE_TARGET_VAULT_KEY) er ikke sat. Vælg »Spørg ved hver forbindelse«, eller få en administrator til at sætte nøglen.",
     "remote_password_required": "Skriv den adgangskode, der skal gemmes.",
     "remote_section_security": "Sikkerhed",
     "remote_tls": "TLS-kryptering",

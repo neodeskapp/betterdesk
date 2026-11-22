@@ -577,6 +577,8 @@
     "remote_password": "Mot de passe enregistré",
     "remote_password_hint": "Stocké chiffré sur ce serveur et saisi à chaque connexion.",
     "remote_password_keep_hint": "Laissez vide pour garder le mot de passe enregistré.",
+    "remote_guacd_missing": "Les connexions ne peuvent pas encore démarrer : guacd, la passerelle RDP et VNC de ce serveur, ne répond pas. Un administrateur doit la configurer.",
+    "remote_vault_missing": "Ce serveur ne peut pas encore enregistrer de mots de passe : sa clé pour les mots de passe enregistrés (REMOTE_TARGET_VAULT_KEY) n'est pas définie. Choisissez « Demander à chaque connexion » ou demandez à un administrateur de définir la clé.",
     "remote_password_required": "Saisissez le mot de passe à enregistrer.",
     "remote_section_security": "Sécurité",
     "remote_tls": "Chiffrement TLS",

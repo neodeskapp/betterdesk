@@ -153,6 +153,9 @@ func init() {
 		// credential is stored
 		contract.Case{Name: "remote-targets", Path: "/api/remote-targets"},
 		contract.Case{Name: "remote-targets-with-disabled", Path: "/api/remote-targets", Query: map[string][]string{"include_disabled": {"true"}}},
+		// L83: a route of the Go console only, recorded from Go: whether the
+		// vault has a key and guacd answers (neither on a test instance)
+		contract.Case{Name: "remote-target-readiness", Path: "/api/remote-targets/readiness"},
 		contract.Case{Name: "remote-target-create-invalid", Method: "POST", Path: "/api/remote-targets", Body: map[string]any{"name": "", "protocol": "vnc"}},
 		contract.Case{Name: "remote-target-create-list-body", Method: "POST", Path: "/api/remote-targets", RawBody: `[{"name":"In a list"}]`, ContentType: "application/json"},
 		contract.Case{

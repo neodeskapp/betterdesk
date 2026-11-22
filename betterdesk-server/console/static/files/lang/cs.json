@@ -573,6 +573,8 @@
     "remote_password": "Uložené heslo",
     "remote_password_hint": "Uloží se zašifrovaně na tomto serveru a vyplní se při každém připojení.",
     "remote_password_keep_hint": "Nechte prázdné, chcete-li ponechat uložené heslo.",
+    "remote_guacd_missing": "Připojení zatím nemohou začít: guacd, brána RDP a VNC tohoto serveru, neodpovídá. Musí ji nastavit správce.",
+    "remote_vault_missing": "Tento server zatím neumí ukládat hesla: jeho klíč pro uložená hesla (REMOTE_TARGET_VAULT_KEY) není nastaven. Zvolte „Ptát se při každém připojení“ nebo požádejte správce, aby klíč nastavil.",
     "remote_password_required": "Zadejte heslo, které se má uložit.",
     "remote_section_security": "Zabezpečení",
     "remote_tls": "Šifrování TLS",

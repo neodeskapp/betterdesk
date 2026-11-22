@@ -58,6 +58,7 @@ func Register(d *kit.Deps) {
 	r.Get("/api/remote-targets", h.remoteTargets, d.RequireAuth, d.RequirePermission("remote_target.view"))
 	r.Post("/api/remote-targets", h.createRemoteTarget, d.RequireAuth, d.RequirePermission("remote_target.edit"))
 	r.Post("/api/remote-targets/test", h.testRemoteTarget, d.RequireAuth, d.RequirePermission("remote_target.test"))
+	r.Get("/api/remote-targets/readiness", h.remoteTargetReadiness, d.RequireAuth, d.RequirePermission("remote_target.view"))
 	r.Get("/api/remote-targets/{id}", h.remoteTarget, d.RequireAuth, d.RequirePermission("remote_target.view"))
 	r.Patch("/api/remote-targets/{id}", h.updateRemoteTarget, d.RequireAuth, d.RequirePermission("remote_target.edit"))
 	r.Get("/api/remote-targets/{id}/credentials", h.remoteTargetCredentials, d.RequireAuth, d.RequirePermission("remote_target.view"))

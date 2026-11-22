@@ -643,6 +643,7 @@ function remoteTargetSheet(d: DeviceLike | null): Promise<boolean> {
 	return ask('remote-target', {
 		device: d,
 		canTest: can('remote_target.test'),
+		readiness: () => targetsApi.getRemoteTargetReadiness(),
 		save: async (input: RemoteTargetInput, password: string) => {
 			const before = d?.id || createdId;
 			let id = before;

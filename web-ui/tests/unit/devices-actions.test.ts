@@ -36,7 +36,8 @@ vi.mock('#lib/api/remoteTargets.ts', () => ({
 	deleteRemoteTarget: vi.fn(async () => ({})),
 	saveRemoteTargetPassword: vi.fn(async () => ({})),
 	deleteRemoteTargetPassword: vi.fn(async () => ({})),
-	testRemoteTarget: vi.fn(async () => ({}))
+	testRemoteTarget: vi.fn(async () => ({})),
+	getRemoteTargetReadiness: vi.fn(async () => ({ vault: false, guacd: true }))
 }));
 vi.mock('#lib/api/mesh.ts', () => ({
 	meshExec: vi.fn(async () => ({})),
@@ -64,6 +65,7 @@ vi.mock('../../src/lib/devices/ask.svelte.ts', () => ({
 		if (kind === 'memberships') await props.save!(['m1']);
 		if (kind === 'access-policy')
 			await props.save!({ password: 'secret', clear_password: true, unattended_enabled: true });
+		if (kind === 'remote-target') await props.readiness!();
 		if (kind === 'remote-target')
 			await props.save!(
 				{
@@ -296,6 +298,8 @@ describe('what the actions send', () => {
 		await act.addRemoteTarget();
 		expect(targetsApi.createRemoteTarget).toHaveBeenCalledWith(expect.objectContaining({ host: '10.0.0.5' }));
 		expect(targetsApi.saveRemoteTargetPassword).toHaveBeenCalledWith('rt_new', 'u', 'pw');
+		// L83: the sheet asks the server what it can do for targets
+		expect(targetsApi.getRemoteTargetReadiness).toHaveBeenCalled();
 	});
 
 	test('several devices are deleted in one request after one confirm', async () => {

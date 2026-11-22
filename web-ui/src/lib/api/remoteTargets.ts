@@ -5,7 +5,7 @@
  */
 
 import * as v from 'valibot';
-import { api, Ok } from './client.ts';
+import { api, Ok, wrapped } from './client.ts';
 
 const enc = encodeURIComponent;
 
@@ -64,4 +64,22 @@ export function deleteRemoteTargetPassword(id: string) {
 /** Whether this server reaches host and port (throws with the server's reason when not) */
 export function testRemoteTarget(target: RemoteTargetInput) {
 	return api(Ok, '/api/remote-targets/test', { method: 'POST', body: target });
+}
+
+/** What this server can do for targets: save their passwords (its vault has a key), start sessions (guacd answers) */
+export interface RemoteTargetReadiness {
+	vault: boolean;
+	guacd: boolean;
+}
+
+/** A value the server leaves out counts as ready, so an older server shows no warning */
+const Readiness = wrapped(
+	v.pipe(
+		v.looseObject({ vault: v.optional(v.boolean()), guacd: v.optional(v.boolean()) }),
+		v.transform((o): RemoteTargetReadiness => ({ vault: o.vault !== false, guacd: o.guacd !== false }))
+	)
+);
+
+export function getRemoteTargetReadiness() {
+	return api(Readiness, '/api/remote-targets/readiness');
 }

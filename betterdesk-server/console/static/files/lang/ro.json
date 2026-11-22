@@ -579,6 +579,8 @@
     "remote_password": "Parola salvată",
     "remote_password_hint": "Stocată criptat pe acest server și completată la fiecare conectare.",
     "remote_password_keep_hint": "Lăsați gol pentru a păstra parola salvată.",
+    "remote_guacd_missing": "Conexiunile nu pot porni încă: guacd, gateway-ul RDP și VNC al acestui server, nu răspunde. Un administrator trebuie să îl configureze.",
+    "remote_vault_missing": "Acest server nu poate salva încă parole: cheia sa pentru parolele salvate (REMOTE_TARGET_VAULT_KEY) nu este setată. Alegeți „Întreabă la fiecare conectare” sau cereți unui administrator să seteze cheia.",
     "remote_password_required": "Introduceți parola de salvat.",
     "remote_section_security": "Securitate",
     "remote_tls": "Criptare TLS",

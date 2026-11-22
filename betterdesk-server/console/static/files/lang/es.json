@@ -573,6 +573,8 @@
     "remote_password": "Contraseña guardada",
     "remote_password_hint": "Se guarda cifrada en este servidor y se rellena en cada conexión.",
     "remote_password_keep_hint": "Déjelo vacío para conservar la contraseña guardada.",
+    "remote_guacd_missing": "Las conexiones aún no pueden iniciarse: guacd, la pasarela RDP y VNC de este servidor, no responde. Un administrador tiene que configurarla.",
+    "remote_vault_missing": "Este servidor aún no puede guardar contraseñas: su clave para contraseñas guardadas (REMOTE_TARGET_VAULT_KEY) no está definida. Elija «Preguntar en cada conexión» o pida a un administrador que defina la clave.",
     "remote_password_required": "Escriba la contraseña que quiere guardar.",
     "remote_section_security": "Seguridad",
     "remote_tls": "Cifrado TLS",

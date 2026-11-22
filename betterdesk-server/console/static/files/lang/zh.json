@@ -573,6 +573,8 @@
     "remote_password": "已保存的密码",
     "remote_password_hint": "以加密方式保存在此服务器，每次连接时自动填入。",
     "remote_password_keep_hint": "留空即保留已保存的密码。",
+    "remote_guacd_missing": "暂时无法开始连接：此服务器的 RDP 和 VNC 网关 guacd 没有响应。需要管理员进行设置。",
+    "remote_vault_missing": "此服务器暂时无法保存密码：用于保存密码的密钥（REMOTE_TARGET_VAULT_KEY）尚未设置。请选择“每次连接时询问”，或请管理员设置该密钥。",
     "remote_password_required": "请输入要保存的密码。",
     "remote_section_security": "安全",
     "remote_tls": "TLS 加密",

@@ -400,6 +400,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/remote-targets", s.requirePermission(auth.PermRemoteTargetView, s.handleListRemoteTargets))
 	mux.HandleFunc("POST /api/remote-targets", s.requirePermission(auth.PermRemoteTargetEdit, s.handleCreateRemoteTarget))
 	mux.HandleFunc("POST /api/remote-targets/test", s.requirePermission(auth.PermRemoteTargetTest, s.handleTestRemoteTarget))
+	mux.HandleFunc("GET /api/remote-targets/readiness", s.requirePermission(auth.PermRemoteTargetView, s.handleRemoteTargetReadiness))
 	mux.HandleFunc("GET /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetView, s.handleGetRemoteTargetCredentialStatus))
 	mux.HandleFunc("PUT /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetEdit, s.handleSetRemoteTargetCredentials))
 	mux.HandleFunc("DELETE /api/remote-targets/{id}/credentials", s.requirePermission(auth.PermRemoteTargetEdit, s.handleClearRemoteTargetCredentials))

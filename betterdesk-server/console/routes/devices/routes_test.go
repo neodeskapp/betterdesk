@@ -200,6 +200,7 @@ func TestPermissions(t *testing.T) {
 		{"guest_issuer", "GET", "/api/remote-targets", "", "section:remote"},
 		{"guest_issuer", "GET", "/api/remote-targets/rt_1", "", "section:remote"},
 		{"guest_issuer", "GET", "/api/remote-targets/rt_1/credentials", "", "section:remote"},
+		{"guest_issuer", "GET", "/api/remote-targets/readiness", "", "section:remote"},
 	} {
 		a := agents[c.role]
 		if a == nil {

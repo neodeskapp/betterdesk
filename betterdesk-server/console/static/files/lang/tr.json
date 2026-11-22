@@ -579,6 +579,8 @@
     "remote_password": "Kayıtlı parola",
     "remote_password_hint": "Bu sunucuda şifreli saklanır ve her bağlantıda doldurulur.",
     "remote_password_keep_hint": "Kayıtlı parolayı korumak için boş bırakın.",
+    "remote_guacd_missing": "Bağlantılar henüz başlayamaz: bu sunucunun RDP ve VNC ağ geçidi guacd yanıt vermiyor. Bir yöneticinin onu kurması gerekiyor.",
+    "remote_vault_missing": "Bu sunucu henüz parola kaydedemez: kayıtlı parolalar için anahtarı (REMOTE_TARGET_VAULT_KEY) ayarlanmamış. \"Her bağlantıda sor\" seçeneğini seçin veya bir yöneticiden anahtarı ayarlamasını isteyin.",
     "remote_password_required": "Kaydedilecek parolayı girin.",
     "remote_section_security": "Güvenlik",
     "remote_tls": "TLS şifrelemesi",

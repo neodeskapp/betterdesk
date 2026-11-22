@@ -60,6 +60,14 @@ func (h *handlers) testRemoteTarget(w http.ResponseWriter, r *http.Request) {
 	byResult(w, r, h.api.TestRemoteTarget(r.Context(), plainBody(r)), http.StatusOK, http.StatusBadRequest)
 }
 
+// remoteTargetReadiness answers GET /api/remote-targets/readiness with what
+// the server says about RDP and VNC targets: {vault, guacd}, whether a
+// password can be saved and whether a session can start. The target form
+// warns while either is false. 502 when the server did not answer.
+func (h *handlers) remoteTargetReadiness(w http.ResponseWriter, r *http.Request) {
+	byResult(w, r, h.api.GetRemoteTargetReadiness(r.Context()), http.StatusOK, http.StatusBadGateway)
+}
+
 // target looks the remote target of the path up and answers 404 or 403
 // when it is none or one the account may not see.
 func (h *handlers) target(w http.ResponseWriter, r *http.Request, what string) (*goapi.Object, bool) {
