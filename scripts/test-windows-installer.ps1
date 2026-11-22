@@ -35,6 +35,9 @@ function New-ScheduledTaskSettingsSet { param([switch]$AllowStartIfOnBatteries, 
 function Register-ScheduledTask { param($TaskName, $Action, $Trigger, $Principal, $Settings, $Description, $Xml) $script:registeredTasks[$TaskName] = $Settings }
 function Get-ScheduledTask { param($TaskName, $ErrorAction) if ($script:registeredTasks.ContainsKey($TaskName)) { [pscustomobject]@{ TaskName = $TaskName } } }
 function Get-Service { param($Name, $ErrorAction) $null }
+# GitHub's API gives no answer unless a test stands in for it, so no check
+# reaches the network
+function Invoke-RestMethod { throw [System.Net.WebException]::new('The remote name could not be resolved: api.github.com') }
 
 function New-TestInstall {
     $dir = Join-Path ([System.IO.Path]::GetTempPath()) ("bd-ps1-" + [guid]::NewGuid().ToString('N'))
@@ -859,10 +862,24 @@ function Test-NoStableReleaseTakesTheNewestPrerelease {
         [pscustomobject]@{ tag_name = 'v3.7.0-rc.1'; draft = $true; prerelease = $true },
         [pscustomobject]@{ tag_name = 'v3.6.0-rc.2'; draft = $false; prerelease = $true },
         [pscustomobject]@{ tag_name = 'v3.6.0-rc.1'; draft = $false; prerelease = $true })
-    function Invoke-RestMethod { param($Uri, $Headers, [switch]$UseBasicParsing, $ErrorAction) if ($Uri -ne 'https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50') { throw "unexpected $Uri" }; return $script:releases }
+    # L254: GitHub's API says there is no stable release (404), and the
+    # download from releases/latest fails the way Windows PowerShell 5.1
+    # reports it on this route: a closed connection without a status, which
+    # the install took for a network failure
+    $script:latest = $null
+    function Invoke-RestMethod {
+        param($Uri, $Headers, [switch]$UseBasicParsing, $ErrorAction)
+        if ($Uri -eq 'https://api.github.com/repos/trybetterdesk/betterdesk/releases/latest') {
+            if ($script:latest) { return $script:latest }
+            throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.')
+        }
+        if ($Uri -ne 'https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50') { throw "unexpected $Uri" }
+        return $script:releases
+    }
     function Invoke-WebRequest {
         param($Uri, $OutFile, [switch]$UseBasicParsing, $ErrorAction)
-        if ($Uri -notlike 'https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0-rc.2/*') { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+        if ($Uri -like 'https://github.com/trybetterdesk/betterdesk/releases/latest/*') { throw [System.Net.WebException]::new('The underlying connection was closed: The connection was closed unexpectedly.') }
+        if ($Uri -notlike 'https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0-rc.2/*' -and $Uri -notlike 'https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/*') { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
         Copy-Item -Path (Join-Path $rel (($Uri -split '/')[-1])) -Destination $OutFile -Force
     }
     $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'trybetterdesk', 'betterdesk'
@@ -883,6 +900,19 @@ function Test-NoStableReleaseTakesTheNewestPrerelease {
     $script:UPDATE_GITHUB_BRANCH = 'main'
     $out = (Get-ReleaseBinary -Dir (Join-Path $dir 'stage-') 6>&1 | Out-String -Width 4096)
     if ($out -notmatch 'no stable release or pre-release yet: installing the development build') { Fail "without a pre-release the install does not take the development build: $out" }
+    # With the stable channel given there is no development build to fall
+    # back to: the install says the repository has no release
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = 'main'
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $out = (Get-ReleaseBinary -Dir (Join-Path $dir 'stage-none') 6>&1 | Out-String -Width 4096)
+    if ($out -notmatch 'has no stable release or pre-release yet' -or $out -match 'Could not reach') { Fail "a repository without releases is reported as: $out" }
+    # A stable release: its files by its tag
+    $script:latest = [pscustomobject]@{ tag_name = 'v3.6.0'; draft = $false; prerelease = $false }
+    $stage = Join-Path $dir 'stage-stable'
+    New-Item -ItemType Directory -Path $stage -Force | Out-Null
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
+    if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe')) -or $out -notmatch 'releases/download/v3\.6\.0') { Fail "the stable release was not installed by its tag: $out" }
+    $script:latest = $null
     $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
     $script:UPDATE_GITHUB_BRANCH = 'main'
     $env:UPDATE_GITHUB_BRANCH = $null
