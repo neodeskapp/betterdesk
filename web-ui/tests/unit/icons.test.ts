@@ -23,8 +23,8 @@ function subset(): Set<string> {
 
 const scan = (text: string, file = 'src/lib/Example.svelte') => iconNamesIn(text, file).sort();
 
-let candidates: Map<string, Set<string>> | undefined;
-const scanned = () => (candidates ??= collectCandidateIcons());
+/** The whole scan, read once in the beforeAll of the font tests */
+let scanned: Map<string, Set<string>>;
 
 describe('icon name scan', () => {
 	test('reads names written straight into Icon, icon props and icon fields', () => {
@@ -146,6 +146,13 @@ describe('icon name scan', () => {
 });
 
 describe('icon font subset', () => {
+	// The scan reads every file under src and static. On a slow disk (the
+	// dev container's bind mount) that takes longer than a test's 5 seconds,
+	// so it runs once here with its own limit.
+	beforeAll(() => {
+		scanned = collectCandidateIcons();
+	}, 120_000);
+
 	test('the subset list is readable', () => {
 		expect(subset().size).toBeGreaterThan(100);
 		expect(subset().has('devices')).toBe(true);
@@ -156,7 +163,7 @@ describe('icon font subset', () => {
 	});
 
 	test('the scan covers the scripts the remote viewer loads from static', () => {
-		const files = new Set([...scanned().values()].flatMap((f) => [...f]));
+		const files = new Set([...scanned.values()].flatMap((f) => [...f]));
 		expect(files).toContain('static/rdclient/file-modal.js');
 		expect(files).toContain('src/lib/shell/Topbar.svelte');
 	});
@@ -164,7 +171,7 @@ describe('icon font subset', () => {
 	test('has a glyph for every icon the console draws', () => {
 		const have = subset();
 		const missing: Record<string, string[]> = {};
-		for (const [name, files] of scanned()) if (!have.has(name)) missing[name] = [...files];
+		for (const [name, files] of scanned) if (!have.has(name)) missing[name] = [...files];
 		// Run `node scripts/update-material-symbols.mjs` from the repo root when this fails
 		expect(missing).toEqual({});
 	});
