@@ -5,6 +5,8 @@
   what applies now and where it comes from; for a user, a warning where a
   setting goes above what the role allows (the role's limit still applies
   on the server). Hard-locked features are always off and have no control.
+  A note says which sessions the client features reach, and some features
+  have a hint for what they do beyond their name (FEATURE_HINTS).
 
   user.edit edits and saves the whole policy at once; with only user.view
   the sheet shows what applies now, without controls. A super admin keeps
@@ -26,6 +28,7 @@
 	import {
 		aboveRole,
 		catalogGroups,
+		FEATURE_HINTS,
 		LEVEL_KEYS,
 		sectionLabelKeys,
 		sourceKey,
@@ -288,10 +291,23 @@
 			{/if}
 
 			<FormSection title={t('users.client_features')}>
+				<p class="note" data-features-note>
+					{tf(
+						'users.access_features_note',
+						'These switches apply to remote sessions started while signed in, from the RustDesk app or the web client. The device must run the BetterDesk client or RustDesk 1.4.5 or later, not on Android. To keep people from connecting without signing in, turn on Only signed-in RustDesk apps can start sessions in Settings.'
+					)}
+				</p>
 				<ul class="rows">
 					{#each catalog.features as f (f.key)}
 						{@const eff = effective?.features[f.key]}
 						{@const text = label(`users.access_feature_${f.key}`, f.label)}
+						{@const hint = FEATURE_HINTS[f.key]}
+						{@const described = [
+							eff && !f.hardLock && `${uid}-f-${f.key}-now`,
+							hint && `${uid}-f-${f.key}-hint`
+						]
+							.filter(Boolean)
+							.join(' ')}
 						<li class="row" data-feature={f.key}>
 							<span class="text">
 								{#if editable && !f.hardLock}
@@ -304,13 +320,16 @@
 								{:else if eff}
 									<span class="now" id="{uid}-f-{f.key}-now">{featureNow(eff.enabled, eff.source)}</span>
 								{/if}
+								{#if hint}
+									<span class="hint" id="{uid}-f-{f.key}-hint">{tf(hint.key, hint.text)}</span>
+								{/if}
 							</span>
 							{#if editable && !f.hardLock}
 								<Select
 									id="{uid}-f-{f.key}"
 									small
 									options={featureOptions}
-									aria-describedby={eff ? `${uid}-f-${f.key}-now` : undefined}
+									aria-describedby={described || undefined}
 									bind:value={form.values.features[f.key]}
 								/>
 							{/if}
@@ -401,7 +420,8 @@
 	.row:not(.is-group) .name {
 		font-weight: 400;
 	}
-	.now {
+	.now,
+	.hint {
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}

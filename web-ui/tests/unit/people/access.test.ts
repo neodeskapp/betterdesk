@@ -366,6 +366,31 @@ describe('the panel access sheet', () => {
 		expect(within(row('devices')).getByText('Now: Read, set for this person')).toBeInTheDocument();
 	});
 
+	test('the client features say which sessions they reach and what a switch does beyond its name', async () => {
+		session.permissions = ['user.view', 'user.edit'];
+		render(AccessSheet, {
+			subject: { kind: 'user', id: 7 },
+			name: 'anna',
+			role: 'operator',
+			onclose: () => {}
+		});
+		await waitFor(() => expect(feature('remote_control')).not.toBeNull());
+		expect(screen.getByText(/RustDesk 1\.4\.5 or later, not on Android/)).toBeInTheDocument();
+		expect(screen.getByText(/Only signed-in RustDesk apps can start sessions/)).toBeInTheDocument();
+
+		const hint = within(feature('remote_control')).getByText(
+			'Off: the session shows the screen, without mouse and keyboard.'
+		);
+		const describedBy =
+			within(feature('remote_control')).getByRole('combobox').getAttribute('aria-describedby') ?? '';
+		expect(describedBy.split(' ')).toContain(hint.id);
+		expect(describedBy.split(' ').length).toBe(2);
+		// The locked row says it has no effect
+		expect(within(feature('client_actions')).getByText(/No effect/)).toBeInTheDocument();
+		// A plain switch has no hint
+		expect(feature('terminal').querySelector('.hint')).toBeNull();
+	});
+
 	test('editing your own account warns that you can lock yourself out', async () => {
 		session.permissions = ['user.view', 'user.edit'];
 		render(AccessSheet, { subject: { kind: 'user', id: 1 }, name: 'demo', onclose: () => {} });
