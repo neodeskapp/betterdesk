@@ -25,28 +25,33 @@ const testTimesFile = ".github/test-times.json"
 // Packages and tests the times file does not know count this long.
 const unknownPackageSeconds = 10.0
 
-// The times file keeps the test times of packages that take at least this
-// long. Only those can be split, and the file stays small.
-const keepTestsOver = 30.0
+// The times file keeps the tests of packages that take at least
+// keepTestsOver seconds (half of what CI cuts at), and the subtests of
+// tests that take at least keepSubtestsOver. Only those can be cut, and
+// the file stays small.
+const (
+	keepTestsOver    = 120.0
+	keepSubtestsOver = 60.0
+)
 
 // testShards is "test-shards": it deals the tests of a module over CI
 // runners by the times they took before, runs one runner's share and
 // keeps the times of this run for the next layout.
 //
-//	test-shards plan  --set NAME --shards N [--split-over S] [--under TEST] [--packages P,...] [-- go test flags]
-//	test-shards run   --set NAME --shards N --shard K [--split-over S] [--under TEST] [--packages P,...] [--times-out FILE] -- go test flags
+//	test-shards plan  --set NAME --shards N [--split-over S] [--packages P,...] [-- go test flags]
+//	test-shards run   --set NAME --shards N --shard K [--split-over S] [--packages P,...] [--times-out FILE] -- go test flags
 //	test-shards merge --out FILE TIMES...
 //
-// The times are in .github/test-times.json: per set (a database, a suite)
-// the seconds of each package and, for packages of 30 seconds and more,
-// of each top-level test. Packages go to the runner with the least time
-// so far, the longest first. A package longer than --split-over is cut
-// into parts by its top-level tests; the last part runs every test the
-// times do not name, so a new test always runs once. With --under TEST
-// the one package is cut into one part per runner by the subtests of
-// TEST (the contract suite's case groups).
+// The times are in .github/test-times.json: per set (a database) the
+// seconds of each package, of the top-level tests of packages of two
+// minutes and more, and of the subtests of tests of a minute and more.
+// Packages go to the runner with the least time so far, the longest
+// first. A package longer than --split-over seconds is cut into parts by
+// its top-level tests, and a test longer than that by its subtests (which
+// must then not need each other). The last part of each cut runs
+// everything the times do not name, so a new test always runs once.
 //
-// run starts one go test -json per part and one for the whole packages,
+// run starts one go test -json for the whole packages and one per part,
 // side by side in --dir (default betterdesk-server), prints the results
 // of the packages and the output of failed tests, and writes the times of
 // this run to --times-out. merge adds such files up into a times file.
@@ -59,7 +64,7 @@ func testShards(root string, args []string, stdout, stderr io.Writer) int {
 	case "plan", "run":
 		return testShardsPlanOrRun(root, args[0], args[1:], stdout, stderr)
 	case "merge":
-		return testShardsMerge(root, args[1:], stdout, stderr)
+		return testShardsMerge(args[1:], stdout, stderr)
 	}
 	fmt.Fprintf(stderr, "repotool test-shards: unknown action %q (plan, run or merge)\n", args[0])
 	return 2
@@ -71,11 +76,12 @@ type testTimes struct {
 	Sets  map[string]map[string]*pkgTime `json:"sets"`
 }
 
-// pkgTime is what one package took: all of it, and its top-level tests
-// (or, for a set cut with --under, the subtests of that test).
+// pkgTime is what one package took: all of it, its top-level tests and
+// the subtests right below them.
 type pkgTime struct {
-	Seconds float64            `json:"seconds"`
-	Tests   map[string]float64 `json:"tests,omitempty"`
+	Seconds  float64                       `json:"seconds"`
+	Tests    map[string]float64            `json:"tests,omitempty"`
+	Subtests map[string]map[string]float64 `json:"subtests,omitempty"`
 }
 
 func readTestTimes(path string) (*testTimes, error) {
@@ -100,6 +106,11 @@ func writeTestTimes(path string, t *testTimes) error {
 			for name, s := range p.Tests {
 				p.Tests[name] = round1(s)
 			}
+			for _, subs := range p.Subtests {
+				for name, s := range subs {
+					subs[name] = round1(s)
+				}
+			}
 		}
 	}
 	data, err := json.MarshalIndent(t, "", "  ")
@@ -111,18 +122,20 @@ func writeTestTimes(path string, t *testTimes) error {
 
 func round1(s float64) float64 { return math.Round(s*10) / 10 }
 
-// shardPart is one go test run of a shard: a package, or the share of a
-// package the times file cut into parts.
+// shardPart is one go test run of a shard: a whole package, or a share
+// of a package the times cut into parts.
 type shardPart struct {
 	pkg     string
 	seconds float64
-	// names are the tests of this part. The rest part runs everything
-	// but the names of the package's other parts (others).
+	split   bool
+	// test is the top-level test whose subtests the part runs; empty for
+	// a part of top-level tests.
+	test string
+	// names are what the part runs. The rest part runs everything but
+	// others instead.
 	names  []string
 	rest   bool
 	others []string
-	split  bool
-	under  string
 }
 
 // args are go test's -run and -skip for the part; none for a whole package.
@@ -131,20 +144,34 @@ func (p shardPart) args() []string {
 		return nil
 	}
 	prefix := ""
-	if p.under != "" {
-		prefix = "^" + regexp.QuoteMeta(p.under) + "$/"
+	if p.test != "" {
+		prefix = "^" + regexp.QuoteMeta(p.test) + "$/"
 	}
 	if !p.rest {
 		return []string{"-run", prefix + namesPattern(p.names)}
 	}
 	var args []string
-	if p.under != "" {
-		args = append(args, "-run", "^"+regexp.QuoteMeta(p.under)+"$")
+	if p.test != "" {
+		args = append(args, "-run", "^"+regexp.QuoteMeta(p.test)+"$")
 	}
 	if len(p.others) > 0 {
 		args = append(args, "-skip", prefix+namesPattern(p.others))
 	}
 	return args
+}
+
+func (p shardPart) label() string {
+	if !p.split {
+		return ""
+	}
+	what, n := "tests", len(p.names)
+	if p.test != "" {
+		what = p.test + " subtests"
+	}
+	if p.rest {
+		return fmt.Sprintf("all %s but %d", what, len(p.others))
+	}
+	return fmt.Sprintf("%d %s", n, what)
 }
 
 func namesPattern(names []string) string {
@@ -156,19 +183,19 @@ func namesPattern(names []string) string {
 	return "^(" + strings.Join(quoted, "|") + ")$"
 }
 
-// splitPackage cuts a package into k parts by its tests, the longest test
-// first into the part with the least time so far. The part with the least
-// time is the rest part. A part's seconds are the package's seconds in the
-// share of its tests.
-func splitPackage(pkg string, pt *pkgTime, k int, under string) []shardPart {
-	names := make([]string, 0, len(pt.Tests))
+// cutNames cuts tests (or the subtests of test) that take seconds in all
+// into k parts: the longest first into the part with the least time so
+// far. The part with the least time is the rest part. A part's seconds
+// are the share of its names in seconds.
+func cutNames(pkg, test string, times map[string]float64, seconds float64, k int) []shardPart {
+	names := make([]string, 0, len(times))
 	total := 0.0
-	for n, s := range pt.Tests {
+	for n, s := range times {
 		names = append(names, n)
 		total += s
 	}
 	sort.Slice(names, func(i, j int) bool {
-		a, b := pt.Tests[names[i]], pt.Tests[names[j]]
+		a, b := times[names[i]], times[names[j]]
 		if a != b {
 			return a > b
 		}
@@ -184,7 +211,7 @@ func splitPackage(pkg string, pt *pkgTime, k int, under string) []shardPart {
 			}
 		}
 		bins[best] = append(bins[best], n)
-		loads[best] += pt.Tests[n]
+		loads[best] += times[n]
 	}
 	rest := 0
 	for b := 1; b < k; b++ {
@@ -201,7 +228,7 @@ func splitPackage(pkg string, pt *pkgTime, k int, under string) []shardPart {
 		if total > 0 {
 			share = loads[b] / total
 		}
-		part := shardPart{pkg: pkg, seconds: pt.Seconds * share, names: bins[b], rest: b == rest, split: true, under: under}
+		part := shardPart{pkg: pkg, test: test, seconds: seconds * share, names: bins[b], rest: b == rest, split: true}
 		if part.rest {
 			for o := 0; o < k; o++ {
 				if o != rest {
@@ -209,50 +236,67 @@ func splitPackage(pkg string, pt *pkgTime, k int, under string) []shardPart {
 				}
 			}
 			sort.Strings(part.others)
-			// The rest part also stands for the tests that are not measured yet
-			if part.seconds < unknownPackageSeconds {
-				part.seconds = unknownPackageSeconds
-			}
+			// The rest part also stands for what is not measured yet
+			part.seconds = math.Max(part.seconds, unknownPackageSeconds)
 		}
 		parts = append(parts, part)
 	}
 	return parts
 }
 
-// planOptions shape a layout.
-type planOptions struct {
-	shards int
-	// splitOver cuts a package longer than this many seconds; 0 never does.
-	splitOver float64
-	// under cuts every package into one part per shard by the subtests of
-	// this top-level test.
-	under string
+func partsFor(seconds, over float64, most int) int {
+	k := int(math.Ceil(seconds / over))
+	return max(1, min(k, most))
+}
+
+// splitPackage cuts a package into parts of about splitOver seconds: its
+// long tests by their subtests, the rest of it by its top-level tests.
+func splitPackage(pkg string, pt *pkgTime, splitOver float64) []shardPart {
+	var long []string
+	longSeconds := 0.0
+	short := map[string]float64{}
+	for n, s := range pt.Tests {
+		if s > splitOver && len(pt.Subtests[n]) > 1 {
+			long = append(long, n)
+			longSeconds += s
+		} else {
+			short[n] = s
+		}
+	}
+	sort.Strings(long)
+	var parts []shardPart
+	for _, n := range long {
+		subs := pt.Subtests[n]
+		parts = append(parts, cutNames(pkg, n, subs, pt.Tests[n], partsFor(pt.Tests[n], splitOver, len(subs)))...)
+	}
+	remaining := math.Max(pt.Seconds-longSeconds, 0)
+	top := cutNames(pkg, "", short, remaining, partsFor(remaining, splitOver, len(short)))
+	// The long tests have parts of their own
+	for i := range top {
+		if top[i].rest && len(long) > 0 {
+			top[i].others = append(top[i].others, long...)
+			sort.Strings(top[i].others)
+		}
+	}
+	return append(parts, top...)
 }
 
 // planShards deals the packages over the shards: the longest part first,
-// each to the shard with the least time so far.
-func planShards(times map[string]*pkgTime, pkgs []string, o planOptions) [][]shardPart {
+// each to the shard with the least time so far that has no other part of
+// its package (two test binaries of one package side by side could share
+// a port or a file).
+func planShards(times map[string]*pkgTime, pkgs []string, shards int, splitOver float64) [][]shardPart {
 	var parts []shardPart
 	for _, pkg := range pkgs {
 		pt := times[pkg]
 		if pt == nil {
 			pt = &pkgTime{Seconds: unknownPackageSeconds}
 		}
-		k := 1
-		switch {
-		case o.under != "":
-			k = o.shards
-		case o.splitOver > 0 && pt.Seconds > o.splitOver && len(pt.Tests) > 1:
-			k = int(math.Ceil(pt.Seconds / o.splitOver))
-			if k > len(pt.Tests) {
-				k = len(pt.Tests)
-			}
-		}
-		if k <= 1 && o.under == "" {
+		if splitOver <= 0 || pt.Seconds <= splitOver || len(pt.Tests) < 2 {
 			parts = append(parts, shardPart{pkg: pkg, seconds: pt.Seconds})
 			continue
 		}
-		parts = append(parts, splitPackage(pkg, pt, k, o.under)...)
+		parts = append(parts, splitPackage(pkg, pt, splitOver)...)
 	}
 	sort.SliceStable(parts, func(i, j int) bool {
 		if parts[i].seconds != parts[j].seconds {
@@ -260,59 +304,71 @@ func planShards(times map[string]*pkgTime, pkgs []string, o planOptions) [][]sha
 		}
 		return parts[i].pkg < parts[j].pkg
 	})
-	shards := make([][]shardPart, o.shards)
-	loads := make([]float64, o.shards)
+	out := make([][]shardPart, shards)
+	loads := make([]float64, shards)
+	has := make([]map[string]bool, shards)
+	for s := range has {
+		has[s] = map[string]bool{}
+	}
 	for _, p := range parts {
-		best := 0
-		for s := 1; s < o.shards; s++ {
-			if loads[s] < loads[best] {
-				best = s
+		best, free := 0, false
+		for s := 0; s < shards; s++ {
+			ok := !has[s][p.pkg]
+			if (ok && !free) || (ok == free && loads[s] < loads[best]) {
+				best, free = s, ok
 			}
 		}
-		shards[best] = append(shards[best], p)
+		out[best] = append(out[best], p)
 		loads[best] += p.seconds
+		has[best][p.pkg] = true
 	}
-	for s := range shards {
-		shards[s] = joinParts(shards[s])
+	for s := range out {
+		out[s] = joinParts(out[s])
 	}
-	return shards
+	return out
 }
 
-// joinParts makes one part of the parts of a package that landed in the
-// same shard, so its test binary starts once.
+// joinParts makes one part of the parts of a cut that landed in the same
+// shard, so its test binary starts once for them. The longest part comes
+// first.
 func joinParts(parts []shardPart) []shardPart {
 	var out []shardPart
 	index := map[string]int{}
 	for _, p := range parts {
-		i, seen := index[p.pkg]
+		key := p.pkg + "\x00" + p.test
+		i, seen := index[key]
 		if !seen || !p.split {
-			index[p.pkg] = len(out)
+			index[key] = len(out)
 			out = append(out, p)
 			continue
 		}
 		q := &out[i]
 		q.seconds += p.seconds
-		switch {
-		case q.rest || p.rest:
-			mine := map[string]bool{}
-			if !q.rest {
-				q.others = p.others
-			}
-			for _, n := range append(append([]string{}, q.names...), p.names...) {
-				mine[n] = true
-			}
-			var others []string
-			for _, n := range q.others {
-				if !mine[n] {
-					others = append(others, n)
-				}
-			}
-			q.others, q.names, q.rest = others, nil, true
-		default:
+		if !q.rest && !p.rest {
 			q.names = append(q.names, p.names...)
+			continue
 		}
+		if !q.rest {
+			q.others = p.others
+		}
+		mine := map[string]bool{}
+		for _, n := range append(append([]string{}, q.names...), p.names...) {
+			mine[n] = true
+		}
+		var others []string
+		for _, n := range q.others {
+			if !mine[n] {
+				others = append(others, n)
+			}
+		}
+		q.others, q.names, q.rest = others, nil, true
 	}
-	sort.SliceStable(out, func(i, j int) bool { return out[i].pkg < out[j].pkg })
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].seconds != out[j].seconds {
+			return out[i].seconds > out[j].seconds
+		}
+		return out[i].pkg < out[j].pkg
+	})
 	return out
 }
 
@@ -326,10 +382,10 @@ func shardSeconds(parts []shardPart) float64 {
 
 // shardFlags are the flags plan and run share.
 type shardFlags struct {
-	times, set, dir, packages, under, timesOut string
-	shards, shard                              int
-	splitOver                                  float64
-	goFlags                                    []string
+	times, set, dir, packages, timesOut string
+	shards, shard                       int
+	splitOver                           float64
+	goFlags                             []string
 }
 
 func parseShardFlags(action string, args []string, stderr io.Writer) (*shardFlags, bool) {
@@ -337,14 +393,13 @@ func parseShardFlags(action string, args []string, stderr io.Writer) (*shardFlag
 	fs.SetOutput(stderr)
 	f := &shardFlags{}
 	fs.StringVar(&f.times, "times", testTimesFile, "the times file, from the repository's root")
-	fs.StringVar(&f.set, "set", "", "the set of times to use (go-race-sqlite, contract-cases, ...)")
+	fs.StringVar(&f.set, "set", "", "the set of times to use (go-race-sqlite, go-race-postgres)")
 	fs.StringVar(&f.dir, "dir", "betterdesk-server", "the module to test, from the repository's root")
 	fs.StringVar(&f.packages, "packages", "", "comma-separated packages (default: every package of the module that has tests)")
-	fs.StringVar(&f.under, "under", "", "cut by the subtests of this top-level test, one part per shard")
 	fs.StringVar(&f.timesOut, "times-out", "", "write the times of this run to this file")
 	fs.IntVar(&f.shards, "shards", 0, "the number of shards")
 	fs.IntVar(&f.shard, "shard", 0, "the shard to run, from 1")
-	fs.Float64Var(&f.splitOver, "split-over", 0, "cut a package that takes longer than this many seconds")
+	fs.Float64Var(&f.splitOver, "split-over", 0, "cut a package or test that takes longer than this many seconds")
 	if err := fs.Parse(args); err != nil {
 		return nil, false
 	}
@@ -386,7 +441,7 @@ func testShardsPlanOrRun(root, action string, args []string, stdout, stderr io.W
 		fmt.Fprintf(stderr, "test-shards %s: %v\n", action, err)
 		return 1
 	}
-	shards := planShards(times.Sets[f.set], pkgs, planOptions{shards: f.shards, splitOver: f.splitOver, under: f.under})
+	shards := planShards(times.Sets[f.set], pkgs, f.shards, f.splitOver)
 	if action == "plan" {
 		for i, parts := range shards {
 			printShard(stdout, i+1, len(shards), parts)
@@ -399,21 +454,18 @@ func testShardsPlanOrRun(root, action string, args []string, stdout, stderr io.W
 }
 
 func printShard(w io.Writer, shard, shards int, parts []shardPart) {
-	fmt.Fprintf(w, "shard %d of %d: %d packages, about %.0f seconds of tests\n", shard, shards, len(parts), shardSeconds(parts))
+	longest := 0.0
+	for _, p := range parts {
+		longest = math.Max(longest, p.seconds)
+	}
+	fmt.Fprintf(w, "shard %d of %d: %d parts, %.0f seconds of tests, the longest %.0f\n", shard, shards, len(parts), shardSeconds(parts), longest)
 	for _, p := range parts {
 		line := fmt.Sprintf("  %7.1fs  %s", p.seconds, p.pkg)
-		if a := p.args(); len(a) > 0 {
-			line += fmt.Sprintf(" (%s)", partSummary(p))
+		if l := p.label(); l != "" {
+			line += " (" + l + ")"
 		}
 		fmt.Fprintln(w, line)
 	}
-}
-
-func partSummary(p shardPart) string {
-	if p.rest {
-		return fmt.Sprintf("all but %d tests", len(p.others))
-	}
-	return fmt.Sprintf("%d tests", len(p.names))
 }
 
 // packagesWithTests lists the packages of the module in dir that have test
@@ -467,9 +519,10 @@ func goOutput(dir string, args ...string) (string, error) {
 	return string(out), nil
 }
 
-// runShard runs the parts of a shard: one go test for the whole packages
-// and one per cut package, side by side.
-func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Writer) int {
+// shardRuns are the go test calls of a shard's parts: one per part of a
+// cut package, and one for the whole packages, the longest first (go
+// test starts them in that order).
+func shardRuns(parts []shardPart) [][]string {
 	var whole []string
 	var runs [][]string
 	for _, p := range parts {
@@ -482,12 +535,18 @@ func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Wr
 	if len(whole) > 0 {
 		runs = append(runs, whole)
 	}
+	return runs
+}
+
+// runShard runs the go test calls of a shard side by side.
+func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Writer) int {
+	runs := shardRuns(parts)
 	module, err := goOutput(dir, "list", "-m")
 	if err != nil {
 		fmt.Fprintln(stderr, "test-shards run:", err)
 		return 1
 	}
-	out := newTestOutput(stdout, strings.TrimSpace(module), f.under)
+	out := newTestOutput(stdout, strings.TrimSpace(module))
 	out.annotate = os.Getenv("GITHUB_ACTIONS") == "true"
 	var wg sync.WaitGroup
 	failed := make([]bool, len(runs))
@@ -522,6 +581,7 @@ func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Wr
 		}
 	}
 	if f.timesOut != "" {
+		dropShortSubtests(out.times)
 		t := &testTimes{Sets: map[string]map[string]*pkgTime{f.set: out.times}}
 		if err := writeTestTimes(f.timesOut, t); err != nil {
 			fmt.Fprintln(stderr, "test-shards run:", err)
@@ -533,23 +593,21 @@ func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Wr
 
 // testEvent is one line of go test -json (cmd/test2json).
 type testEvent struct {
-	Time       time.Time
-	Action     string
-	Package    string
-	ImportPath string
-	Test       string
-	Elapsed    float64
-	Output     string
+	Time    time.Time
+	Action  string
+	Package string
+	Test    string
+	Elapsed float64
+	Output  string
 }
 
 // testOutput turns go test -json into what a person reads: the result line
 // of each package, the output of each failed test, and what a package
-// printed outside its tests (build errors, panics, a suite's summary).
+// printed outside its tests (build errors, panics).
 type testOutput struct {
 	mu     sync.Mutex
 	w      io.Writer
 	module string
-	under  string
 	// held is the output of tests still running, by package and test.
 	held   map[string][]string
 	times  map[string]*pkgTime
@@ -560,8 +618,8 @@ type testOutput struct {
 	annotate bool
 }
 
-func newTestOutput(w io.Writer, module, under string) *testOutput {
-	return &testOutput{w: w, module: module, under: under, held: map[string][]string{}, times: map[string]*pkgTime{}}
+func newTestOutput(w io.Writer, module string) *testOutput {
+	return &testOutput{w: w, module: module, held: map[string][]string{}, times: map[string]*pkgTime{}}
 }
 
 func (o *testOutput) read(r io.Reader) {
@@ -642,25 +700,26 @@ func (o *testOutput) pkgTime(pkg string) *pkgTime {
 	return pt
 }
 
-// testTime keeps the time of a top-level test, or of a subtest right
-// below the --under test.
+// testTime keeps the time of a top-level test or of a subtest right
+// below one.
 func (o *testOutput) testTime(e testEvent) {
-	name := e.Test
-	if o.under != "" {
-		rest, ok := strings.CutPrefix(name, o.under+"/")
-		if !ok {
-			return
-		}
-		name = rest
-	}
-	if strings.Contains(name, "/") {
-		return
-	}
 	pt := o.pkgTime(o.short(e.Package))
-	if pt.Tests == nil {
-		pt.Tests = map[string]float64{}
+	top, sub, isSub := strings.Cut(e.Test, "/")
+	switch {
+	case !isSub:
+		if pt.Tests == nil {
+			pt.Tests = map[string]float64{}
+		}
+		pt.Tests[top] += e.Elapsed
+	case !strings.Contains(sub, "/"):
+		if pt.Subtests == nil {
+			pt.Subtests = map[string]map[string]float64{}
+		}
+		if pt.Subtests[top] == nil {
+			pt.Subtests[top] = map[string]float64{}
+		}
+		pt.Subtests[top][sub] += e.Elapsed
 	}
-	pt.Tests[name] += e.Elapsed
 }
 
 // summary prints what failed and returns the exit status.
@@ -701,7 +760,7 @@ func leafTests(failed []string) []string {
 // testShardsMerge adds up the times of runs into a times file: the parts
 // of a package that ran on different shards add up to the package. Sets
 // the runs have replace the file's sets of that name; others stay.
-func testShardsMerge(root string, args []string, stdout, stderr io.Writer) int {
+func testShardsMerge(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("test-shards merge", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	outPath := fs.String("out", "", "the times file to write (its other sets are kept)")
@@ -731,6 +790,7 @@ func testShardsMerge(root string, args []string, stdout, stderr io.Writer) int {
 	}
 	names := make([]string, 0, len(merged))
 	for name, set := range merged {
+		dropShortSubtests(set)
 		for _, p := range set {
 			if p.Seconds < keepTestsOver {
 				p.Tests = nil
@@ -746,6 +806,21 @@ func testShardsMerge(root string, args []string, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintf(stdout, "wrote %s: %s\n", *outPath, strings.Join(names, ", "))
 	return 0
+}
+
+// dropShortSubtests keeps the subtests of the tests that take a minute or
+// more, the only ones a test is cut by.
+func dropShortSubtests(set map[string]*pkgTime) {
+	for _, p := range set {
+		for test := range p.Subtests {
+			if p.Tests[test] < keepSubtestsOver {
+				delete(p.Subtests, test)
+			}
+		}
+		if len(p.Subtests) == 0 {
+			p.Subtests = nil
+		}
+	}
 }
 
 func addTimes(into map[string]map[string]*pkgTime, sets map[string]map[string]*pkgTime) {
@@ -765,6 +840,17 @@ func addTimes(into map[string]map[string]*pkgTime, sets map[string]map[string]*p
 					q.Tests = map[string]float64{}
 				}
 				q.Tests[t] += s
+			}
+			for t, subs := range p.Subtests {
+				if q.Subtests == nil {
+					q.Subtests = map[string]map[string]float64{}
+				}
+				if q.Subtests[t] == nil {
+					q.Subtests[t] = map[string]float64{}
+				}
+				for s, secs := range subs {
+					q.Subtests[t][s] += secs
+				}
 			}
 		}
 	}

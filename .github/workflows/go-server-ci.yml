@@ -67,9 +67,10 @@ jobs:
   # package and each long test took in earlier runs; repotool test-shards
   # deals the packages out by it, the longest first to the shard with the
   # least time so far, and cuts a package longer than --split-over seconds
-  # into parts by its tests. Tests and packages the file does not know
-  # yet still run, in the last part of their package or as a package of
-  # ten seconds.
+  # into parts by its tests (a test that long by its subtests). Tests and
+  # packages the file does not know yet still run, in the last part of
+  # their package or as a package of ten seconds. A shard takes about as
+  # long as its longest test, plus a minute to start.
   #
   # Each shard uploads the times it measured (test-times-*). To refresh
   # the file from a green run:
@@ -77,21 +78,25 @@ jobs:
   #   gh run download <run id> -R trybetterdesk/betterdesk -p 'test-times-*' -D /tmp/times
   #   cd betterdesk-server
   #   go run ./cmd/repotool test-shards merge --out ../.github/test-times.json /tmp/times/*/test-times.json
-  #   go run ./cmd/repotool test-shards plan --set go-race-postgres --shards 8 --split-over 240
+  #   go run ./cmd/repotool test-shards plan --set go-race-postgres --shards 10 --split-over 240
   #
   # The PostgreSQL shards run every test with BETTERDESK_TEST_POSTGRES_DSN
   # set, so the store tests run on both databases there; the SQLite shards
   # run them without it, as an install without PostgreSQL does.
   test:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
-    name: go test (${{ matrix.db }} ${{ matrix.shard }} of 8)
+    name: go test (${{ matrix.db }} ${{ matrix.shard }} of ${{ matrix.db == 'sqlite' && 8 || 10 }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      # 8 shards on SQLite, 10 on PostgreSQL, where the store tests run twice
       matrix:
         db: [sqlite, postgres]
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        exclude:
+          - { db: sqlite, shard: 9 }
+          - { db: sqlite, shard: 10 }
     services:
       postgres:
         # No image, no service: the SQLite shards go without
@@ -127,12 +132,15 @@ jobs:
             go-race-${{ hashFiles('betterdesk-server/go.sum') }}-
             go-race-
 
-      # The tests open many connections side by side, and need no durability
+      # The tests open many connections side by side, and need no
+      # durability. The server is reached as bdgo-testpg, the name of the
+      # local test database, which recordings of the Node tools print.
       - name: Set up PostgreSQL for the tests
         if: matrix.db == 'postgres'
         env:
           PG: ${{ job.services.postgres.id }}
         run: |
+          echo "127.0.0.1 bdgo-testpg" | sudo tee -a /etc/hosts >/dev/null
           docker exec "$PG" psql -U betterdesk -d betterdesk_test -q \
             -c "ALTER SYSTEM SET max_connections = 300" \
             -c "ALTER SYSTEM SET fsync = off" \
@@ -148,11 +156,12 @@ jobs:
 
       - name: go test
         env:
-          BETTERDESK_TEST_POSTGRES_DSN: ${{ matrix.db == 'postgres' && 'postgres://betterdesk@localhost:5432/betterdesk_test?sslmode=disable' || '' }}
+          BETTERDESK_TEST_POSTGRES_DSN: ${{ matrix.db == 'postgres' && 'postgres://betterdesk@bdgo-testpg:5432/betterdesk_test?sslmode=disable' || '' }}
           SET: go-race-${{ matrix.db }}
           SHARD: ${{ matrix.shard }}
+          SHARDS: ${{ matrix.db == 'sqlite' && 8 || 10 }}
         run: >-
-          go run ./cmd/repotool test-shards run --set "$SET" --shards 8 --shard "$SHARD"
+          go run ./cmd/repotool test-shards run --set "$SET" --shards "$SHARDS" --shard "$SHARD"
           --split-over 240 --times-out "$RUNNER_TEMP/test-times.json"
           -- -race -count=1 -timeout 25m
 

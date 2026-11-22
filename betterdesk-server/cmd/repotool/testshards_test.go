@@ -13,8 +13,11 @@ import (
 )
 
 // runs tells whether go test, called with a part's -run and -skip, runs
-// the test path (TestA, or TestCases/devices for a test cut with under).
-func runs(t *testing.T, args []string, test string) bool {
+// the test of this name (TestA, or TestA/sub). As in package testing, a
+// pattern is cut at its slashes and each level of the name must match the
+// level of the pattern, if the pattern has it; -skip leaves out a test
+// only when the pattern has no more levels than the name.
+func runs(t *testing.T, args []string, name string) bool {
 	t.Helper()
 	run, skip := "", ""
 	for i := 0; i < len(args); i += 2 {
@@ -27,27 +30,53 @@ func runs(t *testing.T, args []string, test string) bool {
 			t.Fatalf("unexpected argument %q", args[i])
 		}
 	}
-	// Each level of a pattern matches the same level of the name
-	matches := func(pattern string) bool {
-		levels := strings.Split(pattern, "/")
-		names := strings.Split(test, "/")
+	levels := strings.Split(name, "/")
+	matches := func(pattern string) (ok, partial bool) {
+		pats := strings.Split(pattern, "/")
 		for i, level := range levels {
-			if i >= len(names) {
-				return true
+			if i >= len(pats) {
+				break
 			}
-			if !regexp.MustCompile(level).MatchString(names[i]) {
-				return false
+			if !regexp.MustCompile(pats[i]).MatchString(level) {
+				return false, false
 			}
 		}
-		return true
+		return true, len(levels) < len(pats)
 	}
-	if run != "" && !matches(run) {
-		return false
+	if run != "" {
+		if ok, _ := matches(run); !ok {
+			return false
+		}
 	}
-	return skip == "" || !matches(skip)
+	if skip != "" {
+		if ok, partial := matches(skip); ok && !partial {
+			return false
+		}
+	}
+	return true
 }
 
-// timesOf makes a package's times from test seconds.
+// runsOnce fails the test unless name runs in exactly one part of pkg.
+func runsOnce(t *testing.T, shards [][]shardPart, pkg string, name string) {
+	t.Helper()
+	n := 0
+	for _, s := range shards {
+		for _, p := range s {
+			if p.pkg != pkg {
+				continue
+			}
+			// A subtest runs where its test runs and it is let through
+			top, _, _ := strings.Cut(name, "/")
+			if runs(t, p.args(), top) && runs(t, p.args(), name) {
+				n++
+			}
+		}
+	}
+	if n != 1 {
+		t.Errorf("%s runs %d times, want 1", name, n)
+	}
+}
+
 func timesOf(seconds float64, tests map[string]float64) *pkgTime {
 	return &pkgTime{Seconds: seconds, Tests: tests}
 }
@@ -60,7 +89,7 @@ func TestPlanDealsLongestFirstToTheEmptiestShard(t *testing.T) {
 		"./d": {Seconds: 40},
 		"./e": {Seconds: 5},
 	}
-	shards := planShards(times, []string{"./e", "./d", "./c", "./b", "./a", "./new"}, planOptions{shards: 2})
+	shards := planShards(times, []string{"./e", "./d", "./c", "./b", "./a", "./new"}, 2, 0)
 	got := make([][]string, len(shards))
 	for i, parts := range shards {
 		for _, p := range parts {
@@ -71,13 +100,17 @@ func TestPlanDealsLongestFirstToTheEmptiestShard(t *testing.T) {
 		}
 	}
 	// a 100 | b 90; c to b (150); d to a (140); new to a (150); e to the
-	// first of two equal shards (155)
-	want := [][]string{{"./a", "./d", "./e", "./new"}, {"./b", "./c"}}
+	// first of two equal shards (155). Each shard lists the longest first.
+	want := [][]string{{"./a", "./d", "./new", "./e"}, {"./b", "./c"}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("layout %v, want %v", got, want)
 	}
 	if s0, s1 := shardSeconds(shards[0]), shardSeconds(shards[1]); s0 != 155 || s1 != 150 {
 		t.Errorf("shard seconds %v and %v, want 155 and 150", s0, s1)
+	}
+	// One go test for the whole packages, which starts them in that order
+	if runs := shardRuns(shards[0]); !reflect.DeepEqual(runs, [][]string{want[0]}) {
+		t.Errorf("go test runs %q", runs)
 	}
 }
 
@@ -94,7 +127,7 @@ func TestPlanCutsALongPackageAndRunsEveryTestOnce(t *testing.T) {
 		"./big":   timesOf(sum, tests),
 		"./small": {Seconds: 30},
 	}
-	shards := planShards(times, []string{"./big", "./small"}, planOptions{shards: 4, splitOver: 250})
+	shards := planShards(times, []string{"./big", "./small"}, 4, 250)
 	// 820 seconds over 250 is four parts, one per shard
 	parts := 0
 	for _, s := range shards {
@@ -111,19 +144,8 @@ func TestPlanCutsALongPackageAndRunsEveryTestOnce(t *testing.T) {
 		t.Fatalf("./big in %d parts, want 4", parts)
 	}
 	// Every measured test and a test the times do not know yet run once
-	names := append(sortedKeys(tests), "TestNew")
-	for _, name := range names {
-		n := 0
-		for _, s := range shards {
-			for _, p := range s {
-				if p.pkg == "./big" && runs(t, p.args(), name) {
-					n++
-				}
-			}
-		}
-		if n != 1 {
-			t.Errorf("%s runs %d times, want 1", name, n)
-		}
+	for _, name := range append(sortedKeys(tests), "TestNew") {
+		runsOnce(t, shards, "./big", name)
 	}
 }
 
@@ -131,51 +153,60 @@ func TestPlanJoinsPartsOfAPackageInOneShard(t *testing.T) {
 	tests := map[string]float64{"TestA": 50, "TestB": 40, "TestC": 30, "TestD": 20}
 	times := map[string]*pkgTime{"./big": timesOf(140, tests)}
 	// Three parts on two shards: two of them share one
-	shards := planShards(times, []string{"./big"}, planOptions{shards: 2, splitOver: 50})
+	shards := planShards(times, []string{"./big"}, 2, 50)
 	for i, s := range shards {
 		if len(s) != 1 {
 			t.Fatalf("shard %d runs %d parts of ./big, want 1", i+1, len(s))
 		}
 	}
 	for _, name := range []string{"TestA", "TestB", "TestC", "TestD", "TestNew"} {
+		runsOnce(t, shards, "./big", name)
+	}
+}
+
+func TestPlanKeepsThePartsOfAPackageApart(t *testing.T) {
+	times := map[string]*pkgTime{
+		"./big": timesOf(200, map[string]float64{"TestA": 100, "TestB": 100}),
+		"./x":   {Seconds: 150},
+	}
+	// x 150 | big 100; the second part of big goes beside x, not beside
+	// the first one, where it would wait for it
+	shards := planShards(times, []string{"./big", "./x"}, 2, 150)
+	for i, s := range shards {
 		n := 0
-		for _, s := range shards {
-			if runs(t, s[0].args(), name) {
+		for _, p := range s {
+			if p.pkg == "./big" {
 				n++
 			}
 		}
 		if n != 1 {
-			t.Errorf("%s runs %d times, want 1", name, n)
+			t.Errorf("shard %d has %d parts of ./big, want 1", i+1, n)
 		}
 	}
 }
 
-func TestPlanUnderCutsTheSubtestsOfOneTest(t *testing.T) {
-	groups := map[string]float64{"devices": 300, "users": 200, "auth-basics": 150, "i18n": 100, "phase4-5": 50}
-	times := map[string]*pkgTime{"./console/contract": timesOf(800, groups)}
-	shards := planShards(times, []string{"./console/contract"}, planOptions{shards: 3, under: "TestCases"})
-	for i, s := range shards {
-		if len(s) != 1 {
-			t.Fatalf("shard %d has %d parts, want 1", i+1, len(s))
-		}
-		for _, other := range []string{"TestMatrix", "TestEveryRouteIsCovered"} {
-			if runs(t, s[0].args(), other) {
-				t.Errorf("shard %d runs %s", i+1, other)
-			}
+func TestPlanCutsALongTestBySubtests(t *testing.T) {
+	pt := timesOf(480, map[string]float64{"TestLong": 400, "TestX": 50, "TestY": 30})
+	pt.Subtests = map[string]map[string]float64{
+		"TestLong": {"sqlite": 100, "sqlite-go": 100, "postgres": 100, "postgres-go": 100},
+		"TestX":    {"one": 25, "two": 25},
+	}
+	shards := planShards(map[string]*pkgTime{"./users": pt}, []string{"./users"}, 3, 250)
+	// TestLong in two parts of 200 seconds, the other tests in one of 80
+	var seconds []float64
+	for _, s := range shards {
+		for _, p := range s {
+			seconds = append(seconds, p.seconds)
 		}
 	}
-	for _, g := range append(sortedKeys(groups), "new-group") {
-		n := 0
-		for _, s := range shards {
-			if runs(t, s[0].args(), "TestCases/"+g) {
-				n++
-			}
-		}
-		if n != 1 {
-			t.Errorf("group %s runs on %d shards, want 1", g, n)
-		}
+	if !reflect.DeepEqual(seconds, []float64{200, 200, 80}) {
+		t.Errorf("parts of %v seconds, want 200, 200 and 80", seconds)
 	}
-	if got := shards[0][0].args(); !reflect.DeepEqual(got, []string{"-run", `^TestCases$/^(devices)$`}) {
+	for _, name := range []string{"TestX", "TestY", "TestNew", "TestX/one",
+		"TestLong/sqlite", "TestLong/sqlite-go", "TestLong/postgres", "TestLong/postgres-go", "TestLong/new"} {
+		runsOnce(t, shards, "./users", name)
+	}
+	if got := shards[0][0].args(); !reflect.DeepEqual(got, []string{"-run", `^TestLong$/^(postgres|sqlite)$`}) {
 		t.Errorf("shard 1 runs %q", got)
 	}
 }
@@ -216,7 +247,7 @@ const testJSON = `{"Action":"start","Package":"example.com/m/ok"}
 
 func TestOutputShowsFailuresAndKeepsTimes(t *testing.T) {
 	var buf bytes.Buffer
-	o := newTestOutput(&buf, "example.com/m", "")
+	o := newTestOutput(&buf, "example.com/m")
 	o.read(strings.NewReader(testJSON))
 	code := o.summary()
 	if code != 1 {
@@ -239,32 +270,18 @@ func TestOutputShowsFailuresAndKeepsTimes(t *testing.T) {
 	if got := o.times["./ok"]; got == nil || got.Seconds != 2.6 || got.Tests["TestFine"] != 2.5 {
 		t.Errorf("times of ./ok: %+v", got)
 	}
-	if got := o.times["./bad"]; got == nil || len(got.Tests) != 1 || got.Tests["TestBroken"] != 0.2 {
-		t.Errorf("times of ./bad: %+v, want only the top-level test", got)
+	want2 := &pkgTime{Seconds: 1, Tests: map[string]float64{"TestBroken": 0.2}, Subtests: map[string]map[string]float64{"TestBroken": {"sub": 0.1}}}
+	if got := o.times["./bad"]; !reflect.DeepEqual(got, want2) {
+		t.Errorf("times of ./bad: %+v, want %+v", got, want2)
 	}
 }
 
 func TestOutputPassesWithoutFailures(t *testing.T) {
 	var buf bytes.Buffer
-	o := newTestOutput(&buf, "example.com/m", "")
+	o := newTestOutput(&buf, "example.com/m")
 	o.read(strings.NewReader(strings.SplitAfter(testJSON, `"Elapsed":2.6}`+"\n")[0]))
 	if code := o.summary(); code != 0 {
 		t.Errorf("exit status %d, want 0:\n%s", code, buf.String())
-	}
-}
-
-func TestOutputUnderKeepsTheGroups(t *testing.T) {
-	lines := `{"Action":"pass","Package":"example.com/m/contract","Test":"TestCases/devices/admin","Elapsed":3}
-{"Action":"pass","Package":"example.com/m/contract","Test":"TestCases/devices","Elapsed":12}
-{"Action":"pass","Package":"example.com/m/contract","Test":"TestCases/users","Elapsed":7}
-{"Action":"pass","Package":"example.com/m/contract","Test":"TestCases","Elapsed":19}
-{"Action":"pass","Package":"example.com/m/contract","Elapsed":20}
-`
-	o := newTestOutput(&bytes.Buffer{}, "example.com/m", "TestCases")
-	o.read(strings.NewReader(lines))
-	want := map[string]float64{"devices": 12, "users": 7}
-	if got := o.times["./contract"]; got == nil || !reflect.DeepEqual(got.Tests, want) || got.Seconds != 20 {
-		t.Errorf("times %+v, want tests %v", got, want)
 	}
 }
 
@@ -278,14 +295,22 @@ func TestMergeAddsPartsAndReplacesSets(t *testing.T) {
 		return path
 	}
 	out := write("times.json", &testTimes{About: "kept", Sets: map[string]map[string]*pkgTime{
-		"go-race-sqlite": {"./gone": {Seconds: 5}},
-		"contract-cases": {"./console/contract": {Seconds: 600}},
+		"go-race-sqlite":   {"./gone": {Seconds: 5}},
+		"go-race-postgres": {"./console": {Seconds: 600}},
 	}})
+	big := func(seconds float64, tests map[string]float64, subs map[string]map[string]float64) *pkgTime {
+		return &pkgTime{Seconds: seconds, Tests: tests, Subtests: subs}
+	}
 	a := write("a.json", &testTimes{Sets: map[string]map[string]*pkgTime{
-		"go-race-sqlite": {"./big": timesOf(100, map[string]float64{"TestA": 90}), "./tiny": timesOf(3, map[string]float64{"TestT": 3})},
+		"go-race-sqlite": {
+			"./big":  big(100, map[string]float64{"TestA": 90}, map[string]map[string]float64{"TestA": {"x": 50, "y": 40}}),
+			"./tiny": timesOf(3, map[string]float64{"TestT": 3}),
+		},
 	}})
 	b := write("b.json", &testTimes{Sets: map[string]map[string]*pkgTime{
-		"go-race-sqlite": {"./big": timesOf(50, map[string]float64{"TestB": 45})},
+		"go-race-sqlite": {
+			"./big": big(50, map[string]float64{"TestA": 10, "TestB": 40}, map[string]map[string]float64{"TestA": {"x": 10}, "TestB": {"z": 40}}),
+		},
 	}})
 	r := runCommand(testShards, dir, "merge", "--out", out, a, b)
 	if r.code != 0 {
@@ -295,12 +320,13 @@ func TestMergeAddsPartsAndReplacesSets(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// TestB is under a minute: its subtests are left out
 	want := &testTimes{About: "kept", Sets: map[string]map[string]*pkgTime{
 		"go-race-sqlite": {
-			"./big":  timesOf(150, map[string]float64{"TestA": 90, "TestB": 45}),
+			"./big":  big(150, map[string]float64{"TestA": 100, "TestB": 40}, map[string]map[string]float64{"TestA": {"x": 60, "y": 40}}),
 			"./tiny": {Seconds: 3},
 		},
-		"contract-cases": {"./console/contract": {Seconds: 600}},
+		"go-race-postgres": {"./console": {Seconds: 600}},
 	}}
 	if !reflect.DeepEqual(got, want) {
 		gotJSON, _ := os.ReadFile(out)
