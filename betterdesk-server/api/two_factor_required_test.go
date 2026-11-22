@@ -44,3 +44,25 @@ func TestMandatoryTwoFactorAtTheAPI(t *testing.T) {
 		t.Error("a directory account is held to the switch")
 	}
 }
+
+// TestMandatoryTwoFactorLeavesProAccounts: a Pro license account signs in
+// only through this API and the desktop client; the web console, where
+// two-factor sign-in is set up, refuses it. The switch leaves it alone, as
+// it leaves directory and single sign-on accounts to their provider, so it
+// is not locked out (BUGS L222).
+func TestMandatoryTwoFactorLeavesProAccounts(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	srv.SetJWTManager(auth.NewJWTManager("required-2fa-pro-test-secret", time.Hour))
+	if err := database.CreateUser(&db.User{Username: "lic", PasswordHash: mustHash(t, "lic-pass-1"), Role: auth.RolePro}); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.SetConfig(configRequireTwoFactor, "true"); err != nil {
+		t.Fatal(err)
+	}
+	if status, body := listenerCall(t, srv, http.MethodPost, "/api/auth/login", `{"username":"lic","password":"lic-pass-1"}`, nil); status != http.StatusOK {
+		t.Errorf("API sign-in of the Pro account: %d %s", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodPost, "/api/login", `{"username":"lic","password":"lic-pass-1","id":"DEVLIC1","uuid":"uuid-lic"}`, nil); status != http.StatusOK {
+		t.Errorf("client sign-in of the Pro account: %d %s", status, body)
+	}
+}

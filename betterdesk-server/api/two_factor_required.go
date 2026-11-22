@@ -3,13 +3,15 @@ package api
 import (
 	"net/http"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/db"
 )
 
 // configRequireTwoFactor is the server_config key of the switch that makes
 // two-factor sign-in mandatory for local accounts (Settings, Sign-in,
 // "Require two-factor sign-in" in the web console). Directory and single
-// sign-on accounts are left to their provider.
+// sign-on accounts are left to their provider. Pro license accounts are
+// left out too: the web console, where the set-up happens, refuses them.
 const configRequireTwoFactor = "require_two_factor"
 
 // twoFactorSetupDue reports whether the account may not sign in here yet:
@@ -17,7 +19,7 @@ const configRequireTwoFactor = "require_two_factor"
 // It sets it up at its next password sign-in to the web console; this API
 // and the desktop client have no step for that.
 func (s *Server) twoFactorSetupDue(user *db.User) bool {
-	if user == nil || user.TOTPEnabled || s.db == nil {
+	if user == nil || user.TOTPEnabled || s.db == nil || auth.IsProRole(user.Role) {
 		return false
 	}
 	if provider := user.AuthProvider; provider != "" && provider != db.AuthProviderLocal {

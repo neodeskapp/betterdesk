@@ -121,3 +121,21 @@ func TestLanguageFilesHoldNoOtherLanguage(t *testing.T) {
 		t.Errorf("%d texts in another language:\n%s", len(found), findings(found))
 	}
 }
+
+// The notes beside an account's role and its organizations name no
+// organization roles, which the console does not have (DECISIONS A154),
+// and the note on turning off two-factor sign-in asks for no password: a
+// directory or single sign-on account confirms with a code, and the field
+// under the note says which (BUGS L222).
+func TestTextsNameNoOrganizationRolesAndNoPassword(t *testing.T) {
+	english := languageTexts(t)["en"]
+	for key, word := range map[string]string{
+		"users.role_note":               "organization",
+		"users.org_membership_hint":     "role",
+		"settings.totp_disable_warning": "password",
+	} {
+		if text := english[key]; text == "" || strings.Contains(strings.ToLower(text), word) {
+			t.Errorf("%s: %q, want a text without %q", key, text, word)
+		}
+	}
+}
