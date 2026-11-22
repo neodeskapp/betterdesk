@@ -258,6 +258,10 @@ func newGoStackWith(t *testing.T, db *store.DB, scenario oracleScenario, certs *
 	}
 	t.Setenv("SESSION_SECRET", testSecret)
 	t.Setenv("CONSOLE_DIR", t.TempDir())
+	// With a first password the start makes the first account at once,
+	// instead of waiting 25 seconds for a credentials file no signal
+	// server writes here. No recorded exchange signs in with it.
+	t.Setenv("DEFAULT_ADMIN_PASSWORD", "Replay-Admin-1!pass")
 	cfg, err := config.LoadEnv()
 	if err != nil {
 		t.Fatal(err)
