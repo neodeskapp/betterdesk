@@ -16,8 +16,8 @@ import (
 )
 
 // The schema the Node console created on an empty database, dumped from a
-// real run. They are how tests get a database "as Node left it" without
-// Node, and they go away with the Node console.
+// real run. They are how tests get a database "as Node left it", the
+// state an install upgraded from the old console starts in.
 var (
 	//go:embed dumps/node-sqlite.sql
 	nodeSQLiteDump string

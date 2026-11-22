@@ -1,8 +1,8 @@
 // Package proxytest replays vectors that were recorded from route files
 // of the Node console: requests to the routes, the answers the client
-// got, and the calls the API server received meanwhile. The scripts that
-// write the vectors are in console/goapipath/testdata/nodeoracle
-// (harness.js) and in the route groups' own testdata folders.
+// got, and the calls the API server received meanwhile. The vectors are
+// fixed recordings in the testdata folders of console/goapipath and of
+// the route groups; they cannot be recorded again.
 //
 // The package is for tests only.
 package proxytest

@@ -432,7 +432,8 @@ func (c *Client) fetchJSON(s *Session, target string) (map[string]any, int, erro
 	return object, res.StatusCode, nil
 }
 
-// Routing answers of the console's routing report (console/proxy.Routing).
+// Routing answers of the console's routing report (GET /__bd/routing,
+// console/routing.go).
 const (
 	HandlerGo      = "go"
 	HandlerNode    = "node"

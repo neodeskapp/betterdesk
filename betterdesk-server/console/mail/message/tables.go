@@ -14,7 +14,8 @@ import (
 // tables.bin.gz holds the Unicode data the domain handling needs: the IDNA
 // mapping, normalization, text direction and joining data of the URL library
 // inside Node 22 (ada 2.9.2, Unicode 15.0), and the lower-case mapping of the
-// JavaScript engine (Unicode 17.0). testdata/nodeoracle/tables.js writes it.
+// JavaScript engine (Unicode 17.0). It is a fixed recording of the old
+// console and cannot be made again.
 //
 //go:embed tables.bin.gz
 var tablesFile []byte
