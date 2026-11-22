@@ -452,11 +452,10 @@ export class RDCrypto {
 		const gamma0 = (x: number) => rotr(x, 7) ^ rotr(x, 18) ^ (x >>> 3);
 		const gamma1 = (x: number) => rotr(x, 17) ^ rotr(x, 19) ^ (x >>> 10);
 
-		// Pre-processing: padding
+		// Pre-processing: padding. The message, 0x80 and the 8-byte length fill whole 64-byte blocks
 		const msgLen = message.length;
 		const bitLen = msgLen * 8;
-		const padLen = (msgLen + 8) % 64 < 56 ? 56 - ((msgLen + 8) % 64) + 8 : 120 - ((msgLen + 8) % 64) + 8;
-		const padded = new Uint8Array(msgLen + padLen + 8);
+		const padded = new Uint8Array(Math.ceil((msgLen + 9) / 64) * 64);
 		padded.set(message);
 		padded[msgLen] = 0x80;
 		// Length in bits as big-endian 64-bit (we only use lower 32 bits since JS is 32-bit safe)
