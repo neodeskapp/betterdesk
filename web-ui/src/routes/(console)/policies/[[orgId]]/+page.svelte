@@ -10,6 +10,8 @@
   it opens without one. An unknown ID in the address says so.
 
   Who: the four admin roles (requireAdmin); everyone else gets the 403 text.
+  Saving needs org.edit (the server refuses the write without it); an admin
+  role without it sees the groups read-only and no Save.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -50,7 +52,7 @@
 		type Section
 	} from '#lib/rules/policies.ts';
 	import { onRefresh, setPageTitle } from '#lib/shell/page.svelte.ts';
-	import { can, session } from '#lib/state/session.svelte.ts';
+	import { can, canWrite, session } from '#lib/state/session.svelte.ts';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
@@ -59,6 +61,7 @@
 	import Input from '#lib/ui/Input.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import SaveBar from '#lib/ui/SaveBar.svelte';
 	import Select from '#lib/ui/Select.svelte';
@@ -73,6 +76,7 @@
 	import type { Column } from '#lib/ui/table.ts';
 
 	const allowed = $derived(isAdminRole(session.user?.role));
+	const canEdit = $derived(canWrite('org.edit'));
 	$effect(() => setPageTitle(t('nav.policies')));
 
 	/* ── Organizations ── */
@@ -288,7 +292,7 @@
 
 	async function save(e: SubmitEvent) {
 		e.preventDefault();
-		if (saving || !org) return;
+		if (saving || !org || !canEdit) return;
 		const sections = changed;
 		if (!sections.length) {
 			status = { state: 'saved', message: t('policies.no_changes') };
@@ -429,6 +433,7 @@
 			<h1>{t('nav.policies')}</h1>
 			<p class="page-description">{t('policies.page_description')}</p>
 		</div>
+		<ReadOnlyHint writes={['org.edit']} />
 
 		{#if orgsState === 'loading'}
 			<States kind="loading" message={t('policies.loading')} />
@@ -486,210 +491,220 @@
 						{@render toc(false)}
 
 						<form class="policy-form" autocomplete="off" novalidate onsubmit={save}>
-							<div class="policy-groups">
-								<section class="section" aria-labelledby="pol-connection-title">
-									<div class="section-head">
-										<h2 id="pol-connection-title" tabindex="-1">{t('policies.connection_title')}</h2>
-										{@render sectionState('connection')}
-									</div>
-									<p class="section-note">{t('policies.connection_desc')}</p>
-									<Field label={t('policies.connection_mode')}>
-										{#snippet children(f)}<Select
-												{...f}
-												options={modeOptions}
-												bind:value={values.connection.mode}
-											/>{/snippet}
-									</Field>
-									<Field
-										id={fieldId('connection.max_session_duration')}
-										label={t('policies.max_session')}
-										hint={t('policies.max_session_hint')}
-										error={errorOf('connection.max_session_duration')}
-										width="short"
-									>
-										{#snippet children(f)}<Input
-												{...f}
-												type="number"
-												min={0}
-												max={1440}
-												step={1}
-												inputmode="numeric"
-												bind:value={values.connection.max_session_duration}
-											/>{/snippet}
-									</Field>
-									<Field
-										id={fieldId('connection.idle_lock_timeout')}
-										label={t('policies.idle_lock')}
-										hint={t('policies.idle_lock_hint')}
-										error={errorOf('connection.idle_lock_timeout')}
-										width="short"
-									>
-										{#snippet children(f)}<Input
-												{...f}
-												type="number"
-												min={0}
-												max={120}
-												step={1}
-												inputmode="numeric"
-												bind:value={values.connection.idle_lock_timeout}
-											/>{/snippet}
-									</Field>
-									<Field label={t('policies.wallpaper_policy')}>
-										{#snippet children(f)}<Select
-												{...f}
-												options={wallpaperOptions}
-												bind:value={values.connection.wallpaper}
-											/>{/snippet}
-									</Field>
-									<p class="field-effect">{t('policies.effect_device')}</p>
-								</section>
+							<fieldset class="policy-fieldset" disabled={!canEdit}>
+								<div class="policy-groups">
+									<section class="section" aria-labelledby="pol-connection-title">
+										<div class="section-head">
+											<h2 id="pol-connection-title" tabindex="-1">{t('policies.connection_title')}</h2>
+											{@render sectionState('connection')}
+										</div>
+										<p class="section-note">{t('policies.connection_desc')}</p>
+										<Field label={t('policies.connection_mode')}>
+											{#snippet children(f)}<Select
+													{...f}
+													options={modeOptions}
+													bind:value={values.connection.mode}
+												/>{/snippet}
+										</Field>
+										<Field
+											id={fieldId('connection.max_session_duration')}
+											label={t('policies.max_session')}
+											hint={t('policies.max_session_hint')}
+											error={errorOf('connection.max_session_duration')}
+											width="short"
+										>
+											{#snippet children(f)}<Input
+													{...f}
+													type="number"
+													min={0}
+													max={1440}
+													step={1}
+													inputmode="numeric"
+													bind:value={values.connection.max_session_duration}
+												/>{/snippet}
+										</Field>
+										<Field
+											id={fieldId('connection.idle_lock_timeout')}
+											label={t('policies.idle_lock')}
+											hint={t('policies.idle_lock_hint')}
+											error={errorOf('connection.idle_lock_timeout')}
+											width="short"
+										>
+											{#snippet children(f)}<Input
+													{...f}
+													type="number"
+													min={0}
+													max={120}
+													step={1}
+													inputmode="numeric"
+													bind:value={values.connection.idle_lock_timeout}
+												/>{/snippet}
+										</Field>
+										<Field label={t('policies.wallpaper_policy')}>
+											{#snippet children(f)}<Select
+													{...f}
+													options={wallpaperOptions}
+													bind:value={values.connection.wallpaper}
+												/>{/snippet}
+										</Field>
+										<p class="field-effect">{t('policies.effect_device')}</p>
+									</section>
 
-								<section class="section" aria-labelledby="pol-features-title">
-									<div class="section-head">
-										<h2 id="pol-features-title" tabindex="-1">{t('policies.features_title')}</h2>
-										{@render sectionState('features')}
-									</div>
-									<p class="section-note">{t('policies.features_desc')}</p>
-									<div class="checks">
+									<section class="section" aria-labelledby="pol-features-title">
+										<div class="section-head">
+											<h2 id="pol-features-title" tabindex="-1">{t('policies.features_title')}</h2>
+											{@render sectionState('features')}
+										</div>
+										<p class="section-note">{t('policies.features_desc')}</p>
+										<div class="checks">
+											<Checkbox
+												label={t('policies.allow_file_transfer')}
+												bind:checked={values.features.allow_file_transfer}
+											/>
+											<Checkbox
+												label={t('policies.allow_clipboard')}
+												bind:checked={values.features.allow_clipboard}
+											/>
+											<Checkbox
+												label={t('policies.allow_audio')}
+												bind:checked={values.features.allow_audio}
+											/>
+											<Checkbox
+												label={t('policies.allow_recording')}
+												bind:checked={values.features.allow_recording}
+											/>
+										</div>
+										<p class="field-effect">{t('policies.effect_device')}</p>
+									</section>
+
+									<section class="section" aria-labelledby="pol-security-title">
+										<div class="section-head">
+											<h2 id="pol-security-title" tabindex="-1">{t('policies.security_title')}</h2>
+											{@render sectionState('security')}
+										</div>
+										<p class="section-note">{t('policies.security_desc')}</p>
+										<Checkbox label={t('policies.require_2fa')} bind:checked={values.security.require_2fa} />
+										<Field
+											id={fieldId('security.password_min_length')}
+											label={t('policies.password_min_length')}
+											hint={t('policies.password_min_hint')}
+											error={errorOf('security.password_min_length')}
+											width="short"
+										>
+											{#snippet children(f)}<Input
+													{...f}
+													type="number"
+													min={6}
+													max={128}
+													step={1}
+													inputmode="numeric"
+													bind:value={values.security.password_min_length}
+												/>{/snippet}
+										</Field>
 										<Checkbox
-											label={t('policies.allow_file_transfer')}
-											bind:checked={values.features.allow_file_transfer}
+											label={t('policies.password_require_special')}
+											bind:checked={values.security.password_require_special}
 										/>
+										<Field
+											id={fieldId('security.password_max_age_days')}
+											label={t('policies.password_max_age')}
+											hint={t('policies.password_max_age_hint')}
+											error={errorOf('security.password_max_age_days')}
+											width="short"
+										>
+											{#snippet children(f)}<Input
+													{...f}
+													type="number"
+													min={0}
+													max={365}
+													step={1}
+													inputmode="numeric"
+													bind:value={values.security.password_max_age_days}
+												/>{/snippet}
+										</Field>
+										<Field
+											label={t('policies.allowed_operators')}
+											hint={t('policies.allowed_operators_hint')}
+										>
+											{#snippet children(f)}<Input
+													{...f}
+													placeholder={tf('policies.allowed_operators_example', 'admin, helpdesk')}
+													bind:value={values.security.allowed_operators}
+												/>{/snippet}
+										</Field>
+										<p class="field-effect">{t('policies.effect_device')}</p>
+									</section>
+
+									<section class="section" aria-labelledby="pol-network-title">
+										<div class="section-head">
+											<h2 id="pol-network-title" tabindex="-1">{t('policies.network_title')}</h2>
+											{@render sectionState('network')}
+										</div>
+										<p class="section-note">{t('policies.network_desc')}</p>
 										<Checkbox
-											label={t('policies.allow_clipboard')}
-											bind:checked={values.features.allow_clipboard}
+											label={t('policies.block_direct_p2p')}
+											hint={t('policies.block_direct_p2p_hint')}
+											effect={t('policies.effect_server')}
+											bind:checked={values.network.block_direct_p2p}
 										/>
-										<Checkbox label={t('policies.allow_audio')} bind:checked={values.features.allow_audio} />
-										<Checkbox
-											label={t('policies.allow_recording')}
-											bind:checked={values.features.allow_recording}
-										/>
-									</div>
-									<p class="field-effect">{t('policies.effect_device')}</p>
-								</section>
+										<Field
+											label={t('policies.allowed_relays')}
+											hint={t('policies.allowed_relays_hint')}
+											effect={t('policies.effect_server')}
+										>
+											{#snippet children(f)}<Textarea
+													{...f}
+													class="mono"
+													rows={3}
+													dir="ltr"
+													spellcheck={false}
+													placeholder={tf('policies.allowed_relays_example', 'relay1.example.com:21117')}
+													bind:value={values.network.allowed_relay_servers}
+												/>{/snippet}
+										</Field>
+										<Field
+											label={t('policies.ip_allowlist')}
+											hint={t('policies.ip_allowlist_hint')}
+											effect={t('policies.effect_device')}
+										>
+											{#snippet children(f)}<Textarea
+													{...f}
+													class="mono"
+													rows={3}
+													dir="ltr"
+													spellcheck={false}
+													placeholder={tf('policies.ip_allowlist_example', '192.168.1.0/24')}
+													bind:value={values.network.ip_allowlist}
+												/>{/snippet}
+										</Field>
+									</section>
 
-								<section class="section" aria-labelledby="pol-security-title">
-									<div class="section-head">
-										<h2 id="pol-security-title" tabindex="-1">{t('policies.security_title')}</h2>
-										{@render sectionState('security')}
-									</div>
-									<p class="section-note">{t('policies.security_desc')}</p>
-									<Checkbox label={t('policies.require_2fa')} bind:checked={values.security.require_2fa} />
-									<Field
-										id={fieldId('security.password_min_length')}
-										label={t('policies.password_min_length')}
-										hint={t('policies.password_min_hint')}
-										error={errorOf('security.password_min_length')}
-										width="short"
-									>
-										{#snippet children(f)}<Input
-												{...f}
-												type="number"
-												min={6}
-												max={128}
-												step={1}
-												inputmode="numeric"
-												bind:value={values.security.password_min_length}
-											/>{/snippet}
-									</Field>
-									<Checkbox
-										label={t('policies.password_require_special')}
-										bind:checked={values.security.password_require_special}
-									/>
-									<Field
-										id={fieldId('security.password_max_age_days')}
-										label={t('policies.password_max_age')}
-										hint={t('policies.password_max_age_hint')}
-										error={errorOf('security.password_max_age_days')}
-										width="short"
-									>
-										{#snippet children(f)}<Input
-												{...f}
-												type="number"
-												min={0}
-												max={365}
-												step={1}
-												inputmode="numeric"
-												bind:value={values.security.password_max_age_days}
-											/>{/snippet}
-									</Field>
-									<Field label={t('policies.allowed_operators')} hint={t('policies.allowed_operators_hint')}>
-										{#snippet children(f)}<Input
-												{...f}
-												placeholder={tf('policies.allowed_operators_example', 'admin, helpdesk')}
-												bind:value={values.security.allowed_operators}
-											/>{/snippet}
-									</Field>
-									<p class="field-effect">{t('policies.effect_device')}</p>
-								</section>
+									<section class="section" aria-labelledby="pol-update-title">
+										<div class="section-head">
+											<h2 id="pol-update-title" tabindex="-1">{t('policies.update_title')}</h2>
+											{@render sectionState('update')}
+										</div>
+										<p class="section-note">{t('policies.update_desc')}</p>
+										<Checkbox label={t('policies.auto_update')} bind:checked={values.update.auto_update} />
+										<Field
+											label={t('policies.update_channel')}
+											hint={t('policies.update_channel_hint')}
+											width="medium"
+										>
+											{#snippet children(f)}<Select
+													{...f}
+													options={channelOptions}
+													bind:value={values.update.channel}
+												/>{/snippet}
+										</Field>
+										<p class="field-effect">{t('policies.effect_device')}</p>
+									</section>
+								</div>
+							</fieldset>
 
-								<section class="section" aria-labelledby="pol-network-title">
-									<div class="section-head">
-										<h2 id="pol-network-title" tabindex="-1">{t('policies.network_title')}</h2>
-										{@render sectionState('network')}
-									</div>
-									<p class="section-note">{t('policies.network_desc')}</p>
-									<Checkbox
-										label={t('policies.block_direct_p2p')}
-										hint={t('policies.block_direct_p2p_hint')}
-										effect={t('policies.effect_server')}
-										bind:checked={values.network.block_direct_p2p}
-									/>
-									<Field
-										label={t('policies.allowed_relays')}
-										hint={t('policies.allowed_relays_hint')}
-										effect={t('policies.effect_server')}
-									>
-										{#snippet children(f)}<Textarea
-												{...f}
-												class="mono"
-												rows={3}
-												dir="ltr"
-												spellcheck={false}
-												placeholder={tf('policies.allowed_relays_example', 'relay1.example.com:21117')}
-												bind:value={values.network.allowed_relay_servers}
-											/>{/snippet}
-									</Field>
-									<Field
-										label={t('policies.ip_allowlist')}
-										hint={t('policies.ip_allowlist_hint')}
-										effect={t('policies.effect_device')}
-									>
-										{#snippet children(f)}<Textarea
-												{...f}
-												class="mono"
-												rows={3}
-												dir="ltr"
-												spellcheck={false}
-												placeholder={tf('policies.ip_allowlist_example', '192.168.1.0/24')}
-												bind:value={values.network.ip_allowlist}
-											/>{/snippet}
-									</Field>
-								</section>
-
-								<section class="section" aria-labelledby="pol-update-title">
-									<div class="section-head">
-										<h2 id="pol-update-title" tabindex="-1">{t('policies.update_title')}</h2>
-										{@render sectionState('update')}
-									</div>
-									<p class="section-note">{t('policies.update_desc')}</p>
-									<Checkbox label={t('policies.auto_update')} bind:checked={values.update.auto_update} />
-									<Field
-										label={t('policies.update_channel')}
-										hint={t('policies.update_channel_hint')}
-										width="medium"
-									>
-										{#snippet children(f)}<Select
-												{...f}
-												options={channelOptions}
-												bind:value={values.update.channel}
-											/>{/snippet}
-									</Field>
-									<p class="field-effect">{t('policies.effect_device')}</p>
-								</section>
-							</div>
-
-							<SaveBar label={t('policies.save_button')} {dirty} busy={saving} {status} />
+							{#if canEdit}
+								<SaveBar label={t('policies.save_button')} {dirty} busy={saving} {status} />
+							{/if}
 						</form>
 
 						<section class="section" aria-labelledby="pol-audit-title">
@@ -755,6 +770,15 @@
 	}
 	.policy-form {
 		max-width: var(--measure);
+	}
+	.policy-fieldset {
+		min-width: 0;
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+	.policy-fieldset:disabled :global(.check-field) {
+		cursor: default;
 	}
 	.checks {
 		display: flex;
