@@ -20,10 +20,9 @@ result.
 When releasing this file onto `main`, set that channel to `main` (operators can
 still override with `--branch` / `BETTERDESK_BRANCH`).
 
-The `build-betterdesk.*` wrappers and `betterdesk-server/deploy.sh` are
-development or migration tools. They must not silently replace the official
-installer lifecycle or be presented as the primary production installation
-path.
+`betterdesk-server/deploy.sh` is a development and migration tool. It must
+not silently replace the official installer lifecycle or be presented as the
+primary production installation path.
 
 ## Lifecycle guarantees
 
