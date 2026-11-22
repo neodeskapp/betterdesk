@@ -1057,8 +1057,9 @@ func (pg *PostgresDB) DeletePeer(id string) error {
 }
 
 // HardDeletePeer permanently removes a peer from the database, revokes its
-// device tokens and releases any id_change_history reservations for that
-// ID (#213).
+// device tokens, releases any id_change_history reservations for that
+// ID (#213) and removes its data loss prevention events (the console's
+// dlp_events, when the console made the table).
 func (pg *PostgresDB) HardDeletePeer(id string) error {
 	tx, err := pg.pool.Begin(pg.ctx)
 	if err != nil {
@@ -1078,6 +1079,9 @@ func (pg *PostgresDB) HardDeletePeer(id string) error {
 	}
 	if _, err := tx.Exec(pg.ctx,
 		`DELETE FROM server_config WHERE key = $1`, "telemetry_seq_"+id); err != nil {
+		return err
+	}
+	if err := pgExecInSavepoint(pg.ctx, tx, `DELETE FROM dlp_events WHERE device_id = $1`, id); err != nil && !isMissingTable(err) {
 		return err
 	}
 	return tx.Commit(pg.ctx)
