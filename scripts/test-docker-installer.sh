@@ -282,6 +282,24 @@ test_uninstall_says_what_it_leaves() (
     rm -rf "$TEST_DIR"
 )
 
+# L206: --purge of an install on PostgreSQL dumps the database before the
+# volumes go: only BetterDesk stops for the backup, the postgres service
+# keeps running for pg_dump.
+test_purge_dumps_postgres_first() (
+    load
+    mgr 'USE_POSTGRES=true; COMMAND=install; do_install' > /dev/null 2>&1 || fail "the PostgreSQL install failed"
+    : > "$CALLS"
+    local out stop dump down
+    out=$(mgr 'PURGE=true; ASSUME_YES=true; do_uninstall' 2>&1) || fail "--purge --yes failed: $out"
+    if grep -qx 'compose stop -t 30' "$CALLS"; then fail "--purge stopped the postgres service before its dump: $(cat "$CALLS")"; fi
+    stop=$(grep -n '^compose stop -t 30 betterdesk$' "$CALLS" | head -n 1 | cut -d: -f1)
+    dump=$(grep -n '^compose exec -T postgres pg_dump' "$CALLS" | head -n 1 | cut -d: -f1)
+    down=$(grep -n 'down -v' "$CALLS" | head -n 1 | cut -d: -f1)
+    { [ -n "$stop" ] && [ -n "$dump" ] && [ -n "$down" ] && [ "$stop" -lt "$dump" ] && [ "$dump" -lt "$down" ]; } \
+        || fail "--purge did not stop BetterDesk, dump PostgreSQL and then delete the volumes, in that order: $(cat "$CALLS")"
+    rm -rf "$TEST_DIR"
+)
+
 # --help names every option the script takes.
 test_help_lists_every_option() (
     local opt help
@@ -433,6 +451,7 @@ test_fresh_install_on_postgres
 test_foreign_install_is_left_alone
 test_errors_say_what_to_do
 test_uninstall_says_what_it_leaves
+test_purge_dumps_postgres_first
 test_help_lists_every_option
 test_postgres_switch_moves_the_data
 test_postgres_declined_keeps_sqlite

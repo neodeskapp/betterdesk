@@ -1033,7 +1033,8 @@ do_uninstall() {
             [ "$answer" = delete ] || die "Nothing was deleted."
         fi
         step "Backing up the data before it is deleted"
-        compose stop -t 30 >/dev/null 2>&1 || true
+        # BetterDesk stops; the postgres service runs on for its dump
+        compose stop -t 30 betterdesk >/dev/null 2>&1 || true
         file=$(backup_volumes)
         ok "Backup: $file"
         compose_quiet --profile postgres --profile guacd down -v --remove-orphans
