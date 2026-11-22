@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, dev]
     paths:
+      - '*.sh'
       - 'install.sh'
       - 'betterdesk.sh'
       - 'betterdesk.ps1'
@@ -27,6 +28,7 @@ on:
   pull_request:
     branches: [main, dev]
     paths:
+      - '*.sh'
       - 'install.sh'
       - 'betterdesk.sh'
       - 'betterdesk.ps1'
@@ -69,6 +71,16 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Check that the top-level scripts are executable in git
+        run: |
+          set -euo pipefail
+          bad="$(git ls-files -s -- ':(glob)*.sh' | awk '$1 != "100755" { print $4 }')"
+          if [ -n "$bad" ]; then
+            echo "These scripts are not executable in git, so ./script.sh fails in a fresh clone:"
+            printf '%s\n' "$bad" | sed 's/^/  /'
+            echo "Fix: git update-index --chmod=+x <script>"
+            exit 1
+          fi
       - name: Parse all Bash installers
         run: |
           set -euo pipefail
