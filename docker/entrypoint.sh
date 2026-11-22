@@ -24,7 +24,7 @@ server_ports() {
 
 echo "========================================"
 echo "  BetterDesk"
-echo "  Version: ${BETTERDESK_IMAGE_VERSION:-3.5.275}"
+echo "  Version: ${BETTERDESK_IMAGE_VERSION:-3.5.276}"
 echo "========================================"
 echo ""
 echo "  Server:       $(server_ports)"
