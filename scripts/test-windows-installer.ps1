@@ -449,6 +449,22 @@ function Test-ChannelAndDownloadErrors {
     Remove-Item -Recurse -Force $dir
 }
 
+# L69: the host clients get becomes PANEL_PUBLIC_HOST, so the HTTP port
+# redirects to HTTPS there; a value the admin set stays.
+function Test-PanelPublicHost {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'PANEL_PUBLIC_HOST=')
+    Setup-Services | Out-Null
+    if ((Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST') -ne '203.0.113.7') { Fail "the install set PANEL_PUBLIC_HOST to '$(Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST')'" }
+    Set-PanelPublicHost -Address '198.51.100.1:21117'
+    if ((Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST') -ne '203.0.113.7') { Fail 'a second address replaced PANEL_PUBLIC_HOST' }
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept')
+    Set-PanelPublicHost -Address 'desk.example.org:21117'
+    if ((Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST') -ne 'desk.example.org') { Fail "PANEL_PUBLIC_HOST from host:port is '$(Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST')'" }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -460,6 +476,7 @@ Test-PostgreSQLAddressIsKept
 Test-ServerLogFile
 Test-UpdateKeepsTheAdminsPorts
 Test-ChannelAndDownloadErrors
+Test-PanelPublicHost
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

@@ -4347,6 +4347,7 @@ setup_services() {
     server_ip=$(resolve_relay_ip)
     resolve_connection_mode_env
     print_info "Relay server IP: $server_ip (mode: ${RELAY_SERVERS:+fixed}${RELAY_SERVERS:-$RELAY_MODE})"
+    set_panel_public_host "${SSL_DOMAIN:-$server_ip}"
 
     local signal_rate_limit="${SIGNAL_RATE_LIMIT_PER_IP:-20}"
     if ! [[ "$signal_rate_limit" =~ ^[0-9]+$ ]]; then
@@ -4375,6 +4376,22 @@ setup_services() {
     print_success "Created betterdesk-server.service (server and web console, user $SERVICE_USER)"
 }
 
+# set_panel_public_host ADDRESS: the host of the address clients get becomes
+# PANEL_PUBLIC_HOST when .env has none, so the console's HTTP port redirects
+# to HTTPS on that host. A value set before stays.
+set_panel_public_host() {
+    local env_file="$CONSOLE_PATH/.env" host="${1%%,*}"
+    [ -f "$env_file" ] || return 0
+    [ -n "$(env_file_value "$env_file" PANEL_PUBLIC_HOST)" ] && return 0
+    case "$host" in
+        \[*) host="${host%%]*}]" ;;
+        *:*:*) ;;
+        *:*) host="${host%%:*}" ;;
+    esac
+    [ -n "$host" ] && _upsert_env_line "$env_file" PANEL_PUBLIC_HOST "$host"
+    return 0
+}
+
 # carry_unit_ports: the signal and relay ports an older unit set (they won
 # over .env) go into .env, where the admin changes them, so a unit written
 # without them keeps the ports the server listens on.
@@ -4398,6 +4415,7 @@ maybe_update_services() {
     args=$(unit_exec_args "$SERVER_UNIT")
     extra=$(server_unit_extra_environment)
     carry_unit_ports
+    set_panel_public_host "$(unit_exec_flag_value "$SERVER_UNIT" -relay-servers)"
     write_server_unit "$args" "$extra"
     systemctl daemon-reload
     print_info "betterdesk-server.service written again with its arguments and settings"

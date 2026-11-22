@@ -1020,6 +1020,19 @@ function Get-ServerBaseEnvironment {
     )
 }
 
+# The host of the address clients get becomes PANEL_PUBLIC_HOST when .env
+# has none, so the console's HTTP port redirects to HTTPS on that host. A
+# value set before stays.
+function Set-PanelPublicHost {
+    param([string]$Address)
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (-not (Test-Path $envFile) -or (Get-ConsoleEnvValue -Key "PANEL_PUBLIC_HOST")) { return }
+    $hostPart = ($Address -split ',')[0].Trim()
+    if ($hostPart -match '^(\[[^\]]+\])') { $hostPart = $Matches[1] }
+    elseif (($hostPart.ToCharArray() | Where-Object { $_ -eq ':' }).Count -eq 1) { $hostPart = $hostPart.Split(':')[0] }
+    if ($hostPart) { Set-ConsoleEnvValue -Key "PANEL_PUBLIC_HOST" -Value $hostPart }
+}
+
 # The signal and relay ports an older service or launcher set (they won
 # over .env) go into .env; returns the other settings.
 function Move-PortsToEnvFile {
@@ -1596,6 +1609,7 @@ function Update-ServerServiceDefinition {
     if ($nssm -and (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
         $serverArgs = "$(& $nssm get $script:SERVER_SERVICE AppParameters 2>$null)".Trim([char]0, ' ')
         $serverArgs = ($serverArgs -replace '\s-tls-api-port(=\S+)?', '' -replace '\s-tls-api(=\S+)?', '').Trim()
+        if ($serverArgs -match '-relay-servers\s+"?([^"\s]+)') { Set-PanelPublicHost -Address $Matches[1] }
         $current = Move-PortsToEnvFile (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
         $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $current)
         Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
@@ -1604,6 +1618,7 @@ function Update-ServerServiceDefinition {
     if (Get-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue) {
         $serverArgs = Get-LauncherArguments
         if (-not $serverArgs) { $serverArgs = Get-ServerArguments -ServerIP (Resolve-RelayIp) }
+        if ($serverArgs -match '-relay-servers\s+"?([^"\s]+)') { Set-PanelPublicHost -Address $Matches[1] }
         $current = Move-PortsToEnvFile (Get-LauncherEnvironment | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
         $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "task"), $current)
         $launcherPath = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
@@ -1776,6 +1791,7 @@ function Setup-Services {
     $serverIP = Resolve-RelayIp
     $connModeEnv = Resolve-ConnectionModeEnv
     Print-Info "Relay server IP: $serverIP (mode: $(if ($script:RELAY_SERVERS) { 'fixed' } else { $script:RELAY_MODE }))"
+    Set-PanelPublicHost -Address $(if ($env:SSL_DOMAIN) { $env:SSL_DOMAIN } else { $serverIP })
 
     $apiKeyPath = Join-Path $script:RUSTDESK_PATH ".api_key"
     if (-not (Test-Path $apiKeyPath)) {

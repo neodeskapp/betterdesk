@@ -450,6 +450,23 @@ test_rerun_updates_and_forgets_the_password() (
     rm -rf "$TEST_DIR"
 )
 
+# L69: the host clients get becomes PANEL_PUBLIC_HOST, so the HTTP port
+# redirects to HTTPS there; a value the admin set stays.
+test_panel_public_host() (
+    load
+    systemctl() { :; }
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    set_panel_public_host "203.0.113.7:21117"
+    grep -qx 'PANEL_PUBLIC_HOST=203.0.113.7' "$CONSOLE_PATH/.env" || fail "PANEL_PUBLIC_HOST from host:port: $(grep PANEL_PUBLIC_HOST "$CONSOLE_PATH/.env")"
+    set_panel_public_host "198.51.100.1"
+    grep -qx 'PANEL_PUBLIC_HOST=203.0.113.7' "$CONSOLE_PATH/.env" || fail "a second address replaced PANEL_PUBLIC_HOST"
+    printf 'PANEL_PUBLIC_HOST=\n' > "$CONSOLE_PATH/.env"
+    write_server_unit "-mode all -relay-servers desk.example.org -api-port 21114" ""
+    maybe_update_services >/dev/null
+    grep -qx 'PANEL_PUBLIC_HOST=desk.example.org' "$CONSOLE_PATH/.env" || fail "an update set no PANEL_PUBLIC_HOST: $(cat "$CONSOLE_PATH/.env")"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -467,4 +484,5 @@ test_update_keeps_the_admins_ports
 test_channel_and_download_errors
 test_one_command_install
 test_rerun_updates_and_forgets_the_password
+test_panel_public_host
 echo "Go installer unit checks passed"
