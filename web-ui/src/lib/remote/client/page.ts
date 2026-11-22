@@ -6,6 +6,7 @@
  * Everything is optional: a value that is not there reads as undefined.
  */
 import type { ViewerCapabilities } from '../access.ts';
+import type { FileTransferModal } from './file-modal.ts';
 
 /** The desktop shell's bridge: commands of the Rust side and its events */
 export interface TauriApi {
@@ -39,6 +40,19 @@ export interface PageGlobals {
 	/** A zstd decoder for browsers whose DecompressionStream has no zstd (none in this console) */
 	_zstdDecoder?: { decode(bytes: Uint8Array, maxBytes: number): Uint8Array };
 	webkitAudioContext?: typeof AudioContext;
+	/** The file transfer sheet; file-modal.ts creates it when it loads (null when that failed) */
+	__fileTransferModal?: FileTransferModal | null;
+	/*
+	 * RDDesktopDnd's native drop state, on the page as desktop-dnd.js kept it:
+	 * the last drop (a repeat within 400 ms is dropped), whether tauri://drag-drop
+	 * is listened to, the retry timer while the bridge is missing, and whether
+	 * bind() listens to rd-desk-native-drop
+	 */
+	__rdDeskNativeDropLastKey?: string;
+	__rdDeskNativeDropLastAt?: number;
+	__rdDeskNativeDropTauriBound?: boolean;
+	__rdDeskNativeDropRetryTimer?: ReturnType<typeof setInterval> | null;
+	__rdDeskNativeDropListener?: boolean;
 }
 
 /** The window with the globals above */
