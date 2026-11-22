@@ -145,6 +145,11 @@ func main() {
 	if code, handled := runSubcommand(os.Args[1:]); handled {
 		os.Exit(code)
 	}
+	// The env file gets the settings a new release added, as after the
+	// installers' update, also when the console's Updates page installed it
+	if !printsOnly(os.Args[1:]) {
+		applyEnvDefaultsFromOS()
+	}
 	// Before anything else: count this start of a freshly installed binary,
 	// and put the previous one back when it is the fourth.
 	pending := updater.StartupCheck(updater.StartupOptions{
