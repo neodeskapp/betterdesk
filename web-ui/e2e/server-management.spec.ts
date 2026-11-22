@@ -1,9 +1,10 @@
 /**
- * Server management (/server-management?tab=...), once per role: the four
+ * Server management (/server-management?tab=...), once per role: the three
  * views open for roles with server.config and say "no permission" (without
  * asking the server for anything) to the others; the file browser opens a
- * folder and a file; services, terminal and overview render; axe finds
- * nothing in each view, the row menu or the editor sheet.
+ * folder and shows a file read-only, with no action that changes one;
+ * services and overview render; the old terminal address is not found
+ * (A194); axe finds nothing in each view or the file sheet.
  */
 import type { Page } from '@playwright/test';
 import { test, expect, expectNoAxeViolations } from './fixtures.ts';
@@ -43,24 +44,19 @@ for (const role of ROLES) {
 			await expect(page.locator('.facts').first()).toBeVisible({ timeout: 15_000 });
 			await expectNoAxeViolations(page);
 
-			// Files: a folder, the row menu, a file in the editor sheet
+			// Files: a folder, and a file in a read-only sheet. A194: no row menu, nothing that writes
 			await page.goto(`${UI}/server-management?tab=files`);
 			const rows = page.locator('.files-table tbody tr[data-key]');
 			await expect(rows.first()).toBeVisible({ timeout: 15_000 });
+			await expect(rows.first().getByRole('button', { name: /^Actions for/ })).toHaveCount(0);
 			await expectNoAxeViolations(page);
-			await rows
-				.first()
-				.getByRole('button', { name: /^Actions for/ })
-				.click();
-			await expect(page.getByRole('menu')).toBeVisible();
-			await expectNoAxeViolations(page);
-			await page.keyboard.press('Escape');
 			const file = page.locator('.files-table tbody tr.type-file').first();
 			if (await file.count()) {
 				await file.locator('.row-open').click();
 				const sheet = page.getByRole('dialog');
 				await expect(sheet).toBeVisible();
-				await expect(sheet.locator('textarea')).toBeVisible();
+				await expect(sheet.locator('textarea')).toHaveAttribute('readonly', '');
+				await expect(sheet.getByRole('button', { name: /^Save/ })).toHaveCount(0);
 				await expectNoAxeViolations(page);
 				await sheet.getByRole('button', { name: 'Close', exact: true }).first().click();
 				await expect(sheet).toBeHidden();
@@ -72,11 +68,11 @@ for (const role of ROLES) {
 			await expect(page.locator('main')).toContainText(/service/i);
 			await expectNoAxeViolations(page);
 
-			// Terminal: the status line and Disconnect
+			// A194: no Terminal; its old address is not found
+			await expect(page.getByRole('tab', { name: 'Terminal' })).toHaveCount(0);
 			await page.goto(`${UI}/server-management?tab=terminal`);
-			await expect(page.locator('.terminal-status')).toBeVisible();
-			await expect(page.locator('.term-disconnect')).toBeVisible();
-			await expectNoAxeViolations(page);
+			await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
+			await expect(page.locator('.terminal-status')).toHaveCount(0);
 		});
 	});
 }
