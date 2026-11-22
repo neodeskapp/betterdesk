@@ -178,11 +178,16 @@ func (c *Client) GetGoSSOStatus(ctx context.Context) *Object {
 // TryGoServerAuth calls POST /api/auth/login with {username, password}. It
 // returns {role, auth_provider} when the API server signed the user in,
 // {requires2fa:true} when it asks for a second factor (that answer names
-// neither role nor provider), and nil for everything else: wrong
-// credentials, the sign-in limit (429) and a missing answer look the same.
+// neither role nor provider), {account_disabled:true} when the credentials
+// are right and the account is disabled, and nil for everything else:
+// wrong credentials, the sign-in limit (429) and a missing answer look the
+// same.
 func (c *Client) TryGoServerAuth(ctx context.Context, username, password string) *Object {
 	status, parsed, ok := c.signIn(ctx, "/api/auth/login",
 		NewObject("username", username, "password", password), c.ownTimeout())
+	if ok && status == http.StatusForbidden && prop(parsed, "code") == "account_disabled" {
+		return NewObject("account_disabled", true)
+	}
 	if !ok || status != http.StatusOK || parsed == nil {
 		return nil
 	}

@@ -236,7 +236,7 @@ func (s *Server) authenticateClientSession(token string) (username, role string,
 	}
 
 	user, err := s.db.GetUserByID(sess.UserID)
-	if err != nil || user == nil {
+	if err != nil || user == nil || user.Disabled {
 		return "", "", false
 	}
 	// A session opened before the account's password or second factor

@@ -259,13 +259,13 @@ func (p *replayer) run() {
 			p.capture(step, got.Body)
 			continue
 		}
-		status, answer, wantCalls := step.Status, step.Answer, nodeCalls(step.Extra.Calls)
+		status, answer, wantCalls := step.Status, withDisabledFlag(step.Answer), nodeCalls(step.Extra.Calls)
 		if fixed {
 			if f.status != 0 {
 				status, wantCalls = f.status, nil
 			}
 			if f.answer != nil {
-				answer = f.answer(step.Answer)
+				answer = withDisabledFlag(f.answer(step.Answer))
 			}
 		}
 		want, have := normalize(answer), normalize(got.Body)

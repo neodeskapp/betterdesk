@@ -107,6 +107,8 @@ type listedAccount struct {
 	PeerGrants   []string          `json:"peer_grants"`
 	StrategyGUID string            `json:"strategy_guid"`
 	TOTPEnabled  bool              `json:"totp_enabled"`
+	// Disabled says the account may not sign in.
+	Disabled bool `json:"disabled"`
 }
 
 // withPicture is a listed account with what the list says about its
@@ -139,7 +141,7 @@ func (h *handlers) serialize(ctx context.Context, a *account) listedAccount {
 	out := listedAccount{
 		ID: a.ID, Username: a.Username, Role: a.Role,
 		Email: cellOr(a.Email, ""), AuthProvider: cellOr(a.AuthProvider, "local"),
-		CreatedAt: a.CreatedAt, LastLogin: a.LastLogin, TOTPEnabled: totpOn(a.TOTPEnabled),
+		CreatedAt: a.CreatedAt, LastLogin: a.LastLogin, TOTPEnabled: totpOn(a.TOTPEnabled), Disabled: a.Disabled.True(),
 		UserGroups: []string{}, FolderIDs: []int64{}, PeerGrants: []string{},
 	}
 	folders, err := h.d.Access.UserFolderIDs(ctx, a.username())
@@ -387,13 +389,15 @@ func (h *handlers) clientError(w http.ResponseWriter, r *http.Request, err error
 
 // update answers PATCH /api/users/{id} with the body {"username", "role",
 // "password", "email", "groupGuids", "folderIds", "peerIds",
-// "strategyGuid"}. What it checks, in order: the id, the account,
-// whether the caller may change it (mayChange), the password and role of
-// a directory or single sign-on account, the new username, the caller's
-// own demotion, the role (the last administrator keeps one), the
-// password, the user groups, the device scope, the email. Only then is
-// anything written, in the same order. The answer is the account as the
-// list has it.
+// "strategyGuid", "disabled"}. What it checks, in order: the id, the
+// account, whether the caller may change it (mayChange), the password and
+// role of a directory or single sign-on account, the new username, the
+// caller's own demotion, the role (the last administrator keeps one), the
+// password, the user groups, the device scope, the email, disabled (true
+// or false, never for the caller's own account). Only then is anything
+// written, in the same order. Disabling ends the account's sessions and
+// revokes its access tokens; the account and its history stay. The answer
+// is the account as the list has it.
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	userID, ok := pathID(r)
 	if !ok {
@@ -496,6 +500,10 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 			return nil, err
 		}
 	}
+	disable, changeDisabled, err := disabledOf(r, body, user)
+	if err != nil {
+		return nil, err
+	}
 
 	id := user.ID.V
 	if renaming {
@@ -526,6 +534,11 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 			return nil, err
 		}
 	}
+	if changeDisabled {
+		if err := h.setDisabled(r, user, disable); err != nil {
+			return nil, err
+		}
+	}
 	// A new name or role ends every session of the account; a new password
 	// keeps the session of a caller who changed their own
 	if newRole := role.Truthy() && role.Str() != user.role(); renaming || newRole || password.Truthy() {
@@ -545,6 +558,44 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	}
 	out := h.serialize(ctx, updated)
 	return &out, nil
+}
+
+// disabledOf reads the body's "disabled": change says it is there and
+// differs from the account's flag. It must be true or false, and an
+// account cannot disable itself.
+func disabledOf(r *http.Request, body middleware.JSONObject, user *account) (disable, change bool, err error) {
+	given := member(body, "disabled")
+	if given.IsUndefined() {
+		return false, false, nil
+	}
+	switch given.JSON() {
+	case "true":
+		disable = true
+	case "false":
+	default:
+		return false, false, say(http.StatusBadRequest, "Invalid value for disabled")
+	}
+	if disable && isSessionAccount(r, user.ID.V) {
+		return false, false, sayKey(r, http.StatusBadRequest, "users.cannot_disable_self")
+	}
+	return disable, disable != user.Disabled.True(), nil
+}
+
+// setDisabled disables or enables the account and notes it in the audit
+// log. Disabling ends every session of the account and revokes its access
+// tokens.
+func (h *handlers) setDisabled(r *http.Request, user *account, disable bool) error {
+	if err := setDisabled(r.Context(), h.d.Store, user.ID.V, disable); err != nil {
+		return err
+	}
+	action, details := "user_enabled", "Enabled user: "
+	if disable {
+		if err := h.endSessions(r, user.ID.V, false); err != nil {
+			return err
+		}
+		action, details = "user_disabled", "Disabled user: "
+	}
+	return h.d.LogAction(r, action, details+user.username())
 }
 
 // newUsername is the body's username, trimmed, when it is text and names

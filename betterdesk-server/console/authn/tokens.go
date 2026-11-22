@@ -98,7 +98,7 @@ type TokenUser struct {
 // ValidateAccessToken returns the account a token belongs to and notes the
 // use on the token. It is nil for a token that is not 64 characters long,
 // unknown, revoked or expired, for a device token, which is no account's
-// sign-in, and for a token whose account is gone.
+// sign-in, and for a token whose account is gone or disabled.
 func (s *Service) ValidateAccessToken(ctx context.Context, token string) (*TokenUser, error) {
 	if utf16Len(toWellFormed(token)) != accessTokenLength {
 		return nil, nil
@@ -108,7 +108,7 @@ func (s *Service) ValidateAccessToken(ctx context.Context, token string) (*Token
 		return nil, err
 	}
 	user, err := getUserByID(ctx, s.db, record.UserID.V)
-	if err != nil || user == nil {
+	if err != nil || user == nil || user.Disabled.True() {
 		return nil, err
 	}
 	if err := touchAccessToken(ctx, s.db, token); err != nil {

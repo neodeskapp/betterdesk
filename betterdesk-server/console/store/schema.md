@@ -223,6 +223,13 @@ and does not have the column. Existing rows get the column's default.
 | `add device_groups.source_type` | `TEXT DEFAULT 'manual'` | same | after branding_config, tolerated | after the users columns up to `guid` | 709-717, 4978-4985 |
 | `add device_groups.tag_filter` | `TEXT DEFAULT ''` | same | tolerated | | 709-717, 4978-4985 |
 | `add access_tokens.token_kind` | `TEXT NOT NULL DEFAULT 'account'` | same | last step | last step | not in Node (BUGS RV1) |
+| `add users.disabled` | `INTEGER NOT NULL DEFAULT 0` | `BOOLEAN NOT NULL DEFAULT FALSE` | after `keep access tokens as their hash` | after `keep access tokens as their hash` | not in Node (L107) |
+
+`users.disabled` marks an account that may not sign in and whose tokens are
+refused; the row and its history stay. Every account that is there when the
+column comes is enabled. The signal server adds the same column with the same
+definition when it makes the table or finds it without the column, so the
+table has it whoever starts first.
 
 `access_tokens.token_kind` is `device` for a token the console issued for a
 device and `account` for the token of an account's sign-in; only a device
@@ -348,7 +355,8 @@ PostgreSQL; `users.totp_secret` is `NOT NULL` in Go's PostgreSQL shape.
   `dlp_policies` columns on SQLite, `settings.updated_at` on PostgreSQL).
   Migrate logs a warning for them.
 - Node logged only some added columns. Migrate logs every change.
-- `access_tokens.token_kind` is not in Node (BUGS RV1).
+- `access_tokens.token_kind` is not in Node (BUGS RV1), nor is `users.disabled`
+  (L107).
 - Access tokens are kept as their hash only: Migrate rewrites `token` of
   every row that holds the token itself (BUGS RV128).
 - SQLite: the second `CREATE TABLE IF NOT EXISTS branding_profiles` (697) is

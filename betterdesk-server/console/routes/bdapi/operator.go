@@ -65,6 +65,9 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 		refuse(http.StatusConflict, goapi.NewObject(
 			"error", "Username collision: a local account with this name already exists", "code", "username_collision"))
 		return
+	case outcome.Failure == authn.FailureAccountDisabled:
+		refuse(http.StatusForbidden, goapi.NewObject("error", "This account is disabled", "code", authn.FailureAccountDisabled))
+		return
 	case user == nil:
 		refuse(http.StatusUnauthorized, failure{Error: "Invalid credentials"})
 		return

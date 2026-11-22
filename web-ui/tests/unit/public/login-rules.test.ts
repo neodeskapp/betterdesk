@@ -79,6 +79,12 @@ describe('the address', () => {
 		expect(readLoginQuery('?error=username_collision').oidcError).toBe('username_collision');
 	});
 
+	test('the code the server sends for a disabled account (L107)', () => {
+		expect(readLoginQuery('?error=account_disabled').oidcError).toBe('account_disabled');
+		setStrings('en', 'ltr', { auth: { oidc_error: 'SSO failed.', account_disabled: 'Disabled.' } });
+		expect(oidcErrorText('account_disabled')).toBe('Disabled.');
+	});
+
 	test('the one-time notices leave the address, the rest stays', () => {
 		expect(withoutNotices('http://x/app/login?expired=1&return=%2Fdevices&reason=session_idle#a').href).toBe(
 			'http://x/app/login?return=%2Fdevices#a'

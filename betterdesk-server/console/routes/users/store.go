@@ -26,9 +26,10 @@ type account struct {
 	LastLogin    store.Time
 	TOTPEnabled  jsbind.Cell
 	Email        jsbind.Cell
+	Disabled     store.Bool
 }
 
-const accountColumns = `id, username, role, auth_provider, created_at, last_login, totp_enabled, email`
+const accountColumns = `id, username, role, auth_provider, created_at, last_login, totp_enabled, email, disabled`
 
 // username is the account's username as text, "" for none.
 func (a *account) username() string {
@@ -55,7 +56,7 @@ func readAccounts(ctx context.Context, q store.Querier, query string, args ...an
 	out := []*account{}
 	for rows.Next() {
 		a := &account{}
-		if err := rows.Scan(&a.ID, &a.Username, &a.Role, &a.AuthProvider, &a.CreatedAt, &a.LastLogin, &a.TOTPEnabled, &a.Email); err != nil {
+		if err := rows.Scan(&a.ID, &a.Username, &a.Role, &a.AuthProvider, &a.CreatedAt, &a.LastLogin, &a.TOTPEnabled, &a.Email, &a.Disabled); err != nil {
 			return nil, err
 		}
 		out = append(out, a)
@@ -126,6 +127,18 @@ func updateRole(ctx context.Context, db *store.DB, id int64, role string) error 
 func updatePasswordHash(ctx context.Context, db *store.DB, id int64, hash string) error {
 	if _, err := db.Exec(ctx, `UPDATE users SET password_hash = ? WHERE id = ?`, hash, id); err != nil {
 		return fmt.Errorf("update password of user %d: %w", id, err)
+	}
+	return nil
+}
+
+// setDisabled disables or enables an account.
+func setDisabled(ctx context.Context, db *store.DB, id int64, disabled bool) error {
+	flag := db.Pick("0", "FALSE")
+	if disabled {
+		flag = db.Pick("1", "TRUE")
+	}
+	if _, err := db.Exec(ctx, `UPDATE users SET disabled = `+flag+` WHERE id = ?`, id); err != nil {
+		return fmt.Errorf("set disabled of user %d: %w", id, err)
 	}
 	return nil
 }

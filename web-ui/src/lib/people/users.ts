@@ -62,6 +62,18 @@ export function mayChangeUser(
 }
 
 /**
+ * Whether the signed-in person may disable or enable this account: one
+ * they may change, but never their own (the server refuses that).
+ */
+export function mayDisableUser(
+	myRole: string | null | undefined,
+	myId: string,
+	user: Pick<ConsoleUser, 'id' | 'role'>
+): boolean {
+	return String(user.id) !== myId && mayChangeUser(myRole, myId, user);
+}
+
+/**
  * The role choices of the user sheet: the roles the editor may give, plus
  * the user's current role (shown, but not choosable) so it stays clear.
  * LDAP accounts get their role from the directory: every choice is locked.

@@ -81,14 +81,19 @@ func SuggestOIDCRedirectURL(panelOrigin string) string {
 // belongs to a local or directory account.
 var ErrUsernameCollision = errors.New("the user name belongs to an account of another provider")
 
+// ErrAccountDisabled is the error of a single sign-on of a disabled
+// account.
+var ErrAccountDisabled = errors.New("the account is disabled")
+
 // OIDCUser returns the local account of a user the signal server signed in
 // through single sign-on, with what the session should carry as the role.
 // A user without a local row gets one with provider "oidc", the given role
 // (else "viewer") and an unusable password. An existing single sign-on row
 // gets the role (else it keeps its own). A row of another provider is
-// never taken over: the error is ErrUsernameCollision. A failure to create
-// or to update is logged, and the row is returned as it then is; the
-// account is nil when there is still none.
+// never taken over: the error is ErrUsernameCollision. A disabled account
+// changes nothing: the error is ErrAccountDisabled. A failure to create or
+// to update is logged, and the row is returned as it then is; the account
+// is nil when there is still none.
 func (s *Service) OIDCUser(ctx context.Context, username, role string) (*Account, error) {
 	user, err := getUserByUsername(ctx, s.db, username)
 	if err != nil {
@@ -98,6 +103,10 @@ func (s *Service) OIDCUser(ctx context.Context, username, role string) (*Account
 		s.log.Info(fmt.Sprintf("[OIDC] Login blocked: username collision for '%s' (provider=%s)",
 			logName(username), normalizeAuthProvider(user.AuthProvider.String)))
 		return nil, ErrUsernameCollision
+	}
+	if user != nil && user.Disabled.True() {
+		s.log.Info(fmt.Sprintf("[OIDC] Login refused: '%s' is disabled", logName(username)))
+		return nil, ErrAccountDisabled
 	}
 	if user == nil {
 		hash, err := s.unusablePasswordHash(ctx)

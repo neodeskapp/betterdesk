@@ -131,6 +131,10 @@ func (s *Server) handleClientOIDCAuthQuery(w http.ResponseWriter, r *http.Reques
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "User not found"})
 		return
 	}
+	if user.Disabled {
+		writeAccountDisabled(w)
+		return
+	}
 
 	clientIP := s.remoteIP(r)
 	token, err := s.issueClientSession(user, consumed.ClientID, consumed.ClientUUID, clientIP)
@@ -157,6 +161,7 @@ func (s *Server) handleClientOIDCAuthQuery(w http.ResponseWriter, r *http.Reques
 
 // ensureOIDCUser finds or auto-provisions a local user from an OIDC result.
 // On failure it returns an error code suitable for panel redirects / HTML pages.
+// A disabled account is account_disabled and stays as it is.
 func (s *Server) ensureOIDCUser(result *auth.OIDCResult, cfg *auth.OIDCConfig) (*db.User, string) {
 	if result == nil || result.Username == "" {
 		return nil, "oidc_error"
@@ -215,6 +220,10 @@ func (s *Server) ensureOIDCUser(result *auth.OIDCResult, cfg *auth.OIDCConfig) (
 		log.Printf("[OIDC] Refused sign-on as %q: the account signs in with %q", result.Username, user.AuthProvider)
 		return nil, "username_collision"
 	}
+	if user.Disabled {
+		log.Printf("[OIDC] Refused sign-on as %q: the account is disabled", result.Username)
+		return nil, "account_disabled"
+	}
 
 	changed := false
 	// With a group map set the map decides the role at every sign-in, the
@@ -264,6 +273,8 @@ func clientOIDCErrorMessage(code string) string {
 		return "Your account was not found and auto-provisioning is disabled."
 	case "username_collision":
 		return "An account with this name exists and does not sign in through SSO."
+	case "account_disabled":
+		return "This account is disabled. Ask an administrator."
 	default:
 		return "An error occurred during SSO login."
 	}

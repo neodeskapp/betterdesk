@@ -230,6 +230,18 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A disabled account learns that it is disabled once its password was
+	// right; a wrong one gets the plain refusal below
+	if outcome.Failure == authn.FailureAccountDisabled {
+		h.recordAttempt(r, name, false)
+		if err := h.audit(r, 0, "login_failed", "Account disabled: "+auditlog.RedactUsername(jsString(username))+client); err != nil {
+			h.serverError(w, r, "Login error:", err)
+			return
+		}
+		refuseDisabled(w, r)
+		return
+	}
+
 	if outcome.IsFailure() || outcome.User == nil {
 		h.recordAttempt(r, name, false)
 		details := "Username: " + jsString(username) + client
@@ -515,11 +527,32 @@ func jsonInt(raw json.RawMessage) int64 {
 	return n
 }
 
+// refuseDisabled answers a sign-in of a disabled account.
+func refuseDisabled(w http.ResponseWriter, r *http.Request) {
+	kit.FailCode(w, r, http.StatusForbidden, kit.T(r, "auth.account_disabled", nil), authn.FailureAccountDisabled)
+}
+
 // finishSecondFactor signs the pending account in once its second factor
 // was accepted: a new session, the sign-in noted on the account, the audit
-// entries and the answer of a finished sign-in.
+// entries and the answer of a finished sign-in. An account that was
+// disabled or deleted while it waited for the code is refused.
 func (h *handlers) finishSecondFactor(w http.ResponseWriter, r *http.Request, who account, method string) {
 	body := kit.Body(r)
+	current, err := h.authn.UserByID(r.Context(), who.id)
+	if err != nil {
+		h.serverError(w, r, "TOTP verify error:", err)
+		return
+	}
+	switch {
+	case current == nil:
+		endPending(kit.Session(r))
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.totp_session_expired", nil))
+		return
+	case current.Disabled.True():
+		endPending(kit.Session(r))
+		refuseDisabled(w, r)
+		return
+	}
 	// The client's details are those of the password step
 	var meta session.Meta
 	var rawMeta json.RawMessage

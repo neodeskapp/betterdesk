@@ -30,15 +30,18 @@ type Account struct {
 	TOTPSecret        nullText          `json:"-"`
 	TOTPEnabled       store.Bool        `json:"totp_enabled"`
 	TOTPRecoveryCodes nullText          `json:"-"`
+	// Disabled says the account may not sign in and its tokens are
+	// refused.
+	Disabled store.Bool `json:"-"`
 }
 
 const accountColumns = `id, username, password_hash, role, auth_provider, preferred_language,
-	totp_secret, totp_enabled, totp_recovery_codes`
+	totp_secret, totp_enabled, totp_recovery_codes, disabled`
 
 func scanAccount(row *store.Row) (*Account, error) {
 	var a Account
 	err := row.Scan(&a.ID, &a.Username, &a.PasswordHash, &a.Role, &a.AuthProvider, &a.PreferredLanguage,
-		&a.TOTPSecret, &a.TOTPEnabled, &a.TOTPRecoveryCodes)
+		&a.TOTPSecret, &a.TOTPEnabled, &a.TOTPRecoveryCodes, &a.Disabled)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}

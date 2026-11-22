@@ -388,6 +388,9 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	case passwordLoginInvalid:
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid credentials"})
 		return
+	case passwordLoginDisabled:
+		writeAccountDisabled(w)
+		return
 	}
 
 	user := login.User
@@ -485,6 +488,10 @@ func (s *Server) handleLogin2FA(w http.ResponseWriter, r *http.Request) {
 	}
 	if issuedBeforeCredentialsChanged(claims, user) {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid or expired partial token"})
+		return
+	}
+	if user.Disabled {
+		writeAccountDisabled(w)
 		return
 	}
 
@@ -1305,8 +1312,9 @@ func (s *Server) orgTokenPrincipal(claims *auth.Claims) (username, role string, 
 // serverTokenPrincipal resolves a server sign-in token to the account it
 // names as the account is now: a renamed or deleted account's token stops
 // working, so does one issued before the account's password or second
-// factor changed, and the role is the stored one, not the claim. A device
-// token keeps its device role, which authMiddleware refuses.
+// factor changed and one of a disabled account, and the role is the stored
+// one, not the claim. A device token keeps its device role, which
+// authMiddleware refuses.
 func (s *Server) serverTokenPrincipal(claims *auth.Claims) (username, role string, ok bool) {
 	if auth.IsDeviceRole(claims.Role) {
 		return claims.Sub, claims.Role, true
@@ -1315,7 +1323,7 @@ func (s *Server) serverTokenPrincipal(claims *auth.Claims) (username, role strin
 		return "", "", false
 	}
 	user, err := s.db.GetUser(claims.Sub)
-	if err != nil || user == nil || !auth.ValidRole(user.Role) || issuedBeforeCredentialsChanged(claims, user) {
+	if err != nil || user == nil || user.Disabled || !auth.ValidRole(user.Role) || issuedBeforeCredentialsChanged(claims, user) {
 		return "", "", false
 	}
 	return user.Username, user.Role, true

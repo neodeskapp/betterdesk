@@ -57,7 +57,7 @@ func (g *Gateway) controlPrincipalOf(r *http.Request) (controlPrincipal, bool) {
 			continue
 		}
 		user, err := g.db.GetUser(claims.Sub)
-		if err != nil || user == nil || !auth.ValidRole(user.Role) {
+		if err != nil || user == nil || user.Disabled || !auth.ValidRole(user.Role) {
 			continue
 		}
 		if user.CredentialsChangedAt > 0 && claims.Iat < user.CredentialsChangedAt {

@@ -16,8 +16,8 @@ export interface LoginQuery {
 	expired: boolean;
 	/**
 	 * ?error=: why a single sign-on did not sign the person in: an oidc_*
-	 * code or username_collision (the name belongs to an account that signs
-	 * in another way). Null for none or an unknown value.
+	 * code, username_collision (the name belongs to an account that signs in
+	 * another way) or account_disabled. Null for none or an unknown value.
 	 */
 	oidcError: string | null;
 	/** ?error= with any value: a single sign-on just failed */
@@ -29,7 +29,7 @@ export interface LoginQuery {
 }
 
 /** The codes besides oidc_* that the server's single sign-on sends back */
-const SSO_CODES = ['username_collision'];
+const SSO_CODES = ['username_collision', 'account_disabled'];
 
 export function readLoginQuery(search: string): LoginQuery {
 	const q = new URLSearchParams(search);
