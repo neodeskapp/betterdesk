@@ -40,7 +40,7 @@
      "data": {
       "binariesPresent": false,
       "buildsPossible": false,
-      "clientRepo": "UNITRONIX/BetterDesk-Client",
+      "clientRepo": "trybetterdesk/betterdesk-client",
       "error": "custom_client_signing_seed_required",
       "installedAt": null,
       "installedVersion": null,

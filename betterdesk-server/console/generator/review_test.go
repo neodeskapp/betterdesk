@@ -99,19 +99,25 @@ func TestSigningFileWritesOverlap(t *testing.T) {
 func TestTemplateInstallChecksRepo(t *testing.T) {
 	for _, c := range []struct {
 		name, repo, allowed string
+		repoSetting         string
 		wantErr             string
 		wantPath            string
 	}{
-		{"path in the name", "o/r/../../../user/repos?per_page=100&x=", "", "betterdesk_client_repo_invalid", ""},
-		{"not on the list", "someorg/private-repo", "", "betterdesk_client_repo_not_allowed", ""},
-		{"default", "", "", "", "/repos/UNITRONIX/BetterDesk-Client/releases/latest"},
-		{"on the list", " someorg/private-repo ", "UNITRONIX/BetterDesk-Client, someorg/private-repo", "", "/repos/someorg/private-repo/releases/latest"},
+		{"path in the name", "o/r/../../../user/repos?per_page=100&x=", "", "", "betterdesk_client_repo_invalid", ""},
+		{"not on the list", "someorg/private-repo", "", "", "betterdesk_client_repo_not_allowed", ""},
+		{"default", "", "", "", "", "/repos/trybetterdesk/betterdesk-client/releases/latest"},
+		// the compose files set the client fork (L238)
+		{"setting of the compose files", "", "", "trybetterdesk/betterdesk-client", "", "/repos/trybetterdesk/betterdesk-client/releases/latest"},
+		{"on the list", " someorg/private-repo ", "trybetterdesk/betterdesk-client, someorg/private-repo", "", "", "/repos/someorg/private-repo/releases/latest"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			gh := &fakeGitHub{answer: func(r *http.Request) *http.Response { return reply(500, []byte(`{}`)) }}
 			env := []string{"BETTERDESK_GITHUB_TOKEN=made-up-token"}
 			if c.allowed != "" {
 				env = append(env, "BETTERDESK_CLIENT_ALLOWED_REPOS="+c.allowed)
+			}
+			if c.repoSetting != "" {
+				env = append(env, "BETTERDESK_CLIENT_REPO="+c.repoSetting)
 			}
 			s := New(Options{DataDir: t.TempDir(), HTTP: gh, Env: func() []string { return env }})
 			must(t, os.WriteFile(filepath.Join(s.opts.DataDir, signingSeedName), []byte(testSeed), 0o600))

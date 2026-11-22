@@ -26,7 +26,7 @@ server hands out its release packages for join and support codes
 (`betterdesk-server/console/clientrelease`): it downloads them from that
 repository's releases, checks them against the signed checksums and serves
 them unchanged. The console's Support agents page imports agent releases
-from UNITRONIX/BetterDesk-Client by default
+from the same repository by default
 (`betterdesk-server/console/agentreleases`); those ship their own notices.
 
 ## Server code

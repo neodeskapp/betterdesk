@@ -148,7 +148,7 @@ func TestNodeAnswers(t *testing.T) {
 				}
 				continue
 			}
-			status, want, have := step.Status, scrub(step.Answer), scrub(got.Body)
+			status, want, have := step.Status, clientRepoFix.Replace(scrub(step.Answer)), scrub(got.Body)
 			if f, fixed := fixes[step.Name]; fixed {
 				status, want = f.status, f.answer
 			}
