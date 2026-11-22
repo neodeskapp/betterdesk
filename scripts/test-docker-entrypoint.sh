@@ -154,6 +154,14 @@ test_image_binary_knows_its_build() (
         || fail "docker-compose.single.yml does not pass the commit to the build"
 )
 
+# L78: the credentials command's hints name the compose service betterdesk.
+test_credentials_hint_names_the_service() (
+    if grep -q 'logs server' "$SCRIPT_ROOT/docker/show-admin-credentials.sh"; then
+        fail "show-admin-credentials.sh points at a service called server"
+    fi
+    grep -q 'docker compose logs betterdesk' "$SCRIPT_ROOT/docker/show-admin-credentials.sh" || fail "show-admin-credentials.sh does not point at docker compose logs betterdesk"
+)
+
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
@@ -163,4 +171,5 @@ test_cdap_port_is_published
 test_compose_reads_env_file
 test_healthcheck_follows_tls
 test_image_binary_knows_its_build
+test_credentials_hint_names_the_service
 echo "Docker entrypoint checks passed"

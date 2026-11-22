@@ -23,5 +23,5 @@ done
 
 echo "No readable admin credentials file found." >&2
 echo "  Checked: /opt/rustdesk/.admin_credentials, /app/data/.admin_credentials" >&2
-echo "  Wait for first boot to finish, then retry. Or: docker compose logs server" >&2
+echo "  Wait for the first start to finish, then retry. Its log: docker compose logs betterdesk" >&2
 exit 1
