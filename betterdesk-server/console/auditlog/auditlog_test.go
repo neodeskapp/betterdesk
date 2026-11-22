@@ -20,7 +20,7 @@ import (
 
 // setup creates audit_log from the console's schema file. On PostgreSQL
 // the table points at users, so a small users table with the accounts 5 and
-// 7 comes first, as in testdata/gen.js.
+// 7 comes first, as in the recording of testdata/rows.json.
 func setup(t *testing.T, db *store.DB) *Log {
 	t.Helper()
 	ctx := context.Background()

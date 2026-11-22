@@ -22,7 +22,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// testdata/nodeoracle/files.js recorded everything that touches files:
+// testdata/files.json.gz recorded everything that touches files:
 // the font service on a scratch folder, uploads through the Node routes,
 // the background list, the built-in themes and the supporters list. The
 // tests here do the same with this package and compare answers and

@@ -11,7 +11,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
 
-// oraclePermissions are the roles of the Node oracle (proxy.js).
+// oraclePermissions are the roles of the recording's permission stub.
 var oraclePermissions = map[string][]string{
 	"admin":        {"cdap.terminal", "cdap.files", "cdap.command"},
 	"global_admin": {"cdap.terminal", "cdap.files", "cdap.command"},

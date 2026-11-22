@@ -10,7 +10,7 @@ import (
 
 // Every recorded Set-Cookie header of Express's res.cookie(name, value,
 // options) for the options the console uses (testdata/setcookie_vectors.json,
-// written by .ui-rework/go/tools/vectors/express-answers.js).
+// a fixed recording made while the Node console still existed).
 func TestSetCookieMatchesExpress(t *testing.T) {
 	raw, err := os.ReadFile("testdata/setcookie_vectors.json")
 	if err != nil {

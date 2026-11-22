@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-// The files under testdata were written by the Node console's own code
-// (testdata/nodeoracle). Each test replays one of them.
+// The files under testdata are fixed recordings of the Node console's own
+// code (testdata/README.md). Each test replays one of them.
 
 func loadVectors(t *testing.T, name string, into any) {
 	t.Helper()

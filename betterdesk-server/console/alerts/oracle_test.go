@@ -27,8 +27,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// The recordings in testdata were made by the scripts in
-// testdata/nodeoracle from the Node console's alertRulesEngine.js.
+// The recordings in testdata were made from the Node console's
+// alertRulesEngine.js (testdata/README.md).
 
 func readGzip(t testing.TB, name string, into any) {
 	t.Helper()
@@ -87,7 +87,7 @@ func bindValue(t testing.TB, text string) jsbind.Value {
 	return v
 }
 
-// dumpBind writes a value as dump() of the oracle's lib.js does.
+// dumpBind writes a value as the recordings write a bound value.
 func dumpBind(v jsbind.Value) string {
 	switch {
 	case v.IsUndefined():

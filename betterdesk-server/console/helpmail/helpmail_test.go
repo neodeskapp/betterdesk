@@ -20,8 +20,8 @@ import (
 	"github.com/unitronix/betterdesk-server/events"
 )
 
-// The vectors were written from the Node console by
-// testdata/nodeoracle/helpmail.js.
+// The vectors are a fixed recording of the Node console
+// (testdata/helpmail.json).
 type oracle struct {
 	Configs [][2]json.RawMessage `json:"configs"`
 	Runs    []struct {

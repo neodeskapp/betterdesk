@@ -20,7 +20,7 @@ import (
 
 // The tests in this file replay what the Node console's device group
 // payload helpers, tag service and address book sync answered
-// (testdata/nodeoracle/vectors.js). Every record must get the same answer
+// (testdata/README.md). Every record must get the same answer
 // here, except where a bug fix changes it on purpose: those records are
 // compared with Node's answer as the fix changes it, named with the bug.
 

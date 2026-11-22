@@ -16,7 +16,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// peersRecording is what testdata/nodeoracle/peers.js recorded.
+// peersRecording is what testdata/peers_<database>.json recorded.
 type peersRecording struct {
 	Dialect string            `json:"dialect"`
 	Seed    []json.RawMessage `json:"seed"`

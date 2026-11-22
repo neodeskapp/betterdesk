@@ -13,7 +13,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/kit"
 )
 
-// register adds the routes of testdata/nodeoracle/proxy.js.
+// register adds the routes the recording of testdata/proxy.json ran.
 func register(d *kit.Deps) {
 	sendsBody := func(r *http.Request) []goapi.CallOption {
 		switch r.Method {

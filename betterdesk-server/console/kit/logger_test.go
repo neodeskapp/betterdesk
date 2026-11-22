@@ -52,8 +52,8 @@ func TestLoggerChildRedactsQuotedUsernames(t *testing.T) {
 	}
 }
 
-// The vectors were recorded by console/auditlog/testdata/gen.js from the
-// Node console's lib/logger.js.
+// The vectors are a fixed recording of the Node console's lib/logger.js
+// (console/auditlog/testdata/logger.json).
 type loggerVectors struct {
 	Levels []struct {
 		LogLevel     *string            `json:"log_level"`

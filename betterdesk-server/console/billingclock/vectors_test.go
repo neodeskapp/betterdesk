@@ -16,8 +16,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/httpx"
 )
 
-// The vectors were written from the Node console by the scripts in
-// testdata/nodeoracle (see the README there).
+// The vectors are fixed recordings of the Node console (see
+// testdata/README.md).
 
 func loadJSON(t *testing.T, name string, into any) {
 	t.Helper()

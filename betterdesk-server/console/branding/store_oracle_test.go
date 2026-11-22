@@ -17,7 +17,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// The scenario recorded by testdata/nodeoracle/store.js is replayed step
+// The scenario recorded in testdata/store_*.json.gz is replayed step
 // by step on a fresh database. After every step the stored rows, the
 // cached settings and everything made from them must be what Node had.
 
@@ -35,10 +35,6 @@ func maskRevision(text string) string {
 func maskTimes(text string) string {
 	return reTimeFields.ReplaceAllString(text, `"$1":"<T>"`)
 }
-
-// fullVectors is set for a trial run of the oracle that recorded every
-// text in full (ORACLE_FULL=1) instead of the hashes of long ones.
-var fullVectors = os.Getenv("BRANDING_VECTORS_FULL") != ""
 
 // fixedNow is the clock of replayed services.
 var fixedNow = time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
@@ -99,7 +95,7 @@ func TestOracleStore(t *testing.T) {
 		data := loadVectors(t, "store_"+db.Dialect().String())
 		s := replayService(t, db, property(data, "fonts"))
 		steps, _ := property(data, "steps").([]any)
-		if len(steps) < 3000 && !fullVectors {
+		if len(steps) < 3000 {
 			t.Errorf("the recorded scenario has %d steps, it should have more than 3000", len(steps))
 		}
 		quickCommits(t, db)
@@ -358,7 +354,7 @@ func profileRows(t testing.TB, ctx context.Context, db *store.DB, skip map[int64
 			}
 		}
 		var storedData any = maskRevision(data)
-		if len(units(storedData.(string))) > 200 && !fullVectors {
+		if len(units(storedData.(string))) > 200 {
 			storedData = object("len", float64(len(units(maskRevision(data)))), "sha256", sha256Hex(maskRevision(data)))
 		}
 		out = append(out, object(
