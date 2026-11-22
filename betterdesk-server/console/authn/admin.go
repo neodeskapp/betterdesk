@@ -186,12 +186,14 @@ func (s *Service) waitForDockerBootstrapAdmin(ctx context.Context) (bool, error)
 //
 // The name is Settings.DefaultAdminUsername. The password is
 // Settings.DefaultAdminPassword, else the one in a .admin_credentials
-// file. A password the password rule refuses (auth.CheckNewPassword) is
-// not used: the log says so, and it counts as no password known.
+// file. The server makes the first account before the console starts,
+// from INIT_ADMIN_PASS under the password rule (main.go), so this creates
+// one only on a database the server did not set up.
 //
 // When there are users it creates nothing. If the password is known and
 // an account of that name exists, its hash is overwritten only when an
-// installer asked for it (checkForcePasswordUpdate).
+// installer asked for it (checkForcePasswordUpdate) and the password keeps
+// the password rule (auth.CheckNewPassword).
 //
 // When there are none it creates the account with the role "admin". With
 // no password known it first waits for the signal server's credentials
@@ -226,7 +228,6 @@ func (s *Service) EnsureDefaultAdmin(ctx context.Context) (created bool, err err
 		return false, s.reviewExistingAdmin(ctx, username, password, force)
 	}
 
-	password = s.keepingRule(password)
 	known := password != ""
 	// credentialsPath is where a made-up password was written.
 	var credentialsPath string
@@ -236,7 +237,7 @@ func (s *Service) EnsureDefaultAdmin(ctx context.Context) (created bool, err err
 			if err := s.sleep(ctx, delay); err != nil {
 				return false, err
 			}
-			if password = s.keepingRule(s.ReadAdminCredentialsFile()); password != "" {
+			if password = s.ReadAdminCredentialsFile(); password != "" {
 				s.log.Info(fmt.Sprintf("[AUTH] Found admin password from Go server on retry %d", i+1))
 				known = true
 				break
