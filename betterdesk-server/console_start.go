@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/unitronix/betterdesk-server/api"
 	"github.com/unitronix/betterdesk-server/config"
@@ -39,9 +40,7 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 	if ccfg.Port == 0 {
 		return func() {}, nil
 	}
-	if os.Getenv("BETTERDESK_API_URL") == "" && os.Getenv("HBBS_API_URL") == "" {
-		ccfg.APIHost = net.JoinHostPort("127.0.0.1", strconv.Itoa(cfg.APIPort))
-	}
+	linkConsoleToServer(ccfg, cfg, os.Getenv)
 
 	sdb, err := openConsoleStore(cfg, database)
 	if err != nil {
@@ -104,6 +103,23 @@ func applySavedPublicRelay(cfg *config.Config, getenv func(string) string) {
 	if relay := info.ReadPublicEndpointEnv().PublicRelayServer; relay != "" {
 		cfg.SetPublicRelayServer(relay)
 		log.Printf("Relay for devices: %s, the public relay server of the console's settings", relay)
+	}
+}
+
+// linkConsoleToServer points the console at the API of this process when
+// neither BETTERDESK_API_URL nor HBBS_API_URL names another, and at the
+// ports its signal server and relay listen on (the browser viewer's
+// sockets, the status page, the attestation) unless WS_HBBS_PORT or
+// WS_HBBR_PORT name others.
+func linkConsoleToServer(ccfg *consoleconfig.Config, cfg *config.Config, getenv func(string) string) {
+	if getenv("BETTERDESK_API_URL") == "" && getenv("HBBS_API_URL") == "" {
+		ccfg.APIHost = net.JoinHostPort("127.0.0.1", strconv.Itoa(cfg.APIPort))
+	}
+	if strings.TrimSpace(getenv("WS_HBBS_PORT")) == "" && cfg.SignalPort > 0 {
+		ccfg.SignalPort = cfg.SignalPort
+	}
+	if strings.TrimSpace(getenv("WS_HBBR_PORT")) == "" && cfg.RelayPort > 0 {
+		ccfg.RelayPort = cfg.RelayPort
 	}
 }
 
