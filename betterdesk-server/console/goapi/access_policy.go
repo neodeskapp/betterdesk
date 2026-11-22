@@ -41,13 +41,15 @@ func (c *Client) DeleteAccessPolicy(ctx context.Context, id string) *Object {
 // GetPeerConnectPassword calls GET /api/peers/{id}/connect-password and
 // returns the answer as it is. It is the one method that returns the
 // failed call: the error is an *Error, a 404 carries {password_set:false}
-// as its data, and a bad id gives "Invalid peerId" without a call.
-func (c *Client) GetPeerConnectPassword(ctx context.Context, id string) (any, error) {
+// as its data, and a bad id gives "Invalid peerId" without a call. opts
+// change the call; the device route makes it as the signed-in account
+// (As), so the API server's organization membership check decides.
+func (c *Client) GetPeerConnectPassword(ctx context.Context, id string, opts ...CallOption) (any, error) {
 	safe, e := safeID(id, "peerId")
 	if e != nil {
 		return nil, e
 	}
-	data, e := c.data(ctx, http.MethodGet, "/peers/"+seg(safe)+"/connect-password")
+	data, e := c.data(ctx, http.MethodGet, "/peers/"+seg(safe)+"/connect-password", opts...)
 	if e != nil {
 		return nil, e
 	}

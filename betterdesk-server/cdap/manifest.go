@@ -45,7 +45,7 @@ type ManifestBridge struct {
 
 // Widget represents a single control/display element on the device.
 type Widget struct {
-	Type     string `json:"type"` // toggle, gauge, button, led, chart, select, slider, text, table, terminal, desktop, video_stream, file_browser
+	Type     string `json:"type"` // toggle, gauge, button, led, chart, select, slider, text, table, terminal, desktop, video_stream, file_browser, audio
 	ID       string `json:"id"`
 	Label    string `json:"label"`
 	Group    string `json:"group,omitempty"` // collapsible group name
@@ -151,12 +151,14 @@ var allowedWidgetTypes = map[string]bool{
 	"desktop":      true,
 	"video_stream": true,
 	"file_browser": true,
+	"audio":        true,
 }
 
 // Allowed capabilities.
 var allowedCapabilities = map[string]bool{
 	"telemetry":         true,
 	"commands":          true,
+	"terminal":          true,
 	"alerts":            true,
 	"logs":              true,
 	"remote_desktop":    true,

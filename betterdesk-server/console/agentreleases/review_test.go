@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-const releaseList = "https://api.github.com/repos/UNITRONIX/BetterDesk-Client/releases?per_page=30"
+const releaseList = "https://api.github.com/repos/trybetterdesk/betterdesk-client/releases?per_page=30"
 
 // offer makes the fixture's GitHub list one release: the signed files of
 // the fixture under the tag.
@@ -19,7 +19,7 @@ func (f *releaseFixture) offer(t *testing.T, tag string) {
 	var assets []any
 	for name := range f.files {
 		assets = append(assets, map[string]any{"name": name,
-			"browser_download_url": "https://github.com/UNITRONIX/BetterDesk-Client/releases/download/support-v2.0.0/" + name})
+			"browser_download_url": "https://github.com/trybetterdesk/betterdesk-client/releases/download/support-v2.0.0/" + name})
 	}
 	list, err := json.Marshal([]any{map[string]any{"tag_name": tag, "assets": assets}})
 	if err != nil {

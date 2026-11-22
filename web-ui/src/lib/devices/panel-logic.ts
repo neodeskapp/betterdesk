@@ -9,7 +9,7 @@
 import type { DeviceDetail } from '#lib/api/devices.ts';
 import type { AvailabilityEvent } from '#lib/api/device-agent.ts';
 import { parseDate } from '#lib/i18n/format.ts';
-import { deviceState, isMesh, type DeviceLike } from './model.ts';
+import { OFFER_ACCESS_POLICY, deviceState, isMesh, type DeviceLike } from './model.ts';
 
 type Can = (permission: string) => boolean;
 type Obj = Record<string, unknown>;
@@ -221,7 +221,8 @@ export function panelActions(d: PanelDevice, can: Can): PanelActions {
 		out.mesh.push('mesh-power-wake');
 	}
 
-	if (can('device.edit')) out.manage.push('edit', 'groups', 'access-policy');
+	if (can('device.edit')) out.manage.push('edit', 'groups');
+	if (can('device.edit') && OFFER_ACCESS_POLICY) out.manage.push('access-policy');
 	if (can('device.change_id')) out.manage.push('change-id');
 	if (can('device.edit') && !d.banned) out.manage.push('issue-token');
 	if (can('device.ban')) out.manage.push(d.banned ? 'unban' : 'ban');

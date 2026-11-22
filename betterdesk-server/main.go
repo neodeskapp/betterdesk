@@ -29,6 +29,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/updater"
 	"github.com/unitronix/betterdesk-server/crypto"
 	"github.com/unitronix/betterdesk-server/db"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 	"github.com/unitronix/betterdesk-server/internal/productversion"
 	"github.com/unitronix/betterdesk-server/logging"
 	"github.com/unitronix/betterdesk-server/meshcentral"
@@ -61,6 +62,49 @@ type persistedTimeSyncConfig struct {
 	RequireSyncedClock bool   `json:"require_synced_clock"`
 	TrustOSNTP         bool   `json:"trust_os_ntp"`
 	BillingTimezone    string `json:"billing_timezone"`
+}
+
+// wsOriginNotices are the start's notes on the browser pages the
+// WebSocket ports take while no allow list names them: the signal and
+// relay ports refuse every page that is not on localhost, the API's event
+// stream every page that is not on its own host. Clients without an
+// Origin header, such as RustDesk, are not affected.
+func wsOriginNotices(cfg *config.Config) []string {
+	var notices []string
+	if cfg.AllowedWSOrigins == "" {
+		notices = append(notices, "[SECURITY] WS_ALLOWED_ORIGINS is not set: the signal and relay WebSocket ports take browser pages from localhost only")
+	}
+	if cfg.APIAllowedWSOrigins == "" {
+		notices = append(notices, "[SECURITY] API_WS_ALLOWED_ORIGINS is not set: the API event stream takes browser pages from its own host only")
+	}
+	return notices
+}
+
+// applySavedCDAPEnabled turns the CDAP gateway on or off as the IoT
+// devices page saved it (cdap_enabled). A saved value wins over
+// CDAP_ENABLED, which decides only while nothing is saved.
+func applySavedCDAPEnabled(cfg *config.Config, database db.Database) {
+	saved, err := database.GetConfig("cdap_enabled")
+	if err != nil {
+		log.Printf("WARN: Failed to read the saved CDAP gateway switch: %v", err)
+		return
+	}
+	if strings.TrimSpace(saved) == "" {
+		return
+	}
+	on, ok := envvar.Switch(saved)
+	if !ok {
+		log.Printf("WARN: Ignoring the saved CDAP gateway switch %q: not an on/off value", saved)
+		return
+	}
+	if on != cfg.CDAPEnabled {
+		state := "off"
+		if on {
+			state = "on"
+		}
+		log.Printf("CDAP gateway %s, as saved on the IoT devices page", state)
+	}
+	cfg.CDAPEnabled = on
 }
 
 func applyPersistedTimeSyncConfig(cfg *config.Config, database db.Database) {
@@ -273,6 +317,14 @@ func main() {
 	}
 	applyPersistedTimeSyncConfig(cfg, database)
 	applyPersistedConnectionSettings(cfg, database)
+	cdapBefore := cfg.CDAPEnabled
+	applySavedCDAPEnabled(cfg, database)
+	if cfg.CDAPEnabled && !cdapBefore {
+		// The gateway's port joins the listeners the start checked
+		if err := checkStartPorts(cfg, os.Getenv); err != nil {
+			log.Fatalf("The start stops: %v", err)
+		}
+	}
 
 	// Load API key from .api_key file or API_KEY env var and sync to database.
 	// This ensures the Node.js console and Go server share the same API key
@@ -506,12 +558,8 @@ func main() {
 	go reloadHandler.ListenSIGHUP(reloadDone)
 	defer close(reloadDone)
 
-	// BD-2026-010: Warn when WebSocket origin policy is permissive
-	if cfg.AllowedWSOrigins == "" {
-		log.Printf("[SECURITY] NOTICE: WS_ALLOWED_ORIGINS is not set — signal/relay WebSocket accepts all origins")
-	}
-	if cfg.APIAllowedWSOrigins == "" {
-		log.Printf("[SECURITY] NOTICE: API_WS_ALLOWED_ORIGINS is not set — API events WebSocket accepts all origins")
+	for _, notice := range wsOriginNotices(cfg) {
+		log.Print(notice)
 	}
 
 	// parseFlags lets only the combined mode through.
@@ -693,6 +741,7 @@ func reloadEnvConfig(cfg *config.Config, database db.Database) error {
 	_, err := applyEnrollmentMode(cfg, database)
 	applyPersistedTimeSyncConfig(cfg, database)
 	applyPersistedConnectionSettings(cfg, database)
+	applySavedCDAPEnabled(cfg, database)
 	if err != nil {
 		return fmt.Errorf("reconcile enrollment mode: %w", err)
 	}

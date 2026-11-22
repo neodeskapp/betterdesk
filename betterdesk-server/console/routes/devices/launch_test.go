@@ -3,12 +3,18 @@ package devices_test
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
+	apiserver "github.com/unitronix/betterdesk-server/api"
+	serverconfig "github.com/unitronix/betterdesk-server/config"
 	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/unitronix/betterdesk-server/db"
+	"github.com/unitronix/betterdesk-server/peer"
 )
 
 // The rows of the launch (BUGS L rows) that the device routes fixed, each
@@ -56,4 +62,56 @@ func TestDeleteTagClearsTheGroupsThatFilterOnIt(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestConnectPasswordNeedsTheDevicesOrganization: the stored connect
+// password of a device in an organization goes only to an account that is
+// a member of that organization, or to a role that sees every
+// organization. The console asks the API server as the signed-in account,
+// so the server's membership check decides (BUGS L216).
+func TestConnectPasswordNeedsTheDevicesOrganization(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, sdb *store.DB) {
+		gdb := storetest.GoServer(t, sdb)
+		srv := apiserver.New(serverconfig.DefaultConfig(), gdb, peer.NewMap(), nil, "test")
+		if err := srv.InitPeerCredentialVault("l216-vault-secret-0123456789abcdef"); err != nil {
+			t.Fatal(err)
+		}
+		w := routetest.New(t, routetest.Options{DB: sdb, API: srv.InternalHandler(), Env: raisedLimits, Config: nodeLanguages})
+
+		if err := gdb.UpsertPeer(&db.Peer{ID: "ORGPEER1", UUID: "u-orgpeer1"}); err != nil {
+			t.Fatal(err)
+		}
+		if err := gdb.CreateOrganization(&db.Organization{ID: "org-a", Name: "Org A", Slug: "org-a", Settings: "{}"}); err != nil {
+			t.Fatal(err)
+		}
+		if err := gdb.AssignDeviceToOrg(&db.OrgDevice{OrgID: "org-a", DeviceID: "ORGPEER1"}); err != nil {
+			t.Fatal(err)
+		}
+		put := httptest.NewRequest(http.MethodPut, "/api/org/org-a/peer-credentials/ORGPEER1", strings.NewReader(`{"password":"l216-stored-pw"}`))
+		put = put.WithContext(apiserver.WithIdentity(put.Context(), apiserver.Identity{Username: "setup", Role: "super_admin"}))
+		rec := httptest.NewRecorder()
+		srv.InternalHandler().ServeHTTP(rec, put)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("store the password: %d %s", rec.Code, rec.Body.String())
+		}
+
+		get := func(role string) routetest.Answer {
+			return w.As(role).Do(http.MethodGet, "/api/devices/ORGPEER1/connect-password", "")
+		}
+		if got := get("operator"); got.Status != http.StatusForbidden || strings.Contains(got.Body, "l216-stored-pw") {
+			t.Errorf("operator outside the organization: %d %s, want 403 without the password", got.Status, got.Body)
+		}
+		for _, role := range []string{"super_admin", "admin", "global_admin"} {
+			if got := get(role); got.Status != http.StatusOK || !strings.Contains(got.Body, `"password":"l216-stored-pw"`) {
+				t.Errorf("%s outside the organization: %d %s, want 200 with the password", role, got.Status, got.Body)
+			}
+		}
+
+		if err := gdb.CreateOrgUser(&db.OrgUser{ID: "ou-operator", OrgID: "org-a", ServerUserID: routetest.RoleIDs["operator"], Username: "e2e_operator", Role: "user"}); err != nil {
+			t.Fatal(err)
+		}
+		if got := get("operator"); got.Status != http.StatusOK || !strings.Contains(got.Body, `"password":"l216-stored-pw"`) {
+			t.Errorf("operator in the organization: %d %s, want 200 with the password", got.Status, got.Body)
+		}
+	})
 }

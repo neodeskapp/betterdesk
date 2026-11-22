@@ -43,7 +43,6 @@
          "contacts",
          "groups",
          "history",
-         "e2e_encryption",
          "read_receipts",
          "typing",
          "presence",

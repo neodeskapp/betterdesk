@@ -171,6 +171,17 @@ describe('client values', () => {
 		expect(intuneScript(null)).toContain("$ServerHost = 'YOUR_SERVER_HOST'");
 	});
 
+	test('the install script sets the relay of the deploy string, with its port (L220)', () => {
+		const script = intuneScript({ ...config, relay_server: "relay.example.com:21219'" });
+		expect(script).toContain("$RelayServer = 'relay.example.com:21219'''");
+		expect(script).toMatch(/^\s*relay = \$RelayServer$/m);
+		expect(script).not.toMatch(/^\s*relay = \$ServerHost$/m);
+		// Without a relay in the answer the relay is the server host, as in the deploy string
+		expect(intuneScript({ ...config, relay_server: '' })).toContain(
+			"$RelayServer = 'desk.example.com''; Remove-Item C:\\ -Recurse; '''"
+		);
+	});
+
 	test('the typed address lasts for this tab only', () => {
 		expect(readClientHost()).toBe('');
 		writeClientHost('10.0.0.5');

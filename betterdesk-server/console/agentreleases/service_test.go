@@ -230,7 +230,7 @@ func (f *releaseFixture) serve() *github {
 	g := &github{answers: map[string]func() *http.Response{}}
 	var assets []any
 	for name, body := range f.files {
-		page := "https://github.com/UNITRONIX/BetterDesk-Client/releases/download/support-v2.0.0/" + name
+		page := "https://github.com/trybetterdesk/betterdesk-client/releases/download/support-v2.0.0/" + name
 		file := "https://objects.githubusercontent.com/files/" + name
 		g.answers[page] = reply(http.StatusFound, nil, "Location", file)
 		g.answers[file] = reply(http.StatusOK, body)
@@ -242,7 +242,7 @@ func (f *releaseFixture) serve() *github {
 		map[string]any{"tag_name": "other-v9"},
 		map[string]any{"tag_name": "support-v2.0.0", "assets": assets},
 	})
-	g.answers["https://api.github.com/repos/UNITRONIX/BetterDesk-Client/releases?per_page=30"] = reply(http.StatusOK, list)
+	g.answers["https://api.github.com/repos/trybetterdesk/betterdesk-client/releases?per_page=30"] = reply(http.StatusOK, list)
 	f.gh = g
 	return g
 }
@@ -288,7 +288,7 @@ func TestImportLatest(t *testing.T) {
 		t.Errorf("ListCached after the import: %+v", got)
 	}
 	first := f.gh.requests[0]
-	if first != "GET https://api.github.com/repos/UNITRONIX/BetterDesk-Client/releases?per_page=30 UA=BetterDesk-Console-Support-Releases Accept=application/vnd.github+json" {
+	if first != "GET https://api.github.com/repos/trybetterdesk/betterdesk-client/releases?per_page=30 UA=BetterDesk-Console-Support-Releases Accept=application/vnd.github+json" {
 		t.Errorf("first request: %s", first)
 	}
 	for _, r := range f.gh.requests[1:] {
@@ -354,7 +354,7 @@ func TestImportRefusals(t *testing.T) {
 }
 
 func TestRequestsToGitHub(t *testing.T) {
-	list := "https://api.github.com/repos/UNITRONIX/BetterDesk-Client/releases?per_page=30"
+	list := "https://api.github.com/repos/trybetterdesk/betterdesk-client/releases?per_page=30"
 	for _, c := range []struct {
 		name   string
 		answer func() *http.Response

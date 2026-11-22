@@ -121,3 +121,38 @@ func TestLanguageFilesHoldNoOtherLanguage(t *testing.T) {
 		t.Errorf("%d texts in another language:\n%s", len(found), findings(found))
 	}
 }
+
+// The notes beside an account's role and its organizations name no
+// organization roles, which the console does not have (DECISIONS A154),
+// and the note on turning off two-factor sign-in asks for no password: a
+// directory or single sign-on account confirms with a code, and the field
+// under the note says which (BUGS L222).
+func TestTextsNameNoOrganizationRolesAndNoPassword(t *testing.T) {
+	english := languageTexts(t)["en"]
+	for key, word := range map[string]string{
+		"users.role_note":               "organization",
+		"users.org_membership_hint":     "role",
+		"settings.totp_disable_warning": "password",
+	} {
+		if text := english[key]; text == "" || strings.Contains(strings.ToLower(text), word) {
+			t.Errorf("%s: %q, want a text without %q", key, text, word)
+		}
+	}
+}
+
+// SDK Studio says that Deploy only marks a flow, since nothing on the
+// server runs flows, and the security audit's advice for old API keys
+// sends the reader to the server's API, since the console has no page for
+// API keys (BUGS L227).
+func TestTextsPromiseNoFlowRunsAndNoKeyPage(t *testing.T) {
+	english := languageTexts(t)["en"]
+	if text := english["sdk_studio.page_description"]; strings.Contains(text, "runs on the server") {
+		t.Errorf("sdk_studio.page_description: %q says flows run on the server", text)
+	}
+	if text := english["sdk_studio.howto_save"]; !strings.Contains(text, "does not run flows") {
+		t.Errorf("sdk_studio.howto_save: %q, want it to say that the server does not run flows", text)
+	}
+	if text := english["security_audit.fix_api_key_age"]; !strings.Contains(text, "no page for API keys") || !strings.Contains(text, "server's API") {
+		t.Errorf("security_audit.fix_api_key_age: %q, want it to send the reader to the server's API", text)
+	}
+}

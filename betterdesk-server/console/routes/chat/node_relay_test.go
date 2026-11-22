@@ -191,7 +191,7 @@ func TestNodeScenarios(t *testing.T) {
 					p.Quiet(10)
 				}
 				got := p.Take()
-				node := wstest.RecordedEvents(t, s.Events)
+				node := rewritten(wstest.RecordedEvents(t, s.Events))
 				if fixed, ok := fixedEvents(t, sc.Name, i, node); ok {
 					node = fixed
 				}
@@ -282,6 +282,33 @@ var fixes = []fix{
 		`{"socket":"o1","text":"{\"0\":\"m\",\"1\":\"a\",\"2\":\"d\",\"3\":\"e\",\"type\":\"group_created\"}"}]`},
 }
 
+// rewrite is a change a bug fix made to every message of one kind: the
+// text old in a message a socket got becomes new.
+type rewrite struct {
+	bug, old, new string
+}
+
+// rewrites are the fixes that changed every message of a kind.
+var rewrites = []rewrite{
+	// The welcome lists no end-to-end encryption, which the relay does not do
+	{"L212", `"history","e2e_encryption","read_receipts"`, `"history","read_receipts"`},
+}
+
+// rewritten applies the rewrites to the texts of the recorded events.
+func rewritten(events []wstest.Event) []wstest.Event {
+	for _, e := range events {
+		text, ok := e["text"].(string)
+		if !ok {
+			continue
+		}
+		for _, rw := range rewrites {
+			text = strings.ReplaceAll(text, rw.old, rw.new)
+		}
+		e["text"] = text
+	}
+	return events
+}
+
 // fixedEvents is what a step of the recording looks like since the fixes:
 // ok is false for a step no fix changed. A fix whose events are the ones
 // Node noted is stale and fails the test.
@@ -303,7 +330,8 @@ func fixedEvents(t *testing.T, scenario string, step int, node []wstest.Event) (
 	return nil, false
 }
 
-// TestFixesNameRecordedSteps: every fix names a step of the recording.
+// TestFixesNameRecordedSteps: every fix names a step of the recording, and
+// every rewrite finds a message to change.
 func TestFixesNameRecordedSteps(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "node_relay.json"))
 	if err != nil {
@@ -320,6 +348,12 @@ func TestFixesNameRecordedSteps(t *testing.T) {
 	for _, f := range fixes {
 		if n, ok := steps[f.scenario]; !ok || f.step < 0 || f.step >= n {
 			t.Errorf("the %s fix names step %d of %q, which the recording does not have", f.bug, f.step, f.scenario)
+		}
+	}
+	for _, rw := range rewrites {
+		quoted, _ := json.Marshal(rw.old)
+		if !bytes.Contains(raw, bytes.Trim(quoted, `"`)) {
+			t.Errorf("the %s rewrite changes no recorded message", rw.bug)
 		}
 	}
 }
