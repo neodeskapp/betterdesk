@@ -93,12 +93,13 @@ ENV CONSOLE_PORT=0
 
 # Ports:
 # 21121 - HTTP API (RustDesk client API + REST)
+# 21122 - CDAP gateway (custom devices and agents)
 # 21115 - NAT type test
 # 21116 - Signal (TCP+UDP)
 # 21117 - Relay (TCP)
 # 21118 - WebSocket Signal
 # 21119 - WebSocket Relay
-EXPOSE 21115 21116/tcp 21116/udp 21117 21118 21119 21121
+EXPOSE 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 
 # Health check via API
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \

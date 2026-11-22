@@ -12,6 +12,7 @@
 # Ports:
 #   5000  - Web console (5443 with HTTPS_ENABLED)
 #   21121 - HTTP API (RustDesk client API + REST)
+#   21122 - CDAP gateway (custom devices and agents)
 #   21115 - NAT type test
 #   21116 - Signal TCP/UDP
 #   21117 - Relay TCP
@@ -118,7 +119,7 @@ ENV NODE_ENV=production \
     BETTERDESK_UPDATE_MODE=image \
     BETTERDESK_SUPERVISOR=docker
 
-EXPOSE 5000 21115 21116/tcp 21116/udp 21117 21118 21119 21121
+EXPOSE 5000 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 
 # The server writes files of its own (mesh_agent_server.pem) in its folder
 WORKDIR /opt/rustdesk

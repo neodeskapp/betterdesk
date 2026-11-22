@@ -80,9 +80,22 @@ test_quick_compose_pulls_the_published_image() (
     done
 )
 
+# L79: the CDAP gateway listens on 21122 by default (A116), so the images
+# expose it and the compose files with host ports publish it.
+test_cdap_port_is_published() (
+    local f
+    for f in docker-compose.quick.single.yml docker-compose.single.yml; do
+        grep -qE '^[[:space:]]+- "21122:21122"' "$SCRIPT_ROOT/$f" || fail "$f does not publish 21122"
+    done
+    for f in Dockerfile Dockerfile.server; do
+        grep -qE '^EXPOSE .* 21122( |$)' "$SCRIPT_ROOT/$f" || fail "$f does not expose 21122"
+    done
+)
+
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
 test_enrollment_mode_is_not_forced
 test_quick_compose_pulls_the_published_image
+test_cdap_port_is_published
 echo "Docker entrypoint checks passed"
