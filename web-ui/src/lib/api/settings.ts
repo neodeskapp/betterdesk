@@ -256,7 +256,8 @@ export function getEnrollment(signal?: AbortSignal): Promise<Enrollment> {
 	return api(wrapped(Enrollment), '/api/settings/enrollment', { signal });
 }
 
-export function saveEnrollment(body: { mode: string; rich_approve: boolean; tag_picker: boolean }) {
+/** The approval options; the enrollment mode is set on Device tokens (lib/api/enrollment.ts) */
+export function saveEnrollment(body: { rich_approve: boolean; tag_picker: boolean }) {
 	return api(wrapped(Enrollment), '/api/settings/enrollment', { method: 'PUT', body });
 }
 
