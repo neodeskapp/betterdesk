@@ -141,21 +141,15 @@
       "/tmp",
       "/var/tmp"
      ],
-     "mutableFileRoots": [
-      "/opt/rustdesk",
-      "/repo/web-nodejs"
-     ],
      "nodeVersion": "<volatile>",
      "pid": 0,
      "platform": "linux",
-     "ptyAvailable": true,
      "server": {
       "running": true,
       "uptimeSeconds": 0,
       "version": "<version>"
      },
-     "success": true,
-     "terminalSessions": 0
+     "success": true
     }
    }
   }

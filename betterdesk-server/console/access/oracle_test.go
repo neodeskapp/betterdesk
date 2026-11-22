@@ -999,6 +999,7 @@ func TestOracleBootstrap(t *testing.T) {
 	}
 	loadVectors(t, "bootstrap", &v)
 	withNodeTables(t)
+	withNodeTerminal(t)
 	if !reflect.DeepEqual(v.UIPermissions, UIPermissions) {
 		t.Fatalf("UIPermissions differ from Node's UI_PERMISSIONS:\n got  %v\n want %v", UIPermissions, v.UIPermissions)
 	}

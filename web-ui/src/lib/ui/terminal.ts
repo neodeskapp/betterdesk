@@ -8,8 +8,7 @@
  * message format, so `socketConnect(url, adapter)` builds one from a URL (or
  * a function that finds the URL) and a `SocketAdapter`.
  *
- * The three terminals of the console:
- *   server shell   socketConnect('/ws/server-management/terminal', shellAdapter())
+ * The two terminals of the console:
  *   IoT device     socketConnect(`/api/cdap/devices/${id}/terminal`, cdapAdapter())
  *   MeshAgent      socketConnect(() => meshTerminalUrl(id), meshAdapter())
  */
@@ -140,76 +139,6 @@ const str = (value: unknown, fallback = ''): string =>
 
 const YELLOW = (s: string) => `\x1b[33m${s}\x1b[0m`;
 const RED = (s: string) => `\x1b[31m${s}\x1b[0m`;
-
-/**
- * The console host's shell (/ws/server-management/terminal). JSON both ways:
- * init, input, resize, close out; ready, output, end, error in.
- */
-export function shellAdapter(): SocketAdapter {
-	// A shell that ends within a few seconds never started; say why
-	let readyAt = 0;
-	let shell = '';
-	let early = '';
-	return {
-		open({ session, send }) {
-			readyAt = 0;
-			early = '';
-			send(JSON.stringify({ type: 'init', cols: session.cols, rows: session.rows }));
-		},
-		message(data, { session, end }) {
-			const msg = parseJson(data);
-			if (!msg) return;
-			if (msg.type === 'ready') {
-				readyAt = Date.now();
-				shell = str(msg.shell);
-				let text = tf('server_mgmt.term_connected_as', 'Connected as {user} on {platform}.', {
-					user: str(msg.user, '?'),
-					platform: str(msg.platform)
-				});
-				if (!msg.pty_available || msg.kind === 'pipe') {
-					text +=
-						' ' +
-						tf(
-							'server_mgmt.term_limited',
-							'Limited mode: programs that need a full terminal, such as editors, may not work.'
-						);
-				}
-				session.status('open', text);
-			} else if (msg.type === 'output') {
-				const out = str(msg.data);
-				if (readyAt && Date.now() - readyAt < 3000 && early.length < 2000) early += out;
-				session.write(out);
-			} else if (msg.type === 'end') {
-				const code = str(msg.code, '?');
-				session.writeln(`\r\n[${tf('server_mgmt.term_exited', 'Shell ended with code {code}', { code })}]`);
-				if (readyAt && Date.now() - readyAt < 3000 && msg.code !== 0) {
-					const missing = /no such file|not found|execvp|ENOENT/i.test(early);
-					end(
-						'error',
-						missing
-							? tf(
-									'server_mgmt.term_shell_missing',
-									"The terminal can't start: the shell {shell} isn't installed on this machine.",
-									{ shell: shell || '/bin/bash' }
-								)
-							: tf(
-									'server_mgmt.term_shell_ended',
-									'The shell ended right after it started (code {code}). The output in the terminal may say why.',
-									{ code }
-								)
-					);
-				} else end('closed');
-			} else if (msg.type === 'error') {
-				const error = str(msg.error);
-				session.writeln(`\r\n[${error}]`);
-				session.status('error', tf('server_mgmt.term_error_reason', 'Terminal error: {error}', { error }));
-			}
-		},
-		input: (data) => JSON.stringify({ type: 'input', data }),
-		resize: (cols, rows) => JSON.stringify({ type: 'resize', cols, rows }),
-		close: () => JSON.stringify({ type: 'close' })
-	};
-}
 
 /**
  * An IoT device's terminal through the CDAP gateway

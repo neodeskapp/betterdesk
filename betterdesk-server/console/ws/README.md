@@ -16,7 +16,6 @@ to the Node console while it runs behind this one. Sockets that live here:
 | `/ws/rendezvous`, `/ws/relay` | `console/wsrelay` | `services/wsRelay.js` |
 | `/ws/remote-agent/<id>`, `/ws/remote-viewer/<id>` | `console/remoterelay` | `services/remoteRelay.js` |
 | `/ws/remote-target/<id>` | `console/remotetarget` | `services/remoteTargetGateway.js` |
-| `/ws/server-management/terminal` | `console/servermgmt` | `services/serverTerminalProxy.js` |
 
 The CDAP and MeshCentral sockets pass what they get on to a socket of
 the API server. The old console opened that socket over the network

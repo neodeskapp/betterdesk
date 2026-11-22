@@ -180,6 +180,34 @@ func withNodeTables(t *testing.T) {
 	t.Cleanup(func() { RouteRules, Catalog, ClientFeatures = goRules, goCatalog, goFeatures })
 }
 
+// withNodeTerminal puts the server terminal's page back into the
+// navigation after the server status page, where Node had it, until the
+// test ends, so that the rest of the navigation is compared with Node's.
+// A194 removed the page.
+func withNodeTerminal(t *testing.T) {
+	t.Helper()
+	goSections := NavSections
+	sections := make([]NavSection, len(goSections))
+	copy(sections, goSections)
+	found := false
+	for i, section := range sections {
+		for j, page := range section.Pages {
+			if page.Page != "server-management:overview" {
+				continue
+			}
+			terminal := navPage("server-management:terminal", "shell console ssh", "/server-management?tab=terminal", "server_mgmt.tab_terminal", withPermission("server.config"), inGroup(groupServer))
+			pages := append(append(append([]NavPage(nil), section.Pages[:j+1]...), terminal), section.Pages[j+1:]...)
+			sections[i].Pages, found = pages, true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("no server status page to put the terminal after")
+	}
+	NavSections = sections
+	t.Cleanup(func() { NavSections = goSections })
+}
+
 // withNodeFeatures puts Node's client features in place of the Go ones
 // until the test ends.
 func withNodeFeatures(t *testing.T) {

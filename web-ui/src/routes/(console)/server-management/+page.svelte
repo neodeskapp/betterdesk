@@ -1,15 +1,16 @@
 <!--
-  Server management (/server-management?tab=overview|terminal|files|services).
+  Server management (/server-management?tab=overview|files|services).
   Each tab is its own entry in the navigation and its own view with its own
   title, as before; an unknown or missing ?tab= is the overview (as the
-  server read it). The page and every call need server.config; without it
-  the page says so and asks for nothing.
+  server read it), and ?tab=terminal is not found (+page.ts). The page and
+  every call need server.config; without it the page says so and asks for
+  nothing.
 -->
 <script lang="ts">
 	import { page } from '$app/state';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { setPageTitle } from '#lib/shell/page.svelte.ts';
-	import { can, canWrite } from '#lib/state/session.svelte.ts';
+	import { can } from '#lib/state/session.svelte.ts';
 	import { TAB_TITLE, tabFrom } from '#lib/serverarea/management.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -18,13 +19,10 @@
 	import FilesPanel from './FilesPanel.svelte';
 	import Overview from './Overview.svelte';
 	import ServicesPanel from './ServicesPanel.svelte';
-	import TerminalPanel from './TerminalPanel.svelte';
 
 	const tab = $derived(tabFrom(page.url.searchParams.get('tab')));
 	const title = $derived(t(TAB_TITLE[tab]));
 	const allowed = $derived(can('server.config'));
-	/** The terminal runs commands: with Server management at read it stays closed */
-	const canEdit = $derived(canWrite('server.config'));
 
 	$effect(() => setPageTitle(title));
 
@@ -61,8 +59,6 @@
 		{#key tab}
 			{#if tab === 'overview'}
 				<Overview />
-			{:else if tab === 'terminal'}
-				{#if canEdit}<TerminalPanel />{:else}<NoAccess />{/if}
 			{:else if tab === 'files'}
 				<FilesPanel />
 			{:else}

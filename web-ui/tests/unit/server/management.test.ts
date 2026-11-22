@@ -12,7 +12,6 @@ import {
 	parentOf,
 	permsText,
 	recentRun,
-	rootWritable,
 	serverLine,
 	serverState,
 	serviceState,
@@ -23,7 +22,7 @@ import {
 
 describe('server management tabs', () => {
 	test('?tab= picks the view; unknown or missing is the overview, as the server read it', () => {
-		expect(tabFrom('terminal')).toBe('terminal');
+		expect(tabFrom('terminal')).toBe('overview');
 		expect(tabFrom('FILES')).toBe('files');
 		expect(tabFrom('services')).toBe('services');
 		expect(tabFrom('nope')).toBe('overview');
@@ -118,15 +117,6 @@ describe('files', () => {
 		expect(upFrom('/opt')).toBe('/');
 		expect(upFrom('/')).toBe('/');
 		expect(upFrom('C:\\data\\logs')).toBe('C:\\data');
-	});
-
-	test('where files can be changed', () => {
-		const mutable = ['/opt/rustdesk', '/app/'];
-		expect(rootWritable('/opt/rustdesk', mutable)).toBe(true);
-		expect(rootWritable('/app/data', mutable)).toBe(true);
-		expect(rootWritable('/opt/rustdesk-other', mutable)).toBe(false);
-		expect(rootWritable('/var/log', mutable)).toBe(false);
-		expect(rootWritable('/var/log', null)).toBeNull();
 	});
 
 	test('folder and file counts', () => {

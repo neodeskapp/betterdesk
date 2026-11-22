@@ -1,58 +1,40 @@
 <!--
-  Files (?tab=files): the folders the console may open on its machine.
-  A path bar, Up one level, Refresh and New folder above the list; a click
-  on a folder opens it, a click on a file opens it in the editor sheet, a
-  link opens what it points to. Each row's menu: Open (files), Rename,
-  Delete. Beside the list, the folders the console may open, each one
-  click away, with whether files can be changed there.
+  Files (?tab=files): the folders the console may open on its machine, to
+  look at only: nothing here creates, changes, moves or deletes a file.
+  A path bar, Up one level and Refresh above the list; a click on a folder
+  opens it, a click on a file opens it in a read-only sheet, a link opens
+  what it points to. Beside the list, the folders the console may open,
+  each one click away.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import {
-		deletePath,
 		getServerInfo,
 		listFiles,
-		makeFolder,
 		readFile,
-		renamePath,
 		type FileContent,
 		type FileEntry
 	} from '#lib/api/serverManagement.ts';
 	import { formatBytes } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { canWrite } from '#lib/state/session.svelte.ts';
-	import {
-		countEntries,
-		entryType,
-		joinPath,
-		parentOf,
-		permsText,
-		rootWritable,
-		upFrom
-	} from '#lib/serverarea/management.ts';
+	import { countEntries, entryType, permsText, upFrom } from '#lib/serverarea/management.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
-	import MenuButton from '#lib/ui/MenuButton.svelte';
-	import MenuDivider from '#lib/ui/MenuDivider.svelte';
-	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Table from '#lib/ui/Table.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
-	import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
-	import FileEditor from './FileEditor.svelte';
+	import FileViewer from './FileViewer.svelte';
 
 	const uid = $props.id();
-	/** Creating, renaming, deleting and saving files need Server management at write */
-	const canEdit = $derived(canWrite('server.config'));
 
 	let cwd = $state('');
 	let pathInput = $state('');
@@ -61,10 +43,9 @@
 	let loadError = $state<string | null>(null);
 
 	let roots = $state.raw<string[] | null>(null);
-	let mutable = $state.raw<string[] | null>(null);
 	let rootsError = $state(false);
 
-	let editing = $state.raw<{ file: FileContent; requested: string } | null>(null);
+	let viewing = $state.raw<{ file: FileContent; requested: string } | null>(null);
 
 	let inflight: AbortController | null = null;
 
@@ -102,7 +83,6 @@
 				try {
 					const info = await getServerInfo();
 					roots = info.fileRoots;
-					mutable = info.mutableFileRoots;
 					if (info.fileRoots[0]) start = info.fileRoots[0];
 				} catch {
 					rootsError = true;
@@ -118,7 +98,7 @@
 	async function openFile(path: string) {
 		try {
 			const file = await readFile(path);
-			editing = { file, requested: path };
+			viewing = { file, requested: path };
 		} catch (err) {
 			toast.error(t('server_mgmt.read_failed_reason', { error: message(err) }));
 		}
@@ -144,67 +124,9 @@
 		else void openLink(e.path);
 	}
 
-	/* ── Changes ── */
-
-	async function rename(e: FileEntry) {
-		const next = await prompt({
-			title: t('server_mgmt.files_rename_title', { name: e.name }),
-			label: t('server_mgmt.files_rename_prompt'),
-			value: e.name,
-			required: true,
-			confirmLabel: t('server_mgmt.files_rename')
-		});
-		const name = next?.trim();
-		if (!name || name === e.name) return;
-		try {
-			await renamePath(e.path, joinPath(parentOf(e.path), name));
-			toast.success(t('server_mgmt.files_renamed', { name }));
-			void refresh(cwd);
-		} catch (err) {
-			toast.error(t('server_mgmt.rename_failed_reason', { error: message(err) }));
-		}
-	}
-
-	async function remove(e: FileEntry) {
-		const ok = await confirm({
-			title: t('server_mgmt.delete_title', { name: e.name }),
-			message: t('server_mgmt.delete_body', { path: e.path }),
-			confirmLabel: t('actions.delete'),
-			confirmIcon: ICONS.delete,
-			danger: true
-		});
-		if (!ok) return;
-		try {
-			await deletePath(e.path);
-			toast.success(t('server_mgmt.files_deleted', { name: e.name }));
-			void refresh(cwd);
-		} catch (err) {
-			toast.error(t('server_mgmt.delete_failed_reason', { error: message(err) }));
-		}
-	}
-
-	async function mkdir() {
-		const raw = await prompt({
-			title: t('server_mgmt.files_mkdir'),
-			label: t('server_mgmt.mkdir_prompt'),
-			required: true,
-			confirmLabel: t('server_mgmt.mkdir_confirm')
-		});
-		const name = raw?.trim();
-		if (!name) return;
-		try {
-			await makeFolder(joinPath(cwd || '/', name));
-			toast.success(t('server_mgmt.files_folder_created', { name }));
-			void refresh(cwd);
-		} catch (err) {
-			toast.error(t('server_mgmt.mkdir_failed_reason', { error: message(err) }));
-		}
-	}
-
 	/* ── Table ── */
 
 	const counts = $derived(countEntries(entries));
-	let menuFor = $state<string | null>(null);
 
 	const columns = $derived<Column<FileEntry>[]>([
 		{
@@ -216,14 +138,7 @@
 		},
 		{ id: 'size', label: t('server_mgmt.files_size'), cell: sizeCell, align: 'num', class: 'col-size' },
 		{ id: 'mtime', label: t('server_mgmt.files_mtime'), cell: timeCell, class: 'col-time' },
-		{ id: 'perms', label: t('server_mgmt.files_perms'), cell: permsCell, class: 'col-perms' },
-		{
-			id: 'actions',
-			label: t('common.actions'),
-			labelHidden: true,
-			cell: actionsCell,
-			align: 'actions'
-		}
+		{ id: 'perms', label: t('server_mgmt.files_perms'), cell: permsCell, class: 'col-perms' }
 	]);
 </script>
 
@@ -243,29 +158,6 @@
 {#snippet permsCell(e: FileEntry)}
 	{@const p = permsText(e.mode)}
 	{#if p}<ValueCopy value={p} copy={false} />{:else}<Empty />{/if}
-{/snippet}
-
-{#snippet actionsCell(e: FileEntry)}
-	<MenuButton
-		kebab
-		label={t('server_mgmt.files_actions_for', { name: e.name })}
-		bind:open={() => menuFor === e.path, (v) => (menuFor = v ? e.path : menuFor === e.path ? null : menuFor)}
-	>
-		{#if entryType(e) === 'file'}
-			<MenuItem class="act-open" icon={ICONS.open} onselect={() => void openFile(e.path)}
-				>{t('server_mgmt.files_open')}</MenuItem
-			>
-		{/if}
-		{#if canEdit}
-			<MenuItem class="act-rename" icon={ICONS.rename} onselect={() => void rename(e)}
-				>{t('server_mgmt.files_rename')}…</MenuItem
-			>
-			<MenuDivider />
-			<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void remove(e)}
-				>{t('actions.delete')}…</MenuItem
-			>
-		{/if}
-	</MenuButton>
 {/snippet}
 
 <div class="page-cols">
@@ -299,11 +191,6 @@
 			<Button class="files-refresh" icon={ICONS.refresh} onclick={() => void refresh(cwd)}
 				>{t('actions.refresh')}</Button
 			>
-			<span class="toolbar-end">
-				<Button class="files-mkdir" icon={ICONS.add} disabled={!cwd || !canEdit} onclick={() => void mkdir()}
-					>{t('server_mgmt.files_mkdir')}</Button
-				>
-			</span>
 		</div>
 		<div class="count" aria-live="polite">
 			{#if !loading && !loadError}<CountLine text={t('server_mgmt.files_count')} values={counts} />{/if}
@@ -339,16 +226,7 @@
 				<div class="roots">
 					<RowList label={t('server_mgmt.files_roots_title')}>
 						{#each roots as r (r)}
-							{@const writable = rootWritable(r, mutable)}
-							<ListRow
-								title={r}
-								sub={writable === null
-									? undefined
-									: t(writable ? 'server_mgmt.root_writable' : 'server_mgmt.root_readonly')}
-								chevron
-								current={cwd === r}
-								onclick={() => void refresh(r)}
-							/>
+							<ListRow title={r} chevron current={cwd === r} onclick={() => void refresh(r)} />
 						{/each}
 					</RowList>
 				</div>
@@ -357,14 +235,8 @@
 	</aside>
 </div>
 
-{#if editing}
-	<FileEditor
-		file={editing.file}
-		requested={editing.requested}
-		onclose={() => (editing = null)}
-		onsaved={() => void refresh(cwd)}
-		{canEdit}
-	/>
+{#if viewing}
+	<FileViewer file={viewing.file} requested={viewing.requested} onclose={() => (viewing = null)} />
 {/if}
 
 <style>
@@ -391,9 +263,6 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-2);
-	}
-	.toolbar-end {
-		margin-inline-start: auto;
 	}
 	.count {
 		margin: 0;
