@@ -560,7 +560,12 @@ export class RDFileConnection {
 				this._emit('2fa_error', resp.error);
 				return;
 			}
-			if (errLower.includes('2fa required') || errLower.includes('totp')) {
+			// The same answers the desktop session takes as a request for the code (RDClient._is2faRequiredError)
+			if (
+				errLower.includes('2fa required') ||
+				errLower.includes('totp') ||
+				errLower.includes('verification code')
+			) {
 				this._emit('2fa_required');
 				return;
 			}

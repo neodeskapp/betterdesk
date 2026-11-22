@@ -423,3 +423,27 @@ describe('a second factor on the file transfer session', () => {
 		expect(c.state).toBe('streaming');
 	});
 });
+
+describe('the file transfer session asks for a second factor', () => {
+	async function fileLogin() {
+		const proto: Proto = (await client()).proto;
+		const f = new g.RDFileConnection({ deviceId: '900100012', proto });
+		f.conn.sendRelay = () => {};
+		const seen: string[] = [];
+		for (const ev of ['2fa_required', '2fa_error', 'login_error']) f.on(ev, () => seen.push(ev));
+		let outcome = 'pending';
+		const login = (f._waitForLogin('pw') as Promise<void>).then(
+			() => (outcome = 'signed in'),
+			(e: Error) => (outcome = e.message)
+		);
+		return { f, seen, login, outcome: () => outcome };
+	}
+
+	test('a device that asks for the verification code gets the code prompt, not a login error', async () => {
+		const t = await fileLogin();
+		t.f._handleLoginResponse({ error: 'Please enter the verification code' });
+		await Promise.resolve();
+		expect(t.seen).toEqual(['2fa_required']);
+		expect(t.outcome()).toBe('pending');
+	});
+});
