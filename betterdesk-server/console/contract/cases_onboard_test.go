@@ -20,7 +20,12 @@ import (
 // wrong and a revoked code get the same answer, and the last requests run
 // into the limit. A test instance has no client release, so the page says
 // release_unavailable and a download 503. What a turn makes it removes
-// again (the invite, the session, both devices).
+// again (the invite, the session, both devices); the two devices have ids
+// the seed does not hold (900400001, 900400002), so the pending
+// registrations of the seed stay for the groups after this one. An earlier
+// group (automation) leaves an SMTP server saved that refuses connections,
+// so in a whole run the mail check says mail is set up and sending an
+// invite fails.
 func init() {
 	// The roles that make invites (enrollment.approve) and quick support
 	// sessions (device.connect). Only their turns capture a code: a refusal
@@ -49,14 +54,14 @@ func init() {
 			Roles:         approvers,
 		},
 		{Name: "invites-one", Path: "/api/onboard/invites"},
-		{Name: "invite-mail-without-smtp", Method: "POST", Path: "/api/onboard/invites/{invite}/mail", Body: map[string]any{"code": "{secret:invite_code}", "to": "ana@example.com"}, Roles: approvers},
+		{Name: "invite-mail-fails", Method: "POST", Path: "/api/onboard/invites/{invite}/mail", Body: map[string]any{"code": "{secret:invite_code}", "to": "ana@example.com"}, Roles: approvers},
 
 		visitor(contract.Case{Name: "public-invite", Path: "/api/onboard/public/{secret:invite_code}"}),
 		visitor(contract.Case{Name: "public-download-no-release", Path: "/api/onboard/public/{secret:invite_code}/download", Query: map[string][]string{"os": {"windows"}, "arch": {"x64"}, "format": {"exe"}}}),
 		visitor(contract.Case{Name: "install-script", Path: "/join/{secret:invite_code}/install.sh"}),
 		visitor(contract.Case{
 			Name: "join", Method: "POST", Path: "/api/onboard/join",
-			Body:          map[string]any{"code": "{secret:invite_code}", "device_id": "900200001", "hostname": "contract-desk", "platform": "Linux"},
+			Body:          map[string]any{"code": "{secret:invite_code}", "device_id": "900400001", "hostname": "contract-desk", "platform": "Linux"},
 			CaptureSecret: map[string]string{"joined_token": "device_token"},
 		}),
 		visitor(contract.Case{Name: "join-used", Method: "POST", Path: "/api/onboard/join", Body: map[string]any{"code": "{secret:invite_code}", "device_id": "900200003"}}),
@@ -98,13 +103,13 @@ func init() {
 	cases = append(cases,
 		app("app-session", "GET", "/api/support/session", nil),
 		app("app-consent-too-early", "POST", "/api/support/session/consent", map[string]any{"allowed": true}),
-		app("app-device", "POST", "/api/support/session/device", map[string]any{"device_id": "900200002", "hostname": "contract-laptop", "platform": "Windows"}),
+		app("app-device", "POST", "/api/support/session/device", map[string]any{"device_id": "900400002", "hostname": "contract-laptop", "platform": "Windows"}),
 		app("app-consent", "POST", "/api/support/session/consent", map[string]any{"allowed": true}),
 		app("app-password", "POST", "/api/support/session/password", map[string]any{"password": "Contract-pw1"}),
 		contract.Case{Name: "session-allowed", Path: "/api/support/sessions/{session}", Roles: contract.Roles("admin")},
 		contract.Case{Name: "session-password", Method: "POST", Path: "/api/support/sessions/{session}/password", Body: map[string]any{}, Roles: contract.Roles("admin")},
 		contract.Case{Name: "session-password-twice", Method: "POST", Path: "/api/support/sessions/{session}/password", Body: map[string]any{}, Roles: contract.Roles("admin")},
-		contract.Case{Name: "device-password-none", Method: "POST", Path: "/api/support/devices/900200002/password", Body: map[string]any{}},
+		contract.Case{Name: "device-password-none", Method: "POST", Path: "/api/support/devices/900400002/password", Body: map[string]any{}},
 		app("app-end", "POST", "/api/support/session/end", map[string]any{}),
 		app("app-after-end", "GET", "/api/support/session", nil),
 		visitor(contract.Case{Name: "app-made-up-token", Path: "/api/support/session", Headers: map[string]string{"Authorization": "Bearer " + "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}}),
@@ -124,8 +129,8 @@ func init() {
 	cases = append(cases,
 		visitor(contract.Case{Name: "limit-reached", Method: "POST", Path: "/api/onboard/join", Body: map[string]any{"code": "ZZZZZZZZ", "device_id": "900200004"}}),
 		contract.Case{Name: "invite-cleanup", Method: "DELETE", Path: "/api/onboard/invites/{invite}"},
-		contract.Case{Name: "cleanup-joined", Method: "DELETE", Path: "/api/devices/900200001", Query: map[string][]string{"hard": {"true"}}, As: "admin", Roles: contract.Roles("admin")},
-		contract.Case{Name: "cleanup-supported", Method: "DELETE", Path: "/api/devices/900200002", Query: map[string][]string{"hard": {"true"}}, As: "admin", Roles: contract.Roles("admin")},
+		contract.Case{Name: "cleanup-joined", Method: "DELETE", Path: "/api/devices/900400001", Query: map[string][]string{"hard": {"true"}}, As: "admin", Roles: contract.Roles("admin")},
+		contract.Case{Name: "cleanup-supported", Method: "DELETE", Path: "/api/devices/900400002", Query: map[string][]string{"hard": {"true"}}, As: "admin", Roles: contract.Roles("admin")},
 	)
 	contract.Group("onboard", cases...)
 }

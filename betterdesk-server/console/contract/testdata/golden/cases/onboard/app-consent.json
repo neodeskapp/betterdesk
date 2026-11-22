@@ -52,7 +52,7 @@
     "kind": "json",
     "json": {
      "session": {
-      "device_id": "900200002",
+      "device_id": "900400002",
       "expires_at": "<volatile>",
       "id": "<volatile>",
       "status": "allowed"

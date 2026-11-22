@@ -117,7 +117,7 @@
       "base": "<base>",
       "https": false
      },
-     "mail": false,
+     "mail": true,
      "release": {
       "error": "",
       "packages": 0,

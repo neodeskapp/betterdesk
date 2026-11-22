@@ -5,7 +5,7 @@
   "path": "/api/onboard/join",
   "body": {
    "code": "{secret:invite_code}",
-   "device_id": "900200001",
+   "device_id": "900400001",
    "hostname": "contract-desk",
    "platform": "Linux"
   },
@@ -52,7 +52,7 @@
      "console": "<base>",
      "device": {
       "folder_id": null,
-      "id": "900200001",
+      "id": "900400001",
       "name": "Contract desk"
      },
      "device_token": "{secret:joined_token}",

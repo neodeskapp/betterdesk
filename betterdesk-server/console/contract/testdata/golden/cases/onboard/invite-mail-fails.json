@@ -1,5 +1,5 @@
 {
- "id": "onboard/invite-mail-without-smtp",
+ "id": "onboard/invite-mail-fails",
  "request": {
   "method": "POST",
   "path": "/api/onboard/invites/{invite}/mail",
@@ -16,7 +16,7 @@
     "super_admin",
     "admin"
    ],
-   "status": 409,
+   "status": 502,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -40,8 +40,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "code": "smtp_not_configured",
-     "error": "Email is not set up on this server (Settings, Email).",
+     "code": "mail_failed",
+     "error": "Couldn't send the email. The link still works.",
      "success": false
     }
    }

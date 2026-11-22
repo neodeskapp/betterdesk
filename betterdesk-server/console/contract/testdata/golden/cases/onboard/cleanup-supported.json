@@ -2,7 +2,7 @@
  "id": "onboard/cleanup-supported",
  "request": {
   "method": "DELETE",
-  "path": "/api/devices/900200002?hard=true",
+  "path": "/api/devices/900400002?hard=true",
   "notes": [
    "sent as admin in every role's turn"
   ]
