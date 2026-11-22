@@ -60,6 +60,22 @@ func getUserByUsername(ctx context.Context, q store.Querier, username string) (*
 	return a, nil
 }
 
+// directoryAccountNamed returns the directory account whose name is
+// username lower-cased and without spaces at the ends, or nil when there
+// is none or username is already that name. Directory accounts are named
+// in lower case, and a directory compares names that way.
+func directoryAccountNamed(ctx context.Context, q store.Querier, username string) (*Account, error) {
+	name := strings.ToLower(strings.TrimSpace(username))
+	if name == "" || name == username {
+		return nil, nil
+	}
+	a, err := getUserByUsername(ctx, q, name)
+	if err != nil || a == nil || normalizeAuthProvider(a.AuthProvider.String) != providerLDAP {
+		return nil, err
+	}
+	return a, nil
+}
+
 // otherSpellingExists reports whether an account exists whose name is
 // username in other letter case or with other spaces at the ends. SQLite
 // folds the case of ASCII letters only.

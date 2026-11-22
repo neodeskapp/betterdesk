@@ -388,8 +388,10 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 //     alone accepts the password, the outcome is the failure
 //     FailureUsernameCollision. A hash the password fits stays as it is,
 //     whatever its form.
-//   - A name that differs from an account's only in letter case or in
-//     spaces at the ends is refused.
+//   - A name that differs from a directory account's only in letter case
+//     or in spaces at the ends signs in to that account: the directory
+//     compares names in lower case. For any other account such a name is
+//     refused.
 //   - An unknown user is refused, unless single sign-on is on or
 //     Settings.AutoCreate is set and the signal server accepts the
 //     credentials: then a local row is made, for a directory or single
@@ -417,8 +419,15 @@ func (s *Service) Authenticate(ctx context.Context, username, password string) (
 		return Outcome{}, err
 	}
 	if user == nil {
-		// A directory matches names without regard to case: another
-		// spelling of an account would sign in as a second account.
+		// A directory compares names in lower case: another spelling of a
+		// directory account's name is that account
+		if user, err = directoryAccountNamed(ctx, s.db, username); err != nil {
+			return Outcome{}, err
+		}
+	}
+	if user == nil {
+		// Another spelling of any other account would sign in as a second
+		// account
 		other, err := otherSpellingExists(ctx, s.db, username)
 		if err != nil {
 			return Outcome{}, err
