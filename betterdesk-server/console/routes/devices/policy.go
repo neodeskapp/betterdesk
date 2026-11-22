@@ -3,7 +3,9 @@ package devices
 import (
 	"net/http"
 
+	"github.com/unitronix/betterdesk-server/api"
 	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
 )
 
@@ -38,13 +40,23 @@ func (h *handlers) deleteAccessPolicy(w http.ResponseWriter, r *http.Request) {
 
 // connectPassword answers GET /api/devices/{id}/connect-password with the
 // server's answer, whose password the web remote fills in; it is never
-// logged. A device without a stored password is {"password_set":false}
-// with 200, and the server's 403 is {"error":"forbidden"}.
+// logged. The call goes to the server as the signed-in account, not as the
+// console's API key, so the server hands out a password stored for an
+// organization only to its members and to the roles that see every
+// organization. A device without a stored password is
+// {"password_set":false} with 200, and the server's 403 is
+// {"error":"forbidden"}.
 func (h *handlers) connectPassword(w http.ResponseWriter, r *http.Request) {
 	if _, ok := h.foundOr(w, r, h.failWith(w, r, "Get connect password error:", "Failed to get connect password")); !ok {
 		return
 	}
-	data, err := h.api.GetPeerConnectPassword(r.Context(), r.PathValue("id"))
+	user := kit.User(r)
+	if user == nil {
+		answer(w, r, http.StatusForbidden, forbidden{Error: "forbidden"})
+		return
+	}
+	account := api.Identity{Username: user.Username, Role: user.Role}
+	data, err := h.api.GetPeerConnectPassword(r.Context(), r.PathValue("id"), goapi.As(account))
 	if err == nil {
 		answer(w, r, http.StatusOK, data)
 		return

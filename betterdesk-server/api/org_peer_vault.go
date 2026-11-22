@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/db"
 )
 
@@ -141,8 +142,9 @@ func (s *Server) handleGetPeerConnectPassword(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Membership: user must belong to the device's org (or be server admin).
-	if !authIsServerAdmin(role) {
+	// Membership: the caller must belong to the device's organization,
+	// unless its role sees every organization and every device.
+	if !auth.IsServerLevel(role) {
 		allowed := false
 		for _, id := range s.resolveUserOrgIDsForAB(r) {
 			if id == orgID {
@@ -184,9 +186,4 @@ func (s *Server) handleGetPeerConnectPassword(w http.ResponseWriter, r *http.Req
 		"password":     plain,
 		"org_id":       orgID,
 	})
-}
-
-func authIsServerAdmin(role string) bool {
-	r := strings.ToLower(strings.TrimSpace(role))
-	return r == "admin" || r == "server_admin"
 }
