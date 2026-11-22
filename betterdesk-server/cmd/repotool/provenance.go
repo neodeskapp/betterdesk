@@ -10,31 +10,30 @@ import (
 )
 
 // checkProvenance is "check-provenance": a guard for the clean-room
-// provenance process. It checks only the repository's policy documents:
-// they exist, the register defines the clean-room workflow and the
-// release gate, the notices describe the SBOM requirement, and no document
-// tells contributors to copy outside protocol schemas or claims they carry
-// no copyright headers. It cannot prove independent authorship and does
-// not replace a legal review.
+// provenance process. It checks the policy the repository keeps (the
+// full register is on the website, betterde.sk/docs/development/provenance):
+// the third-party notices define the clean-room workflow, the release gate
+// and the SBOM requirement, and the Go server context neither tells
+// contributors to copy outside protocol schemas nor claims they carry no
+// copyright headers. It cannot prove independent authorship and does not
+// replace a legal review.
 func checkProvenance(root string, args []string, stdout, stderr io.Writer) int {
 	if len(args) > 0 {
 		fmt.Fprintln(stderr, "usage: repotool check-provenance")
 		return 2
 	}
-	register := filepath.Join(root, "docs", "important", "support-agent-provenance.md")
-	webRemotePlan := filepath.Join(root, "docs", "features", "WEB_REMOTE_CLIENT_PLAN.md")
 	serverContext := filepath.Join(root, ".github", "go-server-context.md")
 	notices := filepath.Join(root, "THIRD_PARTY_NOTICES.md")
 
 	var failures []string
-	for _, file := range []string{register, webRemotePlan, serverContext, notices} {
+	for _, file := range []string{serverContext, notices} {
 		if _, err := os.Stat(file); err != nil {
 			failures = append(failures, "Missing provenance policy file: "+file)
 		}
 	}
 	if len(failures) == 0 {
 		texts := map[string]string{}
-		for _, file := range []string{register, webRemotePlan, serverContext, notices} {
+		for _, file := range []string{serverContext, notices} {
 			text, err := readText(file)
 			if err != nil {
 				fmt.Fprintf(stderr, "Clean-room provenance check failed: %s\n", readError(file, err))
@@ -42,7 +41,7 @@ func checkProvenance(root string, args []string, stdout, stderr io.Writer) int {
 			}
 			texts[file] = text
 		}
-		failures = provenanceFindings(texts[register], texts[webRemotePlan], texts[serverContext], texts[notices])
+		failures = provenanceFindings(texts[serverContext], texts[notices])
 	}
 	if len(failures) > 0 {
 		fmt.Fprintf(stderr, "Clean-room provenance check failed:\n- %s\n", strings.Join(failures, "\n- "))
@@ -58,22 +57,22 @@ var (
 	reNoCopyright    = regexp.MustCompile(`(?i)\.proto files ` + jsDot + `*have \*\*no copyright headers\*\*`)
 )
 
-func provenanceFindings(register, webRemote, serverContext, notices string) []string {
+func provenanceFindings(serverContext, notices string) []string {
 	var failures []string
-	if !strings.Contains(register, "Clean-room workflow") {
-		failures = append(failures, "The provenance register must define the clean-room workflow.")
+	if !strings.Contains(notices, "Clean-room workflow") {
+		failures = append(failures, "The third-party notices must define the clean-room workflow.")
 	}
-	if !strings.Contains(register, "Release gate") {
-		failures = append(failures, "The provenance register must define a release gate.")
+	if !strings.Contains(notices, "Release gate") {
+		failures = append(failures, "The third-party notices must define a release gate.")
 	}
 	if !strings.Contains(notices, "SBOM") {
 		failures = append(failures, "Third-party notices must describe the SBOM release requirement.")
 	}
-	if reCopySchemas.MatchString(webRemote) {
-		failures = append(failures, "The web remote plan still instructs contributors to copy external protocol schemas.")
+	if reCopySchemas.MatchString(serverContext) {
+		failures = append(failures, "The Go server context instructs contributors to copy external protocol schemas.")
 	}
-	if reSameProtoFiles.MatchString(webRemote) {
-		failures = append(failures, "The web remote plan still requires external protocol schema copies.")
+	if reSameProtoFiles.MatchString(serverContext) {
+		failures = append(failures, "The Go server context requires external protocol schema copies.")
 	}
 	if reNoCopyright.MatchString(serverContext) {
 		failures = append(failures, "The Go server context still makes an unverified provenance claim.")

@@ -672,7 +672,7 @@ func (r *filesReplay) themes() {
 var forkLinks = strings.NewReplacer(
 	`"https://github.com/UNITRONIX/BetterDesk"`, `"https://github.com/trybetterdesk/betterdesk"`,
 	`"https://github.com/UNITRONIX/BetterDesk/issues"`, `"https://github.com/trybetterdesk/betterdesk/issues"`,
-	`"https://github.com/UNITRONIX/BetterDesk/blob/main/SPONSORS.md"`, `"https://github.com/trybetterdesk/betterdesk/blob/main/SPONSORS.md"`,
+	`"https://github.com/UNITRONIX/BetterDesk/blob/main/SPONSORS.md"`, `"https://betterde.sk/docs/project/sponsors"`,
 )
 
 func (r *filesReplay) supporters() {

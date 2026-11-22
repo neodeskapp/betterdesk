@@ -4,10 +4,8 @@ package api
 // and per-user device grants.
 //
 // These are the write side of what the RustDesk client reads through
-// /api/device-group/accessible and /api/peers/list. Until stage P2 of
-// docs/important/console-backend-strangler.md the Node console owned the
-// writes; Go now owns both, so the panel and the client can never disagree
-// about who sees which device.
+// /api/device-group/accessible and /api/peers/list. Go owns both sides, so
+// the panel and the client can never disagree about who sees which device.
 //
 // Routes (mounted with requirePanelAdmin / requirePermission wrappers):
 //

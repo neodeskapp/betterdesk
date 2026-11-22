@@ -51,7 +51,7 @@ touch /usr/local/betterdesk/.env
 
 The build dependencies take about 220 MB in `web-ui/node_modules`; only builds need them. Repeat the build after every `git pull`.
 
-Settings go in `/usr/local/betterdesk/.env` (see `docs/wiki/Configuration.md`). The rc script points the server at that file, and at that folder for the console's state.
+Settings go in `/usr/local/betterdesk/.env` (see [Configuration](https://betterde.sk/docs/operations/configuration)). The rc script points the server at that file, and at that folder for the console's state.
 
 ## Install the rc.d script
 
@@ -77,7 +77,7 @@ The web console then answers on `127.0.0.1:5000`. To reach it from the network, 
 
 ## Firewall (`pf`)
 
-Open at least: TCP `21114`–`21119` and `5000` (web console); UDP `21116`. Adjust if you changed ports in `.env` or flags. See `docs/CONNECTION_PORTS.md` for what each port does.
+Open at least: TCP `21114`–`21119` and `5000` (web console); UDP `21116`. Adjust if you changed ports in `.env` or flags. See [Ports and firewall](https://betterde.sk/docs/operations/ports) for what each port does.
 
 ## Limits
 

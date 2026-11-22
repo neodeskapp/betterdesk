@@ -1135,7 +1135,7 @@ _hint_panel_privileged_port_mismatch() {
     if [ "$expected_port" = "443" ] && _tcp_port_is_listening 5443; then
         print_info "  Panel is listening on :5443 instead of configured :443"
         print_info "  → Run Repair → Repair permissions (adds CAP_NET_BIND_SERVICE), then restart betterdesk-server"
-        print_info "  → Or set HTTPS_PORT=5443 and use a reverse proxy on :443 (docs/setup/REVERSE_PROXY.md)"
+        print_info "  → Or set HTTPS_PORT=5443 and use a reverse proxy on :443 (https://betterde.sk/docs/operations/reverse-proxy-tls)"
         return 0
     fi
 
@@ -2170,7 +2170,7 @@ EOF
     fi
 
     cat > "$out_dir/firewall-notes.txt" << EOF
-BetterDesk firewall notes — see docs/CONNECTION_PORTS.md for all profiles.
+BetterDesk firewall notes — every port is described at https://betterde.sk/docs/operations/ports
 
 WAN (clients reach these directly — cannot be HTTP-proxied):
   - 21116/tcp + 21116/udp  Signal (registration, hole punching)
@@ -2232,7 +2232,7 @@ VERIFYEOF
     [ "$proxy_type" = "nginx" ] && print_info "  nginx.betterdesk.conf.snippet" || print_info "  caddy.Caddyfile.snippet"
     print_info "  verify.sh $panel_host"
     print_info "  firewall-notes.txt"
-    print_info "Documentation: docs/setup/REVERSE_PROXY.md"
+    print_info "Documentation: https://betterde.sk/docs/operations/reverse-proxy-tls"
     echo ""
     print_warning "Configure your proxy, then open https://${panel_host}/ (not :5443)"
     if [ "$panel_host" != "$server_id" ]; then
@@ -7534,10 +7534,10 @@ run_protocol_tests() {
         echo -e "  ${GREEN}Configuration verified successfully.${NC}"
         if [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" = "true" ] && [ "$https_port" = "5443" ]; then
             echo ""
-            echo -e "  ${DIM}Tip: for https://your-domain without :5443, set HTTPS_PORT=443 in .env and run Repair → Repair permissions, or re-run Protocol Toggle / SSL config and choose standard port 443. See docs/setup/HTTPS_SETUP.md${NC}"
+            echo -e "  ${DIM}Tip: for https://your-domain without :5443, set HTTPS_PORT=443 in .env and run Repair → Repair permissions, or re-run Protocol Toggle / SSL config and choose standard port 443. See https://betterde.sk/docs/operations/reverse-proxy-tls#https-without-a-proxy${NC}"
         elif [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" != "true" ] && [ "$_trust_on" = "yes" ]; then
             echo ""
-            echo -e "  ${DIM}Tip: configure Caddy/Nginx using $RUSTDESK_PATH/reverse-proxy/ snippets, then open https://your-domain/ (not :5443). See docs/setup/REVERSE_PROXY.md${NC}"
+            echo -e "  ${DIM}Tip: configure Caddy/Nginx using $RUSTDESK_PATH/reverse-proxy/ snippets, then open https://your-domain/ (not :5443). See https://betterde.sk/docs/operations/reverse-proxy-tls${NC}"
         fi
     fi
     echo ""

@@ -1,8 +1,16 @@
 # Verify that the running BetterDesk host matches a documented firewall profile.
 #
-# Profiles are defined in docs/CONNECTION_PORTS.md. This checks observed listeners, not
-# intentions: a panel bound to 0.0.0.0 fails profile B even if the operator believes
-# otherwise.
+# Profiles (what each port does: https://betterde.sk/docs/operations/ports):
+#   a  minimal, no reverse proxy: 21116 and 21117 open, the client API
+#      reachable on 21114
+#   b  behind a reverse proxy on 443 (recommended): the console and the
+#      client API bound to 127.0.0.1, 21116 and 21117 open
+#   c  WebSocket only: 443 open, 21118 and 21119 listening for the proxy,
+#      21116 and 21117 closed to the internet
+#   d  Docker: the compose file publishes the ports, not the host firewall
+#
+# This checks observed listeners, not intentions: a panel bound to 0.0.0.0
+# fails profile B even if the operator believes otherwise.
 #
 # Usage: powershell -File scripts/check-connection-ports.ps1 -Profile b
 # Exit codes: 0 = matches, 1 = mismatch, 2 = usage/environment error.
@@ -101,7 +109,7 @@ try {
 
 Write-Host ''
 if ($failCount -gt 0) {
-    Write-Host "Profile $Profile`: $failCount problem(s), $warnCount warning(s). See docs/CONNECTION_PORTS.md" -ForegroundColor Red
+    Write-Host "Profile $Profile`: $failCount problem(s), $warnCount warning(s). Ports: https://betterde.sk/docs/operations/ports" -ForegroundColor Red
     exit 1
 }
 Write-Host "Profile $Profile`: OK ($warnCount warning(s))" -ForegroundColor Green

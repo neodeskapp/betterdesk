@@ -1,100 +1,79 @@
-# Security Policy
+# Security policy
 
-> This document describes how to report security vulnerabilities in BetterDesk
-> and what to expect from the maintainers in return.
+How to report a vulnerability in BetterDesk and what to expect after you
+do.
 
-## Supported Versions
+## Supported versions
 
-Only the latest minor release on the `main` branch receives active security
-patches. Older tagged releases may receive backports for critical issues at the
-maintainers' discretion.
+Security fixes go into the `main` branch and the next release. Older
+releases may get a backport for a critical issue at the maintainers'
+discretion.
 
-| Version       | Supported          |
-| ------------- | ------------------ |
-| `main`        | :white_check_mark: |
-| latest tag    | :white_check_mark: |
-| older tags    | :x: (best-effort)  |
+| Version | Supported |
+| ------- | --------- |
+| `main` | Yes |
+| Newest release | Yes |
+| Older releases | Best effort |
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-**Please do NOT open a public GitHub issue for security problems.**
+Please don't open a public GitHub issue for a security problem. Report it
+privately through GitHub:
+<https://github.com/trybetterdesk/betterdesk/security/advisories/new>
 
-Preferred channels (in order):
+Please include, where you can:
 
-1. **GitHub Security Advisory (private):**
-   <https://github.com/trybetterdesk/betterdesk/security/advisories/new>
-2. **Encrypted email:** `security@betterdesk.invalid` *(replace with your real
-   address before publishing; PGP key TBD)*
+- What the problem is and what an attacker gains.
+- How to reproduce it: a proof of concept, a request and its answer, or a
+  test case.
+- The affected version or commit, and how BetterDesk runs (Docker, the
+  Linux or Windows installer, a build from source).
+- Logs, screenshots or traffic captures, with sensitive data removed.
 
-Please include, where possible:
+## Response targets
 
-- A clear description of the issue and its impact.
-- A reproduction recipe (PoC, request/response, or test case).
-- Affected versions / commits / deployment shape (Docker single-container,
-  multi-container, bare-metal install, etc.).
-- Any logs, screenshots or traffic captures \u2014 with sensitive data redacted.
+- **Acknowledgement:** within 7 days of the report.
+- **Triage decision:** within 14 days (severity, scope, fix plan).
+- **Coordinated disclosure:** at most 90 days from the acknowledgement,
+  shorter if the issue is being exploited.
+- **Credit:** if you want it, in the release notes or the advisory.
 
-## Response Targets
-
-- **Acknowledgement:** within **7 days** of report.
-- **Triage decision:** within **14 days** (severity, scope, fix plan).
-- **Coordinated disclosure window:** **90 days** maximum from acknowledgement,
-  shortened if the issue is being actively exploited.
-- **Credit:** at your option, in the release notes / advisory.
-
-If you do not get an acknowledgement within 7 days, please ping the repository
-maintainers via a *public* but vague issue ("waiting on security report
-acknowledgement"). Do not disclose any details.
+If you get no acknowledgement within 7 days, open a public issue that
+says only that you are waiting for an answer to a security report, with
+no details.
 
 ## Scope
 
-In scope:
+In scope, everything in this repository:
 
-- The Go server (`betterdesk-server/`) including signal, relay, HTTP/WS API,
-  CDAP gateway, BD-MGMT WebSocket, and the database adapters.
-- The web console inside the Go server (`betterdesk-server/console/`) and its
-  web app (`web-ui/`), including the RustDesk-compatible client API on port
-  `21121`, the panel routes, and the WS push services.
-- The Tauri MGMT and Agent clients (`betterdesk-mgmt/`, `betterdesk-agent-client/`).
-- The native Go agent (`betterdesk-agent/`).
-- The CDAP SDKs and reference bridges (`sdks/`, `bridges/`).
-- The ALL-IN-ONE install scripts (`betterdesk.sh`, `betterdesk.ps1`,
-  `betterdesk-docker.sh`) and the Docker compose files.
+- The Go server in `betterdesk-server/`: the ID server (signal) and the
+  relay, the HTTP and WebSocket API, the client API for RustDesk clients,
+  the CDAP gateway, the MeshCentral compatibility layer, the database
+  code, the release signature checks and the command-line tools.
+- The web console the server serves: its server code in
+  `betterdesk-server/console/` and the web app in `web-ui/`, including the
+  browser remote desktop viewer.
+- The installers `install.sh`, `betterdesk.sh`, `betterdesk.ps1` and
+  `betterdesk-docker.sh`, the Docker images (`Dockerfile`,
+  `Dockerfile.server`, `docker/`) and the compose files.
+- The CDAP SDKs in `sdks/` and the reference bridges in `bridges/`.
+- The RDP and VNC gateway deployment files in `remote-gateway/`.
+- The release and publishing workflows in `.github/workflows/`.
 
 Out of scope:
 
-- Vulnerabilities that require an attacker who already controls the host
-  operating system, the database file, or the operator's browser session.
-- Findings that only apply to legacy Rust binaries in `archive/` or to forks.
-- Denial-of-service from raw network flooding without an amplification vector.
-- Self-XSS, missing security headers on documentation pages, or theoretical
-  issues without a concrete exploitation path.
-- Reports generated solely by automated scanners without manual validation.
+- The BetterDesk desktop client. It is built in
+  [trybetterdesk/betterdesk-client](https://github.com/trybetterdesk/betterdesk-client);
+  report its issues there.
+- Issues that need an attacker who already controls the host's operating
+  system, the database file, or an administrator's browser session.
+- Denial of service from plain network flooding without an amplification
+  vector.
+- Self-XSS, missing security headers on the documentation website, or
+  theoretical issues without a concrete way to exploit them.
+- Reports from automated scanners that nobody checked by hand.
 
-## Hardening Defaults
+## Running a server safely
 
-BetterDesk ships with the following defaults that reduce the blast radius of
-typical issues. Operators should keep them enabled unless they have a specific
-reason to relax them:
-
-- TOTP-based 2FA enforced on the web panel for all roles.
-- WebSocket origin allowlist for the API events endpoint (`API_WS_ALLOWED_ORIGINS`).
-- `trust proxy` disabled by default; must be opted in explicitly when behind a
-  reverse proxy.
-- Local-only bind for the panel HTTP port (`HOST=127.0.0.1`); only the
-  RustDesk client API (`21121`) is intended for WAN exposure.
-- Docker containers run with `no-new-privileges:true` and `cap_drop: [ALL]`.
-- Admin password and PostgreSQL password generated with `openssl rand -hex 16`.
-- TOTP bypass on the RustDesk client API requires both
-  `RUSTDESK_API_DISABLE_TOTP=true` **and**
-  `RUSTDESK_API_DISABLE_TOTP_ACKNOWLEDGED=true`, with a startup banner warning.
-
-## Audits
-
-Recent internal audits are published under `docs/security/` (e.g.
-`AUDIT_PRODUCTION_2026-04-10.md`). Fixes are referenced in commit messages and
-in `CHANGELOG.md`.
-
----
-
-*This policy was last updated on 2026-04-10.*
+The settings and steps that make a server harder to attack are on the
+website: <https://betterde.sk/docs/operations/security>.
