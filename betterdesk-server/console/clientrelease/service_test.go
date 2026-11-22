@@ -18,6 +18,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/unitronix/betterdesk-server/console/updater"
 )
 
 // fakeGitHub serves one release of the client fork.
@@ -309,10 +311,17 @@ func TestFolderSource(t *testing.T) {
 	})
 }
 
-func TestCompiledKeyIsTheReleaseKey(t *testing.T) {
-	keys := Keys("")
-	if len(keys) != 1 {
-		t.Fatalf("%d compiled keys", len(keys))
+// The client packages trust the keys the server's own updates trust, so
+// the release key is named in one place.
+func TestCompiledKeysAreTheServersReleaseKeys(t *testing.T) {
+	keys, want := Keys(""), updater.CompiledKeys()
+	if len(keys) == 0 || len(keys) != len(want) {
+		t.Fatalf("%d compiled keys, the updater has %d", len(keys), len(want))
+	}
+	for i := range keys {
+		if !keys[i].Equal(want[i]) {
+			t.Fatalf("key %d is not the updater's", i)
+		}
 	}
 	if got := base64.StdEncoding.EncodeToString(keys[0]); got != "iwissiXvSjeFFsG8SdKEZq11uAtRLWCrD7Ky1vfY2n4=" {
 		t.Fatalf("compiled key %s", got)

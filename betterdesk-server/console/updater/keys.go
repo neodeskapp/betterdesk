@@ -8,7 +8,8 @@ package updater
 // take these away.
 //
 // The key of the releases of trybetterdesk/betterdesk (DECISIONS A152);
-// release-go.yml signs with its private half.
+// release-go.yml signs with its private half. The client packages the
+// console serves are checked against the same keys (clientrelease.Keys).
 var releaseKeys = []string{"iwissiXvSjeFFsG8SdKEZq11uAtRLWCrD7Ky1vfY2n4="}
 
 // CompiledKeys returns the keys compiled into the binary.
