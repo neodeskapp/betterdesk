@@ -1,6 +1,6 @@
 /**
  * The edge between the viewer and the remote client: the client's modules
- * load once per page, the dev mock device's script loads only when the
+ * load once per page, the dev mock device's module loads only when the
  * viewer data has the mock on (the server sets it only with
  * BD_DEV_MOCK_REMOTE=1 and ?mock=1), and the transport picks the client.
  * The client modules are stand-ins that record what was made.
@@ -28,6 +28,8 @@ vi.mock('../../../src/lib/remote/client/touch.ts', () => ({ RDTouch: stub('touch
 vi.mock('../../../src/lib/remote/client/video.ts', () => ({ RDVideo: { isSupported: () => false } }));
 vi.mock('../../../src/lib/remote/client/file-modal.ts', () => ({ fileTransferModal: () => null }));
 vi.mock('../../../src/lib/remote/client/renderer.ts', () => ({ RDRenderer: stub('renderer') }));
+const MOCK_MODULE = '../../../src/lib/remote/client/mock-session.ts';
+vi.mock('../../../src/lib/remote/client/mock-session.ts', () => ({ MockRemoteSession: stub('mock') }));
 
 type Mod = typeof import('../../../src/lib/remote/rdclient.ts');
 
@@ -36,14 +38,13 @@ async function fresh(): Promise<Mod> {
 	document.head.innerHTML = '';
 	made.length = 0;
 	imported.length = 0;
-	for (const k of ['__mockRemote', 'MockRemoteSession', 'RDRenderer']) Reflect.deleteProperty(window, k);
+	Reflect.deleteProperty(window, '__mockRemote');
 	return import('../../../src/lib/remote/rdclient.ts');
 }
 
 const caps = { transport: 'rd' };
 const load = (m: Mod, deviceId: string, mock: { scenario: string } | null = null) =>
 	m.loadRdClient({ deviceId, capabilities: caps, guestToken: '', csrfToken: 't', mock });
-const mockScript = () => document.head.querySelector<HTMLScriptElement>('script[data-rdclient]');
 const w = window as unknown as Record<string, unknown>;
 
 describe('loading the remote client', () => {
@@ -81,40 +82,43 @@ describe('loading the remote client', () => {
 	});
 
 	test('never loads the dev mock unless the viewer data turned it on', async () => {
+		const canvas = document.createElement('canvas');
+		const opts = {} as Parameters<Mod['createClient']>[1];
 		const m = await fresh();
 		await load(m, '900100012');
-		expect(document.head.querySelector(`script[src="${m.MOCK_SCRIPT}"]`)).toBeNull();
 		expect(w.__mockRemote).toBeNull();
-		expect(w.RDRenderer).toBeUndefined();
+		// Not loaded: even with the flag set later, the transport's client answers
+		w.__mockRemote = { scenario: 'ok' };
+		m.createClient(canvas, opts, 'rd');
+		expect(made).toEqual(['rd']);
 
 		const m2 = await fresh();
-		const p = load(m2, '900100012', { scenario: 'refused' });
-		await vi.waitFor(() => expect(mockScript()).not.toBeNull());
-		expect(mockScript()?.getAttribute('src')).toBe('/dev/mock-remote.js');
+		await load(m2, '900100012', { scenario: 'refused' });
 		expect(w.__mockRemote).toEqual({ scenario: 'refused' });
-		// The mock draws through the global RDRenderer, which the loader puts there first
-		expect(typeof w.RDRenderer).toBe('function');
-		mockScript()?.onload?.(new Event('load'));
-		await p;
+		m2.createClient(canvas, opts, 'rd');
+		expect(made).toEqual(['mock']);
+		expect(document.head.querySelectorAll('script')).toHaveLength(0);
 	});
 
 	test('a failed load lets the next attempt start over', async () => {
 		const m = await fresh();
-		const p = load(m, 'x01', { scenario: 'ok' });
-		await vi.waitFor(() => expect(mockScript()).not.toBeNull());
-		mockScript()?.onerror?.(new Event('error'));
-		await expect(p).rejects.toThrow(/Could not load/);
-		expect(document.head.querySelectorAll('script[data-rdclient]')).toHaveLength(0);
-		const again = load(m, 'x01', { scenario: 'ok' });
-		await vi.waitFor(() => expect(mockScript()).not.toBeNull());
-		mockScript()?.onload?.(new Event('load'));
-		await again;
+		vi.doMock(MOCK_MODULE, () => {
+			throw new Error('mock failed to load');
+		});
+		await expect(load(m, 'x01', { scenario: 'ok' })).rejects.toThrow();
+		const canvas = document.createElement('canvas');
+		const opts = {} as Parameters<Mod['createClient']>[1];
+		expect(() => m.createClient(canvas, opts, 'rd')).toThrow(/not loaded/);
+		vi.doMock(MOCK_MODULE, () => ({ MockRemoteSession: stub('mock') }));
+		await load(m, 'x01', { scenario: 'ok' });
+		m.createClient(canvas, opts, 'rd');
+		expect(made).toEqual(['mock']);
 	});
 
 	test('the mock replaces every transport only when it is on; otherwise the transport picks the client', async () => {
 		const m = await fresh();
-		await load(m, '900100012');
-		w.MockRemoteSession = stub('mock');
+		await load(m, '900100012', { scenario: 'ok' });
+		w.__mockRemote = null;
 		const canvas = document.createElement('canvas');
 		const opts = {} as Parameters<Mod['createClient']>[1];
 		m.createClient(canvas, opts, 'rd');
@@ -122,8 +126,7 @@ describe('loading the remote client', () => {
 		m.createClient(canvas, opts, 'mesh');
 		m.createClient(canvas, opts, 'rdp');
 		m.createClient(canvas, opts, 'vnc');
-		// The script is there but the server did not turn the mock on
-		w.__mockRemote = null;
+		// The mock is loaded but the server did not turn it on for this viewer
 		m.createClient(canvas, opts, 'rd');
 		w.__mockRemote = { scenario: 'ok' };
 		m.createClient(canvas, opts, 'cdap');

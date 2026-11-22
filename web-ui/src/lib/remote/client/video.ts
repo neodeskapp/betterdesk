@@ -28,11 +28,14 @@ export interface RDVideoInitOptions {
 	description?: AllowSharedBufferSource;
 }
 
-/** What the JMuxer path hands to onFrame: the hidden video element as the image */
+/**
+ * What the JMuxer path hands to onFrame: the hidden video element as the
+ * image. The dev mock hands the renderer frames of this shape with a canvas.
+ */
 export interface RDVideoProxyFrame {
 	displayWidth: number;
 	displayHeight: number;
-	_source: HTMLVideoElement;
+	_source: HTMLVideoElement | HTMLCanvasElement;
 	/** Whether data was fed since the previous emitted frame */
 	_isNew: boolean;
 	close(): void;

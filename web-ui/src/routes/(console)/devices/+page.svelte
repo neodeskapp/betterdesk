@@ -26,7 +26,6 @@
 		listFolders,
 		listTags,
 		setDeviceGroups,
-		syncStatus,
 		type Device,
 		type DeviceGroup,
 		type Folder
@@ -101,7 +100,6 @@
 	let addComputer = $state(false);
 	let groups = $state.raw<DeviceGroup[]>([]);
 	let knownTags = $state.raw<string[]>([]);
-	let syncing = $state(false);
 
 	let showDeleted = $state(readPref(PREF_SHOW_DELETED) === '1');
 
@@ -536,20 +534,6 @@
 
 	/* ── Page actions, folders, groups, tags ── */
 
-	async function sync() {
-		if (syncing) return;
-		syncing = true;
-		try {
-			await syncStatus();
-			toast.success(t('devices.sync_success'));
-			await quiet(loadDevices());
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.sync_failed'));
-		} finally {
-			syncing = false;
-		}
-	}
-
 	let folderDialog = $state<{ folder: Folder | null } | null>(null);
 	let groupSheet = $state<{ group: DeviceGroup | null } | null>(null);
 	let billingFor = $state.raw<DeviceGroup | null>(null);
@@ -674,9 +658,6 @@
 			{/if}
 		</div>
 		<div class="page-actions">
-			<Button class="sync-btn" icon={ICONS.refresh} busy={syncing} onclick={sync}
-				>{t('devices.sync_status')}</Button
-			>
 			{#if can('enrollment.approve')}
 				<Button
 					class="add-computer-btn"

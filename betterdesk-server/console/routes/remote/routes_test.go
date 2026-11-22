@@ -17,7 +17,6 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/unitronix/betterdesk-server/console/auditlog"
 	"github.com/unitronix/betterdesk-server/console/authn"
@@ -121,7 +120,8 @@ type world struct {
 	t     *testing.T
 	deps  *kit.Deps
 	steps http.Handler
-	mock  *mockScript
+	// mockOn is BD_DEV_MOCK_REMOTE=1
+	mockOn bool
 
 	mu          sync.Mutex
 	scene       scene
@@ -149,10 +149,7 @@ func nodeLangDir(t *testing.T) string {
 
 func newWorld(t *testing.T, db *store.DB, appVersion string, mockOn bool) *world {
 	t.Helper()
-	w := &world{t: t, cookies: map[string]string{}}
-	if mockOn {
-		w.mock = newMockScript(time.Unix(1700000000, 0))
-	}
+	w := &world{t: t, cookies: map[string]string{}, mockOn: mockOn}
 	ctx := context.Background()
 	sessions, err := session.New(ctx, session.Options{DB: db, Secret: "remote-test-secret-0123456789abcdef0123456789"})
 	if err != nil {
@@ -268,7 +265,7 @@ func (w *world) sources(appVersion string) sources {
 		},
 		languages:  w.deps.I18n.Bundle.AvailableList,
 		appVersion: appVersion,
-		mock:       w.mock,
+		mockOn:     w.mockOn,
 		canAccess: func(_ context.Context, user *session.User, device *goapi.Object) (bool, error) {
 			w.mu.Lock()
 			scope := w.scope
@@ -505,7 +502,7 @@ func appVersionOf(t *testing.T, vectors []vector) string {
 // table and the remote relay, on SQLite and PostgreSQL. A vector whose
 // answer a bug fix changed on purpose is held to another vector's answer
 // (answeredAs) or to the answer it gets since the fix (refusedSessions,
-// targetLookups, keylessSessions).
+// targetLookups, keylessSessions, mockScripts).
 func TestNodeVectors(t *testing.T) {
 	vectors := loadVectors(t)
 	version := appVersionOf(t, vectors)
@@ -513,6 +510,7 @@ func TestNodeVectors(t *testing.T) {
 	refused := refusedSessions(t, vectors)
 	lookedUp, devices := targetLookups(t, vectors)
 	keyless := keylessSessions(t, vectors)
+	scripts := mockScripts(t, vectors)
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := newWorld(t, db, version, false)
 		on := newWorld(t, storetest.Migrated(t), version, true)
@@ -555,6 +553,8 @@ func TestNodeVectors(t *testing.T) {
 			} else if fixed, ok := lookedUp[i]; ok {
 				expected = &fixed
 			} else if fixed, ok := keyless[i]; ok {
+				expected = &fixed
+			} else if fixed, ok := scripts[i]; ok {
 				expected = &fixed
 			}
 			if problems := compare(target, expected, rec); len(problems) > 0 {

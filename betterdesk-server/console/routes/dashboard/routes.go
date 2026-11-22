@@ -170,7 +170,8 @@ func (h *handlers) bandwidth(w http.ResponseWriter, r *http.Request) {
 }
 
 // syncStatus answers POST /api/sync-status. The server keeps the online
-// state itself, so nothing is synced and the answer says so.
+// state itself, so nothing is synced and the answer says so. No page of
+// the web app calls it; it answers for scripts made for older releases.
 func (h *handlers) syncStatus(w http.ResponseWriter, r *http.Request) {
 	kit.OK(w, r, h.backend.SyncOnlineStatus())
 }

@@ -375,11 +375,6 @@ export function setConnectionMode(id: string, mode: ConnectionMode, reason: stri
 	return api(Ok, `/api/devices/${enc(id)}/connection-mode`, { method: 'POST', body: { mode, reason } });
 }
 
-/** Ask the ID server for every device's online state now */
-export function syncStatus() {
-	return api(Ok, '/api/sync-status', { method: 'POST' });
-}
-
 const TagChange = wrapped(
 	v.looseObject({
 		updatedDevices: v.optional(v.number(), 0),

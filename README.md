@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="CHANGELOG.md"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/version.svg"><img alt="Version 3.5.268" src="docs/assets/badges/light/version.svg"></picture></a>
+  <a href="CHANGELOG.md"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/version.svg"><img alt="Version: latest" src="docs/assets/badges/light/version.svg"></picture></a>
   <a href="LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/license.svg"><img alt="License: AGPL-3.0" src="docs/assets/badges/light/license.svg"></picture></a>
   <a href="betterdesk-server"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/go.svg"><img alt="Go 1.26" src="docs/assets/badges/light/go.svg"></picture></a>
   <a href="web-ui"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/svelte.svg"><img alt="Svelte 5" src="docs/assets/badges/light/svelte.svg"></picture></a>

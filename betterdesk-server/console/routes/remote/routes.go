@@ -10,14 +10,12 @@
 // of its remote relay socket: the token, the route that issues it and
 // the socket that takes it live in one process (console/remoterelay).
 //
-// The dev mock of the viewer, /dev/mock-remote.js, is served only when
-// BD_DEV_MOCK_REMOTE is 1; without it the address is no route of its own.
+// The viewer's data turns the web app's dev mock device on only when
+// BD_DEV_MOCK_REMOTE is 1 (mock.go).
 package remote
 
 import (
 	"context"
-	_ "embed"
-	"time"
 
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -52,9 +50,9 @@ type sources struct {
 	languages func() ([]*i18n.Object, error)
 	// appVersion is config.appVersion.
 	appVersion string
-	// mock is the dev mock of the viewer; nil when BD_DEV_MOCK_REMOTE is
-	// not 1.
-	mock *mockScript
+	// mockOn is whether the viewer's data may turn the dev mock on
+	// (BD_DEV_MOCK_REMOTE is 1).
+	mockOn bool
 	// canAccess is the account's device scope
 	// (devicegroups.Service.UserCanAccessDevice): whether it holds the
 	// device. A nil device passes only for an account without a limit.
@@ -67,8 +65,8 @@ type handlers struct {
 	log *kit.Logger
 }
 
-// Register adds the group's routes in the order of the route file:
-// first the dev mock's script, then the data of the remote client.
+// Register adds the group's routes in the order of the route file: the
+// data of the remote client.
 func Register(d *kit.Deps) {
 	register(d, defaultSources(d))
 }
@@ -85,7 +83,6 @@ func register(d *kit.Deps, src sources) {
 	page := d.Limits.RDClientPage.Middleware
 	connect := d.RequireRdClientAuth("device.connect")
 	r := d.Router
-	r.Get("/dev/mock-remote.js", h.mockScript)
 	r.Get("/api/remote/login-info", h.loginInfo, page)
 	r.Get("/api/remote/guest-info", h.guestInfo, page)
 	r.Get("/api/remote/desk", h.desk, page, connect)
@@ -124,7 +121,7 @@ func defaultSources(d *kit.Deps) sources {
 	if d.Config != nil {
 		src.appVersion = d.Config.Version
 		if d.Config.Getenv != nil && jsbind.Trim(d.Config.Getenv("BD_DEV_MOCK_REMOTE")) == "1" {
-			src.mock = newMockScript(time.Now())
+			src.mockOn = true
 		}
 	}
 	return src
