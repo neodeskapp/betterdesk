@@ -436,3 +436,20 @@ func TestVersionCheckRunsBumpVersion(t *testing.T) {
 		t.Errorf("diff check %+v", rec)
 	}
 }
+
+func TestNodeChecksLeaveTheRootAlone(t *testing.T) {
+	// The repository's root has no package.json: the installs and audits
+	// are the web app's and the Node SDK's
+	g, _ := newTestGate(t, t.TempDir())
+	g.runNodeChecks(gateTools{"npm": "no-such-npm-here"})
+	var ids []string
+	for _, r := range g.report.Results {
+		ids = append(ids, r.ID+" "+filepath.Base(r.Cwd))
+	}
+	base := filepath.Base(g.root)
+	want := []string{"node-web-ui-install web-ui", "node-sdk-install nodejs", "npm-audit-web-ui web-ui", "npm-audit-sdk nodejs",
+		"i18n-parity " + base, "provenance-policy " + base}
+	if !reflect.DeepEqual(ids, want) {
+		t.Errorf("checks %v, want %v", ids, want)
+	}
+}

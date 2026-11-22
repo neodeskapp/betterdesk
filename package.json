@@ -1,9 +1,0 @@
-{
-  "scripts": {
-    "i18n:check": "cd betterdesk-server && go run ./cmd/repotool i18n-check --system console",
-    "check:provenance": "cd betterdesk-server && go run ./cmd/repotool check-provenance"
-  },
-  "overrides": {
-    "postcss": "^8.5.23"
-  }
-}

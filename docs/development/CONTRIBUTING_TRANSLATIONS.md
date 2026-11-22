@@ -166,10 +166,10 @@ For right-to-left languages (Arabic, Hebrew, etc.):
 
 ## Required Audit
 
-Before submitting translation changes, run the strict i18n audit from the repository root:
+Before submitting translation changes, run the strict i18n audit in `betterdesk-server`:
 
 ```bash
-npm run i18n:check
+go run ./cmd/repotool i18n-check --system console
 ```
 
 The audit compares every locale in `betterdesk-server/console/static/files/lang/` against the combined `en.json` + `pl.json` key baseline.

@@ -95,9 +95,10 @@ assertion alone.
 
 ## Repository safeguards
 
-`npm run check:provenance` verifies that active design documentation no longer
-contains prohibited copy instructions and that this register is present. It is
-a guardrail, not a replacement for source review or legal review.
+`go run ./cmd/repotool check-provenance` (in `betterdesk-server`) verifies
+that active design documentation no longer contains prohibited copy
+instructions and that this register is present. It is a guardrail, not a
+replacement for source review or legal review.
 
 New code and documentation must not add direct external-source imports,
 upstream clone/build instructions, or copied protocol artifacts outside an

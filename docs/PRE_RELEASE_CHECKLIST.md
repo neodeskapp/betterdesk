@@ -24,7 +24,7 @@ Use this checklist before every tagged release to ensure quality and stability.
 - [ ] **Build**: `npm run build` exits 0
 - [ ] **Security suite**: `pwsh ./scripts/run-security-suite.ps1` (or `./scripts/run-security-suite.sh`) — Go connection gates pass (see `docs/security/SECURITY_TEST_SUITE.md`)
 - [ ] **Secret scan**: `gitleaks detect --source . --config .gitleaks.toml` and `bash scripts/check-no-sensitive-paths.sh` — no operator fingerprints
-- [ ] **i18n coverage**: `npm run i18n:check` in the repository root — 0 missing keys across all languages
+- [ ] **i18n coverage**: `go run ./cmd/repotool i18n-check --system console` in `betterdesk-server` — 0 missing keys across all languages
 - [ ] **Startup**: the server binary with the web app embedded starts without errors and serves the web console on port 5000
 - [ ] **Login**: Admin login works, session created
 - [ ] **Critical pages**: Dashboard, Devices, Users, Settings render correctly

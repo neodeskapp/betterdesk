@@ -61,7 +61,7 @@ To inspect the planned categories without claiming a pass:
 
 The gate fails closed when any required stage is missing or incomplete.
 
-- Node.js: clean installs and audits for the root package, the web app
+- Node.js: clean installs and audits for the web app
   (`web-ui`), and the Node SDK; locale parity; provenance; the web app's unit
   tests and type check; and SDK tests.
 - Go: `go vet`, race-enabled tests, `govulncheck`, native build/help,

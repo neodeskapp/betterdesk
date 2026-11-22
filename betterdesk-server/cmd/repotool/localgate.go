@@ -895,11 +895,9 @@ func (g *gate) runVersionAndDiffChecks() {
 
 func (g *gate) runNodeChecks(tools gateTools) {
 	install := []string{"ci", "--no-audit", "--no-fund"}
-	g.runCheck("node-root-install", "Install root Node dependencies", tools["npm"], install, runOptions{cwd: g.root})
 	g.runCheck("node-web-ui-install", "Install web app Node dependencies", tools["npm"], install, runOptions{cwd: g.path("web-ui")})
 	g.runCheck("node-sdk-install", "Install Node SDK dependencies", tools["npm"], install, runOptions{cwd: g.path("sdks", "nodejs")})
 	for _, a := range []struct{ id, dir, label string }{
-		{"npm-audit-root", g.root, "Audit root npm dependencies"},
 		{"npm-audit-web-ui", g.path("web-ui"), "Audit web app npm dependencies"},
 		{"npm-audit-sdk", g.path("sdks", "nodejs"), "Audit Node SDK dependencies"},
 	} {

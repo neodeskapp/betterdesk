@@ -81,8 +81,8 @@ npm run check
 npm test
 
 # Language files
-cd ..
-npm run i18n:check
+cd ../betterdesk-server
+go run ./cmd/repotool i18n-check --system console
 ```
 
 ### Local-only diagnostic gate

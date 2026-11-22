@@ -2,7 +2,6 @@ name: BetterDesk CodeQL
 
 # Dev-only tooling and test harnesses are not production attack surface.
 paths-ignore:
-  - scripts/local-gate.js
   - betterdesk-mgmt
   # MeshAgent tunnel TLS pin (checkServerIdentity); not default chain validation.
   - betterdesk-server/meshcentral/assets/bettercore.js
@@ -15,17 +14,6 @@ query-filters:
       id: go/request-forgery
       paths:
         - betterdesk-server/auth/oidc_url.go
-
-  # --- Local diagnostic gate only (never production) ---
-  - exclude:
-      id: js/shell-command-injection-from-environment
-      paths:
-        - scripts/local-gate.js
-
-  - exclude:
-      id: js/incomplete-sanitization
-      paths:
-        - scripts/local-gate.js
 
   # --- Nonce / ephemeral client ID; not auth secret material ---
   - exclude:
