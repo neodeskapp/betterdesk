@@ -559,6 +559,10 @@ type scenarioRun struct {
 // costs.
 const testDummyHash = "$2b$04$KiXeOj5vHpJRJHGMhWzadeGcZXEL6ZJOxJHQmO7oKUwgLGDMaRJ3O"
 
+// nodeReadAsOff are the recorded switch values that are on values
+// (envvar.Switch) and that Node read as off, as it took only "true".
+var nodeReadAsOff = map[string]bool{"1": true, "TRUE": true}
+
 func (r *scenarioRun) newClient() *goapi.Client {
 	// Long enough that a busy machine does not turn an answer into a
 	// timeout; every scripted timeout waits this long.
@@ -572,6 +576,15 @@ func (r *scenarioRun) settings() Settings {
 			delete(env, key)
 		} else {
 			env[key] = *value
+		}
+	}
+	// BETTERDESK_AUTH_AUTOCREATE and FORCE_PASSWORD_UPDATE take every on
+	// value, where Node took only "true" (BUGS L84): the replay gives the
+	// recorded on values Node read as off as "false", and
+	// TestSettingsFromEnv checks the new reading
+	for _, key := range []string{"BETTERDESK_AUTH_AUTOCREATE", "FORCE_PASSWORD_UPDATE"} {
+		if nodeReadAsOff[env[key]] {
+			env[key] = "false"
 		}
 	}
 	getenv := func(key string) string {
