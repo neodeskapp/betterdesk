@@ -9,10 +9,11 @@ import (
 )
 
 // DeviceCredentialCreator is created_by of a device token in
-// device_tokens that the server issued for a device at an enrollment, a
-// pairing or a registration: the device's own credential, which the
-// console's device routes and sockets accept like the console's device
-// tokens in access_tokens. Enrollment tokens an operator makes carry the
+// device_tokens that the server or the console issued for a device at an
+// enrollment, a pairing, a registration, an approval or a join: the
+// device's own credential, held by no account, which the console's device
+// routes and sockets accept like the device tokens an older console kept
+// in access_tokens. Enrollment tokens an operator makes carry the
 // operator's name and are no device tokens. Device tokens do not expire by
 // time; a delete, a ban, a change of the device's id and a new token for
 // the device end them.
