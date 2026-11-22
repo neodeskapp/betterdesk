@@ -108,8 +108,9 @@ func TestAgainstAPIServer(t *testing.T) {
 		banned := c.GetPeer(ctx, "PEERBBB2")
 		wantAt(t, "GetPeer after BanPeer", banned, `true`, "banned")
 		wantAt(t, "GetPeer after BanPeer", banned, `"why"`, "ban_reason")
-		// The audit entry names the caller's address: loopback.
-		wantAt(t, "GetAuditEvents", c.GetAuditEvents(ctx, 1.0), `"127.0.0.1"`, "data", "events", 0, "actor")
+		// The audit entry names who acted (BUGS L91): the console's own key,
+		// as the call names no account.
+		wantAt(t, "GetAuditEvents", c.GetAuditEvents(ctx, 1.0), `"apikey:console-bridge"`, "data", "events", 0, "actor")
 		wantAt(t, "GetAuditEvents", c.GetAuditEvents(ctx, 1.0), `"peer_banned"`, "data", "events", 0, "action")
 		wantJSON(t, "UnbanPeer", c.UnbanPeer(ctx, "PEERBBB2"), `{"success":true,"data":{"id":"PEERBBB2","status":"unbanned"}}`)
 
