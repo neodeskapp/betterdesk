@@ -2,7 +2,7 @@ name: Web UI CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, ci-fix-test]
     paths:
       - 'web-ui/**'
       - 'betterdesk-server/protos/**'
