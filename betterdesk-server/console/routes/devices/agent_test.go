@@ -18,7 +18,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
 
-// agentRecording is what testdata/nodeoracle/agent.js recorded: the
+// agentRecording is what testdata/node_agent_<db>.json recorded: the
 // routes that reach into an agent, with a made-up agent of A1001 that
 // answered each request the way the step says.
 type agentRecording struct {

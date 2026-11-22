@@ -20,7 +20,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// The made-up keys of the recording (testdata/nodeoracle/generator.js).
+// The made-up keys of the recording (testdata/README.md).
 var (
 	testSeed      = base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{9}, 32))
 	testPublicKey = base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{3}, 32))

@@ -13,7 +13,7 @@ import (
 )
 
 // vector is one line of testdata/query.json.gz: what the Node console made
-// of a query string (testdata/nodeoracle).
+// of a query string (testdata/README.md).
 type vector struct {
 	Q        string          `json:"q"`
 	Search   json.RawMessage `json:"search"`

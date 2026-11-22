@@ -29,7 +29,7 @@ var refusedTokens = map[string]string{
 }
 
 // TestRequestsThatEndedNode sends the requests that ended the Node
-// process (testdata/crashes.json, from testdata/nodeoracle/crash.js): a
+// process (testdata/crashes.json, recorded from the Node console): a
 // query value with a member toString where the route needed text. Every
 // one of them is refused with 400 (refusedTokens). The requests Node
 // still answered get Node's status.
@@ -87,7 +87,7 @@ func TestRequestsThatEndedNode(t *testing.T) {
 		}
 	}
 	if ended < 8 {
-		t.Fatalf("only %d requests ended Node in the recording, want the 8 of crash.js", ended)
+		t.Fatalf("only %d requests ended Node in the recording, want 8", ended)
 	}
 }
 

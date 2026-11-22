@@ -35,10 +35,10 @@ import (
 //
 //	BD_URL=http://bdgo-rd2:5000 RDFLOW_DB=sqlite go test -tags rdflow -count=1 -run TestClientAPIFlow ./console/routes/rustdeskapi/
 //
-// RDFLOW_RECORD=1 writes the recording instead of comparing,
 // RDAPI_RECORD_FIXED=1 writes the answers of the steps a bug fix changed
-// (differences_test.go), and CONTRACT_REQUIRE_GO=1 fails when the Node
-// console answered a route of the client API.
+// (differences_test.go) instead of comparing, and CONTRACT_REQUIRE_GO=1
+// fails when a route of the client API was not answered by the Go console.
+// The recordings themselves are fixed: they can't be made again.
 
 const (
 	flowUser     = "rd_flow_tmp"
@@ -483,7 +483,7 @@ func TestClientAPIFlow(t *testing.T) {
 	}
 	checkListed(t, "flow_"+dbName, names)
 	fixes := fixesOf("flow_" + dbName)
-	if os.Getenv("RDFLOW_RECORD") == "1" || recordingFixed() {
+	if recordingFixed() {
 		// A mark that does not fit the value it masks would make the
 		// recording fail every later run
 		answers := map[string]any{}
@@ -498,21 +498,7 @@ func TestClientAPIFlow(t *testing.T) {
 		if t.Failed() {
 			t.FailNow()
 		}
-		if recordingFixed() {
-			writeFixed(t, "flow_"+dbName, answers)
-			return
-		}
-		out, err := json.MarshalIndent(f.steps, "", " ")
-		if err != nil {
-			t.Fatalf("encode the recording: %v", err)
-		}
-		if err := os.MkdirAll("testdata", 0o755); err != nil {
-			t.Fatalf("%v", err)
-		}
-		if err := os.WriteFile(file, append(out, '\n'), 0o644); err != nil {
-			t.Fatalf("write the recording: %v", err)
-		}
-		t.Logf("wrote %d steps to %s", len(f.steps), file)
+		writeFixed(t, "flow_"+dbName, answers)
 		return
 	}
 

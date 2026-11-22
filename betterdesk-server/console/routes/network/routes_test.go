@@ -26,7 +26,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// The accounts of the tests, as in testdata/nodeoracle/routes.js.
+// The accounts of the tests, as in the recordings (testdata/README.md).
 var accounts = map[string]session.User{
 	"root": {ID: 1, Username: "root", Role: "super_admin"},
 	"adm":  {ID: 2, Username: "adm", Role: "admin"},
@@ -38,7 +38,7 @@ var accounts = map[string]session.User{
 	"paul": {ID: 8, Username: "paul", Role: "pro"},
 }
 
-// names answers lookups from the table of the oracle scripts: a list of
+// names answers lookups from the table of the recording: a list of
 // addresses for a name, or an object for a name whose lookup fails.
 type names map[string]json.RawMessage
 
@@ -199,7 +199,7 @@ func (w *world) settle() {
 }
 
 // step is one line of testdata/routes.<database>.json: a request to the
-// Node console's routes and what they answered (testdata/nodeoracle).
+// Node console's routes and what they answered (testdata/README.md).
 type step struct {
 	DNS      names   `json:"dns"`
 	Name     string  `json:"name"`
@@ -213,7 +213,7 @@ type step struct {
 	Text     string  `json:"text"`
 }
 
-// The oracle script pointed the checks at 0.0.0.0, which the guard refuses
+// The recorder pointed the checks at 0.0.0.0, which the guard refuses
 // since BUGS.md SC3. The replay moves those steps to standIn, a private
 // address the guard lets through, where nothing listens either.
 const standIn = "10.9.9.9"

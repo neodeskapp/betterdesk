@@ -10,8 +10,8 @@ import (
 )
 
 // The boot script is, byte for byte, the one the Node route sent for the
-// same boot values (testdata/bootscript.json, recorded by
-// testdata/nodeoracle/bootscript.js): the script itself, the values as
+// same boot values (testdata/bootscript.json, recorded from the Node
+// console, see testdata/README.md): the script itself, the values as
 // JSON.stringify wrote them, and every "<" escaped.
 func TestBootScriptAsNodeSentIt(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "bootscript.json"))

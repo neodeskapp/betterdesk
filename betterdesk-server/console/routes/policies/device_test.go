@@ -14,8 +14,8 @@ import (
 )
 
 // withDevices mounts the group as register does, with the device token
-// check on the group's database and the token rows of
-// testdata/nodeoracle/device.js.
+// check on the group's database and the token rows that
+// testdata/device_vectors.json was recorded with.
 func withDevices(t *testing.T) func(d *kit.Deps) {
 	return func(d *kit.Deps) {
 		ctx := context.Background()
@@ -57,7 +57,7 @@ var deviceFixes = slices.Concat(proxytest.Fixes("DV1",
 
 // TestDeviceVectors replays what the device routes of the Node file
 // answered and asked the API server, with the device token checks in front
-// (testdata/nodeoracle/device.js).
+// (testdata/device_vectors.json).
 func TestDeviceVectors(t *testing.T) {
 	proxytest.Replay(t, filepath.Join("testdata", "device_vectors.json"), withDevices(t), deviceFixes...)
 }

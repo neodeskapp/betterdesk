@@ -50,7 +50,7 @@ func describe(text *string) string {
 
 // TestVectors replays what routes/cdap.routes.js of the Node console
 // answered, asked the API server and wrote into the restart transaction
-// file (testdata/nodeoracle/run.js).
+// file (testdata/vectors.json, see testdata/README.md).
 func TestVectors(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "vectors.json"))
 	if err != nil {

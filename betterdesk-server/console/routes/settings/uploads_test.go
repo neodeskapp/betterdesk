@@ -350,10 +350,10 @@ func TestUploadFont(t *testing.T) {
 	})
 }
 
-// testdata/nodeoracle/files.js of console/branding sent uploads through
-// the Node routes and recorded multer's view of each request (the file
-// name and type it handed the route), the answers, the audit entries and
-// the uploads folder after each step. Here the same requests go through
+// The recorder of console/branding (its testdata/README.md) sent uploads
+// through the Node routes and recorded multer's view of each request (the
+// file name and type it handed the route), the answers, the audit entries
+// and the uploads folder after each step. Here the same requests go through
 // the Go routes, with the file name and type multer saw.
 func TestUploadsLikeNode(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {

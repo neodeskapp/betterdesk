@@ -10,7 +10,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/goapi"
 )
 
-// dateVectors is testdata/dates.json (testdata/nodeoracle/dates.js).
+// dateVectors is testdata/dates.json, recorded from JavaScript in the Node
+// console (testdata/README.md).
 type dateVectors struct {
 	Zone      string `json:"zone"`
 	Supported []struct {

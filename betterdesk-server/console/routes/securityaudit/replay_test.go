@@ -19,8 +19,7 @@ import (
 )
 
 // scenario is one entry of testdata/securityaudit.json: answers of the API
-// server and what the Node route made of them
-// (testdata/nodeoracle/securityaudit.js).
+// server and what the Node route made of them (testdata/README.md).
 type scenario struct {
 	Name  string `json:"name"`
 	Route string `json:"route"`

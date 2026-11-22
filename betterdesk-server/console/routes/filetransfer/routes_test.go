@@ -21,7 +21,7 @@ import (
 )
 
 // vector is a request with the Node console's answer, or one of the two
-// steps that are no requests (testdata/nodeoracle/run.js).
+// steps that are no requests (testdata/vectors.json).
 type vector struct {
 	Request *proxytest.Request `json:"request"`
 	Status  int                `json:"status"`

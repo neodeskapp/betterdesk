@@ -20,7 +20,7 @@ import (
 
 // The vectors are what routes/commercialization.routes.js of the Node
 // console answered and asked the API server for the routes that pass a
-// call on (testdata/nodeoracle/run.js): every role, every kind of answer
+// call on (testdata/vectors.json): every role, every kind of answer
 // of the API server (money and times included), the files of the
 // exports, path parameters, queries and bodies. They are replayed in two
 // parts: the calls the API server answers, and the ones it never answers,

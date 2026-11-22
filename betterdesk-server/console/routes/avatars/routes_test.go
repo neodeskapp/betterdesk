@@ -181,7 +181,7 @@ var changedByFixes = map[string]struct {
 }
 
 // TestOracleRoutes replays the requests the Node route answered with
-// pictures in its database (testdata/nodeoracle/routes.js): status, the
+// pictures in its database (testdata/routes.json.gz): status, the
 // headers the route sets, and the body must be the same, but for the
 // requests in changedByFixes.
 func TestOracleRoutes(t *testing.T) {

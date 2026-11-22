@@ -23,7 +23,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// recording is what testdata/nodeoracle/users.js recorded from the Node
+// recording is what testdata/node_<shape>.json holds, recorded from the Node
 // console's account routes on one database shape.
 type recording struct {
 	Dialect string              `json:"dialect"`

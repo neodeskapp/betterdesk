@@ -68,7 +68,7 @@ var fixes = slices.Concat(proxytest.Fixes("FL4",
 ))
 
 // TestVectors replays what routes/policies.routes.js of the Node console
-// answered and asked the API server (testdata/nodeoracle/run.js).
+// answered and asked the API server (testdata/vectors.json).
 func TestVectors(t *testing.T) {
 	proxytest.Replay(t, filepath.Join("testdata", "vectors.json"), register, fixes...)
 }

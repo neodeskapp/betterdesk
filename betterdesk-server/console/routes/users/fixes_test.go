@@ -114,7 +114,7 @@ var deletedGroup = fix{
 
 // fixes are the steps the Go console answers otherwise, by the step's
 // name. The names of the steps before the renames (section 9 of the
-// oracle) are the same on every database shape; later ones carry the
+// recording) are the same on every database shape; later ones carry the
 // shape in front.
 var fixes = map[string]fix{
 	"161 DELETE /api/panel/user-groups/{patched}":   deletedGroup,

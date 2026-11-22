@@ -64,7 +64,7 @@ type apiAnswer struct {
 	Hang   bool   `json:"hang"`
 }
 
-// scene is what a vector scripts around the routes (testdata/nodeoracle/run.js).
+// scene is what a vector scripts around the routes (testdata/vectors.json).
 type scene struct {
 	Devices        map[string]json.RawMessage `json:"devices"`
 	API            map[string]apiAnswer       `json:"api"`
@@ -137,10 +137,10 @@ type world struct {
 	cookies map[string]string
 }
 
-// The token rows, the same as in testdata/nodeoracle/run.js.
+// The token rows the recording was made with.
 var tokenRows = [][2]string{{"tok-device-a", "dev-a"}, {"tok-device-b", "dev-b"}, {"tok-numeric", "123456"}, {"tok-unbound", ""}, {"tok-seeded", "900100001"}}
 
-// nodeLangDir is the console's language folder, which the oracle read as
+// nodeLangDir is the console's language folder, which the recorder read as
 // well (then in web-nodejs/lang).
 func nodeLangDir(t *testing.T) string {
 	t.Helper()
@@ -499,7 +499,7 @@ func appVersionOf(t *testing.T, vectors []vector) string {
 }
 
 // TestNodeVectors replays what routes/remote.routes.js and the agent token
-// route of routes/bd-api.routes.js answered (testdata/nodeoracle/run.js):
+// route of routes/bd-api.routes.js answered (testdata/vectors.json):
 // status, Content-Type, Cache-Control, Location, the cookies, the rate
 // limit and the body, and what they asked the API server, the device
 // table and the remote relay, on SQLite and PostgreSQL. A vector whose
