@@ -505,6 +505,7 @@ func main() {
 	switch cfg.Mode {
 	case "all":
 		log.Printf("Starting signal + relay + API servers...")
+		applySavedPublicRelay(cfg, os.Getenv)
 		sig := sigServer.New(cfg, kp, database)
 		sig.SetBlocklist(blocklist)
 		sig.SetRateLimiter(ipLimiter)

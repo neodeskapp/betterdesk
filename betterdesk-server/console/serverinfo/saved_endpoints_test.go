@@ -192,3 +192,27 @@ func nodeCopiedIntoDurable(env map[string]string, durable, legacy textOrDir) boo
 func savedOverEnv(env map[string]string, durable textOrDir) bool {
 	return fileSets(durable, endpointKeys...) && envSets(env, endpointKeys...)
 }
+
+// L90: a save tells the signal server the relay in force: the saved one,
+// else the environment's.
+func TestSaveTellsTheRelayInForce(t *testing.T) {
+	w := newEndpointsWorld(t)
+	var told []string
+	s := New(Options{APIURL: "http://127.0.0.1:21114/api", DataDir: w.dataDir, EnvPath: w.envPath,
+		Getenv: envMap(map[string]string{EnvPublicRelayServer: "relay-env.example"}), Logger: &recordingLogger{},
+		OnPublicRelay: func(relay string) { told = append(told, relay) }})
+	if _, err := s.SavePublicEndpointSettings(PublicEndpointsInput{PublicRelayServer: "relay-saved.example"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.SavePublicEndpointSettings(PublicEndpointsInput{PublicRelayServer: "bad host!"}); err == nil {
+		t.Fatal("a bad relay was saved")
+	}
+	if _, err := s.SavePublicEndpointSettings(PublicEndpointsInput{}); err != nil {
+		t.Fatal(err)
+	}
+	// The second save was refused and tells nothing; the cleared relay
+	// leaves none until a start reads the environment again
+	if len(told) != 2 || told[0] != "relay-saved.example" || told[1] != "" {
+		t.Fatalf("told %q, want the saved relay, then none", told)
+	}
+}

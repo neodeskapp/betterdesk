@@ -44,6 +44,11 @@ type Config struct {
 	// Servers
 	RelayServers      string // Comma-separated relay server addresses
 	RendezvousServers string // Comma-separated rendezvous server addresses
+	// publicRelay is the relay the console's settings name ("Public relay
+	// server"), which devices are given before RelayServers
+	// (SetPublicRelayServer). relayMu guards it.
+	relayMu     sync.RWMutex
+	publicRelay string
 
 	// Network mask
 	Mask string // LAN mask (e.g. "192.168.0.0/24")
@@ -670,37 +675,63 @@ func (c *Config) WSRelayPort() int {
 	return c.RelayPort + 2
 }
 
-// GetRelayServers parses the comma-separated relay server list.
-// Ensures each entry includes a port; appends the default RelayPort if missing.
-// Validates that each entry resolves to a valid IP or hostname (rejects single
-// characters and obviously bogus values that would cause relay failures).
+// SetPublicRelayServer sets the relay the console's settings name
+// ("Public relay server"): a host with a port or without, "" for none.
+// Devices are given it in place of RELAY_SERVERS, which is the first
+// default (DECISIONS A105). The console calls it at start and after a save.
+func (c *Config) SetPublicRelayServer(relay string) {
+	c.relayMu.Lock()
+	defer c.relayMu.Unlock()
+	c.publicRelay = strings.TrimSpace(relay)
+}
+
+// PublicRelayServer is the relay SetPublicRelayServer set.
+func (c *Config) PublicRelayServer() string {
+	c.relayMu.RLock()
+	defer c.relayMu.RUnlock()
+	return c.publicRelay
+}
+
+// GetRelayServers returns the relays devices are given: the relay the
+// console's settings name (SetPublicRelayServer), else the comma-separated
+// RelayServers list. Each entry gets the default RelayPort when it names
+// no port. Entries that cannot be a host (a single character, a malformed
+// address) are left out, as relay addresses like "a:21117" make every
+// relay connection fail.
 func (c *Config) GetRelayServers() []string {
+	if relay, ok := c.relayAddress(c.PublicRelayServer()); ok {
+		return []string{relay}
+	}
 	if c.RelayServers == "" {
 		return nil
 	}
 	servers := strings.Split(c.RelayServers, ",")
 	result := make([]string, 0, len(servers))
 	for _, s := range servers {
-		s = strings.TrimSpace(s)
-		if s == "" {
-			continue
+		if relay, ok := c.relayAddress(s); ok {
+			result = append(result, relay)
 		}
-		// Add default relay port if not specified.
-		// net.SplitHostPort handles IPv6 bracketed addresses correctly.
-		if _, _, err := net.SplitHostPort(s); err != nil {
-			s = net.JoinHostPort(s, strconv.Itoa(c.RelayPort))
-		}
-		// Validate: extract the host part and reject obviously invalid entries
-		// (single letter, empty host, etc.) that would produce relay addresses
-		// like "a:21117" which cause all relay connections to fail.
-		host, _, err := net.SplitHostPort(s)
-		if err != nil || len(host) < 2 {
-			log.Printf("[config] WARNING: Ignoring invalid relay server %q (host too short or malformed)", s)
-			continue
-		}
-		result = append(result, s)
 	}
 	return result
+}
+
+// relayAddress is one relay entry with its port, and false for an empty
+// or invalid one (logged).
+func (c *Config) relayAddress(s string) (string, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "", false
+	}
+	// net.SplitHostPort handles IPv6 bracketed addresses correctly.
+	if _, _, err := net.SplitHostPort(s); err != nil {
+		s = net.JoinHostPort(s, strconv.Itoa(c.RelayPort))
+	}
+	host, _, err := net.SplitHostPort(s)
+	if err != nil || len(host) < 2 {
+		log.Printf("[config] WARNING: Ignoring invalid relay server %q (host too short or malformed)", s)
+		return "", false
+	}
+	return s, true
 }
 
 // GetRendezvousServers parses the configured rendezvous (ID) server list for

@@ -101,6 +101,11 @@ type Options struct {
 	// (signal.Server.PanelProof). nil: the bridge sends none, and the
 	// signal server treats it as any client.
 	SignalProof []byte
+	// PublicRelay is told the relay the console's settings name after each
+	// save of the public endpoints, so the signal server of this process
+	// gives devices that relay (config.Config.SetPublicRelayServer). nil
+	// tells nobody.
+	PublicRelay func(relay string)
 	// updaterOptions changes the updater's options before it is built:
 	// tests give it a GitHub and a binary of their own.
 	updaterOptions func(*updater.Options)
@@ -246,18 +251,19 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Jobs:  s.jobs,
 	}
 	s.deps.ServerInfo = serverinfo.New(serverinfo.Options{
-		PubKeyPath:  cfg.PubKeyPath,
-		APIKeyPath:  cfg.APIKeyPath,
-		DBPath:      cfg.DBPath,
-		APIURL:      cfg.APIURL,
-		GoAPIPort:   cfg.GoAPIPort,
-		APIPort:     cfg.APIPort,
-		DataDir:     cfg.DataDir,
-		EnvPath:     cfg.EnvPath,
-		IsDocker:    cfg.Docker,
-		Getenv:      getenv,
-		ComposePath: cfg.ComposePath,
-		GoAPI:       api,
+		PubKeyPath:    cfg.PubKeyPath,
+		APIKeyPath:    cfg.APIKeyPath,
+		DBPath:        cfg.DBPath,
+		APIURL:        cfg.APIURL,
+		GoAPIPort:     cfg.GoAPIPort,
+		APIPort:       cfg.APIPort,
+		DataDir:       cfg.DataDir,
+		EnvPath:       cfg.EnvPath,
+		OnPublicRelay: opts.PublicRelay,
+		IsDocker:      cfg.Docker,
+		Getenv:        getenv,
+		ComposePath:   cfg.ComposePath,
+		GoAPI:         api,
 		QR: func(text string) (string, error) {
 			return qr.PNGDataURL(text, qr.Options{Width: 256, Margin: 2})
 		},

@@ -368,8 +368,21 @@ func (s *Service) SyncProcessEnv(p PublicEndpoints) {
 // over the environment values the service reads. It returns the settings
 // as stored. The public endpoints file is where they last; the console's
 // env file only mirrors them, so a failure to write it (read-only in a
-// container) is logged and the save goes on.
+// container) is logged and the save goes on. After a save the relay in
+// force goes to Options.OnPublicRelay.
 func (s *Service) WritePublicEndpointSettingsToEnv(in PublicEndpointsInput) (PublicEndpoints, error) {
+	normalized, err := s.storePublicEndpoints(in)
+	if err != nil {
+		return PublicEndpoints{}, err
+	}
+	if s.opts.OnPublicRelay != nil {
+		s.opts.OnPublicRelay(s.ReadPublicEndpointEnv().PublicRelayServer)
+	}
+	return normalized, nil
+}
+
+// storePublicEndpoints is the save of WritePublicEndpointSettingsToEnv.
+func (s *Service) storePublicEndpoints(in PublicEndpointsInput) (PublicEndpoints, error) {
 	normalized, err := ValidateSettings(in)
 	if err != nil {
 		return PublicEndpoints{}, err
