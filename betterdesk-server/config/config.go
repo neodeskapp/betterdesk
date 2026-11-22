@@ -345,17 +345,14 @@ func readSwitch(name string, field *bool) {
 func (c *Config) LoadEnv() {
 	connection := c.ConnectionSettings()
 
-	// SIGNAL_PORT takes precedence over PORT.
-	// This avoids conflicts in Docker single-container setups where PORT=5000
-	// is intended for the Node.js console, not the Go signal server.
+	// The ID server's port is SIGNAL_PORT. PORT is the old console's port
+	// and moves nothing; a start that still has it says so.
 	if v := os.Getenv("SIGNAL_PORT"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
 			c.SignalPort = n
 		}
 	} else if v := os.Getenv("PORT"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil {
-			c.SignalPort = n
-		}
+		log.Printf("[config] PORT=%s is not read: the ID server listens on SIGNAL_PORT (now %d) and the console on CONSOLE_PORT", v, c.SignalPort)
 	}
 	if v := os.Getenv("RELAY_PORT"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {

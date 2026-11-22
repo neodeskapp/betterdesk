@@ -189,6 +189,10 @@ func main() {
 		fmt.Println(string(encoded))
 		return
 	}
+	// Two listeners on one port: the start stops before anything listens
+	if err := checkStartPorts(cfg, os.Getenv); err != nil {
+		log.Fatalf("The start stops: %v", err)
+	}
 
 	log.Printf("========================================")
 	log.Printf("  BetterDesk Server %s", Version)
