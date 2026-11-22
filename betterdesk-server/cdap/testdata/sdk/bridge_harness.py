@@ -1,17 +1,23 @@
-"""Runs one of the reference bridges in bridges/ with its target faked.
+"""Runs one of the reference bridges in bridges/ against a stand-in target.
 
-The Modbus device, the SNMP agent and the polled HTTP APIs answer from
-memory here, so the test needs none of them. The CDAP side (the Python SDK,
-the bridge's widgets, values, commands, alerts and its webhook server) runs
-as shipped.
+The Modbus bridge talks to a real Modbus TCP server (pymodbus) started here
+on the config's host and port. The SNMP agent and the polled HTTP APIs
+answer from memory, so the test needs neither. The CDAP side (the Python
+SDK, the bridge's widgets, values, commands, alerts and its webhook server)
+runs as shipped.
 
     python3 bridge_harness.py <modbus|snmp|rest-webhook> <bridge script> <config.json>
 """
 
 from __future__ import annotations
 
+import asyncio
 import importlib.util
+import json
+import socket
 import sys
+import threading
+import time
 from typing import Any
 
 
@@ -23,49 +29,37 @@ def load(path: str) -> Any:
     return module
 
 
-# ── Modbus: a device with two coils and a few holding registers ──────
+# ── Modbus: a device with coils and holding registers ─────────────────
 
 
-class Result:
-    def __init__(self, bits: list[bool] | None = None, registers: list[int] | None = None):
-        self.bits = bits or []
-        self.registers = registers or []
+def modbus_device(module: Any, config: dict) -> None:
+    """Serves the example config's registers: temperature 21.5, humidity
+    45.5 and setpoint 20.0 (scale 0.1), and relay 1 off."""
+    from pymodbus.datastore import ModbusDeviceContext, ModbusSequentialDataBlock, ModbusServerContext
+    from pymodbus.server import StartAsyncTcpServer
 
-    def isError(self) -> bool:  # noqa: N802 (pymodbus's name)
-        return False
+    registers = [0] * 32
+    registers[0], registers[1], registers[10] = 215, 455, 200
+    # A block at 1 holds protocol address 0.
+    device = ModbusDeviceContext(
+        hr=ModbusSequentialDataBlock(1, registers),
+        co=ModbusSequentialDataBlock(1, [False] * 32),
+    )
+    host, port = config["modbus"]["host"], config["modbus"]["port"]
 
+    def serve() -> None:
+        asyncio.run(StartAsyncTcpServer(context=ModbusServerContext(devices=device, single=True), address=(host, port)))
 
-class FakeModbus:
-    def __init__(self) -> None:
-        self.coils: dict[int, bool] = {0: False}
-        # temperature 21.5, humidity 45.5, setpoint 20.0 (scale 0.1)
-        self.registers: dict[int, int] = {0: 215, 1: 455, 10: 200}
-
-    async def read_coils(self, address: int, count: int = 1, **kw: Any) -> Result:
-        return Result(bits=[self.coils.get(address + i, False) for i in range(count)])
-
-    read_discrete_inputs = read_coils
-
-    async def read_holding_registers(self, address: int, count: int = 1, **kw: Any) -> Result:
-        return Result(registers=[self.registers.get(address + i, 0) for i in range(count)])
-
-    read_input_registers = read_holding_registers
-
-    async def write_coil(self, address: int, value: bool, **kw: Any) -> Result:
-        self.coils[address] = bool(value)
-        return Result()
-
-    async def write_registers(self, address: int, values: list[int], **kw: Any) -> Result:
-        for i, v in enumerate(values):
-            self.registers[address + i] = v
-        return Result()
-
-
-def fake_modbus(module: Any) -> None:
-    async def connect(self: Any) -> None:
-        self.client = FakeModbus()
-
-    module.ModbusBridge._connect_modbus = connect
+    threading.Thread(target=serve, daemon=True).start()
+    deadline = time.monotonic() + 10
+    while True:
+        try:
+            socket.create_connection((host, port), timeout=1).close()
+            return
+        except OSError:
+            if time.monotonic() > deadline:
+                raise
+            time.sleep(0.05)
 
 
 # ── SNMP: an agent with the example config's OIDs ─────────────────────
@@ -80,7 +74,7 @@ SNMP_VALUES: dict[str, Any] = {
 }
 
 
-def fake_snmp(module: Any) -> None:
+def fake_snmp(module: Any, config: dict) -> None:
     async def get(self: Any, oid: str) -> Any:
         return SNMP_VALUES.get(oid)
 
@@ -95,7 +89,7 @@ REST_ANSWERS: dict[str, Any] = {
 }
 
 
-def fake_rest(module: Any) -> None:
+def fake_rest(module: Any, config: dict) -> None:
     async def poll(self: Any, src: dict) -> Any:
         data = REST_ANSWERS[src["widget_id"]]
         path = src.get("jmespath", "")
@@ -110,13 +104,14 @@ def fake_rest(module: Any) -> None:
     module.RESTBridge._write_source = write
 
 
-FAKES = {"modbus": fake_modbus, "snmp": fake_snmp, "rest-webhook": fake_rest}
+TARGETS = {"modbus": modbus_device, "snmp": fake_snmp, "rest-webhook": fake_rest}
 
 
 def main() -> None:
     kind, script, config = sys.argv[1:4]
     module = load(script)
-    FAKES[kind](module)
+    with open(config, encoding="utf-8") as f:
+        TARGETS[kind](module, json.load(f))
     sys.argv = [script, "--config", config, "--log-level", "DEBUG"]
     module.main()
 

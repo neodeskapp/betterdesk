@@ -147,15 +147,15 @@ class ModbusBridge:
         count = reg.get("count", 1)
 
         if rtype == "coil":
-            result = await self.client.read_coils(addr, count, slave=unit)
+            result = await self.client.read_coils(addr, count=count, device_id=unit)
             return bool(result.bits[0]) if not result.isError() else None
         elif rtype == "discrete":
-            result = await self.client.read_discrete_inputs(addr, count, slave=unit)
+            result = await self.client.read_discrete_inputs(addr, count=count, device_id=unit)
             return bool(result.bits[0]) if not result.isError() else None
         elif rtype == "input":
-            result = await self.client.read_input_registers(addr, count, slave=unit)
+            result = await self.client.read_input_registers(addr, count=count, device_id=unit)
         else:
-            result = await self.client.read_holding_registers(addr, count, slave=unit)
+            result = await self.client.read_holding_registers(addr, count=count, device_id=unit)
 
         if result.isError():
             return None
@@ -173,7 +173,7 @@ class ModbusBridge:
         addr = reg["address"]
 
         if rtype == "coil":
-            result = await self.client.write_coil(addr, bool(value), slave=unit)
+            result = await self.client.write_coil(addr, bool(value), device_id=unit)
             return bool(value) if not result.isError() else None
         else:
             regs = encode_value(
@@ -182,7 +182,7 @@ class ModbusBridge:
                 reg.get("scale", 1.0),
                 reg.get("offset", 0.0),
             )
-            result = await self.client.write_registers(addr, regs, slave=unit)
+            result = await self.client.write_registers(addr, regs, device_id=unit)
             return float(value) if not result.isError() else None
 
     # ── Poll loop ─────────────────────────────────────────────────

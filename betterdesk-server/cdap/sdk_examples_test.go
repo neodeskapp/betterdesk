@@ -30,9 +30,9 @@ import (
 // error.
 //
 // The tests need Node.js with the Node SDK built (npm ci and npm run build
-// in sdks/nodejs) and python3 with websockets, and aiohttp for the REST
-// bridge. Without them they skip; CDAP_SDK_TESTS=1 makes a missing tool a
-// failure.
+// in sdks/nodejs) and python3 with websockets, pymodbus for the Modbus
+// bridge and aiohttp for the REST bridge. Without them they skip;
+// CDAP_SDK_TESTS=1 makes a missing tool a failure.
 
 const sdkTestKey = "apikey-sdk-0123456789abcdef"
 
@@ -482,8 +482,9 @@ func TestPythonSDKExample(t *testing.T) {
 }
 
 // startBridge runs a bridge with its example config, pointed at the
-// gateway with the test's key and changed by edit, and its target faked
-// by testdata/sdk/bridge_harness.py. It returns the config's device id.
+// gateway with the test's key and changed by edit, and its target stood
+// in for by testdata/sdk/bridge_harness.py. It returns the config's device
+// id.
 func (r *sdkRun) startBridge(py, kind, script string, edit func(cfg map[string]any)) string {
 	r.t.Helper()
 	root := sdkRepoRoot(r.t)
@@ -523,11 +524,30 @@ func (r *sdkRun) startBridge(py, kind, script string, edit func(cfg map[string]a
 	return id
 }
 
-// TestModbusBridge runs the Modbus bridge with its example config.
+// freePort is a TCP port on 127.0.0.1 that nothing listens on.
+func freePort(t *testing.T) int {
+	t.Helper()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	return ln.Addr().(*net.TCPAddr).Port
+}
+
+// TestModbusBridge runs the Modbus bridge with its example config against
+// a Modbus TCP server (pymodbus) on a free port.
 func TestModbusBridge(t *testing.T) {
-	py := python(t, "websockets")
+	py := python(t, "websockets", "pymodbus")
+	port := freePort(t)
 	r := newSDKRun(t)
-	id := r.startBridge(py, "modbus", "bridge_modbus.py", nil)
+	id := r.startBridge(py, "modbus", "bridge_modbus.py", func(cfg map[string]any) {
+		modbus, _ := cfg["modbus"].(map[string]any)
+		if modbus == nil {
+			t.Fatal("the example config has no modbus block")
+		}
+		modbus["host"], modbus["port"] = "127.0.0.1", port
+	})
 	m := r.registered(id)
 	if m.Device.Type != "scada" || m.Device.Name != "Modbus Bridge" || m.Bridge.Name != "modbus" {
 		t.Fatalf("device %+v bridge %+v", m.Device, m.Bridge)
@@ -574,12 +594,7 @@ func TestSNMPBridge(t *testing.T) {
 // its webhook on a free port.
 func TestRESTBridge(t *testing.T) {
 	py := python(t, "websockets", "aiohttp")
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	port := ln.Addr().(*net.TCPAddr).Port
-	ln.Close()
+	port := freePort(t)
 
 	r := newSDKRun(t)
 	id := r.startBridge(py, "rest-webhook", "bridge_rest.py", func(cfg map[string]any) {
