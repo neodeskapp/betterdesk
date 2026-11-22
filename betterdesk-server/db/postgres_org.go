@@ -183,9 +183,9 @@ func (pg *PostgresDB) ListOrgUsers(orgID string) ([]*OrgUser, error) {
 
 func (pg *PostgresDB) UpdateOrgUser(u *OrgUser) error {
 	_, err := pg.pool.Exec(pg.ctx,
-		`UPDATE org_users SET display_name = $1, email = $2, role = $3, totp_secret = $4, avatar_url = $5
-		 WHERE id = $6`,
-		u.DisplayName, u.Email, u.Role, u.TOTPSecret, u.AvatarURL, u.ID,
+		`UPDATE org_users SET display_name = $1, email = $2, password_hash = $3, role = $4, totp_secret = $5, avatar_url = $6
+		 WHERE id = $7`,
+		u.DisplayName, u.Email, u.PasswordHash, u.Role, u.TOTPSecret, u.AvatarURL, u.ID,
 	)
 	return err
 }

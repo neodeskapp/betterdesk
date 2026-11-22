@@ -4728,6 +4728,8 @@
     "no_permission": "您的角色无法查看此内容。",
     "remove_from_org": "从组织移除",
     "create_new_user_hint": "创建只存在于此组织内的账号。",
+    "client_signin": "客户端登录",
+    "client_signin_hint": "它登录 BetterDesk 客户端并获得共享通讯录。它无法登录控制台。",
     "select_user_placeholder": "选择用户",
     "username_password_required": "请输入用户名和密码。",
     "select_user_first": "请先选择用户。",

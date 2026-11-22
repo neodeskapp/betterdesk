@@ -4623,6 +4623,8 @@
     "no_permission": "Peran Anda tidak dapat melihat ini.",
     "remove_from_org": "Keluarkan dari organisasi",
     "create_new_user_hint": "Membuat akun yang hanya ada di organisasi ini.",
+    "client_signin": "Masuk klien",
+    "client_signin_hint": "Akun ini masuk ke klien BetterDesk dan mendapat buku alamat bersama. Akun ini tidak dapat masuk ke konsol.",
     "select_user_placeholder": "Pilih pengguna",
     "username_password_required": "Masukkan nama pengguna dan kata sandi.",
     "select_user_first": "Pilih pengguna terlebih dahulu.",

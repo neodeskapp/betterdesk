@@ -4617,6 +4617,8 @@
     "no_permission": "Ihre Rolle darf das nicht sehen.",
     "remove_from_org": "Aus der Organisation entfernen",
     "create_new_user_hint": "Legt ein Konto an, das nur in dieser Organisation existiert.",
+    "client_signin": "Client-Anmeldung",
+    "client_signin_hint": "Es meldet sich im BetterDesk-Client an und erhält das gemeinsame Adressbuch. In der Konsole kann es sich nicht anmelden.",
     "select_user_placeholder": "Benutzer auswählen",
     "username_password_required": "Geben Sie einen Benutzernamen und ein Passwort ein.",
     "select_user_first": "Wählen Sie zuerst einen Benutzer aus.",

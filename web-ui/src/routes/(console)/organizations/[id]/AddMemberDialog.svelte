@@ -1,7 +1,8 @@
 <!--
   Add someone to the organization: a new account that exists only here
-  (username, password), or an existing server account. Two ways, picked
-  with tabs at the top of the dialog.
+  (username, password of at least 8 characters, the server's rule), a
+  sign-in for the BetterDesk client; or an existing server account. Two
+  ways, picked with tabs at the top of the dialog.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -47,7 +48,7 @@
 				const missing = t('organizations.username_password_required');
 				return {
 					username: v.username.trim() ? undefined : missing,
-					password: v.password ? undefined : missing
+					password: !v.password ? missing : v.password.length < 8 ? t('users.password_too_short') : undefined
 				};
 			}
 			return { userId: v.userId ? undefined : t('organizations.select_user_first') };
@@ -78,7 +79,10 @@
 			{#snippet children(current)}
 				<div class="panel">
 					{#if current === 'create'}
-						<p class="note">{t('organizations.create_new_user_hint')}</p>
+						<p class="note">
+							{t('organizations.create_new_user_hint')}
+							{t('organizations.client_signin_hint')}
+						</p>
 						<Field label={t('organizations.username')} error={form.errors.username}>
 							{#snippet children(f)}
 								<Input
@@ -90,7 +94,11 @@
 								/>
 							{/snippet}
 						</Field>
-						<Field label={t('organizations.password')} error={form.errors.password}>
+						<Field
+							label={t('organizations.password')}
+							hint={t('settings.req_length')}
+							error={form.errors.password}
+						>
 							{#snippet children(f)}
 								<Input
 									{...f}

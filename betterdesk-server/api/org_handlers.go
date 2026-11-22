@@ -33,10 +33,11 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
+	"unicode/utf16"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/unitronix/betterdesk-server/audit"
 	"github.com/unitronix/betterdesk-server/auth"
@@ -310,6 +311,10 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"username and password are required"}`, http.StatusBadRequest)
 		return
 	}
+	if problem := orgPasswordProblem(body.Password); problem != "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
+		return
+	}
 
 	// Check duplicate
 	existing, _ := s.db.GetOrgUserByUsername(orgID, body.Username)
@@ -318,7 +323,7 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	hash, err := auth.HashPassword(body.Password)
 	if err != nil {
 		http.Error(w, `{"error":"password hashing failed"}`, http.StatusInternalServerError)
 		return
@@ -330,7 +335,7 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		Username:     body.Username,
 		DisplayName:  body.DisplayName,
 		Email:        body.Email,
-		PasswordHash: string(hash),
+		PasswordHash: hash,
 		Role:         db.OrgRoleUser,
 		CreatedAt:    time.Now().UTC(),
 	}
@@ -410,19 +415,22 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 	if body.Email != nil {
 		user.Email = *body.Email
 	}
+	if body.Password != nil && *body.Password != "" {
+		if problem := orgPasswordProblem(*body.Password); problem != "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
+			return
+		}
+		hash, err := auth.HashPassword(*body.Password)
+		if err != nil {
+			http.Error(w, `{"error":"password hashing failed"}`, http.StatusInternalServerError)
+			return
+		}
+		user.PasswordHash = hash
+	}
 	if err := s.db.UpdateOrgUser(user); err != nil {
 		log.Printf("[org] UpdateOrgUser error: %v", err)
 		http.Error(w, `{"error":"failed to update user"}`, http.StatusInternalServerError)
 		return
-	}
-
-	// Handle password change separately (requires re-hashing)
-	if body.Password != nil && *body.Password != "" {
-		hash, err := bcrypt.GenerateFromPassword([]byte(*body.Password), bcrypt.DefaultCost)
-		if err == nil {
-			user.PasswordHash = string(hash)
-			s.db.UpdateOrgUser(user)
-		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -718,6 +726,29 @@ func (s *Server) handleSetOrgAddressBook(w http.ResponseWriter, r *http.Request)
 //  Org User Login
 // ---------------------------------------------------------------------------
 
+// orgLoginDummyHash is a hash of the server's kind that no account has,
+// checked when the name is unknown.
+var orgLoginDummyHash = sync.OnceValue(func() string {
+	hash, err := auth.HashPassword("no account has this password")
+	if err != nil {
+		return ""
+	}
+	return hash
+})
+
+// orgPasswordProblem says what is wrong with a new password of an
+// organization account, "" when nothing: the server's rule of 8 to 128
+// characters, counted in UTF-16 units as the console counts them.
+func orgPasswordProblem(password string) string {
+	switch n := len(utf16.Encode([]rune(password))); {
+	case n < 8:
+		return "Password must be at least 8 characters"
+	case n > 128:
+		return "Password must be at most 128 characters"
+	}
+	return ""
+}
+
 // POST /api/org/login
 func (s *Server) handleOrgLogin(w http.ResponseWriter, r *http.Request) {
 	clientIP := s.remoteIP(r)
@@ -761,16 +792,14 @@ func (s *Server) handleOrgLogin(w http.ResponseWriter, r *http.Request) {
 
 	user, _ := s.db.GetOrgUserByUsername(orgID, body.Username)
 	if user == nil {
-		// Timing-safe: compare against dummy hash
-		bcrypt.CompareHashAndPassword(
-			[]byte("$2a$10$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-			[]byte(body.Password),
-		)
+		// The same work as for an account, so the answer's time does not
+		// tell which names exist
+		auth.VerifyPassword(orgLoginDummyHash(), body.Password)
 		http.Error(w, `{"error":"invalid credentials"}`, http.StatusUnauthorized)
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(body.Password)); err != nil {
+	if !auth.VerifyPassword(user.PasswordHash, body.Password) {
 		http.Error(w, `{"error":"invalid credentials"}`, http.StatusUnauthorized)
 		return
 	}

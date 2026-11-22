@@ -4750,6 +4750,8 @@
     "no_permission": "您的角色無法檢視此內容。",
     "remove_from_org": "從組織移除",
     "create_new_user_hint": "建立只存在於此組織內的帳號。",
+    "client_signin": "用戶端登入",
+    "client_signin_hint": "它會登入 BetterDesk 用戶端並取得共用通訊錄。它無法登入主控台。",
     "select_user_placeholder": "選擇使用者",
     "username_password_required": "請輸入使用者名稱與密碼。",
     "select_user_first": "請先選擇使用者。",

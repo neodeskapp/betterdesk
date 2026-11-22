@@ -4617,6 +4617,8 @@
     "no_permission": "Vaše role tohle nemůže zobrazit.",
     "remove_from_org": "Odebrat z organizace",
     "create_new_user_hint": "Vytvoří účet, který existuje jen v této organizaci.",
+    "client_signin": "Přihlášení klienta",
+    "client_signin_hint": "Přihlašuje se do klienta BetterDesk a dostává sdílený adresář. Do konzole se přihlásit nemůže.",
     "select_user_placeholder": "Vyberte uživatele",
     "username_password_required": "Zadejte uživatelské jméno a heslo.",
     "select_user_first": "Nejprve vyberte uživatele.",

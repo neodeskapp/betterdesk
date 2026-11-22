@@ -4617,6 +4617,8 @@
     "no_permission": "あなたのロールではこれを表示できません。",
     "remove_from_org": "組織から外す",
     "create_new_user_hint": "この組織の中だけに存在するアカウントを作成します。",
+    "client_signin": "クライアント サインイン",
+    "client_signin_hint": "BetterDesk クライアントにサインインし、共有アドレス帳を受け取ります。コンソールにはサインインできません。",
     "select_user_placeholder": "ユーザーを選択",
     "username_password_required": "ユーザー名とパスワードを入力してください。",
     "select_user_first": "先にユーザーを選択してください。",

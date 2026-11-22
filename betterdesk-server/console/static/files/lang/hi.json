@@ -4623,6 +4623,8 @@
     "no_permission": "आपकी भूमिका इसे नहीं देख सकती।",
     "remove_from_org": "संगठन से हटाएँ",
     "create_new_user_hint": "ऐसा खाता बनाता है जो केवल इसी संगठन में होता है।",
+    "client_signin": "क्लाइंट साइन-इन",
+    "client_signin_hint": "यह BetterDesk क्लाइंट में साइन इन करता है और साझा पता पुस्तिका पाता है। यह कंसोल में साइन इन नहीं कर सकता।",
     "select_user_placeholder": "उपयोगकर्ता चुनें",
     "username_password_required": "उपयोगकर्ता नाम और पासवर्ड दर्ज करें।",
     "select_user_first": "पहले उपयोगकर्ता चुनें।",

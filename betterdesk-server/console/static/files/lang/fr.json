@@ -4750,6 +4750,8 @@
     "no_permission": "Votre rôle ne permet pas de voir ceci.",
     "remove_from_org": "Retirer de l'organisation",
     "create_new_user_hint": "Crée un compte qui n'existe que dans cette organisation.",
+    "client_signin": "Connexion client",
+    "client_signin_hint": "Il se connecte au client BetterDesk et reçoit le carnet d'adresses partagé. Il ne peut pas se connecter à la console.",
     "select_user_placeholder": "Choisissez un utilisateur",
     "username_password_required": "Saisissez un nom d'utilisateur et un mot de passe.",
     "select_user_first": "Choisissez d'abord un utilisateur.",

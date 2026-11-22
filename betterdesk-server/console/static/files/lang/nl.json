@@ -4617,6 +4617,8 @@
     "no_permission": "Uw rol kan dit niet zien.",
     "remove_from_org": "Uit organisatie verwijderen",
     "create_new_user_hint": "Maakt een account aan dat alleen in deze organisatie bestaat.",
+    "client_signin": "Clientaanmelding",
+    "client_signin_hint": "Het meldt zich aan in de BetterDesk-client en krijgt het gedeelde adresboek. Het kan zich niet aanmelden bij de console.",
     "select_user_placeholder": "Kies een gebruiker",
     "username_password_required": "Vul een gebruikersnaam en een wachtwoord in.",
     "select_user_first": "Kies eerst een gebruiker.",

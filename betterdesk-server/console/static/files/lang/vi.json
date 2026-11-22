@@ -4623,6 +4623,8 @@
     "no_permission": "Vai trò của bạn không xem được mục này.",
     "remove_from_org": "Gỡ khỏi tổ chức",
     "create_new_user_hint": "Tạo một tài khoản chỉ tồn tại trong tổ chức này.",
+    "client_signin": "Đăng nhập ứng dụng khách",
+    "client_signin_hint": "Tài khoản này đăng nhập vào ứng dụng khách BetterDesk và nhận sổ địa chỉ dùng chung. Tài khoản không thể đăng nhập vào bảng điều khiển.",
     "select_user_placeholder": "Chọn người dùng",
     "username_password_required": "Nhập tên người dùng và mật khẩu.",
     "select_user_first": "Hãy chọn người dùng trước.",

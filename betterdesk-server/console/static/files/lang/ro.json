@@ -4623,6 +4623,8 @@
     "no_permission": "Rolul dvs. nu poate vedea acest lucru.",
     "remove_from_org": "Elimină din organizație",
     "create_new_user_hint": "Creează un cont care există doar în această organizație.",
+    "client_signin": "Autentificare client",
+    "client_signin_hint": "Se autentifică în clientul BetterDesk și primește agenda partajată. Nu se poate autentifica în consolă.",
     "select_user_placeholder": "Alegeți un utilizator",
     "username_password_required": "Introduceți un nume de utilizator și o parolă.",
     "select_user_first": "Alegeți mai întâi un utilizator.",

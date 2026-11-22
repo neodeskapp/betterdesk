@@ -4623,6 +4623,8 @@
     "no_permission": "Din roll kan inte se detta.",
     "remove_from_org": "Ta bort från organisationen",
     "create_new_user_hint": "Skapar ett konto som bara finns i den här organisationen.",
+    "client_signin": "Klientinloggning",
+    "client_signin_hint": "Det loggar in i BetterDesk-klienten och får den delade adressboken. Det kan inte logga in i konsolen.",
     "select_user_placeholder": "Välj en användare",
     "username_password_required": "Ange ett användarnamn och ett lösenord.",
     "select_user_first": "Välj en användare först.",

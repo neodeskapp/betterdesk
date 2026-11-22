@@ -4623,6 +4623,8 @@
     "no_permission": "Roolisi ei voi nähdä tätä.",
     "remove_from_org": "Poista organisaatiosta",
     "create_new_user_hint": "Luo tilin, joka on olemassa vain tässä organisaatiossa.",
+    "client_signin": "Asiakkaan kirjautuminen",
+    "client_signin_hint": "Se kirjautuu BetterDesk-asiakkaaseen ja saa jaetun osoitekirjan. Se ei voi kirjautua konsoliin.",
     "select_user_placeholder": "Valitse käyttäjä",
     "username_password_required": "Anna käyttäjänimi ja salasana.",
     "select_user_first": "Valitse ensin käyttäjä.",

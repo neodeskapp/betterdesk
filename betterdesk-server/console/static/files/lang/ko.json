@@ -4617,6 +4617,8 @@
     "no_permission": "현재 역할로는 볼 수 없습니다.",
     "remove_from_org": "조직에서 제거",
     "create_new_user_hint": "이 조직에만 있는 계정을 만듭니다.",
+    "client_signin": "클라이언트 로그인",
+    "client_signin_hint": "BetterDesk 클라이언트에 로그인하고 공유 주소록을 받습니다. 콘솔에는 로그인할 수 없습니다.",
     "select_user_placeholder": "사용자 선택",
     "username_password_required": "사용자 이름과 비밀번호를 입력하세요.",
     "select_user_first": "먼저 사용자를 선택하세요.",

@@ -1,7 +1,9 @@
 <!--
   Members tab: the people in the organization and the invitations. Both
   lists and every action need org.manage_users (the members list also
-  user.view); without, the tab says the role cannot see them.
+  user.view); without, the tab says the role cannot see them. An account
+  that exists only in the organization (no server account behind it) is
+  a sign-in for the BetterDesk client and carries a tag that says so.
 -->
 <script lang="ts">
 	import { removeOrgUser, type OrgInvitation, type OrgUser } from '#lib/api/orgs.ts';
@@ -13,6 +15,7 @@
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Table from '#lib/ui/Table.svelte';
+	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import User from '#lib/ui/User.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
@@ -100,7 +103,8 @@
 	]);
 </script>
 
-{#snippet nameCell(m: OrgUser)}<User user={m.username} avatar />{#if m.display_name}<span class="cell-sub"
+{#snippet nameCell(m: OrgUser)}<User user={m.username} avatar />{#if !m.server_user_id}
+		<Tag label={t('organizations.client_signin')} />{/if}{#if m.display_name}<span class="cell-sub"
 			>{m.display_name}</span
 		>{/if}{/snippet}
 {#snippet emailCell(m: OrgUser)}{#if m.email}{m.email}{:else}<Empty />{/if}{/snippet}

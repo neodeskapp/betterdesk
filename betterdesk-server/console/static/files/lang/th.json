@@ -4623,6 +4623,8 @@
     "no_permission": "บทบาทของคุณดูส่วนนี้ไม่ได้",
     "remove_from_org": "นำออกจากองค์กร",
     "create_new_user_hint": "สร้างบัญชีที่มีอยู่เฉพาะในองค์กรนี้",
+    "client_signin": "การลงชื่อเข้าใช้ไคลเอนต์",
+    "client_signin_hint": "บัญชีนี้ลงชื่อเข้าใช้ไคลเอนต์ BetterDesk และได้รับสมุดที่อยู่ที่แชร์ ไม่สามารถลงชื่อเข้าใช้คอนโซลได้",
     "select_user_placeholder": "เลือกผู้ใช้",
     "username_password_required": "กรอกชื่อผู้ใช้และรหัสผ่าน",
     "select_user_first": "เลือกผู้ใช้ก่อน",

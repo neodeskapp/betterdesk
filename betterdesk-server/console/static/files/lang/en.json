@@ -4807,6 +4807,8 @@
         "no_permission": "Your role cannot see this.",
         "remove_from_org": "Remove from organization",
         "create_new_user_hint": "Creates an account that exists only in this organization.",
+        "client_signin": "Client sign-in",
+        "client_signin_hint": "It signs in to the BetterDesk client and gets the shared address book. It cannot sign in to the console.",
         "select_user_placeholder": "Choose a user",
         "username_password_required": "Enter a username and a password.",
         "select_user_first": "Choose a user first.",

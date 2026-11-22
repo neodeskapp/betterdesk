@@ -4617,6 +4617,8 @@
     "no_permission": "Sua função não pode ver isto.",
     "remove_from_org": "Remover da organização",
     "create_new_user_hint": "Cria uma conta que existe apenas nesta organização.",
+    "client_signin": "Início de sessão do cliente",
+    "client_signin_hint": "Inicia sessão no cliente BetterDesk e recebe o livro de endereços partilhado. Não pode iniciar sessão na consola.",
     "select_user_placeholder": "Escolha um usuário",
     "username_password_required": "Informe um nome de usuário e uma senha.",
     "select_user_first": "Escolha um usuário primeiro.",

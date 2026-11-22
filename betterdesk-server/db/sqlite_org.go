@@ -196,9 +196,9 @@ func (s *SQLiteDB) UpdateOrgUser(u *OrgUser) error {
 	defer s.mu.Unlock()
 
 	_, err := s.db.Exec(
-		`UPDATE org_users SET display_name = ?, email = ?, role = ?, totp_secret = ?, avatar_url = ?
+		`UPDATE org_users SET display_name = ?, email = ?, password_hash = ?, role = ?, totp_secret = ?, avatar_url = ?
 		 WHERE id = ?`,
-		u.DisplayName, u.Email, u.Role, u.TOTPSecret, u.AvatarURL, u.ID,
+		u.DisplayName, u.Email, u.PasswordHash, u.Role, u.TOTPSecret, u.AvatarURL, u.ID,
 	)
 	return err
 }

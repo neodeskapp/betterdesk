@@ -4623,6 +4623,8 @@
     "no_permission": "Rolünüz bunu göremez.",
     "remove_from_org": "Kuruluştan çıkar",
     "create_new_user_hint": "Yalnızca bu kuruluşta bulunan bir hesap oluşturur.",
+    "client_signin": "İstemci girişi",
+    "client_signin_hint": "BetterDesk istemcisine giriş yapar ve paylaşılan adres defterini alır. Konsola giriş yapamaz.",
     "select_user_placeholder": "Bir kullanıcı seçin",
     "username_password_required": "Bir kullanıcı adı ve parola girin.",
     "select_user_first": "Önce bir kullanıcı seçin.",

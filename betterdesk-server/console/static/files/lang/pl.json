@@ -4746,6 +4746,8 @@
     "no_permission": "Twoja rola nie może tego wyświetlić.",
     "remove_from_org": "Usuń z organizacji",
     "create_new_user_hint": "Tworzy konto, które istnieje tylko w tej organizacji.",
+    "client_signin": "Logowanie klienta",
+    "client_signin_hint": "Loguje się do klienta BetterDesk i otrzymuje wspólną książkę adresową. Nie może zalogować się do konsoli.",
     "select_user_placeholder": "Wybierz użytkownika",
     "username_password_required": "Wpisz nazwę użytkownika i hasło.",
     "select_user_first": "Najpierw wybierz użytkownika.",

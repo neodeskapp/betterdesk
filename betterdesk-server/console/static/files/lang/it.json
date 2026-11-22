@@ -4617,6 +4617,8 @@
     "no_permission": "Il tuo ruolo non può vedere questo contenuto.",
     "remove_from_org": "Rimuovi dall'organizzazione",
     "create_new_user_hint": "Crea un account che esiste solo in questa organizzazione.",
+    "client_signin": "Accesso client",
+    "client_signin_hint": "Accede al client BetterDesk e riceve la rubrica condivisa. Non può accedere alla console.",
     "select_user_placeholder": "Scegli un utente",
     "username_password_required": "Inserisci un nome utente e una password.",
     "select_user_first": "Scegli prima un utente.",

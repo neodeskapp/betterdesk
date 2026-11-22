@@ -4617,6 +4617,8 @@
     "no_permission": "Su rol no puede ver esto.",
     "remove_from_org": "Quitar de la organización",
     "create_new_user_hint": "Crea una cuenta que existe solo en esta organización.",
+    "client_signin": "Inicio de sesión del cliente",
+    "client_signin_hint": "Inicia sesión en el cliente de BetterDesk y recibe la libreta de direcciones compartida. No puede iniciar sesión en la consola.",
     "select_user_placeholder": "Elija un usuario",
     "username_password_required": "Introduzca un nombre de usuario y una contraseña.",
     "select_user_first": "Elija primero un usuario.",

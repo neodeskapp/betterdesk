@@ -4623,6 +4623,8 @@
     "no_permission": "Az Ön szerepköre ezt nem láthatja.",
     "remove_from_org": "Eltávolítás a szervezetből",
     "create_new_user_hint": "Olyan fiókot hoz létre, amely csak ebben a szervezetben létezik.",
+    "client_signin": "Kliens bejelentkezés",
+    "client_signin_hint": "A BetterDesk kliensbe jelentkezik be, és megkapja a megosztott címjegyzéket. A konzolba nem tud bejelentkezni.",
     "select_user_placeholder": "Válasszon felhasználót",
     "username_password_required": "Adjon meg felhasználónevet és jelszót.",
     "select_user_first": "Először válasszon felhasználót.",
