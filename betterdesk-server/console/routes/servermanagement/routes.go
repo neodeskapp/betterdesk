@@ -1,8 +1,7 @@
 // Package servermanagement answers the routes of the server management
 // page (routes/server-management.routes.js, beta): the runtime and the
 // machine, the file browser and BetterDesk's system services. Every route
-// needs server.config. The work is done by package console/servermgmt,
-// which also has the terminal socket.
+// needs server.config. The work is done by package console/servermgmt.
 package servermanagement
 
 import (

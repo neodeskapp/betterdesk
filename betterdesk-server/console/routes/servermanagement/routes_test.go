@@ -366,12 +366,18 @@ func TestInfo(t *testing.T) {
 	s := newSite(t, db)
 	rec := s.call(s.signIn("admin"), "GET", "/api/server-management/info", "")
 	got := decode(t, rec.Body.String())
-	if got["nodeVersion"] != runtime.Version() || got["pid"] != float64(os.Getpid()) || got["beta"] != true || got["terminalSessions"] != 0.0 ||
+	if got["nodeVersion"] != runtime.Version() || got["pid"] != float64(os.Getpid()) || got["beta"] != true ||
 		got["platform"] != "linux" || got["arch"] != servermgmt.Arch() {
 		t.Errorf("info %v", got)
 	}
 	if !reflect.DeepEqual(got["server"], map[string]any{"running": true, "uptimeSeconds": 3723.0, "version": "3.5.264"}) {
 		t.Errorf("server %v", got["server"])
+	}
+	// The console has no terminal (A194): info says nothing of one
+	for _, key := range []string{"ptyAvailable", "terminalSessions"} {
+		if _, ok := got[key]; ok {
+			t.Errorf("info has %s", key)
+		}
 	}
 	want := []any{s.root + "/server", s.root + "/console", s.root + "/home", s.root + "/log", s.root + "/tmp"}
 	if !reflect.DeepEqual(got["fileRoots"], want) || !reflect.DeepEqual(got["mutableFileRoots"], want[:2]) {

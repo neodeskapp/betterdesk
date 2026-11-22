@@ -1,8 +1,7 @@
 /**
  * Server management (routes/server-management.routes.js): the machine that
  * runs the console, its files and BetterDesk's system services. Every call
- * needs server.config. The terminal is a WebSocket
- * (/ws/server-management/terminal, ui/terminal.ts shellAdapter).
+ * needs server.config.
  *
  * These routes answer `{ success: true, ...fields }` without a data
  * envelope; errors are `{ success: false, error }` with 400 or 500.
@@ -39,7 +38,6 @@ export const ServerInfo = v.looseObject({
 	arch: Str,
 	nodeVersion: Str,
 	pid: Num,
-	ptyAvailable: Bool,
 	fileRoots: Strings,
 	/** Folders where files can be changed; null when the server does not say */
 	mutableFileRoots: v.optional(v.nullable(v.array(v.string())), null),

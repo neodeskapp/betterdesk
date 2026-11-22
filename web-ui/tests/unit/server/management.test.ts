@@ -23,7 +23,7 @@ import {
 
 describe('server management tabs', () => {
 	test('?tab= picks the view; unknown or missing is the overview, as the server read it', () => {
-		expect(tabFrom('terminal')).toBe('terminal');
+		expect(tabFrom('terminal')).toBe('overview');
 		expect(tabFrom('FILES')).toBe('files');
 		expect(tabFrom('services')).toBe('services');
 		expect(tabFrom('nope')).toBe('overview');

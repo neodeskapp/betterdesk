@@ -28,7 +28,6 @@ describe('server management answers', () => {
 			platform: 'linux',
 			nodeVersion: 'v22.23.2',
 			pid: 45,
-			ptyAvailable: true,
 			fileRoots: ['/opt/rustdesk', '/app', 7],
 			mutableFileRoots: ['/opt/rustdesk', '/app'],
 			server: { running: true, uptimeSeconds: 25792, version: '3.5.219' }
@@ -45,7 +44,6 @@ describe('server management answers', () => {
 		expect(out.server).toBeNull();
 		expect(out.mutableFileRoots).toBeNull();
 		expect(out.fileRoots).toEqual([]);
-		expect(out.ptyAvailable).toBe(false);
 	});
 
 	test('a folder listing takes cwd or path, entries or items', async () => {

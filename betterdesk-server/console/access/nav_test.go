@@ -75,6 +75,22 @@ func TestNavFollowsRouteGuards(t *testing.T) {
 	}
 }
 
+// A194: the console has no server terminal, so no role sees an entry for
+// it; Server management keeps its other pages.
+func TestNavHasNoServerTerminal(t *testing.T) {
+	for _, role := range []string{"super_admin", "admin", "server_admin"} {
+		pages := pagesFor(role)
+		if pages["server-management:terminal"] {
+			t.Errorf("%s sees the server terminal", role)
+		}
+		for _, page := range []string{"server-management:overview", "server-management:files", "server-management:services"} {
+			if !pages[page] {
+				t.Errorf("%s does not see %s", role, page)
+			}
+		}
+	}
+}
+
 func TestNavSectionsAndActivePage(t *testing.T) {
 	admin := NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "admin"}
 	nav := BuildNav(admin)
@@ -84,7 +100,7 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 		ids = append(ids, section.ID)
 		total += len(section.Pages)
 	}
-	if strings.Join(ids, ",") != "devices,support,people,activity,settings" || total != 48 {
+	if strings.Join(ids, ",") != "devices,support,people,activity,settings" || total != 47 {
 		t.Errorf("admin sees sections %v with %d pages", ids, total)
 	}
 	if nav.ActivePage != nil || nav.ActiveSection != nil {

@@ -51,7 +51,7 @@ describe('searchAll', () => {
 		const titles = (q: string) => searchAll(q, { pages }).map((r) => r.title);
 		expect(titles('2fa')).toEqual(['Sign-in']);
 		expect(titles('dlp')).toEqual(['Data loss prevention']);
-		expect(titles('ssh')).toEqual(['Terminal']);
+		expect(titles('systemd')).toEqual(['Services']);
 	});
 
 	test('every word must match somewhere; case and accents do not matter', () => {

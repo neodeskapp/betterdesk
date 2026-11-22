@@ -24,8 +24,6 @@ type infoAnswer struct {
 	Arch             string        `json:"arch"`
 	NodeVersion      string        `json:"nodeVersion"`
 	PID              int           `json:"pid"`
-	PtyAvailable     bool          `json:"ptyAvailable"`
-	TerminalSessions int           `json:"terminalSessions"`
 	FileRoots        []string      `json:"fileRoots"`
 	MutableFileRoots []string      `json:"mutableFileRoots"`
 	Server           *serverStatus `json:"server"`
@@ -42,8 +40,7 @@ type serverStatus struct {
 func (h *handlers) info(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, infoAnswer{
 		Success: true, Platform: h.svc.Platform(), Arch: servermgmt.Arch(), NodeVersion: runtime.Version(),
-		PID: os.Getpid(), PtyAvailable: h.svc.PtyAvailable(), TerminalSessions: h.svc.ActiveSessions(),
-		FileRoots: h.svc.ReadRoots(), MutableFileRoots: h.svc.WriteRoots(),
+		PID: os.Getpid(), FileRoots: h.svc.ReadRoots(), MutableFileRoots: h.svc.WriteRoots(),
 		Server: serverFromHealth(h.d.Backend.GetHealth(r.Context())), Beta: true,
 	})
 }

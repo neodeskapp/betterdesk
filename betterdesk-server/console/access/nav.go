@@ -138,7 +138,6 @@ var NavSections = []NavSection{
 		navPage("dataguard", "dataguard dlp data loss", "/dataguard", "nav.dataguard", withPermission("server.config"), inGroup(groupRules)),
 		navPage("attestation", "attestation fingerprint hardware identity", "/attestation", "nav.attestation", withRule(navAdminRole), inGroup(groupRules)),
 		navPage("server-management:overview", "server management status health cpu memory uptime", "/server-management?tab=overview", "nav.server_status", withPermission("server.config"), core, inGroup(groupServer)),
-		navPage("server-management:terminal", "shell console ssh", "/server-management?tab=terminal", "server_mgmt.tab_terminal", withPermission("server.config"), inGroup(groupServer)),
 		navPage("server-management:files", "file browser", "/server-management?tab=files", "server_mgmt.tab_files", withPermission("server.config"), inGroup(groupServer)),
 		navPage("server-management:services", "systemd services", "/server-management?tab=services", "server_mgmt.tab_services", withPermission("server.config"), inGroup(groupServer)),
 		navPage("scaling", "scaling relays", "/scaling", "nav.scaling", withPermission("server.config"), inGroup(groupServer)),
