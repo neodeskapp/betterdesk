@@ -511,6 +511,29 @@ test_uninstall_says_what_stays() (
     rm -rf "$TEST_DIR"
 )
 
+# L155: the server's updater is told the repository of the releases, so an
+# installed binary with an older default does not ask upstream; one named
+# in .env stays.
+test_update_asks_the_fork() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO
+    load
+    do_backup_silent() { :; }
+    print_step() { :; }
+    print_error() { :; }
+    SERVER_BINARY_FILE=""
+    FROM_SOURCE=false
+    unset RELEASE_BASE_URL
+    server_cmd() { printf '%s/%s\n' "${UPDATE_GITHUB_OWNER:-}" "${UPDATE_GITHUB_REPO:-}" > "$TEST_DIR/seen"; return 1; }
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    update_go_install >/dev/null 2>&1 || true
+    [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = trybetterdesk/betterdesk ] \
+        || fail "betterdesk-server update ran for $(cat "$TEST_DIR/seen" 2>/dev/null || echo 'no repository')"
+    printf 'UPDATE_GITHUB_OWNER=acme\nUPDATE_GITHUB_REPO=desk\n' > "$CONSOLE_PATH/.env"
+    update_go_install >/dev/null 2>&1 || true
+    [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = acme/desk ] || fail "the repository of .env lost to the default: $(cat "$TEST_DIR/seen")"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -531,4 +554,5 @@ test_rerun_updates_and_forgets_the_password
 test_panel_public_host
 test_install_summary
 test_uninstall_says_what_stays
+test_update_asks_the_fork
 echo "Go installer unit checks passed"

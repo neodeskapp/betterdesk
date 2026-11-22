@@ -524,6 +524,28 @@ function Test-WindowsFirstHour {
     Remove-Item -Recurse -Force $dir
 }
 
+# L155: the server's updater is told the repository of the releases, so an
+# installed binary with an older default does not ask upstream; one named
+# in .env stays.
+function Test-UpdateAsksTheFork {
+    $dir = New-TestInstall
+    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'trybetterdesk', 'betterdesk'
+    $script:UPDATE_GITHUB_OWNER_GIVEN, $script:UPDATE_GITHUB_REPO_GIVEN = '', ''
+    function script:Invoke-ServerCommand { param([string[]]$Arguments, $InputText, $Binary) $script:seenRepo = "$env:UPDATE_GITHUB_OWNER/$env:UPDATE_GITHUB_REPO"; return 1 }
+    function script:Do-BackupSilent { }
+    $script:BINARY_FILE = ''
+    $script:FROM_SOURCE = $false
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept')
+    Update-GoInstall *> $null
+    if ($script:seenRepo -ne 'trybetterdesk/betterdesk') { Fail "betterdesk-server update ran for $($script:seenRepo)" }
+    Set-Content -Path $envFile -Value @('UPDATE_GITHUB_OWNER=acme', 'UPDATE_GITHUB_REPO=desk')
+    Update-GoInstall *> $null
+    if ($script:seenRepo -ne 'acme/desk') { Fail "the repository of .env lost to the default: $($script:seenRepo)" }
+    if ($env:UPDATE_GITHUB_OWNER) { Fail 'the update left UPDATE_GITHUB_OWNER in the environment' }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -537,6 +559,7 @@ Test-UpdateKeepsTheAdminsPorts
 Test-ChannelAndDownloadErrors
 Test-PanelPublicHost
 Test-WindowsFirstHour
+Test-UpdateAsksTheFork
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

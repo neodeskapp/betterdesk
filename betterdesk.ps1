@@ -1591,7 +1591,16 @@ function Update-GoInstall {
         # signature and SHA-256 checked; the running exe is renamed aside and
         # the old one kept as .prev
         Print-Step "Installing the newest release with betterdesk-server update..."
-        if ((Invoke-ServerCommand -Arguments @("update", "--yes")) -ne 0) {
+        # The repository goes to the updater: an installed binary may have
+        # an older default
+        $owner = if ($script:UPDATE_GITHUB_OWNER_GIVEN) { $script:UPDATE_GITHUB_OWNER_GIVEN } else { Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER" }
+        $repo = if ($script:UPDATE_GITHUB_REPO_GIVEN) { $script:UPDATE_GITHUB_REPO_GIVEN } else { Get-ConsoleEnvValue -Key "UPDATE_GITHUB_REPO" }
+        $savedOwner, $savedRepo = $env:UPDATE_GITHUB_OWNER, $env:UPDATE_GITHUB_REPO
+        $env:UPDATE_GITHUB_OWNER = if ($owner) { $owner } else { $script:UPDATE_GITHUB_OWNER }
+        $env:UPDATE_GITHUB_REPO = if ($repo) { $repo } else { $script:UPDATE_GITHUB_REPO }
+        try { $updateCode = Invoke-ServerCommand -Arguments @("update", "--yes") }
+        finally { $env:UPDATE_GITHUB_OWNER, $env:UPDATE_GITHUB_REPO = $savedOwner, $savedRepo }
+        if ($updateCode -ne 0) {
             Print-Error "betterdesk-server update failed"
             return $false
         }
@@ -3070,6 +3079,9 @@ function Do-Install {
 #===============================================================================
 
 # GitHub repository configuration for online updates
+# A repository given to the installer wins over .env, and .env over these
+$script:UPDATE_GITHUB_OWNER_GIVEN = "$env:UPDATE_GITHUB_OWNER"
+$script:UPDATE_GITHUB_REPO_GIVEN = "$env:UPDATE_GITHUB_REPO"
 $script:UPDATE_GITHUB_OWNER = if ($env:UPDATE_GITHUB_OWNER) { $env:UPDATE_GITHUB_OWNER } else { "trybetterdesk" }
 $script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_REPO } else { "betterdesk" }
 # A channel given to the installer (-Channel, else UPDATE_GITHUB_BRANCH) wins

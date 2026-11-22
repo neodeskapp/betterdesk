@@ -4883,7 +4883,13 @@ update_go_install() {
         # The server's own updater: the release of the channel, its manifest
         # signature and SHA-256 checked, the old binary kept as .prev
         print_step "Installing the newest release with betterdesk-server update..."
-        if ! server_cmd --as-service update --yes; then
+        # The repository goes to the updater: an installed binary may have
+        # an older default
+        local owner repo
+        owner="${UPDATE_GITHUB_OWNER_GIVEN:-$(env_file_value "$CONSOLE_PATH/.env" UPDATE_GITHUB_OWNER)}"
+        repo="${UPDATE_GITHUB_REPO_GIVEN:-$(env_file_value "$CONSOLE_PATH/.env" UPDATE_GITHUB_REPO)}"
+        if ! UPDATE_GITHUB_OWNER="${owner:-$UPDATE_GITHUB_OWNER}" UPDATE_GITHUB_REPO="${repo:-$UPDATE_GITHUB_REPO}" \
+            server_cmd --as-service update --yes; then
             print_error "betterdesk-server update failed"
             return 1
         fi
@@ -5164,6 +5170,9 @@ do_install() {
 #===============================================================================
 
 # GitHub repository configuration for online updates
+# A repository given to the installer wins over .env, and .env over these
+UPDATE_GITHUB_OWNER_GIVEN="${UPDATE_GITHUB_OWNER:-}"
+UPDATE_GITHUB_REPO_GIVEN="${UPDATE_GITHUB_REPO:-}"
 UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-trybetterdesk}"
 UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-betterdesk}"
 # A channel given to the installer (install.sh passes the branch it
