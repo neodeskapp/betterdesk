@@ -6446,6 +6446,8 @@
     "empty_desc": "Elige un rol a la izquierda para ver sus permisos.",
     "locked_title": "Super Admin",
     "locked_desc": "Este rol está protegido y solo puede cambiarse mediante la asignación predeterminada.",
+    "fixed_pro_devices": "Sin efecto: una cuenta de licencia Pro nunca recibe permisos de dispositivos.",
+    "fixed_assigns_no_role": "Sin efecto: este rol no puede asignar ningún rol, así que no puede crear ni eliminar cuentas.",
     "cat_device": "Dispositivos",
     "cat_user": "Usuarios",
     "cat_server": "Administración del servidor",

@@ -6446,6 +6446,8 @@
     "empty_desc": "Kies links een rol om de machtigingen te bekijken.",
     "locked_title": "Super Admin",
     "locked_desc": "Deze rol erft zijn basisgedrag uit de ingebouwde beveiligingshiërarchie.",
+    "fixed_pro_devices": "Geen effect: een Pro-licentieaccount krijgt nooit apparaatrechten.",
+    "fixed_assigns_no_role": "Geen effect: deze rol kan geen rol toekennen en dus geen accounts aanmaken of verwijderen.",
     "cat_device": "Apparaten",
     "cat_user": "Gebruikers",
     "cat_server": "Serversysteem",

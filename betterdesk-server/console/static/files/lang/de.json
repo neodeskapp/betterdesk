@@ -6446,6 +6446,8 @@
     "empty_desc": "Wählen Sie eine Rolle, um ihre Berechtigungen zu sehen.",
     "locked_title": "Super Admin",
     "locked_desc": "Diese Rolle hat immer alle Berechtigungen. Das lässt sich nicht ändern.",
+    "fixed_pro_devices": "Ohne Wirkung: Ein Pro-Lizenzkonto erhält nie Geräteberechtigungen.",
+    "fixed_assigns_no_role": "Ohne Wirkung: Diese Rolle kann keine Rolle vergeben und daher keine Konten anlegen oder löschen.",
     "cat_device": "Geräte",
     "cat_user": "Benutzer",
     "cat_server": "Serververwaltung",

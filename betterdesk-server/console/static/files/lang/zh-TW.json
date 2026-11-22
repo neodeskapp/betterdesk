@@ -4339,6 +4339,8 @@
     "empty_desc": "從上方下拉列表中選擇一個角色以查看和管理其權限。",
     "locked_title": "超級管理員",
     "locked_desc": "超級管理員默認擁有所有權限，無法自定義。",
+    "fixed_pro_devices": "無效：Pro 授權帳戶永遠不會取得裝置權限。",
+    "fixed_assigns_no_role": "無效：此角色不能授予任何角色，因此不能建立或刪除帳戶。",
     "cat_device": "設備",
     "cat_user": "用戶",
     "cat_server": "服務器",

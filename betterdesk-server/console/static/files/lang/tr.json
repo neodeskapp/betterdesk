@@ -6452,6 +6452,8 @@
     "empty_desc": "İzinlerini görüntülemek ve yönetmek için yukarıdaki açılır menüden bir rol seçin.",
     "locked_title": "Super Admin",
     "locked_desc": "Süper Yönetici varsayılan olarak tüm izinlere sahiptir ve özelleştirilemez.",
+    "fixed_pro_devices": "Etkisi yok: Pro lisans hesabı hiçbir zaman cihaz izni almaz.",
+    "fixed_assigns_no_role": "Etkisi yok: bu rol hiçbir rol veremez, bu yüzden hesap oluşturamaz veya silemez.",
     "cat_device": "Cihazlar",
     "cat_user": "Kullanıcılar",
     "cat_server": "Sunucu",

@@ -4317,6 +4317,8 @@
     "empty_desc": "从上方下拉列表中选择一个角色以查看和管理其权限。",
     "locked_title": "超级管理员",
     "locked_desc": "超级管理员默认拥有所有权限，无法自定义。",
+    "fixed_pro_devices": "无效：Pro 许可证账户永远不会获得设备权限。",
+    "fixed_assigns_no_role": "无效：此角色不能授予任何角色，因此不能创建或删除账户。",
     "cat_device": "设备",
     "cat_user": "用户",
     "cat_server": "服务器",

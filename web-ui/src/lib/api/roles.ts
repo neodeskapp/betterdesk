@@ -28,7 +28,12 @@ export const RoleInfo = v.looseObject({
 		v.transform((b) => !!b)
 	),
 	/** The role's defaults */
-	permissions: Strings
+	permissions: Strings,
+	/** Permissions the code fixes for the role, each with the rule's name: a tick there has no effect */
+	fixed: v.pipe(
+		v.optional(v.nullable(v.record(v.string(), v.string())), null),
+		v.transform((f) => f ?? {})
+	)
 });
 export type RoleInfo = v.InferOutput<typeof RoleInfo>;
 

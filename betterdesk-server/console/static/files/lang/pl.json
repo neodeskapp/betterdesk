@@ -4335,6 +4335,8 @@
     "empty_desc": "Wybierz rolę z listy powyżej, aby przeglądać i zarządzać jej uprawnieniami.",
     "locked_title": "Super Admin",
     "locked_desc": "Super Admin ma domyślnie wszystkie uprawnienia i nie można ich dostosowywać.",
+    "fixed_pro_devices": "Bez skutku: konto z licencją Pro nigdy nie dostaje uprawnień do urządzeń.",
+    "fixed_assigns_no_role": "Bez skutku: ta rola nie może nadać żadnej roli, więc nie może tworzyć ani usuwać kont.",
     "cat_device": "Urządzenia",
     "cat_user": "Użytkownicy",
     "cat_server": "Serwer",

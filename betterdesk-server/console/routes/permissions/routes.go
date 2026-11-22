@@ -73,9 +73,28 @@ func answerRead(w http.ResponseWriter, r *http.Request, result *goapi.Object) {
 	kit.JSON(w, r, http.StatusOK, result)
 }
 
-// roles answers GET /api/panel/roles.
+// roles answers GET /api/panel/roles: the API server's list with, on
+// each role, "fixed": the permissions the code decides for the role, each
+// with the rule's name (access.FixedPermissions). A tick on one of them
+// has no effect.
 func (h *handlers) roles(w http.ResponseWriter, r *http.Request) {
-	answerRead(w, r, h.api.ListRoles(r.Context()))
+	result := h.api.ListRoles(r.Context())
+	if roles, isList := goapi.Dig(result, "data", "roles").([]any); isList {
+		for _, entry := range roles {
+			role, isObject := entry.(*goapi.Object)
+			if !isObject {
+				continue
+			}
+			fixed := goapi.NewObject()
+			if name, isText := role.Get("name").(string); isText {
+				for _, f := range access.FixedPermissions(name) {
+					fixed.Set(f.Permission, f.Reason)
+				}
+			}
+			role.Set("fixed", fixed)
+		}
+	}
+	answerRead(w, r, result)
 }
 
 // rolePermissions answers GET /api/panel/roles/{role}/permissions: the

@@ -6452,6 +6452,8 @@
     "empty_desc": "Chọn một vai trò từ danh sách thả xuống ở trên để xem và quản lý các quyền của vai trò đó.",
     "locked_title": "Super Admin",
     "locked_desc": "Quản trị viên cấp cao có tất cả các quyền theo mặc định và không thể tùy chỉnh.",
+    "fixed_pro_devices": "Không có tác dụng: tài khoản giấy phép Pro không bao giờ có quyền với thiết bị.",
+    "fixed_assigns_no_role": "Không có tác dụng: vai trò này không cấp được vai trò nào nên không thể tạo hay xóa tài khoản.",
     "cat_device": "Thiết bị",
     "cat_user": "Người dùng",
     "cat_server": "Máy chủ",

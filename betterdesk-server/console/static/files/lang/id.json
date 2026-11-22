@@ -6452,6 +6452,8 @@
     "empty_desc": "Pilih peran dari dropdown di atas untuk melihat dan mengelola izinnya.",
     "locked_title": "Super Admin",
     "locked_desc": "Admin Super memiliki semua izin secara default dan tidak dapat dikustomisasi.",
+    "fixed_pro_devices": "Tidak berpengaruh: akun lisensi Pro tidak pernah mendapat izin perangkat.",
+    "fixed_assigns_no_role": "Tidak berpengaruh: peran ini tidak bisa memberi peran apa pun, jadi tidak bisa membuat atau menghapus akun.",
     "cat_device": "Perangkat",
     "cat_user": "Pengguna",
     "cat_server": "pelayan",

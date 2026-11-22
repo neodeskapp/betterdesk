@@ -6452,6 +6452,8 @@
     "empty_desc": "Välj en roll från rullgardinsmenyn ovan för att se och hantera dess behörigheter.",
     "locked_title": "Superadministratör",
     "locked_desc": "Super Admin har alla behörigheter som standard och kan inte anpassas.",
+    "fixed_pro_devices": "Ingen verkan: ett Pro-licenskonto får aldrig enhetsbehörigheter.",
+    "fixed_assigns_no_role": "Ingen verkan: den här rollen kan inte tilldela någon roll och kan därför inte skapa eller ta bort konton.",
     "cat_device": "Enheter",
     "cat_user": "Användare",
     "cat_server": "Serversystem",

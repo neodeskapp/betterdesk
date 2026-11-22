@@ -104,6 +104,41 @@ func SafeAPIID(value, label string) (string, error) {
 	return v, nil
 }
 
+// FixedPermission is a permission whose tick on a role takes no effect,
+// whatever the role's overrides say, because a rule in the code decides
+// it. Reason names the rule: "pro_devices" (a Pro license account never
+// gets device and remote target permissions, nor assigns devices to
+// organizations) or "assigns_no_role" (a role that can give no role
+// creates and deletes no account).
+type FixedPermission struct {
+	Permission string
+	Reason     string
+}
+
+// FixedPermissions lists the permissions of a role that the code fixes,
+// in the order of auth.AllPermissions. The super admin roles have none:
+// they have every permission and take no overrides. A role the server
+// does not know has none either.
+func FixedPermissions(role string) []FixedPermission {
+	if auth.IsSuperAdminRole(role) || !auth.ValidRole(role) {
+		return nil
+	}
+	givesARole := false
+	for _, target := range listedRoles {
+		givesARole = givesARole || auth.CanAssignRole(role, target)
+	}
+	var out []FixedPermission
+	for _, p := range auth.AllPermissions {
+		switch {
+		case auth.IsProRole(role) && auth.ProRoleBlocksPermission(p):
+			out = append(out, FixedPermission{p, "pro_devices"})
+		case !givesARole && (p == auth.PermUserCreate || p == auth.PermUserDelete):
+			out = append(out, FixedPermission{p, "assigns_no_role"})
+		}
+	}
+	return out
+}
+
 // DBRoleSource is the role catalogue on the server's own database.
 type DBRoleSource struct {
 	store OverrideStore

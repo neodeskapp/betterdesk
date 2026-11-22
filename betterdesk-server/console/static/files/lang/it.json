@@ -6446,6 +6446,8 @@
     "empty_desc": "Scegli un ruolo a sinistra per visualizzarne i permessi.",
     "locked_title": "Super Admin",
     "locked_desc": "Questo ruolo eredita il comportamento base dalla gerarchia di sicurezza integrata.",
+    "fixed_pro_devices": "Nessun effetto: un account con licenza Pro non riceve mai permessi sui dispositivi.",
+    "fixed_assigns_no_role": "Nessun effetto: questo ruolo non può assegnare ruoli, quindi non può creare né eliminare account.",
     "cat_device": "Dispositivi",
     "cat_user": "Utenti",
     "cat_server": "Sistema server",

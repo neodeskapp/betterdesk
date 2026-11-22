@@ -6452,6 +6452,8 @@
     "empty_desc": "Válasszon egy szerepet a fenti legördülő menüből, hogy megtekinthesse és kezelhesse az engedélyeit.",
     "locked_title": "Szuper adminisztrátor",
     "locked_desc": "A Super Admin alapértelmezés szerint minden jogosultsággal rendelkezik, és nem testreszabható.",
+    "fixed_pro_devices": "Nincs hatása: egy Pro-licencfiók soha nem kap eszközjogosultságokat.",
+    "fixed_assigns_no_role": "Nincs hatása: ez a szerepkör nem adhat szerepkört, ezért fiókot sem hozhat létre és nem törölhet.",
     "cat_device": "Eszközök",
     "cat_user": "Felhasználók",
     "cat_server": "Szerver",

@@ -5,6 +5,9 @@
   says "Saving…", then "Saved" or why it failed. Changed permissions are
   marked with words and can be reset one by one, or all at once from the
   danger zone. Super admin roles always have everything (a note says so).
+  A permission the code fixes for the role (the server's "fixed") shows
+  off and locked with the reason; an override stored for it before can
+  still be reset.
 
   URL: ?role= opens that role and follows the picker.
 -->
@@ -62,6 +65,7 @@
 	const changed = $derived(overrideMap(overrides, role));
 	const groups = $derived(permissionGroups(all));
 	const defaults = $derived(new Set(current?.permissions ?? []));
+	const fixed = $derived(current?.fixed ?? {});
 
 	function roleLabel(name: string): string {
 		const key = `users.role_${name}`;
@@ -213,13 +217,15 @@
 									{#each g.permissions as perm (perm)}
 										{@const isChanged = changed.has(perm)}
 										{@const st = rowStatus.get(perm)}
+										{@const fixedBy = fixed[perm]}
 										<li class={['perm-row', isChanged && 'is-changed']} data-perm={perm}>
 											<Switch
 												class="perm-switch"
 												label={permLabel(perm, t)}
 												hint={perm}
-												checked={effective.has(perm)}
-												disabled={busy.has(perm)}
+												effect={fixedBy ? t(`permissions.fixed_${fixedBy}`) : undefined}
+												checked={!fixedBy && effective.has(perm)}
+												disabled={!!fixedBy || busy.has(perm)}
 												onchange={(e) => toggle(perm, (e.currentTarget as HTMLInputElement).checked)}
 											/>
 											<span class="row-end">

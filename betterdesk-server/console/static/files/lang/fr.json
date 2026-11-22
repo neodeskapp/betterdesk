@@ -4339,6 +4339,8 @@
     "empty_desc": "Choose a role from the dropdown above to view and manage its permissions.",
     "locked_title": "Super Admin",
     "locked_desc": "Super Admin has all permissions by default and cannot be customized.",
+    "fixed_pro_devices": "Sans effet : un compte de licence Pro n’obtient jamais de permissions sur les appareils.",
+    "fixed_assigns_no_role": "Sans effet : ce rôle ne peut attribuer aucun rôle, il ne peut donc ni créer ni supprimer de comptes.",
     "cat_device": "Appareils",
     "cat_user": "Utilisateurs",
     "cat_server": "Serveur",

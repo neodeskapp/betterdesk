@@ -6452,6 +6452,8 @@
     "empty_desc": "Alegeți un rol din meniul derulant de mai sus pentru a vedea și gestiona permisiunile acestuia.",
     "locked_title": "Super administrator",
     "locked_desc": "Super Admin are toate permisiunile în mod implicit și nu poate fi personalizat.",
+    "fixed_pro_devices": "Fără efect: un cont cu licență Pro nu primește niciodată permisiuni pentru dispozitive.",
+    "fixed_assigns_no_role": "Fără efect: acest rol nu poate acorda niciun rol, deci nu poate crea sau șterge conturi.",
     "cat_device": "Dispozitive",
     "cat_user": "Utilizatori",
     "cat_server": "Sistem server",

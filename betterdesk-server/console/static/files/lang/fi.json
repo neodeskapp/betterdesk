@@ -6452,6 +6452,8 @@
     "empty_desc": "Valitse rooli yllä olevasta avattavasta valikosta nähdäksesi ja hallinnoidaksesi sen käyttöoikeuksia.",
     "locked_title": "Pääkäyttäjä",
     "locked_desc": "Super Adminilla on oletuksena kaikki käyttöoikeudet, eikä sitä voi mukauttaa.",
+    "fixed_pro_devices": "Ei vaikutusta: Pro-lisenssitili ei koskaan saa laiteoikeuksia.",
+    "fixed_assigns_no_role": "Ei vaikutusta: tämä rooli ei voi antaa mitään roolia, joten se ei voi luoda eikä poistaa tilejä.",
     "cat_device": "Laitteet",
     "cat_user": "Käyttäjät",
     "cat_server": "Palvelin",

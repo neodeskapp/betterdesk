@@ -4396,6 +4396,8 @@
         "empty_desc": "Choose a role to see its permissions.",
         "locked_title": "Super Admin",
         "locked_desc": "This role always has every permission. It cannot be changed.",
+        "fixed_pro_devices": "No effect: a Pro license account never gets device permissions.",
+        "fixed_assigns_no_role": "No effect: this role can give no role, so it cannot create or delete accounts.",
         "cat_device": "Devices",
         "cat_user": "Users",
         "cat_server": "Server",

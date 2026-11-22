@@ -6452,6 +6452,8 @@
     "empty_desc": "Vælg en rolle fra rullemenuen ovenfor for at se og administrere dens tilladelser.",
     "locked_title": "Superadministrator",
     "locked_desc": "Super Admin har alle tilladelser som standard og kan ikke tilpasses.",
+    "fixed_pro_devices": "Ingen virkning: en Pro-licenskonto får aldrig enhedstilladelser.",
+    "fixed_assigns_no_role": "Ingen virkning: denne rolle kan ikke tildele nogen rolle og kan derfor ikke oprette eller slette konti.",
     "cat_device": "Enheder",
     "cat_user": "Brugere",
     "cat_server": "Serversystem",
