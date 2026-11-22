@@ -2512,6 +2512,11 @@ merge_console_env() {
     if [ "$fresh_install" = "true" ] && ! grep -q '^INIT_ADMIN_PASS=' "$env_file"; then
         printf 'INIT_ADMIN_PASS=%s\n' "$admin_password" >> "$env_file"
     fi
+    # A new install starts in Managed: new clients wait for approval. This
+    # is only the first default; a mode saved in the console wins.
+    if [ "$fresh_install" = "true" ] && ! grep -q '^ENROLLMENT_MODE=' "$env_file"; then
+        printf 'ENROLLMENT_MODE=managed\n' >> "$env_file"
+    fi
     # The update channel the installer was given, over the template's main
     save_given_update_channel
 

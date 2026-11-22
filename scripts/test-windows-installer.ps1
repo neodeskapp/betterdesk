@@ -51,7 +51,6 @@ function New-TestInstall {
     $script:RELAY_SERVERS = '203.0.113.7'
     $script:RELAY_MODE = 'auto'
     $script:USE_POSTGRESQL = $false
-    $script:FRESH_INSTALL = $false
     $script:RUN_AS_ROOT = $false
     $script:LOG_FILE = Join-Path $dir 'test.log'
     $env:CONNECTION_MODE_SET = '1'
@@ -293,6 +292,49 @@ function Test-ReleasesComeFromTheFork {
     foreach ($k in $saved.Keys) { [Environment]::SetEnvironmentVariable($k, $saved[$k]) }
 }
 
+# A stand-in for betterdesk-server.exe: env merge writes a small .env (the
+# admin password only on a fresh one), upgrade-env changes nothing.
+function Use-FakeServerBinary {
+    function script:Get-ServerBinaryPath { 'fake-server' }
+    function script:Test-BinaryHasSubcommands { param($Path) $true }
+    function script:fake-server {
+        if ($args[0] -eq 'env' -and $args[1] -eq 'merge') {
+            $target = $args[3]
+            if ($args -contains '--fresh') {
+                Set-Content -Path $target -Value @("DEFAULT_ADMIN_PASSWORD=$env:BD_SUBST_DEFAULT_ADMIN_PASSWORD", 'DB_TYPE=sqlite')
+            }
+            Write-Output '{"success":true}'
+        }
+        $global:LASTEXITCODE = 0
+    }
+}
+
+# L65 and L36: a fresh install starts in Managed through .env, the first
+# default a mode saved in the console replaces. An update adds no mode,
+# and the service gets neither the mode nor ENROLLMENT_MODE_ENV_OVERRIDE,
+# which would put the installer's value over the console's.
+function Test-FreshInstallStartsManaged {
+    $dir = New-TestInstall
+    Use-FakeServerBinary
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    $env:ADMIN_PASSWORD = 'Fresh-Admin-Pass-1'
+    Merge-ConsoleEnv -FreshInstall $true *> $null
+    if ((Get-ConsoleEnvValue -Key 'ENROLLMENT_MODE') -ne 'managed') { Fail "a fresh .env does not start in Managed: $(Get-Content $envFile)" }
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'DB_TYPE=sqlite')
+    Merge-ConsoleEnv -FreshInstall $false *> $null
+    if (Get-ConsoleEnvValue -Key 'ENROLLMENT_MODE') { Fail 'an update added an enrollment mode to .env' }
+    $env:ADMIN_PASSWORD = $null
+
+    $script:fakeNssm = 'fake-nssm'
+    $script:nssmCalls = @()
+    Setup-Services | Out-Null
+    $script:fakeNssm = $null
+    $envCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppEnvironmentExtra' } | Select-Object -Last 1
+    if (-not $envCall) { Fail 'the NSSM service gets no environment' }
+    elseif (@($envCall | Where-Object { $_ -like 'ENROLLMENT_MODE*' }).Count -gt 0) { Fail "the service sets the enrollment mode: $($envCall -join ' ')" }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -300,6 +342,7 @@ Test-ConsoleHomeCopiesNoConsoleFiles
 Test-MigrationMenusPassOverwrite
 Test-PostgreSQLSwitchMovesTheWholeInstall
 Test-ReleasesComeFromTheFork
+Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'
 # The stand-ins set LASTEXITCODE, and a caller such as GitHub's pwsh step

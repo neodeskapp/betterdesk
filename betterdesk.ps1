@@ -259,9 +259,6 @@ $script:BINARIES_OK = $false
 $script:DATABASE_OK = $false
 $script:CONSOLE_TYPE = "none"  # none, nodejs
 $script:SERVER_TYPE = "none"    # none, go, rust
-# FRESH_INSTALL gates new-install defaults (e.g. managed enrollment mode). It
-# stays $false for UPDATE/REPAIR so existing installs keep their current policy.
-$script:FRESH_INSTALL = $false
 # Logging
 $script:LOG_FILE = "$env:TEMP\betterdesk_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 
@@ -693,6 +690,11 @@ function Merge-ConsoleEnv {
     # console keeps an admin it did not make: both take the same password
     if ($FreshInstall -and -not (Get-ConsoleEnvValue -Key "INIT_ADMIN_PASS")) {
         Set-ConsoleEnvValue -Key "INIT_ADMIN_PASS" -Value ([string]$adminPassword)
+    }
+    # A new install starts in Managed: new clients wait for approval. This
+    # is only the first default; a mode saved in the console wins.
+    if ($FreshInstall -and -not (Get-ConsoleEnvValue -Key "ENROLLMENT_MODE")) {
+        Set-ConsoleEnvValue -Key "ENROLLMENT_MODE" -Value "managed"
     }
 
     $supervisor = if (Get-NssmPath) { "nssm" } else { "task" }
@@ -1729,9 +1731,6 @@ function Setup-Services {
 
     $serverArgs = Get-ServerArguments -ServerIP $serverIP
     $extra = @($connModeEnv)
-    # New installs default to "managed" enrollment so stock RustDesk clients are
-    # queued for operator approval. Existing installs are left untouched.
-    if ($script:FRESH_INSTALL) { $extra += "ENROLLMENT_MODE=managed" }
 
     $nssm = Get-NssmPath
     if (-not $nssm) {
@@ -2811,10 +2810,6 @@ function Do-Install {
         }
         Do-BackupSilent
     }
-
-    # Treat as fresh only when no database exists yet. Reinstalls over an
-    # existing database preserve the operator's current enrollment policy.
-    $script:FRESH_INSTALL = -not $script:DATABASE_OK
 
     Write-Host ""
     Print-Info "Starting BetterDesk v$script:VERSION installation..."

@@ -112,6 +112,7 @@ test_write_server_unit() (
     grep -qx "Environment=BETTERDESK_SUPERVISOR=systemd" "$unit" || fail "BETTERDESK_SUPERVISOR"
     grep -qx "Environment=BETTERDESK_ENV_FILE=$CONSOLE_PATH/.env" "$unit" || fail "BETTERDESK_ENV_FILE"
     grep -qx "SuccessExitStatus=3" "$unit" || fail "SuccessExitStatus"
+    if grep -q 'ENROLLMENT_MODE' "$unit"; then fail "the unit sets the enrollment mode"; fi
     grep -qx "Restart=always" "$unit" || fail "Restart"
     grep -qx "ExecStart=$RUSTDESK_PATH/betterdesk-server -mode all -api-port 21114" "$unit" || fail "ExecStart"
     if grep -q 'CONSOLE_PORT\|EnvironmentFile\|__EMPTY__\|AmbientCapabilities' "$unit"; then
@@ -183,6 +184,9 @@ FAKE
     grep -qx 'INIT_ADMIN_PASS=Fresh-Admin-Pass-1' "$CONSOLE_PATH/.env" \
         || fail "a fresh .env has no INIT_ADMIN_PASS of the admin password: $(grep -c INIT_ADMIN_PASS "$CONSOLE_PATH/.env") lines"
     grep -qx "DB_URL=$RUSTDESK_PATH/db_v2.sqlite3" "$CONSOLE_PATH/.env" || fail "DB_URL of a fresh SQLite install"
+    # L65: a fresh install starts in Managed; .env is only the first
+    # default, a mode saved in the console wins
+    grep -qx 'ENROLLMENT_MODE=managed' "$CONSOLE_PATH/.env" || fail "a fresh .env does not start in Managed"
     rm -rf "$TEST_DIR"
 )
 
@@ -255,6 +259,7 @@ FAKE
     printf 'UPDATE_GITHUB_BRANCH=dev\nDEFAULT_ADMIN_PASSWORD=x\n' > "$CONSOLE_PATH/.env"
     merge_console_env false >/dev/null
     grep -qx 'UPDATE_GITHUB_BRANCH=dev' "$CONSOLE_PATH/.env" || fail "an update without a channel changed .env"
+    if grep -q '^ENROLLMENT_MODE' "$CONSOLE_PATH/.env"; then fail "an update added an enrollment mode to .env"; fi
     read_update_github_branch_from_env
     [ "$UPDATE_GITHUB_BRANCH" = dev ] || fail "the channel of .env was not read: $UPDATE_GITHUB_BRANCH"
     rm -rf "$TEST_DIR"
