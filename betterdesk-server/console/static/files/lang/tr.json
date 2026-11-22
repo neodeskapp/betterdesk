@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "Cihaza farklı bir ID verin",
     "action_ban_desc": "Bu cihazın bağlanmasını engelle",
     "action_unban_desc": "Bu cihazın tekrar bağlanmasına izin ver",
-    "action_delete_desc": "Bu cihazı kalıcı olarak kaldır",
+    "action_delete_desc": "Bu cihazı gizle ve kimliğini koru ya da kalıcı olarak sil",
     "tab_hardware": "Hardware",
     "tab_metrics": "Metrikler",
     "section_system": "System",

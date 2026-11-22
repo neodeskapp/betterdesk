@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "กำหนด ID อื่นให้อุปกรณ์",
     "action_ban_desc": "บล็อกอุปกรณ์นี้ไม่ให้เชื่อมต่อ",
     "action_unban_desc": "อนุญาตให้อุปกรณ์นี้เชื่อมต่ออีกครั้ง",
-    "action_delete_desc": "นำอุปกรณ์นี้ออกอย่างถาวร",
+    "action_delete_desc": "ซ่อนอุปกรณ์นี้และเก็บ ID ไว้ หรือลบออกอย่างถาวร",
     "tab_hardware": "Hardware",
     "tab_metrics": "เมตริก",
     "section_system": "System",

@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "Anna laitteelle toinen ID",
     "action_ban_desc": "Estä tätä laitetta muodostamasta yhteyttä",
     "action_unban_desc": "Anna tämän laitteen muodostaa yhteys uudelleen",
-    "action_delete_desc": "Poista tämä laite pysyvästi",
+    "action_delete_desc": "Piilota tämä laite ja säilytä sen tunnus, tai poista se pysyvästi",
     "tab_hardware": "Hardware",
     "tab_metrics": "Mittarit",
     "section_system": "System",

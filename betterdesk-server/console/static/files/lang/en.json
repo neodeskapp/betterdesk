@@ -2672,7 +2672,7 @@
         "action_change_id_desc": "Give the device a different ID",
         "action_ban_desc": "Block this device from connecting",
         "action_unban_desc": "Allow this device to connect again",
-        "action_delete_desc": "Permanently remove this device",
+        "action_delete_desc": "Hide this device and keep its ID, or delete it for good",
         "tab_hardware": "Hardware",
         "tab_metrics": "Metrics",
         "tab_services": "Services",

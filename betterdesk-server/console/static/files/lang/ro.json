@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "Dați dispozitivului un alt ID",
     "action_ban_desc": "Blocați conectarea acestui dispozitiv",
     "action_unban_desc": "Permiteți acestui dispozitiv să se conecteze din nou",
-    "action_delete_desc": "Eliminați definitiv acest dispozitiv",
+    "action_delete_desc": "Ascundeți acest dispozitiv și păstrați-i ID-ul, sau ștergeți-l definitiv",
     "tab_hardware": "Hardware",
     "tab_metrics": "Metrici",
     "section_system": "System",

@@ -2614,7 +2614,7 @@
     "action_change_id_desc": "Donner un autre ID à l'appareil",
     "action_ban_desc": "Empêcher cet appareil de se connecter",
     "action_unban_desc": "Permettre à cet appareil de se reconnecter",
-    "action_delete_desc": "Supprimer définitivement cet appareil",
+    "action_delete_desc": "Masquer cet appareil et garder son ID, ou le supprimer définitivement",
     "tab_hardware": "Matériel",
     "tab_metrics": "Métriques",
     "tab_services": "Services",

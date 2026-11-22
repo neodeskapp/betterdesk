@@ -2592,7 +2592,7 @@
     "action_change_id_desc": "Přidělit zařízení jiné ID",
     "action_ban_desc": "Zablokovat tomuto zařízení připojení",
     "action_unban_desc": "Znovu povolit tomuto zařízení připojení",
-    "action_delete_desc": "Trvale odstranit toto zařízení",
+    "action_delete_desc": "Skrýt toto zařízení a ponechat jeho ID, nebo ho trvale smazat",
     "tab_hardware": "Hardware",
     "tab_metrics": "Metriky",
     "section_system": "Systém",

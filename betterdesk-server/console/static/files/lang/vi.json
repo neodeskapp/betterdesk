@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "Đặt ID khác cho thiết bị",
     "action_ban_desc": "Chặn kết nối thiết bị này",
     "action_unban_desc": "Cho phép thiết bị này kết nối lại",
-    "action_delete_desc": "Xóa vĩnh viễn thiết bị này",
+    "action_delete_desc": "Ẩn thiết bị này và giữ ID của nó, hoặc xóa vĩnh viễn",
     "tab_hardware": "Hardware",
     "tab_metrics": "Số liệu",
     "section_system": "System",

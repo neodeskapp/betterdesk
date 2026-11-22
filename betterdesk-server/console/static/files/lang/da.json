@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "Giv enheden et andet ID",
     "action_ban_desc": "Bloker denne enhed fra at oprette forbindelse",
     "action_unban_desc": "Tillad denne enhed at oprette forbindelse igen",
-    "action_delete_desc": "Fjern denne enhed permanent",
+    "action_delete_desc": "Skjul denne enhed og behold dens ID, eller slet den permanent",
     "tab_hardware": "Hardware",
     "tab_metrics": "Målinger",
     "section_system": "System",

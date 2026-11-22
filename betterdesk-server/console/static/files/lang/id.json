@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "Beri perangkat ID yang berbeda",
     "action_ban_desc": "Blokir perangkat ini agar tidak terhubung",
     "action_unban_desc": "Izinkan perangkat ini terhubung kembali",
-    "action_delete_desc": "Hapus perangkat ini secara permanen",
+    "action_delete_desc": "Sembunyikan perangkat ini dan simpan ID-nya, atau hapus secara permanen",
     "tab_hardware": "Hardware",
     "tab_metrics": "Metrik",
     "section_system": "System",

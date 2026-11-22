@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "Призначити пристрою інший ID",
     "action_ban_desc": "Заблокувати підключення цього пристрою",
     "action_unban_desc": "Дозвольте цьому пристрою знову підключитися",
-    "action_delete_desc": "Видалити цей пристрій назавжди",
+    "action_delete_desc": "Приховати цей пристрій і зберегти його ID або видалити назавжди",
     "tab_hardware": "Hardware",
     "tab_metrics": "Метрики",
     "section_system": "System",

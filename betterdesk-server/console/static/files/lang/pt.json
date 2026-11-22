@@ -2592,7 +2592,7 @@
     "action_change_id_desc": "Dar outro ID ao dispositivo",
     "action_ban_desc": "Impedir este dispositivo de se conectar",
     "action_unban_desc": "Permitir que este dispositivo se conecte novamente",
-    "action_delete_desc": "Remover permanentemente este dispositivo",
+    "action_delete_desc": "Ocultar este dispositivo e manter o seu ID, ou eliminá-lo definitivamente",
     "tab_hardware": "Hardware",
     "tab_metrics": "Métricas",
     "section_system": "Sistema",

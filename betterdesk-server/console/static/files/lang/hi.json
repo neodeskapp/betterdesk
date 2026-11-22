@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "डिवाइस को दूसरी ID दें",
     "action_ban_desc": "इस डिवाइस को कनेक्ट होने से रोकें",
     "action_unban_desc": "इस डिवाइस को फिर से कनेक्ट होने दें",
-    "action_delete_desc": "इस उपकरण को स्थायी रूप से हटा दें",
+    "action_delete_desc": "इस डिवाइस को छिपाएँ और इसकी ID बनाए रखें, या इसे स्थायी रूप से हटाएँ",
     "tab_hardware": "Hardware",
     "tab_metrics": "मेट्रिक्स",
     "section_system": "System",

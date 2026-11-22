@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "Másik ID megadása az eszköznek",
     "action_ban_desc": "Az eszköz csatlakozásának letiltása",
     "action_unban_desc": "Engedélyezze, hogy az eszköz újra csatlakozzon",
-    "action_delete_desc": "Véglegesen távolítsa el ezt az eszközt",
+    "action_delete_desc": "Az eszköz elrejtése az azonosítója megtartásával, vagy végleges törlése",
     "tab_hardware": "Hardware",
     "tab_metrics": "Metrikák",
     "section_system": "System",

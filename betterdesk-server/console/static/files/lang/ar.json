@@ -2599,7 +2599,7 @@
     "action_change_id_desc": "منح الجهاز معرّفًا مختلفًا",
     "action_ban_desc": "منع هذا الجهاز من الاتصال",
     "action_unban_desc": "السماح لهذا الجهاز بالاتصال مرة أخرى",
-    "action_delete_desc": "قم بإزالة هذا الجهاز نهائيًا",
+    "action_delete_desc": "إخفاء هذا الجهاز مع الاحتفاظ بمعرّفه، أو حذفه نهائيًا",
     "tab_hardware": "Hardware",
     "tab_metrics": "المقاييس",
     "section_system": "System",

@@ -2592,7 +2592,7 @@
     "action_change_id_desc": "Het apparaat een ander ID geven",
     "action_ban_desc": "Voorkom dat dit apparaat verbinding maakt",
     "action_unban_desc": "Sta dit apparaat weer toe om verbinding te maken",
-    "action_delete_desc": "Verwijder dit apparaat permanent",
+    "action_delete_desc": "Verberg dit apparaat en behoud de ID, of verwijder het definitief",
     "tab_hardware": "Hardware",
     "tab_metrics": "Metrieken",
     "section_system": "Systeem",

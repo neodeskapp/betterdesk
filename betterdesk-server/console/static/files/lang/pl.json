@@ -2610,7 +2610,7 @@
     "action_change_id_desc": "Nadaj urządzeniu inne ID",
     "action_ban_desc": "Zablokuj połączenia tego urządzenia",
     "action_unban_desc": "Zezwól na ponowne połączenie",
-    "action_delete_desc": "Trwale usuń to urządzenie",
+    "action_delete_desc": "Ukryj to urządzenie i zachowaj jego ID albo usuń je trwale",
     "tab_hardware": "Sprzęt",
     "tab_metrics": "Metryki",
     "tab_services": "Usługi",

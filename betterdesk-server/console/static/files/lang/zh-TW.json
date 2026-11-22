@@ -2614,7 +2614,7 @@
     "action_change_id_desc": "為裝置更換 ID",
     "action_ban_desc": "阻止此設備連接",
     "action_unban_desc": "允許此設備重新連接",
-    "action_delete_desc": "永久刪除此設備",
+    "action_delete_desc": "隱藏此設備並保留其 ID，或永久刪除",
     "tab_hardware": "硬件",
     "tab_metrics": "指標",
     "tab_services": "服務",

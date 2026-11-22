@@ -2598,7 +2598,7 @@
     "action_change_id_desc": "Ge enheten ett annat ID",
     "action_ban_desc": "Blockera den här enheten från att ansluta",
     "action_unban_desc": "Tillåt den här enheten att ansluta igen",
-    "action_delete_desc": "Ta bort den här enheten permanent",
+    "action_delete_desc": "Dölj den här enheten och behåll dess ID, eller ta bort den permanent",
     "tab_hardware": "Hardware",
     "tab_metrics": "Mätvärden",
     "section_system": "System",
