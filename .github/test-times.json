@@ -1,0 +1,1047 @@
+{
+  "about": "Seconds per package and per long test of earlier CI runs, by set. repotool test-shards deals the tests over the CI runners by them. Refresh from a green run: see the comment above the test job in .github/workflows/go-server-ci.yml.",
+  "sets": {
+    "contract-cases": {
+      "./console/contract": {
+        "seconds": 600,
+        "tests": {
+          "activity": 8.6,
+          "activity-device": 2.0,
+          "auth": 5.2,
+          "auth-basics": 0.7,
+          "auth-oidc-session": 0.3,
+          "automation": 27.4,
+          "automation-device": 3.8,
+          "avatars": 2.5,
+          "bd-api": 8.0,
+          "branding-saved-in-node": 2.3,
+          "cdap": 3.9,
+          "cdap-studio": 9.3,
+          "cdap-toggle": 1.3,
+          "chat": 3.1,
+          "client-branding": 1.1,
+          "commercialization": 18.2,
+          "console": 2.4,
+          "console-strings": 8.1,
+          "cross-platform": 1.2,
+          "dashboard": 3.6,
+          "dataguard": 17.0,
+          "desktop": 2.5,
+          "devices": 45.4,
+          "filetransfer": 12.7,
+          "fleet": 15.7,
+          "folders": 9.7,
+          "generator": 5.1,
+          "guest": 6.0,
+          "health": 1.3,
+          "healthcheck": 1.5,
+          "i18n": 7.5,
+          "inventory": 4.2,
+          "inventory-device": 3.8,
+          "keys": 3.9,
+          "languages": 1.3,
+          "login-page": 0.8,
+          "meshcentral": 6.6,
+          "meshcentral-guest": 0.5,
+          "network": 29.2,
+          "onboard": 8.5,
+          "organizations": 11.5,
+          "pages": 0.7,
+          "pairing": 6.8,
+          "panel-access": 4.7,
+          "permissions": 5.0,
+          "phase4-5": 7.3,
+          "policies": 10.3,
+          "registration": 33.8,
+          "remote": 6.7,
+          "remote-agent-token": 1.4,
+          "reports": 10.6,
+          "resource-control": 10.9,
+          "rustdesk-api": 14.2,
+          "scaling": 13.1,
+          "security-audit": 1.3,
+          "server-attestation": 6.3,
+          "server-management": 11.6,
+          "settings": 8.9,
+          "settings-backup": 5.1,
+          "settings-branding": 3.9,
+          "settings-branding-writes": 7.1,
+          "settings-email": 2.9,
+          "settings-updates": 4.2,
+          "system": 4.6,
+          "tenants": 13.9,
+          "tickets": 20.8,
+          "tokens": 11.6,
+          "toolkit": 20.3,
+          "trends": 1.3,
+          "ui-shell": 2.2,
+          "users": 7.6,
+          "ws-bd-relay": 2.2,
+          "ws-bd-signal": 1.3,
+          "ws-cdap": 2.5,
+          "ws-chat": 9.8,
+          "ws-device-status": 1.5,
+          "ws-mesh": 0.8,
+          "ws-panel-events": 2.4,
+          "ws-relay": 1.5,
+          "ws-remote": 4.6,
+          "ws-remote-target": 1.0,
+          "ws-rendezvous": 2.8,
+          "ws-server-management-terminal": 2.8
+        }
+      }
+    },
+    "go-race-postgres": {
+      ".": {
+        "seconds": 40.5
+      },
+      "./admin": {
+        "seconds": 9.3
+      },
+      "./api": {
+        "seconds": 321.9
+      },
+      "./audit": {
+        "seconds": 3.4
+      },
+      "./auth": {
+        "seconds": 19.9
+      },
+      "./billing": {
+        "seconds": 3.4
+      },
+      "./cdap": {
+        "seconds": 57.3
+      },
+      "./cli": {
+        "seconds": 289.4
+      },
+      "./cmd/devseed": {
+        "seconds": 82.7
+      },
+      "./cmd/embed-webui": {
+        "seconds": 1.0
+      },
+      "./cmd/release-manifest": {
+        "seconds": 1.0
+      },
+      "./cmd/repotool": {
+        "seconds": 15.6
+      },
+      "./codec": {
+        "seconds": 1.0
+      },
+      "./config": {
+        "seconds": 1.1
+      },
+      "./console": {
+        "seconds": 635.8
+      },
+      "./console/access": {
+        "seconds": 27.5
+      },
+      "./console/advancedconfig": {
+        "seconds": 2.6
+      },
+      "./console/agentreleases": {
+        "seconds": 1.2
+      },
+      "./console/alerts": {
+        "seconds": 63.1
+      },
+      "./console/attestation": {
+        "seconds": 5.6
+      },
+      "./console/auditlog": {
+        "seconds": 2.3
+      },
+      "./console/authimport": {
+        "seconds": 37.2
+      },
+      "./console/authn": {
+        "seconds": 465.5
+      },
+      "./console/avatars": {
+        "seconds": 16.1
+      },
+      "./console/backup": {
+        "seconds": 115.9
+      },
+      "./console/bdrelay": {
+        "seconds": 41.0
+      },
+      "./console/billingclock": {
+        "seconds": 4.8
+      },
+      "./console/branding": {
+        "seconds": 265.3
+      },
+      "./console/cdapproxy": {
+        "seconds": 24.3
+      },
+      "./console/clientrelease": {
+        "seconds": 1.3
+      },
+      "./console/config": {
+        "seconds": 1.1
+      },
+      "./console/contract": {
+        "seconds": 2.0
+      },
+      "./console/csrf": {
+        "seconds": 1.1
+      },
+      "./console/devicegroups": {
+        "seconds": 55.3
+      },
+      "./console/discovery": {
+        "seconds": 3.9
+      },
+      "./console/embedfs": {
+        "seconds": 1.0
+      },
+      "./console/filetransfer": {
+        "seconds": 68.3
+      },
+      "./console/generator": {
+        "seconds": 16.1
+      },
+      "./console/goapi": {
+        "seconds": 9.9
+      },
+      "./console/goapipath": {
+        "seconds": 13.8
+      },
+      "./console/guestaccess": {
+        "seconds": 1.0
+      },
+      "./console/helpmail": {
+        "seconds": 14.8
+      },
+      "./console/housekeeping": {
+        "seconds": 50.6
+      },
+      "./console/httpx": {
+        "seconds": 2.2
+      },
+      "./console/i18n": {
+        "seconds": 47.5
+      },
+      "./console/jobs": {
+        "seconds": 1.2
+      },
+      "./console/jsbind": {
+        "seconds": 1.6
+      },
+      "./console/kit": {
+        "seconds": 12.3
+      },
+      "./console/limits": {
+        "seconds": 10.2
+      },
+      "./console/listen": {
+        "seconds": 21.8
+      },
+      "./console/mail": {
+        "seconds": 51.2
+      },
+      "./console/mail/addressparser": {
+        "seconds": 34.8
+      },
+      "./console/mail/message": {
+        "seconds": 68.3
+      },
+      "./console/mail/smtpwire": {
+        "seconds": 177.6
+      },
+      "./console/managedconfig": {
+        "seconds": 1.1
+      },
+      "./console/meshproxy": {
+        "seconds": 12.5
+      },
+      "./console/middleware": {
+        "seconds": 46.5
+      },
+      "./console/netmonitor": {
+        "seconds": 100.8
+      },
+      "./console/onboard": {
+        "seconds": 1.0
+      },
+      "./console/qr": {
+        "seconds": 279.4
+      },
+      "./console/registrations": {
+        "seconds": 10.0
+      },
+      "./console/remoterelay": {
+        "seconds": 37.9
+      },
+      "./console/remotetarget": {
+        "seconds": 71.8
+      },
+      "./console/reports": {
+        "seconds": 19.7
+      },
+      "./console/restart": {
+        "seconds": 8.2
+      },
+      "./console/routes/activity": {
+        "seconds": 148.1
+      },
+      "./console/routes/auth": {
+        "seconds": 456.8
+      },
+      "./console/routes/automation": {
+        "seconds": 126.9
+      },
+      "./console/routes/avatars": {
+        "seconds": 11.8
+      },
+      "./console/routes/bdapi": {
+        "seconds": 174.7
+      },
+      "./console/routes/cdap": {
+        "seconds": 32.8
+      },
+      "./console/routes/cdapstudio": {
+        "seconds": 31.4
+      },
+      "./console/routes/chat": {
+        "seconds": 53.1
+      },
+      "./console/routes/clientbranding": {
+        "seconds": 5.5
+      },
+      "./console/routes/commercialization": {
+        "seconds": 42.9
+      },
+      "./console/routes/console": {
+        "seconds": 11.4
+      },
+      "./console/routes/crossplatform": {
+        "seconds": 16.8
+      },
+      "./console/routes/dashboard": {
+        "seconds": 54.7
+      },
+      "./console/routes/dataguard": {
+        "seconds": 96.6
+      },
+      "./console/routes/desktop": {
+        "seconds": 16.5
+      },
+      "./console/routes/devices": {
+        "seconds": 203.6
+      },
+      "./console/routes/filetransfer": {
+        "seconds": 38.2
+      },
+      "./console/routes/fleet": {
+        "seconds": 31.9
+      },
+      "./console/routes/folders": {
+        "seconds": 75.7
+      },
+      "./console/routes/generator": {
+        "seconds": 44.7
+      },
+      "./console/routes/guest": {
+        "seconds": 29.7
+      },
+      "./console/routes/internal/devicemount": {
+        "seconds": 1.0
+      },
+      "./console/routes/internal/jsjson": {
+        "seconds": 3.8
+      },
+      "./console/routes/internal/jsreq": {
+        "seconds": 2.9
+      },
+      "./console/routes/internal/replay": {
+        "seconds": 1.1
+      },
+      "./console/routes/internal/reqquery": {
+        "seconds": 3.4
+      },
+      "./console/routes/inventory": {
+        "seconds": 92.0
+      },
+      "./console/routes/keys": {
+        "seconds": 3.0
+      },
+      "./console/routes/meshcentral": {
+        "seconds": 19.9
+      },
+      "./console/routes/network": {
+        "seconds": 44.2
+      },
+      "./console/routes/onboard": {
+        "seconds": 61.4
+      },
+      "./console/routes/organizations": {
+        "seconds": 39.2
+      },
+      "./console/routes/pairing": {
+        "seconds": 20.7
+      },
+      "./console/routes/panelaccess": {
+        "seconds": 16.0
+      },
+      "./console/routes/permissions": {
+        "seconds": 17.6
+      },
+      "./console/routes/phase45": {
+        "seconds": 33.2
+      },
+      "./console/routes/policies": {
+        "seconds": 40.5
+      },
+      "./console/routes/registration": {
+        "seconds": 101.0
+      },
+      "./console/routes/remote": {
+        "seconds": 52.1
+      },
+      "./console/routes/reports": {
+        "seconds": 29.7
+      },
+      "./console/routes/resourcecontrol": {
+        "seconds": 20.8
+      },
+      "./console/routes/rustdeskapi": {
+        "seconds": 225.0
+      },
+      "./console/routes/scaling": {
+        "seconds": 32.8
+      },
+      "./console/routes/securityaudit": {
+        "seconds": 36.7
+      },
+      "./console/routes/serverattestation": {
+        "seconds": 10.1
+      },
+      "./console/routes/servermanagement": {
+        "seconds": 8.1
+      },
+      "./console/routes/settings": {
+        "seconds": 112.7
+      },
+      "./console/routes/settingsbackup": {
+        "seconds": 38.3
+      },
+      "./console/routes/settingsupdates": {
+        "seconds": 31.0
+      },
+      "./console/routes/system": {
+        "seconds": 10.7
+      },
+      "./console/routes/tenants": {
+        "seconds": 40.3
+      },
+      "./console/routes/tickets": {
+        "seconds": 99.7
+      },
+      "./console/routes/tokens": {
+        "seconds": 11.0
+      },
+      "./console/routes/toolkit": {
+        "seconds": 14.9
+      },
+      "./console/routes/trends": {
+        "seconds": 16.0
+      },
+      "./console/routes/users": {
+        "seconds": 437.6
+      },
+      "./console/safepath": {
+        "seconds": 1.2
+      },
+      "./console/scheduledbackup": {
+        "seconds": 19.3
+      },
+      "./console/serverinfo": {
+        "seconds": 73.4
+      },
+      "./console/servermgmt": {
+        "seconds": 15.2
+      },
+      "./console/servicedef": {
+        "seconds": 1.2
+      },
+      "./console/session": {
+        "seconds": 9.2
+      },
+      "./console/session/cookie": {
+        "seconds": 1.1
+      },
+      "./console/ssrfguard": {
+        "seconds": 9.5
+      },
+      "./console/static": {
+        "seconds": 39.4
+      },
+      "./console/statuspush": {
+        "seconds": 29.3
+      },
+      "./console/store": {
+        "seconds": 127.1
+      },
+      "./console/updater": {
+        "seconds": 5.9
+      },
+      "./console/webui": {
+        "seconds": 6.1
+      },
+      "./console/ws": {
+        "seconds": 4.3
+      },
+      "./console/ws/wstest": {
+        "seconds": 1.0
+      },
+      "./console/wsrelay": {
+        "seconds": 82.8
+      },
+      "./crypto": {
+        "seconds": 1.1
+      },
+      "./crypto/peervault": {
+        "seconds": 1.0
+      },
+      "./db": {
+        "seconds": 51.1
+      },
+      "./events": {
+        "seconds": 1.0
+      },
+      "./guestaccess": {
+        "seconds": 6.7
+      },
+      "./internal/clientaddr": {
+        "seconds": 1.0
+      },
+      "./internal/envvar": {
+        "seconds": 1.0
+      },
+      "./internal/productversion": {
+        "seconds": 1.0
+      },
+      "./logging": {
+        "seconds": 1.0
+      },
+      "./meshcentral": {
+        "seconds": 26.1
+      },
+      "./metrics": {
+        "seconds": 1.0
+      },
+      "./migrate": {
+        "seconds": 2.3
+      },
+      "./peer": {
+        "seconds": 1.0
+      },
+      "./policy": {
+        "seconds": 4.4
+      },
+      "./ratelimit": {
+        "seconds": 1.3
+      },
+      "./relay": {
+        "seconds": 7.6
+      },
+      "./reload": {
+        "seconds": 1.0
+      },
+      "./security": {
+        "seconds": 1.0
+      },
+      "./sessiongrant": {
+        "seconds": 1.0
+      },
+      "./signal": {
+        "seconds": 172.5
+      },
+      "./timesync": {
+        "seconds": 1.0
+      }
+    },
+    "go-race-sqlite": {
+      ".": {
+        "seconds": 40.5
+      },
+      "./admin": {
+        "seconds": 9.3
+      },
+      "./api": {
+        "seconds": 321.9
+      },
+      "./audit": {
+        "seconds": 3.4
+      },
+      "./auth": {
+        "seconds": 19.9
+      },
+      "./billing": {
+        "seconds": 3.4
+      },
+      "./cdap": {
+        "seconds": 57.3
+      },
+      "./cli": {
+        "seconds": 289.4
+      },
+      "./cmd/devseed": {
+        "seconds": 82.7
+      },
+      "./cmd/embed-webui": {
+        "seconds": 1.0
+      },
+      "./cmd/release-manifest": {
+        "seconds": 1.0
+      },
+      "./cmd/repotool": {
+        "seconds": 15.6
+      },
+      "./codec": {
+        "seconds": 1.0
+      },
+      "./config": {
+        "seconds": 1.1
+      },
+      "./console": {
+        "seconds": 635.8
+      },
+      "./console/access": {
+        "seconds": 27.5
+      },
+      "./console/advancedconfig": {
+        "seconds": 2.6
+      },
+      "./console/agentreleases": {
+        "seconds": 1.2
+      },
+      "./console/alerts": {
+        "seconds": 63.1
+      },
+      "./console/attestation": {
+        "seconds": 5.6
+      },
+      "./console/auditlog": {
+        "seconds": 2.3
+      },
+      "./console/authimport": {
+        "seconds": 37.2
+      },
+      "./console/authn": {
+        "seconds": 465.5
+      },
+      "./console/avatars": {
+        "seconds": 16.1
+      },
+      "./console/backup": {
+        "seconds": 115.9
+      },
+      "./console/bdrelay": {
+        "seconds": 41.0
+      },
+      "./console/billingclock": {
+        "seconds": 4.8
+      },
+      "./console/branding": {
+        "seconds": 265.3
+      },
+      "./console/cdapproxy": {
+        "seconds": 24.3
+      },
+      "./console/clientrelease": {
+        "seconds": 1.3
+      },
+      "./console/config": {
+        "seconds": 1.1
+      },
+      "./console/contract": {
+        "seconds": 2.0
+      },
+      "./console/csrf": {
+        "seconds": 1.1
+      },
+      "./console/devicegroups": {
+        "seconds": 55.3
+      },
+      "./console/discovery": {
+        "seconds": 3.9
+      },
+      "./console/embedfs": {
+        "seconds": 1.0
+      },
+      "./console/filetransfer": {
+        "seconds": 68.3
+      },
+      "./console/generator": {
+        "seconds": 16.1
+      },
+      "./console/goapi": {
+        "seconds": 9.9
+      },
+      "./console/goapipath": {
+        "seconds": 13.8
+      },
+      "./console/guestaccess": {
+        "seconds": 1.0
+      },
+      "./console/helpmail": {
+        "seconds": 14.8
+      },
+      "./console/housekeeping": {
+        "seconds": 50.6
+      },
+      "./console/httpx": {
+        "seconds": 2.2
+      },
+      "./console/i18n": {
+        "seconds": 47.5
+      },
+      "./console/jobs": {
+        "seconds": 1.2
+      },
+      "./console/jsbind": {
+        "seconds": 1.6
+      },
+      "./console/kit": {
+        "seconds": 12.3
+      },
+      "./console/limits": {
+        "seconds": 10.2
+      },
+      "./console/listen": {
+        "seconds": 21.8
+      },
+      "./console/mail": {
+        "seconds": 51.2
+      },
+      "./console/mail/addressparser": {
+        "seconds": 34.8
+      },
+      "./console/mail/message": {
+        "seconds": 68.3
+      },
+      "./console/mail/smtpwire": {
+        "seconds": 177.6
+      },
+      "./console/managedconfig": {
+        "seconds": 1.1
+      },
+      "./console/meshproxy": {
+        "seconds": 12.5
+      },
+      "./console/middleware": {
+        "seconds": 46.5
+      },
+      "./console/netmonitor": {
+        "seconds": 100.8
+      },
+      "./console/onboard": {
+        "seconds": 1.0
+      },
+      "./console/qr": {
+        "seconds": 279.4
+      },
+      "./console/registrations": {
+        "seconds": 10.0
+      },
+      "./console/remoterelay": {
+        "seconds": 37.9
+      },
+      "./console/remotetarget": {
+        "seconds": 71.8
+      },
+      "./console/reports": {
+        "seconds": 19.7
+      },
+      "./console/restart": {
+        "seconds": 8.2
+      },
+      "./console/routes/activity": {
+        "seconds": 148.1
+      },
+      "./console/routes/auth": {
+        "seconds": 456.8
+      },
+      "./console/routes/automation": {
+        "seconds": 126.9
+      },
+      "./console/routes/avatars": {
+        "seconds": 11.8
+      },
+      "./console/routes/bdapi": {
+        "seconds": 174.7
+      },
+      "./console/routes/cdap": {
+        "seconds": 32.8
+      },
+      "./console/routes/cdapstudio": {
+        "seconds": 31.4
+      },
+      "./console/routes/chat": {
+        "seconds": 53.1
+      },
+      "./console/routes/clientbranding": {
+        "seconds": 5.5
+      },
+      "./console/routes/commercialization": {
+        "seconds": 42.9
+      },
+      "./console/routes/console": {
+        "seconds": 11.4
+      },
+      "./console/routes/crossplatform": {
+        "seconds": 16.8
+      },
+      "./console/routes/dashboard": {
+        "seconds": 54.7
+      },
+      "./console/routes/dataguard": {
+        "seconds": 96.6
+      },
+      "./console/routes/desktop": {
+        "seconds": 16.5
+      },
+      "./console/routes/devices": {
+        "seconds": 203.6
+      },
+      "./console/routes/filetransfer": {
+        "seconds": 38.2
+      },
+      "./console/routes/fleet": {
+        "seconds": 31.9
+      },
+      "./console/routes/folders": {
+        "seconds": 75.7
+      },
+      "./console/routes/generator": {
+        "seconds": 44.7
+      },
+      "./console/routes/guest": {
+        "seconds": 29.7
+      },
+      "./console/routes/internal/devicemount": {
+        "seconds": 1.0
+      },
+      "./console/routes/internal/jsjson": {
+        "seconds": 3.8
+      },
+      "./console/routes/internal/jsreq": {
+        "seconds": 2.9
+      },
+      "./console/routes/internal/replay": {
+        "seconds": 1.1
+      },
+      "./console/routes/internal/reqquery": {
+        "seconds": 3.4
+      },
+      "./console/routes/inventory": {
+        "seconds": 92.0
+      },
+      "./console/routes/keys": {
+        "seconds": 3.0
+      },
+      "./console/routes/meshcentral": {
+        "seconds": 19.9
+      },
+      "./console/routes/network": {
+        "seconds": 44.2
+      },
+      "./console/routes/onboard": {
+        "seconds": 61.4
+      },
+      "./console/routes/organizations": {
+        "seconds": 39.2
+      },
+      "./console/routes/pairing": {
+        "seconds": 20.7
+      },
+      "./console/routes/panelaccess": {
+        "seconds": 16.0
+      },
+      "./console/routes/permissions": {
+        "seconds": 17.6
+      },
+      "./console/routes/phase45": {
+        "seconds": 33.2
+      },
+      "./console/routes/policies": {
+        "seconds": 40.5
+      },
+      "./console/routes/registration": {
+        "seconds": 101.0
+      },
+      "./console/routes/remote": {
+        "seconds": 52.1
+      },
+      "./console/routes/reports": {
+        "seconds": 29.7
+      },
+      "./console/routes/resourcecontrol": {
+        "seconds": 20.8
+      },
+      "./console/routes/rustdeskapi": {
+        "seconds": 225.0
+      },
+      "./console/routes/scaling": {
+        "seconds": 32.8
+      },
+      "./console/routes/securityaudit": {
+        "seconds": 36.7
+      },
+      "./console/routes/serverattestation": {
+        "seconds": 10.1
+      },
+      "./console/routes/servermanagement": {
+        "seconds": 8.1
+      },
+      "./console/routes/settings": {
+        "seconds": 112.7
+      },
+      "./console/routes/settingsbackup": {
+        "seconds": 38.3
+      },
+      "./console/routes/settingsupdates": {
+        "seconds": 31.0
+      },
+      "./console/routes/system": {
+        "seconds": 10.7
+      },
+      "./console/routes/tenants": {
+        "seconds": 40.3
+      },
+      "./console/routes/tickets": {
+        "seconds": 99.7
+      },
+      "./console/routes/tokens": {
+        "seconds": 11.0
+      },
+      "./console/routes/toolkit": {
+        "seconds": 14.9
+      },
+      "./console/routes/trends": {
+        "seconds": 16.0
+      },
+      "./console/routes/users": {
+        "seconds": 437.6
+      },
+      "./console/safepath": {
+        "seconds": 1.2
+      },
+      "./console/scheduledbackup": {
+        "seconds": 19.3
+      },
+      "./console/serverinfo": {
+        "seconds": 73.4
+      },
+      "./console/servermgmt": {
+        "seconds": 15.2
+      },
+      "./console/servicedef": {
+        "seconds": 1.2
+      },
+      "./console/session": {
+        "seconds": 9.2
+      },
+      "./console/session/cookie": {
+        "seconds": 1.1
+      },
+      "./console/ssrfguard": {
+        "seconds": 9.5
+      },
+      "./console/static": {
+        "seconds": 39.4
+      },
+      "./console/statuspush": {
+        "seconds": 29.3
+      },
+      "./console/store": {
+        "seconds": 127.1
+      },
+      "./console/updater": {
+        "seconds": 5.9
+      },
+      "./console/webui": {
+        "seconds": 6.1
+      },
+      "./console/ws": {
+        "seconds": 4.3
+      },
+      "./console/ws/wstest": {
+        "seconds": 1.0
+      },
+      "./console/wsrelay": {
+        "seconds": 82.8
+      },
+      "./crypto": {
+        "seconds": 1.1
+      },
+      "./crypto/peervault": {
+        "seconds": 1.0
+      },
+      "./db": {
+        "seconds": 51.1
+      },
+      "./events": {
+        "seconds": 1.0
+      },
+      "./guestaccess": {
+        "seconds": 6.7
+      },
+      "./internal/clientaddr": {
+        "seconds": 1.0
+      },
+      "./internal/envvar": {
+        "seconds": 1.0
+      },
+      "./internal/productversion": {
+        "seconds": 1.0
+      },
+      "./logging": {
+        "seconds": 1.0
+      },
+      "./meshcentral": {
+        "seconds": 26.1
+      },
+      "./metrics": {
+        "seconds": 1.0
+      },
+      "./migrate": {
+        "seconds": 2.3
+      },
+      "./peer": {
+        "seconds": 1.0
+      },
+      "./policy": {
+        "seconds": 4.4
+      },
+      "./ratelimit": {
+        "seconds": 1.3
+      },
+      "./relay": {
+        "seconds": 7.6
+      },
+      "./reload": {
+        "seconds": 1.0
+      },
+      "./security": {
+        "seconds": 1.0
+      },
+      "./sessiongrant": {
+        "seconds": 1.0
+      },
+      "./signal": {
+        "seconds": 172.5
+      },
+      "./timesync": {
+        "seconds": 1.0
+      }
+    }
+  }
+}
