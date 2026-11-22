@@ -2402,6 +2402,7 @@
     "virtual_display": "Layar virtual",
     "plug_out_all": "Cabut semua",
     "file_transfer_unavailable": "Transfer file tidak tersedia untuk sesi ini.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Sertifikat tidak tepercaya",
     "certificate_confirm": "Sertifikat {name} tidak tepercaya. Percayai sertifikat dengan sidik jari {fingerprint}?",
     "certificate_trust": "Percayai sertifikat"
@@ -7927,6 +7928,8 @@
     "ended_peer": "Sesi diakhiri di {name}.",
     "fail_permission": "Anda tidak memiliki izin untuk terhubung ke {name}.",
     "try_permission": "Minta administrator memberi Anda akses ke perangkat ini.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Kata sandi tidak diterima.",
     "try_password": "Hubungkan ulang dan masukkan kata sandi yang diatur di RustDesk pada perangkat.",
     "fail_refused": "{name} menolak koneksi.",

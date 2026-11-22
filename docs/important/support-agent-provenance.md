@@ -19,7 +19,7 @@ The review covers:
   adapter;
 - `betterdesk-server/protos/`, the copy the web console serves
   (`betterdesk-server/console/static/files/protos/`), and generated artifacts
-  (`betterdesk-server/proto/`, `web-ui/static/rdclient/generated/`);
+  (`betterdesk-server/proto/`, `web-ui/src/lib/remote/client/generated/`);
 - compatibility framing, cryptography, generated client configuration, and
   test fixtures;
 - branded Support Agent binaries and their third-party notices.
@@ -83,10 +83,12 @@ assertion alone.
 - `betterdesk-server/protos/` is the current canonical BetterDesk-owned schema
   source. `betterdesk-server/console/static/files/protos/` is a committed copy
   the web console serves at `/protos/`, never a second source.
-- The generated Go code (`betterdesk-server/proto/`) and the browser bundle
-  (`web-ui/static/rdclient/generated/protos-static.js`) are committed. No CI
-  job regenerates them or the served copy, so compare them with the canonical
-  schema by hand when it changes.
+- The generated Go code (`betterdesk-server/proto/`) is committed; no CI job
+  regenerates it or the served copy, so compare them with the canonical
+  schema by hand when it changes. The browser's messages
+  (`web-ui/src/lib/remote/client/generated/protos.ts`) are generated from the
+  canonical schema by every web-ui build, dev server and test run
+  (`web-ui/vite-plugins/protos.ts`) and are not committed.
 - Any legacy `hbb` mapping is confined to the protocol edge. New application
   packages, APIs, and documentation use BetterDesk names.
 - Schema changes require a compatibility test and a provenance entry.

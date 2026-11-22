@@ -2414,6 +2414,7 @@
     "virtual_display": "Wirtualny ekran",
     "plug_out_all": "Odłącz wszystkie",
     "file_transfer_unavailable": "Przesyłanie plików nie jest dostępne w tej sesji.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Niezaufany certyfikat",
     "certificate_confirm": "Certyfikat urządzenia {name} nie jest zaufany. Zaufać certyfikatowi o odcisku {fingerprint}?",
     "certificate_trust": "Zaufaj certyfikatowi"
@@ -7921,6 +7922,8 @@
     "ended_peer": "Sesja została zakończona na urządzeniu {name}.",
     "fail_permission": "Nie masz uprawnień do łączenia się z {name}.",
     "try_permission": "Poproś administratora o dostęp do tego urządzenia.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Hasło nie zostało zaakceptowane.",
     "try_password": "Połącz ponownie i wpisz hasło ustawione w RustDesk na urządzeniu.",
     "fail_refused": "Urządzenie {name} odrzuciło połączenie.",

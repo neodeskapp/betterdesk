@@ -2396,6 +2396,7 @@
     "virtual_display": "Schermo virtuale",
     "plug_out_all": "Scollega tutti",
     "file_transfer_unavailable": "Il trasferimento file non è disponibile per questa sessione.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Certificato non attendibile",
     "certificate_confirm": "Il certificato di {name} non è attendibile. Considerare attendibile il certificato con l'impronta {fingerprint}?",
     "certificate_trust": "Considera attendibile"
@@ -7921,6 +7922,8 @@
     "ended_peer": "La sessione è stata terminata su {name}.",
     "fail_permission": "Non hai il permesso di connetterti a {name}.",
     "try_permission": "Chiedi a un amministratore di darti accesso a questo dispositivo.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "La password non è stata accettata.",
     "try_password": "Riconnettiti e inserisci la password impostata in RustDesk sul dispositivo.",
     "fail_refused": "{name} ha rifiutato la connessione.",

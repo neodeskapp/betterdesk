@@ -61,7 +61,7 @@ Chain: **Browser → rdclient → RustDesk on host → Hyper-V / VM Connect → 
 
 ## Related code
 
-- [`web-ui/static/rdclient/keyboard-encoder.js`](../../web-ui/static/rdclient/keyboard-encoder.js) — RustDesk-compatible KeyEvent encoder
-- [`web-ui/static/rdclient/input.js`](../../web-ui/static/rdclient/input.js) — DOM capture, blur/stop release
-- [`web-ui/static/rdclient/keyboard-scancode.js`](../../web-ui/static/rdclient/keyboard-scancode.js) — DOM `code` → scancode tables
+- [`web-ui/src/lib/remote/client/keyboard-encoder.ts`](../../web-ui/src/lib/remote/client/keyboard-encoder.ts) — RustDesk-compatible KeyEvent encoder
+- [`web-ui/src/lib/remote/client/input.ts`](../../web-ui/src/lib/remote/client/input.ts) — DOM capture, blur/stop release
+- [`web-ui/src/lib/remote/client/keyboard-scancode.ts`](../../web-ui/src/lib/remote/client/keyboard-scancode.ts) — DOM `code` → scancode tables
 - [`web-ui/tests/unit/remote/rdclient-input.test.ts`](../../web-ui/tests/unit/remote/rdclient-input.test.ts) and [`rdclient-misc.test.ts`](../../web-ui/tests/unit/remote/rdclient-misc.test.ts) — input and Map mode regression tests

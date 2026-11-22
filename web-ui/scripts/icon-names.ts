@@ -7,8 +7,9 @@
  *
  * Icons are drawn by the Icon component (src/lib/ui/Icon.svelte), directly
  * or through the icon props of Button, IconButton, MenuItem and the rest;
- * by the remote viewer's file sheet (static/rdclient, plain JS that builds
- * icon spans); and by the sidebar from the section icons the server sends
+ * by the remote viewer's file sheet (src/lib/remote/client/file-modal.ts and
+ * filetransfer.ts, which build icon spans from glyph names); and by the
+ * sidebar from the section icons the server sends
  * (betterdesk-server/console/access/nav.go).
  *
  * A name counts where it is written as a quoted literal in an icon place.
@@ -348,8 +349,10 @@ export function collectCandidateIcons(): Map<string, Set<string>> {
 		if (!fs.existsSync(dir)) continue;
 		for (const file of fs.statSync(dir).isDirectory() ? walkFiles(dir) : [dir]) {
 			const rel = path.relative(UI, file).split(path.sep).join('/');
-			// The Icon component turns meanings ("copy") into glyphs; the plain JS under static/ writes glyphs
-			const glyph = rel.startsWith('static/') ? (n: string) => n : (n: string) => meanings[n] ?? n;
+			// The Icon component turns meanings ("copy") into glyphs; files under static/ and the
+			// remote viewer's client (src/lib/remote/client), which builds icon spans, write glyphs
+			const writesGlyphs = rel.startsWith('static/') || rel.startsWith('src/lib/remote/client/');
+			const glyph = writesGlyphs ? (n: string) => n : (n: string) => meanings[n] ?? n;
 			for (const name of iconNamesIn(fs.readFileSync(file, 'utf8'), rel)) add(glyph(name), rel);
 		}
 	}

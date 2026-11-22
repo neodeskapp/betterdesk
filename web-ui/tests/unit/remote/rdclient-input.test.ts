@@ -1,15 +1,14 @@
 /**
- * The RustDesk client's mouse and touch input (static/rdclient/input.js and
- * touch.js): a button pressed on the remote screen is released on the
+ * The RustDesk client's mouse and touch input (src/lib/remote/client/input.ts and
+ * touch.ts): a button pressed on the remote screen is released on the
  * device, wherever the pointer or finger lets go and when input stops.
  */
 import { describe, expect, test, vi } from 'vitest';
-import { loadScripts, type Loaded } from './rdclient-scripts.ts';
+import type { MessageInit } from '../../../src/lib/remote/client/generated/protos.ts';
+import { RDInput } from '../../../src/lib/remote/client/input.ts';
+import { RDTouch } from '../../../src/lib/remote/client/touch.ts';
 
-const g: Loaded = loadScripts(
-	['keyboard-scancode.js', 'keyboard-encoder.js', 'input.js', 'touch.js'],
-	['RDInput', 'RDTouch']
-);
+const g = { RDInput, RDTouch };
 
 /** A 100 x 100 remote screen drawn 1:1 at the canvas' top left; jsdom's canvas sits at 0,0 */
 const renderer = {
@@ -18,10 +17,10 @@ const renderer = {
 	canvasToRemote: (x: number, y: number) => ({ x, y })
 };
 
-type Sent = { mouseEvent: { mask: number; x: number; y: number } };
+type Sent = MessageInit;
 const UP_LEFT = 2 | (1 << 3);
 const DOWN_LEFT = 1 | (1 << 3);
-const masks = (sent: Sent[]) => sent.map((m) => m.mouseEvent.mask);
+const masks = (sent: Sent[]) => sent.map((m) => m.mouseEvent?.mask);
 
 describe('mouse buttons', () => {
 	test('a drag released outside the screen still releases the button on the device', () => {
@@ -55,7 +54,8 @@ describe('mouse buttons', () => {
 
 describe('touch drag', () => {
 	const touch = (x: number, y: number) => ({ identifier: 1, clientX: x, clientY: y });
-	const ev = (touches: object[], changed: object[]) => ({
+	type Point = ReturnType<typeof touch>;
+	const ev = (touches: Point[], changed: Point[]) => ({
 		preventDefault: () => {},
 		touches,
 		changedTouches: changed

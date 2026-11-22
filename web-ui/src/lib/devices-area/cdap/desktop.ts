@@ -19,12 +19,11 @@
  *
  * Video codecs decode with WebCodecs where the browser has it (a secure
  * context). Elsewhere H.264 can still decode through Media Source
- * Extensions with the remote viewer's own self-hosted helpers
- * (static/rdclient/vendor/jmuxer.min.js and static/rdclient/video.js),
- * loaded only then.
+ * Extensions with the remote viewer's video decoder (RDVideo in
+ * #lib/remote/client/video.ts, with JMuxer), loaded only then.
  */
 
-import { asset } from '$app/paths';
+import type { RDVideo } from '#lib/remote/client/video.ts';
 
 export type StreamState = 'idle' | 'connecting' | 'open' | 'closed' | 'error';
 
@@ -226,53 +225,25 @@ function rgbaToPng(data: string, w: number, h: number): string | null {
 	}
 }
 
-/* ── MSE helpers (the remote viewer's own files) ── */
-
-interface RDVideoLike {
-	initialized: boolean;
-	onFrame:
-		| ((
-				frame: CanvasImageSource & {
-					close?: () => void;
-					displayWidth?: number;
-					displayHeight?: number;
-					_source?: CanvasImageSource;
-				}
-		  ) => void)
-		| null;
-	onError: ((err: unknown) => void) | null;
-	init(codec: string): Promise<void>;
-	decode(chunk: { data: Uint8Array; key: boolean; codec: string }): void;
-	close(): void;
-}
-type RDVideoCtor = new () => RDVideoLike;
+/* ── MSE helpers (the remote viewer's video decoder) ── */
 
 let mseLoad: Promise<boolean> | null = null;
-
-function loadScript(src: string): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const s = document.createElement('script');
-		s.src = src;
-		s.async = false;
-		s.onload = () => resolve();
-		s.onerror = () => reject(new Error(src));
-		document.head.appendChild(s);
-	});
-}
+/** RDVideo once loadMseH264 loaded it */
+let mseVideo: typeof RDVideo | null = null;
 
 /** Whether this browser can only decode H.264 through MSE, and the helpers loaded */
 export function loadMseH264(): Promise<boolean> {
 	if (mseLoad) return mseLoad;
-	const w = window as unknown as { RDVideo?: RDVideoCtor; MediaSource?: typeof MediaSource };
 	const supported =
-		typeof w.MediaSource !== 'undefined' &&
+		typeof window.MediaSource !== 'undefined' &&
 		typeof MediaSource.isTypeSupported === 'function' &&
 		MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E"');
 	if (!supported) return (mseLoad = Promise.resolve(false));
-	if (w.RDVideo) return (mseLoad = Promise.resolve(true));
-	mseLoad = loadScript(asset('rdclient/vendor/jmuxer.min.js'))
-		.then(() => loadScript(asset('rdclient/video.js')))
-		.then(() => typeof (window as unknown as { RDVideo?: RDVideoCtor }).RDVideo === 'function')
+	mseLoad = import('#lib/remote/client/video.ts')
+		.then((m) => {
+			mseVideo = m.RDVideo;
+			return typeof m.RDVideo === 'function';
+		})
 		.catch(() => false);
 	return mseLoad;
 }
@@ -305,7 +276,7 @@ export class DesktopSession {
 	#codecString = '';
 	#decoder: VideoDecoder | null = null;
 	#decoderFormat = '';
-	#mse: RDVideoLike | null = null;
+	#mse: RDVideo | null = null;
 	#gotKey = false;
 	#keyAsked = false;
 	#busy = false;
@@ -639,7 +610,7 @@ export class DesktopSession {
 	}
 
 	#mseDecode(payload: Uint8Array, key: boolean): void {
-		const Ctor = (window as unknown as { RDVideo?: RDVideoCtor }).RDVideo;
+		const Ctor = mseVideo;
 		if (!Ctor) {
 			this.#counters.dropped++;
 			return;
@@ -648,12 +619,16 @@ export class DesktopSession {
 			const v = new Ctor();
 			v.onFrame = (frame) => {
 				try {
-					this.#draw(frame._source ?? frame, frame.displayWidth ?? 0, frame.displayHeight ?? 0);
+					this.#draw(
+						'_source' in frame ? frame._source : frame,
+						frame.displayWidth ?? 0,
+						frame.displayHeight ?? 0
+					);
 				} catch {
 					this.#counters.dropped++;
 				} finally {
 					try {
-						frame.close?.();
+						frame.close();
 					} catch {
 						/* gone */
 					}
@@ -667,7 +642,7 @@ export class DesktopSession {
 			this.#mse = v;
 		}
 		try {
-			this.#mse.decode({ data: payload, key, codec: 'h264' });
+			void this.#mse.decode({ data: payload, key, codec: 'h264' });
 		} catch {
 			this.#counters.dropped++;
 		}

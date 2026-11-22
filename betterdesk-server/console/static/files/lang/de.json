@@ -2396,6 +2396,7 @@
     "virtual_display": "Virtueller Bildschirm",
     "plug_out_all": "Alle entfernen",
     "file_transfer_unavailable": "Dateiübertragung ist in dieser Sitzung nicht verfügbar.",
+    "feature_off": "Das ist für Ihr Konto auf diesem Server ausgeschaltet.",
     "certificate_title": "Nicht vertrauenswürdiges Zertifikat",
     "certificate_confirm": "Das Zertifikat von {name} ist nicht vertrauenswürdig. Möchten Sie dem Zertifikat mit dem Fingerabdruck {fingerprint} vertrauen?",
     "certificate_trust": "Zertifikat vertrauen"
@@ -7921,6 +7922,8 @@
     "ended_peer": "Die Sitzung wurde auf {name} beendet.",
     "fail_permission": "Sie haben keine Berechtigung, sich mit {name} zu verbinden.",
     "try_permission": "Bitten Sie einen Administrator, Ihnen Zugriff auf dieses Gerät zu geben.",
+    "fail_feature_off": "Diese Art von Sitzung ist für Ihr Konto auf diesem Server ausgeschaltet.",
+    "try_feature_off": "Ein Administrator kann sie in den Client-Funktionen Ihres Kontos einschalten.",
     "fail_password": "Das Passwort wurde nicht akzeptiert.",
     "try_password": "Verbinden Sie sich erneut und geben Sie das Passwort ein, das in RustDesk auf dem Gerät festgelegt ist.",
     "fail_refused": "{name} hat die Verbindung abgelehnt.",

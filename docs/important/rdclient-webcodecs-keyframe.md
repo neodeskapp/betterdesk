@@ -1,6 +1,6 @@
 # rdclient WebCodecs black-screen fix
 
-Path: web-ui/static/rdclient/
+Path: web-ui/src/lib/remote/client/
 
 ## Root cause (black screen, 0 FPS on HTTPS / native RustDesk)
 - On HTTPS (port 5443) browser is secure context -> WebCodecs VideoDecoder path (NOT JMuxer).

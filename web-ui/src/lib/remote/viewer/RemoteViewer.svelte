@@ -769,7 +769,7 @@
 		}
 	}
 
-	/* ── The wrapped file transfer sheet (public/js/rdclient/file-modal.js builds its own DOM) ── */
+	/* ── The file transfer sheet (src/lib/remote/client/file-modal.ts builds its own DOM) ── */
 	.rd-sheet-host :global(.file-transfer-modal-overlay) {
 		display: flex;
 		flex-direction: column;

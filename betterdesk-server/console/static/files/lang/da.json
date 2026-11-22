@@ -2402,6 +2402,7 @@
     "virtual_display": "Virtuel skærm",
     "plug_out_all": "Frakobl alle",
     "file_transfer_unavailable": "Filoverførsel er ikke tilgængelig i denne session.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Certifikat, der ikke er tillid til",
     "certificate_confirm": "Certifikatet for {name} er der ikke tillid til. Vil du have tillid til certifikatet med fingeraftrykket {fingerprint}?",
     "certificate_trust": "Hav tillid til certifikatet"
@@ -7927,6 +7928,8 @@
     "ended_peer": "Sessionen blev afsluttet på {name}.",
     "fail_permission": "Du har ikke tilladelse til at forbinde til {name}.",
     "try_permission": "Bed en administrator om at give dig adgang til denne enhed.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Adgangskoden blev ikke godkendt.",
     "try_password": "Forbind igen, og indtast den adgangskode, der er sat i RustDesk på enheden.",
     "fail_refused": "{name} afviste forbindelsen.",

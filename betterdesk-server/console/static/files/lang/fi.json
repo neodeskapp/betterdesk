@@ -2402,6 +2402,7 @@
     "virtual_display": "Virtuaalinäyttö",
     "plug_out_all": "Irrota kaikki",
     "file_transfer_unavailable": "Tiedostonsiirto ei ole käytettävissä tässä istunnossa.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Ei-luotettu varmenne",
     "certificate_confirm": "Laitteen {name} varmenteeseen ei luoteta. Luotetaanko varmenteeseen, jonka sormenjälki on {fingerprint}?",
     "certificate_trust": "Luota varmenteeseen"
@@ -7927,6 +7928,8 @@
     "ended_peer": "Istunto lopetettiin laitteella {name}.",
     "fail_permission": "Sinulla ei ole oikeutta yhdistää laitteeseen {name}.",
     "try_permission": "Pyydä ylläpitäjää antamaan sinulle pääsy tähän laitteeseen.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Salasanaa ei hyväksytty.",
     "try_password": "Yhdistä uudelleen ja anna salasana, joka on asetettu laitteen RustDeskissä.",
     "fail_refused": "{name} hylkäsi yhteyden.",

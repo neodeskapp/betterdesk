@@ -2402,6 +2402,7 @@
     "virtual_display": "Віртуальний дисплей",
     "plug_out_all": "Від'єднати всі",
     "file_transfer_unavailable": "Передавання файлів недоступне для цього сеансу.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Ненадійний сертифікат",
     "certificate_confirm": "Сертифікат {name} ненадійний. Довіряти сертифікату з відбитком {fingerprint}?",
     "certificate_trust": "Довіряти сертифікату"
@@ -7927,6 +7928,8 @@
     "ended_peer": "Сеанс завершено на пристрої {name}.",
     "fail_permission": "У вас немає дозволу на підключення до {name}.",
     "try_permission": "Попросіть адміністратора надати вам доступ до цього пристрою.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Пароль не прийнято.",
     "try_password": "Підключіться знову та введіть пароль, встановлений у RustDesk на пристрої.",
     "fail_refused": "Пристрій {name} відхилив підключення.",

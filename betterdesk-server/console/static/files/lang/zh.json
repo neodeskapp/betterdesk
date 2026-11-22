@@ -2396,6 +2396,7 @@
     "virtual_display": "虚拟显示器",
     "plug_out_all": "全部拔出",
     "file_transfer_unavailable": "此会话无法使用文件传输。",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "不受信任的证书",
     "certificate_confirm": "{name} 的证书不受信任。要信任指纹为 {fingerprint} 的证书吗？",
     "certificate_trust": "信任证书"
@@ -7921,6 +7922,8 @@
     "ended_peer": "会话已在 {name} 上被结束。",
     "fail_permission": "您没有连接 {name} 的权限。",
     "try_permission": "请让管理员为您开通此设备的访问权限。",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "密码未被接受。",
     "try_password": "请重新连接，并输入设备上 RustDesk 中设置的密码。",
     "fail_refused": "{name} 拒绝了连接。",

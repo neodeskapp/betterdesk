@@ -1,29 +1,15 @@
 /**
- * Smaller parts of the wrapped remote client (static/rdclient): the CDAP
+ * Smaller parts of the wrapped remote client (src/lib/remote/client): the CDAP
  * download's save hook, the Linux key codes of Map mode, cancelling a
  * RustDesk connect, and the CDAP session chat. Sockets are fakes.
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { loadScripts, RD_CORE, type Loaded } from './rdclient-scripts.ts';
+import { CDAPFileTransfer } from '../../../src/lib/remote/client/cdap-filetransfer.ts';
+import { CDAPSession } from '../../../src/lib/remote/client/cdap-adapter.ts';
+import { RDClient } from '../../../src/lib/remote/client/client.ts';
+import { RDKeyboardScancode } from '../../../src/lib/remote/client/keyboard-scancode.ts';
 
-const g: Loaded = loadScripts(
-	[
-		...RD_CORE,
-		'video.js',
-		'audio.js',
-		'renderer.js',
-		'keyboard-scancode.js',
-		'keyboard-encoder.js',
-		'input.js',
-		'compress.js',
-		'clipboard.js',
-		'filetransfer.js',
-		'client.js',
-		'cdap-filetransfer.js',
-		'cdap-adapter.js'
-	],
-	['RDClient', 'RDKeyboardScancode', 'CDAPFileTransfer', 'CDAPSession']
-);
+const g = { RDClient, RDKeyboardScancode, CDAPFileTransfer, CDAPSession };
 
 /** A socket that stays connecting until the test opens it */
 class FakeSocket {
@@ -75,12 +61,12 @@ describe('CDAP file download', () => {
 	test('hands the save hook the file name, then the file', async () => {
 		const events: string[] = [];
 		const ft = new g.CDAPFileTransfer({ deviceId: 'cdap-1', emit: (ev: string) => events.push(ev) });
-		ft._ws = { readyState: FakeSocket.OPEN, send: () => {} };
+		ft._ws = { readyState: FakeSocket.OPEN, send: () => {} } as unknown as WebSocket;
 		const save = vi.fn();
 		ft._saveDownload = save;
 		ft.downloadFile('/docs', { name: 'report.txt', size: 3 });
 		await vi.waitFor(() => expect(Object.keys(ft._pending)).toHaveLength(1));
-		ft._pending[Object.keys(ft._pending)[0]!]({ data: btoa('abc') });
+		ft._pending[Object.keys(ft._pending)[0]!]?.({ data: btoa('abc') });
 		expect(save).toHaveBeenCalledOnce();
 		const [name, blob] = save.mock.calls[0]!;
 		expect(name).toBe('report.txt');

@@ -2403,6 +2403,7 @@
     "virtual_display": "شاشة افتراضية",
     "plug_out_all": "فصل الكل",
     "file_transfer_unavailable": "نقل الملفات غير متاح لهذه الجلسة.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "شهادة غير موثوقة",
     "certificate_confirm": "شهادة {name} غير موثوقة. هل تريد الوثوق بالشهادة ذات البصمة {fingerprint}؟",
     "certificate_trust": "الوثوق بالشهادة"
@@ -7928,6 +7929,8 @@
     "ended_peer": "تم إنهاء الجلسة على {name}.",
     "fail_permission": "ليس لديك إذن بالاتصال بـ {name}.",
     "try_permission": "اطلب من المسؤول منحك حق الوصول إلى هذا الجهاز.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "لم تُقبل كلمة المرور.",
     "try_password": "أعد الاتصال وأدخل كلمة المرور المعيّنة في RustDesk على الجهاز.",
     "fail_refused": "رفض {name} الاتصال.",

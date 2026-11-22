@@ -2396,6 +2396,7 @@
     "virtual_display": "仮想ディスプレイ",
     "plug_out_all": "すべて取り外す",
     "file_transfer_unavailable": "このセッションではファイル転送を使用できません。",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "信頼されていない証明書",
     "certificate_confirm": "{name} の証明書は信頼されていません。フィンガープリント {fingerprint} の証明書を信頼しますか?",
     "certificate_trust": "証明書を信頼"
@@ -7921,6 +7922,8 @@
     "ended_peer": "セッションは {name} 側で終了されました。",
     "fail_permission": "{name} に接続する権限がありません。",
     "try_permission": "このデバイスへのアクセス権を付与するよう管理者に依頼してください。",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "パスワードが受け付けられませんでした。",
     "try_password": "再接続して、デバイスの RustDesk で設定したパスワードを入力してください。",
     "fail_refused": "{name} が接続を拒否しました。",

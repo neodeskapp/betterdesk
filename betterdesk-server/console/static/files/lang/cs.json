@@ -2396,6 +2396,7 @@
     "virtual_display": "Virtuální displej",
     "plug_out_all": "Odpojit vše",
     "file_transfer_unavailable": "Přenos souborů není v této relaci dostupný.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Nedůvěryhodný certifikát",
     "certificate_confirm": "Certifikát zařízení {name} není důvěryhodný. Důvěřovat certifikátu s otiskem {fingerprint}?",
     "certificate_trust": "Důvěřovat certifikátu"
@@ -7921,6 +7922,8 @@
     "ended_peer": "Relace byla ukončena na zařízení {name}.",
     "fail_permission": "Nemáte oprávnění připojit se k zařízení {name}.",
     "try_permission": "Požádejte správce o přístup k tomuto zařízení.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Heslo nebylo přijato.",
     "try_password": "Připojte se znovu a zadejte heslo nastavené v RustDesk na zařízení.",
     "fail_refused": "Zařízení {name} připojení odmítlo.",

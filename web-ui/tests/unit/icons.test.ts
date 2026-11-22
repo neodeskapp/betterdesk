@@ -82,7 +82,7 @@ describe('icon name scan', () => {
 		]);
 	});
 
-	test('reads the file sheet the remote viewer loads from static/rdclient', () => {
+	test('reads the file sheet of the remote viewer client', () => {
 		const text = `
     static getFileIcon(entry) {
         if (entry.isDir) {
@@ -102,7 +102,7 @@ describe('icon name scan', () => {
         var icon = meta.type === 'upload' ? 'upload' : 'download';
         if (meta.isFolder) icon = meta.type === 'upload' ? 'drive_folder_upload' : 'folder_zip';
         if (meta.phase === 'pending') icon = 'hourglass_empty';`;
-		expect(scan(text, 'static/rdclient/file-modal.js')).toEqual([
+		expect(scan(text, 'src/lib/remote/client/file-modal.ts')).toEqual([
 			'delete_outline',
 			'description',
 			'download',
@@ -162,9 +162,9 @@ describe('icon font subset', () => {
 		expect(readMeanings()).toEqual(ICONS);
 	});
 
-	test('the scan covers the scripts the remote viewer loads from static', () => {
+	test('the scan covers the file sheet of the remote viewer client', () => {
 		const files = new Set([...scanned.values()].flatMap((f) => [...f]));
-		expect(files).toContain('static/rdclient/file-modal.js');
+		expect(files).toContain('src/lib/remote/client/file-modal.ts');
 		expect(files).toContain('src/lib/shell/Topbar.svelte');
 	});
 

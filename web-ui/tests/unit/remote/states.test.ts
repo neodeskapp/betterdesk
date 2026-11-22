@@ -46,6 +46,17 @@ describe('what happened, in plain words', () => {
 			'insecure',
 			'The connection to demo-build-server was stopped because it could not be secured.'
 		],
+		// The server refuses a session its client features turn off for the account (L41)
+		[
+			'Connection refused: File transfer is turned off for your account on this server',
+			'feature_off',
+			'This kind of session is turned off for your account on this server.'
+		],
+		[
+			'The terminal is turned off for your account',
+			'feature_off',
+			'This kind of session is turned off for your account on this server.'
+		],
 		['something odd', 'generic', 'Could not connect to demo-build-server.']
 	])('%s', (reason, kind, text) => {
 		const out = classifyEnd(reason, null, ctx);
