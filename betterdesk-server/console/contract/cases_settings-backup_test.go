@@ -16,7 +16,9 @@ import (
 // settings snapshot as downloads, the scheduled backup with its
 // destination check, the restore and the retention count of the updater's
 // backups. The network share login is gone (L122): its routes are unknown
-// paths, so the matrix and the cases leave them out.
+// paths. The cases leave them out; the matrix keeps them in its route list,
+// whose order picks the HEAD samples, and pins their answers as unknown
+// paths.
 //
 // The restore is on the matrix skip list. Its cases never put anything
 // back: they are the refusals (no file, not JSON, not a backup, a broken
