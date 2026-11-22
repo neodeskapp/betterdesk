@@ -1,10 +1,7 @@
 {
   "scripts": {
     "i18n:check": "node scripts/i18n-check.js --system console",
-    "check:provenance": "cd betterdesk-server && go run ./cmd/repotool check-provenance",
-    "local:gate": "node scripts/local-gate.js",
-    "local:gate:dry-run": "node scripts/local-gate.js --dry-run",
-    "test:local-gate": "node --test scripts/local-gate.test.js"
+    "check:provenance": "cd betterdesk-server && go run ./cmd/repotool check-provenance"
   },
   "overrides": {
     "postcss": "^8.5.23"

@@ -28,28 +28,41 @@ type command struct {
 	run   func(root string, args []string, stdout, stderr io.Writer) int
 }
 
-// commands are the commands of repotool by name. Add a command here.
-var commands = map[string]command{
-	"check-provenance": {
-		about: "check the clean-room provenance documents",
-		run:   checkProvenance,
-	},
-	"check-pairing-i18n": {
-		about: "check that every console language has the pairing keys",
-		run:   checkPairingI18n,
-	},
-	"check-port-docs": {
-		about: "check docs/CONNECTION_PORTS.md against the ports in the code",
-		run:   checkPortDocs,
-	},
-	"check-js": {
-		about: "fail on tracked JavaScript outside .github/javascript-allowlist.txt",
-		run:   checkJS,
-	},
-	"i18n-check": {
-		about: "audit the translation files [--system ID] [--json] [--verbose]",
-		run:   i18nCheck,
-	},
+// commands are the commands of repotool by name. Add a command here. They
+// are set in init because the local gate runs other commands through run.
+var commands map[string]command
+
+func init() {
+	commands = map[string]command{
+		"check-provenance": {
+			about: "check the clean-room provenance documents",
+			run:   checkProvenance,
+		},
+		"check-pairing-i18n": {
+			about: "check that every console language has the pairing keys",
+			run:   checkPairingI18n,
+		},
+		"check-port-docs": {
+			about: "check docs/CONNECTION_PORTS.md against the ports in the code",
+			run:   checkPortDocs,
+		},
+		"check-js": {
+			about: "fail on tracked JavaScript outside .github/javascript-allowlist.txt",
+			run:   checkJS,
+		},
+		"i18n-check": {
+			about: "audit the translation files [--system ID] [--json] [--verbose]",
+			run:   i18nCheck,
+		},
+		"local-gate": {
+			about: "the complete local check before a commit [--dry-run] [--preflight-only] [--report-dir DIR]",
+			run:   localGate,
+		},
+		"docker-smoke": {
+			about: "test the local image [--database-type sqlite|postgres] [--database-url URL] [--keep]",
+			run:   dockerSmoke,
+		},
+	}
 }
 
 func main() {

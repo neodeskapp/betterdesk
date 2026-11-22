@@ -106,7 +106,7 @@ It does not change the repository or GitHub workflows. Both `pre-commit` and
 `pre-push` then run the complete local gate:
 
 ```powershell
-npm run local:gate
+.\scripts\local-gate.ps1
 ```
 
 The gate runs the web app tests and type check, the Node.js SDK tests, Go
@@ -121,7 +121,7 @@ smoke tests. It creates JSON and Markdown diagnostics in
 The gate fails closed. Missing required tools, failed tests, unexpected skips,
 security findings, unavailable Docker/PostgreSQL, or incomplete integration
 checks block the operation with a non-zero exit code. Use
-`npm run local:gate:dry-run` only to inspect the categories; it is not a
+`.\scripts\local-gate.ps1 -DryRun` only to inspect the categories; it is not a
 passing test result. `--no-verify` bypasses Git's hooks and must be treated as
 an exceptional, explicitly documented action.
 
