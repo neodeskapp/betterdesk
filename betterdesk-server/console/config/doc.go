@@ -159,5 +159,8 @@
 // The old console loaded web-nodejs/.env before anything else. The server
 // loads the file BETTERDESK_ENV_FILE names as the first step of main, with
 // the same rule: a variable that is set to more than "" keeps its value
-// (envfile.go). PORT is not read for the console: CONSOLE_PORT is.
+// (envfile.go). Values are read as dotenv files are read: 'single' and
+// "double" quotes (with \n, \r, \t, \" and \\ in double quotes) and a
+// " # comment" after a value (serverinfo.EnvValue). PORT is not read for
+// the console: CONSOLE_PORT is, and the ID server reads SIGNAL_PORT.
 package config

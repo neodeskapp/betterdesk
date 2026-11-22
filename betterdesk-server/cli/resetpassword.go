@@ -22,7 +22,6 @@ import (
 	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/db"
@@ -251,7 +250,7 @@ func consoleEnv(getenv func(string) string) func(string) string {
 	file := map[string]string{}
 	for _, line := range serverinfo.ParseEnvLines(serverinfo.DecodeUTF8(raw)).Entries {
 		if line.Type == serverinfo.EnvPair && file[line.Key] == "" {
-			file[line.Key] = jsbind.Trim(line.Value)
+			file[line.Key] = line.Value
 		}
 	}
 	return func(key string) string {

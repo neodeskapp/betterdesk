@@ -62,9 +62,8 @@ var (
 )
 
 // ParseEnvFile reads env file text into a map: the lines KEY=value, with
-// key and value trimmed. Comments, blank lines and lines without a key are
-// skipped; a key set twice has its last value. This is the rule the Node
-// console read its own ".env" file by.
+// the key trimmed and the value read by EnvValue. Comments, blank lines
+// and lines without a key are skipped; a key set twice has its last value.
 func ParseEnvFile(content string) map[string]string {
 	out := map[string]string{}
 	for _, line := range splitEnvLines(content) {
@@ -80,7 +79,7 @@ func ParseEnvFile(content string) map[string]string {
 		if key == "__proto__" {
 			continue
 		}
-		out[key] = jsTrim(trimmed[eq+1:])
+		out[key] = EnvValue(trimmed[eq+1:])
 	}
 	return out
 }

@@ -85,7 +85,12 @@ func checkUpsert(t *testing.T, text, key, value string) string {
 		in = in[:len(in)-1]
 	}
 	outLines := strings.Split(out, "\n")
+	// A value that needs quotes is written quoted (BUGS L86); FuzzEnvQuote
+	// checks that the quoted form reads back
 	set := key + "=" + value
+	if !plainEnvValue(value) {
+		set = key + "=" + EnvQuote(value)
+	}
 
 	if !strings.Contains(set, "\n") {
 		// One line in, one line out: every line keeps its place. A line
@@ -129,10 +134,11 @@ func checkUpsert(t *testing.T, text, key, value string) string {
 		}
 	}
 
-	if readableKey(key) && !strings.Contains(value, "\n") {
-		want := strings.TrimFunc(value, fuzzIsSpace)
-		got, ok := nodeReadEnv(out)[key]
-		if !ok || got != want {
+	if readableKey(key) {
+		// Both readers read the value back: Node's rule for a value
+		// without quotes, ParseEnvFile for every value
+		want := value
+		if got, ok := nodeReadEnv(out)[key]; plainEnvValue(value) && (!ok || got != want) {
 			t.Fatalf("after UpsertEnvKey(%q, %q, %q) the file %q reads %q for the key, want %q", text, key, value, out, got, want)
 		}
 		if again := ParseEnvFile(out)[key]; again != want {
@@ -166,7 +172,7 @@ func FuzzEnvMerge(f *testing.F) {
 		// second changed the same key. A second key such as "A=x" does: its
 		// line reads as the key A.
 		_, shadowed := nodeReadEnv(key2 + "=" + value2)[key1]
-		if !shadowed && readableKey(key1) && !strings.Contains(value1, "\n") && !strings.Contains(key2+"="+value2, "\n") {
+		if !shadowed && readableKey(key1) && plainEnvValue(value1) && plainEnvValue(value2) && !strings.Contains(key2, "\n") {
 			if got := nodeReadEnv(final)[key1]; got != strings.TrimFunc(value1, fuzzIsSpace) {
 				t.Fatalf("after setting %q then %q the file %q reads %q for the first key", key1, key2, final, got)
 			}

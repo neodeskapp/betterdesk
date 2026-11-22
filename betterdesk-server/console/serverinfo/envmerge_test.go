@@ -100,6 +100,11 @@ func TestParseEnvLinesAgainstNode(t *testing.T) {
 	atLeast(t, "parse_env_lines", len(v.ParseEnvLines), 700)
 	m := &mismatches{t: t}
 	kinds := map[string]int{}
+	// Node kept the text after "=" as the value. The value is now that
+	// text as dotenv reads it (BUGS L86): trimmed, and for the text
+	// dotenvAffects with quotes and comments, which EnvValue's own tests
+	// cover; the text itself is RawValue.
+	intended := 0
 	for _, c := range v.ParseEnvLines {
 		got := ParseEnvLines(c.Text)
 		if len(got.Entries) != len(c.Out.Entries) {
@@ -109,12 +114,17 @@ func TestParseEnvLinesAgainstNode(t *testing.T) {
 		for i, want := range c.Out.Entries {
 			e := got.Entries[i]
 			kinds[e.Type]++
-			wantKey, wantValue := "", ""
+			wantKey, wantRaw := "", ""
 			if want.Key != nil {
-				wantKey, wantValue = *want.Key, *want.Value
+				wantKey, wantRaw = *want.Key, *want.Value
 			}
-			if e.Type != want.Type || e.Raw != want.Raw || e.Key != wantKey || e.Value != wantValue {
-				m.errorf("ParseEnvLines(%q) line %d: %+v, Node has type %q key %q value %q raw %q", c.Text, i, e, want.Type, wantKey, wantValue, want.Raw)
+			wantValue := strings.TrimFunc(wantRaw, fuzzIsSpace)
+			if dotenvAffects(wantRaw) {
+				intended++
+				wantValue = e.Value
+			}
+			if e.Type != want.Type || e.Raw != want.Raw || e.Key != wantKey || e.RawValue != wantRaw || e.Value != wantValue {
+				m.errorf("ParseEnvLines(%q) line %d: %+v, Node has type %q key %q value %q raw %q", c.Text, i, e, want.Type, wantKey, wantRaw, want.Raw)
 			}
 		}
 		keys := got.Keys()
@@ -126,10 +136,14 @@ func TestParseEnvLinesAgainstNode(t *testing.T) {
 			continue
 		}
 		for i, key := range keys {
-			if value, ok := got.Get(key); !ok || value != c.Out.Values[i] {
-				m.errorf("ParseEnvLines(%q): %s = %q, Node has %q", c.Text, key, value, c.Out.Values[i])
+			want := c.Out.Values[i]
+			if value, ok := got.Get(key); !ok || (!dotenvAffects(want) && value != strings.TrimFunc(want, fuzzIsSpace)) {
+				m.errorf("ParseEnvLines(%q): %s = %q, Node has %q", c.Text, key, value, want)
 			}
 		}
+	}
+	if intended == 0 || intended > kinds[EnvPair]/2 {
+		t.Errorf("%d of %d pairs read otherwise than Node on purpose: the vectors do not test what stayed", intended, kinds[EnvPair])
 	}
 	for _, kind := range []string{EnvComment, EnvBlank, EnvPair} {
 		if kinds[kind] < 300 {
@@ -143,10 +157,20 @@ func TestParseEnvFileAgainstNode(t *testing.T) {
 	loadVectors(t, "envmerge", &v)
 	atLeast(t, "parse_env_file", len(v.ParseEnvFile), 700)
 	m := &mismatches{t: t}
+	// Texts with quotes or comments in a value read otherwise on purpose
+	// (BUGS L86); the others as Node read them
+	intended := 0
 	for _, c := range v.ParseEnvFile {
+		if dotenvText(c.Text) {
+			intended++
+			continue
+		}
 		if got := ParseEnvFile(c.Text); !reflect.DeepEqual(got, c.Out) {
 			m.errorf("ParseEnvFile(%q) = %q, Node answers %q", c.Text, got, c.Out)
 		}
+	}
+	if intended == 0 || len(v.ParseEnvFile)-intended < 250 {
+		t.Errorf("%d of %d texts read otherwise than Node on purpose", intended, len(v.ParseEnvFile))
 	}
 }
 
@@ -155,7 +179,7 @@ func TestUpsertEnvKeyAgainstNode(t *testing.T) {
 	loadVectors(t, "envmerge", &v)
 	atLeast(t, "upsert", len(v.Upsert), 2500)
 	m := &mismatches{t: t}
-	updates, crlf := 0, 0
+	updates, crlf, quoted := 0, 0, 0
 	for _, c := range v.Upsert {
 		content := c.Text
 		if strings.Contains(content, "\r\n") {
@@ -165,14 +189,20 @@ func TestUpsertEnvKeyAgainstNode(t *testing.T) {
 			updates++
 			before := content
 			content = UpsertEnvKey(content, u.Key, u.Value)
+			// A value that needs quotes is written quoted (BUGS L86)
+			if !plainEnvValue(u.Value) {
+				quoted++
+				content = u.Out
+				continue
+			}
 			if content != u.Out {
 				m.errorf("UpsertEnvKey(%q, %q, %q) =\n%q\nNode answers\n%q", before, u.Key, u.Value, content, u.Out)
 				content = u.Out
 			}
 		}
 	}
-	if updates < 6000 || crlf < 200 {
-		t.Fatalf("%d updates, %d files with CRLF: too few", updates, crlf)
+	if updates < 6000 || crlf < 200 || quoted == 0 || quoted > updates/2 {
+		t.Fatalf("%d updates, %d files with CRLF, %d quoted values: too few or too many", updates, crlf, quoted)
 	}
 }
 
@@ -218,9 +248,14 @@ func TestSubstitutionsAgainstNode(t *testing.T) {
 	atLeast(t, "substitute", len(v.Substitute), 600)
 	atLeast(t, "assert_resolved", len(v.AssertResolved), 300)
 	m := &mismatches{t: t}
-	changed := 0
+	changed, quoted := 0, 0
 	for _, c := range v.Substitute {
 		got := ApplySubstitutions(c.Text, c.Subs)
+		// A whole value that needs quotes goes in quoted (BUGS L86)
+		if !plainSubstitutions(c.Subs) {
+			quoted++
+			continue
+		}
 		if got != c.Out {
 			m.errorf("ApplySubstitutions(%q, %q) = %q, Node answers %q", c.Text, c.Subs, got, c.Out)
 		}
@@ -228,8 +263,8 @@ func TestSubstitutionsAgainstNode(t *testing.T) {
 			changed++
 		}
 	}
-	if changed < 50 {
-		t.Fatalf("only %d texts changed", changed)
+	if changed < 50 || quoted > len(v.Substitute)/2 {
+		t.Fatalf("only %d texts changed, %d with values that need quotes", changed, quoted)
 	}
 	refused := 0
 	for _, c := range v.AssertResolved {
@@ -254,7 +289,14 @@ func TestBuildEnvSubstitutionsAgainstNode(t *testing.T) {
 	loadVectors(t, "envmerge", &v)
 	atLeast(t, "build_substitutions", len(v.BuildSubstitutions), 400)
 	m := &mismatches{t: t}
+	compared := 0
 	for _, c := range v.BuildSubstitutions {
+		// Values of the existing file are taken as the file reads them,
+		// trimmed and with quotes and comments read (BUGS L86)
+		if !plainEnvText(c.ExistingContent) {
+			continue
+		}
+		compared++
 		in := EnvSubstitutionInput{
 			ExistingContent: c.ExistingContent,
 			Config: EnvConfig{
@@ -286,6 +328,20 @@ func TestBuildEnvSubstitutionsAgainstNode(t *testing.T) {
 			m.errorf("BuildEnvSubstitutions(%q, %+v) =\n%q\nNode answers\n%q", c.ExistingContent, c.Config, got, c.Out)
 		}
 	}
+	if compared < len(v.BuildSubstitutions)/2 {
+		t.Errorf("only %d of %d cases compared", compared, len(v.BuildSubstitutions))
+	}
+}
+
+// plainSubstitutions reports whether every value of subs goes into a
+// template as it is (plainEnvValue).
+func plainSubstitutions(subs []Substitution) bool {
+	for _, s := range subs {
+		if !plainEnvValue(s.Value) {
+			return false
+		}
+	}
+	return true
 }
 
 // The source of random bytes is read on every call and its failure is an
@@ -354,7 +410,10 @@ func TestMergeEnvFileAgainstNode(t *testing.T) {
 				dropped++
 			}
 		}
-		checkFile(t, m, label, target, want)
+		// A whole value that needs quotes is written quoted (BUGS L86)
+		if plainSubstitutions(c.Subs) {
+			checkFile(t, m, label, target, want)
+		}
 	}
 	if dropped == 0 {
 		t.Error("no recorded merge carried a comment along (SI6): the vectors do not test it")

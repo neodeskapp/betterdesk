@@ -158,9 +158,18 @@ func TestReadPublicEndpointsAgainstNode(t *testing.T) {
 	atLeast(t, "read", len(v.Read), 700)
 	base := t.TempDir()
 	m := &mismatches{t: t}
-	migrated := 0
+	migrated, intended := 0, 0
 	for i, c := range v.Read {
 		label := "case " + strconv.Itoa(i)
+		durable := c.Durable
+		if c.Options.NoDataDir {
+			durable = textOrDir{}
+		}
+		// Files with quotes or comments read otherwise (BUGS L86)
+		if dotenvText(durable.Text) || dotenvText(c.Legacy.Text) {
+			intended++
+			continue
+		}
 		st := stageEndpoints(t, filepath.Join(base, strconv.Itoa(i)), c.Durable, c.Legacy, c.Options.NoDataDir)
 		s := New(Options{DataDir: st.dataDir, EnvPath: st.envPath, Getenv: envMap(c.Env), Logger: &recordingLogger{}})
 
@@ -187,8 +196,8 @@ func TestReadPublicEndpointsAgainstNode(t *testing.T) {
 		}
 		st.check(t, m, label+" (second read)", c.AfterSecond)
 	}
-	if migrated < 50 {
-		t.Fatalf("only %d cases copied into the durable file", migrated)
+	if migrated < 50 || intended > len(v.Read)/2 {
+		t.Fatalf("only %d cases copied into the durable file, %d read otherwise on purpose", migrated, intended)
 	}
 }
 
@@ -201,9 +210,19 @@ func TestWritePublicEndpointsAgainstNode(t *testing.T) {
 	written, refused := 0, 0
 	ipv6 := &ipv6Cases{t: t}
 	all := m
+	intended := 0
 	for i, c := range v.Write {
 		label := "case " + strconv.Itoa(i)
 		m := ipv6.mismatches(all, c.Raw, c.Env, c.Durable, c.Legacy)
+		durable := c.Durable
+		if c.Options.NoDataDir {
+			durable = textOrDir{}
+		}
+		// Files with quotes or comments read otherwise (BUGS L86)
+		if dotenvText(durable.Text) || dotenvText(c.Legacy.Text) {
+			intended++
+			continue
+		}
 		st := stageEndpoints(t, filepath.Join(base, strconv.Itoa(i)), c.Durable, c.Legacy, c.Options.NoDataDir)
 		s := New(Options{DataDir: st.dataDir, EnvPath: st.envPath, Getenv: envMap(c.Env), Logger: &recordingLogger{}})
 
@@ -236,8 +255,8 @@ func TestWritePublicEndpointsAgainstNode(t *testing.T) {
 		}
 		st.check(t, m, label, c.After)
 	}
-	if written < 300 || refused < 100 {
-		t.Fatalf("%d writes and %d refusals: too few", written, refused)
+	if written < 300 || refused < 100 || intended > len(v.Write)/2 {
+		t.Fatalf("%d writes, %d refusals and %d cases that differ on purpose: too few", written, refused, intended)
 	}
 }
 

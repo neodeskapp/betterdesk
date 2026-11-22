@@ -54,7 +54,7 @@ func TestEnvFileFillsWhatIsNotSet(t *testing.T) {
 		"DUP":                 "first",
 		"LATER_EMPTY":         "second",
 		"WITH_EQUALS":         "a=b=c",
-		"QUOTED":              `"kept as written"`,
+		"QUOTED":              "kept as written",
 		"LAST":                "no newline",
 	}
 	if !reflect.DeepEqual(env, want) {
@@ -78,5 +78,42 @@ func TestEnvFileThatCannotBeRead(t *testing.T) {
 	err := loadEnvFile(env.get, env.set, os.ReadFile)
 	if !errors.Is(err, os.ErrNotExist) || len(env) != 1 {
 		t.Errorf("err %v, env %v", err, env)
+	}
+}
+
+// L86: the env file takes quoted values and comments as dotenv files do;
+// lines without quotes read as before.
+func TestEnvFileReadsQuotesAndComments(t *testing.T) {
+	file := filepath.Join(t.TempDir(), ".env")
+	text := "DOUBLE=\"kept as written\"\n" +
+		"SINGLE='single # not a comment'\n" +
+		`ESCAPES="a\"b\\c\nd"` + "\n" +
+		"COMMENTED=value # the comment\n" +
+		"QUOTED_COMMENTED=\"x # y\" # the comment\n" +
+		"PADDED=\"  inside  \"\n" +
+		"HASH=pa#ss\n" +
+		"PLAIN=  as before  \n" +
+		"UNCLOSED=\"open\n"
+	if err := os.WriteFile(file, []byte(text), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	env := fakeEnv{"BETTERDESK_ENV_FILE": file}
+	if err := loadEnvFile(env.get, env.set, os.ReadFile); err != nil {
+		t.Fatal(err)
+	}
+	want := fakeEnv{
+		"BETTERDESK_ENV_FILE": file,
+		"DOUBLE":              "kept as written",
+		"SINGLE":              "single # not a comment",
+		"ESCAPES":             "a\"b\\c\nd",
+		"COMMENTED":           "value",
+		"QUOTED_COMMENTED":    "x # y",
+		"PADDED":              "  inside  ",
+		"HASH":                "pa#ss",
+		"PLAIN":               "as before",
+		"UNCLOSED":            "\"open",
+	}
+	if !reflect.DeepEqual(env, want) {
+		t.Errorf("environment\n got %q\nwant %q", env, want)
 	}
 }

@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 )
 
 // loadEnvFile fills the environment from the file BETTERDESK_ENV_FILE
-// names, with the rule the old console applied to its .env
-// (web-nodejs/config/config.js): lines of KEY=value and "#" comments, key
-// and value trimmed, and a variable keeps a value that is not empty, so
-// the service's own settings win. The first line of a key that fills it
-// wins. Without the variable nothing is read.
+// names: lines of KEY=value and "#" comments, the key trimmed and the
+// value read as dotenv files are read (serverinfo.EnvValue: quotes, the
+// escapes in double quotes, " #" comments). A variable keeps a value that
+// is not empty, so the service's own settings win. The first line of a
+// key that fills it wins. Without the variable nothing is read.
 func loadEnvFile(getenv func(string) string, setenv func(key, value string) error, readFile func(string) ([]byte, error)) error {
 	path := getenv("BETTERDESK_ENV_FILE")
 	if path == "" {
@@ -27,7 +26,7 @@ func loadEnvFile(getenv func(string) string, setenv func(key, value string) erro
 		if line.Type != serverinfo.EnvPair || getenv(line.Key) != "" {
 			continue
 		}
-		if err := setenv(line.Key, jsbind.Trim(line.Value)); err != nil {
+		if err := setenv(line.Key, line.Value); err != nil {
 			return fmt.Errorf("env file %s: %s: %w", path, line.Key, err)
 		}
 	}
