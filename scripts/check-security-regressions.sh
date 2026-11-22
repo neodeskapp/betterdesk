@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fail when the repository reintroduces a security regression fixed on
-# 2026-11-13 (see docs/security/AUDIT_2026-11-13.md).
+# 2026-11-13 in an internal audit.
 #
 # Checks:
 #   1. No credentials written into systemd units by the installers (H3).

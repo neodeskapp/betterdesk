@@ -2,10 +2,9 @@ package db
 
 // Panel-owned device grouping: members, ACL and folders.
 //
-// The Node console used to write these tables and Go only read them
-// (db/panel_sync.go, db/console_auth.go). Go now owns the writes as well
-// (docs/important/console-backend-strangler.md, stage P2), so the reading and
-// writing paths share one implementation and one set of SQL statements.
+// Go reads these tables (db/panel_sync.go, db/console_auth.go) and writes
+// them here, so the reading and writing paths share one implementation and
+// one set of SQL statements.
 //
 // A group is identified by its GUID on the wire and by its numeric id in the
 // tables; helpers below resolve one to the other so handlers never have to.

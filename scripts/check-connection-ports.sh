@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 # Verify that the running BetterDesk host matches a documented firewall profile.
 #
-# Profiles and their expected exposure are defined in docs/CONNECTION_PORTS.md. This script
-# checks observed listeners, not intentions: a panel bound to 0.0.0.0 fails profile B even if
-# the operator believes otherwise.
+# Profiles and their expected exposure (what each port does:
+# https://betterde.sk/docs/operations/ports):
+#   a  minimal, no reverse proxy: 21116 and 21117 open, the client API
+#      reachable on 21114
+#   b  behind a reverse proxy on 443 (recommended): the console and the
+#      client API bound to 127.0.0.1, 21116 and 21117 open
+#   c  WebSocket only: 443 open, 21118 and 21119 listening for the proxy,
+#      21116 and 21117 closed to the internet
+#   d  Docker: the compose file publishes the ports, not the host firewall
+#
+# This script checks observed listeners, not intentions: a panel bound to
+# 0.0.0.0 fails profile B even if the operator believes otherwise.
 #
 # Usage: sudo bash scripts/check-connection-ports.sh [a|b|c|d]
 # Exit codes: 0 = matches, 1 = mismatch, 2 = usage/environment error.
@@ -16,7 +25,7 @@ PROFILE="$(printf '%s' "$PROFILE" | tr '[:upper:]' '[:lower:]')"
 case "$PROFILE" in
   a | b | c | d) ;;
   *)
-    echo "usage: $0 [a|b|c|d]   (see docs/CONNECTION_PORTS.md)" >&2
+    echo "usage: $0 [a|b|c|d]   (the profiles are described at the top of this script)" >&2
     exit 2
     ;;
 esac
@@ -165,7 +174,7 @@ fi
 
 echo
 if [ "$FAIL" -ne 0 ]; then
-  echo "Profile $PROFILE: $FAIL problem(s), $WARN warning(s). See docs/CONNECTION_PORTS.md" >&2
+  echo "Profile $PROFILE: $FAIL problem(s), $WARN warning(s). Ports: https://betterde.sk/docs/operations/ports" >&2
   exit 1
 fi
 echo "Profile $PROFILE: OK ($WARN warning(s))"

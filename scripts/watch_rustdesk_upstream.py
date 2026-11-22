@@ -27,6 +27,8 @@ MARKER_RE = re.compile(
     re.IGNORECASE,
 )
 COMPONENT_KEYS = ("client", "server_oss")
+# The checklist a review issue links to
+CHECKLIST_URL = "https://betterde.sk/docs/development/rustdesk-compatibility#the-checklist-for-a-new-rustdesk-release"
 
 
 class WatchError(RuntimeError):
@@ -206,12 +208,9 @@ def build_issue_body(
     repository: str,
     tag: str,
     html_url: str,
-    checklist_doc: str,
-    audit_doc: str,
+    checklist_url: str,
 ) -> str:
     title_component = "client" if component_id == "client" else "OSS server"
-    # The docs are linked in the repository the workflow runs in
-    this_repo = os.environ.get("GITHUB_REPOSITORY", "").strip() or "trybetterdesk/betterdesk"
     return f"""## RustDesk upstream watch
 
 New **{title_component}** release needs a BetterDesk compatibility review.
@@ -224,7 +223,7 @@ New **{title_component}** release needs a BetterDesk compatibility review.
 
 ### Checklist
 
-Follow [`{checklist_doc}`](https://github.com/{this_repo}/blob/dev/{checklist_doc}) end-to-end (manual lab + code review). Record findings in [`{audit_doc}`](https://github.com/{this_repo}/blob/dev/{audit_doc}).
+Follow [the compatibility checklist]({checklist_url}) end-to-end (manual lab + code review). Record the findings in this issue.
 
 - [ ] Bootstrap / deploy string / deep-link / no public fallback
 - [ ] RegisterPk / enrollment modes
@@ -234,7 +233,7 @@ Follow [`{checklist_doc}`](https://github.com/{this_repo}/blob/dev/{checklist_do
 - [ ] Session smoke: remote, clipboard, files, terminal
 - [ ] Proto drift vs BetterDesk canonical schemas (diff only, no AGPL import)
 - [ ] Update `config/rustdesk-upstream-watch.json` → `last_reviewed_tag` for `{component_id}`
-- [ ] Add / update audit section for `{tag}`
+- [ ] Findings for `{tag}` recorded in this issue
 
 ### Notes
 
@@ -251,8 +250,7 @@ def create_review_issue(
     tag: str,
     html_url: str,
     labels: list[str],
-    checklist_doc: str,
-    audit_doc: str,
+    checklist_url: str,
     dry_run: bool,
 ) -> None:
     title_component = "client" if component_id == "client" else "OSS server"
@@ -262,8 +260,7 @@ def create_review_issue(
         repository=repository,
         tag=tag,
         html_url=html_url,
-        checklist_doc=checklist_doc,
-        audit_doc=audit_doc,
+        checklist_url=checklist_url,
     )
     if dry_run:
         print(f"[dry-run] would create issue: {title}")
@@ -308,8 +305,7 @@ def main() -> int:
 
     manifest = load_manifest()
     labels = [str(x) for x in manifest.get("issue_labels") or ["Next Updates", "compatibility"]]
-    checklist_doc = str(manifest.get("checklist_doc") or "docs/important/rustdesk-compat-checklist.md")
-    audit_doc = str(manifest.get("audit_doc") or "docs/RDCLIENT_VS_RUSTDESK_AUDIT.md")
+    checklist_url = str(manifest.get("checklist_url") or CHECKLIST_URL)
 
     any_changed = False
     latest_by_id: dict[str, dict[str, str]] = {}
@@ -356,8 +352,7 @@ def main() -> int:
             tag=tag,
             html_url=str(latest["html_url"]),
             labels=labels,
-            checklist_doc=checklist_doc,
-            audit_doc=audit_doc,
+            checklist_url=checklist_url,
             dry_run=args.dry_run,
         )
 

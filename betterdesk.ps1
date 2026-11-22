@@ -3413,7 +3413,7 @@ function Do-Validate {
     if ($activeProfiles) {
         # Ports that must be reachable for clients. The panel (5000/5443) is deliberately
         # absent: it is a local port and exposing it to WAN defeats the reverse-proxy setup.
-        # See docs/CONNECTION_PORTS.md.
+        # See https://betterde.sk/docs/operations/ports.
         $fwPorts = @(21116, 21117, [int]$script:GO_API_PORT)
         $fwMissing = 0
         foreach ($fwPort in $fwPorts) {
