@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/guestaccess"
@@ -61,7 +60,7 @@ func FuzzRequests(f *testing.F) {
 	w := &world{deps: d}
 	src := w.sources("1.0.0")
 	src.languages = bundle.AvailableList
-	src.mock = newMockScript(time.Now())
+	src.mockOn = true
 	register(d, src)
 	steps := middleware.Bodies(middleware.BodyOptions{})(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		r = kit.Begin(r, httpx.TrustProxy{}, bundle)

@@ -211,3 +211,36 @@ func keylessSessions(t *testing.T, vectors []vector) map[int]vector {
 	}
 	return fixed
 }
+
+// mockScripts holds the Node vectors whose answer A176 changed on
+// purpose: the dev mock is part of the web app, so GET and HEAD of
+// /dev/mock-remote.js are no route of the group with the mock on either.
+// Each is held to the answer the same request got from Node with the mock
+// off: 404, the next handler's "no route" (no body for HEAD).
+func mockScripts(t *testing.T, vectors []vector) map[int]vector {
+	t.Helper()
+	off := map[string]vector{}
+	for _, v := range vectors {
+		if v.Request.Path == "/dev/mock-remote.js" && v.World.Mock == nil {
+			if _, ok := off[v.Request.Method]; !ok {
+				off[v.Request.Method] = v
+			}
+		}
+	}
+	fixed := map[int]vector{}
+	for i, v := range vectors {
+		if v.Request.Path != "/dev/mock-remote.js" || v.Status == http.StatusNotFound {
+			continue
+		}
+		twin, ok := off[v.Request.Method]
+		if !ok {
+			t.Fatalf("vector %d (%s %s) has no twin with the mock off", i, v.Request.Method, v.Request.Path)
+		}
+		v.Status, v.Type, v.CacheControl, v.Body = twin.Status, twin.Type, twin.CacheControl, twin.Body
+		fixed[i] = v
+	}
+	if len(fixed) == 0 {
+		t.Fatal("no vector serves the dev mock's script")
+	}
+	return fixed
+}

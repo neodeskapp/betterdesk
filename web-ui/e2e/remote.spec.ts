@@ -6,8 +6,8 @@
  * nothing in the page, its menus, sheets and dialogs.
  *
  * The viewer tests need the console running with BD_DEV_MOCK_REMOTE=1 (the
- * dev compose file sets it); without it they are skipped, and the mock
- * must not load (checked below).
+ * dev compose file sets it): the viewer's data then turns the mock device
+ * on. Without it they are skipped.
  */
 import type { Page } from '@playwright/test';
 import { test, expect, expectNoAxeViolations } from './fixtures.ts';
@@ -27,9 +27,11 @@ async function canConnect(page: Page): Promise<boolean> {
 	});
 }
 
+/** The server has the dev mock on: the viewer's data of the mock device names it */
 async function mockOn(page: Page): Promise<boolean> {
-	const r = await page.request.get('/dev/mock-remote.js');
-	return r.status() === 200;
+	const r = await page.request.get(`/api/remote/viewer/${MOCK_DEVICE}?mock=1`);
+	if (!r.ok()) return false;
+	return !!(await r.json()).mockRemote;
 }
 
 for (const role of ROLES) {
@@ -178,12 +180,8 @@ test.describe('remote client pages without a session', () => {
 		await expectNoAxeViolations(page);
 	});
 
-	test('the dev mock script is not served unless the flag is on', async ({ page }) => {
+	test('the dev mock has no script of its own: it loads with the web app', async ({ page }) => {
 		const r = await page.request.get('/dev/mock-remote.js');
-		if (r.status() === 200) {
-			expect(await r.text()).toContain('MockRemoteSession');
-		} else {
-			expect(r.status()).toBe(404);
-		}
+		expect(r.status()).toBe(404);
 	});
 });

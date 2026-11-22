@@ -122,9 +122,9 @@ func TestDevMockQueryThatIsNoTextIsRefused(t *testing.T) {
 	}
 }
 
-// TestDevMockSwitch checks that the dev mock is served only when
-// BD_DEV_MOCK_REMOTE is 1 (after trimming), as lib/devMockRemote did, and
-// that without it the address is no route of the group.
+// TestDevMockSwitch checks that the viewer's data may turn the dev mock
+// on only when BD_DEV_MOCK_REMOTE is 1 (after trimming), as
+// lib/devMockRemote did.
 func TestDevMockSwitch(t *testing.T) {
 	for _, tc := range []struct {
 		env string
@@ -137,36 +137,30 @@ func TestDevMockSwitch(t *testing.T) {
 			return ""
 		}}}
 		src := defaultSources(d)
-		if got := src.mock != nil; got != tc.on {
+		if got := src.mockOn; got != tc.on {
 			t.Errorf("BD_DEV_MOCK_REMOTE=%q: mock on %v, want %v", tc.env, got, tc.on)
 		}
 	}
-	if src := defaultSources(&kit.Deps{}); src.mock != nil {
+	if src := defaultSources(&kit.Deps{}); src.mockOn {
 		t.Error("without a configuration the mock is on")
 	}
 }
 
-// TestDevMockScript serves the mock with the headers res.sendFile and the
-// old route gave it, the bytes of the old file, and passes the request on
-// when the mock is off.
-func TestDevMockScript(t *testing.T) {
-	on := newWorld(t, storetest.Migrated(t), "1.0.0", true)
-	rec := on.do(&vector{Request: request{Method: "GET", Path: "/dev/mock-remote.js"}})
-	if rec.Code != http.StatusOK || rec.Header().Get("Content-Type") != "application/javascript; charset=utf-8" || rec.Header().Get("Cache-Control") != "no-store" {
-		t.Fatalf("mock on: %d %q %q", rec.Code, rec.Header().Get("Content-Type"), rec.Header().Get("Cache-Control"))
-	}
-	if !strings.HasPrefix(rec.Header().Get("ETag"), `W/"`) || rec.Header().Get("Last-Modified") == "" || rec.Header().Get("Accept-Ranges") != "bytes" {
-		t.Errorf("mock on: ETag %q, Last-Modified %q, Accept-Ranges %q", rec.Header().Get("ETag"), rec.Header().Get("Last-Modified"), rec.Header().Get("Accept-Ranges"))
-	}
-	off := newWorld(t, storetest.Migrated(t), "1.0.0", false)
-	rec = off.do(&vector{Request: request{Method: "GET", Path: "/dev/mock-remote.js"}})
-	if rec.Code != http.StatusNotFound || rec.Body.String() != "no route" {
-		t.Errorf("mock off: %d %q, want the request passed on", rec.Code, rec.Body.String())
+// TestNoDevMockScript: the dev mock is part of the web app (DECISIONS
+// A176), so /dev/mock-remote.js is no route of the group, also with the
+// mock on; the request goes on as for any other address.
+func TestNoDevMockScript(t *testing.T) {
+	for _, mockOn := range []bool{true, false} {
+		w := newWorld(t, storetest.Migrated(t), "1.0.0", mockOn)
+		rec := w.do(&vector{Request: request{Method: "GET", Path: "/dev/mock-remote.js"}})
+		if rec.Code != http.StatusNotFound || rec.Body.String() != "no route" {
+			t.Errorf("mock on %v: %d %q, want the request passed on", mockOn, rec.Code, rec.Body.String())
+		}
 	}
 }
 
 // TestRegisteredRoutes lists the group's routes in the order of the route
-// file, the dev mock first, and the agent token route in the early stage.
+// file, and the agent token route in the early stage.
 func TestRegisteredRoutes(t *testing.T) {
 	w := newWorld(t, storetest.Migrated(t), "1.0.0", false)
 	var got []string
@@ -176,7 +170,6 @@ func TestRegisteredRoutes(t *testing.T) {
 		}
 	}
 	want := []string{
-		"GET /dev/mock-remote.js",
 		"GET /api/remote/login-info",
 		"GET /api/remote/guest-info",
 		"GET /api/remote/desk",
