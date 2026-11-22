@@ -16,7 +16,7 @@ func (s *Service) ClientFeaturesOff(ctx context.Context, userID int64) ([]string
 	if userID <= 0 {
 		return nil, errors.New("client features: no account")
 	}
-	own, err := s.data.ClientFeaturePolicies(ctx, SubjectUser, strconv.FormatInt(userID, 10))
+	own, err := s.ClientFeatureRows(ctx, SubjectUser, strconv.FormatInt(userID, 10))
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (s *Service) ClientFeaturesOff(ctx context.Context, userID int64) ([]string
 	}
 	var inherited []FeatureRow
 	for _, group := range groups {
-		rows, err := s.data.ClientFeaturePolicies(ctx, SubjectGroup, group.GUID)
+		rows, err := s.ClientFeatureRows(ctx, SubjectGroup, group.GUID)
 		if err != nil {
 			return nil, err
 		}
@@ -40,4 +40,15 @@ func (s *Service) ClientFeaturesOff(ctx context.Context, userID int64) ([]string
 		}
 	}
 	return off, nil
+}
+
+// ClientFeatureRows returns a subject's stored client feature rows as the
+// rows of the features there are (currentFeatureRows): what the policy
+// editors show and what resolving a policy reads.
+func (s *Service) ClientFeatureRows(ctx context.Context, subjectType, subjectID string) ([]FeatureRow, error) {
+	rows, err := s.data.ClientFeaturePolicies(ctx, subjectType, subjectID)
+	if err != nil {
+		return nil, err
+	}
+	return currentFeatureRows(rows), nil
 }

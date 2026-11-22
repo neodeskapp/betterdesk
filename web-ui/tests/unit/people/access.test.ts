@@ -385,8 +385,6 @@ describe('the panel access sheet', () => {
 			within(feature('remote_control')).getByRole('combobox').getAttribute('aria-describedby') ?? '';
 		expect(describedBy.split(' ')).toContain(hint.id);
 		expect(describedBy.split(' ').length).toBe(2);
-		// The locked row says it has no effect
-		expect(within(feature('client_actions')).getByText(/No effect/)).toBeInTheDocument();
 		// A plain switch has no hint
 		expect(feature('terminal').querySelector('.hint')).toBeNull();
 	});

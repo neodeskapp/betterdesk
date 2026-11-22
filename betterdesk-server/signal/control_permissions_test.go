@@ -110,7 +110,7 @@ func TestSessionsOfASignedInControllerTurnItsFeaturesOff(t *testing.T) {
 			recv, targetAddr := attachTestUDPPair(t, srv)
 			putOnlinePeer(srv, "FEATTGT01", targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
 			userID, token := signedInController(t, database, "feat-op")
-			srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: {"file_transfer", "clipboard", "client_actions"}}))
+			srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: {"file_transfer", "clipboard"}}))
 
 			path.run(srv, "FEATTGT01", token, udpAddr("203.0.113.71", 51000))
 			got := permissionsAtTarget(t, recv)
@@ -158,7 +158,7 @@ func TestSessionPermissionsByController(t *testing.T) {
 	if got := srv.sessionPolicy(token, addr, false, pb.ConnType_DEFAULT_CONN).permissions; got != nil {
 		t.Errorf("before the console sets the lookup: %#x", got.GetPermissions())
 	}
-	srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: {"client_actions"}}))
+	srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: {}}))
 	if got := srv.sessionPolicy(token, addr, false, pb.ConnType_DEFAULT_CONN).permissions; got != nil {
 		t.Errorf("every feature on: %#x", got.GetPermissions())
 	}
@@ -327,7 +327,6 @@ func TestSessionPolicyRefusesKindsOfSessionTheAccountMayNotOpen(t *testing.T) {
 	}{
 		{pb.ConnType_FILE_TRANSFER, []string{"file_transfer"}, "File transfer is turned off for your account on this server"},
 		{pb.ConnType_TERMINAL, []string{"terminal"}, "The terminal is turned off for your account on this server"},
-		{pb.ConnType_PORT_FORWARD, []string{"port_forwarding"}, "TCP tunnels are turned off for your account on this server"},
 		{pb.ConnType_PORT_FORWARD, []string{"tunnel"}, "TCP tunnels are turned off for your account on this server"},
 		{pb.ConnType_RDP, []string{"tunnel"}, "TCP tunnels are turned off for your account on this server"},
 		{pb.ConnType_FILE_TRANSFER, []string{"terminal", "tunnel"}, ""},

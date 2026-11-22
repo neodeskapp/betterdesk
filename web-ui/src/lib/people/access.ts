@@ -169,8 +169,7 @@ export function sectionLabelKeys(key: string): string[] {
 /**
  * What a client feature does beyond its name, where that is not plain: the
  * string key and its English text. The server turns features off on the
- * device through RustDesk's session permissions; Tunnel and Port forwarding
- * are one permission there, and nothing reads Client actions.
+ * device through RustDesk's session permissions.
  */
 export const FEATURE_HINTS: Record<string, { key: string; text: string }> = {
 	remote_control: {
@@ -183,18 +182,10 @@ export const FEATURE_HINTS: Record<string, { key: string; text: string }> = {
 	},
 	tunnel: {
 		key: 'users.access_feature_hint_tcp_tunnel',
-		text: 'RustDesk has one setting for tunnels and port forwarding: either off turns both off.'
-	},
-	port_forwarding: {
-		key: 'users.access_feature_hint_tcp_tunnel',
-		text: 'RustDesk has one setting for tunnels and port forwarding: either off turns both off.'
+		text: 'Includes RDP through RustDesk: RustDesk has one setting for all TCP tunnels.'
 	},
 	privacy_mode: {
 		key: 'users.access_feature_hint_privacy_mode',
 		text: 'Needs the BetterDesk client or RustDesk 1.4.7 or later on the device.'
-	},
-	client_actions: {
-		key: 'users.access_feature_hint_client_actions',
-		text: 'No effect: nothing in BetterDesk reads this setting yet.'
 	}
 };

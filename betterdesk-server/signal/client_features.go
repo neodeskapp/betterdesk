@@ -46,20 +46,18 @@ func (s *Server) SetControllerFeatures(f ControllerFeatures) {
 const featureLookupTimeout = 3 * time.Second
 
 // featurePermissions are the session permissions each client feature
-// turns off on the device. RustDesk has one permission for TCP tunnels,
-// so Tunnel and Port forwarding both turn it off. File transfer also
-// turns off printing from the device to the controller's printer, which
-// moves files the same way.
+// turns off on the device. Tunnels and port forwarding are one RustDesk
+// permission, so one switch. File transfer also turns off printing from
+// the device to the controller's printer, which moves files the same way.
 var featurePermissions = map[string][]pb.ControlPermissions_Permission{
-	"remote_control":  {pb.ControlPermissions_keyboard},
-	"file_transfer":   {pb.ControlPermissions_file, pb.ControlPermissions_remote_printer},
-	"clipboard":       {pb.ControlPermissions_clipboard},
-	"audio":           {pb.ControlPermissions_audio},
-	"tunnel":          {pb.ControlPermissions_tunnel},
-	"port_forwarding": {pb.ControlPermissions_tunnel},
-	"terminal":        {pb.ControlPermissions_terminal},
-	"reboot":          {pb.ControlPermissions_restart},
-	"privacy_mode":    {pb.ControlPermissions_privacy_mode},
+	"remote_control": {pb.ControlPermissions_keyboard},
+	"file_transfer":  {pb.ControlPermissions_file, pb.ControlPermissions_remote_printer},
+	"clipboard":      {pb.ControlPermissions_clipboard},
+	"audio":          {pb.ControlPermissions_audio},
+	"tunnel":         {pb.ControlPermissions_tunnel},
+	"terminal":       {pb.ControlPermissions_terminal},
+	"reboot":         {pb.ControlPermissions_restart},
+	"privacy_mode":   {pb.ControlPermissions_privacy_mode},
 }
 
 // permissionOff is the two-bit value of control_permissions that turns a
@@ -152,17 +150,16 @@ func (s *Server) controllerFeaturesOff(token string, raddr *net.UDPAddr, panel b
 // the device's own check.
 var connTypeFeatures = map[pb.ConnType][]string{
 	pb.ConnType_FILE_TRANSFER: {"file_transfer"},
-	pb.ConnType_PORT_FORWARD:  {"tunnel", "port_forwarding"},
-	pb.ConnType_RDP:           {"tunnel", "port_forwarding"},
+	pb.ConnType_PORT_FORWARD:  {"tunnel"},
+	pb.ConnType_RDP:           {"tunnel"},
 	pb.ConnType_TERMINAL:      {"terminal"},
 }
 
 // featureRefusals are the messages of refused requests, by feature.
 var featureRefusals = map[string]string{
-	"file_transfer":   "File transfer is turned off for your account on this server",
-	"tunnel":          "TCP tunnels are turned off for your account on this server",
-	"port_forwarding": "TCP tunnels are turned off for your account on this server",
-	"terminal":        "The terminal is turned off for your account on this server",
+	"file_transfer": "File transfer is turned off for your account on this server",
+	"tunnel":        "TCP tunnels are turned off for your account on this server",
+	"terminal":      "The terminal is turned off for your account on this server",
 }
 
 // sessionPolicy is what the server does with a session a request starts.

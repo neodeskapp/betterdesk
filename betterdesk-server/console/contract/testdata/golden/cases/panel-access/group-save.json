@@ -194,11 +194,6 @@
          "hard_lock": false,
          "source": "group"
         },
-        "client_actions": {
-         "enabled": false,
-         "hard_lock": true,
-         "source": "group"
-        },
         "clipboard": {
          "enabled": true,
          "hard_lock": false,
@@ -208,11 +203,6 @@
          "enabled": false,
          "hard_lock": false,
          "source": "group"
-        },
-        "port_forwarding": {
-         "enabled": true,
-         "hard_lock": false,
-         "source": "default"
         },
         "privacy_mode": {
          "enabled": true,
@@ -393,10 +383,6 @@
        {
         "enabled": false,
         "feature_key": "tunnel"
-       },
-       {
-        "enabled": true,
-        "feature_key": "client_actions"
        }
       ],
       "group_guid": "<volatile>",

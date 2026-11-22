@@ -2050,9 +2050,8 @@
     "access_features_note": "These switches apply to remote sessions started while signed in, from the RustDesk app or the web client. The device must run the BetterDesk client or RustDesk 1.4.5 or later, not on Android. To keep people from connecting without signing in, turn on Only signed-in RustDesk apps can start sessions in Settings.",
     "access_feature_hint_remote_control": "Off: the session shows the screen, without mouse and keyboard.",
     "access_feature_hint_file_transfer": "Off also stops printing from the device to the printer of the person who connects.",
-    "access_feature_hint_tcp_tunnel": "RustDesk has one setting for tunnels and port forwarding: either off turns both off.",
+    "access_feature_hint_tcp_tunnel": "Includes RDP through RustDesk: RustDesk has one setting for all TCP tunnels.",
     "access_feature_hint_privacy_mode": "Needs the BetterDesk client or RustDesk 1.4.7 or later on the device.",
-    "access_feature_hint_client_actions": "No effect: nothing in BetterDesk reads this setting yet.",
     "access_load_failed": "Přístup ke konzoli se nepodařilo načíst.",
     "access_saved": "Přístup ke konzoli byl uložen.",
     "access_none": "Žádný",
@@ -2107,10 +2106,8 @@
     "access_feature_audio": "Zvuk",
     "access_feature_tunnel": "Tunel",
     "access_feature_terminal": "Terminál",
-    "access_feature_port_forwarding": "Přesměrování portů",
     "access_feature_reboot": "Vzdálený restart",
     "access_feature_privacy_mode": "Režim soukromí",
-    "access_feature_client_actions": "Akce klienta",
     "access_now_role": "Nyní: {level}, {source}. Limit role: {limit}"
   },
   "folders": {

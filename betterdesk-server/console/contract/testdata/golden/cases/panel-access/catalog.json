@@ -137,17 +137,12 @@
        {
         "hardLock": false,
         "key": "tunnel",
-        "label": "Tunnel"
+        "label": "Tunnels and port forwarding"
        },
        {
         "hardLock": false,
         "key": "terminal",
         "label": "Terminal"
-       },
-       {
-        "hardLock": false,
-        "key": "port_forwarding",
-        "label": "Port forwarding"
        },
        {
         "hardLock": false,
@@ -158,11 +153,6 @@
         "hardLock": false,
         "key": "privacy_mode",
         "label": "Privacy mode"
-       },
-       {
-        "hardLock": true,
-        "key": "client_actions",
-        "label": "Client actions"
        }
       ],
       "groups": [

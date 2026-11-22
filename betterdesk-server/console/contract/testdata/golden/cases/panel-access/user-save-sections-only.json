@@ -81,22 +81,12 @@
          "hard_lock": false,
          "source": "default"
         },
-        "client_actions": {
-         "enabled": false,
-         "hard_lock": true,
-         "source": "default"
-        },
         "clipboard": {
          "enabled": true,
          "hard_lock": false,
          "source": "default"
         },
         "file_transfer": {
-         "enabled": true,
-         "hard_lock": false,
-         "source": "default"
-        },
-        "port_forwarding": {
          "enabled": true,
          "hard_lock": false,
          "source": "default"

@@ -174,9 +174,81 @@ func nodeTables(t *testing.T) ([]Rule, []Section) {
 func withNodeTables(t *testing.T) {
 	t.Helper()
 	rules, catalog := nodeTables(t)
-	goRules, goCatalog := RouteRules, Catalog
-	RouteRules, Catalog = rules, catalog
-	t.Cleanup(func() { RouteRules, Catalog = goRules, goCatalog })
+	features := nodeFeatures(t)
+	goRules, goCatalog, goFeatures := RouteRules, Catalog, ClientFeatures
+	RouteRules, Catalog, ClientFeatures = rules, catalog, features
+	t.Cleanup(func() { RouteRules, Catalog, ClientFeatures = goRules, goCatalog, goFeatures })
+}
+
+// withNodeFeatures puts Node's client features in place of the Go ones
+// until the test ends.
+func withNodeFeatures(t *testing.T) {
+	t.Helper()
+	features := nodeFeatures(t)
+	goFeatures := ClientFeatures
+	ClientFeatures = features
+	t.Cleanup(func() { ClientFeatures = goFeatures })
+}
+
+// nodeFeatures returns the client features as the Node console had them.
+func nodeFeatures(t *testing.T) []ClientFeature {
+	t.Helper()
+	var normalize struct {
+		Catalog struct {
+			Features []ClientFeature `json:"features"`
+		} `json:"catalog"`
+	}
+	loadVectors(t, "normalize", &normalize)
+	if len(normalize.Catalog.Features) < 5 {
+		t.Fatalf("Node's client features look empty: %d", len(normalize.Catalog.Features))
+	}
+	return normalize.Catalog.Features
+}
+
+// featureFix is a change of the client features against Node's: a
+// feature that goes, or one whose label changes.
+type featureFix struct {
+	bug, key string
+	// label is the new label; "" removes the feature.
+	label string
+}
+
+var featureFixes = []featureFix{
+	// RustDesk has one permission for tunnels and port forwarding, and
+	// nothing reads Client actions (DECISIONS A162).
+	{bug: "L41 (A162)", key: "tunnel", label: "Tunnels and port forwarding"},
+	{bug: "L41 (A162)", key: "port_forwarding"},
+	{bug: "L41 (A162)", key: "client_actions"},
+}
+
+func TestClientFeaturesAreNodesWithTheFixes(t *testing.T) {
+	want := append([]ClientFeature(nil), nodeFeatures(t)...)
+	for _, fix := range featureFixes {
+		found := false
+		for i := range want {
+			if want[i].Key != fix.key {
+				continue
+			}
+			found = true
+			if fix.label == "" {
+				want = append(want[:i:i], want[i+1:]...)
+			} else {
+				want[i].Label = fix.label
+			}
+			break
+		}
+		if !found {
+			t.Fatalf("%s: Node has no client feature %q", fix.bug, fix.key)
+		}
+	}
+	if len(ClientFeatures) != len(want) {
+		t.Fatalf("%d client features, Node's with the fixes has %d: %+v", len(ClientFeatures), len(want), ClientFeatures)
+	}
+	for i := range want {
+		if ClientFeatures[i] != want[i] {
+			t.Errorf("client feature %d is %+v, Node's with the fixes has %+v", i, ClientFeatures[i], want[i])
+		}
+	}
 }
 
 func TestTablesAreNodesWithTheFixes(t *testing.T) {

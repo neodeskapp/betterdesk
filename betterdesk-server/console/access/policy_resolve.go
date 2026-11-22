@@ -249,7 +249,7 @@ func (s *Service) ResolveForUser(ctx context.Context, user PolicyUser) (*Policy,
 	if rows.sections, err = s.data.PanelAccessPolicies(ctx, SubjectUser, subjectID); err != nil {
 		return nil, err
 	}
-	if rows.features, err = s.data.ClientFeaturePolicies(ctx, SubjectUser, subjectID); err != nil {
+	if rows.features, err = s.ClientFeatureRows(ctx, SubjectUser, subjectID); err != nil {
 		return nil, err
 	}
 	if rows.groups, err = s.data.UserGroupsForUser(ctx, user.ID); err != nil {
@@ -260,7 +260,7 @@ func (s *Service) ResolveForUser(ctx context.Context, user PolicyUser) (*Policy,
 		if err != nil {
 			return nil, err
 		}
-		features, err := s.data.ClientFeaturePolicies(ctx, SubjectGroup, group.GUID)
+		features, err := s.ClientFeatureRows(ctx, SubjectGroup, group.GUID)
 		if err != nil {
 			return nil, err
 		}
@@ -283,7 +283,7 @@ func (s *Service) ResolveForGroup(ctx context.Context, groupGUID string) (*Polic
 	if err != nil {
 		return nil, err
 	}
-	featureRows, err := s.data.ClientFeaturePolicies(ctx, SubjectGroup, groupGUID)
+	featureRows, err := s.ClientFeatureRows(ctx, SubjectGroup, groupGUID)
 	if err != nil {
 		return nil, err
 	}
