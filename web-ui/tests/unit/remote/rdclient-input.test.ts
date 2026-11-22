@@ -129,7 +129,7 @@ describe('the file clipboard of the desktop shell', () => {
 		['Control', false]
 	];
 
-	test('a drag to the edge of the screen ends the drag on the device and copies there', async () => {
+	test('a drag to the edge of the screen and beyond sends no key to the device and keeps the button held', async () => {
 		vi.useFakeTimers();
 		const done = desktop({});
 		try {
@@ -138,14 +138,15 @@ describe('the file clipboard of the desktop shell', () => {
 			t.sent.length = 0;
 			t.canvas.dispatchEvent(new MouseEvent('mousedown', { button: 0, clientX: 50, clientY: 50 }));
 			t.canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 99, clientY: 50 }));
-			await vi.advanceTimersByTimeAsync(100);
-			expect(presses(t.sent)).toEqual([DOWN_LEFT, UP_LEFT]);
-			expect(keys(t.sent)).toEqual(CTRL('c'));
-			// The operator lets go later: the device already got the release
+			t.canvas.dispatchEvent(new MouseEvent('mouseleave', { clientX: 105, clientY: 50 }));
+			t.canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: 120, clientY: 50 }));
+			await vi.advanceTimersByTimeAsync(3000);
+			expect(keys(t.sent)).toEqual([]);
+			expect(presses(t.sent)).toEqual([DOWN_LEFT]);
+			// The device lets go of the button when the operator does
 			window.dispatchEvent(new MouseEvent('mouseup', { button: 0, clientX: 120, clientY: 50 }));
 			expect(presses(t.sent)).toEqual([DOWN_LEFT, UP_LEFT]);
 			RDCliprdr.stopPolling(t.client);
-			await vi.advanceTimersByTimeAsync(3000);
 			t.input.stop();
 		} finally {
 			done();
