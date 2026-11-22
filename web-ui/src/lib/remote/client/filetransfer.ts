@@ -1774,6 +1774,10 @@ export class RDFileTransfer {
 	 * Handle directory listing response
 	 */
 	_handleDir(dir: FileDirectory): void {
+		// The device answers a download with the job's files under the job's
+		// id (for one file the file itself); that is no folder listing
+		if (dir.id && this._transfers.has(Number(dir.id))) return;
+
 		// Clear browse timeout — we got a response
 		if (this._browseTimeout) {
 			clearTimeout(this._browseTimeout);

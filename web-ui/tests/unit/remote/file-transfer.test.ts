@@ -275,3 +275,19 @@ describe('a folder walk and the sheet listing at the same time', () => {
 		expect(t.named('file_dir')).toEqual([]);
 	});
 });
+
+describe('a download and the sheet listing', () => {
+	test("the device's file list of a download job leaves the sheet in its folder", async () => {
+		const t = await setup();
+		t.ft.browseDir('/home/user');
+		t.respond({ dir: { id: 0, path: '/home/user', entries: [{ name: 'a.txt', entryType: 4, size: 3 }] } });
+		const id = t.ft.downloadFile('/home/user', { name: 'a.txt', size: 3 });
+		// RustDesk answers a send request with the job's files under the job's id: the file itself, no name
+		t.respond({ dir: { id, path: '/home/user/a.txt', entries: [{ name: '', entryType: 4, size: 3 }] } });
+		await tick();
+		expect(t.ft.currentPath).toBe('/home/user');
+		expect(t.named('file_dir')).toEqual([
+			{ path: '/home/user', entries: [expect.objectContaining({ name: 'a.txt' })] }
+		]);
+	});
+});
