@@ -58,6 +58,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/webui"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/events"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
@@ -383,7 +384,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		SectionAccess: ws.SectionAccessOf(s.deps.Access),
 		Origins: ws.OriginPolicy{
 			Allowed:      ws.ParseAllowedOrigins(getenv("WS_ALLOWED_ORIGINS")),
-			AllowMissing: getenv("BD_ALLOW_MISSING_ORIGIN") == "true",
+			AllowMissing: envvar.SwitchOr(getenv("BD_ALLOW_MISSING_ORIGIN"), false),
 		},
 		ClientIP: cfg.TrustProxy.ClientIP,
 	})
@@ -428,7 +429,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	// The old console announced itself over mDNS only where someone had
 	// installed bonjour-service by hand; no installer or image did. So the
 	// announcement runs only when PANEL_MDNS asks for it.
-	if mdns := getenv("PANEL_MDNS"); mdns != "" && mdns != "off" && mdns != "0" {
+	if mdns := getenv("PANEL_MDNS"); mdns != "" && envvar.SwitchOr(mdns, true) {
 		s.jobs.Add("mDNS announcement", func(ctx context.Context) { discovery.NewMDNS(s.announced(lan)).Run(ctx) })
 	}
 	registerRoutes(s.deps, backups)

@@ -108,10 +108,12 @@ func TestSettingsFromEnv(t *testing.T) {
 		want       any
 	}{
 		{"BETTERDESK_AUTH_AUTOCREATE", "true", func(s Settings) any { return s.AutoCreate }, true},
-		{"BETTERDESK_AUTH_AUTOCREATE", "TRUE", func(s Settings) any { return s.AutoCreate }, false},
-		{"BETTERDESK_AUTH_AUTOCREATE", "1", func(s Settings) any { return s.AutoCreate }, false},
+		{"BETTERDESK_AUTH_AUTOCREATE", "TRUE", func(s Settings) any { return s.AutoCreate }, true},
+		{"BETTERDESK_AUTH_AUTOCREATE", "1", func(s Settings) any { return s.AutoCreate }, true},
+		{"BETTERDESK_AUTH_AUTOCREATE", "maybe", func(s Settings) any { return s.AutoCreate }, false},
 		{"FORCE_PASSWORD_UPDATE", "true", func(s Settings) any { return s.ForcePasswordUpdate }, true},
-		{"FORCE_PASSWORD_UPDATE", "yes", func(s Settings) any { return s.ForcePasswordUpdate }, false},
+		{"FORCE_PASSWORD_UPDATE", "yes", func(s Settings) any { return s.ForcePasswordUpdate }, true},
+		{"FORCE_PASSWORD_UPDATE", "off", func(s Settings) any { return s.ForcePasswordUpdate }, false},
 		{"API_TOKEN_EXPIRY_DAYS", "30", func(s Settings) any { return s.TokenExpiryDays }, 30},
 		{"API_TOKEN_EXPIRY_DAYS", "0", func(s Settings) any { return s.TokenExpiryDays }, 7},
 		{"API_TOKEN_EXPIRY_DAYS", "abc", func(s Settings) any { return s.TokenExpiryDays }, 7},

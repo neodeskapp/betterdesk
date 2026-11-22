@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 )
 
 // ResolvePort is the port a console listener uses: the configured one,
@@ -28,14 +30,13 @@ func ResolvePort(configured, fallback int, label string, canBindLow func() bool,
 
 // CanBindLowPorts reports whether the process counts as one that may
 // bind ports below 1024: it runs as root, BETTERDESK_HAS_BIND_SERVICE is
-// 1, true, yes or y, or (on Linux) it has CAP_NET_BIND_SERVICE among its
+// on (envvar.Switch), or (on Linux) it has CAP_NET_BIND_SERVICE among its
 // effective capabilities.
 func CanBindLowPorts(getenv func(string) string) bool {
 	if os.Getuid() == 0 {
 		return true
 	}
-	switch strings.ToLower(strings.TrimSpace(getenv("BETTERDESK_HAS_BIND_SERVICE"))) {
-	case "1", "true", "yes", "y":
+	if envvar.SwitchOr(getenv("BETTERDESK_HAS_BIND_SERVICE"), false) {
 		return true
 	}
 	if runtime.GOOS != "linux" {

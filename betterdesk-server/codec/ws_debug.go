@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 	pb "github.com/unitronix/betterdesk-server/proto"
 	"google.golang.org/protobuf/proto"
 )
@@ -16,8 +16,7 @@ import (
 // WSDebugFrames enables verbose logging of the first WS frames on each connection.
 // Set env WS_DEBUG_FRAMES=1 to enable.
 func WSDebugFrames() bool {
-	v := strings.ToLower(strings.TrimSpace(os.Getenv("WS_DEBUG_FRAMES")))
-	return v == "1" || v == "true" || v == "yes"
+	return envvar.SwitchOr(os.Getenv("WS_DEBUG_FRAMES"), false)
 }
 
 func describeWSFrameType(typ websocket.MessageType) string {

@@ -528,8 +528,14 @@ func TestHTTPSSettingsAgainstNode(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
-		if open := g.s.net.redirectAddr != ""; open != *scenario.PlainPortOpen {
-			t.Errorf("%s: redirect listener %v, Node %v", name, open, *scenario.PlainPortOpen)
+		want := *scenario.PlainPortOpen
+		if name == "https redirect yes" {
+			// HTTP_REDIRECT_HTTPS=yes is on, where Node took only "true"
+			// (BUGS L84)
+			want = true
+		}
+		if open := g.s.net.redirectAddr != ""; open != want {
+			t.Errorf("%s: redirect listener %v, want %v (Node %v)", name, open, want, *scenario.PlainPortOpen)
 		}
 	}
 	// HTTPS_ENABLED=True with HTTP_REDIRECT_HTTPS=TRUE: TestRedirectAgainstNode

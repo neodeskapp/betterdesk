@@ -58,8 +58,8 @@ type Settings struct {
 	// BadDiscoveryPort is the DISCOVERY_PORT that was no port, for the
 	// warning; "" when there was none.
 	BadDiscoveryPort string
-	// MDNS is PANEL_MDNS as written: "off" or "0" turn the mDNS
-	// announcement off.
+	// MDNS is PANEL_MDNS as written: an off value (envvar.Switch) turns
+	// the mDNS announcement off.
 	MDNS string
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 )
 
 // Who may register (the audit of 2026-11-13, finding C1). A device id the
@@ -238,11 +239,7 @@ func (h *handlers) allowOpenRegister() bool {
 	if h.d.Config != nil && h.d.Config.Getenv != nil {
 		raw = h.d.Config.Getenv("BD_REGISTER_ALLOW_OPEN")
 	}
-	switch jsbind.ToLower(trim(raw)) {
-	case "true", "1", "yes":
-		return true
-	}
-	return false
+	return envvar.SwitchOr(raw, false)
 }
 
 // truthyValue is the truth of a value of the request.

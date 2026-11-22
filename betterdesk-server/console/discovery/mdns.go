@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
@@ -296,7 +297,7 @@ func NewMDNS(settings Settings) *MDNS {
 }
 
 // Enabled reports whether PANEL_MDNS leaves the announcement on.
-func (s Settings) mdnsEnabled() bool { return s.MDNS != "off" && s.MDNS != "0" }
+func (s Settings) mdnsEnabled() bool { return envvar.SwitchOr(s.MDNS, true) }
 
 // prepare works out the service from the settings, as the old console
 // did before it published: nothing when PANEL_MDNS is off or the
