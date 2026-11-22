@@ -1,6 +1,9 @@
 package wstest
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 // The goroutine check leaves out what the PostgreSQL driver started (BUGS
 // L150): a dump with the test's own goroutine, a slow database's
@@ -30,13 +33,23 @@ created by database/sql.OpenDB in goroutine 25765
 	}
 }
 
-// A goroutine of the test's own still counts.
+// A goroutine of the test's own still counts. Only this test's goroutines
+// are counted: goroutines of the tests before it may end meanwhile.
 func TestCountGoroutinesSeesAGoroutineLeftRunning(t *testing.T) {
-	before := countGoroutines(allStacks())
+	own := func() []byte {
+		var blocks [][]byte
+		for _, g := range bytes.Split(allStacks(), []byte("\n\n")) {
+			if bytes.Contains(g, []byte("wstest.TestCountGoroutinesSeesAGoroutineLeftRunning")) {
+				blocks = append(blocks, g)
+			}
+		}
+		return bytes.Join(blocks, []byte("\n\n"))
+	}
+	before := countGoroutines(own())
 	stop := make(chan struct{})
 	defer close(stop)
 	go func() { <-stop }()
-	if got := countGoroutines(allStacks()); got != before+1 {
+	if got := countGoroutines(own()); got != before+1 {
 		t.Fatalf("counted %d goroutines with one more running, %d before", got, before)
 	}
 }

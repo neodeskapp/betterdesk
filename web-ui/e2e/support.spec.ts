@@ -31,6 +31,9 @@ async function permissions(
 const has = (p: { permissions: string[]; superAdmin: boolean }, perm: string) =>
 	p.superAdmin || p.permissions.includes(perm);
 
+const forbidden = (page: Page) =>
+	page.getByRole('heading', { level: 1, name: "You don't have access to this page" });
+
 for (const role of ROLES) {
 	test.describe(`support pages as ${role}`, () => {
 		test.use({ role });
@@ -88,7 +91,8 @@ for (const role of ROLES) {
 			await expect(sheet.getByRole('button', { name: 'Edit ticket' })).toHaveCount(canEdit ? 1 : 0);
 			await expect(sheet.getByRole('button', { name: 'Delete ticket' })).toHaveCount(canEdit ? 1 : 0);
 			await expect(sheet.getByRole('group', { name: 'Status and assignee' })).toHaveCount(canEdit ? 1 : 0);
-			await expect(sheet.getByRole('textbox', { name: 'New comment' })).toBeVisible();
+			// A43: commenting needs device.edit
+			await expect(sheet.getByRole('textbox', { name: 'New comment' })).toHaveCount(canEdit ? 1 : 0);
 			await expectNoAxeViolations(page);
 			await page.keyboard.press('Escape');
 			await expect(sheet).toBeHidden();
@@ -116,7 +120,8 @@ for (const role of ROLES) {
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const p = await permissions(page);
 			if (!has(p, 'chat.access')) {
-				await expect(page.locator('.notice')).toBeVisible();
+				// The chat section needs chat.access, as its API does (PA4)
+				await expect(forbidden(page)).toBeVisible();
 				await expect(page.getByRole('button', { name: 'New group' })).toHaveCount(0);
 				await expectNoAxeViolations(page);
 				return;
@@ -142,13 +147,19 @@ for (const role of ROLES) {
 			await page.goto(`${UI}/toolkit#crypto`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const p = await permissions(page);
+			if (!has(p, 'device.connect')) {
+				// The toolkit section needs device.connect: server_admin keeps no network tools (A46)
+				await expect(forbidden(page)).toBeVisible();
+				await expectNoAxeViolations(page);
+				return;
+			}
 			await expect(page.getByRole('tab', { name: 'Passwords and hashes' })).toHaveAttribute(
 				'aria-selected',
 				'true'
 			);
 			await page.getByRole('tab', { name: 'Network' }).click();
 			await expect(page).toHaveURL(/#network$/);
-			await expect(page.locator('#tool-ping')).toHaveCount(has(p, 'device.connect') ? 1 : 0);
+			await expect(page.locator('#tool-ping')).toHaveCount(1);
 			await expect(page.locator('#tool-ssl')).toHaveCount(1);
 			await expect(page.getByRole('tab', { name: 'Server' })).toHaveCount(has(p, 'metrics.view') ? 1 : 0);
 			await page.locator('#tool-ssl summary').click();

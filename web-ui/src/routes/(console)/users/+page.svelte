@@ -204,8 +204,12 @@
 
 	/* ── #user-groups ── */
 
+	// The section is drawn once the list and the groups are in: go there then, once
+	let wentToGroups = false;
 	$effect(() => {
-		if (!allowed || location.hash !== '#user-groups') return;
+		if (!allowed || !loaded || groupsState === 'loading' || wentToGroups) return;
+		if (location.hash !== '#user-groups') return;
+		wentToGroups = true;
 		void tick().then(() =>
 			requestAnimationFrame(() => {
 				const section = document.getElementById('user-groups');
@@ -670,6 +674,10 @@
 {/if}
 
 <style>
+	/* #user-groups scrolls here: the heading stays clear of the top bar */
+	#user-groups {
+		scroll-margin-top: calc(var(--topbar-h) + var(--space-4));
+	}
 	.count-line-row {
 		min-height: 1.5em;
 		margin: 0;

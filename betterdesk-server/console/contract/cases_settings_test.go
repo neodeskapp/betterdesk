@@ -189,9 +189,12 @@ func init() {
 			Name: "audit-limit-list", Path: "/api/settings/audit", Query: url.Values{"limit": {"1", "5"}},
 			Roles: admin, Volatile: []string{"data[*].id"},
 		},
+		// A limit that is no number gives the default 100 entries: which
+		// entries those are, and whether each names an account, depends on
+		// what the groups before this one did. Each is an object.
 		contract.Case{
 			Name: "audit-limit-object", Path: "/api/settings/audit", Query: url.Values{"limit[x]": {"1"}},
-			Roles: contract.Roles("signed-out", "viewer"), Volatile: []string{"data[*].id"},
+			Roles: contract.Roles("signed-out", "viewer"), Volatile: []string{"data[*].id", "~data[*]"},
 		},
 
 		// Enrollment

@@ -30,6 +30,17 @@ var matrixQueries = map[string]string{
 	"GET /api/devices (2)": "sortBy=id&sortOrder=asc",
 }
 
+// matrixHeaders holds request headers for single matrix requests, by
+// matrix entry ID. They replace the suite's default headers of that name.
+var matrixHeaders = map[string]map[string]string{
+	// The snapshot lists the machine's disks, network addresses and
+	// processor, and its history grows with every call. Whether the answer
+	// is past the size from which the console compresses depends on the
+	// machine, so these are asked for uncompressed.
+	"GET /api/server-management/resources":  {"Accept-Encoding": "identity"},
+	"HEAD /api/server-management/resources": {"Accept-Encoding": "identity"},
+}
+
 // matrixVolatile and matrixVolatileHeaders mark by hand what two recordings
 // cannot find out: paths of a route's answer that are volatile although two
 // recordings may agree on them, and headers that only have to be present.

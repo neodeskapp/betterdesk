@@ -1,0 +1,274 @@
+# The console against a running server: the contract suite
+# (betterdesk-server/console/contract) and the web app's Playwright tests
+# (web-ui/e2e). Each job starts its own seeded test instance
+# (.github/test-stack) from the server the build job makes.
+name: Console CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'betterdesk-server/**'
+      - 'web-ui/**'
+      - '.github/test-stack/**'
+      - '.github/workflows/console-ci.yml'
+  pull_request:
+    paths:
+      - 'betterdesk-server/**'
+      - 'web-ui/**'
+      - '.github/test-stack/**'
+      - '.github/workflows/console-ci.yml'
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request replaces a run that is
+# still going
+concurrency:
+  group: console-ci-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+# As the release builds the server; the suite shares its build cache
+env:
+  CGO_ENABLED: '0'
+
+jobs:
+  # The server with the web app inside, as the release builds it, and
+  # devseed, which seeds the test instances
+  build:
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
+    name: build the test server
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: web-ui/package-lock.json
+
+      - name: Build the web app
+        working-directory: web-ui
+        run: |
+          npx -y npm@11.6.2 ci --no-audit --no-fund
+          npm run build
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: betterdesk-server/go.mod
+          cache: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+
+      # Saved once a day; the contract jobs restore it
+      - name: Name today's build cache
+        id: key
+        run: echo "key=go-build-${{ hashFiles('betterdesk-server/go.sum') }}-$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: ${{ steps.key.outputs.key }}
+          restore-keys: |
+            go-build-${{ hashFiles('betterdesk-server/go.sum') }}-
+            go-build-
+
+      - name: Build the server and devseed
+        working-directory: betterdesk-server
+        run: |
+          go run ./cmd/embed-webui
+          mkdir -p "$RUNNER_TEMP/bin"
+          go build -o "$RUNNER_TEMP/bin/betterdesk-server" .
+          go build -o "$RUNNER_TEMP/bin/devseed" ./cmd/devseed
+          go test -tags contract -c -o /dev/null ./console/contract
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: test-server
+          path: ${{ runner.temp }}/bin
+          retention-days: 1
+
+  # The contract suite as `contract.sh check all` runs it on the local
+  # stack, each part on a fresh instance: the matrix, which writes to
+  # everything it reaches, and the cases. The goldens are answers of
+  # SQLite installs, so the instances use SQLite.
+  #
+  # The case groups run in name order on one instance, because some
+  # goldens hold what earlier groups left there. ws-remote, half of the
+  # cases' time, needs none of that and runs on an instance of its own.
+  contract:
+    needs: build
+    name: contract (${{ matrix.part.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        part:
+          - name: matrix
+            run: '^(TestMatrix|TestEveryRouteIsCovered)$'
+          - name: cases
+            run: '^TestCases$'
+            skip: '^TestCases$/^ws-remote$'
+          - name: cases ws-remote
+            run: '^TestCases$/^ws-remote$'
+    env:
+      # What contract.sh sets: uncovered routes are listed, not failed
+      CONTRACT_COVERAGE: report
+      RUN: ${{ matrix.part.run }}
+      SKIP: ${{ matrix.part.skip }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: test-server
+          path: ${{ runner.temp }}/bin
+
+      # The instance seeds itself while the suite builds. Its name has the
+      # shape of the local stack's (ct-<6 hex>-<layer>).
+      - name: Start a test instance
+        env:
+          LAYER: ${{ matrix.part.name == 'matrix' && 'matrix' || 'cases' }}
+        run: |
+          name="ct-$(head -c 3 /dev/urandom | od -An -tx1 | tr -d ' \n')-$LAYER"
+          echo "INSTANCE=$name" >> "$GITHUB_ENV"
+          bash .github/test-stack/up.sh start "$name" "$RUNNER_TEMP/bin"
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: betterdesk-server/go.mod
+          cache: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: go-build-${{ hashFiles('betterdesk-server/go.sum') }}
+          restore-keys: |
+            go-build-${{ hashFiles('betterdesk-server/go.sum') }}-
+            go-build-
+
+      - name: Build the suite
+        working-directory: betterdesk-server
+        run: go test -tags contract -c -o /dev/null ./console/contract
+
+      - name: go vet with the contract tag
+        if: matrix.part.name == 'matrix'
+        working-directory: betterdesk-server
+        run: go vet -tags contract ./console/contract
+
+      - name: Wait for the test instance
+        run: bash .github/test-stack/up.sh wait "$INSTANCE"
+
+      # From the suite's folder without a package argument, so a passing
+      # run prints its summary too
+      - name: Check ${{ matrix.part.name }}
+        working-directory: betterdesk-server/console/contract
+        run: |
+          export BD_URL="http://bdgo-$INSTANCE:5000"
+          export BD_PASSWORD_FILE="$RUNNER_TEMP/bdgo-$INSTANCE/secrets/e2e_password"
+          export BD_SECRETS_DIR="$RUNNER_TEMP/bdgo-$INSTANCE/secrets"
+          args=(-run "$RUN")
+          [ -z "$SKIP" ] || args+=(-skip "$SKIP")
+          go test -tags contract -count=1 -timeout 25m "${args[@]}"
+
+      - name: Logs of the test instance
+        if: failure()
+        run: bash .github/test-stack/up.sh logs "$INSTANCE"
+
+  # The Playwright tests in Chromium and Firefox, cut into shards by
+  # Playwright (--shard), each against its own fresh instance
+  e2e:
+    needs: build
+    name: e2e (${{ matrix.shard }} of 6)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: test-server
+          path: ${{ runner.temp }}/bin
+
+      # The update check asks GitHub; with the job's token it is not
+      # refused for the runner address's rate limit
+      - name: Start a test instance
+        env:
+          UPDATE_GITHUB_TOKEN: ${{ github.token }}
+        run: bash .github/test-stack/up.sh start e2e "$RUNNER_TEMP/bin"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: web-ui/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web-ui
+        run: |
+          npx -y npm@11.6.2 ci --no-audit --no-fund
+          echo "PLAYWRIGHT=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_ENV"
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT }}-chromium-firefox
+
+      # The sign-in of the global setup uses Chromium, so every shard needs both
+      - name: Install the browsers
+        working-directory: web-ui
+        env:
+          CACHED: ${{ steps.browsers.outputs.cache-hit }}
+        run: |
+          if [ "$CACHED" = true ]; then
+            npx playwright install-deps chromium firefox
+          else
+            npx playwright install --with-deps chromium firefox
+          fi
+
+      # Saved before the tests run: after a failed test the job would save nothing
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.browsers.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.browsers.outputs.cache-primary-key }}
+
+      - name: Wait for the test instance
+        run: bash .github/test-stack/up.sh wait e2e
+
+      - name: Run the e2e tests
+        working-directory: web-ui
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          export BD_URL=http://bdgo-e2e:5000
+          export E2E_PASSWORD_FILE="$RUNNER_TEMP/bdgo-e2e/secrets/e2e_password"
+          npx playwright test --shard="$SHARD/6"
+
+      - name: Logs of the test instance
+        if: failure()
+        run: bash .github/test-stack/up.sh logs e2e
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: failure()
+        with:
+          name: e2e-results-${{ matrix.shard }}
+          path: web-ui/test-results
+          retention-days: 7
+          if-no-files-found: ignore

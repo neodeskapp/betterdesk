@@ -315,6 +315,11 @@ func TestRouteListAndTablesFit(t *testing.T) {
 			}
 		}
 	}
+	for id := range matrixHeaders {
+		if !sent[id] {
+			t.Errorf("matrixHeaders names %q, which is not a request of the matrix", id)
+		}
+	}
 	for id := range matrixPaths {
 		if _, ok := byID[id]; !ok {
 			t.Errorf("matrixPaths names %q, which is not in the route list", id)
