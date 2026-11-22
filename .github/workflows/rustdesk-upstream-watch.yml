@@ -56,4 +56,5 @@ jobs:
           Thanks: INSOLVE (Honorary); Marco Jakobs (@jacotec); MyNameisStitch (@MyNameisStitch); Redspin (@playerumpknow); muopc (@muopc)
           EOF
           )"
-          git push origin HEAD:dev
+          # The branch by its full name: the dev release has a tag named dev
+          git push origin HEAD:refs/heads/dev
