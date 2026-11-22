@@ -3532,12 +3532,19 @@ compile_go_server() {
 # Installation Functions
 #===============================================================================
 
+# apt_update: the package lists. A source that fails (a third-party
+# repository, a mirror in sync) stops nothing: the packages come from the
+# lists that are there, and apt-get install says when one is missing.
+apt_update() {
+    apt-get update -qq || print_warning "apt-get update failed for a package source (output above); installing from the package lists there are"
+}
+
 install_dependencies() {
     print_step "Installing dependencies..."
     
     # The server is one static binary; the installer needs only these
     if command -v apt-get &> /dev/null; then
-        apt-get update -qq
+        apt_update
         apt-get install -y -qq sqlite3 curl wget openssl ca-certificates iproute2 lsof
     elif command -v dnf &> /dev/null; then
         dnf install -y -q sqlite curl wget openssl ca-certificates iproute lsof
@@ -3566,7 +3573,7 @@ install_postgresql() {
     fi
     
     if command -v apt-get &> /dev/null; then
-        apt-get update -qq
+        apt_update
         apt-get install -y -qq postgresql postgresql-contrib
     elif command -v dnf &> /dev/null; then
         dnf install -y -q postgresql-server postgresql

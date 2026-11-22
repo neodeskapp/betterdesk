@@ -537,6 +537,19 @@ test_runs_without_term() (
     rm -rf "$TEST_DIR"
 )
 
+# L207: a package source that fails in apt-get update (a third-party
+# repository, a mirror in sync) does not stop the install: the packages are
+# installed from the lists there are, and the run says so.
+test_apt_source_failure_goes_on() (
+    local out
+    out=$(bash -c 'script=$1; set --; source "$script"
+        LOG_FILE=/dev/null
+        apt-get() { if [ "$1" = update ]; then echo "E: Failed to fetch https://packages.example.org/Packages.xz" >&2; return 100; fi; echo "apt-get $*"; }
+        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/betterdesk.sh" 2>&1 < /dev/null) || true
+    case "$out" in *"apt-get install -y -qq sqlite3"*"after the dependencies"*) ;; *) fail "a failing package source stopped the install: $out" ;; esac
+    case "$out" in *"apt-get update failed for a package source"*) ;; *) fail "the failing package source is not said: $out" ;; esac
+)
+
 # A fresh install from the one-liner without --channel takes the stable
 # channel, and while the repository has no stable release it installs the
 # development build, says so and keeps that channel. A channel given
@@ -1005,6 +1018,7 @@ test_update_keeps_the_admins_ports
 test_channel_and_download_errors
 test_one_command_install
 test_runs_without_term
+test_apt_source_failure_goes_on
 test_no_stable_release_installs_dev
 test_rerun_updates_and_forgets_the_password
 test_panel_public_host
