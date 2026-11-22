@@ -377,6 +377,7 @@ describe('the panel access sheet', () => {
 		await waitFor(() => expect(feature('remote_control')).not.toBeNull());
 		expect(screen.getByText(/RustDesk 1\.4\.5 or later, not on Android/)).toBeInTheDocument();
 		expect(screen.getByText(/Only signed-in RustDesk apps can start sessions/)).toBeInTheDocument();
+		expect(screen.getByText(/also apply to CDAP, MeshCentral and RDP or VNC sessions/)).toBeInTheDocument();
 
 		const hint = within(feature('remote_control')).getByText(
 			'Off: the session shows the screen, without mouse and keyboard.'

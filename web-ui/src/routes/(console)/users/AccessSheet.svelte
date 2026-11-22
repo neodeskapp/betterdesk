@@ -294,7 +294,7 @@
 				<p class="note" data-features-note>
 					{tf(
 						'users.access_features_note',
-						'These switches apply to remote sessions started while signed in, from the RustDesk app or the web client. The device must run the BetterDesk client or RustDesk 1.4.5 or later, not on Android. To keep people from connecting without signing in, turn on Only signed-in RustDesk apps can start sessions in Settings.'
+						'These switches apply to remote sessions started while signed in. For RustDesk sessions, from the RustDesk app or the web client, the device must run the BetterDesk client or RustDesk 1.4.5 or later, not on Android. In the web client they also apply to CDAP, MeshCentral and RDP or VNC sessions. To keep people from connecting without signing in, turn on Only signed-in RustDesk apps can start sessions in Settings.'
 					)}
 				</p>
 				<ul class="rows">
