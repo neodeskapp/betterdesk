@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -114,8 +113,9 @@ type Settings struct {
 	// EnsureDefaultAdmin wait for the signal server's admin; the exact
 	// "true" adds /app/data to the places for .admin_credentials.
 	Docker string
-	// DBType is DB_TYPE, else "postgres" when DATABASE_URL is a PostgreSQL
-	// address, else "sqlite".
+	// DBType is the type of the database the server opens: "postgres" or
+	// "sqlite" by the scheme of DATABASE_URL (envvar.DatabaseFrom, which
+	// reads DB_URL for older installs), else DB_TYPE, else "sqlite".
 	DBType string
 	// SQLiteAuthDBMode is SQLITE_AUTH_DB_MODE: "legacy", "consolidated" or
 	// empty.
@@ -125,8 +125,6 @@ type Settings struct {
 	// least 1 s.
 	DockerAdminBootstrapWait time.Duration
 }
-
-var postgresURL = regexp.MustCompile(`(?i)^postgres(ql)?://`)
 
 // SettingsFromEnv reads the settings the way the console read them from
 // its environment. dataDir and keysPath are the folders the console's
@@ -146,14 +144,17 @@ func SettingsFromEnv(getenv func(string) string, dataDir, keysPath string) Setti
 		KeysPath:             keysPath,
 		AuthDBPath:           getenv("AUTH_DB_PATH"),
 		Docker:               getenv("DOCKER"),
-		DBType:               getenv("DB_TYPE"),
 		SQLiteAuthDBMode:     getenv("SQLITE_AUTH_DB_MODE"),
 	}
-	if s.DBType == "" {
+	switch database := envvar.DatabaseFrom(getenv); {
+	case database.Postgres:
+		s.DBType = "postgres"
+	case database.DSN != "":
 		s.DBType = "sqlite"
-		if postgresURL.MatchString(getenv("DATABASE_URL")) {
-			s.DBType = "postgres"
-		}
+	case getenv("DB_TYPE") != "":
+		s.DBType = getenv("DB_TYPE")
+	default:
+		s.DBType = "sqlite"
 	}
 	wait := getenv("DOCKER_ADMIN_BOOTSTRAP_WAIT_MS")
 	if wait == "" {

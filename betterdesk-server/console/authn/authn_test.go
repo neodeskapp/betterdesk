@@ -145,7 +145,23 @@ func TestSettingsFromEnv(t *testing.T) {
 	}
 	env = map[string]string{"DB_TYPE": "sqlite", "DATABASE_URL": "postgres://u@h/db"}
 	if got := SettingsFromEnv(get, "", "").DBType; got != "sqlite" {
-		t.Errorf("DB_TYPE wins over DATABASE_URL: got %q", got)
+		t.Errorf("DB_TYPE=sqlite keeps an older install on SQLite: got %q", got)
+	}
+	// L70: the scheme of DATABASE_URL gives the type the server opens,
+	// also against DB_TYPE; DB_URL is read for older installs
+	for _, c := range []struct {
+		env  map[string]string
+		want string
+	}{
+		{map[string]string{"DATABASE_URL": "/data/db_v2.sqlite3", "DB_URL": "postgres://u@h/db"}, "sqlite"},
+		{map[string]string{"DATABASE_URL": "sqlite:///data/db_v2.sqlite3"}, "sqlite"},
+		{map[string]string{"DB_URL": "postgres://u@h/db"}, "postgres"},
+		{map[string]string{"DB_URL": "/opt/rustdesk/db_v2.sqlite3", "DB_TYPE": "postgres"}, "sqlite"},
+	} {
+		env = c.env
+		if got := SettingsFromEnv(get, "", "").DBType; got != c.want {
+			t.Errorf("%v: DBType %q, want %q", c.env, got, c.want)
+		}
 	}
 }
 

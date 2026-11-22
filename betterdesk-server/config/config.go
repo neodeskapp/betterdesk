@@ -35,7 +35,7 @@ type Config struct {
 	Mode string // "all"; the start refuses every other mode
 
 	// Database
-	DBPath     string // Database DSN: file path for SQLite, postgres:// URI for PostgreSQL
+	DBPath     string // Database DSN: file path for SQLite, postgres:// URI for PostgreSQL (DATABASE_URL, else DB_URL, else -db)
 	AuthDBPath string // Console auth.db (device groups, folders) — AUTH_DB_PATH
 
 	// Crypto
@@ -379,8 +379,14 @@ func (c *Config) LoadEnv() {
 	if v := os.Getenv("MODE"); v != "" {
 		c.Mode = strings.ToLower(v)
 	}
-	if v := os.Getenv("DB_URL"); v != "" {
-		c.DBPath = v
+	// DATABASE_URL names the database; DB_URL and DB_TYPE are read for
+	// older installs
+	database := envvar.DatabaseFrom(os.Getenv)
+	if database.DSN != "" {
+		c.DBPath = database.DSN
+	}
+	for _, warning := range database.Warnings {
+		log.Printf("[config] %s", warning)
 	}
 	if v := os.Getenv("AUTH_DB_PATH"); v != "" {
 		c.AuthDBPath = v
