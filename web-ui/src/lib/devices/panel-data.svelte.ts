@@ -81,7 +81,7 @@ export class PanelData {
 	#seq: Record<string, number> = {};
 	/** The device as the panel last loaded it */
 	#device: PanelDevice | null = null;
-	/** For each pending view, what the device looked like when it was asked */
+	/** For each pending view, what the device looked like when it was asked; undefined for the others */
 	#asked: Partial<Record<LiveView, WaitMark>> = {};
 	#tagsLoaded = false;
 	#foldersLoading: Promise<void> | null = null;
@@ -142,8 +142,7 @@ export class PanelData {
 					? await agentApi.browseFiles(this.id, where)
 					: await agentApi.getAgentView(this.id, view as AgentView);
 			if (!current()) return;
-			if (result.pending && asked) this.#asked[view] = asked;
-			else delete this.#asked[view];
+			this.#asked[view] = result.pending && asked ? asked : undefined;
 			this.views[view] = {
 				state: result.pending ? 'pending' : 'ready',
 				result,
@@ -170,7 +169,7 @@ export class PanelData {
 			if (!asked || this.views[view].state !== 'pending') continue;
 			const now = waitMark(device, view);
 			if ((now.online && !asked.online) || now.collectedAt !== asked.collectedAt) {
-				delete this.#asked[view];
+				this.#asked[view] = undefined;
 				void this.loadView(view);
 			}
 		}

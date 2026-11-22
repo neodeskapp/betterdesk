@@ -7,7 +7,6 @@ import { readLoginQuery } from '../../../src/lib/public/login.ts';
 vi.mock('$app/paths', () => ({ resolve: (p: string) => '/app' + (p || '/'), asset: (p: string) => '/' + p }));
 
 const LoginView = (await import('../../../src/lib/public/LoginView.svelte')).default;
-const { i18n, setStrings } = await import('../../../src/lib/i18n/i18n.svelte.ts');
 
 function page(over: Partial<LoginPage> = {}, branding: Partial<LoginPage['branding']> = {}): LoginPage {
 	return {
@@ -78,9 +77,16 @@ describe('mandatory two-factor sign-in (A153)', () => {
 		reply('/api/auth/oidc/status', { body: { enabled: false } });
 		reply('/api/auth/login', { body: { success: true, totpSetupRequired: true } });
 		reply('/api/auth/totp/required/setup', {
-			body: { success: true, qrCode: 'data:image/png;base64,AAAA', secret: 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ' }
+			body: {
+				success: true,
+				qrCode: 'data:image/png;base64,AAAA',
+				secret: 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'
+			}
 		});
-		reply('/api/auth/totp/required/enable', { status: 401, body: { success: false, error: 'Invalid code.' } });
+		reply('/api/auth/totp/required/enable', {
+			status: 401,
+			body: { success: false, error: 'Invalid code.' }
+		});
 		reply('/api/auth/totp/required/enable', {
 			body: { success: true, redirect: '/tickets', recoveryCodes: ['AAAA-BBBB', 'CCCC-DDDD'] }
 		});
@@ -89,7 +95,9 @@ describe('mandatory two-factor sign-in (A153)', () => {
 		await userEvent.type(screen.getByLabelText('auth.username'), 'demo');
 		await userEvent.type(screen.getByLabelText('auth.password'), 'secret{Enter}');
 
-		expect(await screen.findByRole('heading', { name: 'auth.totp_setup_required_title' })).toBeInTheDocument();
+		expect(
+			await screen.findByRole('heading', { name: 'auth.totp_setup_required_title' })
+		).toBeInTheDocument();
 		expect(await screen.findByRole('img', { name: 'settings.signin.totp_qr_alt' })).toHaveAttribute(
 			'src',
 			'data:image/png;base64,AAAA'
