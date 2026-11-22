@@ -300,65 +300,163 @@ function Write-Log {
     "[$timestamp] $Message" | Out-File -FilePath $script:LOG_FILE -Append -Encoding UTF8
 }
 
+# Get-ColorMode: how this run colours its output, decided on first use.
+#   vt       24-bit colour through escape sequences: the console of
+#            Windows 10 1703 and newer, where PowerShell turns them on,
+#            and Windows Terminal
+#   console  the 16 console colours: older consoles and other hosts
+#   none     plain text: the output goes to a file or a pipe, NO_COLOR is
+#            set, or TERM is dumb
+function Get-ColorMode {
+    if (-not $script:COLOR_MODE) {
+        $script:COLOR_MODE = 'console'
+        if ($env:NO_COLOR -or $env:TERM -eq 'dumb' -or (Test-OutputRedirected)) {
+            $script:COLOR_MODE = 'none'
+        } elseif ($Host.Name -eq 'ConsoleHost' -and $Host.UI.SupportsVirtualTerminal -and
+            ($PSVersionTable.PSEdition -eq 'Core' -or [Environment]::OSVersion.Version.Build -ge 15063)) {
+            $script:COLOR_MODE = 'vt'
+        }
+    }
+    return $script:COLOR_MODE
+}
+
+# Test-OutputRedirected: the output goes to a file or a pipe
+function Test-OutputRedirected {
+    return [Console]::IsOutputRedirected
+}
+
+# Write-Status SYMBOL KIND MESSAGE: a status line, SYMBOL in the colour of
+# KIND (ok, error, warning, info; a step keeps the text colour). The
+# 24-bit colours keep at least 3.8:1 on black, on PowerShell's blue
+# (#012456) and on white; the console colours follow the background.
+function Write-Status {
+    param([string]$Symbol, [string]$Kind, [string]$Message)
+    $mode = Get-ColorMode
+    if ($Kind -eq 'step' -or $mode -eq 'none') {
+        Write-Host "$Symbol $Message"
+    } elseif ($mode -eq 'vt') {
+        $esc = [char]27
+        $rgb = @{ ok = '37;149;46'; error = '228;75;69'; warning = '178;116;9'; info = '26;143;147' }[$Kind]
+        Write-Host "$esc[38;2;${rgb}m$Symbol$esc[39m $Message"
+    } else {
+        $light = $false
+        try { $light = @('White', 'Gray', 'Yellow', 'Cyan', 'Green') -contains [string]$Host.UI.RawUI.BackgroundColor } catch { }
+        $colors = @{ ok = 'Green'; error = 'Red'; warning = 'Yellow'; info = 'Cyan' }
+        if ($light) { $colors = @{ ok = 'DarkGreen'; error = 'DarkRed'; warning = 'DarkYellow'; info = 'DarkCyan' } }
+        Write-Host "$Symbol " -ForegroundColor $colors[$Kind] -NoNewline
+        Write-Host $Message
+    }
+}
+
+# Write-Mark LABELS: the BetterDesk mark in half blocks, six lines high,
+# with LABELS[i] beside line i. The rows are the logo's square (b), circle
+# (g) and their overlap (t) on a 12 x 12 grid, sampled from its geometry;
+# two rows make one line.
+function Write-Mark {
+    param([string[]]$Labels)
+    $rows = @(
+        '......gggg..',
+        '....ggggggg.',
+        '....gggggggg',
+        '..bttttggggg',
+        'bbbtttttgggg',
+        'bbbttttttggg',
+        'bbbbtttttgg.',
+        'bbbbbttttgg.',
+        'bbbbbbttt...',
+        'bbbbbbbbb...',
+        'bbbbbbbb....',
+        '.bbbbbbb....'
+    )
+    $vt = (Get-ColorMode) -eq 'vt'
+    $esc = [char]27
+    $rgb = @{ b = '88;166;255'; g = '163;230;53'; t = '63;208;196' }
+    $console = @{ b = 'Cyan'; g = 'Green'; t = 'DarkCyan' }
+    $upper = [string][char]0x2580
+    $lower = [string][char]0x2584
+    $full = [string][char]0x2588
+    for ($line = 0; $line -lt 6; $line++) {
+        $top = $rows[2 * $line]
+        $bottom = $rows[2 * $line + 1]
+        $label = if ($line -lt $Labels.Count) { $Labels[$line] } else { '' }
+        # Up to the last cell with a part of the mark, all of them before a label
+        $width = $top.Length
+        if (-not $label) {
+            while ($width -gt 0 -and $top[$width - 1] -eq '.' -and $bottom[$width - 1] -eq '.') { $width-- }
+        }
+        $text = '  '
+        if (-not $vt) { Write-Host '  ' -NoNewline }
+        for ($i = 0; $i -lt $width; $i++) {
+            $t = [string]$top[$i]
+            $b = [string]$bottom[$i]
+            $glyph, $fg, $bg = ' ', '', ''
+            if ($t -eq $b -and $t -ne '.') { $glyph, $fg = $full, $t }
+            elseif ($b -eq '.' -and $t -ne '.') { $glyph, $fg = $upper, $t }
+            elseif ($t -eq '.' -and $b -ne '.') { $glyph, $fg = $lower, $b }
+            elseif ($t -ne '.') { $glyph, $fg, $bg = $upper, $t, $b }
+            if ($vt) {
+                if (-not $fg) { $text += ' '; continue }
+                $text += "$esc[38;2;$($rgb[$fg])m"
+                if ($bg) { $text += "$esc[48;2;$($rgb[$bg])m" }
+                $text += "$glyph$esc[0m"
+            } elseif (-not $fg) {
+                Write-Host ' ' -NoNewline
+            } elseif ($bg) {
+                Write-Host $glyph -ForegroundColor $console[$fg] -BackgroundColor $console[$bg] -NoNewline
+            } else {
+                Write-Host $glyph -ForegroundColor $console[$fg] -NoNewline
+            }
+        }
+        $after = if ($label) { "   $label" } else { '' }
+        if ($vt) { Write-Host "$text$after" } else { Write-Host $after }
+    }
+}
+
+# Print-Header: clears the console and shows the BetterDesk mark beside
+# the name, what this script is and its version. Without colour (a file,
+# a pipe, NO_COLOR) it is one plain line.
 function Print-Header {
-    Clear-Host
-    Write-Host @"
-╔══════════════════════════════════════════════════════════════════╗
-║                                                                  ║
-║   ██████╗ ███████╗████████╗████████╗███████╗██████╗              ║
-║   ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗             ║
-║   ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝             ║
-║   ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗             ║
-║   ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║             ║
-║   ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝             ║
-║                    ██████╗ ███████╗███████╗██╗  ██╗              ║
-║                    ██╔══██╗██╔════╝██╔════╝██║ ██╔╝              ║
-║                    ██║  ██║█████╗  ███████╗█████╔╝               ║
-║                    ██║  ██║██╔══╝  ╚════██║██╔═██╗               ║
-║                    ██████╔╝███████╗███████║██║  ██╗              ║
-║                    ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝              ║
-║                                                                  ║
-║                  Console Manager v$($script:VERSION)             ║
-╚══════════════════════════════════════════════════════════════════╝
-"@ -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  ⚠  WINDOWS SUPPORT: EXPERIMENTAL (Tier 3)" -ForegroundColor Yellow
-    Write-Host "     Primary platform: Linux. Report issues at GitHub." -ForegroundColor DarkYellow
-    Write-Host ""
+    $title = "Server installer $($script:VERSION)"
+    if ((Get-ColorMode) -eq 'none') {
+        Write-Host "BetterDesk $title"
+    } else {
+        Clear-Host
+        Write-Host ''
+        Write-Mark @('', '', 'BetterDesk', $title)
+        Write-Host ''
+    }
+    Write-Status '[!]' warning 'Windows support is experimental.'
+    Write-Host '    Linux is the main platform. Report problems on GitHub.'
+    Write-Host ''
 }
 
 function Print-Success {
     param([string]$Message)
-    Write-Host "[OK] " -ForegroundColor Green -NoNewline
-    Write-Host $Message
+    Write-Status '[OK]' ok $Message
     Write-Log "SUCCESS: $Message"
 }
 
 function Print-Error {
     param([string]$Message)
-    Write-Host "[X] " -ForegroundColor Red -NoNewline
-    Write-Host $Message
+    Write-Status '[X]' error $Message
     Write-Log "ERROR: $Message"
 }
 
 function Print-Warning {
     param([string]$Message)
-    Write-Host "[!] " -ForegroundColor Yellow -NoNewline
-    Write-Host $Message
+    Write-Status '[!]' warning $Message
     Write-Log "WARNING: $Message"
 }
 
 function Print-Info {
     param([string]$Message)
-    Write-Host "[i] " -ForegroundColor Blue -NoNewline
-    Write-Host $Message
+    Write-Status '[i]' info $Message
     Write-Log "INFO: $Message"
 }
 
 function Print-Step {
     param([string]$Message)
-    Write-Host "[>] " -ForegroundColor Magenta -NoNewline
-    Write-Host $Message
+    Write-Status '[>]' step $Message
     Write-Log "STEP: $Message"
 }
 

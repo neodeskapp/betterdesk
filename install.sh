@@ -78,23 +78,127 @@ DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122 5000"
 
 # ── Output helpers ────────────────────────────────────────────────────────────
 
-if [ -t 1 ]; then
+# Colours: 24-bit where the terminal says it has them (COLORTERM), else the
+# 16 basic ones; none when the output is not a terminal, NO_COLOR is set or
+# TERM is dumb (COLOR_DEPTH 24bit, 16 or empty). In 24-bit, C_RED, C_GREEN,
+# C_YELLOW and C_CYAN keep at least 3.8:1 on black, on PowerShell's blue
+# and on white.
+COLOR_DEPTH=""
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != dumb ]; then
+    case "${COLORTERM:-}" in
+        truecolor|24bit) COLOR_DEPTH=24bit ;;
+        *) COLOR_DEPTH=16 ;;
+    esac
+fi
+case "$COLOR_DEPTH" in
+    24bit)
+        C_RED='\033[38;2;228;75;69m'
+        C_GREEN='\033[38;2;37;149;46m'
+        C_YELLOW='\033[38;2;178;116;9m'
+        C_CYAN='\033[38;2;26;143;147m'
+        ;;
+    16)
+        C_RED='\033[0;31m'
+        C_GREEN='\033[0;32m'
+        C_YELLOW='\033[0;33m'
+        C_CYAN='\033[0;36m'
+        ;;
+    *)
+        C_RED='' C_GREEN='' C_YELLOW='' C_CYAN=''
+        ;;
+esac
+if [ -n "$COLOR_DEPTH" ]; then
     C_RESET='\033[0m'
     C_BOLD='\033[1m'
-    C_DIM='\033[2m'
-    C_RED='\033[0;31m'
-    C_GREEN='\033[0;32m'
-    C_YELLOW='\033[1;33m'
-    C_CYAN='\033[0;36m'
-    C_WHITE='\033[1;37m'
 else
-    C_RESET='' C_BOLD='' C_DIM='' C_RED='' C_GREEN='' C_YELLOW='' C_CYAN='' C_WHITE=''
+    C_RESET='' C_BOLD=''
 fi
+
+# The BetterDesk mark: the logo's square (b), circle (g) and their overlap
+# (t) on a 12 x 12 grid, sampled from its geometry. Two rows make one line
+# of half blocks.
+BD_MARK_ROWS=(
+    '......gggg..'
+    '....ggggggg.'
+    '....gggggggg'
+    '..bttttggggg'
+    'bbbtttttgggg'
+    'bbbttttttggg'
+    'bbbbtttttgg.'
+    'bbbbbttttgg.'
+    'bbbbbbttt...'
+    'bbbbbbbbb...'
+    'bbbbbbbb....'
+    '.bbbbbbb....'
+)
 
 log()  { echo -e "${C_CYAN}[install]${C_RESET} $*"; }
 ok()   { echo -e "${C_GREEN}✓${C_RESET} $*"; }
 warn() { echo -e "${C_YELLOW}!${C_RESET} $*" >&2; }
 die()  { echo -e "${C_RED}✗${C_RESET} $*" >&2; exit 1; }
+
+# mark_colour PART LAYER: in REPLY, the escape code that makes PART of the
+# mark (b, g, t) the text (38) or background (48) colour: the logo's own
+# colours in 24-bit, else bright cyan, bright green and cyan
+mark_colour() {
+    local rgb code
+    case $1 in
+        b) rgb='88;166;255' code=96 ;;
+        g) rgb='163;230;53' code=92 ;;
+        *) rgb='63;208;196' code=36 ;;
+    esac
+    if [ "$COLOR_DEPTH" = 24bit ]; then
+        REPLY=$'\033'"[$2;2;${rgb}m"
+    else
+        if [ "$2" = 48 ]; then code=$((code + 10)); fi
+        REPLY=$'\033'"[${code}m"
+    fi
+}
+
+# mark_line TOP BOTTOM [LABEL]: in REPLY, one line of half blocks from two
+# rows of the mark, with LABEL beside it
+mark_line() {
+    local top=$1 bottom=$2 label=${3:-} line='  ' width=${#1} i t b glyph fg bg
+    if [ -z "$label" ]; then
+        while [ "$width" -gt 0 ] && [ "${top:width-1:1}" = . ] && [ "${bottom:width-1:1}" = . ]; do
+            width=$((width - 1))
+        done
+    fi
+    for ((i = 0; i < width; i++)); do
+        t=${top:i:1} b=${bottom:i:1} glyph=' ' fg='' bg=''
+        if [ "$t" = "$b" ] && [ "$t" != . ]; then glyph='█' fg=$t
+        elif [ "$b" = . ] && [ "$t" != . ]; then glyph='▀' fg=$t
+        elif [ "$t" = . ] && [ "$b" != . ]; then glyph='▄' fg=$b
+        elif [ "$t" != . ]; then glyph='▀' fg=$t bg=$b
+        fi
+        if [ -z "$fg" ]; then line+=' '; continue; fi
+        mark_colour "$fg" 38
+        line+=$REPLY
+        if [ -n "$bg" ]; then mark_colour "$bg" 48; line+=$REPLY; fi
+        line+="$glyph"$'\033[0m'
+    done
+    REPLY="$line${label:+   $label}"
+}
+
+# print_header: the BetterDesk mark beside the name, what this script is
+# and the release it installs; one plain line without colour (no
+# terminal, NO_COLOR). The managers this script runs leave theirs out
+# (BETTERDESK_HEADER_SHOWN).
+print_header() {
+    local title="Installer ${BETTERDESK_VERSION}" line
+    export BETTERDESK_HEADER_SHOWN=1
+    if [ -z "$COLOR_DEPTH" ]; then
+        printf 'BetterDesk %s\n' "$title"
+        return 0
+    fi
+    local labels=('' '' "${C_BOLD}BetterDesk${C_RESET}" "$title" '' '')
+    printf '\n'
+    for ((line = 0; line < 6; line++)); do
+        mark_line "${BD_MARK_ROWS[line * 2]}" "${BD_MARK_ROWS[line * 2 + 1]}" "${labels[line]}"
+        printf '%b\n' "$REPLY"
+    done
+    printf '\n'
+}
 
 usage() {
     sed -n '4,/^#   --help/p' "$0" | sed 's/^# \?//'
@@ -601,9 +705,7 @@ run_docker_management_action() {
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 main() {
-    echo ""
-    echo -e "${C_BOLD}BetterDesk installer v${VERSION}${C_RESET}"
-    echo ""
+    print_header
 
     if [ "$DO_UNINSTALL" = true ]; then
         case "$INSTALL_MODE" in
