@@ -6,26 +6,32 @@
 #   ghcr.io/<owner>/betterdesk          (server with its web console, one process)
 #
 # Tags:
-#   - main push: dev, sha-<commit>
-#   - GitHub Release (stable): semver, v*, major.minor, latest
-#   - workflow_dispatch on a v* tag with tag empty/latest: latest and the
-#     tag's versions; tag=dev: dev, sha-<commit>; else the custom tag
+#   - main: dev, sha-<commit>
+#   - a pushed v* tag: the version (3.6.0-rc.1), the tag (v3.6.0-rc.1),
+#     major.minor for a stable release, and latest when
+#     scripts/docker-latest.sh says so: always for a stable release, for a
+#     pre-release while there is no stable release and no newer pre-release
+#   - workflow_dispatch on a v* tag with tag empty/latest: as a pushed tag;
+#     tag=dev: dev, sha-<commit>; else the custom tag
 #
 # Pushes to main: build ONLY on CI version-bump subjects
 # (`chore: bump version … [version-bump]`) so the GHCR image VERSION matches
 # tip (auto-bump runs after the feature commit; building the feature SHA left
-# :dev one patch behind — #401). Feature commits skip. Releases and
-# workflow_dispatch always build. latest comes from a release or a v* tag,
-# never from main.
+# :dev one patch behind — #401). Feature commits skip. Tags and
+# workflow_dispatch always build. latest comes from a v* tag, never from
+# main.
 #
-# Note: GITHUB_TOKEN pushes do not re-trigger workflows, so version-bump.yml
-# dispatches this workflow on main with tag=dev after each successful bump.
+# Note: pushes and releases made with GITHUB_TOKEN start no workflow, so
+# version-bump.yml dispatches this workflow on main with tag=dev after each
+# successful bump, and a v* tag starts it by its push, not through the
+# release release-go.yml makes for it. GitHub starts no workflow for tags
+# pushed more than three at a time.
 #
 # Phase 1 (amd64) then Phase 2 (native ubuntu-24.04-arm). AIO :dev is
 # multi-arch again (#476); ARM runs last so amd64 still publishes if ARM fails
 # (soft-merge). Native ARM avoids the old QEMU/npm 6h limit (#401).
 #
-# Triggers: push main (path-filtered), release published, manual
+# Triggers: push main (path-filtered), push of a v* tag, manual
 # =============================================================================
 
 name: Build & Publish Docker Images
@@ -41,6 +47,9 @@ on:
 
   push:
     branches: [main]
+    # The paths below apply to main only; GitHub does not filter tag
+    # pushes by path.
+    tags: ['v*']
     paths:
       - 'Dockerfile*'
       - 'docker-compose*.yml'
@@ -50,13 +59,11 @@ on:
       - '.github/workflows/docker-publish.yml'
       - 'VERSION'
 
-  release:
-    types: [published]
-
 concurrency:
-  # Serialize image publication per ref/tag. A release is published by the
-  # release event only; the tag push is intentionally not a Docker trigger.
-  group: docker-publish-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || 'auto' }}
+  # Runs of v* tags take turns in one group, so a later tag decides about
+  # latest after the earlier one has published. Other runs take turns per
+  # ref and requested tag.
+  group: docker-publish-${{ startsWith(github.ref, 'refs/tags/v') && 'release-tags' || format('{0}-{1}', github.ref, github.event_name == 'workflow_dispatch' && github.event.inputs.tag || 'auto') }}
   cancel-in-progress: false
 
 env:
@@ -73,6 +80,7 @@ jobs:
       version: ${{ steps.ver.outputs.version }}
       image_prefix: ${{ steps.ver.outputs.image_prefix }}
       owner: ${{ steps.ver.outputs.owner }}
+      latest: ${{ steps.latest.outputs.latest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Validate manual publish tag
@@ -85,16 +93,30 @@ jobs:
       - id: ver
         run: |
           if [ -f VERSION ]; then
-            echo "version=$(tr -d '\n\r' < VERSION)" >> "$GITHUB_OUTPUT"
+            version="$(tr -d '\n\r' < VERSION)"
           else
-            echo "version=dev" >> "$GITHUB_OUTPUT"
+            version=dev
           fi
+          # A v* tag publishes the version it names, as release-go.yml does
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]] && [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::The tag ${GITHUB_REF_NAME} does not match VERSION ${version}."
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
           # The images live under the repository's owner. GHCR names are
           # lowercase, and expressions cannot lowercase the owner's display
           # name, so the shell does it here.
           owner="${GITHUB_REPOSITORY_OWNER,,}"
           echo "owner=${owner}" >> "$GITHUB_OUTPUT"
           echo "image_prefix=${REGISTRY}/${owner}" >> "$GITHUB_OUTPUT"
+      - id: latest
+        name: Decide whether latest moves to this tag
+        if: startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'push' || github.event.inputs.tag == '' || github.event.inputs.tag == 'latest')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest="$(bash scripts/docker-latest.sh "${GITHUB_REF_NAME}")"
+          echo "latest=${latest}" >> "$GITHUB_OUTPUT"
 
   # Guard against GHCR authorization outages. On 2026-11-18 a publish failed with
   # "permission_denied ... circuit breaker is open" from GitHub's authzd service —
@@ -105,7 +127,7 @@ jobs:
     needs: read-version
     if: |
       github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'release' ||
+      startsWith(github.ref, 'refs/tags/v') ||
       (github.event_name == 'push' &&
         (startsWith(github.event.head_commit.message, 'chore: bump version') ||
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
@@ -147,12 +169,12 @@ jobs:
 
   build-server:
     needs: [read-version, ghcr-preflight]
-    # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
+    # Tags/dispatch always; branch pushes only on CI version-bump subjects (#401).
     # Match subject markers (chore: bump/release … [version-bump]), not incidental
     # mentions of [version-bump] in a feature commit body.
     if: |
       github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'release' ||
+      startsWith(github.ref, 'refs/tags/v') ||
       (github.event_name == 'push' &&
         (startsWith(github.event.head_commit.message, 'chore: bump version') ||
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
@@ -185,8 +207,10 @@ jobs:
           # Prefer product VERSION over tag name (dispatch with tag=latest must not label as "latest")
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
+          # latest only by the rule below, never added for a tag by itself
+          flavor: latest=false
           tags: |
-            type=raw,value=latest,enable=${{ (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && startsWith(github.ref, 'refs/tags/')) }}
+            type=raw,value=latest,enable=${{ needs.read-version.outputs.latest == 'true' }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -226,10 +250,10 @@ jobs:
 
   build-allinone:
     needs: [read-version, ghcr-preflight]
-    # Release/dispatch always; branch pushes only on CI version-bump subjects (#401).
+    # Tags/dispatch always; branch pushes only on CI version-bump subjects (#401).
     if: |
       github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'release' ||
+      startsWith(github.ref, 'refs/tags/v') ||
       (github.event_name == 'push' &&
         (startsWith(github.event.head_commit.message, 'chore: bump version') ||
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
@@ -267,8 +291,10 @@ jobs:
           images: ${{ needs.read-version.outputs.image_prefix }}/betterdesk
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
+          # latest only by the rule below, never added for a tag by itself
+          flavor: latest=false
           tags: |
-            type=raw,value=latest,enable=${{ (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && startsWith(github.ref, 'refs/tags/')) }}
+            type=raw,value=latest,enable=${{ needs.read-version.outputs.latest == 'true' }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -317,7 +343,7 @@ jobs:
       needs.read-version.result == 'success' &&
       needs.build-server.result == 'success' &&
       (github.event_name == 'workflow_dispatch' ||
-       github.event_name == 'release' ||
+       startsWith(github.ref, 'refs/tags/v') ||
        (github.event_name == 'push' &&
         (startsWith(github.event.head_commit.message, 'chore: bump version') ||
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
@@ -386,7 +412,7 @@ jobs:
       needs.build-allinone.result == 'success' &&
       (needs.build-arm64.result == 'success' || needs.build-arm64.result == 'failure') &&
       (github.event_name == 'workflow_dispatch' ||
-       github.event_name == 'release' ||
+       startsWith(github.ref, 'refs/tags/v') ||
        (github.event_name == 'push' &&
         (startsWith(github.event.head_commit.message, 'chore: bump version') ||
          startsWith(github.event.head_commit.message, 'chore: release version')) &&
@@ -491,8 +517,10 @@ jobs:
           images: ${{ needs.read-version.outputs.image_prefix }}/${{ matrix.image }}
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
+          # latest only by the rule below, never added for a tag by itself
+          flavor: latest=false
           tags: |
-            type=raw,value=latest,enable=${{ (github.event_name == 'release' && github.event.release.prerelease == false) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.tag == '' || github.event.inputs.tag == 'latest') && startsWith(github.ref, 'refs/tags/')) }}
+            type=raw,value=latest,enable=${{ needs.read-version.outputs.latest == 'true' }}
             type=raw,value=dev,enable=${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
             type=ref,event=tag
             type=semver,pattern={{version}}
@@ -597,7 +625,7 @@ jobs:
             echo "docker compose up -d"
             echo "\`\`\`"
             echo ""
-            echo "### Rolling stable tip (\`latest\` = last successful stable image publish)"
+            echo "### Newest release (\`latest\`: the newest stable release, or the newest pre-release while there is none)"
             echo "\`\`\`bash"
             echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.quick.single.yml -o docker-compose.yml"
             echo "BETTERDESK_IMAGE_TAG=latest docker compose up -d"

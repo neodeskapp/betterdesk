@@ -17,6 +17,8 @@ on:
       - 'betterdesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
+      - 'scripts/docker-latest.sh'
+      - 'scripts/test-docker-latest.sh'
       - 'betterdesk-server/cli/**'
       - 'betterdesk-server/console/safepath/**'
       - 'betterdesk-server/console/updater/**'
@@ -41,6 +43,8 @@ on:
       - 'betterdesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
+      - 'scripts/docker-latest.sh'
+      - 'scripts/test-docker-latest.sh'
       - 'betterdesk-server/cli/**'
       - 'betterdesk-server/console/safepath/**'
       - 'betterdesk-server/console/updater/**'
@@ -96,7 +100,9 @@ jobs:
             scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
             scripts/test-postgresql-hba.sh \
-            scripts/test-docker-hardening.sh)
+            scripts/test-docker-hardening.sh \
+            scripts/docker-latest.sh \
+            scripts/test-docker-latest.sh)
       - name: Run ShellCheck
         run: |
           shellcheck --severity=error \
@@ -109,13 +115,17 @@ jobs:
             scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
             scripts/test-postgresql-hba.sh \
-            scripts/test-docker-hardening.sh
+            scripts/test-docker-hardening.sh \
+            scripts/docker-latest.sh \
+            scripts/test-docker-latest.sh
       - name: Test the upgrade to the server with its web console
         run: bash scripts/test-go-installer.sh
       - name: Check the Go pins of the installers against go.mod
         run: bash scripts/check-go-toolchain-pins.sh
       - name: Test the Docker manager's update and backup
         run: bash scripts/test-docker-installer.sh
+      - name: Test which release moves the Docker images' latest tag
+        run: bash scripts/test-docker-latest.sh
       - name: Check that the systemd unit and the image name their supervisor
         run: bash scripts/check-supervisor-env.sh
       - name: Test the Windows installer's service and task set-up
