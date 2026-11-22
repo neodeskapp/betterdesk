@@ -183,11 +183,15 @@ type strategyAnswer struct {
 }
 
 // createStrategy answers POST /api/panel/strategies. An account whose
-// device scope is limited binds a rule only to a device group open to it.
+// device scope is limited binds a rule only to a device group open to it,
+// and to no user group.
 func (h *handlers) createStrategy(w http.ResponseWriter, r *http.Request) {
 	payload, err := normalizeStrategyPayload(plainBody(r))
 	if err == nil {
 		err = h.ruleGroupInScope(r, payload.DeviceGroupGUID)
+	}
+	if err == nil {
+		err = h.ruleUserGroupInScope(r, "", payload.UserGroupGUID)
 	}
 	var created *goapi.Object
 	if err == nil {
@@ -219,8 +223,8 @@ func nameOf(row *goapi.Object) (string, error) {
 // fields over the stored rule. A field the body leaves out keeps its
 // value; the stored switch is read as a boolean first (1 or 0 on SQLite).
 // An account whose device scope is limited changes only a rule whose
-// assignments and device group it may all see, and binds it only to a
-// device group open to it.
+// assignments and device group it may all see, binds it only to a device
+// group open to it, and keeps its user group as it is.
 func (h *handlers) updateStrategy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	guid, ok := strategyGUID(w, r)
@@ -250,6 +254,12 @@ func (h *handlers) updateStrategy(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == nil {
 		err = h.ruleGroupInScope(r, payload.DeviceGroupGUID)
+	}
+	if err == nil {
+		var stored string
+		if stored, err = textOr(existing.Get("user_group_guid"), ""); err == nil {
+			err = h.ruleUserGroupInScope(r, jsTrim(stored), payload.UserGroupGUID)
+		}
 	}
 	var updated *goapi.Object
 	if err == nil {
@@ -699,6 +709,21 @@ func (h *handlers) ruleGroupInScope(r *http.Request, guid string) error {
 	}
 	open, err := h.ruleGroupOpen(r.Context(), scope, guid)
 	if err == nil && !open {
+		err = errOutOfScope
+	}
+	return err
+}
+
+// ruleUserGroupInScope returns errOutOfScope when an account whose device
+// scope is limited binds a rule to another user group than the stored one,
+// or clears it: a user group names other accounts, and such an account
+// gives rules only to itself (A72). Keeping the stored user group passes.
+func (h *handlers) ruleUserGroupInScope(r *http.Request, stored, next string) error {
+	if stored == next {
+		return nil
+	}
+	scope, err := h.ruleScopeOf(r)
+	if err == nil && scope != nil {
 		err = errOutOfScope
 	}
 	return err

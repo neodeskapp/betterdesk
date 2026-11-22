@@ -248,6 +248,92 @@ func TestGroupAccessListsNeedUserEdit(t *testing.T) {
 	}
 }
 
+// TestLimitedScopeBindsNoRuleToAUserGroup: an account whose device scope
+// is limited may not bind a client rule to a user group, nor change or
+// clear the user group of a rule, on create or change (403, nothing
+// written, no write on the API server); a save that keeps the stored user
+// group passes. An account that sees every device binds any (L50, the
+// rule of A72 for the users list).
+func TestLimitedScopeBindsNoRuleToAUserGroup(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, api := world(t, db, nil, nil)
+		ctx := context.Background()
+		admin, operator := w.As("admin"), w.As("operator")
+		create := func(a *routetest.Agent, body string) string {
+			t.Helper()
+			created := a.Do("POST", "/api/panel/strategies", body)
+			m := strategyGUIDField.FindStringSubmatch(created.Body)
+			if created.Status != http.StatusOK || m == nil {
+				t.Fatalf("create %s: %d %s", body, created.Status, created.Body)
+			}
+			return "/api/panel/strategies/" + m[1]
+		}
+		grouped := create(admin, `{"name":"Grouped","user_group_guid":"ug-1"}`)
+		plain := create(admin, `{"name":"Plain"}`)
+		state := func() string {
+			t.Helper()
+			rows, err := db.Query(ctx, `SELECT name || '=' || COALESCE(user_group_guid, '') FROM strategies ORDER BY name`)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer rows.Close()
+			var out []string
+			for rows.Next() {
+				var s string
+				if err := rows.Scan(&s); err != nil {
+					t.Fatal(err)
+				}
+				out = append(out, s)
+			}
+			return strings.Join(out, " ")
+		}
+		before := state()
+		if before != "Grouped=ug-1 Plain=" {
+			t.Fatalf("rules: %s", before)
+		}
+		forbidden := `{"success":false,"error":"You don't have access to this device."}`
+		for _, c := range []struct{ method, path, body string }{
+			{"POST", "/api/panel/strategies", `{"name":"Mine","user_group_guid":"ug-1"}`},
+			{"PATCH", plain, `{"user_group_guid":"ug-1"}`},
+			{"PATCH", grouped, `{"user_group_guid":"ug-2"}`},
+			{"PATCH", grouped, `{"name":"Grouped","user_group_guid":""}`},
+		} {
+			api.Calls()
+			if got := operator.Do(c.method, c.path, c.body); got.Status != http.StatusForbidden || got.Body != forbidden {
+				t.Errorf("%s %s %s as a limited operator: %d %s, want 403 %s", c.method, c.path, c.body, got.Status, got.Body, forbidden)
+			}
+			for _, call := range api.Calls() {
+				if !strings.HasPrefix(call, "GET ") {
+					t.Errorf("%s %s %s as a limited operator reached the server: %s", c.method, c.path, c.body, call)
+				}
+			}
+			if got := state(); got != before {
+				t.Fatalf("%s %s %s as a limited operator wrote: %s", c.method, c.path, c.body, got)
+			}
+		}
+		for _, c := range []struct{ method, path, body string }{
+			{"PATCH", grouped, `{"name":"Grouped","enabled":false,"user_group_guid":"ug-1"}`},
+			{"PATCH", plain, `{"name":"Plain","user_group_guid":""}`},
+			{"POST", "/api/panel/strategies", `{"name":"Mine","user_group_guid":""}`},
+		} {
+			if got := operator.Do(c.method, c.path, c.body); got.Status != http.StatusOK {
+				t.Errorf("%s %s %s as a limited operator: %d %s, want 200", c.method, c.path, c.body, got.Status, got.Body)
+			}
+		}
+		if got := admin.Do("PATCH", plain, `{"user_group_guid":"ug-1"}`); got.Status != http.StatusOK {
+			t.Errorf("the admin binds a rule to a user group: %d %s", got.Status, got.Body)
+		}
+		// Without access lists the operator sees every device and binds any
+		if _, err := db.Exec(ctx, `DELETE FROM device_group_user_access`); err != nil {
+			t.Fatal(err)
+		}
+		create(operator, `{"name":"Team","user_group_guid":"ug-2"}`)
+		if got := state(); got != "Grouped=ug-1 Mine= Plain=ug-1 Team=ug-2" {
+			t.Errorf("rules at the end: %s", got)
+		}
+	})
+}
+
 // TestStrategyRoutesKeepTheScope: an account whose device scope is
 // limited reads a rule's assignments without the devices outside its
 // scope, other accounts and device groups closed to it; it may not
