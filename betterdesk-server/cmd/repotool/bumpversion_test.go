@@ -162,7 +162,8 @@ func TestBumpVersionArguments(t *testing.T) {
 	writeTree(t, root, versionTree("3.5.270"))
 	runBump(root, nil, "--list-paths", "--verify").want(t, 0, "VERSION\nbetterdesk.sh\nbetterdesk.ps1\nbetterdesk-docker.sh\nDockerfile\nDockerfile.server\n"+
 		"install.sh\ndocker/entrypoint.sh\nbetterdesk-server/VERSION\nbetterdesk-server/internal/productversion/VERSION\nCHANGELOG.md\n", "")
-	runBump(root, nil, "--set", "4.0").want(t, 1, "", "Invalid --set version (expected X.Y.Z): 4.0\n")
+	runBump(root, nil, "--set", "4.0").want(t, 1, "", "Invalid --set version (expected X.Y.Z or X.Y.Z-suffix): 4.0\n")
+	runBump(root, nil, "--set", "4.0.0-").want(t, 1, "", "Invalid --set version (expected X.Y.Z or X.Y.Z-suffix): 4.0.0-\n")
 	runBump(root, nil, "--set").want(t, 1, bumpUsage, "")
 	runBump(root, nil).want(t, 1, bumpUsage, "")
 	runBump(root, nil, "--fast").want(t, 1, bumpUsage, "")
@@ -173,6 +174,37 @@ func TestBumpVersionArguments(t *testing.T) {
 	runBump(root, nil, "--set", " 3.5.270 ").want(t, 0, "Version already 3.5.270; nothing to bump.\nVersion 3.5.270 → 3.5.270\nNo file changes required.\n", "")
 	if got := readTree(t, root); got["VERSION"] != "3.5.270\n" || got["CHANGELOG.md"] != versionTree("3.5.270")["CHANGELOG.md"] {
 		t.Error("a dry run or a bump to the same version wrote files")
+	}
+}
+
+// A release candidate: --set takes 3.6.0-rc.1 and writes it into every
+// version file, --verify passes on it (Version Verify), and the next
+// --patch (Version Bump) makes 3.6.1 without the suffix (L235).
+func TestBumpVersionReleaseCandidate(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root, versionTree("3.5.272"))
+	if r := runBump(root, nil, "--set", "3.6.0-rc.1"); r.code != 0 || !strings.HasPrefix(r.stdout, "Version 3.5.272 → 3.6.0-rc.1\n") {
+		t.Fatalf("--set 3.6.0-rc.1: %+v", r)
+	}
+	got := readTree(t, root)
+	for name, text := range versionTree("3.6.0-rc.1") {
+		if name != "CHANGELOG.md" && got[name] != text {
+			t.Errorf("%s:\n%q\nwant:\n%q", name, got[name], text)
+		}
+	}
+	if !strings.Contains(got["CHANGELOG.md"], "## [3.6.0-rc.1] — 2026-11-22") ||
+		!strings.HasSuffix(got["CHANGELOG.md"], "[3.6.0-rc.1]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.272...v3.6.0-rc.1\n") {
+		t.Errorf("changelog:\n%s", got["CHANGELOG.md"])
+	}
+	runBump(root, nil, "--verify").want(t, 0, "All Tier 1/2 version files match VERSION (3.6.0-rc.1).\n", "")
+	runBump(root, nil, "--sync").want(t, 0, "All Tier 1/2 files already match VERSION (3.6.0-rc.1).\n", "")
+	if r := runBump(root, nil, "--patch"); r.code != 0 || !strings.HasPrefix(r.stdout, "Version 3.6.0-rc.1 → 3.6.1\n") {
+		t.Fatalf("--patch after the candidate: %+v", r)
+	}
+	runBump(root, nil, "--verify").want(t, 0, "All Tier 1/2 version files match VERSION (3.6.1).\n", "")
+	writeTree(t, root, map[string]string{"VERSION": "3.7.0-beta.2\n"})
+	if r := runBump(root, nil, "--dry-run", "--minor"); r.code != 0 || !strings.HasPrefix(r.stdout, "[dry-run] Version 3.7.0-beta.2 → 3.8.0\n") {
+		t.Errorf("--minor after a pre-release: %+v", r)
 	}
 }
 

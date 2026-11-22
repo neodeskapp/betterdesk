@@ -18,7 +18,9 @@ import (
 // and is repeated in the files of versionRules. --verify checks that they
 // all name VERSION's version, --sync writes it into those that drifted,
 // and --patch, --minor and --set X.Y.Z bump it everywhere and open its
-// section in CHANGELOG.md. --list-paths prints the files the bump writes,
+// section in CHANGELOG.md. A version may carry a pre-release suffix
+// (3.6.0-rc.1, for a release candidate tagged v3.6.0-rc.1); --patch and
+// --minor bump its numbers and drop the suffix. --list-paths prints the files the bump writes,
 // for "git add" in the bump workflows.
 func bumpVersion(root string, args []string, stdout, stderr io.Writer) int {
 	b := versionBump{root: root, stdout: stdout, stderr: stderr, now: time.Now, getenv: os.Getenv}
@@ -30,18 +32,20 @@ func bumpVersion(root string, args []string, stdout, stderr io.Writer) int {
 	return code
 }
 
-const bumpUsage = `Usage: go run ./cmd/repotool bump-version [--patch | --minor | --set X.Y.Z] [--dry-run] [--verify] [--list-paths]
+const bumpUsage = `Usage: go run ./cmd/repotool bump-version [--patch | --minor | --set X.Y.Z[-suffix]] [--dry-run] [--verify] [--list-paths]
 
-  --patch       Bump patch (+0.0.1)
+  --patch       Bump patch (+0.0.1; 3.6.0-rc.1 becomes 3.6.1)
   --minor       Bump minor (+0.1.0, reset patch)
-  --set X.Y.Z   Set explicit version
+  --set X.Y.Z   Set explicit version, or X.Y.Z-suffix for a pre-release (3.6.0-rc.1)
   --verify      Exit 1 if Tier 1/2 files disagree with VERSION
   --sync        Align drifted Tier 1/2 files to canonical VERSION (no bump)
   --list-paths  Print managed file paths (one per line) for CI git add
   --dry-run     Print planned version without writing files
 `
 
-var reSemver = regexp.MustCompile(`^(\d+)\.(\d+)\.(\d+)$`)
+// reSemver is a version: X.Y.Z, with a pre-release suffix of semver's
+// dot-separated identifiers (3.6.0-rc.1) or without.
+var reSemver = regexp.MustCompile(`^(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$`)
 
 // versionRule is a file that carries the version: extract reads it (""
 // when the file names none), apply writes another.
@@ -200,7 +204,7 @@ func (b versionBump) run(args []string) (int, error) {
 		if i := slices.Index(args, "--set"); i >= 0 && i+1 < len(args) && args[i+1] != "" {
 			next = jsTrim(args[i+1])
 			if !reSemver.MatchString(next) {
-				fmt.Fprintln(b.stderr, "Invalid --set version (expected X.Y.Z):", next)
+				fmt.Fprintln(b.stderr, "Invalid --set version (expected X.Y.Z or X.Y.Z-suffix):", next)
 				return 1, nil
 			}
 		}

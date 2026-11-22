@@ -119,6 +119,11 @@ func TestVersions(t *testing.T) {
 	}{
 		{"3.6.0", "3.5.9", 1}, {"3.5.10", "3.5.9", 1}, {"3.5.9", "3.5.9", 0}, {"3.6.0-rc.1", "3.6.0", -1},
 		{"3.6.0-rc.2", "3.6.0-rc.1", 1}, {"dev", "3.6.0", -1}, {"3.6.0", "dev", 1}, {"dev", "dev", 0},
+		// A release candidate comes after every 3.5 and before its release;
+		// its numbers compare as numbers, as semver orders them (L235)
+		{"3.6.0-rc.1", "3.5.272", 1}, {"3.5.272", "3.6.0-rc.1", -1}, {"3.6.0-rc.10", "3.6.0-rc.9", 1},
+		{"3.6.0-rc.9", "3.6.0-rc.10", -1}, {"3.6.0-beta.2", "3.6.0-rc.1", -1}, {"3.6.0-rc.1", "3.6.0-rc", 1},
+		{"3.6.1", "3.6.0-rc.1", 1},
 	} {
 		if got := CompareVersions(tc.a, tc.b); got != tc.want {
 			t.Errorf("CompareVersions(%s, %s) = %d", tc.a, tc.b, got)
