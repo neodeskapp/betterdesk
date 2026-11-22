@@ -19,7 +19,3 @@ betterdesk-server/console/webui/testdata/site/_ui/immutable/chunks/raw.t3st.js
 betterdesk-server/console/webui/testdata/site/_ui/immutable/chunks/UPPER.JS
 betterdesk-server/console/webui/testdata/site/_ui/immutable/entry/start.t3st.js
 betterdesk-server/console/webui/testdata/site/_ui/immutable/nodes/0.t3st.js
-
-# The dev mock of the remote viewer the server sends to the browser with
-# BD_DEV_MOCK_REMOTE=1; it goes when it is written in TypeScript.
-betterdesk-server/console/routes/remote/mock-session.js
