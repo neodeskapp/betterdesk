@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"slices"
 	"strings"
 	"time"
 
@@ -18,7 +19,9 @@ import (
 // client of a signed-in account (the account its panel proof names, see
 // panel_proof.go). It asks the console which features the account may not
 // use, and tells the device in control_permissions on every message that
-// starts a session there (PunchHole, RequestRelay, FetchLocalAddr).
+// starts a session there (PunchHole, RequestRelay, FetchLocalAddr). A
+// request for a kind of session the account may not open (file transfer,
+// terminal, TCP tunnel) is refused right away (connTypeFeatures).
 // RustDesk 1.4.5 and later apply control_permissions on the controlled
 // side over the device's own settings, so the server only ever sends
 // "off": a feature the account may use is left to the device. A request
@@ -117,34 +120,85 @@ func (s *Server) controllerAccount(token string, raddr *net.UDPAddr, panel bool)
 }
 
 // controllerFeaturesOff returns the client features the account behind a
-// request may not use, and whether the request has an account. A lookup
+// request may not use; none for a request without an account. A lookup
 // that fails turns every feature off.
-func (s *Server) controllerFeaturesOff(token string, raddr *net.UDPAddr, panel bool) ([]string, bool) {
+func (s *Server) controllerFeaturesOff(token string, raddr *net.UDPAddr, panel bool) []string {
 	lookup := s.controllerFeatures.Load()
 	if lookup == nil {
-		return nil, false
+		return nil
 	}
 	userID := s.controllerAccount(token, raddr, panel)
 	switch {
 	case userID == 0:
-		return nil, false
+		return nil
 	case userID == accountUnknown:
-		return allFeatureKeys(), true
+		return allFeatureKeys()
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), featureLookupTimeout)
 	defer cancel()
 	off, err := (*lookup)(ctx, userID)
 	if err != nil {
 		log.Printf("[signal] client features of user %d from %s: %v; every feature is off for this session", userID, raddr, err)
-		return allFeatureKeys(), true
+		return allFeatureKeys()
 	}
-	return off, true
+	return off
 }
 
-// sessionPermissions is the control_permissions the device gets for a
-// session the request starts: the features the account may not use
-// turned off, or nil for a request without an account.
-func (s *Server) sessionPermissions(token string, raddr *net.UDPAddr, panel bool) *pb.ControlPermissions {
-	off, _ := s.controllerFeaturesOff(token, raddr, panel)
-	return disabledPermissions(off)
+// connTypeFeatures are the features a kind of session needs, by the
+// connection type the controller names in its request. An unmodified
+// RustDesk app names the kind it opens, so the server refuses it with a
+// message the app shows, also for devices that ignore
+// control_permissions. An app that names another kind is still held by
+// the device's own check.
+var connTypeFeatures = map[pb.ConnType][]string{
+	pb.ConnType_FILE_TRANSFER: {"file_transfer"},
+	pb.ConnType_PORT_FORWARD:  {"tunnel", "port_forwarding"},
+	pb.ConnType_RDP:           {"tunnel", "port_forwarding"},
+	pb.ConnType_TERMINAL:      {"terminal"},
+}
+
+// featureRefusals are the messages of refused requests, by feature.
+var featureRefusals = map[string]string{
+	"file_transfer":   "File transfer is turned off for your account on this server",
+	"tunnel":          "TCP tunnels are turned off for your account on this server",
+	"port_forwarding": "TCP tunnels are turned off for your account on this server",
+	"terminal":        "The terminal is turned off for your account on this server",
+}
+
+// sessionPolicy is what the server does with a session a request starts.
+type sessionPolicy struct {
+	// permissions go to the device: the features the account may not
+	// use turned off, nil for a request without an account.
+	permissions *pb.ControlPermissions
+	// refusal is the message of a request the server refuses, feature
+	// the feature it needs; "" lets the request through.
+	refusal, feature string
+}
+
+// sessionPolicy decides a punch or relay request for connType.
+func (s *Server) sessionPolicy(token string, raddr *net.UDPAddr, panel bool, connType pb.ConnType) sessionPolicy {
+	off := s.controllerFeaturesOff(token, raddr, panel)
+	policy := sessionPolicy{permissions: disabledPermissions(off)}
+	for _, need := range connTypeFeatures[connType] {
+		if slices.Contains(off, need) {
+			policy.refusal, policy.feature = featureRefusals[need], need
+			break
+		}
+	}
+	return policy
+}
+
+// refuseForFeature logs and audits a request refused by sessionPolicy.
+func (s *Server) refuseForFeature(raddr *net.UDPAddr, initiatorID, targetID string, policy sessionPolicy) {
+	s.logUnauthorizedInitiatorDetails(raddr, initiatorID, targetID, "initiator_feature_off", map[string]string{"feature": policy.feature})
+}
+
+// featureRefusedPunchResponse answers a refused punch request: no address
+// and the message, which the RustDesk app shows.
+func featureRefusedPunchResponse(refusal string) *pb.RendezvousMessage {
+	return &pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_PunchHoleResponse{
+			PunchHoleResponse: &pb.PunchHoleResponse{OtherFailure: refusal},
+		},
+	}
 }

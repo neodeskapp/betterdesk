@@ -155,17 +155,17 @@ func TestSessionPermissionsByController(t *testing.T) {
 	addr := udpAddr("203.0.113.72", 51000)
 	userID, token := signedInController(t, database, "feat-kinds")
 
-	if got := srv.sessionPermissions(token, addr, false); got != nil {
+	if got := srv.sessionPolicy(token, addr, false, pb.ConnType_DEFAULT_CONN).permissions; got != nil {
 		t.Errorf("before the console sets the lookup: %#x", got.GetPermissions())
 	}
 	srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: {"client_actions"}}))
-	if got := srv.sessionPermissions(token, addr, false); got != nil {
+	if got := srv.sessionPolicy(token, addr, false, pb.ConnType_DEFAULT_CONN).permissions; got != nil {
 		t.Errorf("every feature on: %#x", got.GetPermissions())
 	}
-	if got := srv.sessionPermissions("", addr, false); got != nil {
+	if got := srv.sessionPolicy("", addr, false, pb.ConnType_DEFAULT_CONN).permissions; got != nil {
 		t.Errorf("no token: %#x", got.GetPermissions())
 	}
-	if got := srv.sessionPermissions(strings.Repeat("cd", 32), addr, false); got != nil {
+	if got := srv.sessionPolicy(strings.Repeat("cd", 32), addr, false, pb.ConnType_DEFAULT_CONN).permissions; got != nil {
 		t.Errorf("a token nobody holds: %#x", got.GetPermissions())
 	}
 	everything := []string{}
@@ -173,15 +173,15 @@ func TestSessionPermissionsByController(t *testing.T) {
 		everything = append(everything, f.Key)
 	}
 	srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: everything}))
-	if got := srv.sessionPermissions(token, addr, false).GetPermissions(); got != allOff {
+	if got := srv.sessionPolicy(token, addr, false, pb.ConnType_DEFAULT_CONN).permissions.GetPermissions(); got != allOff {
 		t.Errorf("every feature off: %#x, want %#x", got, allOff)
 	}
 	srv.SetControllerFeatures(func(context.Context, int64) ([]string, error) { return nil, errors.New("store down") })
-	if got := srv.sessionPermissions(token, addr, false).GetPermissions(); got != allOff {
+	if got := srv.sessionPolicy(token, addr, false, pb.ConnType_DEFAULT_CONN).permissions.GetPermissions(); got != allOff {
 		t.Errorf("failed lookup: %#x, want %#x", got, allOff)
 	}
 	srv.SetControllerFeatures(nil)
-	if got := srv.sessionPermissions(token, addr, false); got != nil {
+	if got := srv.sessionPolicy(token, addr, false, pb.ConnType_DEFAULT_CONN).permissions; got != nil {
 		t.Errorf("after the console stopped: %#x", got.GetPermissions())
 	}
 }
@@ -306,5 +306,98 @@ func TestReadPanelProof(t *testing.T) {
 		if userID != c.userID || ok != c.ok {
 			t.Errorf("%s: (%d, %v), want (%d, %v)", c.name, userID, ok, c.userID, c.ok)
 		}
+	}
+}
+
+// Which kinds of session the server refuses: a file transfer, terminal or
+// TCP tunnel session (RDP included) when the account may not use the
+// feature; a desktop or camera session never, whatever is off.
+func TestSessionPolicyRefusesKindsOfSessionTheAccountMayNotOpen(t *testing.T) {
+	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+	addr := udpAddr("203.0.113.73", 51000)
+	userID, token := signedInController(t, database, "feat-kind")
+	everything := []string{}
+	for _, f := range access.ClientFeatures {
+		everything = append(everything, f.Key)
+	}
+	for _, c := range []struct {
+		connType pb.ConnType
+		off      []string
+		refusal  string
+	}{
+		{pb.ConnType_FILE_TRANSFER, []string{"file_transfer"}, "File transfer is turned off for your account on this server"},
+		{pb.ConnType_TERMINAL, []string{"terminal"}, "The terminal is turned off for your account on this server"},
+		{pb.ConnType_PORT_FORWARD, []string{"port_forwarding"}, "TCP tunnels are turned off for your account on this server"},
+		{pb.ConnType_PORT_FORWARD, []string{"tunnel"}, "TCP tunnels are turned off for your account on this server"},
+		{pb.ConnType_RDP, []string{"tunnel"}, "TCP tunnels are turned off for your account on this server"},
+		{pb.ConnType_FILE_TRANSFER, []string{"terminal", "tunnel"}, ""},
+		{pb.ConnType_DEFAULT_CONN, everything, ""},
+		{pb.ConnType_VIEW_CAMERA, everything, ""},
+	} {
+		srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: c.off}))
+		if got := srv.sessionPolicy(token, addr, false, c.connType).refusal; got != c.refusal {
+			t.Errorf("%v with %v off: refusal %q, want %q", c.connType, c.off, got, c.refusal)
+		}
+	}
+	// Without an account nothing is refused.
+	srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: everything}))
+	if got := srv.sessionPolicy("", addr, false, pb.ConnType_FILE_TRANSFER).refusal; got != "" {
+		t.Errorf("without an account: %q", got)
+	}
+}
+
+// expectNothingAt fails when the target gets a message within a moment.
+func expectNothingAt(t *testing.T, recv *net.UDPConn) {
+	t.Helper()
+	if err := recv.SetReadDeadline(time.Now().Add(300 * time.Millisecond)); err != nil {
+		t.Fatal(err)
+	}
+	buf := make([]byte, 65535)
+	if n, _, err := recv.ReadFromUDP(buf); err == nil {
+		t.Fatalf("the target got %d bytes of a refused session", n)
+	}
+}
+
+// A refused request gets the message on every path, and the device is not
+// asked at all.
+func TestARefusedSessionReachesNoDevice(t *testing.T) {
+	const refusal = "File transfer is turned off for your account on this server"
+	for _, path := range []string{"punch hole over UDP", "punch hole over TCP", "relay over UDP", "relay over TCP"} {
+		t.Run(path, func(t *testing.T) {
+			srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
+			srv.localIP.Store("198.51.100.20")
+			recv, targetAddr := attachTestUDPPair(t, srv)
+			putOnlinePeer(srv, "FEATREF01", targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
+			userID, token := signedInController(t, database, "feat-ref")
+			srv.SetControllerFeatures(featuresOf(map[int64][]string{userID: {"file_transfer"}}))
+			initiator, initiatorAddr := openLANInitiator(t)
+
+			var answer *pb.RendezvousMessage
+			punch := &pb.PunchHoleRequest{Id: "FEATREF01", Token: token, ConnType: pb.ConnType_FILE_TRANSFER}
+			relay := &pb.RequestRelay{Id: "FEATREF01", Uuid: "feat-ref", Token: token, ConnType: pb.ConnType_FILE_TRANSFER}
+			switch path {
+			case "punch hole over UDP":
+				srv.handlePunchHoleRequest(punch, initiatorAddr)
+				answer = readUDPRendezvous(t, initiator)
+			case "punch hole over TCP":
+				answer = srv.handlePunchHoleRequestTCP(punch, initiatorAddr)
+			case "relay over UDP":
+				srv.handleRequestRelay(relay, initiatorAddr)
+				answer = readUDPRendezvous(t, initiator)
+			case "relay over TCP":
+				answer = srv.handleRequestRelayTCP(relay, initiatorAddr, peer.ConnTCP)
+			}
+			got := answer.GetPunchHoleResponse().GetOtherFailure()
+			if answer.GetRelayResponse() != nil {
+				got = answer.GetRelayResponse().GetRefuseReason()
+			}
+			if got != refusal {
+				t.Fatalf("answer %v, want the refusal %q", answer, refusal)
+			}
+			if len(answer.GetPunchHoleResponse().GetSocketAddr()) > 0 {
+				t.Fatal("a refused punch carries an address")
+			}
+			expectNothingAt(t, recv)
+		})
 	}
 }

@@ -1077,8 +1077,14 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		s.sendUDP(s.punchHoleUnauthorizedResponse(), raddr)
 		return
 	}
+	policy := s.sessionPolicy(msg.GetToken(), raddr, false, msg.GetConnType())
+	if policy.refusal != "" {
+		s.refuseForFeature(raddr, initiatorID, targetID, policy)
+		s.sendUDP(featureRefusedPunchResponse(policy.refusal), raddr)
+		return
+	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole")
-	permissions := s.sessionPermissions(msg.GetToken(), raddr, false)
+	permissions := policy.permissions
 
 	target := s.peers.Get(targetID)
 
@@ -1300,8 +1306,13 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 	if !ok {
 		return s.punchHoleUnauthorizedResponse()
 	}
+	policy := s.sessionPolicy(msg.GetToken(), raddr, panel, msg.GetConnType())
+	if policy.refusal != "" {
+		s.refuseForFeature(raddr, initiatorID, targetID, policy)
+		return featureRefusedPunchResponse(policy.refusal)
+	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole")
-	permissions := s.sessionPermissions(msg.GetToken(), raddr, panel)
+	permissions := policy.permissions
 
 	target := s.peers.Get(targetID)
 	if target == nil || target.IsExpired(config.RegTimeout) {
@@ -1682,8 +1693,14 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		s.sendUDP(s.relayUnauthorizedResponse(relayServer), raddr)
 		return
 	}
+	policy := s.sessionPolicy(msg.GetToken(), raddr, false, msg.GetConnType())
+	if policy.refusal != "" {
+		s.refuseForFeature(raddr, initiatorID, targetID, policy)
+		s.sendUDP(relayRefusedResponse(policy.refusal, relayServer), raddr)
+		return
+	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "request_relay")
-	permissions := s.sessionPermissions(msg.GetToken(), raddr, false)
+	permissions := policy.permissions
 
 	target := s.peers.Get(targetID)
 
@@ -1836,8 +1853,13 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 	if !ok {
 		return s.relayUnauthorizedResponse(relayServer)
 	}
+	policy := s.sessionPolicy(msg.GetToken(), raddr, panel, msg.GetConnType())
+	if policy.refusal != "" {
+		s.refuseForFeature(raddr, initiatorID, targetID, policy)
+		return relayRefusedResponse(policy.refusal, relayServer)
+	}
 	s.logAuthorizedInitiator(raddr, initiatorID, targetID, msg.GetToken(), "request_relay")
-	permissions := s.sessionPermissions(msg.GetToken(), raddr, panel)
+	permissions := policy.permissions
 
 	target := s.peers.Get(targetID)
 
