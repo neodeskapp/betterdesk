@@ -1850,7 +1850,7 @@
     "username_change_warning": "Das Ändern des Benutzernamens aktualisiert auch das Adressbuch und Gruppenzuweisungen und meldet den Benutzer überall ab.",
     "password": "Passwort",
     "password_placeholder": "Passwort eingeben",
-    "password_hint": "Mindestens 8 Zeichen. Mischen Sie Groß- und Kleinbuchstaben, Ziffern und Sonderzeichen.",
+    "password_hint": "Mindestens 8 Zeichen.",
     "password_leave_empty": "Leer lassen, um das aktuelle Passwort zu behalten.",
     "role": "Rolle",
     "role_admin": "Administrator",

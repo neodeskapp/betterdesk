@@ -183,19 +183,6 @@ func unescapeLikeJS(s string) string {
 	return b.String()
 }
 
-// utf16Length is a string's length in JavaScript: UTF-16 code units.
-func utf16Length(s string) int {
-	n := 0
-	for _, r := range s {
-		if r > 0xFFFF {
-			n += 2
-		} else {
-			n++
-		}
-	}
-	return n
-}
-
 // parseIntPrefix is parseInt(s, 10): ok is false where it gives NaN.
 func parseIntPrefix(s string) (int64, bool) {
 	s = strings.TrimLeftFunc(s, jsbind.IsSpace)

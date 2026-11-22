@@ -77,6 +77,8 @@ const (
 	cannotDemoteSelf = `{"success":false,"error":"You cannot demote yourself"}`
 	invalidEmail     = `{"success":false,"error":"Enter a valid email address."}`
 	emailTooLong     = `{"success":false,"error":"An email address has at most 200 characters."}`
+	// The recordings' language file has no text for the key
+	passwordTooShort = `{"success":false,"error":"users.password_too_short"}`
 )
 
 // fixFor is the fix of a step: the one for the recording's shape
@@ -203,7 +205,7 @@ var fixes = map[string]fix{
 	}},
 	// Node wrote the role before the weak password, the folders before the
 	// unknown strategy, the user groups before the invalid email
-	"366 PATCH /api/users/13": {bug: "US4", node: func(n *nodeWrites) { n.exec(`UPDATE users SET role = 'viewer' WHERE id = 13`) }},
+	"366 PATCH /api/users/13": {bug: "US4, L94", answer: is(passwordTooShort), node: func(n *nodeWrites) { n.exec(`UPDATE users SET role = 'viewer' WHERE id = 13`) }},
 	"378 PATCH /api/users/13": {bug: "US4", node: func(n *nodeWrites) {
 		if _, err := n.p.world.Server.Deps().Access.SyncUserFolderAccess(context.Background(), "target_op", []any{1.0}); err != nil {
 			n.p.t.Fatal(err)
@@ -248,6 +250,33 @@ var fixes = map[string]fix{
 	"postgres: 315 POST /api/users":    {bug: "C4", status: http.StatusOK, answer: newViewer("94", "limit_after_reset"), node: uncreated("limit_after_reset")},
 	"postgres-go: 315 POST /api/users": {bug: "C4", status: http.StatusOK, answer: newViewer(`"94"`, "limit_after_reset"), node: uncreated("limit_after_reset")},
 	"325 POST /api/users":              {bug: "C4", status: http.StatusBadRequest, answer: is(`{"success":false,"error":"Please fill in all required fields"}`)},
+
+	// One password rule: at least 8 characters of text, no strength score.
+	// Node refused weak passwords with their feedback and failed with 500
+	// on some that are no text; the Go console refuses every one under 8
+	// characters or no text as too short, and takes 8 lower-case letters,
+	// whose account is taken back so the next one gets Node's id.
+	"211 POST /api/users":              {bug: "L94", answer: is(passwordTooShort)},
+	"sqlite: 212 POST /api/users":      {bug: "L94", status: http.StatusOK, answer: newViewer("33", "weak_lower"), node: uncreated("weak_lower")},
+	"sqlite-go: 212 POST /api/users":   {bug: "L94", status: http.StatusOK, answer: newViewer("33", "weak_lower"), node: uncreated("weak_lower")},
+	"postgres: 212 POST /api/users":    {bug: "L94", status: http.StatusOK, answer: newViewer("34", "weak_lower"), node: uncreated("weak_lower")},
+	"postgres-go: 212 POST /api/users": {bug: "L94", status: http.StatusOK, answer: newViewer(`"34"`, "weak_lower"), node: uncreated("weak_lower")},
+	"215 POST /api/users":              {bug: "L94", answer: is(passwordTooShort)},
+	"216 POST /api/users":              {bug: "L94", answer: is(passwordTooShort)},
+	"217 POST /api/users":              {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
+	"218 POST /api/users":              {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
+	"219 POST /api/users":              {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
+	"220 POST /api/users":              {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
+	"221 POST /api/users":              {bug: "L94", answer: is(passwordTooShort)},
+	"297 POST /api/users":              {bug: "L94", answer: is(passwordTooShort)},
+	// The password is checked before the role
+	"298 POST /api/users":                   {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
+	"367 PATCH /api/users/13":               {bug: "L94", answer: is(passwordTooShort)},
+	"368 PATCH /api/users/13":               {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
+	"442 POST /api/users/14/reset-password": {bug: "L94", answer: is(passwordTooShort)},
+	"443 POST /api/users/14/reset-password": {bug: "L94", answer: is(passwordTooShort)},
+	"444 POST /api/users/14/reset-password": {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
+	"445 POST /api/users/14/reset-password": {bug: "L94", status: http.StatusBadRequest, answer: is(passwordTooShort)},
 }
 
 // newViewer is the answer to a new account with a username and a password

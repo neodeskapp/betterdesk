@@ -309,6 +309,10 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"username and password are required"}`, http.StatusBadRequest)
 		return
 	}
+	if err := auth.CheckNewPassword(body.Password); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
 	if body.Role == "" {
 		body.Role = db.OrgRoleUser
 	}
@@ -424,6 +428,12 @@ func (s *Server) handleUpdateOrgUser(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
 		return
+	}
+	if body.Password != nil && *body.Password != "" {
+		if err := auth.CheckNewPassword(*body.Password); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
 	}
 
 	if body.DisplayName != nil {

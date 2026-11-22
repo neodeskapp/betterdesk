@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
@@ -185,7 +186,8 @@ func (s *Service) waitForDockerBootstrapAdmin(ctx context.Context) (bool, error)
 //
 // The name is Settings.DefaultAdminUsername. The password is
 // Settings.DefaultAdminPassword, else the one in a .admin_credentials
-// file.
+// file. A password the password rule refuses (auth.CheckNewPassword) is
+// not used: the log says so, and it counts as no password known.
 //
 // When there are users it creates nothing. If the password is known and
 // an account of that name exists, its hash is overwritten only when an
@@ -224,6 +226,7 @@ func (s *Service) EnsureDefaultAdmin(ctx context.Context) (created bool, err err
 		return false, s.reviewExistingAdmin(ctx, username, password, force)
 	}
 
+	password = s.keepingRule(password)
 	known := password != ""
 	// credentialsPath is where a made-up password was written.
 	var credentialsPath string
@@ -233,7 +236,7 @@ func (s *Service) EnsureDefaultAdmin(ctx context.Context) (created bool, err err
 			if err := s.sleep(ctx, delay); err != nil {
 				return false, err
 			}
-			if password = s.ReadAdminCredentialsFile(); password != "" {
+			if password = s.keepingRule(s.ReadAdminCredentialsFile()); password != "" {
 				s.log.Info(fmt.Sprintf("[AUTH] Found admin password from Go server on retry %d", i+1))
 				known = true
 				break
@@ -298,6 +301,9 @@ func (s *Service) reviewExistingAdmin(ctx context.Context, username, password st
 		return err
 	}
 	if force {
+		if s.keepingRule(password) == "" {
+			return nil
+		}
 		s.log.Info("[AUTH] Force password update requested — updating admin password")
 		hash, err := s.HashPassword(ctx, password)
 		if err != nil {
@@ -318,6 +324,20 @@ func (s *Service) reviewExistingAdmin(ctx context.Context, username, password st
 	}
 	s.log.Info(fmt.Sprintf("[AUTH] Default admin account exists (%s) — password unchanged", hashType))
 	return nil
+}
+
+// keepingRule is password when it keeps the password rule
+// (auth.CheckNewPassword), else "" with an error in the log, so the admin
+// account never gets a configured password that the rule refuses.
+func (s *Service) keepingRule(password string) string {
+	if password == "" {
+		return ""
+	}
+	if err := auth.CheckNewPassword(password); err != nil {
+		s.log.Error("[AUTH] The configured admin password is not used: " + err.Error())
+		return ""
+	}
+	return password
 }
 
 // writeCredentials writes the made-up password where the user and the

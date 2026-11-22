@@ -1850,7 +1850,7 @@
     "username_change_warning": "사용자 이름을 변경하면 주소록과 그룹 할당도 업데이트되고 모든 곳에서 로그아웃됩니다.",
     "password": "비밀번호",
     "password_placeholder": "비밀번호를 입력하세요",
-    "password_hint": "대소문자, 숫자, 기호를 혼합하여 최소 8자 이상",
+    "password_hint": "최소 8자 이상",
     "password_leave_empty": "현재 상태를 유지하려면 비워 두세요.",
     "role": "역할",
     "role_admin": "관리자",

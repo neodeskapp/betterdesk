@@ -1856,7 +1856,7 @@
     "username_change_warning": "Endring av brukernavnet oppdaterer også adresseboken og gruppetilordninger, og logger brukeren ut overalt.",
     "password": "Passord",
     "password_placeholder": "Skriv inn passord",
-    "password_hint": "Minimum 8 tegn med blandet store og små bokstaver, tall og symboler",
+    "password_hint": "Minimum 8 tegn",
     "password_leave_empty": "La stå tomt for å holde deg oppdatert",
     "role": "Rolle",
     "role_admin": "Administrator",

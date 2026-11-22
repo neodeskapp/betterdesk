@@ -347,7 +347,7 @@ func main() {
 		if adminUser == "" {
 			adminUser = "admin"
 		}
-		adminPass := cfg.InitAdminPass
+		adminPass := initialAdminPassword(cfg.InitAdminPass)
 		adminPasswordGenerated := false
 		adminPasswordFromFile := false
 		if adminPass == "" {
@@ -732,6 +732,21 @@ func openBlocklist(file string, database db.Database) (*security.Blocklist, erro
 		return nil, err
 	}
 	return blocklist, nil
+}
+
+// initialAdminPassword is the password the first account gets from
+// INIT_ADMIN_PASS: the given one when it keeps the password rule
+// (auth.CheckNewPassword), else "" with an error line, and the account
+// gets a made-up password as when none is given.
+func initialAdminPassword(given string) string {
+	if given == "" {
+		return ""
+	}
+	if err := auth.CheckNewPassword(given); err != nil {
+		log.Printf("ERROR: INIT_ADMIN_PASS is not used (%v); the first account gets a made-up password", err)
+		return ""
+	}
+	return given
 }
 
 // runAvailabilityHistoryCleanup deletes expired peer_availability_events when

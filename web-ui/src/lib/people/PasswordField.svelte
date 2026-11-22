@@ -1,8 +1,8 @@
 <!--
   A new password: the field, a Show toggle (aria-pressed, the name stays
   "Show password" so it matches its word), a line that says how
-  strong the password is while it is typed (the server refuses weak ones),
-  and the hint. Used by the user sheet and the reset password dialog.
+  strong the password is while it is typed (the server asks only for 8
+  characters), and the hint. Used by the user sheet and the reset password dialog.
 -->
 <script lang="ts">
 	import { t } from '#lib/i18n/i18n.svelte.ts';
@@ -26,9 +26,7 @@
 
 	const strength = $derived.by(() => {
 		if (!value) return '';
-		const level = passwordStrength(value);
-		const line = t('users.strength_line', { strength: t(`users.strength_${level}`) });
-		return level === 'weak' ? `${line} ${t('users.password_weak_hint')}` : line;
+		return t('users.strength_line', { strength: t(`users.strength_${passwordStrength(value)}`) });
 	});
 </script>
 

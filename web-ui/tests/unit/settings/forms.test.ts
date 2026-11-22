@@ -89,15 +89,12 @@ describe('General', () => {
 });
 
 describe('Sign-in', () => {
-	test('password rules tick off one by one', () => {
-		const met = (pw: string) =>
-			passwordRules(pw)
-				.filter((r) => r.met)
-				.map((r) => r.id);
-		expect(met('')).toEqual([]);
-		expect(met('abc')).toEqual(['lowercase']);
-		expect(met('Abcdefg1')).toEqual(['length', 'uppercase', 'lowercase', 'number']);
-		expect(met('ABCDEFGH')).toEqual(['length', 'uppercase']);
+	test("the password rule is the server's: at least 8 characters, nothing else (L94)", () => {
+		const rules = (pw: string) => passwordRules(pw).map((r) => [r.id, r.met]);
+		expect(rules('')).toEqual([['length', false]]);
+		expect(rules('sixsix7')).toEqual([['length', false]]);
+		expect(rules('alllower')).toEqual([['length', true]]);
+		expect(rules('12345678')).toEqual([['length', true]]);
 	});
 
 	test('the SSO redirect must end in a callback path', () => {

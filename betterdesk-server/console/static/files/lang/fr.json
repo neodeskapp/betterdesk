@@ -1872,7 +1872,7 @@
     "username_change_warning": "Modifier le nom d'utilisateur met aussi à jour le carnet d'adresses et les affectations de groupes, et déconnecte l'utilisateur partout.",
     "password": "Mot de passe",
     "password_placeholder": "Entrez le mot de passe",
-    "password_hint": "Minimum 8 caractères avec majuscules, minuscules, chiffres et symboles",
+    "password_hint": "Minimum 8 caractères",
     "password_leave_empty": "Laisser vide pour conserver l'actuel",
     "role": "Rôle",
     "role_admin": "Administrateur",

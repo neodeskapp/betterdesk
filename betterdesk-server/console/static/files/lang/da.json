@@ -1856,7 +1856,7 @@
     "username_change_warning": "Ændring af brugernavnet opdaterer også adressebogen, gruppetildelinger og logger brugeren ud overalt.",
     "password": "Adgangskode",
     "password_placeholder": "Indtast adgangskode",
-    "password_hint": "Minimum 8 tegn med blandet store og små bogstaver, tal og symboler",
+    "password_hint": "Minimum 8 tegn",
     "password_leave_empty": "Lad være tom for at holde dig opdateret",
     "role": "Rolle",
     "role_admin": "Administrator",

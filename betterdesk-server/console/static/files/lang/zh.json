@@ -1850,7 +1850,7 @@
     "username_change_warning": "更改用户名还会更新通讯录和分组分配，并在所有设备上退出登录。",
     "password": "密码",
     "password_placeholder": "请输入密码",
-    "password_hint": "至少 8 个字符，包含大小写字母、数字和符号",
+    "password_hint": "至少 8 个字符",
     "password_leave_empty": "留空保持不变",
     "role": "角色",
     "role_admin": "管理员",

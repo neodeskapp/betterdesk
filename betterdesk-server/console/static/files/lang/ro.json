@@ -1856,7 +1856,7 @@
     "username_change_warning": "Schimbarea numelui de utilizator actualizează și agenda și atribuirile de grup și deconectează utilizatorul peste tot.",
     "password": "Parolă",
     "password_placeholder": "Introduceți parola",
-    "password_hint": "Minim 8 caractere cu majuscule, numere și simboluri mixte",
+    "password_hint": "Minim 8 caractere",
     "password_leave_empty": "Lăsați gol pentru a menține curent",
     "role": "Rol",
     "role_admin": "Administrator",

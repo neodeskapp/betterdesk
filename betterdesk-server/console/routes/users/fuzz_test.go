@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 )
@@ -27,9 +26,9 @@ func bodyMember(value string, fn func(v jsbind.Value)) bool {
 }
 
 // FuzzRequestValues reads every kind of JSON value the way the account
-// routes read the members of a body: as user group guids, as an email
-// address and as a password. Nothing may panic, and what comes out keeps
-// the rules the routes rely on.
+// routes read the members of a body: as user group guids and as an email
+// address. Nothing may panic, and what comes out keeps the rules the
+// routes rely on.
 func FuzzRequestValues(f *testing.F) {
 	for _, seed := range []string{
 		`"ug-alpha, ug-beta,,ug-alpha"`, `["a", " b ", null, 0, false, ["c"], {"guid": "x"}]`, `{"toString": 1}`,
@@ -69,22 +68,6 @@ func FuzzRequestValues(f *testing.F) {
 				}
 			case !v.IsUndefined() && !v.IsNull():
 				t.Fatalf("no email for %s", value)
-			}
-
-			rating, err := strength(v)
-			if err != nil {
-				if err != errNotPrimitive {
-					t.Fatalf("strength: %v", err)
-				}
-				return
-			}
-			if rating.Score < 0 || rating.Score > 6 || rating.Feedback == nil {
-				t.Fatalf("rating %+v", rating)
-			}
-			if v.IsString() {
-				if want := authn.ValidatePasswordStrength(v.Str()); want.Strength != rating.Strength || want.Score != rating.Score {
-					t.Fatalf("text rated %+v, authn %+v", rating, want)
-				}
 			}
 		})
 	})

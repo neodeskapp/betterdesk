@@ -1850,7 +1850,7 @@
     "username_change_warning": "Het wijzigen van de gebruikersnaam werkt ook het adresboek en de groepsindelingen bij en meldt de gebruiker overal af.",
     "password": "Wachtwoord",
     "password_placeholder": "Voer wachtwoord in",
-    "password_hint": "Minimaal 8 tekens met hoofdletters, kleine letters, cijfers en symbolen",
+    "password_hint": "Minimaal 8 tekens",
     "password_leave_empty": "Leeg laten om huidig te behouden",
     "role": "Rol",
     "role_admin": "Beheerder",

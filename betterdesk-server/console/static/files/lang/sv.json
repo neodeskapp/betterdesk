@@ -1856,7 +1856,7 @@
     "username_change_warning": "Att ändra användarnamnet uppdaterar även adressboken och grupptilldelningar och loggar ut användaren överallt.",
     "password": "Lösenord",
     "password_placeholder": "Ange lösenord",
-    "password_hint": "Minst 8 tecken med blandade versaler, siffror och symboler",
+    "password_hint": "Minst 8 tecken",
     "password_leave_empty": "Lämna tomt för att hålla dig uppdaterad",
     "role": "Roll",
     "role_admin": "Administratör",

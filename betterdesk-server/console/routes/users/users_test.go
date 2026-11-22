@@ -449,7 +449,8 @@ func TestRefusedChangesWriteNothing(t *testing.T) {
 			{"PATCH", "/api/users/5", `{"role":"viewer","password":"Strong-Pass-1!","groupGuids":["g1"],"folderIds":[1],"email":"bad"}`, 400, invalidEmail},
 			{"PATCH", "/api/users/5", `{"groupGuids":["g1"],"email":"` + long + `"}`, 400, emailTooLong},
 			{"PATCH", "/api/users/5", `{"role":"viewer","folderIds":[1],"strategyGuid":"missing"}`, 500, serverError},
-			{"PATCH", "/api/users/5", `{"role":"viewer","password":["Abcdefgh1!"]}`, 500, serverError},
+			// A password that is no text breaks the password rule (L94)
+			{"PATCH", "/api/users/5", `{"role":"viewer","password":["Abcdefgh1!"]}`, 400, `{"success":false,"error":"users.password_too_short"}`},
 			{"PATCH", "/api/users/5", `{"username":"renamed_op","role":"nonsense"}`, 400, `{"success":false,"error":"Invalid role"}`},
 			// A taken name is refused before the other checks, as when the
 			// rename came first

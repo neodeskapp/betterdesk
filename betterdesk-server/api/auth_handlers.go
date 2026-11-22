@@ -751,6 +751,10 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Username and password required"})
 		return
 	}
+	if err := auth.CheckNewPassword(body.Password); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
 	if body.Role == "" {
 		body.Role = auth.RoleViewer
 	}
@@ -878,6 +882,10 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 		if provider != db.AuthProviderLocal {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Cannot set a local password on an LDAP/OIDC account"})
+			return
+		}
+		if err := auth.CheckNewPassword(body.Password); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
 		hash, err := auth.HashPassword(body.Password)

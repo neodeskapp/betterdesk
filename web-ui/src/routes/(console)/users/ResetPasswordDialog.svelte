@@ -1,6 +1,6 @@
 <!--
   Set a new password for a local account (one field, so a centred dialog).
-  The same rules as the server: at least 8 characters and not weak.
+  The same rule as the server: at least 8 characters.
 -->
 <script lang="ts">
 	import { resetUserPassword, type ConsoleUser } from '#lib/api/users.ts';

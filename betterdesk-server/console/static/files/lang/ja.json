@@ -1850,7 +1850,7 @@
     "username_change_warning": "ユーザー名を変更すると、アドレス帳とグループ割り当ても更新され、すべての場所でサインアウトされます。",
     "password": "パスワード",
     "password_placeholder": "パスワードを入力してください",
-    "password_hint": "大文字と小文字を混合した少なくとも 8 文字、数字、記号",
+    "password_hint": "少なくとも 8 文字",
     "password_leave_empty": "最新の状態を維持するには空のままにしておきます",
     "role": "ロール",
     "role_admin": "管理者",

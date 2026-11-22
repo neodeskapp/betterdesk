@@ -1868,7 +1868,7 @@
     "username_change_warning": "Zmiana nazwy użytkownika aktualizuje także książkę adresową i przypisania grup oraz wylogowuje użytkownika wszędzie.",
     "password": "Hasło",
     "password_placeholder": "Wprowadź hasło",
-    "password_hint": "Minimum 8 znaków z dużymi literami, cyframi i symbolami",
+    "password_hint": "Minimum 8 znaków",
     "password_leave_empty": "Zostaw puste, aby zachować obecne",
     "role": "Rola",
     "role_admin": "Administrator",

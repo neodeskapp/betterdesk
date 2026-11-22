@@ -1850,7 +1850,7 @@
     "username_change_warning": "Alterar o nome de utilizador também atualiza a agenda de endereços e as atribuições de grupos, e termina a sessão em todo o lado.",
     "password": "Palavra-passe",
     "password_placeholder": "Insira a palavra-passe",
-    "password_hint": "Mínimo 8 caracteres com maiúsculas, minúsculas, números e símbolos",
+    "password_hint": "Mínimo 8 caracteres",
     "password_leave_empty": "Deixe vazio para manter a atual",
     "role": "Função",
     "role_admin": "Administrador",

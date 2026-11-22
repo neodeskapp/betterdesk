@@ -263,3 +263,13 @@ func TestBlocklistOfTheStartHoldsTheStoredBans(t *testing.T) {
 		t.Fatal("the stored ban is not in the blocklist of the start")
 	}
 }
+
+// TestInitialAdminPasswordKeepsThePasswordRule: an INIT_ADMIN_PASS under
+// 8 characters is not given to the first account (L94).
+func TestInitialAdminPasswordKeepsThePasswordRule(t *testing.T) {
+	for given, want := range map[string]string{"": "", "sixsix7": "", "alllower": "alllower", "Long-Pass-1": "Long-Pass-1"} {
+		if got := initialAdminPassword(given); got != want {
+			t.Errorf("initialAdminPassword(%q) = %q, want %q", given, got, want)
+		}
+	}
+}

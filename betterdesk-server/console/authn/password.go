@@ -106,82 +106,6 @@ func (s *Service) VerifyPassword(ctx context.Context, password, hash string) (bo
 	return bcryptCompare(ctx, password, hash)
 }
 
-// PasswordStrength is the rating of a new password.
-type PasswordStrength struct {
-	// Score is 0 to 6: one point each for 8 characters, 12 characters, a
-	// lower-case letter, an upper-case letter, a digit and any other
-	// character.
-	Score int `json:"score"`
-	// Feedback names what is missing, in English.
-	Feedback []string `json:"feedback"`
-	// Strength is "weak" up to 2 points, "medium" up to 4, else "strong".
-	Strength string `json:"strength"`
-	// length is the password's length in UTF-16 units.
-	length int
-}
-
-// TooShort reports whether the password is shorter than MinPasswordLength,
-// which no new password may be, whatever its strength.
-func (p PasswordStrength) TooShort() bool { return p.length < MinPasswordLength }
-
-// TooLong reports whether the password is longer than MaxPasswordLength,
-// which the sign-in refuses.
-func (p PasswordStrength) TooLong() bool { return p.length > MaxPasswordLength }
-
-// ValidatePasswordStrength rates a password. Letters and digits are the
-// ASCII ones; every other character counts as a special character. The
-// length is counted in UTF-16 units.
-func ValidatePasswordStrength(password string) PasswordStrength {
-	password = toWellFormed(password)
-	length := utf16Len(password)
-	result := PasswordStrength{Feedback: []string{}, length: length}
-	var lower, upper, digit, other bool
-	for i := 0; i < len(password); i++ {
-		switch c := password[i]; {
-		case c >= 'a' && c <= 'z':
-			lower = true
-		case c >= 'A' && c <= 'Z':
-			upper = true
-		case c >= '0' && c <= '9':
-			digit = true
-		default:
-			other = true
-		}
-	}
-	if length >= 8 {
-		result.Score++
-	} else {
-		result.Feedback = append(result.Feedback, "Use at least 8 characters")
-	}
-	if length >= 12 {
-		result.Score++
-	}
-	for _, rule := range []struct {
-		met  bool
-		hint string
-	}{
-		{lower, "Add lowercase letters"},
-		{upper, "Add uppercase letters"},
-		{digit, "Add numbers"},
-		{other, "Add special characters"},
-	} {
-		if rule.met {
-			result.Score++
-		} else {
-			result.Feedback = append(result.Feedback, rule.hint)
-		}
-	}
-	switch {
-	case result.Score <= 2:
-		result.Strength = "weak"
-	case result.Score <= 4:
-		result.Strength = "medium"
-	default:
-		result.Strength = "strong"
-	}
-	return result
-}
-
 // Refusal is an answer of the service that is not a fault of the server:
 // its text is what the route sends as "error".
 type Refusal string
@@ -198,18 +122,19 @@ const (
 	ErrInvalidTOTPCode  Refusal = "Invalid verification code"
 )
 
-// MinPasswordLength is the shortest new password, in UTF-16 units, as the
-// web app's forms ask for it.
-const MinPasswordLength = 8
+// MinPasswordLength is the shortest new password, in UTF-16 units: the
+// password rule of every path (auth.CheckNewPassword).
+const MinPasswordLength = auth.MinPasswordLength
 
 // MaxPasswordLength is the longest password, in UTF-16 units, that the
 // sign-in takes.
-const MaxPasswordLength = 128
+const MaxPasswordLength = auth.MaxPasswordLength
 
 // ChangePassword replaces the password of an account after checking the
-// current one. The new password must have 8 to 128 UTF-16 units; nothing
-// else about it is checked. It returns ErrUserNotFound, ErrWrongPassword,
-// ErrPasswordTooShort or ErrPasswordTooLong when it refuses.
+// current one. The new password must keep the password rule
+// (auth.CheckNewPassword); nothing else about it is checked. It returns
+// ErrUserNotFound, ErrWrongPassword, ErrPasswordTooShort or
+// ErrPasswordTooLong when it refuses.
 func (s *Service) ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error {
 	user, err := getUserByID(ctx, s.db, userID)
 	if err != nil {
@@ -225,10 +150,10 @@ func (s *Service) ChangePassword(ctx context.Context, userID int64, currentPassw
 	if !valid {
 		return ErrWrongPassword
 	}
-	switch length := utf16Len(toWellFormed(newPassword)); {
-	case length < MinPasswordLength:
+	switch auth.CheckNewPassword(newPassword) {
+	case auth.ErrPasswordTooShort:
 		return ErrPasswordTooShort
-	case length > MaxPasswordLength:
+	case auth.ErrPasswordTooLong:
 		return ErrPasswordTooLong
 	}
 	hash, err := s.HashPassword(ctx, newPassword)

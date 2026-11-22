@@ -27,13 +27,13 @@ beforeAll(() => {
 });
 
 describe('PasswordField', () => {
-	test('says how strong the password is while it is typed, and nothing when empty', async () => {
+	test('says how strong the password is while it is typed, and nothing when empty; a weak one is not called unsaveable (L94)', async () => {
 		render(PasswordField, { label: 'Password', hint: 'At least 8 characters', value: '' });
 		const input = screen.getByLabelText('Password');
 		const line = document.querySelector('.strength') as HTMLElement;
 		expect(line.textContent).toBe('');
 		await userEvent.type(input, 'abcdefgh');
-		expect(line.textContent).toBe('Strength: weak. Use a longer password.');
+		expect(line.textContent).toBe('Strength: weak.');
 		await userEvent.clear(input);
 		await userEvent.type(input, 'Correct-Horse-9');
 		expect(line.textContent).toBe('Strength: strong.');

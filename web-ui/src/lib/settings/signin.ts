@@ -6,17 +6,13 @@
  */
 
 export interface PasswordRule {
-	id: 'length' | 'uppercase' | 'lowercase' | 'number';
+	id: 'length';
 	met: boolean;
 }
 
+/** The server's password rule: at least 8 characters, nothing else */
 export function passwordRules(password: string): PasswordRule[] {
-	return [
-		{ id: 'length', met: password.length >= 8 },
-		{ id: 'uppercase', met: /[A-Z]/.test(password) },
-		{ id: 'lowercase', met: /[a-z]/.test(password) },
-		{ id: 'number', met: /[0-9]/.test(password) }
-	];
+	return [{ id: 'length', met: password.length >= 8 }];
 }
 
 const str = (v: unknown, fallback = ''): string =>

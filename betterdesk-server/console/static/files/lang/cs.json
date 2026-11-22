@@ -1850,7 +1850,7 @@
     "username_change_warning": "Změna uživatelského jména aktualizuje také adresář, přiřazení skupin a odhlásí uživatele ze všech zařízení.",
     "password": "Heslo",
     "password_placeholder": "Zadejte heslo",
-    "password_hint": "Minimálně 8 znaků, s malými a velkými písmeny, čísly a symboly",
+    "password_hint": "Minimálně 8 znaků",
     "password_leave_empty": "Nechte prázdné pro zachování stávajícího",
     "role": "Role",
     "role_admin": "Administrátor",

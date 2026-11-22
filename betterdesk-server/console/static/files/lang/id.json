@@ -1856,7 +1856,7 @@
     "username_change_warning": "Mengubah nama pengguna juga memperbarui buku alamat dan penetapan grup, serta mengeluarkan pengguna dari semua sesi.",
     "password": "Kata sandi",
     "password_placeholder": "Masukkan kata sandi",
-    "password_hint": "Minimal 8 karakter dengan campuran huruf besar-kecil, angka dan simbol",
+    "password_hint": "Minimal 8 karakter",
     "password_leave_empty": "Biarkan kosong agar tetap terkini",
     "role": "Peran",
     "role_admin": "Administrator",

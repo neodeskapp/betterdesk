@@ -1856,7 +1856,7 @@
     "username_change_warning": "Kullanıcı adını değiştirmek adres defterini ve grup atamalarını da günceller ve kullanıcıyı her yerden çıkış yaptırır.",
     "password": "Şifre",
     "password_placeholder": "Şifreyi girin",
-    "password_hint": "Karışık harf, sayı ve simgelerden oluşan minimum 8 karakter",
+    "password_hint": "Minimum 8 karakter",
     "password_leave_empty": "Güncel tutmak için boş bırakın",
     "role": "Rol",
     "role_admin": "Yönetici",

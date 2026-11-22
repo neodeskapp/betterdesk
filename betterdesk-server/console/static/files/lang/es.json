@@ -1850,7 +1850,7 @@
     "username_change_warning": "Cambiar el nombre de usuario también actualiza la libreta de direcciones y las asignaciones de grupos, y cierra la sesión del usuario en todas partes.",
     "password": "Contraseña",
     "password_placeholder": "Introduzca la contraseña",
-    "password_hint": "Mínimo 8 caracteres con mayúsculas, minúsculas, números y símbolos",
+    "password_hint": "Mínimo 8 caracteres",
     "password_leave_empty": "Dejar vacío para mantener la actual",
     "role": "Rol",
     "role_admin": "Administrador",

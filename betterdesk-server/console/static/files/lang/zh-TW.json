@@ -1872,7 +1872,7 @@
     "username_change_warning": "變更使用者名稱也會更新通訊錄與群組指派，並在所有裝置上登出。",
     "password": "密碼",
     "password_placeholder": "請輸入密碼",
-    "password_hint": "至少 8 個字符，包含大小寫字母、數字和符號",
+    "password_hint": "至少 8 個字符",
     "password_leave_empty": "留空保持不變",
     "role": "角色",
     "role_admin": "管理員",

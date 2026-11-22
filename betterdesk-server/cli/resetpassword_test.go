@@ -315,17 +315,37 @@ func resetFix(c *resetCase, start serverStart) []string {
 
 // resetFixRun is the part of resetFix that changes how a run ends.
 func resetFixRun(c *resetCase, start serverStart) string {
-	// BN5: a password under 6 characters is refused before the database
+	// BN5, L94: a password that breaks the password rule (under 8
+	// characters, where the script took 6) is refused before the database
 	// is chosen or opened: nothing is printed about it and nothing made
-	if password, ok := resetPasswordOf(c.Argv); ok && utf16Length(password) < 6 {
-		c.Status, c.Stdout, c.Stderr = 1, "", "Password must be at least 6 characters\n"
+	if password, ok := resetPasswordOf(c.Argv); ok && auth.CheckNewPassword(password) != nil {
+		c.Status, c.Stdout, c.Stderr = 1, "", "Password must be at least 8 characters\n"
 		switch c.Setup {
 		case "none":
 			c.State = resetState{}
 		case "emptyfile":
 			c.State = resetState{Exists: true}
 		}
-		return "BN5"
+		// The rows stay as the setup made them (admin and operator1 with
+		// the old hash): an account Node created goes, one Node gave the
+		// password keeps the old hash
+		if c.State.Rows != nil {
+			rows := []resetRow{}
+			for _, row := range c.State.Rows {
+				if !row.Old {
+					if row.Username != "admin" && row.Username != "operator1" {
+						continue
+					}
+					row.Old, row.Verifies, row.Length = true, false, 60
+				}
+				rows = append(rows, row)
+			}
+			c.State.Rows = rows
+		}
+		if auth.PasswordLength(password) < 6 {
+			return "BN5"
+		}
+		return "L94"
 	}
 	// BN6: a database without a users table gets the one a server start
 	// makes, where the script made a table of its own
@@ -689,18 +709,18 @@ func TestResetPasswordUsesTheServersDatabase(t *testing.T) {
 	}
 }
 
-// A password that is too short is refused before anything is opened: the
-// folder stays empty (BN5).
+// A password that breaks the password rule (under 8 characters) is
+// refused before anything is opened: the folder stays empty (BN5, L94).
 func TestResetPasswordShortPasswordOpensNothing(t *testing.T) {
 	root := t.TempDir()
 	file := filepath.Join(root, "db_v2.sqlite3")
-	for _, password := range []string{"short", "abécd", "\U0001F600\U0001F600", ""} {
+	for _, password := range []string{"short", "abécd", "\U0001F600\U0001F600", "", "sixsix7", "a\U0001F600bcde"} {
 		var out, errOut bytes.Buffer
 		env := map[string]string{"DB_PATH": file, "CONSOLE_DIR": root}
 		e := Env{Stdin: strings.NewReader(password + "\n"), Stdout: &out, Stderr: &errOut, Getenv: func(k string) string { return env[k] }}
 		status := resetPassword([]string{"admin"}, e, resetOptions{random: rand.Reader, terminal: func(io.Reader) bool { return false },
 			exists: func(p string) bool { _, err := os.Stat(p); return err == nil }, cwd: root})
-		if status != 1 || out.String() != "" || errOut.String() != "Password must be at least 6 characters\n" {
+		if status != 1 || out.String() != "" || errOut.String() != "Password must be at least 8 characters\n" {
 			t.Errorf("%q: %d, stdout %q, stderr %q", password, status, out.String(), errOut.String())
 		}
 		entries, err := os.ReadDir(root)
