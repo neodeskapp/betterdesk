@@ -251,6 +251,22 @@ FAKE_MIGRATE
     [ "$(migrations)" = "-mode sqlite2pg -src $src -dst postgres://u@h/db" ] \
         || fail "sqlite2pg after a declined replace ran as: $(migrations)"
 
+    # L72: a move of the install's own database points .env at the new one
+    # and restarts the server
+    mkdir -p "$CONSOLE_PATH"
+    printf 'SESSION_SECRET=kept\nDB_TYPE=sqlite\nDATABASE_URL=\nDB_URL=%s\n' "$src" > "$CONSOLE_PATH/.env"
+    systemctl() { printf 'systemctl %s\n' "$*" >> "$calls"; }
+    run_menu 2 $'\npostgres://u@h/db\nn'
+    grep -qx 'DB_TYPE=postgres' "$CONSOLE_PATH/.env" && grep -qx 'DATABASE_URL=postgres://u@h/db' "$CONSOLE_PATH/.env" \
+        && grep -qx 'DB_URL=postgres://u@h/db' "$CONSOLE_PATH/.env" || fail "after the menu's move .env does not point at PostgreSQL: $(cat "$CONSOLE_PATH/.env")"
+    grep -qx 'SESSION_SECRET=kept' "$CONSOLE_PATH/.env" || fail "the menu's move lost a line of .env"
+    grep -q 'systemctl restart betterdesk-server' "$calls" || fail "the server was not restarted after the move"
+    run_menu 3 $'postgres://u@h/db\n\ny'
+    grep -qx 'DB_TYPE=sqlite' "$CONSOLE_PATH/.env" && grep -qxF "DB_URL=$src" "$CONSOLE_PATH/.env" \
+        || fail "after the menu's move back .env does not point at SQLite: $(cat "$CONSOLE_PATH/.env")"
+    rm -f "$CONSOLE_PATH/.env"
+    unset -f systemctl
+
     # pg2sqlite into the existing default file: agreed, then declined
     run_menu 3 $'postgres://u@h/db\n\ny'
     [[ "$(migrations)" == *"-mode pg2sqlite -src postgres://u@h/db -dst $src -overwrite"* ]] \
@@ -350,6 +366,14 @@ FAKE_MIGRATE
     [ "$(moves)" = "-mode sqlite2pg -src $src -dst $uri" ] \
         || fail "the switch after a declined replace ran as: $(moves)"
 
+    # L60: a declined move keeps the install on SQLite
+    run_switch 0 true false $'n'
+    [ -z "$(moves)" ] || fail "the switch moved the data although the move was declined: $(moves)"
+    [ "$USE_POSTGRESQL" = false ] && [ -z "$POSTGRESQL_URI" ] \
+        || fail "after a declined move the install still uses PostgreSQL ($USE_POSTGRESQL, $POSTGRESQL_URI)"
+    grep -qxF "DB_URL=$src" "$env" && grep -qx "DB_TYPE=sqlite" "$env" && grep -qx "DATABASE_URL=" "$env" \
+        || fail "after a declined move .env does not point at the SQLite file: $(cat "$env")"
+
     # a failed move leaves the install on SQLite
     run_switch 1 true true ""
     [ "$USE_POSTGRESQL" = false ] && [ -z "$POSTGRESQL_URI" ] \
@@ -358,9 +382,23 @@ FAKE_MIGRATE
         || fail "after a failed move .env does not point at the SQLite file: $(cat "$env")"
 )
 
+# L31: the one-line installer clones and downloads from the fork.
+test_install_sh_uses_the_fork() (
+    unset BETTERDESK_REPO BETTERDESK_RAW_BASE BETTERDESK_BRANCH
+    set --
+    # shellcheck disable=SC1091
+    source "$SCRIPT_ROOT/install.sh"
+    [ "$BETTERDESK_REPO" = trybetterdesk/betterdesk ] || fail "install.sh clones $BETTERDESK_REPO"
+    case "$BETTERDESK_RAW_BASE" in
+        https://raw.githubusercontent.com/trybetterdesk/betterdesk/*) ;;
+        *) fail "install.sh downloads from $BETTERDESK_RAW_BASE" ;;
+    esac
+)
+
 test_bounded_go_commands
 test_dirty_native_clone
 test_native_update_channel
 test_migration_menus
 test_postgresql_switch
+test_install_sh_uses_the_fork
 printf 'PASS: native installer regression tests\n'

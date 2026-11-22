@@ -51,7 +51,6 @@ function New-TestInstall {
     $script:RELAY_SERVERS = '203.0.113.7'
     $script:RELAY_MODE = 'auto'
     $script:USE_POSTGRESQL = $false
-    $script:FRESH_INSTALL = $false
     $script:RUN_AS_ROOT = $false
     $script:LOG_FILE = Join-Path $dir 'test.log'
     $env:CONNECTION_MODE_SET = '1'
@@ -189,6 +188,22 @@ function Test-MigrationMenusPassOverwrite {
     $runs = Invoke-TestMenu '2' @('', 'postgres://u@h/db', 'n')
     if ("$runs" -ne "-mode sqlite2pg -src $src -dst postgres://u@h/db") { Fail "sqlite2pg after a declined replace ran as: $runs" }
 
+    # L72: a move of the install's own database points .env at the new one
+    # and restarts the server
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'DB_TYPE=sqlite', 'DATABASE_URL=', "DB_URL=$src")
+    $script:restarted = $false
+    function script:Stop-ServerService { }
+    function script:Start-ServerService { $script:restarted = $true }
+    Invoke-TestMenu '2' @('', 'postgres://u@h/db', 'n') | Out-Null
+    if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'postgres' -or (Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne 'postgres://u@h/db' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne 'postgres://u@h/db') {
+        Fail "after the menu's move .env does not point at PostgreSQL: $(Get-Content $envFile)"
+    }
+    if (-not $script:restarted) { Fail 'the server was not started again after the move' }
+    Invoke-TestMenu '3' @('postgres://u@h/db', '', 'y') | Out-Null
+    if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'sqlite' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne $src) { Fail "after the menu's move back .env does not point at SQLite: $(Get-Content $envFile)" }
+    Remove-Item -Force $envFile
+
     $runs = Invoke-TestMenu '3' @('postgres://u@h/db', '', 'y')
     if ($runs -notcontains "-mode pg2sqlite -src postgres://u@h/db -dst $src -overwrite") { Fail "pg2sqlite after an agreed overwrite ran as: $runs" }
     $runs = Invoke-TestMenu '3' @('postgres://u@h/db', '', 'n')
@@ -253,6 +268,14 @@ function Test-PostgreSQLSwitchMovesTheWholeInstall {
     $runs = Invoke-Switch 0 $false @('y', 'n')
     if ("$runs" -ne "-mode sqlite2pg -src $src -dst $uri") { Fail "the switch after a declined replace ran as: $runs" }
 
+    # L60: a declined move keeps the install on SQLite
+    $runs = Invoke-Switch 0 $false @('n')
+    if ($runs.Count -ne 0) { Fail "the switch moved the data although the move was declined: $runs" }
+    if ($script:USE_POSTGRESQL -or $script:POSTGRESQL_URI) { Fail "after a declined move the install still uses PostgreSQL ($($script:USE_POSTGRESQL), $($script:POSTGRESQL_URI))" }
+    if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'sqlite' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne $src -or (Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne '') {
+        Fail "after a declined move .env does not point at the SQLite file: $(Get-Content $envFile)"
+    }
+
     $runs = Invoke-Switch 1 $true @()
     if ($script:USE_POSTGRESQL -or $script:POSTGRESQL_URI) { Fail "after a failed move the install still uses PostgreSQL ($($script:USE_POSTGRESQL), $($script:POSTGRESQL_URI))" }
     if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'sqlite' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne $src -or (Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne '') {
@@ -262,11 +285,370 @@ function Test-PostgreSQLSwitchMovesTheWholeInstall {
     Remove-Item -Recurse -Force $dir
 }
 
+# L31: releases come from the fork's repository. The defaults are set at
+# the script's top level, so those lines are run here as they are.
+function Test-ReleasesComeFromTheFork {
+    $saved = @{}
+    foreach ($k in 'UPDATE_GITHUB_OWNER', 'UPDATE_GITHUB_REPO', 'UPDATE_GITHUB_BRANCH', 'RELEASE_BASE_URL') {
+        $saved[$k] = [Environment]::GetEnvironmentVariable($k)
+        [Environment]::SetEnvironmentVariable($k, $null)
+    }
+    $defaults = $ast.FindAll({
+        $args[0] -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+        $args[0].Left.Extent.Text -like '$script:UPDATE_GITHUB_*'
+    }, $false)
+    if ($defaults.Count -lt 2) { Fail "the installer sets no repository for releases ($($defaults.Count) lines)" }
+    foreach ($a in $defaults) { . ([scriptblock]::Create($a.Extent.Text)) }
+    $base = Get-ReleaseBaseUrl
+    if ($base -ne 'https://github.com/trybetterdesk/betterdesk/releases/latest/download') { Fail "the stable channel downloads from $base" }
+    $script:UPDATE_GITHUB_BRANCH = 'dev'
+    $base = Get-ReleaseBaseUrl
+    if ($base -ne 'https://github.com/trybetterdesk/betterdesk/releases/download/dev') { Fail "the development channel downloads from $base" }
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    foreach ($k in $saved.Keys) { [Environment]::SetEnvironmentVariable($k, $saved[$k]) }
+}
+
+# A stand-in for betterdesk-server.exe: env merge writes a small .env (the
+# admin password only on a fresh one), upgrade-env changes nothing.
+function Use-FakeServerBinary {
+    function script:Get-ServerBinaryPath { 'fake-server' }
+    function script:Test-BinaryHasSubcommands { param($Path) $true }
+    function script:fake-server {
+        if ($args[0] -eq 'env' -and $args[1] -eq 'merge') {
+            $target = $args[3]
+            if ($args -contains '--fresh') {
+                Set-Content -Path $target -Value @("DEFAULT_ADMIN_PASSWORD=$env:BD_SUBST_DEFAULT_ADMIN_PASSWORD", 'DB_TYPE=sqlite')
+            }
+            Write-Output '{"success":true}'
+        }
+        $global:LASTEXITCODE = 0
+    }
+}
+
+# L65 and L36: a fresh install starts in Managed through .env, the first
+# default a mode saved in the console replaces. An update adds no mode,
+# and the service gets neither the mode nor ENROLLMENT_MODE_ENV_OVERRIDE,
+# which would put the installer's value over the console's.
+function Test-FreshInstallStartsManaged {
+    $dir = New-TestInstall
+    Use-FakeServerBinary
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    $env:ADMIN_PASSWORD = 'Fresh-Admin-Pass-1'
+    Merge-ConsoleEnv -FreshInstall $true *> $null
+    if ((Get-ConsoleEnvValue -Key 'ENROLLMENT_MODE') -ne 'managed') { Fail "a fresh .env does not start in Managed: $(Get-Content $envFile)" }
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'DB_TYPE=sqlite')
+    Merge-ConsoleEnv -FreshInstall $false *> $null
+    if (Get-ConsoleEnvValue -Key 'ENROLLMENT_MODE') { Fail 'an update added an enrollment mode to .env' }
+    $env:ADMIN_PASSWORD = $null
+
+    $script:fakeNssm = 'fake-nssm'
+    $script:nssmCalls = @()
+    Setup-Services | Out-Null
+    $script:fakeNssm = $null
+    $envCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppEnvironmentExtra' } | Select-Object -Last 1
+    if (-not $envCall) { Fail 'the NSSM service gets no environment' }
+    elseif (@($envCall | Where-Object { $_ -like 'ENROLLMENT_MODE*' }).Count -gt 0) { Fail "the service sets the enrollment mode: $($envCall -join ' ')" }
+    Remove-Item -Recurse -Force $dir
+}
+
+# L124: Windows does not create the PostgreSQL database, so an unattended
+# install takes the address it is given as it is, and without one it needs
+# the password of the existing database instead of making one up.
+function Test-PostgreSQLAddressIsKept {
+    $dir = New-TestInstall
+    $script:POSTGRESQL_USER, $script:POSTGRESQL_HOST, $script:POSTGRESQL_PORT, $script:POSTGRESQL_DB = 'betterdesk', 'localhost', '5432', 'betterdesk'
+    $script:USE_POSTGRESQL = $true
+    $script:POSTGRESQL_URI = 'postgres://bd:Given-Pass@db.example:5433/desk?sslmode=require'
+    $script:POSTGRESQL_PASS = ''
+    $ok = Setup-PostgreSQLDatabase 6> $null
+    if (-not $ok) { Fail 'the PostgreSQL set-up refused a given address' }
+    if ($script:POSTGRESQL_URI -ne 'postgres://bd:Given-Pass@db.example:5433/desk?sslmode=require') { Fail "the given address was replaced: $($script:POSTGRESQL_URI)" }
+
+    $script:POSTGRESQL_URI = ''
+    $ok = Setup-PostgreSQLDatabase 6> $null
+    if ($ok) { Fail "an unattended install without an address or password went on with $($script:POSTGRESQL_URI)" }
+
+    $script:POSTGRESQL_PASS = 'p@ss/word'
+    $ok = Setup-PostgreSQLDatabase 6> $null
+    if (-not $ok -or $script:POSTGRESQL_URI -ne 'postgres://betterdesk:p%40ss%2Fword@localhost:5432/betterdesk?sslmode=disable') { Fail "the address from the parts is $($script:POSTGRESQL_URI)" }
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    $script:POSTGRESQL_PASS = ''
+    Remove-Item -Recurse -Force $dir
+}
+
+# L74: the server's log, which it writes to standard error, goes to
+# logs\server.log, as a service and as a scheduled task; an update of the
+# task keeps one redirect.
+function Test-ServerLogFile {
+    $dir = New-TestInstall
+    $log = Join-Path $script:RUSTDESK_PATH 'logs\server.log'
+    $script:fakeNssm = 'fake-nssm'
+    $script:nssmCalls = @()
+    Setup-Services | Out-Null
+    $script:fakeNssm = $null
+    foreach ($stream in 'AppStdout', 'AppStderr') {
+        $call = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq $stream } | Select-Object -Last 1
+        if (-not $call -or $call[3] -ne $log) { Fail "the service's $stream goes to $($call[3]), not $log" }
+    }
+    $script:registeredTasks = @{}
+    Setup-Services | Out-Null
+    $launcher = Join-Path $script:RUSTDESK_PATH 'start-betterdesk-server.cmd'
+    $redirect = '>> "' + $log + '" 2>&1'
+    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*betterdesk-server.exe"*' })
+    if ($line.Count -ne 1 -or -not $line[0].EndsWith($redirect)) { Fail "the task's server line does not write $log`: $line" }
+    Update-ServerServiceDefinition | Out-Null
+    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*betterdesk-server.exe"*' })
+    if ($line.Count -ne 1 -or -not $line[0].EndsWith($redirect) -or ($line[0] -split '>>').Count -ne 2) { Fail "an update of the task changed the redirect: $line" }
+    Remove-Item -Recurse -Force $dir
+}
+
+# L68: the signal and relay ports live in .env, where the admin changes
+# them. The service does not set them, and an update moves the ports an
+# older launcher set into .env instead of setting 21116 and 21117 again.
+function Test-UpdateKeepsTheAdminsPorts {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'SIGNAL_PORT=21116', 'RELAY_PORT=21117')
+    Setup-Services | Out-Null
+    $launcher = Join-Path $script:RUSTDESK_PATH 'start-betterdesk-server.cmd'
+    if ((Get-Content $launcher -Raw) -match '(SIGNAL|RELAY)_PORT') { Fail "the launcher sets the ports: $(Get-Content $launcher)" }
+    $exe = Join-Path $script:RUSTDESK_PATH 'betterdesk-server.exe'
+    Set-Content -Path $launcher -Encoding ASCII -Value @(
+        '@echo off',
+        'set "BETTERDESK_SUPERVISOR=task"',
+        'set "SIGNAL_PORT=31116"',
+        'set "RELAY_PORT=31117"',
+        ':run',
+        "`"$exe`" -mode all -api-port 21114",
+        'goto run'
+    )
+    Update-ServerServiceDefinition | Out-Null
+    if ((Get-Content $launcher -Raw) -match '(SIGNAL|RELAY)_PORT') { Fail "the updated launcher sets the ports: $(Get-Content $launcher)" }
+    if ((Get-ConsoleEnvValue -Key 'SIGNAL_PORT') -ne '31116' -or (Get-ConsoleEnvValue -Key 'RELAY_PORT') -ne '31117') { Fail "the update lost the launcher's ports: $(Get-Content $envFile)" }
+    if ((Get-ConsoleEnvValue -Key 'SESSION_SECRET') -ne 'kept') { Fail 'the update lost a line of .env' }
+    Remove-Item -Recurse -Force $dir
+}
+
+# L140: -Channel picks the channel, wins over .env and goes into it, and a
+# failed download says what to do: no stable release yet, or no way out.
+function Test-ChannelAndDownloadErrors {
+    $dir = New-TestInstall
+    $saved = $env:UPDATE_GITHUB_BRANCH
+    $env:UPDATE_GITHUB_BRANCH = $null
+    $Channel = 'dev'
+    $defaults = $ast.FindAll({
+        $args[0] -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+        $args[0].Left.Extent.Text -like '$script:UPDATE_GITHUB_*'
+    }, $false)
+    foreach ($a in $defaults) { . ([scriptblock]::Create($a.Extent.Text)) }
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('UPDATE_GITHUB_BRANCH=main')
+    Read-UpdateGitHubBranchFromEnv
+    if ($script:UPDATE_GITHUB_BRANCH -ne 'dev') { Fail "-Channel dev lost to the main of .env: $($script:UPDATE_GITHUB_BRANCH)" }
+    Use-FakeServerBinary
+    Merge-ConsoleEnv -FreshInstall $false *> $null
+    if ((Get-ConsoleEnvValue -Key 'UPDATE_GITHUB_BRANCH') -ne 'dev') { Fail "the given channel is not in .env: $(Get-Content $envFile)" }
+
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    Remove-Item -Force $envFile
+    function script:Invoke-WebRequest { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String)
+    if ($out -notmatch 'no stable release' -or $out -notmatch '-Channel dev' -or $out -notmatch '-Binary') { Fail "a missing stable release says: $out" }
+    function script:Invoke-WebRequest { throw [System.Net.WebException]::new('The remote name could not be resolved: github.com') }
+    $out = (Get-ReleaseBinary -Dir $dir 6>&1 | Out-String)
+    if ($out -notmatch 'Could not reach' -or $out -notmatch '-Binary') { Fail "a download without network says: $out" }
+    Remove-Item function:Invoke-WebRequest -ErrorAction SilentlyContinue
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $env:UPDATE_GITHUB_BRANCH = $saved
+    Remove-Item -Recurse -Force $dir
+}
+
+# L69: the host clients get becomes PANEL_PUBLIC_HOST, so the HTTP port
+# redirects to HTTPS there; a value the admin set stays.
+function Test-PanelPublicHost {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'PANEL_PUBLIC_HOST=')
+    Setup-Services | Out-Null
+    if ((Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST') -ne '203.0.113.7') { Fail "the install set PANEL_PUBLIC_HOST to '$(Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST')'" }
+    Set-PanelPublicHost -Address '198.51.100.1:21117'
+    if ((Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST') -ne '203.0.113.7') { Fail 'a second address replaced PANEL_PUBLIC_HOST' }
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept')
+    Set-PanelPublicHost -Address 'desk.example.org:21117'
+    if ((Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST') -ne 'desk.example.org') { Fail "PANEL_PUBLIC_HOST from host:port is '$(Get-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST')'" }
+    Remove-Item -Recurse -Force $dir
+}
+
+# L151: -Help documents every parameter; a second -Auto run updates; the
+# password shows only when the install made it and leaves .env after the
+# first start; the install keeps a copy of the script for updates; the
+# summary names the log and the commands for later.
+function Test-WindowsFirstHour {
+    $documented = @([regex]::Matches((Get-Content $installer -Raw), '(?m)^\.PARAMETER\s+(\w+)') | ForEach-Object { $_.Groups[1].Value })
+    foreach ($p in $ast.ParamBlock.Parameters) {
+        $name = $p.Name.VariablePath.UserPath
+        if ($name -in 'NodeJs', 'Flask') { continue }
+        if ($documented -notcontains $name) { Fail "the help does not document -$name" }
+    }
+    if (-not ($ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Help' })) { Fail 'there is no -Help' }
+
+    # The real binary path again (Use-FakeServerBinary replaced it)
+    foreach ($fn in $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq 'Get-ServerBinaryPath' }, $false)) {
+        . ([scriptblock]::Create(($fn.Extent.Text -replace '^function ', 'function script:')))
+    }
+    $dir = New-TestInstall
+    $script:UNINSTALL_MODE = $false
+    $script:MINIMAL_MODE = $false
+    if ((Get-AutoAction) -ne 'install') { Fail "a machine without BetterDesk gets $(Get-AutoAction)" }
+    Setup-Services | Out-Null
+    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'betterdesk-server.exe') -Value 'exe'
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('DEFAULT_ADMIN_PASSWORD=First-Pass-1', 'INIT_ADMIN_PASS=First-Pass-1', 'SESSION_SECRET=kept', 'DB_TYPE=sqlite')
+    Copy-Item $envFile "$envFile.pre-go"
+    if ((Get-AutoAction) -ne 'update') { Fail "a second run on an install gets $(Get-AutoAction)" }
+    $script:USE_POSTGRESQL = $true
+    if ((Get-AutoAction) -ne 'install') { Fail "-PostgreSQL on a SQLite install gets $(Get-AutoAction), not the move" }
+    $script:USE_POSTGRESQL = $false
+
+    $env:ADMIN_PASSWORD = $null
+    $script:FRESH_CONSOLE_ENV = $false
+    $out = (Create-AdminUser 6>&1 | Out-String)
+    if ($out -match 'First-Pass-1') { Fail 'a run that kept .env showed the admin password again' }
+    $script:FRESH_CONSOLE_ENV = $true
+    $out = (Create-AdminUser 6>&1 | Out-String)
+    if ($out -notmatch 'First-Pass-1') { Fail 'a fresh install did not show the admin password' }
+    Remove-FirstAdminPassword
+    foreach ($f in $envFile, "$envFile.pre-go") {
+        if ((Get-Content $f -Raw) -match 'First-Pass-1') { Fail "$(Split-Path -Leaf $f) keeps the admin password after the first start" }
+    }
+    if ((Get-ConsoleEnvValue -Key 'SESSION_SECRET') -ne 'kept') { Fail 'forgetting the password lost a line of .env' }
+
+    $script:SELF_PATH = $installer
+    Install-ManagerScript 6> $null
+    $copy = Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1'
+    if (-not (Test-Path $copy) -or (Get-FileHash $copy).Hash -ne (Get-FileHash $installer).Hash) { Fail "the install keeps no copy of the script at $copy" }
+
+    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'id_ed25519.pub') -Value 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ='
+    Set-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST' -Value 'desk.example.org'
+    $out = (Show-InstallSummary 6>&1 | Out-String)
+    Set-ConsoleEnvValue -Key 'API_PORT' -Value '21121'
+    $out = (Show-InstallSummary 6>&1 | Out-String)
+    if (-not $out.Contains('http://desk.example.org:21121')) { Fail "the summary gives clients another API address (L76): $out" }
+    foreach ($want in 'desk.example.org', 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=', (Get-ServerLogPath), $envFile, '-Update', '-Uninstall', 'admin') {
+        if (-not $out.Contains($want)) { Fail "the summary does not name $want" }
+    }
+    $script:FRESH_CONSOLE_ENV = $false
+    Remove-Item -Recurse -Force $dir
+}
+
+# L155: the server's updater is told the repository of the releases, so an
+# installed binary with an older default does not ask upstream; one named
+# in .env stays.
+function Test-UpdateAsksTheFork {
+    $dir = New-TestInstall
+    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'trybetterdesk', 'betterdesk'
+    $script:UPDATE_GITHUB_OWNER_GIVEN, $script:UPDATE_GITHUB_REPO_GIVEN = '', ''
+    function script:Invoke-ServerCommand { param([string[]]$Arguments, $InputText, $Binary) $script:seenRepo = "$env:UPDATE_GITHUB_OWNER/$env:UPDATE_GITHUB_REPO"; return 1 }
+    function script:Do-BackupSilent { }
+    $script:BINARY_FILE = ''
+    $script:FROM_SOURCE = $false
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept')
+    Update-GoInstall *> $null
+    if ($script:seenRepo -ne 'trybetterdesk/betterdesk') { Fail "betterdesk-server update ran for $($script:seenRepo)" }
+    Set-Content -Path $envFile -Value @('UPDATE_GITHUB_OWNER=acme', 'UPDATE_GITHUB_REPO=desk')
+    Update-GoInstall *> $null
+    if ($script:seenRepo -ne 'acme/desk') { Fail "the repository of .env lost to the default: $($script:seenRepo)" }
+    if ($env:UPDATE_GITHUB_OWNER) { Fail 'the update left UPDATE_GITHUB_OWNER in the environment' }
+    Remove-Item -Recurse -Force $dir
+}
+
+# L67: both installers open the same ports: RustDesk's (21115 to 21117 TCP,
+# 21116 UDP), the client API port, 21122 while CDAP is on, and the
+# console's ports unless TLS ends at a reverse proxy.
+function Test-FirewallPorts {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('API_PORT=21121', 'CONSOLE_PORT=5000', 'HTTPS_ENABLED=true', 'HTTPS_PORT=5443', 'CDAP_ENABLED=Y', 'TRUST_PROXY=false')
+    $got = (Get-FirewallPorts | ForEach-Object { "$($_.Port)/$($_.Proto)" }) -join ' '
+    if ($got -ne '21115/TCP 21116/TCP 21116/UDP 21117/TCP 21121/TCP 21122/TCP 5000/TCP 5443/TCP') { Fail "the firewall ports: $got" }
+    Set-Content -Path $envFile -Value @('API_PORT=21121', 'CONSOLE_PORT=5000', 'HTTPS_ENABLED=false', 'CDAP_ENABLED=N', 'TRUST_PROXY=Y')
+    $got = (Get-FirewallPorts | ForEach-Object { "$($_.Port)/$($_.Proto)" }) -join ' '
+    if ($got -ne '21115/TCP 21116/TCP 21116/UDP 21117/TCP 21121/TCP') { Fail "the firewall ports behind a reverse proxy without CDAP: $got" }
+    Remove-Item -Recurse -Force $dir
+}
+
+# L66: the server binary makes the certificate, so Windows needs no
+# OpenSSL; a certificate that could not be written as PEM files leaves the
+# console on HTTP instead of turning HTTPS on without files.
+function Test-CertificateFromTheBinary {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('HTTPS_ENABLED=false', 'SSL_CERT_PATH=', 'SSL_KEY_PATH=', 'RUSTDESK_API_TLS=auto')
+    function script:Get-PublicIP { '203.0.113.7' }
+    function script:Get-LocalIP { '192.168.1.5' }
+    function script:Test-BinaryHasCertCommand { $true }
+    function script:Invoke-ServerCommand {
+        param([string[]]$Arguments, $InputText, $Binary)
+        $script:certArgs = $Arguments -join ' '
+        $out = $Arguments[2]
+        Set-Content -Path (Join-Path $out 'betterdesk.crt') -Value 'crt'
+        Set-Content -Path (Join-Path $out 'betterdesk.key') -Value 'key'
+        return 0
+    }
+    if (-not (Generate-SSLCertificates 6> $null)) { Fail 'the cert command made no certificate' }
+    if ($script:certArgs -notmatch '--host 203\.0\.113\.7' -or $script:certArgs -notmatch '--host 192\.168\.1\.5') { Fail "the cert command was given: $($script:certArgs)" }
+    if ((Get-ConsoleEnvValue -Key 'HTTPS_ENABLED') -ne 'true' -or (Get-ConsoleEnvValue -Key 'RUSTDESK_API_TLS') -ne 'false') { Fail "after the certificate .env has: $(Get-Content $envFile)" }
+
+    Remove-Item -Recurse -Force (Join-Path $script:RUSTDESK_PATH 'ssl')
+    Set-Content -Path $envFile -Value @('HTTPS_ENABLED=false', 'SSL_CERT_PATH=', 'SSL_KEY_PATH=')
+    function script:Test-BinaryHasCertCommand { $false }
+    function script:New-SelfSignedCertificate { [pscustomobject]@{ Thumbprint = 'AB' } }
+    function script:Export-Certificate { }
+    function script:Export-PfxCertificate { }
+    function script:Get-Command { param($Name, $ErrorAction) if ($Name -eq 'openssl') { return $null }; Microsoft.PowerShell.Core\Get-Command $Name -ErrorAction SilentlyContinue }
+    $ok = Generate-SSLCertificates 6> $null
+    Remove-Item function:Get-Command, function:New-SelfSignedCertificate, function:Export-Certificate, function:Export-PfxCertificate -ErrorAction SilentlyContinue
+    if ($ok -or (Get-ConsoleEnvValue -Key 'HTTPS_ENABLED') -eq 'true') { Fail "HTTPS was turned on without PEM files: $(Get-Content $envFile)" }
+    Remove-Item -Recurse -Force $dir
+}
+
+# L161: passwords and secrets come from the system's cryptographic
+# generator, with repeats allowed, never from Get-Random.
+function Test-SecretsAreRandom {
+    function script:Get-Random { throw 'Get-Random was used for a secret' }
+    $a = Generate-RandomPassword -Length 64
+    $b = Generate-RandomPassword -Length 64
+    Remove-Item function:Get-Random -ErrorAction SilentlyContinue
+    if ($a.Length -ne 64 -or $a -notmatch '^[A-Za-z0-9]+$') { Fail "a secret of 64 is '$a'" }
+    if ($a -eq $b) { Fail 'two secrets are the same' }
+    $repeats = @($a.ToCharArray() | Group-Object -CaseSensitive | Where-Object { $_.Count -gt 1 }).Count
+    if ($repeats -eq 0) { Fail 'a secret of 64 has no character twice, which a shuffle of the alphabet gives' }
+    if ((Get-Content $installer -Raw) -match 'Get-Random -Count') { Fail 'the installer still draws secrets with Get-Random -Count' }
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
 Test-ConsoleHomeCopiesNoConsoleFiles
 Test-MigrationMenusPassOverwrite
 Test-PostgreSQLSwitchMovesTheWholeInstall
+Test-ReleasesComeFromTheFork
+Test-PostgreSQLAddressIsKept
+Test-ServerLogFile
+Test-UpdateKeepsTheAdminsPorts
+Test-ChannelAndDownloadErrors
+Test-PanelPublicHost
+Test-WindowsFirstHour
+Test-UpdateAsksTheFork
+Test-FirewallPorts
+Test-CertificateFromTheBinary
+Test-SecretsAreRandom
+Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'
+# The stand-ins set LASTEXITCODE, and a caller such as GitHub's pwsh step
+# exits with it when the script ends without an exit of its own.
+exit 0

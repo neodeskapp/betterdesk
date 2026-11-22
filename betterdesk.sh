@@ -45,6 +45,8 @@ VERSION="3.5.270"
 # Bump when installer control-flow changes must apply mid-session after Update (#219).
 BETTERDESK_SH_REVISION="20260725-console-start-306"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# This file; empty when the script is piped into bash
+BETTERDESK_SELF="${BASH_SOURCE[0]:-}"
 # Preserve argv before shift — used to re-exec after installer self-update (#219).
 BETTERDESK_ORIG_ARGV=("$@")
 
@@ -59,6 +61,7 @@ REPAIR_PERMISSIONS=false
 MANAGED_CONFIG_CHANGES=()
 UPDATE_MODE=false
 ROLLBACK_GO_MODE=false
+RESET_PASSWORD_MODE=false
 CLEANUP_NODE_MODE=false
 # Where the server binary comes from: a file (--binary), a build of this
 # checkout (--from-source), else the release of the update channel.
@@ -123,6 +126,10 @@ while [[ $# -gt 0 ]]; do
             ROLLBACK_GO_MODE=true
             shift
             ;;
+        --reset-password)
+            RESET_PASSWORD_MODE=true
+            shift
+            ;;
         --cleanup-node)
             CLEANUP_NODE_MODE=true
             shift
@@ -138,6 +145,18 @@ while [[ $# -gt 0 ]]; do
         --from-source)
             FROM_SOURCE=true
             shift
+            ;;
+        --channel)
+            case "${2:-}" in
+                stable|main) UPDATE_GITHUB_BRANCH=main ;;
+                dev|development) UPDATE_GITHUB_BRANCH=dev ;;
+                *)
+                    echo "ERROR: --channel must be 'stable' or 'dev'"
+                    exit 1
+                    ;;
+            esac
+            export UPDATE_GITHUB_BRANCH
+            shift 2
             ;;
         --postgresql|--postgres)
             USE_POSTGRESQL=true
@@ -178,15 +197,20 @@ while [[ $# -gt 0 ]]; do
             echo "                   with the Node.js console this runs the upgrade (--update)"
             echo "  --update         Update without questions; an install with the Node.js"
             echo "                   console is upgraded in place to the server with its console"
+            echo "  --reset-password Give the admin account a new password (ADMIN_PASSWORD, else"
+            echo "                   a random one) and show it once"
             echo "  --rollback-go    Put the Node.js console and the server from before the"
             echo "                   upgrade back (binaries, services, .env); data stays"
             echo "  --cleanup-node   Delete the Node.js console's code and its disabled service"
             echo "                   after an upgrade"
             echo "  --binary FILE    Install this betterdesk-server binary instead of the release"
+            echo "  --channel C      Release channel: 'stable' (default, the newest release) or"
+            echo "                   'dev' (the development build); kept for later updates"
             echo "  --from-source    Build betterdesk-server from this checkout (needs Go, and"
             echo "                   Node.js unless web-ui/build exists)"
-            echo "  --uninstall      Stop services and remove the native installation"
-            echo "  --purge          With --uninstall, also remove data and keys"
+            echo "  --uninstall      Stop and remove the service, after a backup; the data stays,"
+            echo "                   and the end lists what is left on the machine"
+            echo "  --purge          With --uninstall, also remove the data, keys and the betterdesk command"
             echo "  --check-permissions  Report panel/update/config/restart capabilities"
             echo "  --repair-permissions Repair BetterDesk ownership and service access"
             echo "  --set-config K=V Apply an allowlisted .env setting (repeatable)"
@@ -214,6 +238,14 @@ while [[ $# -gt 0 ]]; do
             echo "  UPDATE_GITHUB_BRANCH=main|dev  Update channel: stable (main) or development (dev)"
             echo "  UPDATE_GITHUB_OWNER=... / UPDATE_GITHUB_REPO=...  Repository the releases come from"
             echo "  RELEASE_BASE_URL=...    Folder URL with the release files (SHA256SUMS and binaries)"
+            echo "  SSL_DOMAIN=...          Host name for the self-signed certificate and the console's address"
+            echo "  RUSTDESK_PATH=... / CONSOLE_PATH=... / BACKUP_DIR=...  Install folders"
+            echo "                          (default /opt/betterdesk, /opt/BetterDeskConsole, /opt/rustdesk-backups)"
+            echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
+            echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
+            echo ""
+            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh | sudo bash"
+            echo "Later:                     sudo betterdesk (menu), sudo betterdesk --update, sudo betterdesk --uninstall"
             exit 0
             ;;
         *)
@@ -265,6 +297,8 @@ STORE_ADMIN_CREDENTIALS="${STORE_ADMIN_CREDENTIALS:-false}"
 # binary by rename and keeps the old one as betterdesk-server.prev.
 SERVER_SERVICE="betterdesk-server"
 SERVER_UNIT="/etc/systemd/system/betterdesk-server.service"
+# This installer as a command, for updates and the uninstall later.
+MANAGER_COMMAND="/usr/local/sbin/betterdesk"
 SERVICE_USER="betterdesk"
 # What the installs with the Node.js console had besides the server: the
 # console's unit (disabled and kept for one release after the upgrade), the
@@ -498,17 +532,51 @@ configure_management() {
     esac
 }
 
+# Without a terminal (piped from curl, cron, CI) nothing waits for a key,
+# and a question without an answer (end of input) takes its default.
 press_enter() {
+    [ -t 0 ] || return 0
     echo ""
     echo -e "${CYAN}Press Enter to continue...${NC}"
-    read -r
+    read -r || true
 }
 
 confirm() {
     local prompt="${1:-Continue?}"
     echo -e "${YELLOW}${prompt} [y/N]${NC} "
-    read -r response
+    read -r response || return 1
     [[ "$response" =~ ^[TtYy]$ ]]
+}
+
+# default_to_auto_without_terminal: a run without a terminal installs or
+# updates without questions, as --auto does.
+default_to_auto_without_terminal() {
+    if [ "$AUTO_MODE" != true ] && [ ! -t 0 ]; then
+        AUTO_MODE=true
+        print_info "No terminal: installing or updating without questions (--auto)"
+    fi
+}
+
+# install_manager_command: this installer as the command betterdesk, for
+# updates, repairs and the uninstall later. Run from the command itself
+# (an update), it takes the newest one of the update channel; piped from
+# curl, it fetches itself from the same place.
+install_manager_command() {
+    local self="$BETTERDESK_SELF" tmp
+    tmp=$(mktemp) || return 0
+    if [ -n "$self" ] && [ -f "$self" ] && [ "$(readlink -f "$self")" != "$(readlink -f "$MANAGER_COMMAND" 2>/dev/null)" ]; then
+        cp "$self" "$tmp"
+    elif ! curl -fsSL --retry 2 --connect-timeout 20 -o "$tmp" \
+        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${UPDATE_GITHUB_BRANCH}/betterdesk.sh" \
+        || ! grep -q '^BETTERDESK_SH_REVISION=' "$tmp"; then
+        rm -f "$tmp"
+        [ -x "$MANAGER_COMMAND" ] || print_warning "Could not save the betterdesk command; run this installer again for updates"
+        return 0
+    fi
+    mkdir -p "$(dirname "$MANAGER_COMMAND")"
+    install -m 0755 "$tmp" "$MANAGER_COMMAND" && print_info "Manage this install with: sudo $(basename "$MANAGER_COMMAND")"
+    rm -f "$tmp"
+    return 0
 }
 
 #===============================================================================
@@ -940,30 +1008,49 @@ wait_for_service_stop() {
 
 # Kill any stale processes that might be holding files/ports
 # Free BetterDesk ports when systemd stop left orphan listeners (#219).
+# port_listener_pids PORT: the processes listening on a TCP port.
+port_listener_pids() {
+    ss -ltnpH "sport = :$1" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u
+}
+
+# is_betterdesk_process PID: the server, the old Rust servers, or the old
+# Node.js console of this install.
+is_betterdesk_process() {
+    local comm args
+    comm=$(cat "/proc/$1/comm" 2>/dev/null) || return 1
+    args=$(tr '\0' ' ' < "/proc/$1/cmdline" 2>/dev/null)
+    case "$comm" in
+        betterdesk-serv*|hbbs|hbbr|hbbs-v8-api) return 0 ;;
+        node) [[ "$args" == *"$CONSOLE_PATH"* || "$args" == *"server.js"* ]] && return 0 ;;
+    esac
+    return 1
+}
+
+# kill_processes_holding_ports: BetterDesk's own processes left on its
+# ports are stopped (#219). A port another program holds is named in
+# FOREIGN_PORT_HOLDERS and that program is left alone.
 kill_processes_holding_ports() {
-    local port pids
-    for port in 21116 21117 5000 5443; do
-        if ! ss -tlnH 2>/dev/null | grep -q ":${port} "; then
-            continue
-        fi
-        pids=$(lsof -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null || true)
-        if [ -n "$pids" ]; then
-            print_warning "Port ${port} still in use (pids: $pids) — terminating (#219)"
-            for pid in $pids; do
+    local port pid name
+    FOREIGN_PORT_HOLDERS=""
+    for port in $(signal_port) $(relay_port) $(resolve_panel_http_port) $(resolve_panel_https_port); do
+        [ "$port" = 0 ] && continue
+        for pid in $(port_listener_pids "$port"); do
+            if is_betterdesk_process "$pid"; then
+                print_warning "Port ${port} is still held by an old BetterDesk process (pid $pid): stopping it (#219)"
                 kill -TERM "$pid" 2>/dev/null || true
-            done
-            sleep 1
-            pids=$(lsof -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null || true)
-            if [ -n "$pids" ]; then
-                for pid in $pids; do
-                    kill -9 "$pid" 2>/dev/null || true
-                done
+                sleep 1
+                kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null
+            else
+                name=$(cat "/proc/$pid/comm" 2>/dev/null || echo unknown)
+                FOREIGN_PORT_HOLDERS="${FOREIGN_PORT_HOLDERS:+$FOREIGN_PORT_HOLDERS, }$port ($name, pid $pid)"
             fi
-        elif command -v fuser &>/dev/null; then
-            fuser -k "${port}/tcp" 2>/dev/null || true
-        fi
+        done
     done
-    sleep 1
+    if [ -n "$FOREIGN_PORT_HOLDERS" ]; then
+        print_error "Ports BetterDesk needs are taken by other programs: $FOREIGN_PORT_HOLDERS"
+        print_info "Stop those programs, or give BetterDesk other ports: SIGNAL_PORT, RELAY_PORT, CONSOLE_PORT or HTTPS_PORT in $CONSOLE_PATH/.env"
+    fi
+    return 0
 }
 
 kill_stale_processes() {
@@ -1317,11 +1404,13 @@ _safe_cp_tls_file() {
     return 0
 }
 
-# Ensure Go signal/relay/API ports are not overridden by shared .env (#219).
-# While an install runs the Node.js console, the server's own console stays
-# off (CONSOLE_PORT=0): Node holds its port.
+# The server reads PORT as its signal port when SIGNAL_PORT is missing, and
+# the console's .env sets PORT for the console (#219): .env names the
+# signal and relay ports (the admin's values stay), and the API port stays
+# on the unit. While an install runs the Node.js console, the server's own
+# console stays off (CONSOLE_PORT=0): Node holds its port.
 ensure_go_server_signal_ports() {
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
     local changed=0
     local go_api_port="${GO_API_PORT:-21114}"
 
@@ -1331,13 +1420,15 @@ ensure_go_server_signal_ports() {
         _upsert_systemd_env "$go_svc_file" CONSOLE_PORT 0
         changed=1
     fi
-    if ! grep -q '^Environment=SIGNAL_PORT=21116' "$go_svc_file" 2>/dev/null; then
-        _upsert_systemd_env "$go_svc_file" SIGNAL_PORT 21116
-        changed=1
-    fi
-    if ! grep -q '^Environment=RELAY_PORT=21117' "$go_svc_file" 2>/dev/null; then
-        _upsert_systemd_env "$go_svc_file" RELAY_PORT 21117
-        changed=1
+    if [ -f "$CONSOLE_PATH/.env" ]; then
+        if [ -z "$(env_file_value "$CONSOLE_PATH/.env" SIGNAL_PORT)" ] && [ -z "$(unit_env_value "$go_svc_file" SIGNAL_PORT)" ]; then
+            _upsert_env_line "$CONSOLE_PATH/.env" SIGNAL_PORT 21116
+            changed=1
+        fi
+        if [ -z "$(env_file_value "$CONSOLE_PATH/.env" RELAY_PORT)" ] && [ -z "$(unit_env_value "$go_svc_file" RELAY_PORT)" ]; then
+            _upsert_env_line "$CONSOLE_PATH/.env" RELAY_PORT 21117
+            changed=1
+        fi
     fi
     if ! grep -q "^Environment=GO_API_PORT=${go_api_port}" "$go_svc_file" 2>/dev/null; then
         _upsert_systemd_env "$go_svc_file" GO_API_PORT "$go_api_port"
@@ -1350,7 +1441,7 @@ ensure_go_server_signal_ports() {
     fi
     if [ "$changed" -eq 1 ]; then
         systemctl daemon-reload 2>/dev/null || true
-        print_info "Go server uses SIGNAL_PORT=21116, GO_API_PORT=${go_api_port} (panel PORT/API_PORT in .env are console-only)"
+        print_info "Server ports: signal $(signal_port), relay $(relay_port), API ${go_api_port} (PORT and API_PORT in .env are the console's)"
     fi
     [ "$changed" -eq 1 ]
 }
@@ -1748,7 +1839,7 @@ apply_console_protocol_mode() {
 # Enable signal/relay TLS on betterdesk-server using deployed panel cert (#219).
 sync_go_server_signal_relay_tls() {
     local ssl_dir="${1:-$RUSTDESK_PATH/ssl}"
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
 
     [ -f "$go_svc_file" ] || return 0
     sed -i 's/ -tls-cert [^ ]*//g' "$go_svc_file"
@@ -1763,7 +1854,7 @@ sync_go_server_signal_relay_tls() {
 
 # Remove signal/relay TLS from betterdesk-server (#219).
 clear_go_server_signal_relay_tls() {
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
 
     [ -f "$go_svc_file" ] || return 0
     sed -i 's/ -tls-cert [^ ]*//g' "$go_svc_file"
@@ -1786,7 +1877,7 @@ sync_go_server_trust_proxy() {
     else
         trusted_cidrs="127.0.0.1/32,::1/128"
     fi
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
 
     [ -f "$go_svc_file" ] || return 0
     if [ "$enable" = "yes" ]; then
@@ -2511,6 +2602,11 @@ merge_console_env() {
     # console keeps an admin it did not make: both take the same password
     if [ "$fresh_install" = "true" ] && ! grep -q '^INIT_ADMIN_PASS=' "$env_file"; then
         printf 'INIT_ADMIN_PASS=%s\n' "$admin_password" >> "$env_file"
+    fi
+    # A new install starts in Managed: new clients wait for approval. This
+    # is only the first default; a mode saved in the console wins.
+    if [ "$fresh_install" = "true" ] && ! grep -q '^ENROLLMENT_MODE=' "$env_file"; then
+        printf 'ENROLLMENT_MODE=managed\n' >> "$env_file"
     fi
     # The update channel the installer was given, over the template's main
     save_given_update_channel
@@ -3668,8 +3764,11 @@ migrate_sqlite_to_postgresql() {
     
     chmod +x "$migrate_bin"
     
-    # Verify binary supports -mode flag (in case of outdated binary)
-    if ! "$migrate_bin" -h 2>&1 | grep -q -- "-mode"; then
+    # Verify binary supports -mode flag (in case of outdated binary). The
+    # help is read whole first: grep -q on a pipe can end the tool early
+    local migrate_help
+    migrate_help=$("$migrate_bin" -h 2>&1 || true)
+    if ! grep -q -- "-mode" <<< "$migrate_help"; then
         print_warning "Migration binary is outdated (missing -mode flag): the server keeps using $sqlite_db"
         print_info "Rebuild with: cd betterdesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
         keep_sqlite_install "$sqlite_db"
@@ -3677,7 +3776,8 @@ migrate_sqlite_to_postgresql() {
     fi
     
     if [ "$AUTO_MODE" != true ] && ! confirm "Move the existing SQLite install (every server and console table) to PostgreSQL?"; then
-        print_info "The SQLite data stays where it is; PostgreSQL starts empty"
+        print_info "The install stays on SQLite ($sqlite_db); move it later with the menu's Database migration"
+        keep_sqlite_install "$sqlite_db"
         return 0
     fi
 
@@ -3767,11 +3867,34 @@ download_release_binary() {
     read_update_github_branch_from_env
     base=$(release_base_url)
     print_info "Downloading $asset ($UPDATE_GITHUB_BRANCH channel) from $base"
-    if ! curl -fsSL --retry 3 --connect-timeout 20 -o "$dir/SHA256SUMS" "$base/SHA256SUMS"; then
-        print_error "Could not download $base/SHA256SUMS"
-        return 1
-    fi
-    if ! curl -fSL --retry 3 --connect-timeout 20 --progress-bar -o "$dir/$asset" "$base/$asset"; then
+    local code
+    code=$(curl -sSL --retry 3 --connect-timeout 20 -o "$dir/SHA256SUMS" -w '%{http_code}' "$base/SHA256SUMS" 2>/dev/null) || true
+    case "$code" in
+        200) ;;
+        000|"")
+            print_error "Could not reach $base"
+            print_info "Check this server's internet access and DNS (a proxy goes in HTTPS_PROXY),"
+            print_info "or install offline: download the binary elsewhere and run with --binary FILE"
+            return 1
+            ;;
+        404)
+            if [ -z "${RELEASE_BASE_URL:-}" ] && [ "$UPDATE_GITHUB_BRANCH" != dev ]; then
+                print_error "${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO} has no stable release yet"
+                print_info "Install the development build with --channel dev, or a binary you have with --binary FILE"
+            else
+                print_error "There is no release at $base"
+                print_info "Install a binary you have with --binary FILE"
+            fi
+            return 1
+            ;;
+        *)
+            print_error "Downloading $base/SHA256SUMS failed (HTTP $code); try again later, or use --binary FILE"
+            return 1
+            ;;
+    esac
+    local progress=(-s)
+    [ -t 1 ] && progress=(--progress-bar)
+    if ! curl -fSL --retry 3 --connect-timeout 20 "${progress[@]}" -o "$dir/$asset" "$base/$asset"; then
         print_error "Could not download $base/$asset"
         return 1
     fi
@@ -3908,6 +4031,7 @@ setup_console_home() {
     if [ ! -f "$CONSOLE_PATH/.env" ]; then
         is_fresh=true
     fi
+    FRESH_CONSOLE_ENV="$is_fresh"
     if [ "$is_fresh" = true ]; then
         if [ -z "$ADMIN_PASSWORD" ]; then
             ADMIN_PASSWORD=$(openssl rand -hex 16)
@@ -3967,13 +4091,6 @@ generate_ssl_certificates() {
         return 0
     fi
     
-    # Ensure openssl is available
-    if ! command -v openssl &>/dev/null; then
-        print_warning "openssl not found - skipping TLS certificate generation"
-        print_info "Install openssl and use SSL config menu (option C) to generate later"
-        return 1
-    fi
-    
     mkdir -p "$ssl_dir"
     
     # Detect server IPs for SAN (Subject Alternative Name)
@@ -4002,25 +4119,45 @@ generate_ssl_certificates() {
     # Determine CN (Common Name) — prefer domain, fallback to public IP
     local cn="${SSL_DOMAIN:-$server_ip}"
     
-    # Generate certificate with SAN extension (valid for 10 years for self-signed)
-    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-        -keyout "$ssl_dir/betterdesk.key" \
-        -out "$ssl_dir/betterdesk.crt" \
-        -subj "/CN=$cn/O=BetterDesk/C=PL" \
-        -addext "subjectAltName=$san_list" \
-        2>&1 || {
-        print_warning "Certificate generation failed (openssl too old for -addext?)"
-        # Fallback without SAN for older openssl
+    # The binary makes the pair (no OpenSSL needed); an older binary
+    # without the cert command leaves it to openssl
+    local bin
+    bin=$(server_binary_path)
+    if [ -x "$bin" ] && grep -q 'cert --out DIR' "$bin" 2>/dev/null; then
+        local -a cert_args=(cert --out "$ssl_dir" --force)
+        [ -n "${SSL_DOMAIN:-}" ] && cert_args+=(--host "$SSL_DOMAIN")
+        cert_args+=(--host "$server_ip")
+        [ -n "$lan_ip" ] && [ "$lan_ip" != "$server_ip" ] && cert_args+=(--host "$lan_ip")
+        if ! "$bin" "${cert_args[@]}" >/dev/null; then
+            print_error "Failed to generate self-signed certificate"
+            return 1
+        fi
+    else
+        if ! command -v openssl &>/dev/null; then
+            print_warning "openssl not found - skipping TLS certificate generation"
+            print_info "Install openssl and use SSL config menu (option C) to generate later"
+            return 1
+        fi
+        # Generate certificate with SAN extension (valid for 10 years for self-signed)
         openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
             -keyout "$ssl_dir/betterdesk.key" \
             -out "$ssl_dir/betterdesk.crt" \
             -subj "/CN=$cn/O=BetterDesk/C=PL" \
-            2>&1 || {
-            print_error "Failed to generate self-signed certificate"
-            return 1
+            -addext "subjectAltName=$san_list" \
+            >/dev/null 2>&1 || {
+            print_warning "Certificate generation failed (openssl too old for -addext?)"
+            # Fallback without SAN for older openssl
+            openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+                -keyout "$ssl_dir/betterdesk.key" \
+                -out "$ssl_dir/betterdesk.crt" \
+                -subj "/CN=$cn/O=BetterDesk/C=PL" \
+                2>&1 || {
+                print_error "Failed to generate self-signed certificate"
+                return 1
+            }
         }
-    }
-    
+    fi
+
     # Deploy with console-user-readable permissions (#219)
     if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key"; then
         print_error "Failed to set permissions on self-signed certificate"
@@ -4035,6 +4172,9 @@ generate_ssl_certificates() {
             sed -i "s|^HTTPS_ENABLED=.*|HTTPS_ENABLED=true|" "$env_file"
             sed -i "s|^SSL_CERT_PATH=.*|SSL_CERT_PATH=$ssl_dir/betterdesk.crt|" "$env_file"
             sed -i "s|^SSL_KEY_PATH=.*|SSL_KEY_PATH=$ssl_dir/betterdesk.key|" "$env_file"
+            # RustDesk clients refuse a self-signed certificate: the client
+            # API port stays on HTTP until a trusted certificate is set up
+            _upsert_env_line "$env_file" RUSTDESK_API_TLS false
             # The internal API URLs stay http://: API TLS breaks RustDesk clients.
 
             # Enterprise TLS compatibility: Go API must remain HTTP because
@@ -4121,7 +4261,8 @@ unit_exec_args() {
         | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/[[:space:]]+/ /g'
 }
 
-# The settings write_server_unit writes itself.
+# The settings write_server_unit writes itself, and the ports that live in
+# .env (carry_unit_ports moves them there).
 SERVER_UNIT_OWN_KEYS=" BETTERDESK_ENV_FILE BETTERDESK_SUPERVISOR SIGNAL_PORT RELAY_PORT GO_API_PORT MESH_ENABLED CONSOLE_PORT "
 
 # server_unit_extra_environment: the Environment= lines of the installed
@@ -4165,7 +4306,7 @@ write_server_unit() {
     cat << EOF | grep -v '^__EMPTY__$' > "$SERVER_UNIT"
 [Unit]
 Description=BetterDesk server and web console v$VERSION
-Documentation=https://github.com/UNITRONIX/BetterDesk
+Documentation=https://github.com/trybetterdesk/betterdesk
 After=network-online.target postgresql.service
 Wants=network-online.target
 
@@ -4176,8 +4317,6 @@ Group=$SERVICE_USER
 WorkingDirectory=$RUSTDESK_PATH
 Environment=BETTERDESK_ENV_FILE=$CONSOLE_PATH/.env
 Environment=BETTERDESK_SUPERVISOR=systemd
-Environment=SIGNAL_PORT=21116
-Environment=RELAY_PORT=21117
 Environment=GO_API_PORT=${GO_API_PORT:-21114}
 Environment=MESH_ENABLED=Y
 ${extra_env:-__EMPTY__}
@@ -4252,6 +4391,7 @@ setup_services() {
     server_ip=$(resolve_relay_ip)
     resolve_connection_mode_env
     print_info "Relay server IP: $server_ip (mode: ${RELAY_SERVERS:+fixed}${RELAY_SERVERS:-$RELAY_MODE})"
+    set_panel_public_host "${SSL_DOMAIN:-$server_ip}"
 
     local signal_rate_limit="${SIGNAL_RATE_LIMIT_PER_IP:-20}"
     if ! [[ "$signal_rate_limit" =~ ^[0-9]+$ ]]; then
@@ -4280,6 +4420,34 @@ setup_services() {
     print_success "Created betterdesk-server.service (server and web console, user $SERVICE_USER)"
 }
 
+# set_panel_public_host ADDRESS: the host of the address clients get becomes
+# PANEL_PUBLIC_HOST when .env has none, so the console's HTTP port redirects
+# to HTTPS on that host. A value set before stays.
+set_panel_public_host() {
+    local env_file="$CONSOLE_PATH/.env" host="${1%%,*}"
+    [ -f "$env_file" ] || return 0
+    [ -n "$(env_file_value "$env_file" PANEL_PUBLIC_HOST)" ] && return 0
+    case "$host" in
+        \[*) host="${host%%]*}]" ;;
+        *:*:*) ;;
+        *:*) host="${host%%:*}" ;;
+    esac
+    [ -n "$host" ] && _upsert_env_line "$env_file" PANEL_PUBLIC_HOST "$host"
+    return 0
+}
+
+# carry_unit_ports: the signal and relay ports an older unit set (they won
+# over .env) go into .env, where the admin changes them, so a unit written
+# without them keeps the ports the server listens on.
+carry_unit_ports() {
+    local key value
+    for key in SIGNAL_PORT RELAY_PORT; do
+        value=$(unit_env_value "$SERVER_UNIT" "$key")
+        [ -n "$value" ] && _upsert_env_line "$CONSOLE_PATH/.env" "$key" "$value"
+    done
+    return 0
+}
+
 # During UPDATE and REPAIR: write the unit again from the template with the
 # installed unit's arguments and extra settings; make it when missing.
 maybe_update_services() {
@@ -4290,6 +4458,8 @@ maybe_update_services() {
     local args extra
     args=$(unit_exec_args "$SERVER_UNIT")
     extra=$(server_unit_extra_environment)
+    carry_unit_ports
+    set_panel_public_host "$(unit_exec_flag_value "$SERVER_UNIT" -relay-servers)"
     write_server_unit "$args" "$extra"
     systemctl daemon-reload
     print_info "betterdesk-server.service written again with its arguments and settings"
@@ -4313,18 +4483,24 @@ console_health_url() {
     fi
 }
 
+# The signal and relay ports the server listens on.
+signal_port() { read_effective_console_setting SIGNAL_PORT 21116; }
+relay_port() { read_effective_console_setting RELAY_PORT 21117; }
+
 # verify_go_install [SECONDS]: the service runs, the API and the web console
 # answer /health, signal and relay listen, and the client API port listens
 # when it is on.
 verify_go_install() {
-    local timeout="${1:-60}" waited=0 api_ok=false console_url console_ok=false
+    local timeout="${1:-60}" waited=0 api_ok=false console_url console_ok=false signal relay
     console_url=$(console_health_url)
+    signal=$(signal_port)
+    relay=$(relay_port)
     [ -z "$console_url" ] && console_ok=true
     while [ "$waited" -lt "$timeout" ]; do
         if systemctl is-active --quiet "$SERVER_SERVICE"; then
             [ "$api_ok" = true ] || { curl -fsS -o /dev/null --max-time 3 "http://127.0.0.1:${GO_API_PORT:-21114}/api/health" 2>/dev/null && api_ok=true; }
             [ "$console_ok" = true ] || { curl -ksf -o /dev/null --max-time 3 "$console_url" 2>/dev/null && console_ok=true; }
-            if [ "$api_ok" = true ] && [ "$console_ok" = true ] && _tcp_port_is_listening 21116 && _tcp_port_is_listening 21117; then
+            if [ "$api_ok" = true ] && [ "$console_ok" = true ] && _tcp_port_is_listening "$signal" && _tcp_port_is_listening "$relay"; then
                 break
             fi
         fi
@@ -4338,15 +4514,15 @@ verify_go_install() {
     fi
     [ "$api_ok" = true ] || { print_error "The API does not answer on :${GO_API_PORT:-21114}"; show_service_logs "$SERVER_SERVICE" 30; return 1; }
     [ "$console_ok" = true ] || { print_error "The web console does not answer $console_url"; show_service_logs "$SERVER_SERVICE" 30; return 1; }
-    _tcp_port_is_listening 21116 || { print_error "Signal port 21116 is not listening"; return 1; }
-    _tcp_port_is_listening 21117 || { print_error "Relay port 21117 is not listening"; return 1; }
+    _tcp_port_is_listening "$signal" || { print_error "Signal port $signal is not listening"; return 1; }
+    _tcp_port_is_listening "$relay" || { print_error "Relay port $relay is not listening"; return 1; }
     if [ "$(read_effective_console_setting API_ENABLED true | tr '[:upper:]' '[:lower:]')" = "true" ] \
         && [ "$(read_effective_console_setting CONSOLE_PORT 5000)" != "0" ]; then
         local client_port
         client_port=$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")
         _tcp_port_is_listening "$client_port" || print_warning "The client API port $client_port is not listening"
     fi
-    print_success "betterdesk-server answers: API :${GO_API_PORT:-21114}${console_url:+, web console $console_url}, signal :21116, relay :21117"
+    print_success "betterdesk-server answers: API :${GO_API_PORT:-21114}${console_url:+, web console $console_url}, signal :$signal, relay :$relay"
 }
 
 #===============================================================================
@@ -4750,7 +4926,13 @@ update_go_install() {
         # The server's own updater: the release of the channel, its manifest
         # signature and SHA-256 checked, the old binary kept as .prev
         print_step "Installing the newest release with betterdesk-server update..."
-        if ! server_cmd --as-service update --yes; then
+        # The repository goes to the updater: an installed binary may have
+        # an older default
+        local owner repo
+        owner="${UPDATE_GITHUB_OWNER_GIVEN:-$(env_file_value "$CONSOLE_PATH/.env" UPDATE_GITHUB_OWNER)}"
+        repo="${UPDATE_GITHUB_REPO_GIVEN:-$(env_file_value "$CONSOLE_PATH/.env" UPDATE_GITHUB_REPO)}"
+        if ! UPDATE_GITHUB_OWNER="${owner:-$UPDATE_GITHUB_OWNER}" UPDATE_GITHUB_REPO="${repo:-$UPDATE_GITHUB_REPO}" \
+            server_cmd --as-service update --yes; then
             print_error "betterdesk-server update failed"
             return 1
         fi
@@ -4762,7 +4944,9 @@ update_go_install() {
     set_server_folder_permissions
     systemctl reset-failed "$SERVER_SERVICE" 2>/dev/null || true
     systemctl restart "$SERVER_SERVICE" || true
-    if ! verify_go_install 90; then
+    if verify_go_install 90; then
+        forget_first_admin_password
+    else
         if [ "$before" != "$after" ] && [ -f "$bin.prev" ]; then
             print_error "The new binary did not come up; putting the previous one back"
             systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
@@ -4783,14 +4967,20 @@ update_go_install() {
     else
         print_success "Updated to $(timeout 10 "$bin" -version 2>/dev/null)"
     fi
+    install_manager_command
 }
 
-# Shows the admin's first password after a fresh install.
+# Shows the admin's first password, once: only when this run made the
+# console's .env. The server makes the admin at its first start from
+# DEFAULT_ADMIN_PASSWORD.
 create_admin_user() {
     print_step "Admin account..."
 
-    # The server makes the admin at its first start from
-    # DEFAULT_ADMIN_PASSWORD. Prefer the installer's password, then .env.
+    if [ "${FRESH_CONSOLE_ENV:-false}" != true ]; then
+        print_info "The admin account and its password stay as they are."
+        print_info "Forgot it? sudo $(basename "$MANAGER_COMMAND") --reset-password"
+        return 0
+    fi
     local admin_password="${ADMIN_PASSWORD:-}"
     if [ -z "$admin_password" ]; then
         admin_password=$(env_file_value "$CONSOLE_PATH/.env" DEFAULT_ADMIN_PASSWORD)
@@ -4828,6 +5018,79 @@ CREDEOF
 
 start_services() {
     start_services_with_verification
+}
+
+# print_install_summary: what the admin needs after an install, and no
+# password: the console's address, the first sign-in, what RustDesk
+# clients are given, the log, the settings file and the commands for
+# later.
+print_install_summary() {
+    local env_file="$CONSOLE_PATH/.env" cmd host key console http_port https_port
+    local id_server relay_server signal relay
+    cmd=$(basename "$MANAGER_COMMAND")
+    host=$(env_file_value "$env_file" PANEL_PUBLIC_HOST)
+    [ -n "$host" ] || host=$(get_public_ip)
+    key=$(cat "$RUSTDESK_PATH/id_ed25519.pub" 2>/dev/null || true)
+    http_port=$(resolve_panel_http_port)
+    https_port=$(resolve_panel_https_port)
+    if [ "$MINIMAL_MODE" = true ] || [ "$http_port" = 0 ]; then
+        console="off (set CONSOLE_PORT in $env_file to turn it on)"
+    elif [ "$(read_effective_console_setting HTTPS_ENABLED false | tr '[:upper:]' '[:lower:]')" = "true" ]; then
+        console="https://$host:$https_port  (http://$host:$http_port leads there)"
+    else
+        console="http://$host:$http_port"
+    fi
+    signal=$(signal_port)
+    relay=$(relay_port)
+    id_server="$host"
+    [ "$signal" = 21116 ] || id_server="$host:$signal"
+    relay_server="$host"
+    [ "$relay" = 21117 ] || relay_server="$host:$relay"
+
+    echo ""
+    echo -e "${GREEN}${BOLD}BetterDesk is installed${NC}"
+    echo ""
+    echo -e "  Web console:   ${WHITE}$console${NC}"
+    local subject="" issuer=""
+    if [ -f "$RUSTDESK_PATH/ssl/betterdesk.crt" ]; then
+        subject=$(openssl x509 -in "$RUSTDESK_PATH/ssl/betterdesk.crt" -noout -subject 2>/dev/null | sed 's/^subject=//')
+        issuer=$(openssl x509 -in "$RUSTDESK_PATH/ssl/betterdesk.crt" -noout -issuer 2>/dev/null | sed 's/^issuer=//')
+    fi
+    if [ -n "$subject" ] && [ "$subject" = "$issuer" ]; then
+        echo "                 The certificate is self-signed, so the browser warns once."
+    fi
+    if [ "${FRESH_CONSOLE_ENV:-false}" = true ]; then
+        echo "  First sign-in: user admin, with the password shown above (it is not shown again)"
+    else
+        echo "  Sign in:       user admin; forgot the password? sudo $cmd --reset-password"
+    fi
+    echo "  RustDesk clients (Settings > Network > ID/Relay server):"
+    echo -e "    ID server:     ${WHITE}$id_server${NC}"
+    echo -e "    Relay server:  ${WHITE}$relay_server${NC}"
+    local api_scheme=http
+    client_api_should_use_tls && api_scheme=https
+    echo -e "    API server:    ${WHITE}$api_scheme://$host:$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")${NC}"
+    echo -e "    Key:           ${WHITE}$key${NC}"
+    echo "  Log:           sudo journalctl -u betterdesk-server -f"
+    echo "  Settings:      $env_file (then: sudo systemctl restart betterdesk-server)"
+    echo "  Update:        sudo $cmd --update"
+    echo "  Uninstall:     sudo $cmd --uninstall"
+    echo ""
+}
+
+# forget_first_admin_password: once the server has started and made the
+# admin, .env and its kept copies hold no admin password any more (the
+# server reads DEFAULT_ADMIN_PASSWORD and INIT_ADMIN_PASS only to make the
+# first account).
+forget_first_admin_password() {
+    local f
+    for f in "$CONSOLE_PATH/.env" "$CONSOLE_PATH"/.env.pre-go*; do
+        [ -f "$f" ] || continue
+        if grep -q '^DEFAULT_ADMIN_PASSWORD=.' "$f" || grep -q '^INIT_ADMIN_PASS=' "$f"; then
+            sed -i -e 's/^DEFAULT_ADMIN_PASSWORD=.*/DEFAULT_ADMIN_PASSWORD=/' -e '/^INIT_ADMIN_PASS=/d' "$f"
+        fi
+    done
+    return 0
 }
 
 #===============================================================================
@@ -4880,6 +5143,10 @@ do_install() {
 
     # Stop services if running (prevents "Text file busy" error)
     graceful_stop_services
+    if [ -n "${FOREIGN_PORT_HOLDERS:-}" ]; then
+        print_error "Installation stopped: the ports above are in use"
+        return 1
+    fi
 
     install_dependencies
 
@@ -4912,6 +5179,7 @@ do_install() {
     if ! start_services; then
         install_ok=false
     fi
+    [ "$install_ok" = true ] && forget_first_admin_password
 
     echo ""
     if [ "$install_ok" = true ]; then
@@ -4922,42 +5190,7 @@ do_install() {
     fi
     echo ""
 
-    local server_ip
-    server_ip=$(get_public_ip)
-    local public_key=""
-    if [ -f "$RUSTDESK_PATH/id_ed25519.pub" ]; then
-        public_key=$(cat "$RUSTDESK_PATH/id_ed25519.pub")
-    fi
-
-    local db_type_info="SQLite"
-    if [ "$USE_POSTGRESQL" = "true" ]; then
-        db_type_info="PostgreSQL"
-    fi
-
-    local tls_status="Disabled"
-    if [ -f "$RUSTDESK_PATH/ssl/betterdesk.crt" ] && [ -f "$RUSTDESK_PATH/ssl/betterdesk.key" ]; then
-        tls_status="Self-signed (auto-generated)"
-    fi
-
-    local panel_url="off (minimal installation)"
-    if [ "$MINIMAL_MODE" != true ]; then
-        if [ "$(read_effective_console_setting HTTPS_ENABLED false | tr '[:upper:]' '[:lower:]')" = "true" ]; then
-            panel_url="https://$server_ip:$(resolve_panel_https_port)"
-        else
-            panel_url="http://$server_ip:$(resolve_panel_http_port)"
-        fi
-    fi
-
-    echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║              INSTALLATION INFO                             ║${NC}"
-    echo -e "${CYAN}╠════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${CYAN}║  Panel Web:     ${WHITE}$panel_url${CYAN}                        ║${NC}"
-    echo -e "${CYAN}║  API Port:      ${WHITE}$API_PORT${CYAN}                                     ║${NC}"
-    echo -e "${CYAN}║  Server ID:     ${WHITE}$server_ip${CYAN}                                    ║${NC}"
-    echo -e "${CYAN}║  Database:      ${WHITE}$db_type_info${CYAN}                                 ║${NC}"
-    echo -e "${CYAN}║  TLS:           ${WHITE}$tls_status${CYAN}                                   ║${NC}"
-    echo -e "${CYAN}║  Key:           ${WHITE}${public_key:0:20}...${CYAN}                          ║${NC}"
-    echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
+    print_install_summary
 
     # Offer TLS configuration for fresh installs
     if [ "$install_ok" = true ] && [ "$AUTO_MODE" = false ] && [ "$MINIMAL_MODE" != true ]; then
@@ -4973,6 +5206,8 @@ do_install() {
         fi
     fi
 
+    [ "$install_ok" = true ] && install_manager_command
+
     if [ "$AUTO_MODE" = false ]; then
         press_enter
     fi
@@ -4984,8 +5219,11 @@ do_install() {
 #===============================================================================
 
 # GitHub repository configuration for online updates
-UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-UNITRONIX}"
-UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-BetterDesk}"
+# A repository given to the installer wins over .env, and .env over these
+UPDATE_GITHUB_OWNER_GIVEN="${UPDATE_GITHUB_OWNER:-}"
+UPDATE_GITHUB_REPO_GIVEN="${UPDATE_GITHUB_REPO:-}"
+UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-trybetterdesk}"
+UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-betterdesk}"
 # A channel given to the installer (install.sh passes the branch it
 # installed) wins over .env and is written into it
 UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"
@@ -5622,29 +5860,41 @@ do_reset_password() {
     if [ "$CONSOLE_TYPE" = "none" ]; then
         print_error "No console installation detected!"
         press_enter
-        return
+        return 1
     fi
     if [ "$CONSOLE_TYPE" = "nodejs" ]; then
         print_error "This install runs the Node.js console; use Update to move it into betterdesk-server first"
         press_enter
-        return
+        return 1
     fi
 
-    local _menu_items=(
-        $'Generate random password\tCreate a strong random admin password'
-        $'Set custom password\tType a new password (min. 8 characters)'
-        $'Back\tReturn to the main menu'
-    )
-    local _menu_returns=( 1 2 0 )
-    menu_choose "Admin Password Reset" "The account admin of the web console"
-    local pw_choice="$MENU_CHOICE"
-
-    local new_password
+    local pw_choice new_password
+    if [ "$AUTO_MODE" = true ]; then
+        # --reset-password: ADMIN_PASSWORD, else a random one
+        pw_choice=1
+        [ -n "${ADMIN_PASSWORD:-}" ] && pw_choice=env
+    else
+        local _menu_items=(
+            $'Generate random password\tCreate a strong random admin password'
+            $'Set custom password\tType a new password (min. 8 characters)'
+            $'Back\tReturn to the main menu'
+        )
+        local _menu_returns=( 1 2 0 )
+        menu_choose "Admin Password Reset" "The account admin of the web console"
+        pw_choice="$MENU_CHOICE"
+    fi
 
     case $pw_choice in
         1)
             # M-05: full hex entropy
             new_password=$(openssl rand -hex 16)
+            ;;
+        env)
+            new_password="$ADMIN_PASSWORD"
+            if [ ${#new_password} -lt 8 ]; then
+                print_error "ADMIN_PASSWORD must be at least 8 characters"
+                return 1
+            fi
             ;;
         2)
             echo ""
@@ -5670,13 +5920,9 @@ do_reset_password() {
 
     echo ""
     if [ "$success" = "true" ]; then
-        # DEFAULT_ADMIN_PASSWORD in .env must match, or the next start with a
-        # forced password update would set the old one again
-        if grep -q '^DEFAULT_ADMIN_PASSWORD=' "$CONSOLE_PATH/.env" 2>/dev/null; then
-            # awk handles passwords with special characters (|, &, $, etc.)
-            awk -v pw="$new_password" '/^DEFAULT_ADMIN_PASSWORD=/{print "DEFAULT_ADMIN_PASSWORD=" pw; next}{print}' "$CONSOLE_PATH/.env" > "$CONSOLE_PATH/.env.tmp" \
-                && cat "$CONSOLE_PATH/.env.tmp" > "$CONSOLE_PATH/.env" && rm -f "$CONSOLE_PATH/.env.tmp"
-        fi
+        # .env keeps no password: an old one there would come back at a
+        # start with a forced password update
+        forget_first_admin_password
 
         echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
         echo -e "${GREEN}║              NEW LOGIN CREDENTIALS                       ║${NC}"
@@ -5701,6 +5947,7 @@ CREDEOF
     fi
 
     press_enter
+    [ "$success" = true ]
 }
 
 #===============================================================================
@@ -5986,80 +6233,61 @@ do_build_legacy_rust() {
 # Firewall Configuration
 #===============================================================================
 
+# firewall_ports: the ports the installers open, one PORT/PROTO a line:
+# RustDesk's (NAT test, signal TCP and UDP, relay), the client API port,
+# the CDAP gateway (21122) while CDAP is on, and the console's ports
+# unless TLS ends at a reverse proxy (TRUST_PROXY).
+firewall_ports() {
+    local signal relay value port
+    signal=$(signal_port)
+    relay=$(relay_port)
+    printf '%s\n' "$((signal - 1))/tcp" "$signal/tcp" "$signal/udp" "$relay/tcp"
+    echo "$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")/tcp"
+    value=$(read_effective_console_setting CDAP_ENABLED Y | tr '[:upper:]' '[:lower:]')
+    case "$value" in n|no|0|false|off) ;; *) echo "21122/tcp" ;; esac
+    value=$(read_effective_console_setting TRUST_PROXY false | tr '[:upper:]' '[:lower:]')
+    case "$value" in y|yes|1|true|on) return 0 ;; esac
+    port=$(resolve_panel_http_port)
+    [ "$port" != 0 ] && echo "$port/tcp"
+    if [ "$(read_effective_console_setting HTTPS_ENABLED false | tr '[:upper:]' '[:lower:]')" = "true" ]; then
+        echo "$(resolve_panel_https_port)/tcp"
+    fi
+    return 0
+}
+
+# configure_firewall_rules: opens firewall_ports in ufw or firewalld when
+# one of them is active, else with iptables, and names the ports a
+# firewall outside this machine needs.
 configure_firewall_rules() {
-    local required_ports="${GO_API_PORT:-21114} ${CLIENT_API_PORT:-21121} 21115 21116 21117 21118 21119 5000 5443"
-    local created=0
-    local total=0
-    
-    if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "active"; then
-        print_info "Configuring UFW firewall rules..."
-        
-        for port in $required_ports; do
-            total=$((total + 1))
-            if ! ufw status 2>/dev/null | grep -qE "^${port}[/ ]"; then
-                if [ "$port" = "21116" ]; then
-                    ufw allow 21116/tcp comment "BetterDesk ID Server TCP" 2>/dev/null && created=$((created + 1))
-                    ufw allow 21116/udp comment "BetterDesk ID Server UDP" 2>/dev/null && created=$((created + 1))
-                    total=$((total + 1))
-                else
-                    ufw allow "${port}/tcp" comment "BetterDesk port ${port}" 2>/dev/null && created=$((created + 1))
-                fi
-            fi
+    local entries entry created=0
+    mapfile -t entries < <(firewall_ports)
+    if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
+        print_info "Opening the BetterDesk ports in ufw..."
+        for entry in "${entries[@]}"; do
+            ufw allow "$entry" comment "BetterDesk" >/dev/null 2>&1 && created=$((created + 1))
         done
-        
-        ufw reload 2>/dev/null
-        
     elif command -v firewall-cmd &>/dev/null && systemctl is-active --quiet firewalld 2>/dev/null; then
-        print_info "Configuring firewalld rules..."
-        
-        for port in $required_ports; do
-            total=$((total + 1))
-            local open_ports=$(firewall-cmd --list-ports 2>/dev/null)
-            if ! echo "$open_ports" | grep -qE "${port}/tcp"; then
-                if [ "$port" = "21116" ]; then
-                    firewall-cmd --permanent --add-port=21116/tcp 2>/dev/null && created=$((created + 1))
-                    firewall-cmd --permanent --add-port=21116/udp 2>/dev/null && created=$((created + 1))
-                    total=$((total + 1))
-                else
-                    firewall-cmd --permanent --add-port="${port}/tcp" 2>/dev/null && created=$((created + 1))
-                fi
-            fi
+        print_info "Opening the BetterDesk ports in firewalld..."
+        for entry in "${entries[@]}"; do
+            firewall-cmd --permanent --add-port="$entry" >/dev/null 2>&1 && created=$((created + 1))
         done
-        
-        firewall-cmd --reload 2>/dev/null
-        
+        firewall-cmd --reload >/dev/null 2>&1 || true
     elif command -v iptables &>/dev/null; then
-        print_info "Configuring iptables rules..."
-        
-        for port in $required_ports; do
-            total=$((total + 1))
-            if ! iptables -L INPUT -n 2>/dev/null | grep -qE "dpt:${port}\b"; then
-                if [ "$port" = "21116" ]; then
-                    iptables -A INPUT -p tcp --dport 21116 -j ACCEPT 2>/dev/null && created=$((created + 1))
-                    iptables -A INPUT -p udp --dport 21116 -j ACCEPT 2>/dev/null && created=$((created + 1))
-                    total=$((total + 1))
-                else
-                    iptables -A INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null && created=$((created + 1))
-                fi
-            fi
+        print_info "Opening the BetterDesk ports with iptables..."
+        for entry in "${entries[@]}"; do
+            iptables -C INPUT -p "${entry#*/}" --dport "${entry%/*}" -j ACCEPT 2>/dev/null \
+                || iptables -A INPUT -p "${entry#*/}" --dport "${entry%/*}" -j ACCEPT 2>/dev/null
+            created=$((created + 1))
         done
-        
-        # Try to persist iptables rules
         if command -v iptables-save &>/dev/null; then
             iptables-save > /etc/iptables/rules.v4 2>/dev/null || \
             iptables-save > /etc/sysconfig/iptables 2>/dev/null || true
         fi
     else
-        print_info "No active firewall detected — no rules to configure"
-        return 0
+        print_info "No firewall is active on this machine"
     fi
-    
-    if [ $created -gt 0 ]; then
-        print_success "Created $created firewall rule(s)"
-    else
-        print_success "All firewall rules already configured"
-    fi
-    
+    [ "$created" -gt 0 ] && print_success "Open: ${entries[*]}"
+    print_info "A firewall outside this machine (your cloud provider's) needs the same ports: ${entries[*]}"
     return 0
 }
 
@@ -6448,7 +6676,25 @@ do_uninstall() {
         print_info "Preserved console data: $CONSOLE_PATH"
     fi
     
+    if [ "$PURGE_MODE" = true ]; then
+        rm -f "$MANAGER_COMMAND"
+    fi
+
     print_success "BetterDesk has been uninstalled"
+    local left=()
+    [ -d "$RUSTDESK_PATH" ] && left+=("$RUSTDESK_PATH: the database, the server's keys and certificates")
+    [ -d "$CONSOLE_PATH" ] && left+=("$CONSOLE_PATH: the settings (.env) and the console's data")
+    [ -d "$BACKUP_DIR" ] && left+=("$BACKUP_DIR: the backups")
+    id "$SERVICE_USER" &>/dev/null && left+=("the system user $SERVICE_USER (sudo userdel $SERVICE_USER)")
+    [ "$USE_POSTGRESQL" = true ] && left+=("the PostgreSQL database and PostgreSQL itself")
+    left+=("the firewall rules for the BetterDesk ports")
+    [ -x "$MANAGER_COMMAND" ] && left+=("the command $MANAGER_COMMAND, to install again")
+    echo ""
+    echo "Left on this machine:"
+    printf '  %s\n' "${left[@]}"
+    if [ "$PURGE_MODE" != true ] && { [ -d "$RUSTDESK_PATH" ] || [ -d "$CONSOLE_PATH" ]; }; then
+        echo "Remove the data too with: sudo $(basename "$MANAGER_COMMAND") --uninstall --purge"
+    fi
     press_enter
 }
 
@@ -6716,7 +6962,7 @@ do_configure_ssl() {
 # HTTP <-> HTTPS switch so the operator gets immediate, trustworthy feedback.
 # Honours the project invariant: the Go API (:21121) must remain HTTP for RustDesk clients.
 run_protocol_tests() {
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
     local ssl_dir="$RUSTDESK_PATH/ssl"
     local pass=0 fail=0 warn=0
 
@@ -7019,7 +7265,7 @@ do_toggle_protocol() {
 
     local env_file="$CONSOLE_PATH/.env"
     local svc_file="/etc/systemd/system/betterdesk-console.service"
-    local go_svc_file="/etc/systemd/system/betterdesk-server.service"
+    local go_svc_file="$SERVER_UNIT"
     local ssl_dir="$RUSTDESK_PATH/ssl"
 
     # Detect current mode (effective runtime: systemd overrides .env)
@@ -7410,15 +7656,24 @@ do_migrate_database() {
             print_step "Creating backup before migration..."
             "$migrate_bin" -mode backup -src "$src_db" 2>&1 || true
 
-            print_step "Running SQLite → PostgreSQL migration..."
-            "$migrate_bin" -mode sqlite2pg -src "$src_db" -dst "$pg_uri" ${pg_overwrite:+"$pg_overwrite"} 2>&1
+            # The install's own database: the server stops for the copy and
+            # starts again on the new database
+            local own_db=false
+            [ "$src_db" = "$RUSTDESK_PATH/db_v2.sqlite3" ] && [ -f "$CONSOLE_PATH/.env" ] && own_db=true
+            [ "$own_db" = true ] && systemctl stop "$SERVER_SERVICE" 2>/dev/null
 
-            if [ $? -eq 0 ]; then
+            print_step "Running SQLite → PostgreSQL migration..."
+            if "$migrate_bin" -mode sqlite2pg -src "$src_db" -dst "$pg_uri" ${pg_overwrite:+"$pg_overwrite"} 2>&1; then
                 print_success "SQLite → PostgreSQL migration completed successfully!"
-                print_info "Update your BetterDesk Go server config: DB_URL=$pg_uri"
+                if [ "$own_db" = true ]; then
+                    use_database_in_env postgres "$pg_uri"
+                    print_success "The install now runs on PostgreSQL"
+                fi
             else
                 print_error "Migration failed. Check the output above for details."
+                [ "$own_db" = true ] && print_info "The install stays on $src_db"
             fi
+            [ "$own_db" = true ] && systemctl restart "$SERVER_SERVICE" 2>/dev/null
             ;;
         3)
             # PostgreSQL → SQLite
@@ -7443,13 +7698,25 @@ do_migrate_database() {
                 "$migrate_bin" -mode backup -src "$dst_db" 2>&1 || true
             fi
 
+            # The install's own database: the server stops for the copy and
+            # starts again on the new database
+            local own_pg=false
+            [ -f "$CONSOLE_PATH/.env" ] && [ "$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)" = "$pg_uri" ] \
+                && [ "$dst_db" = "$RUSTDESK_PATH/db_v2.sqlite3" ] && own_pg=true
+            [ "$own_pg" = true ] && systemctl stop "$SERVER_SERVICE" 2>/dev/null
+
             print_step "Running PostgreSQL → SQLite migration..."
             if "$migrate_bin" -mode pg2sqlite -src "$pg_uri" -dst "$dst_db" ${MIGRATE_OVERWRITE:+"$MIGRATE_OVERWRITE"} 2>&1; then
                 migrate_sqlite_dst_done "$dst_db"
                 print_success "PostgreSQL → SQLite migration completed successfully!"
+                if [ "$own_pg" = true ]; then
+                    use_database_in_env sqlite "$dst_db"
+                    print_success "The install now runs on SQLite ($dst_db)"
+                fi
             else
                 print_error "Migration failed. Check the output above for details."
             fi
+            [ "$own_pg" = true ] && systemctl restart "$SERVER_SERVICE" 2>/dev/null
             ;;
         4)
             # Backup
@@ -7532,6 +7799,8 @@ main() {
     echo ""
     sleep 1
 
+    default_to_auto_without_terminal
+
     if [ "$CHECK_CAPABILITIES" = true ] || [ "$REPAIR_PERMISSIONS" = true ] \
         || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
         local management_rc=0
@@ -7560,19 +7829,29 @@ main() {
         exit $?
     fi
 
-    # Auto mode - run installation directly; an install with the Node.js
-    # console is upgraded in place
+    # --uninstall asks nothing: it makes a backup and keeps the data unless
+    # --purge is given
+    [ "$UNINSTALL_MODE" = true ] && AUTO_MODE=true
+
+    if [ "$RESET_PASSWORD_MODE" = true ]; then
+        AUTO_MODE=true
+        do_reset_password
+        exit $?
+    fi
+
+    # Without questions: install, or update an install that is there (run
+    # again, the installer updates); an install with the Node.js console is
+    # upgraded in place
     if [ "$AUTO_MODE" = true ]; then
-        print_info "Running in AUTO mode..."
-        if [ "$UNINSTALL_MODE" = true ]; then
-            do_uninstall
-        elif is_node_era_install; then
-            do_update
-        elif [ "$MINIMAL_MODE" = true ]; then
-            do_install_minimal
-        else
-            do_install
-        fi
+        case "$(auto_action)" in
+            uninstall) do_uninstall ;;
+            upgrade|update)
+                print_info "BetterDesk is installed here: updating it"
+                do_update
+                ;;
+            minimal) do_install_minimal ;;
+            *) do_install ;;
+        esac
         exit $?
     fi
 
@@ -7648,8 +7927,28 @@ main() {
     done
 }
 
-# Run only when executed directly; this also lets installer tests source the
+# auto_action: what a run without questions does here: install, update (an
+# install of the server with its console is there), upgrade (the Node.js
+# console is there), minimal or uninstall. --postgresql on an install that
+# runs on SQLite installs again, which moves it to PostgreSQL.
+auto_action() {
+    if [ "$UNINSTALL_MODE" = true ]; then
+        echo uninstall
+    elif is_node_era_install; then
+        echo upgrade
+    elif is_go_only_install && [ -x "$(server_binary_path)" ] && [ -f "$CONSOLE_PATH/.env" ] \
+        && { [ "$USE_POSTGRESQL" != true ] || [ "$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)" = postgres ]; }; then
+        echo update
+    elif [ "$MINIMAL_MODE" = true ]; then
+        echo minimal
+    else
+        echo install
+    fi
+}
+
+# Run only when executed directly or piped into bash (curl ... | sudo bash,
+# where BASH_SOURCE is empty); this also lets installer tests source the
 # bounded command helpers without starting the interactive manager.
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+if [[ "${BASH_SOURCE[0]:-$0}" == "$0" ]]; then
     main "$@"
 fi

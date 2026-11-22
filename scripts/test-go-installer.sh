@@ -112,6 +112,7 @@ test_write_server_unit() (
     grep -qx "Environment=BETTERDESK_SUPERVISOR=systemd" "$unit" || fail "BETTERDESK_SUPERVISOR"
     grep -qx "Environment=BETTERDESK_ENV_FILE=$CONSOLE_PATH/.env" "$unit" || fail "BETTERDESK_ENV_FILE"
     grep -qx "SuccessExitStatus=3" "$unit" || fail "SuccessExitStatus"
+    if grep -q 'ENROLLMENT_MODE' "$unit"; then fail "the unit sets the enrollment mode"; fi
     grep -qx "Restart=always" "$unit" || fail "Restart"
     grep -qx "ExecStart=$RUSTDESK_PATH/betterdesk-server -mode all -api-port 21114" "$unit" || fail "ExecStart"
     if grep -q 'CONSOLE_PORT\|EnvironmentFile\|__EMPTY__\|AmbientCapabilities' "$unit"; then
@@ -125,6 +126,35 @@ test_write_server_unit() (
     grep -qx "AmbientCapabilities=CAP_NET_BIND_SERVICE" "$unit" || fail "AmbientCapabilities for port 80"
     grep -qx "Environment=TRUST_PROXY=Y" "$unit" || fail "extra environment"
     [ "$(server_unit_extra_environment)" = "Environment=TRUST_PROXY=Y" ] || fail "server_unit_extra_environment: $(server_unit_extra_environment)"
+    rm -rf "$TEST_DIR"
+)
+
+# L68: the signal and relay ports live in .env, where the admin changes
+# them; the unit does not set them, and an update moves the ports an older
+# unit set into .env instead of setting 21116 and 21117 again.
+test_update_keeps_the_admins_ports() (
+    load
+    systemctl() { :; }
+    print_info() { :; }
+    write_server_unit "-mode all -api-port 21114" ""
+    if grep -q 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT"; then fail "the unit sets $(grep 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT")"; fi
+    sed -i '/^Environment=BETTERDESK_SUPERVISOR=/a Environment=SIGNAL_PORT=31116\nEnvironment=RELAY_PORT=31117' "$SERVER_UNIT"
+    printf 'SIGNAL_PORT=21116\nRELAY_PORT=21117\nSESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    maybe_update_services
+    if grep -q 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT"; then fail "the updated unit sets $(grep 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT")"; fi
+    grep -qx 'SIGNAL_PORT=31116' "$CONSOLE_PATH/.env" && grep -qx 'RELAY_PORT=31117' "$CONSOLE_PATH/.env" \
+        || fail "the update lost the unit's ports: $(grep '_PORT=' "$CONSOLE_PATH/.env" | tr '\n' ' ')"
+    grep -qx 'SESSION_SECRET=kept' "$CONSOLE_PATH/.env" || fail "the update lost a line of .env"
+
+    # A repair puts the ports into .env when it has none, and leaves the
+    # admin's alone
+    ensure_go_server_signal_ports || true
+    grep -qx 'SIGNAL_PORT=31116' "$CONSOLE_PATH/.env" || fail "a repair changed the admin's signal port"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    ensure_go_server_signal_ports || true
+    grep -qx 'SIGNAL_PORT=21116' "$CONSOLE_PATH/.env" && grep -qx 'RELAY_PORT=21117' "$CONSOLE_PATH/.env" \
+        || fail "a repair left .env without ports: $(cat "$CONSOLE_PATH/.env")"
+    if grep -q 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT"; then fail "a repair pinned $(grep 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT")"; fi
     rm -rf "$TEST_DIR"
 )
 
@@ -183,6 +213,9 @@ FAKE
     grep -qx 'INIT_ADMIN_PASS=Fresh-Admin-Pass-1' "$CONSOLE_PATH/.env" \
         || fail "a fresh .env has no INIT_ADMIN_PASS of the admin password: $(grep -c INIT_ADMIN_PASS "$CONSOLE_PATH/.env") lines"
     grep -qx "DB_URL=$RUSTDESK_PATH/db_v2.sqlite3" "$CONSOLE_PATH/.env" || fail "DB_URL of a fresh SQLite install"
+    # L65: a fresh install starts in Managed; .env is only the first
+    # default, a mode saved in the console wins
+    grep -qx 'ENROLLMENT_MODE=managed' "$CONSOLE_PATH/.env" || fail "a fresh .env does not start in Managed"
     rm -rf "$TEST_DIR"
 )
 
@@ -255,6 +288,7 @@ FAKE
     printf 'UPDATE_GITHUB_BRANCH=dev\nDEFAULT_ADMIN_PASSWORD=x\n' > "$CONSOLE_PATH/.env"
     merge_console_env false >/dev/null
     grep -qx 'UPDATE_GITHUB_BRANCH=dev' "$CONSOLE_PATH/.env" || fail "an update without a channel changed .env"
+    if grep -q '^ENROLLMENT_MODE' "$CONSOLE_PATH/.env"; then fail "an update added an enrollment mode to .env"; fi
     read_update_github_branch_from_env
     [ "$UPDATE_GITHUB_BRANCH" = dev ] || fail "the channel of .env was not read: $UPDATE_GITHUB_BRANCH"
     rm -rf "$TEST_DIR"
@@ -304,6 +338,272 @@ test_console_home_copies_no_console_files() (
     rm -rf "$TEST_DIR"
 )
 
+# L31: releases, the update channel and the unit's documentation link
+# name the fork's repository.
+test_releases_come_from_the_fork() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO UPDATE_GITHUB_BRANCH RELEASE_BASE_URL
+    load
+    local base
+    base=$(release_base_url)
+    [ "$base" = "https://github.com/trybetterdesk/betterdesk/releases/latest/download" ] \
+        || fail "the stable channel downloads from $base"
+    UPDATE_GITHUB_BRANCH=dev
+    base=$(release_base_url)
+    [ "$base" = "https://github.com/trybetterdesk/betterdesk/releases/download/dev" ] \
+        || fail "the development channel downloads from $base"
+    write_server_unit "-mode all" ""
+    grep -qx "Documentation=https://github.com/trybetterdesk/betterdesk" "$SERVER_UNIT" \
+        || fail "the unit's documentation link: $(grep '^Documentation=' "$SERVER_UNIT")"
+    rm -rf "$TEST_DIR"
+)
+
+# L140: --channel picks the update channel, and a failed download says
+# what to do: no stable release yet, or no way out to the internet.
+test_channel_and_download_errors() (
+    unset UPDATE_GITHUB_BRANCH RELEASE_BASE_URL UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO
+    set -- --channel dev
+    # shellcheck disable=SC1091
+    source "$SCRIPT_ROOT/betterdesk.sh"
+    [ "$UPDATE_GITHUB_BRANCH" = dev ] && [ "$UPDATE_GITHUB_BRANCH_GIVEN" = dev ] \
+        || fail "--channel dev gives the channel '$UPDATE_GITHUB_BRANCH' (given '$UPDATE_GITHUB_BRANCH_GIVEN')"
+    load
+    print_info() { echo "$1"; }
+    unset UPDATE_GITHUB_BRANCH_GIVEN
+    UPDATE_GITHUB_BRANCH=main
+    local out
+    curl() { printf '404'; }
+    out=$(download_release_binary "$TEST_DIR" 2>&1) && fail "a download that found nothing succeeded"
+    case "$out" in
+        *"no stable release"*"--channel dev"*"--binary"*) ;;
+        *) fail "a missing stable release says: $out" ;;
+    esac
+    curl() { printf '000'; return 6; }
+    out=$(download_release_binary "$TEST_DIR" 2>&1) && fail "a download without network succeeded"
+    case "$out" in
+        *"Could not reach"*"--binary"*) ;;
+        *) fail "a download without network says: $out" ;;
+    esac
+    if bash "$SCRIPT_ROOT/betterdesk.sh" --channel nightly >/dev/null 2>&1; then fail "--channel nightly was taken"; fi
+    rm -rf "$TEST_DIR"
+)
+
+# L141: the installer runs piped from curl, takes no answers from a pipe,
+# and leaves the betterdesk command behind for updates and the uninstall.
+test_one_command_install() (
+    local out
+    # main runs: it asks for root, or as root it looks for an install
+    out=$(cd "$(mktemp -d)" && timeout 60 bash -s -- --check-permissions < "$SCRIPT_ROOT/betterdesk.sh" 2>&1 || true)
+    case "$out" in
+        *"requires root"*|*"Detecting installation"*) ;;
+        *) fail "betterdesk.sh piped into bash did not start: $out" ;;
+    esac
+    load
+    AUTO_MODE=false
+    default_to_auto_without_terminal < /dev/null
+    [ "$AUTO_MODE" = true ] || fail "without a terminal the installer would ask questions"
+    out=$( (press_enter; confirm "Go on?" && echo yes || echo no) < /dev/null 2>/dev/null)
+    case "$out" in
+        *no) ;;
+        *) fail "without a terminal a question did not take its default: $out" ;;
+    esac
+    MANAGER_COMMAND="$TEST_DIR/sbin/betterdesk"
+    install_manager_command >/dev/null
+    [ -x "$MANAGER_COMMAND" ] || fail "no betterdesk command was left behind"
+    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/betterdesk.sh" || fail "the betterdesk command is not this installer"
+    rm -rf "$TEST_DIR"
+)
+
+# L143: a second run updates instead of installing again, the password
+# shows only when the install made it, and after the first start .env and
+# its copies keep no admin password.
+test_rerun_updates_and_forgets_the_password() (
+    load
+    [ "$(auto_action)" = install ] || fail "a machine without BetterDesk gets $(auto_action)"
+    write_server_unit "-mode all" ""
+    printf '#!/bin/sh\n' > "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    printf 'DEFAULT_ADMIN_PASSWORD=First-Pass-1\nINIT_ADMIN_PASS=First-Pass-1\nSESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    cp "$CONSOLE_PATH/.env" "$CONSOLE_PATH/.env.pre-go"
+    [ "$(auto_action)" = update ] || fail "a second run on an install gets $(auto_action)"
+    USE_POSTGRESQL=true
+    [ "$(auto_action)" = install ] || fail "--postgresql on a SQLite install gets $(auto_action), not the move"
+    USE_POSTGRESQL=false
+    UNINSTALL_MODE=true
+    [ "$(auto_action)" = uninstall ] || fail "--uninstall on an install gets $(auto_action)"
+    UNINSTALL_MODE=false
+
+    local out
+    FRESH_CONSOLE_ENV=false
+    ADMIN_PASSWORD=""
+    out=$(create_admin_user 2>&1)
+    case "$out" in *First-Pass-1*) fail "a run that kept .env showed the admin password again" ;; esac
+    FRESH_CONSOLE_ENV=true
+    out=$(create_admin_user 2>&1)
+    case "$out" in *First-Pass-1*) ;; *) fail "a fresh install did not show the admin password" ;; esac
+
+    forget_first_admin_password
+    for f in "$CONSOLE_PATH/.env" "$CONSOLE_PATH/.env.pre-go"; do
+        if grep -q 'First-Pass-1' "$f"; then fail "$(basename "$f") keeps the admin password after the first start"; fi
+    done
+    grep -qx 'DEFAULT_ADMIN_PASSWORD=' "$CONSOLE_PATH/.env" || fail "DEFAULT_ADMIN_PASSWORD is not left empty"
+    grep -qx 'SESSION_SECRET=kept' "$CONSOLE_PATH/.env" || fail "forgetting the password lost a line of .env"
+    rm -rf "$TEST_DIR"
+)
+
+# L69: the host clients get becomes PANEL_PUBLIC_HOST, so the HTTP port
+# redirects to HTTPS there; a value the admin set stays.
+test_panel_public_host() (
+    load
+    systemctl() { :; }
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    set_panel_public_host "203.0.113.7:21117"
+    grep -qx 'PANEL_PUBLIC_HOST=203.0.113.7' "$CONSOLE_PATH/.env" || fail "PANEL_PUBLIC_HOST from host:port: $(grep PANEL_PUBLIC_HOST "$CONSOLE_PATH/.env")"
+    set_panel_public_host "198.51.100.1"
+    grep -qx 'PANEL_PUBLIC_HOST=203.0.113.7' "$CONSOLE_PATH/.env" || fail "a second address replaced PANEL_PUBLIC_HOST"
+    printf 'PANEL_PUBLIC_HOST=\n' > "$CONSOLE_PATH/.env"
+    write_server_unit "-mode all -relay-servers desk.example.org -api-port 21114" ""
+    maybe_update_services >/dev/null
+    grep -qx 'PANEL_PUBLIC_HOST=desk.example.org' "$CONSOLE_PATH/.env" || fail "an update set no PANEL_PUBLIC_HOST: $(cat "$CONSOLE_PATH/.env")"
+    rm -rf "$TEST_DIR"
+)
+
+# L149: the end of an install names the console's address, the first
+# sign-in, the client settings with the whole key, the log, the settings
+# file and the commands for update and uninstall, and shows no password.
+test_install_summary() (
+    load
+    printf 'PANEL_PUBLIC_HOST=desk.example.org\nHTTPS_ENABLED=true\nHTTPS_PORT=5443\nCONSOLE_PORT=5000\nDEFAULT_ADMIN_PASSWORD=\n' > "$CONSOLE_PATH/.env"
+    printf 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=\n' > "$RUSTDESK_PATH/id_ed25519.pub"
+    ADMIN_PASSWORD='Summary-Pass-1'
+    local out
+    out=$(print_install_summary 2>&1)
+    # L76: clients get the client API port, plain HTTP while the
+    # certificate is self-signed (RustDesk refuses it)
+    printf 'API_PORT=21121\nRUSTDESK_API_TLS=false\n' >> "$CONSOLE_PATH/.env"
+    out=$(print_install_summary 2>&1)
+    case "$out" in *"API server:    "*"http://desk.example.org:21121"*) ;; *) fail "the summary gives clients another API address: $out" ;; esac
+    for want in "https://desk.example.org:5443" "admin" "ID server" "desk.example.org" \
+        "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=" "journalctl -u betterdesk-server" "$CONSOLE_PATH/.env" \
+        "betterdesk --update" "betterdesk --uninstall"; do
+        case "$out" in *"$want"*) ;; *) fail "the summary does not name $want: $out" ;; esac
+    done
+    case "$out" in *Summary-Pass-1*) fail "the summary shows the password" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# L149: the uninstall says what it leaves on the machine, and --purge
+# removes the data and the betterdesk command too.
+test_uninstall_says_what_stays() (
+    load
+    systemctl() { :; }
+    do_backup_silent() { :; }
+    print_header() { :; }
+    AUTO_MODE=true
+    UNINSTALL_MODE=true
+    MANAGER_COMMAND="$TEST_DIR/sbin/betterdesk"
+    mkdir -p "$TEST_DIR/sbin" && printf '#!/bin/sh\n' > "$MANAGER_COMMAND" && chmod +x "$MANAGER_COMMAND"
+    printf 'DB_TYPE=sqlite\n' > "$CONSOLE_PATH/.env"
+    local out
+    out=$(do_uninstall 2>&1)
+    for want in "Left on this machine" "$RUSTDESK_PATH" "$CONSOLE_PATH" "--purge" "$MANAGER_COMMAND"; do
+        case "$out" in *"$want"*) ;; *) fail "the uninstall does not name $want: $out" ;; esac
+    done
+    [ -d "$RUSTDESK_PATH" ] && [ -d "$CONSOLE_PATH" ] || fail "the uninstall without --purge removed the data"
+    PURGE_MODE=true
+    do_uninstall >/dev/null 2>&1
+    [ ! -e "$RUSTDESK_PATH" ] && [ ! -e "$CONSOLE_PATH" ] && [ ! -e "$MANAGER_COMMAND" ] \
+        || fail "--purge left $(ls -d "$RUSTDESK_PATH" "$CONSOLE_PATH" "$MANAGER_COMMAND" 2>/dev/null | tr '\n' ' ')"
+    rm -rf "$TEST_DIR"
+)
+
+# L155: the server's updater is told the repository of the releases, so an
+# installed binary with an older default does not ask upstream; one named
+# in .env stays.
+test_update_asks_the_fork() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO
+    load
+    do_backup_silent() { :; }
+    print_step() { :; }
+    print_error() { :; }
+    SERVER_BINARY_FILE=""
+    FROM_SOURCE=false
+    unset RELEASE_BASE_URL
+    server_cmd() { printf '%s/%s\n' "${UPDATE_GITHUB_OWNER:-}" "${UPDATE_GITHUB_REPO:-}" > "$TEST_DIR/seen"; return 1; }
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    update_go_install >/dev/null 2>&1 || true
+    [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = trybetterdesk/betterdesk ] \
+        || fail "betterdesk-server update ran for $(cat "$TEST_DIR/seen" 2>/dev/null || echo 'no repository')"
+    printf 'UPDATE_GITHUB_OWNER=acme\nUPDATE_GITHUB_REPO=desk\n' > "$CONSOLE_PATH/.env"
+    update_go_install >/dev/null 2>&1 || true
+    [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = acme/desk ] || fail "the repository of .env lost to the default: $(cat "$TEST_DIR/seen")"
+    rm -rf "$TEST_DIR"
+)
+
+# L67: both installers open the same ports: RustDesk's (21115 to 21117 TCP,
+# 21116 UDP), the client API port, 21122 while CDAP is on, and the
+# console's ports unless TLS ends at a reverse proxy.
+test_firewall_ports() (
+    load
+    printf 'API_PORT=21121\nCONSOLE_PORT=5000\nHTTPS_ENABLED=true\nHTTPS_PORT=5443\nCDAP_ENABLED=Y\nTRUST_PROXY=false\n' > "$CONSOLE_PATH/.env"
+    [ "$(firewall_ports | tr '\n' ' ')" = "21115/tcp 21116/tcp 21116/udp 21117/tcp 21121/tcp 21122/tcp 5000/tcp 5443/tcp " ] \
+        || fail "the firewall ports: $(firewall_ports | tr '\n' ' ')"
+    printf 'API_PORT=21121\nCONSOLE_PORT=5000\nHTTPS_ENABLED=false\nCDAP_ENABLED=N\nTRUST_PROXY=Y\n' > "$CONSOLE_PATH/.env"
+    [ "$(firewall_ports | tr '\n' ' ')" = "21115/tcp 21116/tcp 21116/udp 21117/tcp 21121/tcp " ] \
+        || fail "the firewall ports behind a reverse proxy without CDAP: $(firewall_ports | tr '\n' ' ')"
+    rm -rf "$TEST_DIR"
+)
+
+# L76: a self-signed certificate keeps the client API port on HTTP, which
+# RustDesk clients accept; the console gets HTTPS.
+test_self_signed_keeps_the_client_api_on_http() (
+    load
+    command -v openssl >/dev/null || { echo "skipped: no openssl"; exit 0; }
+    get_public_ip() { echo 203.0.113.7; }
+    deploy_ssl_material_to_rustdesk_dir() { return 0; }
+    print_success() { :; }
+    printf 'HTTPS_ENABLED=false\nSSL_CERT_PATH=\nSSL_KEY_PATH=\nRUSTDESK_API_TLS=auto\n' > "$CONSOLE_PATH/.env"
+    generate_ssl_certificates >/dev/null 2>&1 || fail "no certificate was made"
+    grep -qx 'HTTPS_ENABLED=true' "$CONSOLE_PATH/.env" || fail "HTTPS is not on"
+    grep -qx 'RUSTDESK_API_TLS=false' "$CONSOLE_PATH/.env" || fail "the client API port takes the self-signed certificate: $(grep RUSTDESK_API_TLS "$CONSOLE_PATH/.env")"
+
+    # L66: a binary with the cert command makes the pair, no OpenSSL needed
+    rm -rf "$RUSTDESK_PATH/ssl"
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+#!/bin/bash
+# Stands in for the binary: cert --out DIR [--host NAME]... (the commands it has)
+[ "$1" = cert ] || exit 2
+printf '%s\n' "$*" > "$3/args"
+printf 'crt\n' > "$3/betterdesk.crt"
+printf 'key\n' > "$3/betterdesk.key"
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    openssl() { echo "openssl was used" >> "$TEST_DIR/openssl"; command openssl "$@"; }
+    generate_ssl_certificates >/dev/null 2>&1 || fail "the cert command made no certificate"
+    [ ! -e "$TEST_DIR/openssl" ] || fail "OpenSSL made the certificate although the binary can"
+    grep -q -- '--host 203.0.113.7' "$RUSTDESK_PATH/ssl/args" || fail "the cert command was not given the public address: $(cat "$RUSTDESK_PATH/ssl/args")"
+    rm -rf "$TEST_DIR"
+)
+
+# L162: a port held by another program is named and left alone; only
+# BetterDesk's own leftovers are stopped.
+test_port_taken_by_another_program() (
+    load
+    command -v python3 >/dev/null && command -v ss >/dev/null || { echo "skipped: no python3 or ss"; exit 0; }
+    printf 'SIGNAL_PORT=31116\nRELAY_PORT=31117\nCONSOLE_PORT=0\n' > "$CONSOLE_PATH/.env"
+    python3 -m http.server 31116 --bind 127.0.0.1 >/dev/null 2>&1 &
+    local other=$!
+    local i
+    for i in $(seq 1 50); do ss -ltnH "sport = :31116" | grep -q . && break; sleep 0.1; done
+    local out
+    kill_processes_holding_ports > "$TEST_DIR/out" 2>&1
+    out=$(cat "$TEST_DIR/out")
+    if ! kill -0 "$other" 2>/dev/null; then fail "the installer killed another program on port 31116"; fi
+    kill "$other" 2>/dev/null; wait "$other" 2>/dev/null || true
+    case "$out" in *31116*python3*) ;; *) fail "the port taken is not named with its program: $out" ;; esac
+    [ -n "${FOREIGN_PORT_HOLDERS:-}" ] || fail "the install would go on with a port taken"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -316,4 +616,16 @@ test_update_channel_before_server_update
 test_update_channel_kept_without_one
 test_server_folder_mode
 test_console_home_copies_no_console_files
+test_releases_come_from_the_fork
+test_update_keeps_the_admins_ports
+test_channel_and_download_errors
+test_one_command_install
+test_rerun_updates_and_forgets_the_password
+test_panel_public_host
+test_install_summary
+test_uninstall_says_what_stays
+test_update_asks_the_fork
+test_firewall_ports
+test_self_signed_keeps_the_client_api_on_http
+test_port_taken_by_another_program
 echo "Go installer unit checks passed"

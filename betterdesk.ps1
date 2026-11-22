@@ -58,6 +58,10 @@
     Build betterdesk-server.exe from this checkout (needs Go, and Node.js
     unless web-ui\build exists).
 
+.PARAMETER Channel
+    Release channel: 'stable' (default, the newest release) or 'dev' (the
+    development build). The install keeps it for later updates.
+
 .PARAMETER Protocol
     Set protocol mode: 'http' or 'https'
 
@@ -88,6 +92,18 @@
 
 .PARAMETER SetConfig
     Apply one or more allowlisted .env settings as KEY=VALUE.
+
+.PARAMETER Minimal
+    Install the server with its web console off (CONSOLE_PORT=0 in .env).
+
+.PARAMETER Help
+    Show this help: every parameter, and the environment variables
+    ADMIN_PASSWORD, RELAY_SERVERS, RELAY_MODE, POSTGRESQL_URI,
+    POSTGRESQL_USER, POSTGRESQL_PASS, POSTGRESQL_HOST, POSTGRESQL_PORT,
+    POSTGRESQL_DB, UPDATE_GITHUB_BRANCH, UPDATE_GITHUB_OWNER,
+    UPDATE_GITHUB_REPO, RELEASE_BASE_URL, SSL_DOMAIN, RUSTDESK_PATH,
+    CONSOLE_PATH, BACKUP_DIR, GO_API_PORT, CLIENT_API_PORT,
+    STORE_ADMIN_CREDENTIALS and BETTERDESK_RUN_AS_ROOT.
 
 .EXAMPLE
     .\betterdesk.ps1
@@ -133,6 +149,8 @@ param(
     [switch]$RollbackGo,
     [switch]$CleanupNode,
     [string]$Binary = "",
+    [ValidateSet('stable', 'dev', '')]
+    [string]$Channel = "",
     [switch]$FromSource,
     [switch]$PostgreSQL,
     [string]$PgUri = "",
@@ -145,8 +163,14 @@ param(
     [switch]$CheckPermissions,
     [switch]$RepairPermissions,
     [string[]]$SetConfig = @(),
-    [switch]$Flask  # No longer needed: the web console is part of the server
+    [switch]$Flask,  # No longer needed: the web console is part of the server
+    [switch]$Help
 )
+
+if ($Help) {
+    Get-Help $MyInvocation.MyCommand.Path -Detailed
+    exit 0
+}
 
 #===============================================================================
 # Configuration
@@ -154,6 +178,8 @@ param(
 
 $script:VERSION = "3.5.270"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# This file; empty when the script runs from Invoke-Expression
+$script:SELF_PATH = $MyInvocation.MyCommand.Path
 
 # Auto mode flags
 $script:AUTO_MODE = $Auto
@@ -259,9 +285,6 @@ $script:BINARIES_OK = $false
 $script:DATABASE_OK = $false
 $script:CONSOLE_TYPE = "none"  # none, nodejs
 $script:SERVER_TYPE = "none"    # none, go, rust
-# FRESH_INSTALL gates new-install defaults (e.g. managed enrollment mode). It
-# stays $false for UPDATE/REPAIR so existing installs keep their current policy.
-$script:FRESH_INSTALL = $false
 # Logging
 $script:LOG_FILE = "$env:TEMP\betterdesk_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 
@@ -597,11 +620,24 @@ function Resolve-RelayIp {
     return $ip
 }
 
+# Letters and digits from the system's cryptographic generator, for
+# passwords and secrets.
 function Generate-RandomPassword {
     param([int]$Length = 16)
     $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    $password = -join ((1..$Length) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
-    return $password
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $byte = New-Object byte[] 1
+    $out = New-Object System.Text.StringBuilder
+    try {
+        while ($out.Length -lt $Length) {
+            $rng.GetBytes($byte)
+            # 248 is 4 times 62: a byte above it would favour the first characters
+            if ($byte[0] -lt 248) { [void]$out.Append($chars[$byte[0] % $chars.Length]) }
+        }
+    } finally {
+        $rng.Dispose()
+    }
+    return $out.ToString()
 }
 
 # Write or merge the console's .env from the template built into the server
@@ -633,17 +669,17 @@ function Merge-ConsoleEnv {
         if (-not $adminPassword) {
             $adminPassword = Generate-RandomPassword
         }
-        $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+        $sessionSecret = Generate-RandomPassword -Length 64
     } else {
         $sessionSecret = Get-ConsoleEnvValue -Key "SESSION_SECRET"
         if (-not $adminPassword) { $adminPassword = Get-ConsoleEnvValue -Key "DEFAULT_ADMIN_PASSWORD" }
         if (-not $sessionSecret) {
-            $sessionSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+            $sessionSecret = Generate-RandomPassword -Length 64
         }
     }
     $remoteTargetVaultKey = Get-ConsoleEnvValue -Key "REMOTE_TARGET_VAULT_KEY"
     if (-not $remoteTargetVaultKey) {
-        $remoteTargetVaultKey = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+        $remoteTargetVaultKey = Generate-RandomPassword -Length 64
     }
 
     $goPort = if ($script:GO_API_PORT) { $script:GO_API_PORT } else { 21114 }
@@ -693,6 +729,15 @@ function Merge-ConsoleEnv {
     # console keeps an admin it did not make: both take the same password
     if ($FreshInstall -and -not (Get-ConsoleEnvValue -Key "INIT_ADMIN_PASS")) {
         Set-ConsoleEnvValue -Key "INIT_ADMIN_PASS" -Value ([string]$adminPassword)
+    }
+    # A new install starts in Managed: new clients wait for approval. This
+    # is only the first default; a mode saved in the console wins.
+    if ($FreshInstall -and -not (Get-ConsoleEnvValue -Key "ENROLLMENT_MODE")) {
+        Set-ConsoleEnvValue -Key "ENROLLMENT_MODE" -Value "managed"
+    }
+    # The channel the installer was given, where the server's updater reads it
+    if ($script:UPDATE_GITHUB_BRANCH_GIVEN) {
+        Set-ConsoleEnvValue -Key "UPDATE_GITHUB_BRANCH" -Value $script:UPDATE_GITHUB_BRANCH_GIVEN
     }
 
     $supervisor = if (Get-NssmPath) { "nssm" } else { "task" }
@@ -749,6 +794,13 @@ function Test-BinaryHasSubcommands {
     param([string]$Path = (Get-ServerBinaryPath))
     if (-not $Path -or -not (Test-Path $Path)) { return $false }
     return [bool](Select-String -Path $Path -Pattern 'upgrade-env --from FILE' -SimpleMatch -Quiet)
+}
+
+# True when the binary can make the install's certificate (cert).
+function Test-BinaryHasCertCommand {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'cert --out DIR' -SimpleMatch -Quiet)
 }
 
 # The NSSM environment of a service as a list of KEY=VALUE lines.
@@ -843,7 +895,22 @@ function Get-ReleaseBinary {
         Invoke-WebRequest -Uri "$base/SHA256SUMS" -OutFile $sums -UseBasicParsing -ErrorAction Stop
         Invoke-WebRequest -Uri "$base/$asset" -OutFile $file -UseBasicParsing -ErrorAction Stop
     } catch {
-        Print-Error "Download failed: $_"
+        $status = 0
+        if ($_.Exception.Response) { try { $status = [int]$_.Exception.Response.StatusCode } catch { $status = 0 } }
+        if (-not $status -and "$($_.Exception.Message)" -match '\b404\b') { $status = 404 }
+        if ($status -eq 404 -and -not $env:RELEASE_BASE_URL -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
+            Print-Error "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release yet"
+            Print-Info "Install the development build with -Channel dev, or a binary you have with -Binary FILE"
+        } elseif ($status -eq 404) {
+            Print-Error "There is no release at $base"
+            Print-Info "Install a binary you have with -Binary FILE"
+        } elseif (-not $status) {
+            Print-Error "Could not reach ${base}: $($_.Exception.Message)"
+            Print-Info "Check this machine's internet access, DNS and proxy settings,"
+            Print-Info "or install offline: download the binary elsewhere and run with -Binary FILE"
+        } else {
+            Print-Error "The download failed (HTTP $status); try again later, or use -Binary FILE"
+        }
         return $null
     }
     $expected = $null
@@ -939,6 +1006,7 @@ function Setup-ConsoleHome {
     New-Item -ItemType Directory -Path (Join-Path $script:CONSOLE_PATH "logs") -Force | Out-Null
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
     $isFresh = -not (Test-Path $envFile)
+    $script:FRESH_CONSOLE_ENV = $isFresh
     if ($isFresh) {
         if (-not $env:ADMIN_PASSWORD) { $env:ADMIN_PASSWORD = Generate-RandomPassword }
         New-Item -ItemType File -Path (Join-Path $script:CONSOLE_PATH "data\.force_password_update") -Force | Out-Null
@@ -981,17 +1049,44 @@ function Get-ServerArguments {
     return $serverArgs
 }
 
-# The settings BetterDeskServer gets besides those it reads from .env.
+# The settings BetterDeskServer gets besides those it reads from .env. The
+# signal and relay ports are in .env, where the admin changes them.
 function Get-ServerBaseEnvironment {
     param([string]$Supervisor = "nssm")
     return @(
         "BETTERDESK_ENV_FILE=$(Join-Path $script:CONSOLE_PATH '.env')",
         "BETTERDESK_SUPERVISOR=$Supervisor",
-        "SIGNAL_PORT=21116",
-        "RELAY_PORT=21117",
         "GO_API_PORT=$($script:GO_API_PORT)",
         "MESH_ENABLED=Y"
     )
+}
+
+# The host of the address clients get becomes PANEL_PUBLIC_HOST when .env
+# has none, so the console's HTTP port redirects to HTTPS on that host. A
+# value set before stays.
+function Set-PanelPublicHost {
+    param([string]$Address)
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (-not (Test-Path $envFile) -or (Get-ConsoleEnvValue -Key "PANEL_PUBLIC_HOST")) { return }
+    $hostPart = ($Address -split ',')[0].Trim()
+    if ($hostPart -match '^(\[[^\]]+\])') { $hostPart = $Matches[1] }
+    elseif (($hostPart.ToCharArray() | Where-Object { $_ -eq ':' }).Count -eq 1) { $hostPart = $hostPart.Split(':')[0] }
+    if ($hostPart) { Set-ConsoleEnvValue -Key "PANEL_PUBLIC_HOST" -Value $hostPart }
+}
+
+# The signal and relay ports an older service or launcher set (they won
+# over .env) go into .env; returns the other settings.
+function Move-PortsToEnvFile {
+    param([string[]]$Environment)
+    $rest = @()
+    foreach ($line in @($Environment)) {
+        if ($line -match '^(SIGNAL_PORT|RELAY_PORT)=(.+)$') {
+            Set-ConsoleEnvValue -Key $Matches[1] -Value $Matches[2]
+            continue
+        }
+        if ($line) { $rest += $line }
+    }
+    return , $rest
 }
 
 # Merges environment lists: the first list wins, later lists add keys it lacks.
@@ -1030,9 +1125,11 @@ function Set-NssmServerService {
     & $Nssm set $script:SERVER_SERVICE AppExit Default Restart | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppRestartDelay 2000 | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppStopMethodConsole 10000 | Out-Null
-    New-Item -ItemType Directory -Path "$script:RUSTDESK_PATH\logs" -Force | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppStdout "$script:RUSTDESK_PATH\logs\server.log" | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppStderr "$script:RUSTDESK_PATH\logs\server_error.log" | Out-Null
+    # The server logs to standard error: both streams go to one file
+    $log = Get-ServerLogPath
+    New-Item -ItemType Directory -Path (Split-Path -Parent $log) -Force | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppStdout $log | Out-Null
+    & $Nssm set $script:SERVER_SERVICE AppStderr $log | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppRotateFiles 1 | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppRotateBytes 10485760 | Out-Null
     # The service account needs the server folder and the console's folder
@@ -1053,8 +1150,10 @@ function Write-ServerLauncher {
         $lines += "set `"$pair`""
     }
     $lines += "set `"BETTERDESK_SUPERVISOR=task`""
+    $log = Get-ServerLogPath
+    New-Item -ItemType Directory -Path (Split-Path -Parent $log) -Force | Out-Null
     $lines += ":run"
-    $lines += "`"$(Get-ServerBinaryPath)`" $Arguments"
+    $lines += "`"$(Get-ServerBinaryPath)`" $Arguments >> `"$log`" 2>&1"
     $lines += "timeout /t 2 /nobreak >nul"
     $lines += "goto run"
     Set-Content -Path $launcher -Value $lines -Encoding ASCII
@@ -1071,14 +1170,23 @@ function Get-LauncherEnvironment {
     })
 }
 
-# The arguments of an existing launcher's server line.
+# The arguments of an existing launcher's server line, without the
+# redirect of its output.
 function Get-LauncherArguments {
     $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
     if (-not (Test-Path $launcher)) { return $null }
     foreach ($line in Get-Content $launcher) {
-        if ($line -match '^"[^"]*betterdesk-server\.exe"\s*(.*)$') { return $Matches[1] }
+        if ($line -match '^"[^"]*betterdesk-server\.exe"\s*(.*)$') {
+            return ($Matches[1] -replace '\s*>>\s*"[^"]*"\s*2>&1\s*$', '').Trim()
+        }
     }
     return $null
+}
+
+# The server's log file: both of its output streams, as a service and as
+# a scheduled task.
+function Get-ServerLogPath {
+    return (Join-Path $script:RUSTDESK_PATH "logs\server.log")
 }
 
 function Register-ServerTask {
@@ -1108,18 +1216,24 @@ function Get-ConsoleHealthUrl {
     return "http://127.0.0.1:$port/health"
 }
 
+# The signal and relay ports the server listens on (.env).
+function Get-SignalPort { $p = Get-ConsoleEnvValue -Key "SIGNAL_PORT"; if ($p) { $p } else { "21116" } }
+function Get-RelayPort { $p = Get-ConsoleEnvValue -Key "RELAY_PORT"; if ($p) { $p } else { "21117" } }
+
 # The server answers: API and web console /health, signal and relay ports
 # (betterdesk-server check).
 function Test-GoInstall {
     param([int]$TimeoutSeconds = 90)
-    $checkArgs = @("check", "--api", "http://127.0.0.1:$($script:GO_API_PORT)/api/health", "--port", "127.0.0.1:21116", "--port", "127.0.0.1:21117", "--insecure")
+    $signal = Get-SignalPort
+    $relay = Get-RelayPort
+    $checkArgs = @("check", "--api", "http://127.0.0.1:$($script:GO_API_PORT)/api/health", "--port", "127.0.0.1:$signal", "--port", "127.0.0.1:$relay", "--insecure")
     $consoleUrl = Get-ConsoleHealthUrl
     if ($consoleUrl) { $checkArgs += @("--panel", $consoleUrl) }
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     do {
         $code = Invoke-ServerCommand -Arguments $checkArgs 6>$null
         if ($code -eq 0) {
-            Print-Success "betterdesk-server answers: API :$($script:GO_API_PORT)$(if ($consoleUrl) { ", web console $consoleUrl" }), signal :21116, relay :21117"
+            Print-Success "betterdesk-server answers: API :$($script:GO_API_PORT)$(if ($consoleUrl) { ", web console $consoleUrl" }), signal :$signal, relay :$relay"
             return $true
         }
         Start-Sleep -Seconds 3
@@ -1497,7 +1611,16 @@ function Update-GoInstall {
         # signature and SHA-256 checked; the running exe is renamed aside and
         # the old one kept as .prev
         Print-Step "Installing the newest release with betterdesk-server update..."
-        if ((Invoke-ServerCommand -Arguments @("update", "--yes")) -ne 0) {
+        # The repository goes to the updater: an installed binary may have
+        # an older default
+        $owner = if ($script:UPDATE_GITHUB_OWNER_GIVEN) { $script:UPDATE_GITHUB_OWNER_GIVEN } else { Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER" }
+        $repo = if ($script:UPDATE_GITHUB_REPO_GIVEN) { $script:UPDATE_GITHUB_REPO_GIVEN } else { Get-ConsoleEnvValue -Key "UPDATE_GITHUB_REPO" }
+        $savedOwner, $savedRepo = $env:UPDATE_GITHUB_OWNER, $env:UPDATE_GITHUB_REPO
+        $env:UPDATE_GITHUB_OWNER = if ($owner) { $owner } else { $script:UPDATE_GITHUB_OWNER }
+        $env:UPDATE_GITHUB_REPO = if ($repo) { $repo } else { $script:UPDATE_GITHUB_REPO }
+        try { $updateCode = Invoke-ServerCommand -Arguments @("update", "--yes") }
+        finally { $env:UPDATE_GITHUB_OWNER, $env:UPDATE_GITHUB_REPO = $savedOwner, $savedRepo }
+        if ($updateCode -ne 0) {
             Print-Error "betterdesk-server update failed"
             return $false
         }
@@ -1524,6 +1647,8 @@ function Update-GoInstall {
     if ($before -ne $after -and (Test-Path $record) -and (Test-Path (Join-Path $script:CONSOLE_PATH "server.js"))) {
         Remove-NodeLeftovers | Out-Null
     }
+    Remove-FirstAdminPassword
+    Install-ManagerScript
     Print-Success "betterdesk-server: $(& $serverExe -version 2>$null | Select-Object -First 1)"
     return $true
 }
@@ -1536,7 +1661,8 @@ function Update-ServerServiceDefinition {
     if ($nssm -and (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
         $serverArgs = "$(& $nssm get $script:SERVER_SERVICE AppParameters 2>$null)".Trim([char]0, ' ')
         $serverArgs = ($serverArgs -replace '\s-tls-api-port(=\S+)?', '' -replace '\s-tls-api(=\S+)?', '').Trim()
-        $current = Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -notlike 'CONSOLE_PORT=0' }
+        if ($serverArgs -match '-relay-servers\s+"?([^"\s]+)') { Set-PanelPublicHost -Address $Matches[1] }
+        $current = Move-PortsToEnvFile (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
         $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $current)
         Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
         return
@@ -1544,7 +1670,8 @@ function Update-ServerServiceDefinition {
     if (Get-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue) {
         $serverArgs = Get-LauncherArguments
         if (-not $serverArgs) { $serverArgs = Get-ServerArguments -ServerIP (Resolve-RelayIp) }
-        $current = Get-LauncherEnvironment | Where-Object { $_ -notlike 'CONSOLE_PORT=0' }
+        if ($serverArgs -match '-relay-servers\s+"?([^"\s]+)') { Set-PanelPublicHost -Address $Matches[1] }
+        $current = Move-PortsToEnvFile (Get-LauncherEnvironment | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
         $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "task"), $current)
         $launcherPath = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
         Register-ServerTask -Launcher $launcherPath
@@ -1716,6 +1843,7 @@ function Setup-Services {
     $serverIP = Resolve-RelayIp
     $connModeEnv = Resolve-ConnectionModeEnv
     Print-Info "Relay server IP: $serverIP (mode: $(if ($script:RELAY_SERVERS) { 'fixed' } else { $script:RELAY_MODE }))"
+    Set-PanelPublicHost -Address $(if ($env:SSL_DOMAIN) { $env:SSL_DOMAIN } else { $serverIP })
 
     $apiKeyPath = Join-Path $script:RUSTDESK_PATH ".api_key"
     if (-not (Test-Path $apiKeyPath)) {
@@ -1729,9 +1857,6 @@ function Setup-Services {
 
     $serverArgs = Get-ServerArguments -ServerIP $serverIP
     $extra = @($connModeEnv)
-    # New installs default to "managed" enrollment so stock RustDesk clients are
-    # queued for operator approval. Existing installs are left untouched.
-    if ($script:FRESH_INSTALL) { $extra += "ENROLLMENT_MODE=managed" }
 
     $nssm = Get-NssmPath
     if (-not $nssm) {
@@ -1752,7 +1877,7 @@ function Setup-Services {
 
     $current = @()
     if (Test-GoOnlyInstall) {
-        $current = Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE
+        $current = Move-PortsToEnvFile (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE)
     }
     $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $extra, $current)
     Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
@@ -1966,10 +2091,17 @@ function Do-ResetPassword {
     Press-Enter
 }
 
+# Shows the admin's first password, once: only when this run made the
+# console's .env. The server makes the admin at its first start from
+# DEFAULT_ADMIN_PASSWORD.
 function Create-AdminUser {
     Print-Step "Admin account..."
 
-    # The server makes the admin at its first start from DEFAULT_ADMIN_PASSWORD.
+    if (-not $script:FRESH_CONSOLE_ENV) {
+        Print-Info "The admin account and its password stay as they are."
+        Print-Info "Forgot it? Reset admin password in the menu of $(Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1')"
+        return $null
+    }
     $adminPassword = $env:ADMIN_PASSWORD
     if (-not $adminPassword) { $adminPassword = Get-ConsoleEnvValue -Key "DEFAULT_ADMIN_PASSWORD" }
 
@@ -1994,6 +2126,81 @@ function Create-AdminUser {
     Print-Warning "No admin password found"
     Print-Info "Use password reset option to set a new admin password"
     return $null
+}
+
+# Once the server has started and made the admin, .env and its kept
+# copies hold no admin password any more (the server reads
+# DEFAULT_ADMIN_PASSWORD and INIT_ADMIN_PASS only to make the first account).
+function Remove-FirstAdminPassword {
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    foreach ($f in @($envFile) + @(Get-ChildItem -Path $script:CONSOLE_PATH -Filter ".env.pre-go*" -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })) {
+        if (-not (Test-Path $f)) { continue }
+        $lines = @(Get-Content $f)
+        $kept = @($lines | Where-Object { $_ -notmatch '^INIT_ADMIN_PASS=' } | ForEach-Object { if ($_ -match '^DEFAULT_ADMIN_PASSWORD=') { 'DEFAULT_ADMIN_PASSWORD=' } else { $_ } })
+        if (($kept -join "`n") -ne ($lines -join "`n")) { Set-Content -Path $f -Value $kept -Encoding UTF8 }
+    }
+}
+
+# This script as C:\BetterDesk\betterdesk.ps1, for updates, repairs and the
+# uninstall later. Run from that copy (an update), it takes the newest one
+# of the update channel; run from Invoke-Expression, it fetches itself.
+function Install-ManagerScript {
+    $target = Join-Path $script:RUSTDESK_PATH "betterdesk.ps1"
+    try {
+        if ($script:SELF_PATH -and (Test-Path $script:SELF_PATH) -and ((Resolve-Path $script:SELF_PATH).Path -ne $target)) {
+            Copy-Item -Path $script:SELF_PATH -Destination $target -Force -ErrorAction Stop
+        } else {
+            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:UPDATE_GITHUB_BRANCH)/betterdesk.ps1"
+            $tmp = "$target.download"
+            Invoke-WebRequest -Uri $url -OutFile $tmp -UseBasicParsing -ErrorAction Stop
+            if (-not (Select-String -Path $tmp -Pattern 'function Install-ManagerScript' -SimpleMatch -Quiet)) { throw "not the installer" }
+            Move-Item -Path $tmp -Destination $target -Force
+        }
+        Print-Info "Manage this install with: & '$target'"
+    } catch {
+        if (-not (Test-Path $target)) { Print-Warning "Could not keep a copy of the installer at ${target}: run this installer again for updates" }
+    }
+}
+
+# What the admin needs after an install, and no password: the console's
+# address, the first sign-in, what RustDesk clients are given, the log,
+# the settings file and the commands for later.
+function Show-InstallSummary {
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    $manager = Join-Path $script:RUSTDESK_PATH "betterdesk.ps1"
+    $hostName = Get-ConsoleEnvValue -Key "PANEL_PUBLIC_HOST"
+    if (-not $hostName) { $hostName = Get-PublicIP }
+    $pubKeyPath = Join-Path $script:RUSTDESK_PATH "id_ed25519.pub"
+    $key = if (Test-Path $pubKeyPath) { (Get-Content $pubKeyPath -Raw).Trim() } else { "" }
+    $console = "off (set CONSOLE_PORT in $envFile to turn it on)"
+    $healthUrl = Get-ConsoleHealthUrl
+    if (-not $script:MINIMAL_MODE -and $healthUrl) { $console = ($healthUrl -replace '/health$', '') -replace '127\.0\.0\.1', $hostName }
+    $signal = Get-SignalPort
+    $relay = Get-RelayPort
+    $idServer = if ($signal -eq "21116") { $hostName } else { "${hostName}:$signal" }
+    $relayServer = if ($relay -eq "21117") { $hostName } else { "${hostName}:$relay" }
+    Write-Host ""
+    Write-Host "BetterDesk is installed" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  Web console:   " -NoNewline; Write-Host $console -ForegroundColor White
+    if ($script:FRESH_CONSOLE_ENV) {
+        Write-Host "  First sign-in: user admin, with the password shown above (it is not shown again)"
+    } else {
+        Write-Host "  Sign in:       user admin; forgot the password? Reset admin password in the menu of $manager"
+    }
+    Write-Host "  RustDesk clients (Settings > Network > ID/Relay server):"
+    Write-Host "    ID server:     " -NoNewline; Write-Host $idServer -ForegroundColor White
+    Write-Host "    Relay server:  " -NoNewline; Write-Host $relayServer -ForegroundColor White
+    $apiPort = Get-ConsoleEnvValue -Key "API_PORT"
+    if (-not $apiPort) { $apiPort = $script:CLIENT_API_PORT }
+    $apiScheme = if ((Get-ConsoleEnvValue -Key "RUSTDESK_API_TLS") -match '^(?i)(true|1|on|https)$') { "https" } else { "http" }
+    Write-Host "    API server:    " -NoNewline; Write-Host "${apiScheme}://${hostName}:$apiPort" -ForegroundColor White
+    Write-Host "    Key:           " -NoNewline; Write-Host $key -ForegroundColor White
+    Write-Host "  Log:           $(Get-ServerLogPath)"
+    Write-Host "  Settings:      $envFile (then: Restart-Service $($script:SERVER_SERVICE))"
+    Write-Host "  Update:        & '$manager' -Update"
+    Write-Host "  Uninstall:     & '$manager' -Uninstall"
+    Write-Host ""
 }
 
 function Update-EnvForTLS {
@@ -2261,7 +2468,7 @@ function Print-Status {
             $svc = Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
             if ($svc -and $svc.Status -eq 'Stopped') {
                 Write-Host "  BetterDesk Server (Go): " -NoNewline; Write-Host "o Stopped" -ForegroundColor Red
-                Write-Host "    Hint: Check logs at $script:RUSTDESK_PATH\logs\server_error.log" -ForegroundColor Yellow
+                Write-Host "    Hint: Check the log $(Get-ServerLogPath)" -ForegroundColor Yellow
             } else {
                 Write-Host "  BetterDesk Server (Go): " -NoNewline; Write-Host "o Inactive" -ForegroundColor Red
             }
@@ -2437,9 +2644,7 @@ function Choose-DatabaseType {
             $pgUser = Read-Host "PostgreSQL user [$($script:POSTGRESQL_USER)]"
             if (![string]::IsNullOrEmpty($pgUser)) { $script:POSTGRESQL_USER = $pgUser }
             
-            $pgPass = Read-Host "PostgreSQL password (leave empty to generate)" -AsSecureString
-            $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pgPass)
-            $script:POSTGRESQL_PASS = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+            Print-Info "The database must exist: Windows does not install PostgreSQL. The next step asks for its password."
         }
         default {
             $script:USE_POSTGRESQL = $false
@@ -2448,25 +2653,35 @@ function Choose-DatabaseType {
     }
 }
 
+# The PostgreSQL address. Windows does not install PostgreSQL or create
+# its database, so the database must exist: the address comes from -PgUri
+# or POSTGRESQL_URI as it is, else from its parts with the password of the
+# existing user (POSTGRESQL_PASS, or asked for in an interactive run).
 function Setup-PostgreSQLDatabase {
-    Print-Step "Setting up PostgreSQL database for BetterDesk..."
-    
-    # Generate password if not set
-    if ([string]::IsNullOrEmpty($script:POSTGRESQL_PASS)) {
-        $script:POSTGRESQL_PASS = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 16 | ForEach-Object {[char]$_})
-        Print-Info "Generated PostgreSQL password"
+    Print-Step "Setting up PostgreSQL for BetterDesk..."
+    $where = "$($script:POSTGRESQL_HOST):$($script:POSTGRESQL_PORT)/$($script:POSTGRESQL_DB)"
+    if ($script:POSTGRESQL_URI) {
+        Print-Info "Using the PostgreSQL address given (-PgUri or POSTGRESQL_URI)"
+        return $true
     }
-    
-    # Build connection URI
-    $script:POSTGRESQL_URI = "postgres://$($script:POSTGRESQL_USER):$($script:POSTGRESQL_PASS)@$($script:POSTGRESQL_HOST):$($script:POSTGRESQL_PORT)/$($script:POSTGRESQL_DB)?sslmode=disable"
-    
-    Print-Info "PostgreSQL URI configured: postgres://$($script:POSTGRESQL_USER):****@$($script:POSTGRESQL_HOST):$($script:POSTGRESQL_PORT)/$($script:POSTGRESQL_DB)"
-    Print-Warning "Note: On Windows, you must set up PostgreSQL manually before installation."
-    Print-Info "Required PostgreSQL setup:"
-    Print-Info "  1. Install PostgreSQL from https://www.postgresql.org/download/windows/"
-    Print-Info "  2. Create user: CREATE USER $($script:POSTGRESQL_USER) WITH PASSWORD '...' CREATEDB;"
-    Print-Info "  3. Create database: CREATE DATABASE $($script:POSTGRESQL_DB) OWNER $($script:POSTGRESQL_USER);"
-    
+    if ([string]::IsNullOrEmpty($script:POSTGRESQL_PASS) -and -not $script:AUTO_MODE) {
+        $secure = Read-Host "Password of the PostgreSQL user $($script:POSTGRESQL_USER) on $where" -AsSecureString
+        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+        try { $script:POSTGRESQL_PASS = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr) }
+        finally { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+    }
+    if ([string]::IsNullOrEmpty($script:POSTGRESQL_PASS)) {
+        Print-Error "PostgreSQL needs an existing database and its password. The installer does not create one on Windows."
+        Print-Info "Create the user and the database, then run the installer again with one of:"
+        Print-Info "  -PgUri 'postgres://USER:PASSWORD@HOST:5432/DATABASE?sslmode=disable'"
+        Print-Info "  `$env:POSTGRESQL_PASS (with POSTGRESQL_USER, POSTGRESQL_HOST, POSTGRESQL_PORT, POSTGRESQL_DB for other values than $($script:POSTGRESQL_USER)@$where)"
+        Print-Info "Or leave out -PostgreSQL: SQLite needs no set-up."
+        return $false
+    }
+    $user = [uri]::EscapeDataString($script:POSTGRESQL_USER)
+    $pass = [uri]::EscapeDataString($script:POSTGRESQL_PASS)
+    $script:POSTGRESQL_URI = "postgres://${user}:${pass}@$($script:POSTGRESQL_HOST):$($script:POSTGRESQL_PORT)/$($script:POSTGRESQL_DB)?sslmode=disable"
+    Print-Info "PostgreSQL: $($script:POSTGRESQL_USER)@$where"
     return $true
 }
 
@@ -2489,7 +2704,8 @@ function Migrate-SQLiteToPostgreSQL {
     }
 
     if (-not $script:AUTO_MODE -and -not (Confirm-Action "Move the existing SQLite install (every server and console table) to PostgreSQL?")) {
-        Print-Info "The SQLite data stays where it is; PostgreSQL starts empty"
+        Print-Info "The install stays on SQLite ($sqliteDb); move it later with the menu's Database migration"
+        Use-SQLiteInstall $sqliteDb
         return
     }
 
@@ -2567,13 +2783,33 @@ function Generate-SSLCertificates {
     
     # Detect server IP for SAN
     $serverIP = Get-PublicIP
-    
+
+    # The binary makes the pair as PEM files, no OpenSSL needed (ten years,
+    # as on Linux); an older binary without the cert command leaves it to
+    # Windows and OpenSSL
+    if (Test-BinaryHasCertCommand) {
+        $certArgs = @("cert", "--out", $sslDir, "--force")
+        if ($env:SSL_DOMAIN) { $certArgs += @("--host", $env:SSL_DOMAIN) }
+        $certArgs += @("--host", $serverIP)
+        $lanIP = Get-LocalIP
+        if ($lanIP -and $lanIP -ne $serverIP) { $certArgs += @("--host", $lanIP) }
+        if (((Invoke-ServerCommand -Arguments $certArgs) -eq 0) -and (Test-Path $certPath) -and (Test-Path $keyPath)) {
+            # HTTPS for the web console (5443, a redirect on its HTTP port)
+            Update-EnvForTLS -CertPath $certPath -KeyPath $keyPath
+            # RustDesk clients refuse a self-signed certificate: the client API port stays on HTTP
+            Set-ConsoleEnvValue -Key "RUSTDESK_API_TLS" -Value "false"
+            Print-Success "Self-signed TLS certificate made (valid 10 years): $sslDir"
+            return $true
+        }
+        Print-Warning "betterdesk-server cert failed (output above)"
+    }
+
     # Try PowerShell native certificate generation first
     try {
         $cert = New-SelfSignedCertificate `
             -DnsName "localhost", $serverIP `
             -CertStoreLocation "Cert:\LocalMachine\My" `
-            -NotAfter (Get-Date).AddYears(3) `
+            -NotAfter (Get-Date).AddYears(10) `
             -KeyAlgorithm RSA `
             -KeyLength 2048 `
             -FriendlyName "BetterDesk Server" `
@@ -2601,14 +2837,23 @@ function Generate-SSLCertificates {
         
         # Clean up certificate from store
         Remove-Item "Cert:\LocalMachine\My\$($cert.Thumbprint)" -ErrorAction SilentlyContinue
-        
+
+        # The server reads PEM files only: without them HTTPS stays off
+        if (-not ((Test-Path $certPath) -and (Test-Path $keyPath))) {
+            Print-Warning "The certificate could not be written as PEM files (OpenSSL is missing): the console stays on HTTP"
+            Print-Info "Update to a release whose betterdesk-server makes the certificate, or install OpenSSL, then use the SSL menu (option C)"
+            return $false
+        }
+
         # HTTPS for the web console (5443, a redirect on its HTTP port)
         Update-EnvForTLS -CertPath $certPath -KeyPath $keyPath
+        # RustDesk clients refuse a self-signed certificate: the client API port stays on HTTP
+        Set-ConsoleEnvValue -Key "RUSTDESK_API_TLS" -Value "false"
         
         Print-Success "Self-signed TLS certificate generated"
         Print-Info "Certificate: $sslDir"
         Print-Info "SAN: DNS:localhost, IP:$serverIP, IP:127.0.0.1"
-        Print-Info "Valid for 3 years"
+        Print-Info "Valid for 10 years"
         return $true
     } catch {
         Print-Warning "PowerShell certificate generation failed: $_"
@@ -2618,7 +2863,7 @@ function Generate-SSLCertificates {
         if ($opensslCmd) {
             Print-Info "Falling back to openssl..."
             try {
-                & openssl req -x509 -nodes -days 1095 -newkey rsa:2048 `
+                & openssl req -x509 -nodes -days 3650 -newkey rsa:2048 `
                     -keyout $keyPath `
                     -out $certPath `
                     -subj "/CN=$serverIP/O=BetterDesk/C=US" `
@@ -2626,6 +2871,8 @@ function Generate-SSLCertificates {
                 
                 if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
                     Update-EnvForTLS -CertPath $certPath -KeyPath $keyPath
+                    # RustDesk clients refuse a self-signed certificate: the client API port stays on HTTP
+                    Set-ConsoleEnvValue -Key "RUSTDESK_API_TLS" -Value "false"
                     Print-Success "Self-signed TLS certificate generated (openssl)"
                     return $true
                 }
@@ -2811,10 +3058,6 @@ function Do-Install {
         Do-BackupSilent
     }
 
-    # Treat as fresh only when no database exists yet. Reinstalls over an
-    # existing database preserve the operator's current enrollment policy.
-    $script:FRESH_INSTALL = -not $script:DATABASE_OK
-
     Write-Host ""
     Print-Info "Starting BetterDesk v$script:VERSION installation..."
     Write-Host ""
@@ -2849,6 +3092,10 @@ function Do-Install {
     Configure-Firewall | Out-Null
 
     $installOk = Start-ServicesWithVerification
+    if ($installOk) {
+        Remove-FirstAdminPassword
+        Install-ManagerScript
+    }
 
     Write-Host ""
     if ($installOk) {
@@ -2858,59 +3105,9 @@ function Do-Install {
     }
     Write-Host ""
     
-    $serverIP = Get-PublicIP
-    $publicKey = ""
-    $pubKeyPath = Join-Path $script:RUSTDESK_PATH "id_ed25519.pub"
-    if (Test-Path $pubKeyPath) {
-        $publicKey = (Get-Content $pubKeyPath -Raw).Trim()
-    }
-    
-    $dbTypeInfo = "SQLite"
-    if ($script:USE_POSTGRESQL) { $dbTypeInfo = "PostgreSQL" }
-    
-    $tlsStatus = "Disabled"
-    $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
-    if ((Test-Path (Join-Path $sslDir "betterdesk.crt")) -and (Test-Path (Join-Path $sslDir "betterdesk.key"))) {
-        $tlsStatus = "Self-signed (auto-generated)"
-    }
-    
-    Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host "              INSTALLATION INFO                             " -ForegroundColor Cyan
-    Write-Host "============================================================" -ForegroundColor Cyan
-    $panelUrl = "off (minimal installation)"
-    if (-not $script:MINIMAL_MODE) {
-        $healthUrl = Get-ConsoleHealthUrl
-        if ($healthUrl) { $panelUrl = ($healthUrl -replace '/health$', '') -replace '127\.0\.0\.1', $serverIP }
-    }
-    Write-Host "  Panel Web:     " -NoNewline; Write-Host $panelUrl -ForegroundColor White
-    Write-Host "  API Port:      " -NoNewline; Write-Host $script:API_PORT -ForegroundColor White
-    Write-Host "  Server ID:     " -NoNewline; Write-Host $serverIP -ForegroundColor White
-    Write-Host "  Database:      " -NoNewline; Write-Host $dbTypeInfo -ForegroundColor White
-    Write-Host "  TLS:           " -NoNewline; Write-Host $tlsStatus -ForegroundColor White
-    if ($publicKey) {
-        Write-Host "  Key:           " -NoNewline; Write-Host "$($publicKey.Substring(0, [Math]::Min(20, $publicKey.Length)))..." -ForegroundColor White
-    }
-    Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  Required ports (ensure firewall allows):" -ForegroundColor Yellow
-    Write-Host "    TCP/UDP 21116  - ID Server (client registration)"
-    Write-Host "    TCP    21115  - NAT type test"
-    Write-Host "    TCP    21117  - Relay Server"
-    Write-Host "    TCP    $($script:GO_API_PORT)  - Go API (default, direct)"
-    Write-Host "    TCP    5000   - Web Console (admin panel; 5443 with HTTPS)"
-    Write-Host "    TCP    $($script:CLIENT_API_PORT)  - RustDesk client API (served by the web console)"
-    Write-Host ""
-    Write-Host "  RustDesk Client Configuration:" -ForegroundColor Yellow
-    Write-Host "    ID Server:    $serverIP"
-    Write-Host "    Relay Server: $serverIP"
-    if ($publicKey) {
-        Write-Host "    Key:          $publicKey"
-    }
-    Write-Host ""
-    
-    # Auto-configure firewall rules
-    Write-Host "  Configuring Windows Firewall rules..." -ForegroundColor Cyan
-    Configure-Firewall
+    Show-InstallSummary
+    $ports = (Get-FirewallPorts | ForEach-Object { "$($_.Port)/$($_.Proto)" }) -join ' '
+    Write-Host "  A firewall outside this machine (your network's or cloud provider's) needs these ports: $ports"
     Write-Host ""
     
     # Offer HTTPS Enterprise configuration for fresh installs
@@ -2935,11 +3132,18 @@ function Do-Install {
 #===============================================================================
 
 # GitHub repository configuration for online updates
-$script:UPDATE_GITHUB_OWNER = if ($env:UPDATE_GITHUB_OWNER) { $env:UPDATE_GITHUB_OWNER } else { "UNITRONIX" }
-$script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_REPO } else { "BetterDesk" }
-$script:UPDATE_GITHUB_BRANCH = if ($env:UPDATE_GITHUB_BRANCH) { $env:UPDATE_GITHUB_BRANCH } else { "main" }
+# A repository given to the installer wins over .env, and .env over these
+$script:UPDATE_GITHUB_OWNER_GIVEN = "$env:UPDATE_GITHUB_OWNER"
+$script:UPDATE_GITHUB_REPO_GIVEN = "$env:UPDATE_GITHUB_REPO"
+$script:UPDATE_GITHUB_OWNER = if ($env:UPDATE_GITHUB_OWNER) { $env:UPDATE_GITHUB_OWNER } else { "trybetterdesk" }
+$script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_REPO } else { "betterdesk" }
+# A channel given to the installer (-Channel, else UPDATE_GITHUB_BRANCH) wins
+# over .env and is written into it
+$script:UPDATE_GITHUB_BRANCH_GIVEN = if ($Channel -eq "dev") { "dev" } elseif ($Channel -eq "stable") { "main" } elseif ($env:UPDATE_GITHUB_BRANCH) { $env:UPDATE_GITHUB_BRANCH } else { "" }
+$script:UPDATE_GITHUB_BRANCH = if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { $script:UPDATE_GITHUB_BRANCH_GIVEN } else { "main" }
 
 function Read-UpdateGitHubBranchFromEnv {
+    if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { return }
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
     if ($script:CONSOLE_PATH -and (Test-Path $envFile)) {
         $line = Get-Content $envFile -ErrorAction SilentlyContinue |
@@ -2977,6 +3181,7 @@ function Write-UpdateGitHubBranchToEnv {
     }
     Set-Content -Path $envFile -Value $updated -Encoding UTF8
     $script:UPDATE_GITHUB_BRANCH = $Branch
+    if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { $script:UPDATE_GITHUB_BRANCH_GIVEN = $Branch }
     $env:UPDATE_GITHUB_BRANCH = $Branch
     Print-Success "Update channel saved (GitHub branch: $Branch)"
     return $true
@@ -3359,17 +3564,47 @@ function Check-PortStatus {
     return $result
 }
 
+# The ports the installers open: RustDesk's (NAT test, signal TCP and UDP,
+# relay), the client API port, the CDAP gateway (21122) while CDAP is on,
+# and the console's ports unless TLS ends at a reverse proxy (TRUST_PROXY).
+function Get-FirewallPorts {
+    $signal = [int](Get-SignalPort)
+    $relay = [int](Get-RelayPort)
+    $ports = @(
+        @{Port = $signal - 1; Proto = "TCP"; Name = "BetterDesk NAT test"},
+        @{Port = $signal; Proto = "TCP"; Name = "BetterDesk ID server TCP"},
+        @{Port = $signal; Proto = "UDP"; Name = "BetterDesk ID server UDP"},
+        @{Port = $relay; Proto = "TCP"; Name = "BetterDesk relay"}
+    )
+    $api = Get-ConsoleEnvValue -Key "API_PORT"
+    if (-not $api) { $api = $script:CLIENT_API_PORT }
+    $ports += @{Port = [int]$api; Proto = "TCP"; Name = "BetterDesk client API"}
+    if ((Get-ConsoleEnvValue -Key "CDAP_ENABLED") -notmatch '^(?i)(n|no|0|false|off)$') {
+        $ports += @{Port = 21122; Proto = "TCP"; Name = "BetterDesk CDAP gateway"}
+    }
+    if ((Get-ConsoleEnvValue -Key "TRUST_PROXY") -match '^(?i)(y|yes|1|true|on)$') { return $ports }
+    $http = Get-ConsoleEnvValue -Key "CONSOLE_PORT"
+    if (-not $http) { $http = "5000" }
+    if ($http -ne "0") { $ports += @{Port = [int]$http; Proto = "TCP"; Name = "BetterDesk web console"} }
+    if ((Get-ConsoleEnvValue -Key "HTTPS_ENABLED") -eq "true") {
+        $https = Get-ConsoleEnvValue -Key "HTTPS_PORT"
+        if (-not $https) { $https = "5443" }
+        $ports += @{Port = [int]$https; Proto = "TCP"; Name = "BetterDesk web console HTTPS"}
+    }
+    return $ports
+}
+
 function Check-FirewallRules {
     Write-Host ""
     Write-Host "=== Windows Firewall ===" -ForegroundColor White
     Write-Host ""
-    
+
     $firewallProfile = Get-NetFirewallProfile -ErrorAction SilentlyContinue
     if (-not $firewallProfile) {
         Print-Warning "  Unable to query Windows Firewall"
         return
     }
-    
+
     $activeProfiles = $firewallProfile | Where-Object { $_.Enabled -eq $true }
     if ($activeProfiles) {
         $profileNames = ($activeProfiles | ForEach-Object { $_.Name }) -join ", "
@@ -3378,16 +3613,8 @@ function Check-FirewallRules {
         Write-Host "  Firewall: Disabled" -ForegroundColor Green
         return
     }
-    
-    # Check for BetterDesk firewall rules. Minimum WAN set from docs/CONNECTION_PORTS.md;
-    # the panel ports stay local and WebSocket ports are optional.
-    $requiredPorts = @(
-        @{Port=21116; Proto="TCP";  Name="ID Server TCP"},
-        @{Port=21116; Proto="UDP";  Name="ID Server UDP"},
-        @{Port=21117; Proto="TCP";  Name="Relay Server"},
-        @{Port=[int]$script:GO_API_PORT; Proto="TCP";  Name="Go API (default, direct)"}
-    )
-    
+
+    $requiredPorts = Get-FirewallPorts
     $missingRules = @()
     
     foreach ($p in $requiredPorts) {
@@ -3413,16 +3640,7 @@ function Configure-Firewall {
     param([array]$MissingRules = @())
     
     if ($MissingRules.Count -eq 0) {
-        # Minimum WAN set from docs/CONNECTION_PORTS.md. The panel (5000/5443) and the
-        # WebSocket ports (21118/21119) are not required: the panel stays local and native
-        # TCP/UDP works without WS.
-        $requiredPorts = @(
-            @{Port=21116; Proto="TCP";  Name="BetterDesk ID Server TCP"},
-            @{Port=21116; Proto="UDP";  Name="BetterDesk ID Server UDP"},
-            @{Port=21117; Proto="TCP";  Name="BetterDesk Relay Server"},
-            @{Port=[int]$script:GO_API_PORT; Proto="TCP";  Name="BetterDesk Go API (default)"}
-        )
-        
+        $requiredPorts = Get-FirewallPorts
         foreach ($p in $requiredPorts) {
             $rules = Get-NetFirewallRule -Direction Inbound -Enabled True -ErrorAction SilentlyContinue | 
                 Where-Object { $_.Action -eq 'Allow' } |
@@ -4961,15 +5179,27 @@ function Do-MigrateDatabase {
             Print-Step "Creating backup before migration..."
             & $migrateBin -mode backup -src $srcDb 2>&1 | ForEach-Object { Write-Host $_ }
 
+            # The install's own database: the server stops for the copy and
+            # starts again on the new database
+            $ownDb = ($srcDb -eq (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3")) -and (Test-Path (Join-Path $script:CONSOLE_PATH ".env"))
+            if ($ownDb) { Stop-ServerService }
+
             Print-Step "Running SQLite -> PostgreSQL migration..."
             & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
 
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "SQLite -> PostgreSQL migration completed successfully!"
-                Print-Info "Update your BetterDesk Go server config: DB_URL=$pgUri"
+                if ($ownDb) {
+                    Set-ConsoleEnvValue -Key "DB_TYPE" -Value "postgres"
+                    Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $pgUri
+                    Set-ConsoleEnvValue -Key "DB_URL" -Value $pgUri
+                    Print-Success "The install now runs on PostgreSQL"
+                }
             } else {
                 Print-Error "Migration failed. Check the output above for details."
+                if ($ownDb) { Print-Info "The install stays on $srcDb" }
             }
+            if ($ownDb) { Start-ServerService }
         }
         "3" {
             # PostgreSQL -> SQLite
@@ -4994,6 +5224,11 @@ function Do-MigrateDatabase {
                 & $migrateBin -mode backup -src $dstDb 2>&1 | ForEach-Object { Write-Host $_ }
             }
 
+            # The install's own database: the server stops for the copy and
+            # starts again on the new database
+            $ownPg = ((Get-ConsoleEnvValue -Key "DATABASE_URL") -eq $pgUri) -and ($dstDb -eq (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"))
+            if ($ownPg) { Stop-ServerService }
+
             Print-Step "Running PostgreSQL -> SQLite migration..."
             $migrateArgs = @("-mode", "pg2sqlite", "-src", $pgUri, "-dst", $dstDb)
             if ($script:MIGRATE_OVERWRITE) { $migrateArgs += $script:MIGRATE_OVERWRITE }
@@ -5001,9 +5236,14 @@ function Do-MigrateDatabase {
 
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "PostgreSQL -> SQLite migration completed successfully!"
+                if ($ownPg) {
+                    Use-SQLiteInstall $dstDb
+                    Print-Success "The install now runs on SQLite ($dstDb)"
+                }
             } else {
                 Print-Error "Migration failed. Check the output above for details."
             }
+            if ($ownPg) { Start-ServerService }
         }
         "4" {
             # Backup
@@ -5067,6 +5307,19 @@ function Show-Menu {
     Write-Host ""
 }
 
+# What a run without questions does here: install, update (an install of
+# the server with its console is there), upgrade (the Node.js console is
+# there), minimal or uninstall. -PostgreSQL on an install that runs on
+# SQLite installs again, which moves it to PostgreSQL.
+function Get-AutoAction {
+    if ($script:UNINSTALL_MODE) { return "uninstall" }
+    if (Test-NodeEraInstall) { return "upgrade" }
+    if ((Test-GoOnlyInstall) -and (Test-Path (Get-ServerBinaryPath)) -and (Test-Path (Join-Path $script:CONSOLE_PATH ".env")) -and
+        (-not $script:USE_POSTGRESQL -or (Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres")) { return "update" }
+    if ($script:MINIMAL_MODE) { return "minimal" }
+    return "install"
+}
+
 function Main {
     # Auto-detect paths on startup
     Write-Host "Detecting installation..." -ForegroundColor Cyan
@@ -5103,19 +5356,16 @@ function Main {
         exit ([int](-not (Do-Update)))
     }
 
-    # Auto mode - run installation directly; an install with the Node.js
-    # console is upgraded in place
+    # Without questions: install, or update an install that is there (run
+    # again, the installer updates); an install with the Node.js console is
+    # upgraded in place
     if ($script:AUTO_MODE) {
-        Print-Info "Running in AUTO mode..."
         $ok = $true
-        if ($script:UNINSTALL_MODE) {
-            Do-Uninstall
-        } elseif (Test-NodeEraInstall) {
-            $ok = Do-Update
-        } elseif ($script:MINIMAL_MODE) {
-            $ok = Do-InstallMinimal
-        } else {
-            $ok = Do-Install
+        switch (Get-AutoAction) {
+            "uninstall" { Do-Uninstall }
+            { $_ -in "upgrade", "update" } { Print-Info "BetterDesk is installed here: updating it"; $ok = Do-Update }
+            "minimal" { $ok = Do-InstallMinimal }
+            default { $ok = Do-Install }
         }
         exit ([int](-not $ok))
     }

@@ -67,21 +67,21 @@ func (g *github) RoundTrip(req *http.Request) (*http.Response, error) {
 	bin := binaryFor("3.6.0", newCommit)
 	files := map[string]string{asset: string(bin)}
 	manifest, _ := json.Marshal(map[string]any{
-		"schema_version": 1, "product": "betterdesk-server", "version": "3.6.0", "channel": "stable", "owner": "UNITRONIX",
-		"repo": "BetterDesk", "branch": "main", "sha": newCommit,
+		"schema_version": 1, "product": "betterdesk-server", "version": "3.6.0", "channel": "stable", "owner": "trybetterdesk",
+		"repo": "betterdesk", "branch": "main", "sha": newCommit,
 		"files": []any{map[string]any{"path": asset, "sha256": hexSum(bin), "size": len(bin)}},
 	})
 	files["manifest.json"] = string(manifest)
 	switch u := req.URL.String(); {
-	case u == "https://api.github.com/repos/UNITRONIX/BetterDesk/releases/latest":
+	case u == "https://api.github.com/repos/trybetterdesk/betterdesk/releases/latest":
 		var assets []map[string]any
 		for name := range files {
-			assets = append(assets, map[string]any{"name": name, "browser_download_url": "https://github.com/UNITRONIX/BetterDesk/releases/download/v3.6.0/" + name})
+			assets = append(assets, map[string]any{"name": name, "browser_download_url": "https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/" + name})
 		}
 		body, _ := json.Marshal(map[string]any{"tag_name": "v3.6.0", "name": "BetterDesk 3.6.0", "assets": assets})
 		return reply(200, string(body))
-	case strings.HasPrefix(u, "https://github.com/UNITRONIX/BetterDesk/releases/download/v3.6.0/"):
-		return reply(200, files[strings.TrimPrefix(u, "https://github.com/UNITRONIX/BetterDesk/releases/download/v3.6.0/")])
+	case strings.HasPrefix(u, "https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/"):
+		return reply(200, files[strings.TrimPrefix(u, "https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/")])
 	}
 	return reply(404, `{"message":"Not Found"}`)
 }
@@ -194,7 +194,7 @@ func TestReadRoutes(t *testing.T) {
 		res.Body != `{"success":false,"error":"Updates install prebuilt releases; no Go toolchain is needed"}` {
 		t.Errorf("install-go %d %s", res.Status, res.Body)
 	}
-	if res := admin.Do("GET", "/api/settings/updates/channel", ""); res.Body != `{"success":true,"data":{"channel":"stable","branch":"main","label":"Stable","owner":"UNITRONIX","repo":"BetterDesk"}}` {
+	if res := admin.Do("GET", "/api/settings/updates/channel", ""); res.Body != `{"success":true,"data":{"channel":"stable","branch":"main","label":"Stable","owner":"trybetterdesk","repo":"betterdesk"}}` {
 		t.Errorf("channel %s", res.Body)
 	}
 	if res := admin.Do("GET", "/api/settings/updates/install-status", ""); res.Body != `{"success":true,"data":{"inProgress":false,"marker":null,"localSHA":"`+oldCommit+`","lastResult":null}}` {

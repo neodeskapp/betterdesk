@@ -38,6 +38,7 @@
 		GO_SOURCES,
 		awaitRestart,
 		buildTools,
+		channelRepo,
 		consoleVersionNow,
 		checkState,
 		componentRows,
@@ -369,7 +370,7 @@
 			{#if channel.branch}
 				<span class="side-sub"
 					>{t('settings.updates_tab.channel_source', {
-						repo: `${channel.owner || 'UNITRONIX'}/${channel.repo || 'BetterDesk'}`,
+						repo: channelRepo(channel),
 						branch: channel.branch
 					})}</span
 				>

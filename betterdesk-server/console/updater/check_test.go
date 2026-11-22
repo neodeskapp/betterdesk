@@ -106,7 +106,7 @@ func TestCheckFindsTheRelease(t *testing.T) {
 	if !got.UpdateAvailable || got.RemoteSHA != newCommit || *got.LocalSHA != oldCommit || got.LocalVersion != "3.5.0" ||
 		got.LatestVersion != "3.6.0" || got.ReleaseTag != "v3.6.0" || got.CommitsBehind != 3 || got.LatestMessage != "BetterDesk 3.6.0" ||
 		got.LatestDate != "2026-11-18T10:00:00Z" || got.LatestAuthor != "unitronix" || got.DeploymentMode != "native" ||
-		got.UpdateChannel != "stable" || got.GithubBranch != "main" || got.GithubOwner != "UNITRONIX" || got.GithubRepo != "BetterDesk" {
+		got.UpdateChannel != "stable" || got.GithubBranch != "main" || got.GithubOwner != "trybetterdesk" || got.GithubRepo != "betterdesk" {
 		t.Errorf("check %+v", got)
 	}
 	// docs/ is not counted; the renamed web app file and the installer
@@ -151,7 +151,7 @@ func TestCheckCases(t *testing.T) {
 		in := newInstall(t)
 		rel := newTestRelease("3.6.0", newCommit, BranchStable)
 		in.gh.serve(rel)
-		in.gh.on("GET https://api.github.com/repos/UNITRONIX/BetterDesk/compare/"+oldCommit+"..."+newCommit, func(*http.Request) *http.Response {
+		in.gh.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/compare/"+oldCommit+"..."+newCommit, func(*http.Request) *http.Response {
 			return respond(404, "No common ancestor", nil)
 		})
 		got, err := in.svc.Check(context.Background())
@@ -182,7 +182,7 @@ func TestCheckCases(t *testing.T) {
 		in.gh.serve(newTestRelease("3.6.0", newCommit, BranchStable))
 		got, err := in.svc.Check(context.Background())
 		if err != nil || !got.DockerShaUnknown || !got.DockerImageMode || got.DeploymentMode != "docker-image" ||
-			got.DockerUpdate == nil || got.DockerUpdate.Images[0] != "ghcr.io/unitronix/betterdesk:latest" || *got.InAppUpdateSupported {
+			got.DockerUpdate == nil || got.DockerUpdate.Images[0] != "ghcr.io/trybetterdesk/betterdesk:latest" || *got.InAppUpdateSupported {
 			t.Errorf("%+v %v", got, err)
 		}
 	})
@@ -190,7 +190,7 @@ func TestCheckCases(t *testing.T) {
 		in := newInstall(t)
 		in.env["UPDATE_GITHUB_TOKEN"] = "x"
 		in.svc = New(in.opts)
-		in.gh.on("GET https://api.github.com/repos/UNITRONIX/BetterDesk/releases/latest", func(*http.Request) *http.Response {
+		in.gh.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/releases/latest", func(*http.Request) *http.Response {
 			return respond(429, "slow down", http.Header{"X-Ratelimit-Remaining": {"0"}, "X-Ratelimit-Reset": {"1795000000"}})
 		})
 		_, err := in.svc.Check(context.Background())
@@ -256,7 +256,7 @@ func TestChannel(t *testing.T) {
 	if err := os.WriteFile(in.opts.EnvFile, []byte("PORT=5000\r\nUPDATE_GITHUB_BRANCH=main\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if got := mustJSON(t, in.svc.Channel()); got != `{"channel":"stable","branch":"main","label":"Stable","owner":"UNITRONIX","repo":"BetterDesk"}` {
+	if got := mustJSON(t, in.svc.Channel()); got != `{"channel":"stable","branch":"main","label":"Stable","owner":"trybetterdesk","repo":"betterdesk"}` {
 		t.Errorf("channel %s", got)
 	}
 	switched, err := in.svc.SetChannel("development")
