@@ -2360,6 +2360,7 @@
     "virtual_display": "Pantalla virtual",
     "plug_out_all": "Desconectar todas",
     "file_transfer_unavailable": "La transferencia de archivos no está disponible en esta sesión.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Certificado no fiable",
     "certificate_confirm": "El certificado de {name} no es de confianza. ¿Confiar en el certificado con la huella {fingerprint}?",
     "certificate_trust": "Confiar en el certificado"
@@ -7691,6 +7692,8 @@
     "ended_peer": "La sesión se finalizó en {name}.",
     "fail_permission": "No tiene permiso para conectarse a {name}.",
     "try_permission": "Pida a un administrador que le dé acceso a este dispositivo.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "No se aceptó la contraseña.",
     "try_password": "Vuelva a conectar e introduzca la contraseña configurada en RustDesk en el dispositivo.",
     "fail_refused": "{name} rechazó la conexión.",

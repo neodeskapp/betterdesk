@@ -2366,6 +2366,7 @@
     "virtual_display": "Virtuell skärm",
     "plug_out_all": "Koppla från alla",
     "file_transfer_unavailable": "Filöverföring är inte tillgänglig för den här sessionen.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Certifikat som inte är betrott",
     "certificate_confirm": "Certifikatet för {name} är inte betrott. Vill du lita på certifikatet med fingeravtrycket {fingerprint}?",
     "certificate_trust": "Lita på certifikatet"
@@ -7697,6 +7698,8 @@
     "ended_peer": "Sessionen avslutades på {name}.",
     "fail_permission": "Du har inte behörighet att ansluta till {name}.",
     "try_permission": "Be en administratör att ge dig åtkomst till den här enheten.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Lösenordet godkändes inte.",
     "try_password": "Anslut igen och ange lösenordet som är inställt i RustDesk på enheten.",
     "fail_refused": "{name} nekade anslutningen.",

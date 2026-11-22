@@ -2366,6 +2366,7 @@
     "virtual_display": "Ecran virtual",
     "plug_out_all": "Deconectează toate",
     "file_transfer_unavailable": "Transferul de fișiere nu este disponibil pentru această sesiune.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Certificat neîncrezut",
     "certificate_confirm": "Certificatul pentru {name} nu este de încredere. Aveți încredere în certificatul cu amprenta {fingerprint}?",
     "certificate_trust": "Acordă încredere certificatului"
@@ -7697,6 +7698,8 @@
     "ended_peer": "Sesiunea a fost încheiată pe {name}.",
     "fail_permission": "Nu aveți permisiunea de a vă conecta la {name}.",
     "try_permission": "Cereți unui administrator acces la acest dispozitiv.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Parola nu a fost acceptată.",
     "try_password": "Reconectați-vă și introduceți parola setată în RustDesk pe dispozitiv.",
     "fail_refused": "{name} a refuzat conexiunea.",

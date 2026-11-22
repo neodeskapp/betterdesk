@@ -2360,6 +2360,7 @@
     "virtual_display": "Virtueel scherm",
     "plug_out_all": "Alle loskoppelen",
     "file_transfer_unavailable": "Bestandsoverdracht is niet beschikbaar voor deze sessie.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Niet-vertrouwd certificaat",
     "certificate_confirm": "Het certificaat van {name} wordt niet vertrouwd. Het certificaat met vingerafdruk {fingerprint} vertrouwen?",
     "certificate_trust": "Certificaat vertrouwen"
@@ -7691,6 +7692,8 @@
     "ended_peer": "De sessie is beëindigd op {name}.",
     "fail_permission": "Je hebt geen toestemming om verbinding te maken met {name}.",
     "try_permission": "Vraag een beheerder je toegang tot dit apparaat te geven.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Het wachtwoord is niet geaccepteerd.",
     "try_password": "Maak opnieuw verbinding en voer het wachtwoord in dat in RustDesk op het apparaat is ingesteld.",
     "fail_refused": "{name} heeft de verbinding geweigerd.",

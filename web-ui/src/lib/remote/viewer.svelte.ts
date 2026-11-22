@@ -102,6 +102,24 @@ export interface BillingPane {
 	busy: boolean;
 }
 
+/** What the device lets this session use; it turns these off for the account's client features */
+export interface DevicePermissions {
+	keyboard: boolean;
+	clipboard: boolean;
+	file: boolean;
+	restart: boolean;
+}
+
+const ALL_ALLOWED: DevicePermissions = { keyboard: true, clipboard: true, file: true, restart: true };
+
+/** PermissionInfo.Permission values (message.proto) the viewer follows */
+const DEVICE_PERMISSIONS: Record<number, keyof DevicePermissions> = {
+	0: 'keyboard',
+	2: 'clipboard',
+	4: 'file',
+	5: 'restart'
+};
+
 /** Hooks a session panel gives the viewer to move focus inside it */
 export interface PanelFocus {
 	canvas(): void;
@@ -147,6 +165,10 @@ export class ViewerSession {
 	recording = $state(false);
 	meshServerRecord = $state(false);
 	viewOnly = $state(false);
+	/** What the device lets this session use (PermissionInfo messages) */
+	allowed = $state<DevicePermissions>({ ...ALL_ALLOWED });
+	/** The operator's own view only setting while the device has the keyboard off */
+	viewOnlyBeforeKeyboardOff: boolean | null = null;
 	chat = $state.raw<ChatLine[]>([]);
 	latency = $state(0);
 	monitors = $state.raw<Monitor[]>([]);
@@ -462,6 +484,9 @@ export class Viewer {
 		s.encrypted = false;
 		s.loginError = '';
 		s.tfaError = '';
+		// The device of the new session says again what it turns off
+		s.allowed = { ...ALL_ALLOWED };
+		s.viewOnlyBeforeKeyboardOff = null;
 		if (!s.canvas) return;
 		s.client = createClient(s.canvas, this.clientOptions(s), this.transport);
 		s.client.setBackgroundFps?.(s.prefs.backgroundFps || 1);
@@ -622,6 +647,7 @@ export class Viewer {
 			s.latency = Number(rtt) || 0;
 		});
 		on('chat', (text: unknown) => this.addChat(s, String(text ?? ''), 'received'));
+		on('permission', (info: unknown) => this.applyPermission(s, c, info));
 		// CDAP: the agent lists its monitors; RustDesk: peer_info after sign-in
 		on('monitors', () => this.refreshMonitors(s));
 		on('peer_info', (info?: { platform?: string; os?: string }) => {
@@ -642,6 +668,37 @@ export class Viewer {
 		};
 		on('signature_warning', insecure);
 		on('encryption_warning', insecure);
+	}
+
+	/**
+	 * The device turned a permission of this session on or off
+	 * (PermissionInfo): without the keyboard the session is view only and
+	 * sends no input, without the clipboard the client keeps it off, without
+	 * file transfer the file sheet closes, without restart the command goes.
+	 */
+	private applyPermission(s: ViewerSession, c: RemoteClient, info: unknown): void {
+		if (!info || typeof info !== 'object') return;
+		const key = DEVICE_PERMISSIONS[Number(Reflect.get(info, 'permission') ?? 0)];
+		if (!key) return;
+		const on = Reflect.get(info, 'enabled') === true;
+		if (s.allowed[key] === on) return;
+		s.allowed = { ...s.allowed, [key]: on };
+		if (key === 'keyboard') {
+			if (!on) {
+				s.viewOnlyBeforeKeyboardOff = s.viewOnly;
+				s.viewOnly = true;
+				c.setViewOnly?.(true);
+			} else {
+				s.viewOnly = this.viewOnlyGuest || !!s.viewOnlyBeforeKeyboardOff;
+				s.viewOnlyBeforeKeyboardOff = null;
+				c.setViewOnly?.(s.viewOnly);
+			}
+			this.syncTouch();
+		} else if (key === 'clipboard') {
+			c.setDisableClipboard?.(!on || s.toggles.disableClipboard);
+		} else if (key === 'file' && !on && this.sheet === 'files' && this.isActive(s)) {
+			this.closeSheet();
+		}
 	}
 
 	private async trustCertificate(s: ViewerSession, c: RemoteClient, fingerprint: string): Promise<void> {
@@ -877,7 +934,7 @@ export class Viewer {
 
 	/** The client of the active tab for a control that sends input; none for a watch-only guest */
 	private inputClient(): RemoteClient | null {
-		if (this.viewOnlyGuest) return null;
+		if (this.viewOnlyGuest || this.active?.allowed.keyboard === false) return null;
 		return this.active?.client ?? null;
 	}
 
@@ -898,7 +955,7 @@ export class Viewer {
 
 	async restartRemote(): Promise<void> {
 		const s = this.active;
-		if (!s?.client || !this.inputClient()) return;
+		if (!s?.client || !this.inputClient() || !s.allowed.restart) return;
 		const ok = await confirm({
 			title: tf('remote.restart_remote', 'Restart remote device'),
 			message: tf('remote.confirm_restart', 'Restart the remote device?'),
@@ -927,6 +984,10 @@ export class Viewer {
 		if (!s?.client) return;
 		if (s.client.viewOnly || this.viewOnlyGuest) {
 			toast.warning(tf('remote.view_only', 'View only mode'));
+			return;
+		}
+		if (!s.allowed.clipboard) {
+			toast.warning(tf('remote.feature_off', 'This is turned off for your account on this server.'));
 			return;
 		}
 		try {
@@ -972,7 +1033,8 @@ export class Viewer {
 		else if (key === 'showCursor') c.setShowRemoteCursor?.(on);
 		else if (key === 'lockAfter') c.setLockAfterSession?.(on);
 		else if (key === 'privacy') c.setPrivacyMode?.(on);
-		else c.setDisableClipboard?.(on);
+		// The clipboard stays off while the device has it off
+		else c.setDisableClipboard?.(on || !s.allowed.clipboard);
 	}
 
 	/** Image quality, frame rate, scaling, keyboard mode, codec: the session and the saved defaults */
@@ -1012,7 +1074,7 @@ export class Viewer {
 
 	toggleViewOnly(): void {
 		const s = this.active;
-		if (!s?.client || this.viewOnlyGuest) return;
+		if (!s?.client || this.viewOnlyGuest || !s.allowed.keyboard) return;
 		s.viewOnly = !s.viewOnly;
 		s.client.setViewOnly?.(s.viewOnly);
 		this.syncTouch();
@@ -1117,6 +1179,10 @@ export class Viewer {
 		const files = fileSheet();
 		if (name !== 'files' && files?.isOpen()) files.close();
 		if (name === 'files') {
+			if (!s.allowed.file) {
+				toast.warning(tf('remote.feature_off', 'This is turned off for your account on this server.'));
+				return;
+			}
 			if (!s.client?.fileTransfer && this.transport !== 'cdap') {
 				toast.warning(
 					tf('remote.file_transfer_unavailable', 'File transfer is not available for this session.')

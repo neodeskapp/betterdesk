@@ -2366,6 +2366,7 @@
     "virtual_display": "वर्चुअल डिस्प्ले",
     "plug_out_all": "सभी अनप्लग करें",
     "file_transfer_unavailable": "इस सत्र के लिए फ़ाइल ट्रांसफ़र उपलब्ध नहीं है।",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "अविश्वसनीय प्रमाणपत्र",
     "certificate_confirm": "{name} का प्रमाणपत्र विश्वसनीय नहीं है। क्या फ़िंगरप्रिंट {fingerprint} वाले प्रमाणपत्र पर भरोसा करें?",
     "certificate_trust": "प्रमाणपत्र पर भरोसा करें"
@@ -7697,6 +7698,8 @@
     "ended_peer": "सत्र {name} पर समाप्त किया गया।",
     "fail_permission": "आपको {name} से कनेक्ट करने की अनुमति नहीं है।",
     "try_permission": "किसी एडमिनिस्ट्रेटर से इस डिवाइस का एक्सेस देने को कहें।",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "पासवर्ड स्वीकार नहीं हुआ।",
     "try_password": "दोबारा कनेक्ट करें और डिवाइस पर RustDesk में सेट किया गया पासवर्ड डालें।",
     "fail_refused": "{name} ने कनेक्शन अस्वीकार कर दिया।",

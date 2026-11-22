@@ -2366,6 +2366,7 @@
     "virtual_display": "Sanal ekran",
     "plug_out_all": "Tümünü çıkar",
     "file_transfer_unavailable": "Bu oturumda dosya aktarımı kullanılamıyor.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Güvenilmeyen sertifika",
     "certificate_confirm": "{name} sertifikasına güvenilmiyor. Parmak izi {fingerprint} olan sertifikaya güvenilsin mi?",
     "certificate_trust": "Sertifikaya güven"
@@ -7697,6 +7698,8 @@
     "ended_peer": "Oturum {name} cihazında sonlandırıldı.",
     "fail_permission": "{name} cihazına bağlanma izniniz yok.",
     "try_permission": "Bu cihaza erişim vermesi için bir yöneticiye başvurun.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Parola kabul edilmedi.",
     "try_password": "Yeniden bağlanın ve cihazda RustDesk'te ayarlanan parolayı girin.",
     "fail_refused": "{name} cihazı bağlantıyı reddetti.",

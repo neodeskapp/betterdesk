@@ -2382,6 +2382,7 @@
     "virtual_display": "虛擬顯示器",
     "plug_out_all": "全部移除",
     "file_transfer_unavailable": "此工作階段無法使用檔案傳輸。",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "不受信任的憑證",
     "certificate_confirm": "{name} 的憑證不受信任。要信任指紋為 {fingerprint} 的憑證嗎？",
     "certificate_trust": "信任憑證"
@@ -7695,6 +7696,8 @@
     "ended_peer": "工作階段已在 {name} 上被結束。",
     "fail_permission": "您沒有連線到 {name} 的權限。",
     "try_permission": "請管理員為您開放此裝置的存取權。",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "密碼未被接受。",
     "try_password": "請重新連線，並輸入裝置上 RustDesk 中設定的密碼。",
     "fail_refused": "{name} 拒絕了連線。",

@@ -2366,6 +2366,7 @@
     "virtual_display": "Màn hình ảo",
     "plug_out_all": "Gỡ tất cả",
     "file_transfer_unavailable": "Phiên này không hỗ trợ truyền tệp.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Chứng chỉ không đáng tin cậy",
     "certificate_confirm": "Chứng chỉ của {name} không đáng tin cậy. Tin cậy chứng chỉ có dấu vân tay {fingerprint}?",
     "certificate_trust": "Tin cậy chứng chỉ"
@@ -7697,6 +7698,8 @@
     "ended_peer": "Phiên đã được kết thúc trên {name}.",
     "fail_permission": "Bạn không có quyền kết nối với {name}.",
     "try_permission": "Hãy nhờ quản trị viên cấp cho bạn quyền truy cập thiết bị này.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Mật khẩu không được chấp nhận.",
     "try_password": "Hãy kết nối lại và nhập mật khẩu đã đặt trong RustDesk trên thiết bị.",
     "fail_refused": "{name} đã từ chối kết nối.",

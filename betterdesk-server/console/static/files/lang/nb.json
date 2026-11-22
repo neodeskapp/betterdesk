@@ -2366,6 +2366,7 @@
     "virtual_display": "Virtuell skjerm",
     "plug_out_all": "Koble fra alle",
     "file_transfer_unavailable": "Filoverføring er ikke tilgjengelig for denne økten.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Sertifikat som ikke er klarert",
     "certificate_confirm": "Sertifikatet til {name} er ikke klarert. Vil du klarere sertifikatet med fingeravtrykket {fingerprint}?",
     "certificate_trust": "Klarer sertifikatet"
@@ -7697,6 +7698,8 @@
     "ended_peer": "Økten ble avsluttet på {name}.",
     "fail_permission": "Du har ikke tillatelse til å koble til {name}.",
     "try_permission": "Be en administrator om å gi deg tilgang til denne enheten.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Passordet ble ikke godtatt.",
     "try_password": "Koble til igjen og skriv inn passordet som er satt i RustDesk på enheten.",
     "fail_refused": "{name} avviste tilkoblingen.",

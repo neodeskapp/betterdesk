@@ -136,9 +136,11 @@
 					<MenuItem icon="lock" onselect={() => viewer.lockScreen()}
 						>{tf('remote.lock_screen', 'Lock screen')}</MenuItem
 					>
-					<MenuItem icon="restart_alt" onselect={() => void viewer.restartRemote()}
-						>{tf('remote.restart_remote', 'Restart remote device')}</MenuItem
-					>
+					{#if s?.allowed.restart ?? true}
+						<MenuItem icon="restart_alt" onselect={() => void viewer.restartRemote()}
+							>{tf('remote.restart_remote', 'Restart remote device')}</MenuItem
+						>
+					{/if}
 					<MenuDivider />
 					<MenuItem icon="refresh" onselect={() => viewer.refreshScreen()}
 						>{tf('remote.refresh_screen', 'Refresh screen')}</MenuItem
@@ -410,6 +412,7 @@
 					title={tf('remote.file_transfer', 'File transfer')}
 					aria-pressed={viewer.sheet === 'files'}
 					aria-controls="rd-sheet-host"
+					disabled={!(s?.allowed.file ?? true)}
 					onclick={() => viewer.toggleSheet('files')}
 					><span class="tb-label">{tf('remote.file_transfer', 'File transfer')}</span></Button
 				>
@@ -465,6 +468,7 @@
 					icon="visibility"
 					title={tf('remote.view_only', 'View only')}
 					aria-pressed={s?.viewOnly ?? false}
+					disabled={!(s?.allowed.keyboard ?? true)}
 					onclick={() => viewer.toggleViewOnly()}
 					><span class="tb-label">{tf('remote.view_only', 'View only')}</span></Button
 				>

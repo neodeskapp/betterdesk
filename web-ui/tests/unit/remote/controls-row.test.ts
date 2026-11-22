@@ -101,4 +101,17 @@ describe('remote viewer controls', () => {
 		expect(screen.getByTitle('Type text')).toBeInTheDocument();
 		expect(screen.getByTitle('View only')).toBeInTheDocument();
 	});
+
+	test('what the device turned off for the account cannot be used: view only stays, no file sheet', async () => {
+		const v = streamingViewer({ transport: 'rd' });
+		render(ControlsRow, { viewer: v, id: 'ctl' });
+		const c = v.sessions[0]!.client as unknown as FakeClient;
+		expect(screen.getByTitle('View only')).toBeEnabled();
+		expect(screen.getByTitle('File transfer')).toBeEnabled();
+		c.emit('permission', { permission: 0, enabled: false });
+		c.emit('permission', { permission: 4, enabled: false });
+		await vi.waitFor(() => expect(screen.getByTitle('View only')).toBeDisabled());
+		expect(screen.getByTitle('View only')).toHaveAttribute('aria-pressed', 'true');
+		expect(screen.getByTitle('File transfer')).toBeDisabled();
+	});
 });

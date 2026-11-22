@@ -2360,6 +2360,7 @@
     "virtual_display": "가상 디스플레이",
     "plug_out_all": "모두 제거",
     "file_transfer_unavailable": "이 세션에서는 파일 전송을 사용할 수 없습니다.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "신뢰할 수 없는 인증서",
     "certificate_confirm": "{name}의 인증서를 신뢰할 수 없습니다. 지문이 {fingerprint}인 인증서를 신뢰하시겠습니까?",
     "certificate_trust": "인증서 신뢰"
@@ -7691,6 +7692,8 @@
     "ended_peer": "{name}에서 세션을 종료했습니다.",
     "fail_permission": "{name}에 연결할 권한이 없습니다.",
     "try_permission": "관리자에게 이 기기에 대한 접근 권한을 요청하세요.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "비밀번호가 거부되었습니다.",
     "try_password": "다시 연결한 후 기기의 RustDesk에 설정된 비밀번호를 입력하세요.",
     "fail_refused": "{name}에서 연결을 거부했습니다.",

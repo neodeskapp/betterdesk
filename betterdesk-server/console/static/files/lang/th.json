@@ -2366,6 +2366,7 @@
     "virtual_display": "จอแสดงผลเสมือน",
     "plug_out_all": "ถอดทั้งหมด",
     "file_transfer_unavailable": "ไม่สามารถถ่ายโอนไฟล์ในเซสชันนี้ได้",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "ใบรับรองที่ไม่น่าเชื่อถือ",
     "certificate_confirm": "ใบรับรองของ {name} ไม่น่าเชื่อถือ เชื่อถือใบรับรองที่มีลายนิ้วมือ {fingerprint} หรือไม่",
     "certificate_trust": "เชื่อถือใบรับรอง"
@@ -7697,6 +7698,8 @@
     "ended_peer": "เซสชันถูกสิ้นสุดที่ {name}",
     "fail_permission": "คุณไม่มีสิทธิ์เชื่อมต่อกับ {name}",
     "try_permission": "โปรดขอให้ผู้ดูแลระบบให้สิทธิ์เข้าถึงอุปกรณ์นี้แก่คุณ",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "รหัสผ่านไม่ถูกยอมรับ",
     "try_password": "เชื่อมต่อใหม่และป้อนรหัสผ่านที่ตั้งไว้ใน RustDesk บนอุปกรณ์",
     "fail_refused": "{name} ปฏิเสธการเชื่อมต่อ",

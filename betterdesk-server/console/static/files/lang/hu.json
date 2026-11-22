@@ -2366,6 +2366,7 @@
     "virtual_display": "Virtuális kijelző",
     "plug_out_all": "Összes leválasztása",
     "file_transfer_unavailable": "Ebben a munkamenetben a fájlátvitel nem érhető el.",
+    "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Nem megbízható tanúsítvány",
     "certificate_confirm": "A(z) {name} tanúsítványa nem megbízható. Megbízik a(z) {fingerprint} ujjlenyomatú tanúsítványban?",
     "certificate_trust": "Tanúsítvány elfogadása"
@@ -7697,6 +7698,8 @@
     "ended_peer": "A munkamenetet a(z) {name} eszközön befejezték.",
     "fail_permission": "Nincs jogosultsága csatlakozni a(z) {name} eszközhöz.",
     "try_permission": "Kérjen hozzáférést ehhez az eszközhöz egy rendszergazdától.",
+    "fail_feature_off": "This kind of session is turned off for your account on this server.",
+    "try_feature_off": "An administrator can turn it on in your account's client features.",
     "fail_password": "Az eszköz nem fogadta el a jelszót.",
     "try_password": "Csatlakozzon újra, és adja meg az eszközön a RustDeskben beállított jelszót.",
     "fail_refused": "A(z) {name} eszköz elutasította a kapcsolatot.",

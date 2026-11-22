@@ -166,6 +166,21 @@ export function classifyEnd(
 	const p = { name: ctx.name };
 	const pick = (kind: string, text: string, tryText: string): Outcome => ({ kind, text, tryText });
 
+	// The server refused a session the account's client features turn off
+	// ("File transfer is turned off for your account on this server")
+	if (/turned off for your account/.test(m)) {
+		return pick(
+			'feature_off',
+			tf(
+				'remote_viewer.fail_feature_off',
+				'This kind of session is turned off for your account on this server.'
+			),
+			tf(
+				'remote_viewer.try_feature_off',
+				"An administrator can turn it on in your account's client features."
+			)
+		);
+	}
 	// The client stopped before signing in: the device's identity or the encryption did not check out
 	if (/^handshake failed/.test(m)) {
 		return pick(
