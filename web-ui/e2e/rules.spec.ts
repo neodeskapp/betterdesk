@@ -72,6 +72,16 @@ for (const role of ROLES) {
 			await orgs.first().click();
 			await expect(page).toHaveURL(new RegExp(`${UI}/policies/[^/]+$`));
 			await waitData(page.locator('#pol-connection-title')).toBeVisible();
+			if (!(b.isSuperAdmin || b.permissions.includes('org.edit'))) {
+				// A83: saving policies needs org.edit (server_admin reads them)
+				await expect(page.getByText('You can view this page but not change it.')).toBeVisible();
+				await expect(page.getByLabel('Longest session (minutes)')).toBeDisabled();
+				await expect(page.getByRole('button', { name: 'Save policies' })).toHaveCount(0);
+				await expectNoAxeViolations(page);
+				const org = new URL(page.url()).pathname.split('/').pop() ?? 'x';
+				expect(await refused(page, b, 'put', `/api/panel/policies/${org}/connection`, {})).toBe(403);
+				return;
+			}
 			await expect(page.getByRole('button', { name: 'Save policies' })).toBeVisible();
 			await expectNoAxeViolations(page);
 			// A change marks the form; a refused number says why and keeps the change
@@ -122,10 +132,17 @@ for (const role of ROLES) {
 			await expectNoAxeViolations(page);
 			await page.keyboard.press('Escape');
 			await expect(sheet).toBeHidden();
-			// The tab is in the address
-			await page.getByRole('tab', { name: 'Remote commands' }).click();
-			await expect(page).toHaveURL(/[?&]tab=commands/);
-			await expect(page.getByRole('button', { name: 'Send command' })).toBeVisible();
+			// The tab is in the address. A80: remote commands also need device.connect
+			if (b.isSuperAdmin || b.permissions.includes('device.connect')) {
+				await page.getByRole('tab', { name: 'Remote commands' }).click();
+				await expect(page).toHaveURL(/[?&]tab=commands/);
+				await expect(page.getByRole('button', { name: 'Send command' })).toBeVisible();
+			} else {
+				await expect(page.getByRole('tab', { name: 'Remote commands' })).toHaveCount(0);
+				expect(
+					await refused(page, b, 'post', '/api/automation/commands', { device_id: 'x', payload: 'x' })
+				).toBe(403);
+			}
 			await page.getByRole('tab', { name: 'Alert history' }).click();
 			await expect(page).toHaveURL(/[?&]tab=alerts/);
 			await expectNoAxeViolations(page);
