@@ -1,6 +1,6 @@
 <!--
   Settings › Backup (server.config). Download a full backup; make backups
-  on a schedule (with the network share login); restore from a file. The
+  on a schedule into a folder; restore from a file. The
   side column has the schedule's state and what a backup made now holds.
   Old page: views/settings.ejs "Backup", settings.js initBackupSection.
 -->
@@ -10,13 +10,10 @@
 		errorText,
 		getBackupSchedule,
 		getBackupStats,
-		getSmb,
 		restoreBackup,
 		runScheduledBackup,
 		saveBackupSchedule,
-		saveSmb,
 		testBackupDestination,
-		testSmb,
 		type BackupStats,
 		type RestoreResult,
 		type Schedule,
@@ -43,7 +40,6 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
-	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import Facts, { type Fact } from '#lib/ui/Facts.svelte';
 	import IdFacts, { type IdFact } from '#lib/settings-b/IdFacts.svelte';
 	import { trackDirty } from '#lib/settings/dirty.ts';
@@ -65,7 +61,7 @@
 	const allowed = can('server.config');
 
 	/** Sample values in empty fields (paths and host names, the same in every language) */
-	const SAMPLE = { path: '/mnt/backups', smbHost: 'nas.example.local' } as const;
+	const SAMPLE = { path: '/mnt/backups' } as const;
 
 	type Line = { message: string; tone: 'neutral' | 'ok' | 'error' };
 	const NONE: Line = { message: '', tone: 'neutral' };
@@ -197,52 +193,6 @@
 		}
 	}
 
-	// ── Network share login ──
-	let smbOpen = $state(false);
-	let smbLine = $state<Line>(NONE);
-	let smbTesting = $state(false);
-
-	const smb = createForm({
-		id: 'scheduled-backup-smb-form',
-		initial: { host: '', share: '', domain: '', username: '', password: '', mountPath: '' },
-		submit: async (v) => {
-			await saveSmb(v);
-			smbLine = NONE;
-		},
-		savedMessage: t('backup.smb_saved')
-	});
-
-	async function loadSmb() {
-		try {
-			const s = await getSmb();
-			smb.reset({
-				host: s.host ?? '',
-				share: s.share ?? '',
-				domain: s.domain ?? '',
-				username: s.username ?? '',
-				password: s.password ?? '',
-				mountPath: s.mountPath ?? ''
-			});
-			// A saved share login is shown open; an unused one stays folded
-			if (s.host) smbOpen = true;
-		} catch (err) {
-			smbLine = fail(err);
-			smbOpen = true;
-		}
-	}
-
-	async function testShare() {
-		smbTesting = true;
-		try {
-			const r = await testSmb($state.snapshot(smb.values));
-			smbLine = ok(`${t('backup.smb_test_success')}: ${r?.target ?? ''}`);
-		} catch (err) {
-			smbLine = fail(err);
-		} finally {
-			smbTesting = false;
-		}
-	}
-
 	// ── Restore: file, parts, Restore, confirm ──
 	let files = $state<FileList | null>(null);
 	let picked = $state.raw<ReadonlySet<RestorePart['field']>>(new Set());
@@ -345,7 +295,6 @@
 		if (!allowed) return;
 		void loadStats();
 		void loadSchedule();
-		void loadSmb();
 		return onRefresh(() => {
 			void loadStats();
 			void refreshSchedule();
@@ -359,10 +308,9 @@
 	]);
 	// Leaving the tab with unsaved changes asks first (the settings page)
 	$effect(() => trackDirty(() => schedule.dirty));
-	$effect(() => trackDirty(() => smb.dirty));
 
 	// One primary on the page: Download, unless a form has unsaved changes
-	const anyDirty = $derived(schedule.dirty || smb.dirty);
+	const anyDirty = $derived(schedule.dirty);
 </script>
 
 {#snippet lastRun()}
@@ -409,7 +357,6 @@
 				<ul class="toc">
 					<li><a href="#backup-create">{t('settings.backup_tab.create_title')}</a></li>
 					<li><a href="#scheduled-backup-panel">{t('backup.schedule_title')}</a></li>
-					<li><a href="#scheduled-backup-smb-panel">{t('settings.backup_tab.smb_title')}</a></li>
 					<li><a href="#backup-restore">{t('settings.backup_tab.restore_title')}</a></li>
 				</ul>
 			</nav>
@@ -513,83 +460,6 @@
 						</form>
 					</section>
 
-					<Disclosure
-						id="scheduled-backup-smb-panel"
-						title={t('settings.backup_tab.smb_title')}
-						bind:open={smbOpen}
-					>
-						<p class="section-note smb-note">{t('settings.backup_tab.smb_note')}</p>
-						<form class="form-column smb-form" id={smb.id} onsubmit={smb.onsubmit} novalidate>
-							<Field id="backup-smb-host" label={t('backup.smb_host')} width="host">
-								{#snippet children(f)}
-									<Input
-										{...f}
-										class="mono"
-										autocomplete="off"
-										spellcheck="false"
-										placeholder={SAMPLE.smbHost}
-										bind:value={smb.values.host}
-									/>
-								{/snippet}
-							</Field>
-							<Field id="backup-smb-share" label={t('backup.smb_share')} width="host">
-								{#snippet children(f)}
-									<Input {...f} autocomplete="off" spellcheck="false" bind:value={smb.values.share} />
-								{/snippet}
-							</Field>
-							<Field
-								id="backup-smb-domain"
-								label={t('backup.smb_domain')}
-								hint={t('settings.backup_tab.smb_domain_hint')}
-								width="host"
-							>
-								{#snippet children(f)}
-									<Input {...f} autocomplete="off" spellcheck="false" bind:value={smb.values.domain} />
-								{/snippet}
-							</Field>
-							<Field id="backup-smb-username" label={t('backup.smb_username')} width="host">
-								{#snippet children(f)}
-									<Input {...f} autocomplete="off" spellcheck="false" bind:value={smb.values.username} />
-								{/snippet}
-							</Field>
-							<Field
-								id="backup-smb-password"
-								label={t('backup.smb_password')}
-								hint={t('backup.smb_password_hint')}
-								width="host"
-							>
-								{#snippet children(f)}
-									<Input
-										{...f}
-										type="password"
-										autocomplete="new-password"
-										bind:value={smb.values.password}
-									/>
-								{/snippet}
-							</Field>
-							<Field
-								id="backup-smb-mount-path"
-								label={t('settings.backup_tab.smb_mount_path')}
-								hint={t('settings.backup_tab.smb_mount_path_hint')}
-								width="host"
-							>
-								{#snippet children(f)}
-									<Input
-										{...f}
-										class="mono"
-										placeholder={SAMPLE.path}
-										spellcheck="false"
-										bind:value={smb.values.mountPath}
-									/>
-								{/snippet}
-							</Field>
-							<FormStatus message={smbLine.message} tone={smbLine.tone} />
-							<p class="field-effect">{t('settings.backup_tab.smb_effect')}</p>
-							<SaveBar form={smb} label={t('backup.smb_save')}>
-								<Button busy={smbTesting} onclick={testShare}>{t('backup.smb_test')}</Button>
-							</SaveBar>
-						</form>
-					</Disclosure>
 				</div>
 			</div>
 
@@ -742,13 +612,6 @@
 		.settings-toc {
 			display: none;
 		}
-	}
-
-	.smb-note {
-		margin-top: 0;
-	}
-	.smb-form {
-		margin-top: var(--space-3);
 	}
 
 	.danger-zone {

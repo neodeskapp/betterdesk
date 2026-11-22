@@ -1,16 +1,15 @@
 // Package scheduledbackup writes full backups on a schedule
 // (services/scheduledBackupService.js): its settings, its state, the
-// check of a destination and of an SMB share, and the job that runs it.
+// check of a destination folder, and the job that runs it.
 //
 // The archive itself comes from package backup, so a scheduled backup
 // holds what a download holds. This package stores it, checks it twice
 // (as made and as read back from the disk), writes its SHA-256 next to
 // it and removes the oldest archives beyond the retention count.
 //
-// Settings live in the settings table as JSON: scheduled_backup_config,
-// scheduled_backup_status and scheduled_backup_smb. The SMB password is
-// stored as it was given and answered as "********"; sending that mask
-// back keeps the stored password.
+// Settings live in the settings table as JSON: scheduled_backup_config
+// and scheduled_backup_status. A backup goes to a folder; a network share
+// is mounted there by the operating system.
 package scheduledbackup
 
 import (
@@ -42,16 +41,12 @@ import (
 const (
 	ConfigKey = "scheduled_backup_config"
 	StatusKey = "scheduled_backup_status"
-	SMBKey    = "scheduled_backup_smb"
 
 	DefaultIntervalHours = 24
 	DefaultRetention     = 7
 	minIntervalHours     = 1
 	maxIntervalHours     = 24 * 30
 	maxRetention         = 365
-
-	// PasswordMask stands for a stored SMB password in answers.
-	PasswordMask = "********"
 )
 
 // Backups makes and checks archives (package backup).
@@ -59,21 +54,6 @@ type Backups interface {
 	CreateFullBackup(ctx context.Context) ([]byte, string, error)
 	ValidateFullBackup(buf []byte) backup.Validation
 }
-
-// Command is a program the SMB test starts: its arguments, variables it
-// gets on top of the console's environment, and what it reads on stdin
-// (nothing when empty).
-type Command struct {
-	Name  string
-	Args  []string
-	Env   []string
-	Stdin string
-}
-
-// Runner starts a program and waits for it. exitCode is its exit status;
-// err is a failure to start it (exec.ErrNotFound for a program that is
-// not installed) or the end of ctx.
-type Runner func(ctx context.Context, c Command) (exitCode int, err error)
 
 // Options are the settings of a Service.
 type Options struct {
@@ -90,16 +70,11 @@ type Options struct {
 	// PID is the process id in the name of a file being written; 0 is
 	// os.Getpid().
 	PID int
-	// Run starts smbclient or net; nil runs them with os/exec.
-	Run Runner
-	// Windows picks net use over smbclient; the default is the system's.
+	// Windows reads a destination as Windows does, where the root of a
+	// network share (a UNC path) is a folder; the default is the system's.
 	Windows *bool
 	// Ticker gives the job its minute; nil is time.NewTicker.
 	Ticker func(d time.Duration) (<-chan time.Time, func())
-	// SMBTimeout and SMBCleanupTimeout bound the SMB test (15 s) and the
-	// net use /delete after it on Windows (10 s).
-	SMBTimeout        time.Duration
-	SMBCleanupTimeout time.Duration
 }
 
 // Service is the scheduled backup.
@@ -116,9 +91,6 @@ func New(o Options) *Service {
 	if o.PID == 0 {
 		o.PID = os.Getpid()
 	}
-	if o.Run == nil {
-		o.Run = runProgram
-	}
 	if o.Windows == nil {
 		w := runtime.GOOS == "windows"
 		o.Windows = &w
@@ -128,12 +100,6 @@ func New(o Options) *Service {
 			t := time.NewTicker(d)
 			return t.C, t.Stop
 		}
-	}
-	if o.SMBTimeout == 0 {
-		o.SMBTimeout = 15 * time.Second
-	}
-	if o.SMBCleanupTimeout == 0 {
-		o.SMBCleanupTimeout = 10 * time.Second
 	}
 	return &Service{o: o}
 }
@@ -228,36 +194,6 @@ func jsNumber(v any) (float64, error) {
 		return math.NaN(), nil
 	}
 	return math.NaN(), nil
-}
-
-// textOr is String(v || "").
-func textOr(v any) (string, error) {
-	if !branding.Truthy(v) {
-		return "", nil
-	}
-	return jsString(v)
-}
-
-// utf16Slice is s.slice(0, n) on UTF-16 units. A character cut in half
-// leaves its first half, kept as WTF-8 the way package branding keeps a
-// lone surrogate.
-func utf16Slice(s string, n int) string {
-	units := 0
-	for i, r := range s {
-		w := 1
-		if r >= 0x10000 {
-			w = 2
-		}
-		if units+w > n {
-			if w == 2 && units+1 == n {
-				hi := 0xD800 + ((r - 0x10000) >> 10)
-				return s[:i] + string([]byte{0xED, byte(0xA0 | (hi>>6)&0x0F), byte(0x80 | hi&0x3F)})
-			}
-			return s[:i]
-		}
-		units += w
-	}
-	return s
 }
 
 // jsRound is Math.round.

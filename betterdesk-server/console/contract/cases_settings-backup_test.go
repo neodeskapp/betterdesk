@@ -14,8 +14,9 @@ import (
 
 // The backup routes of the settings group: the full backup and the
 // settings snapshot as downloads, the scheduled backup with its
-// destination and SMB checks, the restore and the retention count of the
-// updater's backups.
+// destination check, the restore and the retention count of the updater's
+// backups. The network share login is gone (L122): its routes are unknown
+// paths, so the matrix and the cases leave them out.
 //
 // The restore is on the matrix skip list. Its cases never put anything
 // back: they are the refusals (no file, not JSON, not a backup, a broken
@@ -29,9 +30,6 @@ import (
 // the session secret file. The counts of settings, the session secret
 // flag and the list of parts are compared by type; the unit tests of
 // console/backup pin them against Node.
-//
-// The SMB test answers that smbclient is not installed: the test image
-// has none, so no connection is made.
 func init() {
 	some := contract.Roles("signed-out", "viewer", "server_admin", "admin")
 	admin := contract.Roles("admin")
@@ -151,39 +149,6 @@ func init() {
 		contract.Case{Name: "schedule-back-to-local", Method: "PUT", Path: "/api/settings/backup/schedule", Body: map[string]any{}, Roles: admin},
 		contract.Case{Name: "run", Method: "POST", Path: "/api/settings/backup/schedule/run", Body: map[string]any{}, Roles: some, Volatile: []string{"~data.validation.components"}},
 		contract.Case{Name: "status-after-run", Path: "/api/settings/backup/schedule/status", Roles: admin, Volatile: []string{"~data.lastValidation.components"}},
-
-		contract.Case{Name: "smb", Path: "/api/settings/backup/smb", Roles: some},
-		contract.Case{
-			Name: "smb-bad-host", Method: "PUT", Path: "/api/settings/backup/smb",
-			Body: map[string]any{"host": "nas example", "share": "backups"}, Roles: some,
-		},
-		contract.Case{
-			Name: "smb-bad-share", Method: "PUT", Path: "/api/settings/backup/smb",
-			Body: map[string]any{"host": "nas", "share": "a/b"}, Roles: admin,
-		},
-		contract.Case{
-			Name: "smb-save", Method: "PUT", Path: "/api/settings/backup/smb",
-			Body:  map[string]any{"host": " nas.invalid ", "share": "backups$", "domain": " WORK ", "username": "backup", "password": " pass word ", "mountPath": "/mnt/nas", "extra": 1},
-			Roles: admin,
-		},
-		contract.Case{Name: "smb-after-save", Path: "/api/settings/backup/smb", Roles: admin},
-		contract.Case{
-			Name: "smb-save-mask", Method: "PUT", Path: "/api/settings/backup/smb",
-			Body: map[string]any{"host": "nas.invalid", "share": "backups", "password": "********"}, Roles: admin,
-		},
-		contract.Case{
-			Name: "smb-test", Method: "POST", Path: "/api/settings/backup/smb/test",
-			Body: map[string]any{"host": "nas.invalid", "share": "backups", "username": "backup", "password": "********"}, Roles: some,
-		},
-		contract.Case{
-			Name: "smb-test-bad-host", Method: "POST", Path: "/api/settings/backup/smb/test",
-			Body: map[string]any{"host": "", "share": "backups"}, Roles: admin,
-		},
-		contract.Case{
-			Name: "smb-save-no-password", Method: "PUT", Path: "/api/settings/backup/smb",
-			Body: map[string]any{"host": "nas.invalid", "share": "backups", "password": ""}, Roles: admin,
-		},
-		contract.Case{Name: "smb-after-no-password", Path: "/api/settings/backup/smb", Roles: admin},
 
 		contract.Case{Name: "restore-no-file", Method: "POST", Path: "/api/settings/restore", Body: map[string]any{}, Roles: some},
 		contract.Case{

@@ -5,13 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"regexp"
-	"strings"
-	"syscall"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/console/branding"
@@ -46,28 +41,6 @@ type scheduleVectors struct {
 		Result *string         `json:"result"`
 		Error  *jsErr          `json:"error"`
 	} `json:"destination"`
-	SMBSave []struct {
-		Body   json.RawMessage `json:"body"`
-		Before *string         `json:"before"`
-		Result json.RawMessage `json:"result"`
-		Error  *jsErr          `json:"error"`
-		Stored *string         `json:"stored"`
-	} `json:"smbSave"`
-	SMBGet []struct {
-		Stored *string         `json:"stored"`
-		Result json.RawMessage `json:"result"`
-	} `json:"smbGet"`
-	SMBTest []struct {
-		Platform string          `json:"platform"`
-		Body     json.RawMessage `json:"body"`
-		Plan     struct {
-			Code      int    `json:"code"`
-			ErrorCode string `json:"errorCode"`
-		} `json:"plan"`
-		Calls  []json.RawMessage `json:"calls"`
-		Result json.RawMessage   `json:"result"`
-		Error  *jsErr            `json:"error"`
-	} `json:"smbTest"`
 }
 
 func loadSchedule(t *testing.T) scheduleVectors {
@@ -107,8 +80,6 @@ func canon(t *testing.T, raw []byte) string {
 	return branding.Stringify(parse(t, raw))
 }
 
-var loneSurrogate = regexp.MustCompile(`\\ud[89a-f][0-9a-f]{2}`)
-
 func putSetting(t *testing.T, db *store.DB, key string, value *string) {
 	t.Helper()
 	ctx := context.Background()
@@ -140,11 +111,6 @@ func same(a, b *string) bool {
 	}
 	return *a == *b
 }
-
-// hide replaces the passwords in JSON text, so a failure never prints one.
-var passwordField = regexp.MustCompile(`"password":\s*"(?:[^"\\]|\\.)*"`)
-
-func hide(s string) string { return passwordField.ReplaceAllString(s, `"password":"<hidden>"`) }
 
 func show(p *string) string {
 	if p == nil {
@@ -205,134 +171,4 @@ func TestScheduleMatchesNode(t *testing.T) {
 			t.Errorf("destination %d %s: got %q %v, want %q", i, c.Body, got, err, *c.Result)
 		}
 	}
-}
-
-func TestSMBSettingsMatchNode(t *testing.T) {
-	v := loadSchedule(t)
-	if len(v.SMBSave) < 1000 || len(v.SMBTest) < 600 {
-		t.Fatal("too few vectors")
-	}
-	if got := hide(`{"user":"u","password": "a\"b\\","x":1}`); got != `{"user":"u","password":"<hidden>","x":1}` {
-		t.Fatalf("hide: %s", got)
-	}
-	db := storetest.Migrated(t)
-	s := New(Options{Store: db, DataDir: v.DataDir, AppDir: v.AppDir})
-	ctx := context.Background()
-	for i, c := range v.SMBSave {
-		putSetting(t, db, SMBKey, c.Before)
-		got, err := s.SaveSMB(ctx, parse(t, c.Body))
-		stored := storedSetting(t, s, SMBKey)
-		if c.Error != nil {
-			if err == nil || err.Error() != c.Error.Message {
-				t.Errorf("smb save %d %s: want error %q, got %v", i, hide(string(c.Body)), c.Error.Message, err)
-			}
-		} else if err != nil || got != canon(t, c.Result) {
-			t.Errorf("smb save %d %s: got %s %v, want %s", i, hide(string(c.Body)), hide(got), err, hide(string(c.Result)))
-		}
-		if !same(stored, c.Stored) {
-			t.Errorf("smb save %d %s: stored %s, want %s", i, hide(string(c.Body)), hide(show(stored)), hide(show(c.Stored)))
-		}
-	}
-	for i, c := range v.SMBGet {
-		putSetting(t, db, SMBKey, c.Stored)
-		got, err := s.GetSMB(ctx)
-		if err != nil || got != canon(t, c.Result) {
-			t.Errorf("smb get %d %s: got %s %v, want %s", i, hide(show(c.Stored)), hide(got), err, hide(string(c.Result)))
-		}
-	}
-	moved := 0
-	for i, c := range v.SMBTest {
-		windows := c.Platform == "win32"
-		var calls []string
-		var ran []Command
-		plan := c.Plan
-		run := func(_ context.Context, cmd Command) (int, error) {
-			list := make([]any, len(cmd.Args))
-			for k, a := range cmd.Args {
-				list[k] = a
-			}
-			calls = append(calls, branding.Stringify([]any{cmd.Name, list}))
-			ran = append(ran, cmd)
-			switch plan.ErrorCode {
-			case "ENOENT":
-				return 0, &exec.Error{Name: cmd.Name, Err: exec.ErrNotFound}
-			case "EACCES":
-				return 0, &fs.PathError{Op: "fork/exec", Path: cmd.Name, Err: syscall.EACCES}
-			}
-			return plan.Code, nil
-		}
-		ts := New(Options{Store: db, Run: run, Windows: &windows})
-		target, err := ts.TestSMBConnection(ctx, parse(t, c.Body))
-		if c.Error != nil {
-			if err == nil || err.Error() != c.Error.Message {
-				t.Errorf("smb test %d %s %s: want error %q, got %v", i, c.Platform, hide(string(c.Body)), c.Error.Message, err)
-			}
-		} else if err != nil || `{"valid":true,"target":`+branding.Stringify(target)+`}` != canon(t, c.Result) {
-			t.Errorf("smb test %d %s %s: got %q %v, want %s", i, c.Platform, hide(string(c.Body)), target, err, hide(string(c.Result)))
-		}
-		if len(calls) != len(c.Calls) {
-			t.Errorf("smb test %d: %d calls, want %d", i, len(calls), len(c.Calls))
-			continue
-		}
-		for k := range calls {
-			// spawn hands a lone surrogate to the program as U+FFFD
-			want := loneSurrogate.ReplaceAllString(canon(t, c.Calls[k]), "\ufffd")
-			wantEnv, wantStdin := "", ""
-			if smb, err := ValidateSMB(parse(t, c.Body)); err == nil {
-				var ok bool
-				want, wantEnv, wantStdin, ok = passwordMoved(t, want, argText(smb.Password))
-				if !ok {
-					t.Errorf("smb test %d call %d: the password is not where Node put it", i, k)
-					continue
-				}
-				if wantEnv != "" || wantStdin != "" {
-					moved++
-				}
-			}
-			if calls[k] != want {
-				t.Errorf("smb test %d call %d differs (%d bytes, want %d)", i, k, len(calls[k]), len(want))
-			}
-			if env := strings.Join(ran[k].Env, "\n"); env != wantEnv || ran[k].Stdin != wantStdin {
-				t.Errorf("smb test %d call %d: %d variables and %d bytes on stdin, want %d and %d", i, k, len(ran[k].Env), len(ran[k].Stdin), len(wantEnv), len(wantStdin))
-			}
-		}
-	}
-	if moved < 50 {
-		t.Errorf("only %d calls with a password", moved)
-	}
-}
-
-// passwordMoved is a call Node recorded, as JSON text, with the password
-// taken out of the arguments (BUGS.md BK10): smbclient's "-U user%password"
-// becomes "-U user" with the password in PASSWD, net use's
-// "/user:name password" becomes "* /user:name" with the password on
-// stdin. Other calls stay as they are. ok is false when the recorded call
-// does not hold the password where Node put it.
-func passwordMoved(t *testing.T, call, password string) (want, env, stdin string, ok bool) {
-	t.Helper()
-	parts := parse(t, []byte(call)).([]any)
-	name := parts[0].(string)
-	var args []string
-	for _, a := range parts[1].([]any) {
-		args = append(args, a.(string))
-	}
-	switch {
-	case name == "smbclient" && len(args) > 2 && args[1] == "-U":
-		user, cut := strings.CutSuffix(args[2], "%"+password)
-		if !cut {
-			return "", "", "", false
-		}
-		args[2], env = user, "PASSWD="+password
-	case name == "net" && len(args) == 4 && strings.HasPrefix(args[2], "/user:"):
-		if args[3] != password {
-			return "", "", "", false
-		}
-		args = []string{args[0], args[1], "*", args[2]}
-		stdin = password + "\r\n"
-	}
-	list := make([]any, len(args))
-	for k, a := range args {
-		list[k] = a
-	}
-	return branding.Stringify([]any{name, list}), env, stdin, true
 }
