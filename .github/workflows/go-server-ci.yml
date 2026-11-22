@@ -1,4 +1,5 @@
-# BetterDesk Go server — vet + tests on push/PR
+# BetterDesk Go server: vet, race tests on SQLite and PostgreSQL, the
+# release build
 name: Go Server CI
 
 on:
@@ -7,19 +8,23 @@ on:
     paths:
       - 'betterdesk-server/**'
       - 'web-ui/**'
+      - '.github/test-times.json'
       - '.github/workflows/go-server-ci.yml'
   pull_request:
     paths:
       - 'betterdesk-server/**'
       - 'web-ui/**'
+      - '.github/test-times.json'
       - '.github/workflows/go-server-ci.yml'
 
 permissions:
   contents: read
 
+# A newer push to the same branch or pull request replaces a run that is
+# still going
 concurrency:
   group: go-server-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 defaults:
   run:
@@ -36,7 +41,17 @@ jobs:
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: betterdesk-server/go.mod
-          cache-dependency-path: betterdesk-server/go.sum
+          cache: false
+
+      # The module cache every Go job of CI restores; this job saves it when
+      # go.sum changed
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+
+      - name: Download modules
+        run: go mod download
 
       - name: go vet
         run: go vet ./...
@@ -47,36 +62,162 @@ jobs:
       - name: govulncheck
         run: govulncheck ./...
 
-  # With the race detector the whole suite takes longer than one runner
-  # should run, and the console package alone takes more than go test's
-  # default ten minutes. So the packages with tests are dealt out to six
-  # runners in turn, and each package gets thirty minutes.
+  # The race tests take more than half an hour on one runner, so they run
+  # on several per database. .github/test-times.json holds how long each
+  # package and each long test took in earlier runs; repotool test-shards
+  # deals the packages out by it, the longest first to the shard with the
+  # least time so far, and cuts a package longer than --split-over seconds
+  # into parts by its tests (a test that long by its subtests). Tests and
+  # packages the file does not know yet still run, in the last part of
+  # their package or as a package of ten seconds. A shard takes about as
+  # long as its longest test, plus a minute to start; the longest is cli
+  # TestResetPasswordLikeNode, five to six minutes, which has no subtests
+  # to cut it by.
+  #
+  # Each shard uploads the times it measured (test-times-*). To refresh
+  # the file from a green run:
+  #
+  #   gh run download <run id> -R trybetterdesk/betterdesk -p 'test-times-*' -D /tmp/times
+  #   cd betterdesk-server
+  #   go run ./cmd/repotool test-shards merge --out ../.github/test-times.json /tmp/times/*/test-times.json
+  #   go run ./cmd/repotool test-shards plan --set go-race-postgres --shards 9 --split-over 240
+  #
+  # The PostgreSQL shards run every test with BETTERDESK_TEST_POSTGRES_DSN
+  # set, so the store tests run on both databases there; the SQLite shards
+  # run them without it, as an install without PostgreSQL does.
   test:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
-    name: go test (part ${{ matrix.part }} of 6)
+    name: go test (${{ matrix.db }} ${{ matrix.shard }} of ${{ matrix.db == 'sqlite' && 7 || 9 }})
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     strategy:
       fail-fast: false
+      # 7 shards on SQLite, 9 on PostgreSQL, where the store tests run twice
       matrix:
-        part: [1, 2, 3, 4, 5, 6]
+        db: [sqlite, postgres]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        exclude:
+          - { db: sqlite, shard: 8 }
+          - { db: sqlite, shard: 9 }
+    services:
+      postgres:
+        # No image, no service: the SQLite shards go without
+        image: ${{ matrix.db == 'postgres' && 'postgres:16-alpine' || '' }}
+        env:
+          POSTGRES_USER: betterdesk
+          POSTGRES_DB: betterdesk_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U betterdesk -d betterdesk_test"
+          --health-interval 2s --health-timeout 5s --health-retries 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: betterdesk-server/go.mod
-          cache-dependency-path: betterdesk-server/go.sum
+          cache: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+
+      # The race build of every test binary, saved by the job "go test cache"
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: go-race-${{ hashFiles('betterdesk-server/go.sum') }}
+          restore-keys: |
+            go-race-${{ hashFiles('betterdesk-server/go.sum') }}-
+            go-race-
+
+      # The tests open many connections side by side, and need no
+      # durability. The server is reached as bdgo-testpg, the name of the
+      # local test database, which recordings of the Node tools print.
+      - name: Set up PostgreSQL for the tests
+        if: matrix.db == 'postgres'
+        env:
+          PG: ${{ job.services.postgres.id }}
+        run: |
+          echo "127.0.0.1 bdgo-testpg" | sudo tee -a /etc/hosts >/dev/null
+          docker exec "$PG" psql -U betterdesk -d betterdesk_test -q \
+            -c "ALTER SYSTEM SET max_connections = 300" \
+            -c "ALTER SYSTEM SET fsync = off" \
+            -c "ALTER SYSTEM SET synchronous_commit = off" \
+            -c "ALTER SYSTEM SET full_page_writes = off"
+          docker restart "$PG" >/dev/null
+          for _ in $(seq 1 60); do
+            docker exec "$PG" pg_isready -U betterdesk -d betterdesk_test -q && exit 0
+            sleep 1
+          done
+          echo "PostgreSQL did not come back"
+          exit 1
 
       - name: go test
         env:
-          PART: ${{ matrix.part }}
-        run: |
-          set -o pipefail
-          go list -f '{{if or .TestGoFiles .XTestGoFiles}}{{.ImportPath}}{{end}}' ./... \
-            | awk -v part="$PART" 'NF && (n++ % 6) + 1 == part' > "$RUNNER_TEMP/packages"
-          echo "$(wc -l < "$RUNNER_TEMP/packages") packages"
-          xargs -r go test -race -count=1 -timeout 30m < "$RUNNER_TEMP/packages"
+          BETTERDESK_TEST_POSTGRES_DSN: ${{ matrix.db == 'postgres' && 'postgres://betterdesk@bdgo-testpg:5432/betterdesk_test?sslmode=disable' || '' }}
+          SET: go-race-${{ matrix.db }}
+          SHARD: ${{ matrix.shard }}
+          SHARDS: ${{ matrix.db == 'sqlite' && 7 || 9 }}
+        run: >-
+          go run ./cmd/repotool test-shards run --set "$SET" --shards "$SHARDS" --shard "$SHARD"
+          --split-over 240 --times-out "$RUNNER_TEMP/test-times.json"
+          -- -race -count=1 -timeout 25m
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: test-times-go-race-${{ matrix.db }}-${{ matrix.shard }}
+          path: ${{ runner.temp }}/test-times.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # Builds every test binary with the race detector once a day (and when
+  # go.sum changes) and saves the build cache the shards start from. The
+  # shards do not wait for it: they take the newest cache there is.
+  race-cache:
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
+    name: go test cache
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: betterdesk-server/go.mod
+          cache: false
+
+      - name: Name today's cache
+        id: key
+        run: echo "key=go-race-${{ hashFiles('betterdesk-server/go.sum') }}-$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: today
+        with:
+          path: ~/.cache/go-build
+          key: ${{ steps.key.outputs.key }}
+          lookup-only: true
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.today.outputs.cache-hit != 'true'
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+
+      # Test failures and build errors are the shards' to report
+      - name: Build every test binary with the race detector
+        if: steps.today.outputs.cache-hit != 'true'
+        run: go test -race -count=1 -run '^$' ./... > /dev/null 2>&1 || true
+
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.today.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cache/go-build
+          key: ${{ steps.key.outputs.key }}
 
   mesh-interop:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
@@ -88,7 +229,12 @@ jobs:
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: betterdesk-server/go.mod
-          cache-dependency-path: betterdesk-server/go.sum
+          cache: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
 
       - name: Mesh interop (simulated handshake)
         working-directory: betterdesk-server
@@ -124,7 +270,12 @@ jobs:
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: betterdesk-server/go.mod
-          cache-dependency-path: betterdesk-server/go.sum
+          cache: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
 
       - name: Check the console's language files
         run: go run ./cmd/repotool i18n-check --system console

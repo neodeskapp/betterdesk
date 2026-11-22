@@ -66,6 +66,10 @@ func init() {
 			about: "test the local image [--database-type sqlite|postgres] [--database-url URL] [--keep]",
 			run:   dockerSmoke,
 		},
+		"test-shards": {
+			about: "deal tests over CI runners by measured time: plan | run | merge",
+			run:   testShards,
+		},
 	}
 }
 
