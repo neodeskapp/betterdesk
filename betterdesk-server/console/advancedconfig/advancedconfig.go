@@ -24,7 +24,8 @@
 //
 // Files are read and written up to 512 KiB. A write of a file that exists
 // first copies it to "<path>.bak.<time>", and RestoreBackup copies such a
-// backup back. These files hold secrets: nothing here logs their content.
+// backup back; the managedconfig.KeptBackups newest backups of a file
+// stay. These files hold secrets: nothing here logs their content.
 package advancedconfig
 
 import (
@@ -40,6 +41,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/managedconfig"
 )
 
 // MaxBytes is the largest file the editor reads or writes.
@@ -403,8 +405,9 @@ func (s *Service) WriteFile(id string, content any) (*Written, error) {
 }
 
 // writeBackup copies a file to "<path>.bak.<time>", the time as
-// toISOString writes it with ":" and "." made "-". A failed copy gives no
-// backup and no error.
+// toISOString writes it with ":" and "." made "-", and removes the
+// file's backups but the managedconfig.KeptBackups newest. A failed copy
+// gives no backup and no error.
 func (s *Service) writeBackup(path string) *string {
 	if !exists(path) {
 		return nil
@@ -414,6 +417,8 @@ func (s *Service) writeBackup(path string) *string {
 	if err := copyFile(path, backup); err != nil {
 		return nil
 	}
+	// An old backup that cannot be removed goes at the next write
+	_ = managedconfig.PruneBackups(path)
 	return &backup
 }
 

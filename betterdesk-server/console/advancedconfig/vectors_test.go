@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/unitronix/betterdesk-server/console/managedconfig"
 )
 
 // The vectors are what services/advancedConfigService.js of the Node
@@ -246,7 +247,7 @@ func truthy(v any) bool {
 
 func TestNodeVectors(t *testing.T) {
 	scenarios := loadVectors(t)
-	steps, fixed := 0, 0
+	steps, fixed, pruned := 0, 0, 0
 	for _, sc := range scenarios {
 		t.Run(sc.Name, func(t *testing.T) {
 			root := t.TempDir()
@@ -331,8 +332,12 @@ func TestNodeVectors(t *testing.T) {
 						t.Errorf("%s:\n got  %.600s\n want %.600s", name, gb, wb)
 					}
 				}
-				if got := treeOf(t, root); !reflect.DeepEqual(got, step.Tree) {
-					t.Errorf("%s: files\n got  %+v\n want %+v", name, got, step.Tree)
+				want, fewer := keptBackups(step.Tree)
+				if fewer {
+					pruned++
+				}
+				if got := treeOf(t, root); !reflect.DeepEqual(got, want) {
+					t.Errorf("%s: files\n got  %+v\n want %+v", name, got, want)
 				}
 			}
 		})
@@ -340,9 +345,45 @@ func TestNodeVectors(t *testing.T) {
 	if steps < 150 {
 		t.Fatalf("only %d steps in the vectors", steps)
 	}
+	if pruned == 0 {
+		t.Error("no step of the vectors left more backups of a file than are kept (BUGS L58)")
+	}
 	if fixed == 0 {
 		t.Error("no restore of the vectors failed in its copy (BUGS SE3)")
 	}
+}
+
+// backupName is a backup "<file>.bak.<time>" in a tree of the vectors.
+var backupName = regexp.MustCompile(`^(.*)\.bak\.\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z$`)
+
+// keptBackups is BUGS L58 in the replay: of each file's backups only the
+// managedconfig.KeptBackups newest stay, where Node kept every one. It
+// returns the recorded tree without the older ones and whether there were
+// any.
+func keptBackups(tree []vectorFile) ([]vectorFile, bool) {
+	backups := map[string][]string{}
+	for _, f := range tree {
+		if m := backupName.FindStringSubmatch(f.Path); m != nil {
+			backups[m[1]] = append(backups[m[1]], f.Path)
+		}
+	}
+	gone := map[string]bool{}
+	for _, paths := range backups {
+		sort.Strings(paths)
+		for _, p := range paths[:max(0, len(paths)-managedconfig.KeptBackups)] {
+			gone[p] = true
+		}
+	}
+	if len(gone) == 0 {
+		return tree, false
+	}
+	var kept []vectorFile
+	for _, f := range tree {
+		if !gone[f.Path] {
+			kept = append(kept, f)
+		}
+	}
+	return kept, true
 }
 
 // failedCopyKeepsTheFile is BUGS SE3 in the replay: a restore whose copy

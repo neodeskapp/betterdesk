@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -239,5 +240,56 @@ func TestAllowlistMatchesTheTemplate(t *testing.T) {
 	}
 	if len(keys) < 50 {
 		t.Errorf("only %d keys", len(keys))
+	}
+}
+
+// TestApplyKeepsTheFiveNewestBackups: every write of the env file leaves
+// a backup with all its secrets, and only the KeptBackups newest stay,
+// the one of this write among them. A file of another name next to them
+// (a copy made by hand, the backup of another file) stays (BUGS L58).
+func TestApplyKeepsTheFiveNewestBackups(t *testing.T) {
+	f := newFixture(t)
+	env := filepath.Join(f.console, ".env")
+	for _, name := range []string{".env.bak.manual", ".env.local.bak.2026-01-01T00-00-00-000Z", ".env.bak.2026-01-01T00-00-00-000Z.old"} {
+		if err := os.WriteFile(filepath.Join(f.console, name), []byte("x"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	clock := time.Date(2026, 11, 22, 9, 0, 0, 0, time.UTC)
+	f.cfg.opts.Now = func() time.Time { return clock }
+	var last Applied
+	for i := 0; i < 8; i++ {
+		clock = clock.Add(time.Minute)
+		applied, err := f.cfg.Apply([]Setting{{"PORT", strconv.Itoa(5000 + i)}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		last = applied
+	}
+	entries, err := os.ReadDir(f.console)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, e := range entries {
+		if e.Name() != ".env" {
+			names = append(names, e.Name())
+		}
+	}
+	sort.Strings(names)
+	want := []string{
+		".env.bak.2026-01-01T00-00-00-000Z.old",
+		".env.bak.2026-11-22T09-04-00-000Z", ".env.bak.2026-11-22T09-05-00-000Z", ".env.bak.2026-11-22T09-06-00-000Z",
+		".env.bak.2026-11-22T09-07-00-000Z", ".env.bak.2026-11-22T09-08-00-000Z",
+		".env.bak.manual", ".env.local.bak.2026-01-01T00-00-00-000Z",
+	}
+	if strings.Join(names, "\n") != strings.Join(want, "\n") {
+		t.Errorf("files next to the env file:\n%s\nwant:\n%s", strings.Join(names, "\n"), strings.Join(want, "\n"))
+	}
+	if last.BackupPath != env+".bak.2026-11-22T09-08-00-000Z" {
+		t.Errorf("the last write's backup is %s", last.BackupPath)
+	}
+	if err := f.cfg.RestoreBackup(last.BackupPath); err != nil {
+		t.Errorf("restore the last write's backup: %v", err)
 	}
 }
