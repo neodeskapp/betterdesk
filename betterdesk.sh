@@ -347,17 +347,61 @@ COMMON_CONSOLE_PATHS=(
     "$HOME/BetterDeskConsole"
 )
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-WHITE='\033[1;37m'
-NC='\033[0m' # No Color
-BOLD='\033[1m'
-DIM='\033[2m'
+# Colours: 24-bit where the terminal says it has them (COLORTERM), else the
+# 16 basic ones; none when the output is not a terminal, NO_COLOR is set or
+# TERM is dumb (COLOR_DEPTH 24bit, 16 or empty). In 24-bit, RED, GREEN,
+# YELLOW and CYAN keep at least 3.8:1 on black, on PowerShell's blue and on
+# white. WHITE is bold in the terminal's own text colour.
+COLOR_DEPTH=""
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != dumb ]; then
+    case "${COLORTERM:-}" in
+        truecolor|24bit) COLOR_DEPTH=24bit ;;
+        *) COLOR_DEPTH=16 ;;
+    esac
+fi
+case "$COLOR_DEPTH" in
+    24bit)
+        RED='\033[38;2;228;75;69m'
+        GREEN='\033[38;2;37;149;46m'
+        YELLOW='\033[38;2;178;116;9m'
+        CYAN='\033[38;2;26;143;147m'
+        ;;
+    16)
+        RED='\033[0;31m'
+        GREEN='\033[0;32m'
+        YELLOW='\033[0;33m'
+        CYAN='\033[0;36m'
+        ;;
+    *)
+        RED='' GREEN='' YELLOW='' CYAN=''
+        ;;
+esac
+if [ -n "$COLOR_DEPTH" ]; then
+    WHITE='\033[1m'
+    NC='\033[0m' # No Color
+    BOLD='\033[1m'
+    DIM='\033[2m'
+else
+    WHITE='' NC='' BOLD='' DIM=''
+fi
+
+# The BetterDesk mark: the logo's square (b), circle (g) and their overlap
+# (t) on a 12 x 12 grid, sampled from its geometry. Two rows make one line
+# of half blocks.
+BD_MARK_ROWS=(
+    '......gggg..'
+    '....ggggggg.'
+    '....gggggggg'
+    '..bttttggggg'
+    'bbbtttttgggg'
+    'bbbttttttggg'
+    'bbbbtttttgg.'
+    'bbbbbttttgg.'
+    'bbbbbbttt...'
+    'bbbbbbbbb...'
+    'bbbbbbbb....'
+    '.bbbbbbb....'
+)
 
 # Logging
 LOG_FILE="/tmp/betterdesk_$(date +%Y%m%d_%H%M%S).log"
@@ -370,36 +414,74 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
 }
 
+# mark_colour PART LAYER: in REPLY, the escape code that makes PART of the
+# mark (b, g, t) the text (38) or background (48) colour: the logo's own
+# colours in 24-bit, else bright cyan, bright green and cyan
+mark_colour() {
+    local rgb code
+    case $1 in
+        b) rgb='88;166;255' code=96 ;;
+        g) rgb='163;230;53' code=92 ;;
+        *) rgb='63;208;196' code=36 ;;
+    esac
+    if [ "$COLOR_DEPTH" = 24bit ]; then
+        REPLY=$'\033'"[$2;2;${rgb}m"
+    else
+        if [ "$2" = 48 ]; then code=$((code + 10)); fi
+        REPLY=$'\033'"[${code}m"
+    fi
+}
+
+# mark_line TOP BOTTOM [LABEL]: in REPLY, one line of half blocks from two
+# rows of the mark, with LABEL beside it
+mark_line() {
+    local top=$1 bottom=$2 label=${3:-} line='  ' width=${#1} i t b glyph fg bg
+    if [ -z "$label" ]; then
+        while [ "$width" -gt 0 ] && [ "${top:width-1:1}" = . ] && [ "${bottom:width-1:1}" = . ]; do
+            width=$((width - 1))
+        done
+    fi
+    for ((i = 0; i < width; i++)); do
+        t=${top:i:1} b=${bottom:i:1} glyph=' ' fg='' bg=''
+        if [ "$t" = "$b" ] && [ "$t" != . ]; then glyph='█' fg=$t
+        elif [ "$b" = . ] && [ "$t" != . ]; then glyph='▀' fg=$t
+        elif [ "$t" = . ] && [ "$b" != . ]; then glyph='▄' fg=$b
+        elif [ "$t" != . ]; then glyph='▀' fg=$t bg=$b
+        fi
+        if [ -z "$fg" ]; then line+=' '; continue; fi
+        mark_colour "$fg" 38
+        line+=$REPLY
+        if [ -n "$bg" ]; then mark_colour "$bg" 48; line+=$REPLY; fi
+        line+="$glyph"$'\033[0m'
+    done
+    REPLY="$line${label:+   $label}"
+}
+
+# print_header: clears the terminal and shows the BetterDesk mark beside
+# the name, what this script is and its version. Without colour (no
+# terminal, NO_COLOR) it is one plain line.
 print_header() {
-    # Without a terminal (cloud-init, CI, a pipe) or without TERM, clear
-    # fails; the run goes on
-    if [ -t 1 ]; then clear 2>/dev/null || true; fi
-    echo -e "${CYAN}"
-    echo "╔══════════════════════════════════════════════════════════════════╗"
-    echo "║                                                                  ║"
-    echo "║   ██████╗ ███████╗████████╗████████╗███████╗██████╗              ║"
-    echo "║   ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗             ║"
-    echo "║   ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝             ║"
-    echo "║   ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗             ║"
-    echo "║   ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║             ║"
-    echo "║   ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝             ║"
-    echo "║                    ██████╗ ███████╗███████╗██╗  ██╗              ║"
-    echo "║                    ██╔══██╗██╔════╝██╔════╝██║ ██╔╝              ║"
-    echo "║                    ██║  ██║█████╗  ███████╗█████╔╝               ║"
-    echo "║                    ██║  ██║██╔══╝  ╚════██║██╔═██╗               ║"
-    echo "║                    ██████╔╝███████╗███████║██║  ██╗              ║"
-    echo "║                    ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝              ║"
-    echo "║                                                                  ║"
-    echo "║                  Console Manager v${VERSION}                     ║"
-    echo "╚══════════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
+    local title="Server installer ${VERSION}" line
+    if [ -z "$COLOR_DEPTH" ]; then
+        printf 'BetterDesk %s\n' "$title"
+        return 0
+    fi
+    # Without TERM, clear fails; the run goes on
+    clear 2>/dev/null || true
+    local labels=('' '' "${BOLD}BetterDesk${NC}" "$title" '' '')
+    printf '\n'
+    for ((line = 0; line < 6; line++)); do
+        mark_line "${BD_MARK_ROWS[line * 2]}" "${BD_MARK_ROWS[line * 2 + 1]}" "${labels[line]}"
+        printf '%b\n' "$REPLY"
+    done
+    printf '\n'
 }
 
 print_success() { echo -e "${GREEN}✓${NC} $1"; log "SUCCESS: $1"; }
 print_error() { echo -e "${RED}✗${NC} $1"; log "ERROR: $1"; }
 print_warning() { echo -e "${YELLOW}!${NC} $1"; log "WARNING: $1"; }
-print_info() { echo -e "${BLUE}ℹ${NC} $1"; log "INFO: $1"; }
-print_step() { echo -e "${MAGENTA}▶${NC} $1"; log "STEP: $1"; }
+print_info() { echo -e "${CYAN}ℹ${NC} $1"; log "INFO: $1"; }
+print_step() { echo -e "${BOLD}▶${NC} $1"; log "STEP: $1"; }
 
 #===============================================================================
 # Management capabilities and allowlisted runtime configuration

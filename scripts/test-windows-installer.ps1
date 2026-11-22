@@ -1002,6 +1002,133 @@ function Test-BackupUsesTheServersBackup {
     Remove-Item -Recurse -Force $dir
 }
 
+# Get-HostLines BLOCK: what BLOCK wrote with Write-Host, as lines, and the
+# console colours it set that are not the host's own
+function Get-HostLines([scriptblock]$Block) {
+    $text = New-Object System.Text.StringBuilder
+    $colors = @()
+    foreach ($record in @(& $Block 6>&1)) {
+        $m = $record.MessageData
+        if ($m -is [System.Management.Automation.HostInformationMessage]) {
+            [void]$text.Append($m.Message)
+            if (-not $m.NoNewLine) { [void]$text.Append("`n") }
+            if ($m.ForegroundColor -ne $Host.UI.RawUI.ForegroundColor) { $colors += [string]$m.ForegroundColor }
+            if ($m.BackgroundColor -ne $Host.UI.RawUI.BackgroundColor) { $colors += [string]$m.BackgroundColor }
+        } else {
+            [void]$text.Append("$m`n")
+        }
+    }
+    [pscustomobject]@{ Lines = @($text.ToString().TrimEnd("`r", "`n") -split "`r?`n"); Colors = $colors }
+}
+
+# Get-Contrast R G B: the lowest contrast of the colour on black, on
+# PowerShell's blue (#012456) and on white
+function Get-Contrast([int]$R, [int]$G, [int]$B) {
+    $lum = {
+        param([int[]]$rgb)
+        $c = foreach ($v in $rgb) { $v = $v / 255; if ($v -le 0.04045) { $v / 12.92 } else { [math]::Pow(($v + 0.055) / 1.055, 2.4) } }
+        0.2126 * $c[0] + 0.7152 * $c[1] + 0.0722 * $c[2]
+    }
+    $l = & $lum @($R, $G, $B)
+    $min = 99
+    foreach ($bg in @(@(12, 12, 12), @(1, 36, 86), @(255, 255, 255))) {
+        $lb = & $lum $bg
+        $ratio = ([math]::Max($l, $lb) + 0.05) / ([math]::Min($l, $lb) + 0.05)
+        if ($ratio -lt $min) { $min = $ratio }
+    }
+    return $min
+}
+
+# The header: the BetterDesk mark beside the name and the version in a
+# console, one plain line when the output goes to a file or a pipe or
+# NO_COLOR is set, and no escape codes then. No box characters, no line
+# wider than 60 columns. The status helpers use no blue or magenta, and
+# their 24-bit colours keep 3.5:1 on black, PowerShell's blue and white.
+function Test-HeaderAndColours {
+    function Clear-Host { }
+    $dir = New-TestInstall
+    $script:VERSION = [regex]::Match((Get-Content $installer -Raw), '(?m)^\$script:VERSION = "([^"]+)"').Groups[1].Value
+    $plain = "BetterDesk Server installer $($script:VERSION)"
+    $esc = [string][char]27
+    $banned = 'Blue', 'DarkBlue', 'Magenta', 'DarkMagenta'
+    # Box drawing (U+2500 to U+257F) and the half and full blocks of the mark
+    $boxChars = '[' + [char]0x2500 + '-' + [char]0x257F + ']'
+    $halfBlocks = '[' + [char]0x2580 + [char]0x2584 + [char]0x2588 + ']'
+    $helpers = { Print-Success 's'; Print-Error 'e'; Print-Warning 'w'; Print-Info 'i'; Print-Step 'p' }
+    $savedNoColor = $env:NO_COLOR
+
+    # A file or a pipe: a run of its own with its output redirected
+    $child = Join-Path $dir 'header.ps1'
+    Set-Content -Path $child -Encoding ASCII -Value @(
+        '$tokens = $null; $errors = $null'
+        "`$ast = [System.Management.Automation.Language.Parser]::ParseFile('$installer', [ref]`$tokens, [ref]`$errors)"
+        'foreach ($fn in $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $false)) { . ([scriptblock]::Create($fn.Extent.Text)) }'
+        "`$script:VERSION = '$($script:VERSION)'; `$script:LOG_FILE = '$(Join-Path $dir 'child.log')'"
+        'Print-Header; Print-Info "a note"'
+    )
+    $env:NO_COLOR = $null
+    $out = @(& (Get-Process -Id $PID).Path -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $child)
+    if (($out -join "`n").Contains($esc)) { Fail "the header has escape codes in a pipe: $($out -join ' | ')" }
+    if ($out[0] -ne $plain) { Fail "in a pipe the header is not one plain line: $($out -join ' | ')" }
+
+    # A console, with and without NO_COLOR
+    function Test-OutputRedirected { $false }
+    $script:COLOR_MODE = $null
+    if ((Get-ColorMode) -eq 'none') { Fail 'a console without NO_COLOR gets no colour' }
+    $env:NO_COLOR = '1'
+    $script:COLOR_MODE = $null
+    $got = Get-HostLines { Print-Header; & $helpers }
+    if (($got.Lines -join "`n").Contains($esc)) { Fail "with NO_COLOR there are escape codes: $($got.Lines -join ' | ')" }
+    if ($got.Lines[0] -ne $plain) { Fail "with NO_COLOR the header is not one plain line: $($got.Lines -join ' | ')" }
+    if ($got.Colors) { Fail "with NO_COLOR there are console colours: $($got.Colors -join ', ')" }
+    $env:NO_COLOR = $savedNoColor
+
+    foreach ($mode in 'vt', 'console') {
+        $script:COLOR_MODE = $mode
+        $got = Get-HostLines { Print-Header }
+        $text = @($got.Lines | ForEach-Object { $_ -replace "$esc\[[0-9;]*m", '' })
+        if (($text -join "`n") -notmatch "BetterDesk[\s\S]*Server installer $([regex]::Escape($script:VERSION))") { Fail "the $mode header does not say BetterDesk and the version: $($text -join ' | ')" }
+        if (($text -join "`n") -match $boxChars) { Fail "the $mode header draws a box: $($text -join ' | ')" }
+        $markLines = @($text | Where-Object { $_ -match $halfBlocks })
+        if ($markLines.Count -ne 6) { Fail "the $mode header has $($markLines.Count) lines of the mark, not 6" }
+        foreach ($line in $text) {
+            if ($line.Length -gt 60) { Fail "the $mode header has a line of $($line.Length) columns: $line" }
+            if ($line -match '\s$') { Fail "the $mode header has a line that ends in spaces: '$line'" }
+        }
+        if ($text -notcontains '[!] Windows support is experimental.') { Fail "the $mode header does not say that Windows support is experimental" }
+        if ($mode -eq 'vt' -and ($got.Lines -join '') -notmatch '38;2;88;166;255') { Fail 'the vt header does not draw the mark in its 24-bit colours' }
+        foreach ($c in $got.Colors) { if ($banned -contains $c) { Fail "the $mode header uses $c" } }
+
+        $got = Get-HostLines $helpers
+        foreach ($c in $got.Colors) { if ($banned -contains $c) { Fail "a status helper uses $c" } }
+        if ($mode -eq 'vt') {
+            $rgb = @($got.Lines | ForEach-Object { [regex]::Matches($_, '38;2;(\d+);(\d+);(\d+)') })
+            if ($rgb.Count -lt 4) { Fail "the status helpers have no 24-bit colours: $($got.Lines -join ' | ')" }
+            foreach ($m in $rgb) {
+                $min = Get-Contrast ([int]$m.Groups[1].Value) ([int]$m.Groups[2].Value) ([int]$m.Groups[3].Value)
+                if ($min -lt 3.5) { Fail ("the status colour {0} has {1:N2}:1 on black, blue or white" -f $m.Value, $min) }
+            }
+        }
+    }
+    $script:COLOR_MODE = $null
+    Remove-Item -Recurse -Force $dir
+}
+
+# The menus' title box and descriptions use no colour that is hard to read
+# on PowerShell's blue: no blue, magenta or dark gray.
+function Test-MenuColours {
+    function Clear-Host { }
+    function Test-TuiAvailable { $false }
+    function Read-Host { param($Prompt) '1' }
+    $got = Get-HostLines { Invoke-MenuChoose -Title 'Title' -Subtitle 'Subtitle' -Items @("One`tthe first", "Back`tthe menu before") -Returns @('1', '0') }
+    if (-not $got.Colors) { Fail 'the menu has no colours to check' }
+    foreach ($c in $got.Colors) {
+        if ('Blue', 'DarkBlue', 'Magenta', 'DarkMagenta', 'DarkGray' -contains $c) { Fail "the menu uses $c" }
+    }
+}
+
+Test-HeaderAndColours
+Test-MenuColours
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised

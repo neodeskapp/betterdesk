@@ -8,6 +8,142 @@ fail() {
     exit 1
 }
 
+# run_script FILE CODE [NAME=value...]: CODE after FILE is sourced, with
+# the variables given and without NO_COLOR, COLORTERM or
+# BETTERDESK_HEADER_SHOWN from outside; its output goes to a pipe
+run_script() {
+    local file=$1 code=$2 run
+    shift 2
+    run=$(mktemp)
+    printf 'set --\nsource %q\n%s\n' "$file" "$code" > "$run"
+    env -u NO_COLOR -u COLORTERM -u BETTERDESK_HEADER_SHOWN TERM=xterm "$@" bash "$run" < /dev/null 2>&1 | cat
+    rm -f "$run"
+}
+
+# in_terminal FILE CODE [NAME=value...]: as run_script, in a terminal of
+# its own (script(1)); prints what the terminal showed
+in_terminal() {
+    local file=$1 code=$2 run
+    shift 2
+    run=$(mktemp)
+    printf 'set --\nsource %q\n%s\n' "$file" "$code" > "$run"
+    env -u NO_COLOR -u COLORTERM -u BETTERDESK_HEADER_SHOWN TERM=xterm "$@" script -qec "bash $run" /dev/null < /dev/null | tr -d '\r'
+    rm -f "$run"
+}
+
+# sgr_colours: the colours in the escape codes of stdin, one per line:
+# "basic N" for the 16 colours, "rgb R G B MIN" for a 24-bit text colour,
+# MIN being its lowest contrast on black, on PowerShell's blue (#012456)
+# and on white
+sgr_colours() {
+    awk -v esc=$'\033' '
+        function lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ^ 2.4 }
+        function lum(r, g, b) { return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b) }
+        function ratio(a, b) { return a > b ? (a + 0.05) / (b + 0.05) : (b + 0.05) / (a + 0.05) }
+        {
+            s = $0
+            while (match(s, esc "\\[[0-9;]*m")) {
+                n = split(substr(s, RSTART + 2, RLENGTH - 3), p, ";")
+                s = substr(s, RSTART + RLENGTH)
+                for (i = 1; i <= n; i++) {
+                    if ((p[i] == 38 || p[i] == 48) && p[i + 1] == 2) {
+                        if (p[i] == 38) {
+                            l = lum(p[i + 2], p[i + 3], p[i + 4])
+                            m = ratio(l, lum(12, 12, 12))
+                            if (ratio(l, lum(1, 36, 86)) < m) m = ratio(l, lum(1, 36, 86))
+                            if (ratio(l, lum(255, 255, 255)) < m) m = ratio(l, lum(255, 255, 255))
+                            printf "rgb %s %s %s %.2f\n", p[i + 2], p[i + 3], p[i + 4], m
+                        }
+                        i += 4
+                    } else if (p[i] != "" && p[i] + 0 >= 30) {
+                        print "basic", p[i] + 0
+                    }
+                }
+            }
+        }'
+}
+
+# blue_or_magenta: stdin (from sgr_colours) has a blue or magenta of the
+# 16 colours (34, 35, 44, 45, 94, 95, 104, 105)
+blue_or_magenta() {
+    awk '$1 == "basic" && ($2 % 10 == 4 || $2 % 10 == 5) { found = 1 } END { exit !found }'
+}
+
+# check_header NAME OUT TITLE: OUT is NAME's header drawn in a terminal:
+# six lines of the mark with BetterDesk and TITLE beside it, no box
+# characters, no blue or magenta, no line wider than 60 columns or ending
+# in spaces
+check_header() {
+    local name=$1 out=$2 title=$3 text line box LC_ALL=C.UTF-8
+    text=$(printf '%s\n' "$out" | sed $'s/\033\\[[0-9;?]*[A-Za-z]//g')
+    case "$text" in *BetterDesk*"$title"*) ;; *) fail "$name's header does not say BetterDesk and $title: $text" ;; esac
+    for box in ═ ║ ╔ ╗ ╚ ╝ ─ │ ┌ ┐ └ ┘ ╭ ╮ ╯ ╰; do
+        case "$text" in *"$box"*) fail "$name's header draws a box: $text" ;; esac
+    done
+    [ "$(printf '%s\n' "$text" | grep -cF -e ▀ -e ▄ -e █)" = 6 ] || fail "$name's header has no mark of six lines: $text"
+    while IFS= read -r line; do
+        [ "${#line}" -le 60 ] || fail "$name's header has a line of ${#line} columns: $line"
+        case "$line" in *' ') fail "$name's header has a line that ends in spaces: '$line'" ;; esac
+    done <<< "$text"
+    if printf '%s\n' "$out" | sgr_colours | blue_or_magenta; then
+        fail "$name's header uses blue or magenta: $(printf '%q' "$out")"
+    fi
+}
+
+# check_output NAME TITLE HELPERS [NAME=value...]: NAME's header is the
+# mark beside BetterDesk and TITLE in a terminal, and one plain line
+# "BetterDesk TITLE" without a terminal or with NO_COLOR, with no escape
+# codes at all then. The status helpers (HELPERS, code that calls each)
+# use no blue or magenta, and their 24-bit colours keep 3.5:1 on black,
+# on PowerShell's blue and on white.
+check_output() {
+    local name=$1 title=$2 helpers=$3 file="$SCRIPT_ROOT/$1" out colours
+    shift 3
+    out=$(run_script "$file" "print_header; $helpers" "$@")
+    case "$out" in *$'\033'*) fail "$name has escape codes without a terminal: $(printf '%q' "$out")" ;; esac
+    [ "$(printf '%s\n' "$out" | head -1)" = "BetterDesk $title" ] || fail "without a terminal $name's header is not one plain line: $out"
+    out=$(in_terminal "$file" "print_header; $helpers" NO_COLOR=1 "$@")
+    case "$out" in *$'\033'*) fail "$name has escape codes with NO_COLOR: $(printf '%q' "$out")" ;; esac
+    [ "$(printf '%s\n' "$out" | head -1)" = "BetterDesk $title" ] || fail "with NO_COLOR $name's header is not one plain line: $out"
+
+    out=$(in_terminal "$file" print_header "$@")
+    check_header "$name" "$out" "$title"
+    out=$(in_terminal "$file" "$helpers" "$@")
+    if printf '%s\n' "$out" | sgr_colours | blue_or_magenta; then
+        fail "a status helper of $name uses blue or magenta: $(printf '%q' "$out")"
+    fi
+
+    out=$(in_terminal "$file" print_header COLORTERM=truecolor "$@")
+    check_header "$name" "$out" "$title"
+    case "$out" in *$'\033[38;2;88;166;255m'*) ;; *) fail "$name's mark is not in its 24-bit colours: $(printf '%q' "$out")" ;; esac
+    out=$(in_terminal "$file" "$helpers" COLORTERM=truecolor "$@")
+    colours=$(printf '%s\n' "$out" | sgr_colours)
+    [ "$(printf '%s\n' "$colours" | grep -c '^rgb ')" -ge 4 ] || fail "the status helpers of $name have no 24-bit colours: $(printf '%q' "$out")"
+    if printf '%s\n' "$colours" | blue_or_magenta || printf '%s\n' "$colours" | awk '$1 == "rgb" && $5 < 3.5 { found = 1 } END { exit !found }'; then
+        fail "a status colour of $name is blue, magenta or hard to read: $colours"
+    fi
+}
+
+# The installers' header and status colours (check_output). install.sh's
+# header stands for the managers it runs: betterdesk-docker.sh leaves its
+# own out then.
+test_headers_and_colours() (
+    local version out
+    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/betterdesk.sh")
+    check_output betterdesk.sh "Server installer $version" \
+        'print_success s; print_error e; print_warning w; print_info i; print_step p'
+    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/betterdesk-docker.sh")
+    check_output betterdesk-docker.sh "Docker installer $version" \
+        'step s; ok o; warn w; (die e) || true' BETTERDESK_DOCKER_SOURCED=1
+    version=$(sed -n 's/^BETTERDESK_VERSION="${BETTERDESK_VERSION:-\(.*\)}"$/\1/p' "$SCRIPT_ROOT/install.sh")
+    check_output install.sh "Installer $version" 'log l; ok o; warn w; (die e) || true'
+
+    out=$(run_script "$SCRIPT_ROOT/install.sh" 'print_header > /dev/null; printenv BETTERDESK_HEADER_SHOWN')
+    [ "$out" = 1 ] || fail "install.sh does not tell the managers it showed the header: $out"
+    out=$(in_terminal "$SCRIPT_ROOT/betterdesk-docker.sh" print_header BETTERDESK_DOCKER_SOURCED=1 BETTERDESK_HEADER_SHOWN=1)
+    [ -z "$out" ] || fail "betterdesk-docker.sh shows its header after install.sh's: $out"
+)
+
 test_bounded_go_commands() (
     export GO_COMMAND_HEARTBEAT_INTERVAL=1
     export GO_COMMAND_KILL_AFTER=1
@@ -478,4 +614,5 @@ test_native_update_channel
 test_migration_menus
 test_postgresql_switch
 test_install_sh_uses_the_fork
+test_headers_and_colours
 printf 'PASS: native installer regression tests\n'
