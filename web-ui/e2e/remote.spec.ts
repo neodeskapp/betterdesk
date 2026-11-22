@@ -27,6 +27,16 @@ async function canConnect(page: Page): Promise<boolean> {
 	});
 }
 
+/**
+ * /devices, until its modules and styles have loaded: the viewer tests go on
+ * to /remote/<id> right after, and loads cut off there are page errors in
+ * Firefox
+ */
+async function devicesPage(page: Page): Promise<void> {
+	await page.goto(`${UI}/devices`);
+	await page.waitForLoadState('networkidle');
+}
+
 async function mockOn(page: Page): Promise<boolean> {
 	const r = await page.request.get('/dev/mock-remote.js');
 	return r.status() === 200;
@@ -72,7 +82,9 @@ for (const role of ROLES) {
 			page
 		}) => {
 			test.skip(!(await mockOn(page)), 'the console runs without BD_DEV_MOCK_REMOTE=1');
-			await page.goto(`${UI}/devices`);
+			// An axe scan of every menu and sheet, and a session that may take up to a minute to stream
+			test.slow();
+			await devicesPage(page);
 			if (!(await canConnect(page))) {
 				await page.goto(`${UI}/remote/${MOCK_DEVICE}?mock=1`);
 				await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -116,7 +128,7 @@ for (const role of ROLES) {
 
 		test('viewer: a failed connection says why, with details', async ({ page }) => {
 			test.skip(!(await mockOn(page)), 'the console runs without BD_DEV_MOCK_REMOTE=1');
-			await page.goto(`${UI}/devices`);
+			await devicesPage(page);
 			test.skip(!(await canConnect(page)), 'needs device.connect');
 			await page.goto(`${UI}/remote/${MOCK_DEVICE}?mock=1&scenario=fail-relay`);
 			await expect(page.locator('.overlay-status')).toHaveText(/closed before/, { timeout: 60_000 });
@@ -137,7 +149,7 @@ for (const role of ROLES) {
 
 		test('viewer: password prompt of the mock device', async ({ page }) => {
 			test.skip(!(await mockOn(page)), 'the console runs without BD_DEV_MOCK_REMOTE=1');
-			await page.goto(`${UI}/devices`);
+			await devicesPage(page);
 			test.skip(!(await canConnect(page)), 'needs device.connect');
 			await page.goto(`${UI}/remote/${MOCK_DEVICE}?mock=1&scenario=password`);
 			const pw = page.getByLabel('Device password', { exact: true });
