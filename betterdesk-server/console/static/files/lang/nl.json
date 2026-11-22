@@ -335,6 +335,7 @@
     "change_id_title": "Apparaat-ID wijzigen",
     "new_id": "Nieuw ID",
     "change_id_hint": "6-16 tekens, alleen letters, cijfers, koppeltekens en underscores",
+    "change_id_stock_note": "Only the BetterDesk client takes on the new ID by itself. A stock RustDesk client keeps its old ID until the new one is set in it by hand.",
     "change_id_online_warn": "Apparaat is online. Wijzig de ID bij voorkeur in de RustDesk-client. Een wijziging in het paneel behoudt de identiteit, maar de client moet de nieuwe ID overnemen.",
     "change_id_success": "Apparaat-ID succesvol gewijzigd",
     "id_length_error": "ID moet 6-16 tekens lang zijn",

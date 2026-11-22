@@ -345,6 +345,7 @@
         "change_id_title": "Change device ID",
         "new_id": "New ID",
         "change_id_hint": "6-16 characters, letters, numbers, dashes and underscores only",
+        "change_id_stock_note": "Only the BetterDesk client takes on the new ID by itself. A stock RustDesk client keeps its old ID until the new one is set in it by hand.",
         "change_id_online_warn": "This device is online. Prefer changing the ID in the RustDesk client when possible. A panel-side change keeps the same device identity but the client must adopt the new ID to stay connected.",
         "change_id_success": "Device ID changed successfully",
         "id_length_error": "ID must be 6-16 characters long",

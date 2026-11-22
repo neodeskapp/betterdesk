@@ -617,6 +617,8 @@ export async function changeId(d: DeviceLike): Promise<string | null> {
 	const answer = await prompt({
 		title: t('devices.change_id_title'),
 		label: t('devices.new_id'),
+		// Only the BetterDesk client follows a change made here
+		message: t('devices.change_id_stock_note'),
 		placeholder: 'NEWID123',
 		hint: t('devices.change_id_hint'),
 		confirmLabel: t('devices.change_id')

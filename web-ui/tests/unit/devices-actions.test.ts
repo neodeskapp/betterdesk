@@ -265,6 +265,12 @@ describe('what the actions send', () => {
 		expect(devicesApi.changeDeviceId).toHaveBeenCalledWith('900100001', 'NEWID123');
 	});
 
+	test('the change ID dialog says that only the BetterDesk client follows the change', async () => {
+		as('device.change_id');
+		await act.changeId(dev());
+		expect(prompt).toHaveBeenCalledWith(expect.objectContaining({ message: 'devices.change_id_stock_note' }));
+	});
+
 	test('issue token asks first, then sends; cancelling sends nothing', async () => {
 		as('device.edit');
 		dismissAll();
