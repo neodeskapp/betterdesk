@@ -1,6 +1,6 @@
 <!--
   Security and audit (/security-audit, audit.view): the console audit log,
-  the server's own events, the security checks, the hardening plan and the
+  the server's own events, the security checks, the hardening settings and the
   signed-in person's sessions. Each tab loads when it is first opened.
 
   URL: ?tab=audit|events|overview|hardening|sessions (the old

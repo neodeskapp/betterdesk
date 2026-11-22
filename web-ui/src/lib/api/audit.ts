@@ -137,7 +137,7 @@ export function getOverview(signal?: AbortSignal): Promise<Overview> {
 	return api(Overview, '/api/panel/security-audit/overview', { signal });
 }
 
-/* ── Hardening and dependency scan ── */
+/* ── Hardening: the settings this server runs with ── */
 
 export const HardeningItem = v.looseObject({
 	id: Str,
@@ -162,41 +162,6 @@ export async function listHardening(signal?: AbortSignal): Promise<HardeningItem
 		{ signal }
 	);
 	return out.priorities ?? out.items ?? [];
-}
-
-export const Vulnerability = v.looseObject({
-	package: Str,
-	name: Str,
-	title: Str,
-	description: Str,
-	severity: Str
-});
-export type Vulnerability = v.InferOutput<typeof Vulnerability>;
-
-export const VulnScan = v.looseObject({
-	scan_available: v.optional(v.nullable(v.boolean())),
-	counts: v.pipe(
-		v.optional(
-			v.nullable(v.looseObject({ total: Num, critical: Num, high: Num, medium: Num, low: Num })),
-			null
-		),
-		v.transform((c) => ({
-			total: c?.total ?? 0,
-			critical: c?.critical ?? 0,
-			high: c?.high ?? 0,
-			medium: c?.medium ?? 0,
-			low: c?.low ?? 0
-		}))
-	),
-	vulnerabilities: v.pipe(
-		v.optional(v.nullable(v.array(Vulnerability)), null),
-		v.transform((a) => a ?? [])
-	)
-});
-export type VulnScan = v.InferOutput<typeof VulnScan>;
-
-export function getVulnerabilities(signal?: AbortSignal): Promise<VulnScan> {
-	return api(VulnScan, '/api/panel/security-audit/vulnerabilities', { signal });
 }
 
 /* ── Own sessions ── */

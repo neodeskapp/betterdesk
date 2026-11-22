@@ -1,13 +1,12 @@
 // Package securityaudit answers the security audit page: an overview with
 // a score made from the API server's health, keys, audit events and
-// blocklist, the audit events themselves, a fixed list of hardening
-// measures, and the count of the Go modules built into the server.
+// blocklist, the audit events themselves, and the hardening settings this
+// server runs with.
 package securityaudit
 
 import (
 	"math"
 	"net/http"
-	"runtime/debug"
 	"strconv"
 	"sync"
 	"time"
@@ -21,11 +20,8 @@ import (
 type handlers struct {
 	api    *goapi.Client
 	getenv func(string) string
-	// buildInfo reads the build information of the running binary, whose
-	// modules the vulnerabilities route counts.
-	buildInfo func() (*debug.BuildInfo, bool)
-	now       func() time.Time
-	local     *time.Location
+	now    func() time.Time
+	local  *time.Location
 }
 
 // Register adds the group's routes.
@@ -35,18 +31,16 @@ func Register(d *kit.Deps) {
 		getenv = func(string) string { return "" }
 	}
 	h := &handlers{
-		api:       d.GoAPI,
-		getenv:    getenv,
-		buildInfo: debug.ReadBuildInfo,
-		now:       time.Now,
-		local:     time.Local,
+		api:    d.GoAPI,
+		getenv: getenv,
+		now:    time.Now,
+		local:  time.Local,
 	}
 	r := d.Router
 	view := d.RequirePermission("audit.view")
 	r.Get("/api/panel/security-audit/overview", h.overview, d.RequireAuth, view)
 	r.Get("/api/panel/security-audit/events", h.events, d.RequireAuth, view)
 	r.Get("/api/panel/security-audit/hardening", h.hardening, d.RequireAuth, view)
-	r.Get("/api/panel/security-audit/vulnerabilities", h.vulnerabilities, d.RequireAuth, view)
 }
 
 const (
@@ -310,68 +304,21 @@ type hardeningList struct {
 	Priorities []priority `json:"priorities"`
 }
 
-// hardening answers GET /api/panel/security-audit/hardening: the fixed
-// list of measures. Only the session limit depends on the configuration.
+// hardening answers GET /api/panel/security-audit/hardening: the hardening
+// settings this server runs with, read from its configuration: the idle
+// and absolute session timeouts, and the limit of sessions per account,
+// which is off at 0.
 func (h *handlers) hardening(w http.ResponseWriter, r *http.Request) {
-	perUser := session.PolicyFromEnv(h.getenv).MaxSessionsPerUser
+	policy := session.PolicyFromEnv(h.getenv)
+	perUser := policy.MaxSessionsPerUser
 	limit := "unlimited"
 	if perUser > 0 {
 		limit = strconv.Itoa(perUser)
 	}
+	minutes := func(ms int64) string { return strconv.FormatInt(ms/60000, 10) }
 	kit.JSON(w, r, http.StatusOK, hardeningList{Priorities: []priority{
-		{"mutual_tls", "Mutual TLS Console ↔ Go Server", "network", "high", false, "Replace plain HTTP localhost with mutual TLS authentication between web console and Go server."},
-		{"api_key_rotation", "API Key Auto-Rotation", "auth", "high", false, "Automatically rotate API keys every 30 days with a grace period for old keys."},
-		{"audit_tamper", "Audit Log Tamper Detection", "audit", "medium", false, "HMAC chain where each audit entry signs the previous — detects log tampering."},
-		{"session_timeout", "Panel Idle and Absolute Session Timeout", "auth", "medium", true, "Server-enforced idle timeout and absolute max age for console sessions (SESSION_IDLE_TIMEOUT / SESSION_MAX_AGE)."},
+		{"session_timeout", "Panel Idle and Absolute Session Timeout", "auth", "medium", true, "A console session ends after " + minutes(policy.IdleTimeoutMs) +
+			" minutes without a request and " + minutes(policy.MaxAgeMs) + " minutes after sign-in (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE)."},
 		{"single_session", "Concurrent Panel Session Limit per Account", "auth", "high", perUser > 0, "A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently " + limit + ") and records IP/User-Agent for audit."},
-		{"ip_allowlist", "IP Allowlisting", "network", "medium", false, "Restrict console and API access to specific IP ranges per organization."},
-		{"cert_pinning", "Certificate Pinning", "network", "low", false, "Pin TLS certificates in desktop client to prevent MITM attacks."},
-		{"mem_safe_creds", "Memory-Safe Credential Handling", "crypto", "medium", false, "Zeroize secrets in memory after use to prevent memory dump attacks."},
-		{"csp_headers", "CSP Headers Hardening", "web", "high", true, "Content Security Policy headers to prevent XSS and code injection."},
-		{"rate_limit_review", "Rate Limiting Review", "network", "medium", true, "Review and enforce rate limiting on all public-facing endpoints."},
-		{"docker_scan", "Docker Image Scanning", "infra", "medium", false, "Automated vulnerability scanning of Docker images using Trivy in CI/CD pipeline."},
 	}})
-}
-
-type dependencySet struct {
-	Total      int   `json:"total"`
-	Vulnerable int   `json:"vulnerable"`
-	Items      []any `json:"items"`
-}
-
-type severityCounts struct {
-	Critical int `json:"critical"`
-	High     int `json:"high"`
-	Medium   int `json:"medium"`
-	Low      int `json:"low"`
-	Total    int `json:"total"`
-}
-
-type vulnerabilityReport struct {
-	ScanAvailable   bool           `json:"scan_available"`
-	Counts          severityCounts `json:"counts"`
-	Vulnerabilities []any          `json:"vulnerabilities"`
-	Dependencies    struct {
-		Go dependencySet `json:"go"`
-	} `json:"dependencies"`
-	LastScan *string `json:"last_scan"`
-}
-
-// vulnerabilities answers GET /api/panel/security-audit/vulnerabilities.
-// No scan runs: the answer says so and counts the Go modules built into
-// the binary.
-func (h *handlers) vulnerabilities(w http.ResponseWriter, r *http.Request) {
-	out := vulnerabilityReport{Vulnerabilities: []any{}}
-	out.Dependencies.Go = dependencySet{Total: h.goModules(), Items: []any{}}
-	kit.JSON(w, r, http.StatusOK, out)
-}
-
-// goModules counts the modules of the binary's build information besides
-// the main one, 0 when the binary has none.
-func (h *handlers) goModules() int {
-	info, ok := h.buildInfo()
-	if !ok {
-		return 0
-	}
-	return len(info.Deps)
 }
