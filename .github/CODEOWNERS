@@ -1,14 +1,14 @@
-# Default maintainer review for every change.
-* @UNITRONIX
+# Default review by the fork's maintainer for every change.
+* @rathlinus
 
 # Security-sensitive paths require explicit maintainer ownership.
-/betterdesk-server/signal/ @UNITRONIX
-/betterdesk-server/relay/ @UNITRONIX
-/betterdesk-server/peer/ @UNITRONIX
-/betterdesk-server/auth/ @UNITRONIX
-/betterdesk-server/db/ @UNITRONIX
-/betterdesk-server/console/wsrelay/ @UNITRONIX
-/betterdesk-server/console/routes/ @UNITRONIX
-/betterdesk-server/console/static/files/lang/ @UNITRONIX
-/docker* @UNITRONIX
-/.github/workflows/ @UNITRONIX
+/betterdesk-server/signal/ @rathlinus
+/betterdesk-server/relay/ @rathlinus
+/betterdesk-server/peer/ @rathlinus
+/betterdesk-server/auth/ @rathlinus
+/betterdesk-server/db/ @rathlinus
+/betterdesk-server/console/wsrelay/ @rathlinus
+/betterdesk-server/console/routes/ @rathlinus
+/betterdesk-server/console/static/files/lang/ @rathlinus
+/docker* @rathlinus
+/.github/workflows/ @rathlinus
