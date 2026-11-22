@@ -7,13 +7,11 @@ on:
     paths:
       - 'betterdesk-server/**'
       - 'web-ui/**'
-      - 'scripts/i18n-check.js'
       - '.github/workflows/go-server-ci.yml'
   pull_request:
     paths:
       - 'betterdesk-server/**'
       - 'web-ui/**'
-      - 'scripts/i18n-check.js'
       - '.github/workflows/go-server-ci.yml'
 
 permissions:
@@ -117,10 +115,6 @@ jobs:
           cache: npm
           cache-dependency-path: web-ui/package-lock.json
 
-      - name: Check the console's language files
-        working-directory: .
-        run: node scripts/i18n-check.js --system console
-
       - name: Build the web app
         working-directory: web-ui
         run: |
@@ -131,6 +125,9 @@ jobs:
         with:
           go-version-file: betterdesk-server/go.mod
           cache-dependency-path: betterdesk-server/go.sum
+
+      - name: Check the console's language files
+        run: go run ./cmd/repotool i18n-check --system console
 
       - name: Embed the web app and record the times of the console's files
         run: go run ./cmd/embed-webui

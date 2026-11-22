@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "i18n:check": "node scripts/i18n-check.js --system console",
+    "i18n:check": "cd betterdesk-server && go run ./cmd/repotool i18n-check --system console",
     "check:provenance": "cd betterdesk-server && go run ./cmd/repotool check-provenance"
   },
   "overrides": {
