@@ -168,6 +168,7 @@ type Normalizer struct {
 	// consoleIP is the IP address the console's host name stands for, as
 	// the network tools report it when a case points them at the console.
 	consoleIP *regexp.Regexp
+	version   *regexp.Regexp
 	secrets   *secretSet
 }
 
@@ -199,10 +200,11 @@ func NewNormalizer(origin, clientIP string) *Normalizer {
 			pairs = append(pairs, name, "<hostname>")
 		}
 	}
-	if version := productVersion(); version != "" {
-		pairs = append(pairs, version, "<version>")
-	}
 	n.replacer = strings.NewReplacer(pairs...)
+	if version := productVersion(); version != "" {
+		// Not inside a longer dotted number: 3.6.1 is part of an OID.
+		n.version = addressPattern(version)
+	}
 	if clientIP != "" {
 		n.clientIP = addressPattern(clientIP)
 	}
@@ -240,6 +242,7 @@ func (n *Normalizer) Text(s string) string {
 	}
 	s = n.secrets.mask(s)
 	s = n.replacer.Replace(s)
+	s = replaceAddress(s, n.version, "<version>")
 	s = replaceAddress(s, n.clientIP, "<client-ip>")
 	return replaceAddress(s, n.consoleIP, "<console-ip>")
 }

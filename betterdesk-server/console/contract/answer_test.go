@@ -222,3 +222,15 @@ func TestNormalizerWritesTheProductVersionAsAWord(t *testing.T) {
 		t.Errorf("another version was taken for the product version: %s", got)
 	}
 }
+
+// A version inside a longer dotted number, such as an SNMP OID, is not the
+// product version (L289).
+func TestNormalizerLeavesAVersionInsideADottedNumber(t *testing.T) {
+	saved := productVersion
+	productVersion = func() string { return "3.6.1" }
+	defer func() { productVersion = saved }()
+	n := NewNormalizer("http://bdgo-c1:5000", "")
+	if got := n.Text(`{"oid":"1.3.6.1.2.1.1.3.0","v":"3.6.1","c":"BetterDesk/3.6.1"}`); got != `{"oid":"1.3.6.1.2.1.1.3.0","v":"<version>","c":"BetterDesk/<version>"}` {
+		t.Errorf("got %s", got)
+	}
+}
