@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -905,13 +906,16 @@ func (s *Server) handleDeviceRegisterStatus(w http.ResponseWriter, r *http.Reque
 			enrollmentTokenCandidates(r, ""),
 			true,
 		)
-		if !hasBoundCredential && s.authorizeEnrollmentTokenIssue(r, deviceID, "", "", true) {
+		switch {
+		case hasBoundCredential:
+			// The device holds a working device token and keeps it.
+		case s.authorizeEnrollmentTokenIssue(r, deviceID, "", "", true):
 			if token, err := s.issueEnrollmentDeviceToken(deviceID); err == nil {
 				resp.DeviceToken = token
 			} else {
 				log.Printf("[API] Failed to issue enrollment device token on status poll for %s: %v", deviceID, err)
 			}
-		} else {
+		default:
 			resp.Message = "Device identity proof is required to issue a device token"
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -1570,12 +1574,20 @@ func (s *Server) issueEnrollmentDeviceToken(deviceID string) (string, error) {
 		Status:    db.TokenStatusActive,
 		MaxUses:   0,
 		UseCount:  0,
-		CreatedBy: "system",
+		CreatedBy: db.DeviceCredentialCreator,
 		Note:      "Auto-issued during device enrollment",
 	}
 
 	if err := s.db.CreateDeviceToken(token); err != nil {
 		return "", err
+	}
+	// A new token for the device ends the device tokens it had, here and
+	// in the console.
+	if err := s.db.EndDeviceTokensExcept(deviceID, token.ID); err != nil {
+		if revokeErr := s.db.RevokeDeviceToken(token.ID); revokeErr != nil {
+			err = errors.Join(err, revokeErr)
+		}
+		return "", fmt.Errorf("end the earlier device tokens of %s: %w", deviceID, err)
 	}
 
 	return plainToken, nil

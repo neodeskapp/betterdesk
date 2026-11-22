@@ -23,6 +23,13 @@ import (
 // is true, 1 or yes. A banned or removed device is always refused. A known
 // device registers again freely while its key and uuid stay; changing
 // either needs a proof made with the key it has.
+//
+// A device admitted by a template or by the proof of its key gets its
+// device token in the answer (authn.IssueServerDeviceToken), and so does a
+// known device that proves its key and brings no device token of its own,
+// for example after "Issue a new token" ended its token. A device admitted
+// by an approval gets its token from the registration's status
+// (register-status); an open registration gives none.
 
 // refusal is the answer of a refused registration: {"error": code,
 // "message": text}.
@@ -38,6 +45,7 @@ type registered struct {
 	DeviceID          string `json:"device_id"`
 	ServerTime        int64  `json:"server_time"`
 	HeartbeatInterval int    `json:"heartbeat_interval"`
+	DeviceToken       string `json:"device_token,omitempty"`
 }
 
 // renamed is the refusal of an id the signal server renamed.
@@ -91,7 +99,7 @@ func (h *handlers) register(w http.ResponseWriter, r *http.Request) {
 		effective = check.redirectID
 	}
 
-	refused, err := h.registerPolicy(r, effective, uuid, publicKey)
+	refused, issue, err := h.registerPolicy(r, effective, uuid, publicKey)
 	if err != nil {
 		h.serverError(w, r, "Register error:", err, "Registration failed")
 		return
@@ -114,24 +122,34 @@ func (h *handlers) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = updateOnlineStatus(ctx, h.d.Store, jsbind.String(effective))
-	kit.JSON(w, r, http.StatusOK, registered{Success: true, DeviceID: effective, ServerTime: h.now().UnixMilli(), HeartbeatInterval: 15})
+	answer := registered{Success: true, DeviceID: effective, ServerTime: h.now().UnixMilli(), HeartbeatInterval: 15}
+	if issue && !callerOf(r).byDeviceToken {
+		token, err := h.d.Authn.IssueServerDeviceToken(ctx, effective, "Issued at the device registration")
+		if err != nil {
+			h.serverError(w, r, "Register error:", err, "Registration failed")
+			return
+		}
+		answer.DeviceToken = token
+	}
+	kit.JSON(w, r, http.StatusOK, answer)
 }
 
 // registerPolicy is evaluateRegisterPolicy: nil when the registration may
-// go on, the refusal otherwise. uuid and publicKey are the request's
-// values (uuid || ”, public_key || ”).
-func (h *handlers) registerPolicy(r *http.Request, id string, uuid, publicKey any) (*refusal, error) {
+// go on, the refusal otherwise, and whether the device's proof earns it a
+// device token (a template, or the proof of its key). uuid and publicKey
+// are the request's values (uuid || ”, public_key || ”).
+func (h *handlers) registerPolicy(r *http.Request, id string, uuid, publicKey any) (*refusal, bool, error) {
 	ctx := r.Context()
 	existing, err := registrationState(ctx, h.d.Store, id)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if existing != nil {
 		if existing.banned {
-			return &refusal{status: http.StatusForbidden, Error: "device_banned", Message: "This device is banned"}, nil
+			return &refusal{status: http.StatusForbidden, Error: "device_banned", Message: "This device is banned"}, false, nil
 		}
 		if existing.deleted {
-			return &refusal{status: http.StatusForbidden, Error: "device_removed", Message: "This device has been removed"}, nil
+			return &refusal{status: http.StatusForbidden, Error: "device_removed", Message: "This device has been removed"}, false, nil
 		}
 		storedKey, hasStored := canonicalKey(orValue(existing.pk, ""))
 		incomingKey, hasIncoming := canonicalKey(orValue(publicKey, ""))
@@ -139,66 +157,86 @@ func (h *handlers) registerPolicy(r *http.Request, id string, uuid, publicKey an
 		storedUUID := trim(existing.uuid.ToString())
 		incoming, err := textOr(uuid, "")
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		incoming = trim(incoming)
 		// Compared as the rename guard compares them: without dashes and
 		// letter case
 		sameUUID, err := uuidsEqual(incoming, storedUUID)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		uuidChanged := storedUUID != "" && incoming != "" && !sameUUID
 		if keyChanged || uuidChanged {
 			if !hasStored {
 				return &refusal{status: http.StatusConflict, Error: "identity_change_not_allowed",
-					Message: "Device identity is already registered; an operator must change it"}, nil
+					Message: "Device identity is already registered; an operator must change it"}, false, nil
 			}
 			if reason := h.verifyProof(r, id, storedKey); reason != "" {
 				return &refusal{status: http.StatusForbidden, Error: "identity_proof_required",
-					Message: "Changing device identity requires proof of possession (" + reason + ")"}, nil
+					Message: "Changing device identity requires proof of possession (" + reason + ")"}, false, nil
 			}
+			return nil, true, nil
 		}
-		return nil, nil
+		// A known device that signs the request with its key proves it is
+		// that device.
+		return nil, hasStored && hasProofHeaders(r) && h.verifyProof(r, id, storedKey) == "", nil
 	}
 
-	admitted, err := h.admitted(r, id, publicKey)
-	if err != nil || admitted {
-		return nil, err
+	admission, err := h.admitted(r, id, publicKey)
+	if err != nil {
+		return nil, false, err
+	}
+	if admission != admittedNot {
+		return nil, admission == admittedByTemplate, nil
 	}
 	if truthyValue(publicKey) && h.verifyProof(r, id, publicKey) == "" {
-		return nil, nil
+		return nil, true, nil
 	}
 	if !h.allowOpenRegister() {
 		return &refusal{status: http.StatusForbidden, Error: "enrollment_proof_required",
-			Message: "Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession"}, nil
+			Message: "Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession"}, false, nil
 	}
-	return nil, nil
+	return nil, false, nil
 }
+
+// hasProofHeaders reports whether the request carries the three headers
+// of a proof of possession.
+func hasProofHeaders(r *http.Request) bool {
+	timestamp, nonce, signature := proofHeaders(r)
+	return timestamp != "" && nonce != "" && signature != ""
+}
+
+// How admitted admitted a device id the console does not know.
+const (
+	admittedNot = iota
+	admittedByApproval
+	admittedByTemplate
+)
 
 // admitted is resolveAdmissionGrant: an approval of the operator for the
 // id, with the key the approver reviewed when the request carried one,
 // or an enrollment token in the body that is, or now becomes, bound to
 // the id. A failed lookup of the approval counts as none.
-func (h *handlers) admitted(r *http.Request, id string, publicKey any) (bool, error) {
+func (h *handlers) admitted(r *http.Request, id string, publicKey any) (int, error) {
 	ctx := r.Context()
 	if reg, err := h.regs.ByDeviceID(ctx, id); err == nil && reg != nil && reg.Get("status") == "approved" {
 		reviewed, hasReviewed := canonicalKey(orValue(reg.Get("public_key"), ""))
 		incoming, hasIncoming := canonicalKey(orValue(publicKey, ""))
 		if !hasReviewed || hasIncoming && reviewed == incoming {
-			return true, nil
+			return admittedByApproval, nil
 		}
 	}
 
 	raw, err := textOr(jsreq.Prop(jsreq.Body(r), "enrollment_token"), "")
 	if err != nil {
-		return false, err
+		return admittedNot, err
 	}
 	token := cut(trim(raw), 64)
-	if token == "" {
-		return false, nil
+	if token == "" || !h.redeemToken(r, token, id) {
+		return admittedNot, nil
 	}
-	return h.redeemToken(r, token, id), nil
+	return admittedByTemplate, nil
 }
 
 // redeemToken is findByEnrollmentToken followed by redeemEnrollmentToken:

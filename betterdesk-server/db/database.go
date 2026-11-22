@@ -653,6 +653,9 @@ type Database interface {
 	ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, error)
 	UpdateDeviceToken(t *DeviceToken) error
 	RevokeDeviceToken(id int64) error
+	// EndDeviceTokensExcept ends the device tokens of the device but the
+	// device_tokens row keep: a new token for a device ends the others.
+	EndDeviceTokensExcept(peerID string, keep int64) error
 	BindTokenToPeer(tokenHash, peerID string) error
 	IncrementTokenUse(tokenHash string) error
 	ValidateToken(tokenHash string) (*DeviceToken, error) // Returns token if valid, nil if invalid/expired/revoked
