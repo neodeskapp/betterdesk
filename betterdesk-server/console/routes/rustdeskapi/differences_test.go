@@ -143,6 +143,10 @@ var fixedSteps = []fixedStep{
 	{"node", "450 GET /api/audit/alarm?alarm_type=6&host_id=", "RV2"},
 	{"node", "451 GET /api/audit/alarm?alarm_type[]=1", "RV2"},
 	{"node", "452 GET /api/audit/alarm?host_id=h&limit=1", "RV2"},
+	// The user groups are listed only to an account with user.view:
+	// guest_issuer and viewer get the empty list, as pro does.
+	{"node", "526 GET /api/user-groups", "L52"},
+	{"flow", "viewer-user-groups", "L52"},
 }
 
 // fixedStep is a step of the recordings of both databases ("node",

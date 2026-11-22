@@ -524,7 +524,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/software", s.handleClientSoftware)
 	mux.HandleFunc("GET /api/software/client-download-link", s.handleClientSoftwareDownloadLink)
 	mux.HandleFunc("GET /api/user/group", s.handleClientUserGroup)
-	mux.HandleFunc("GET /api/user-groups", s.handleUserGroupsGet)
+	mux.HandleFunc("GET /api/user-groups", s.requirePermission(auth.PermUserView, s.handleUserGroupsGet))
 	mux.HandleFunc("POST /api/user-groups", s.requirePanelAdmin(s.handleUserGroupsPost))
 	mux.HandleFunc("GET /api/strategies", s.requirePermission(auth.PermDeviceView, s.handleStrategiesGet))
 	mux.HandleFunc("POST /api/strategies", s.requirePanelAdmin(s.handleStrategiesPost))

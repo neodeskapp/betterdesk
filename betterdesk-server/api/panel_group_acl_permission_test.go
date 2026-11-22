@@ -132,3 +132,19 @@ func TestPanelDeletesOfGroupsWithAnAccessListAskUserEdit(t *testing.T) {
 		}
 	}
 }
+
+// TestUserGroupsListAsksUserView: GET /api/user-groups lists the user
+// groups only for a caller with user.view; a viewer key gets 403 (L52).
+func TestUserGroupsListAsksUserView(t *testing.T) {
+	srv, _ := newInternalServer(t, nil)
+	if status, body := asConsole(t, srv, http.MethodPost, "/api/user-groups", `{"name":"Support"}`); status != http.StatusOK {
+		t.Fatalf("create a user group in process: %d %s", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodGet, "/api/user-groups", "", map[string]string{"X-API-Key": testViewerKey}); status != http.StatusForbidden || body != `{"error":"Insufficient permissions"}` {
+		t.Errorf("GET /api/user-groups as a viewer: %d %s, want 403", status, body)
+	}
+	status, body := listenerCall(t, srv, http.MethodGet, "/api/user-groups", "", map[string]string{"X-API-Key": testOperatorKey})
+	if status != http.StatusOK || !strings.Contains(body, `"name":"Support"`) {
+		t.Errorf("GET /api/user-groups as an operator: %d %s, want 200 with the group", status, body)
+	}
+}

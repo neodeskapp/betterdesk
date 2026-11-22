@@ -35,8 +35,8 @@ func normalizeRustDeskStrategyPermissions(raw json.RawMessage) (string, error) {
 
 // ── User Groups ───────────────────────────────────────────────────────
 
-// handleUserGroupsGet lists user groups. Auth enforced by route wrapper.
-// Role "pro" sees an empty list (matches the Node.js console behaviour).
+// handleUserGroupsGet lists user groups. The route asks user.view; a
+// "pro" account that an override gave it still sees an empty list.
 func (s *Server) handleUserGroupsGet(w http.ResponseWriter, r *http.Request) {
 	if auth.IsProRole(getRoleFromCtx(r)) {
 		writeJSON(w, http.StatusOK, map[string]any{"data": []*db.UserGroup{}, "total": 0})

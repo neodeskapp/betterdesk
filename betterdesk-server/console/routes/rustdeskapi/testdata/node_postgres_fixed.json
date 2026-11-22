@@ -626,6 +626,17 @@
   },
   "bug": "RV4"
  },
+ "526 GET /api/user-groups": {
+  "answer": {
+   "answer": "{\"data\":[],\"total\":0}",
+   "extra": {
+    "calls": [],
+    "type": "application/json; charset=utf-8"
+   },
+   "status": 200
+  },
+  "bug": "L52"
+ },
  "527 GET /api/strategies": {
   "answer": {
    "answer": "{\"data\":[{\"guid\":\"s-fixed-1\",\"name\":\"Alpha\",\"user_group_guid\":\"ug-fixed\",\"device_group_guid\":\"\",\"enabled\":true,\"permissions\":{\"a\":2,\"b\":1}},{\"guid\":\"s-fixed-2\",\"name\":\"Beta\",\"user_group_guid\":\"\",\"device_group_guid\":\"dg-manual\",\"enabled\":false,\"permissions\":{}}],\"total\":2}",

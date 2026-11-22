@@ -703,9 +703,17 @@ func (h *handlers) userGroup(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, map[string]any{"data": goapi.NewObject("name", col(groups[0], "name"), "guid", col(groups[0], "guid"), "groups", list)})
 }
 
-// userGroups answers GET /api/user-groups.
+// userGroups answers GET /api/user-groups: every user group for an
+// account whose role has user.view (with its overrides), the empty list
+// for any other and for a pro account.
 func (h *handlers) userGroups(w http.ResponseWriter, r *http.Request) {
-	if authUser(r).isPro() {
+	user := authUser(r)
+	allowed, err := h.d.Access.RoleHasEffectivePermission(r.Context(), user.role(), "user.view")
+	if err != nil {
+		h.serverFailure(w, r, "Permission lookup failed:", err)
+		return
+	}
+	if !allowed || user.isPro() {
 		kit.JSON(w, r, http.StatusOK, listAnswer{Data: []any{}})
 		return
 	}
