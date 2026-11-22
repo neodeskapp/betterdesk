@@ -365,6 +365,42 @@ describe('device clipboard', () => {
 	});
 });
 
+describe('RDP and VNC gateway socket', () => {
+	/** A browser WebSocket's binary delivery: a Blob unless binaryType asks for an ArrayBuffer */
+	class GatewaySocket {
+		static last: GatewaySocket | null = null;
+		binaryType: BinaryType = 'blob';
+		onopen: (() => void) | null = null;
+		onmessage: ((ev: { data: unknown }) => void) | null = null;
+		onerror: (() => void) | null = null;
+		onclose: (() => void) | null = null;
+		readyState = 1;
+		constructor() {
+			GatewaySocket.last = this;
+		}
+		send() {}
+		close() {}
+		binary(text: string) {
+			// ASCII as bytes of this realm (jsdom's TextEncoder gives Node's)
+			const bytes = Uint8Array.from(text, (c) => c.charCodeAt(0));
+			this.onmessage?.({ data: this.binaryType === 'arraybuffer' ? bytes.buffer : new Blob([bytes]) });
+		}
+	}
+
+	test('reads the instructions the gateway sends as binary messages', async () => {
+		vi.stubGlobal('WebSocket', Object.assign(GatewaySocket, { OPEN: 1 }));
+		try {
+			const s = new RemoteTargetSession(document.createElement('canvas'), { deviceId: 'target-1' });
+			await s.authenticate('pw');
+			GatewaySocket.last!.binary('5.ready,4.abcd;');
+			expect(s.state).toBe('streaming');
+			s.disconnect();
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+});
+
 describe('RDP and VNC clipboard', () => {
 	const Session = RemoteTargetSession;
 
