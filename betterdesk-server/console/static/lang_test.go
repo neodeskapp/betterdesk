@@ -139,3 +139,20 @@ func TestTextsNameNoOrganizationRolesAndNoPassword(t *testing.T) {
 		}
 	}
 }
+
+// SDK Studio says that Deploy only marks a flow, since nothing on the
+// server runs flows, and the security audit's advice for old API keys
+// sends the reader to the server's API, since the console has no page for
+// API keys (BUGS L227).
+func TestTextsPromiseNoFlowRunsAndNoKeyPage(t *testing.T) {
+	english := languageTexts(t)["en"]
+	if text := english["sdk_studio.page_description"]; strings.Contains(text, "runs on the server") {
+		t.Errorf("sdk_studio.page_description: %q says flows run on the server", text)
+	}
+	if text := english["sdk_studio.howto_save"]; !strings.Contains(text, "does not run flows") {
+		t.Errorf("sdk_studio.howto_save: %q, want it to say that the server does not run flows", text)
+	}
+	if text := english["security_audit.fix_api_key_age"]; !strings.Contains(text, "no page for API keys") || !strings.Contains(text, "server's API") {
+		t.Errorf("security_audit.fix_api_key_age: %q, want it to send the reader to the server's API", text)
+	}
+}

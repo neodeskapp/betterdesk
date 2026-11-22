@@ -34,7 +34,7 @@
 	import ValueField from '#lib/ui/ValueField.svelte';
 	import Version from '#lib/ui/Version.svelte';
 
-	const GITHUB_RELEASES = 'https://github.com/UNITRONIX/BetterDesk-Client/releases';
+	const GITHUB_RELEASES = 'https://github.com/trybetterdesk/betterdesk-client/releases';
 	const allowed = isAdminRole(session.user?.role);
 	const canImport = can('enrollment.manage');
 

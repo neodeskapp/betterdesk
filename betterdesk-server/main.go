@@ -64,6 +64,22 @@ type persistedTimeSyncConfig struct {
 	BillingTimezone    string `json:"billing_timezone"`
 }
 
+// wsOriginNotices are the start's notes on the browser pages the
+// WebSocket ports take while no allow list names them: the signal and
+// relay ports refuse every page that is not on localhost, the API's event
+// stream every page that is not on its own host. Clients without an
+// Origin header, such as RustDesk, are not affected.
+func wsOriginNotices(cfg *config.Config) []string {
+	var notices []string
+	if cfg.AllowedWSOrigins == "" {
+		notices = append(notices, "[SECURITY] WS_ALLOWED_ORIGINS is not set: the signal and relay WebSocket ports take browser pages from localhost only")
+	}
+	if cfg.APIAllowedWSOrigins == "" {
+		notices = append(notices, "[SECURITY] API_WS_ALLOWED_ORIGINS is not set: the API event stream takes browser pages from its own host only")
+	}
+	return notices
+}
+
 // applySavedCDAPEnabled turns the CDAP gateway on or off as the IoT
 // devices page saved it (cdap_enabled). A saved value wins over
 // CDAP_ENABLED, which decides only while nothing is saved.
@@ -541,12 +557,8 @@ func main() {
 	go reloadHandler.ListenSIGHUP(reloadDone)
 	defer close(reloadDone)
 
-	// BD-2026-010: Warn when WebSocket origin policy is permissive
-	if cfg.AllowedWSOrigins == "" {
-		log.Printf("[SECURITY] NOTICE: WS_ALLOWED_ORIGINS is not set — signal/relay WebSocket accepts all origins")
-	}
-	if cfg.APIAllowedWSOrigins == "" {
-		log.Printf("[SECURITY] NOTICE: API_WS_ALLOWED_ORIGINS is not set — API events WebSocket accepts all origins")
+	for _, notice := range wsOriginNotices(cfg) {
+		log.Print(notice)
 	}
 
 	// parseFlags lets only the combined mode through.

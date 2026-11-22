@@ -32,8 +32,9 @@ import (
 )
 
 const (
-	// DefaultRepo is the GitHub repository releases come from.
-	DefaultRepo = "UNITRONIX/BetterDesk-Client"
+	// DefaultRepo is the GitHub repository releases come from: the
+	// client fork, which the invites download from too.
+	DefaultRepo = "trybetterdesk/betterdesk-client"
 	// DefaultPublicKey is the public half of the key the release workflow
 	// signs manifests with, in base64.
 	DefaultPublicKey = "eXGPOvUvFfz1FGGbYogKfYEEWVWzeJEKpmI1ngAU490="
