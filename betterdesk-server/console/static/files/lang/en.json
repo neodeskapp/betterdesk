@@ -2131,6 +2131,7 @@
         "access_locked": "Always off",
         "access_load_failed": "Could not load the panel access.",
         "access_saved": "Panel access saved.",
+        "access_keep_own_write": "You can't take away your own write access to Users: you could no longer change panel access.",
         "access_now_role": "Now: {level}, {source}. Role limit: {limit}"
     },
     "folders": {

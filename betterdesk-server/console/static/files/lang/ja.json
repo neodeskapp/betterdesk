@@ -2049,6 +2049,7 @@
     "access_locked": "常にオフ",
     "access_load_failed": "パネルへのアクセスを読み込めませんでした。",
     "access_saved": "パネルへのアクセスを保存しました。",
+    "access_keep_own_write": "ユーザーへの自分の書き込みアクセスは外せません。外すとパネルアクセスを変更できなくなります。",
     "access_none": "なし",
     "access_read": "読み取り",
     "access_write": "フル",

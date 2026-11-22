@@ -2049,6 +2049,7 @@
     "access_locked": "Sempre desligado",
     "access_load_failed": "Não foi possível carregar o acesso à consola.",
     "access_saved": "Acesso à consola guardado.",
+    "access_keep_own_write": "Não pode retirar o seu próprio acesso de escrita a Utilizadores: deixaria de poder alterar o acesso ao painel.",
     "access_none": "Nenhum",
     "access_read": "Leitura",
     "access_write": "Completo",

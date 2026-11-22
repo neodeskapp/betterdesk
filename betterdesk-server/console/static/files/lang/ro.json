@@ -2055,6 +2055,7 @@
     "access_locked": "Mereu oprit",
     "access_load_failed": "Accesul la consolă nu a putut fi încărcat.",
     "access_saved": "Accesul la consolă a fost salvat.",
+    "access_keep_own_write": "Nu vă puteți lua propriul acces de scriere la Utilizatori: nu ați mai putea modifica accesul la panou.",
     "access_none": "Niciunul",
     "access_read": "Citire",
     "access_write": "Complet",

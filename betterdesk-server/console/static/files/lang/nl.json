@@ -2049,6 +2049,7 @@
     "access_locked": "Altijd uit",
     "access_load_failed": "De toegang tot de console kon niet worden geladen.",
     "access_saved": "Toegang tot de console opgeslagen.",
+    "access_keep_own_write": "U kunt uw eigen schrijftoegang tot Gebruikers niet weghalen: dan kunt u de paneeltoegang niet meer wijzigen.",
     "access_none": "Geen",
     "access_read": "Lezen",
     "access_write": "Volledig",

@@ -2055,6 +2055,7 @@
     "access_locked": "हमेशा बंद",
     "access_load_failed": "पैनल पहुँच लोड नहीं हो सकी।",
     "access_saved": "पैनल पहुँच सहेजी गई।",
+    "access_keep_own_write": "आप उपयोगकर्ता पर अपनी लिखने की पहुँच नहीं हटा सकते: तब आप पैनल पहुँच नहीं बदल पाएँगे।",
     "access_none": "कोई नहीं",
     "access_read": "पढ़ें",
     "access_write": "पूर्ण",

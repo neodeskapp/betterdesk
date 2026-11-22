@@ -2071,6 +2071,7 @@
     "access_locked": "一律關閉",
     "access_load_failed": "無法載入面板存取權限。",
     "access_saved": "已儲存面板存取權限。",
+    "access_keep_own_write": "不能取消您自己對「使用者」的寫入權限，否則您將無法再變更面板存取權限。",
     "access_none": "無",
     "access_read": "讀取",
     "access_write": "完整",

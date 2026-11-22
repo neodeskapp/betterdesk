@@ -2049,6 +2049,7 @@
     "access_locked": "始终关闭",
     "access_load_failed": "无法加载面板访问权限。",
     "access_saved": "已保存面板访问权限。",
+    "access_keep_own_write": "不能取消您自己对“用户”的写入权限，否则您将无法再更改面板访问权限。",
     "access_none": "无",
     "access_read": "读取",
     "access_write": "完整",

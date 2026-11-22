@@ -2055,6 +2055,7 @@
     "access_locked": "Her zaman kapalı",
     "access_load_failed": "Panel erişimi yüklenemedi.",
     "access_saved": "Panel erişimi kaydedildi.",
+    "access_keep_own_write": "Kullanıcılar için kendi yazma erişiminizi kaldıramazsınız: aksi halde panel erişimini artık değiştiremezsiniz.",
     "access_none": "Yok",
     "access_read": "Okuma",
     "access_write": "Tam",

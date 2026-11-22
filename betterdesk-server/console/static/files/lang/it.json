@@ -2049,6 +2049,7 @@
     "access_locked": "Sempre disattivato",
     "access_load_failed": "Impossibile caricare l'accesso alla console.",
     "access_saved": "Accesso alla console salvato.",
+    "access_keep_own_write": "Non puoi toglierti l'accesso in scrittura a Utenti: non potresti più modificare l'accesso al pannello.",
     "access_none": "Nessuno",
     "access_read": "Lettura",
     "access_write": "Completo",

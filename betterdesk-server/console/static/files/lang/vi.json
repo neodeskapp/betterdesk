@@ -2055,6 +2055,7 @@
     "access_locked": "Luôn tắt",
     "access_load_failed": "Không tải được quyền truy cập bảng điều khiển.",
     "access_saved": "Đã lưu quyền truy cập bảng điều khiển.",
+    "access_keep_own_write": "Bạn không thể tự bỏ quyền ghi của mình với Người dùng: khi đó bạn sẽ không đổi được quyền truy cập bảng điều khiển nữa.",
     "access_none": "Không",
     "access_read": "Đọc",
     "access_write": "Đầy đủ",

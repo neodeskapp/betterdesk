@@ -2055,6 +2055,7 @@
     "access_locked": "Alltid av",
     "access_load_failed": "Kunne ikke laste konsolltilgangen.",
     "access_saved": "Konsolltilgang lagret.",
+    "access_keep_own_write": "Du kan ikke fjerne din egen skrivetilgang til Brukere: da kunne du ikke lenger endre tilgangen til konsollen.",
     "access_none": "Ingen",
     "access_read": "Les",
     "access_write": "Full",

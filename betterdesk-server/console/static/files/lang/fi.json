@@ -2055,6 +2055,7 @@
     "access_locked": "Aina pois",
     "access_load_failed": "Konsolin käyttöoikeutta ei voitu ladata.",
     "access_saved": "Konsolin käyttöoikeus tallennettu.",
+    "access_keep_own_write": "Et voi poistaa omaa kirjoitusoikeuttasi Käyttäjiin: et voisi enää muuttaa konsolin käyttöoikeuksia.",
     "access_none": "Ei mitään",
     "access_read": "Luku",
     "access_write": "Täysi",

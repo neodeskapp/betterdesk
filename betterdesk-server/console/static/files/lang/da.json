@@ -2055,6 +2055,7 @@
     "access_locked": "Altid fra",
     "access_load_failed": "Konsoladgangen kunne ikke indlæses.",
     "access_saved": "Konsoladgang gemt.",
+    "access_keep_own_write": "Du kan ikke fjerne din egen skriveadgang til Brugere: så kunne du ikke længere ændre adgangen til konsollen.",
     "access_none": "Ingen",
     "access_read": "Læs",
     "access_write": "Fuld",

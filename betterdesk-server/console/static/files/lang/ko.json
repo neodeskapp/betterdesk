@@ -2049,6 +2049,7 @@
     "access_locked": "항상 꺼짐",
     "access_load_failed": "패널 접근을 불러오지 못했습니다.",
     "access_saved": "패널 접근을 저장했습니다.",
+    "access_keep_own_write": "사용자에 대한 본인의 쓰기 권한은 없앨 수 없습니다. 없애면 패널 접근 권한을 더 이상 바꿀 수 없습니다.",
     "access_none": "없음",
     "access_read": "읽기",
     "access_write": "전체",

@@ -2055,6 +2055,7 @@
     "access_locked": "Mindig ki",
     "access_load_failed": "A konzolhozzáférést nem sikerült betölteni.",
     "access_saved": "Konzolhozzáférés mentve.",
+    "access_keep_own_write": "Nem veheti el a saját írási hozzáférését a Felhasználókhoz: utána nem tudná módosítani a konzolhozzáférést.",
     "access_none": "Nincs",
     "access_read": "Olvasás",
     "access_write": "Teljes",

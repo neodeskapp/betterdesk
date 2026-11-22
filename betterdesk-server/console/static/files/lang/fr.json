@@ -2071,6 +2071,7 @@
     "access_locked": "Toujours désactivé",
     "access_load_failed": "Impossible de charger l'accès à la console.",
     "access_saved": "Accès à la console enregistré.",
+    "access_keep_own_write": "Vous ne pouvez pas retirer votre propre accès en écriture aux Utilisateurs : vous ne pourriez plus modifier l’accès au panneau.",
     "access_none": "Aucun",
     "access_read": "Lecture",
     "access_write": "Complet",

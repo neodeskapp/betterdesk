@@ -2049,6 +2049,7 @@
     "access_locked": "Vždy vypnuto",
     "access_load_failed": "Přístup ke konzoli se nepodařilo načíst.",
     "access_saved": "Přístup ke konzoli byl uložen.",
+    "access_keep_own_write": "Nemůžete si odebrat vlastní přístup pro zápis k Uživatelům: pak byste už nemohli měnit přístup ke konzoli.",
     "access_none": "Žádný",
     "access_read": "Čtení",
     "access_write": "Plný",

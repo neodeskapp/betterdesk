@@ -2055,6 +2055,7 @@
     "access_locked": "Selalu mati",
     "access_load_failed": "Akses panel tidak dapat dimuat.",
     "access_saved": "Akses panel disimpan.",
+    "access_keep_own_write": "Anda tidak bisa mencabut akses tulis Anda sendiri ke Pengguna: Anda tidak akan bisa lagi mengubah akses panel.",
     "access_none": "Tidak ada",
     "access_read": "Baca",
     "access_write": "Penuh",

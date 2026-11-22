@@ -2123,6 +2123,7 @@
     "access_locked": "Zawsze wyłączone",
     "access_load_failed": "Nie udało się wczytać dostępu do panelu.",
     "access_saved": "Zapisano dostęp do panelu.",
+    "access_keep_own_write": "Nie możesz odebrać sobie dostępu do zapisu w Użytkownikach: nie mógłbyś już zmieniać dostępu do panelu.",
     "access_now_role": "Teraz: {level}, {source}. Limit roli: {limit}"
   },
   "folders": {

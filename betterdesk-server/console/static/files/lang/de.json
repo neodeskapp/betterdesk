@@ -2049,6 +2049,7 @@
     "access_locked": "Immer aus",
     "access_load_failed": "Der Konsolenzugriff konnte nicht geladen werden.",
     "access_saved": "Konsolenzugriff gespeichert.",
+    "access_keep_own_write": "Sie können sich nicht selbst den Schreibzugriff auf Benutzer nehmen: Sie könnten den Konsolenzugriff dann nicht mehr ändern.",
     "access_none": "Keiner",
     "access_read": "Lesen",
     "access_write": "Voll",

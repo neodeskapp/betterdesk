@@ -2055,6 +2055,7 @@
     "access_locked": "Alltid av",
     "access_load_failed": "Konsolåtkomsten kunde inte läsas in.",
     "access_saved": "Konsolåtkomst sparad.",
+    "access_keep_own_write": "Du kan inte ta bort din egen skrivåtkomst till Användare: då kunde du inte längre ändra åtkomsten till konsolen.",
     "access_none": "Ingen",
     "access_read": "Läs",
     "access_write": "Full",
