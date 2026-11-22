@@ -5132,15 +5132,27 @@ function Do-MigrateDatabase {
             Print-Step "Creating backup before migration..."
             & $migrateBin -mode backup -src $srcDb 2>&1 | ForEach-Object { Write-Host $_ }
 
+            # The install's own database: the server stops for the copy and
+            # starts again on the new database
+            $ownDb = ($srcDb -eq (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3")) -and (Test-Path (Join-Path $script:CONSOLE_PATH ".env"))
+            if ($ownDb) { Stop-ServerService }
+
             Print-Step "Running SQLite -> PostgreSQL migration..."
             & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
 
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "SQLite -> PostgreSQL migration completed successfully!"
-                Print-Info "Update your BetterDesk Go server config: DB_URL=$pgUri"
+                if ($ownDb) {
+                    Set-ConsoleEnvValue -Key "DB_TYPE" -Value "postgres"
+                    Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $pgUri
+                    Set-ConsoleEnvValue -Key "DB_URL" -Value $pgUri
+                    Print-Success "The install now runs on PostgreSQL"
+                }
             } else {
                 Print-Error "Migration failed. Check the output above for details."
+                if ($ownDb) { Print-Info "The install stays on $srcDb" }
             }
+            if ($ownDb) { Start-ServerService }
         }
         "3" {
             # PostgreSQL -> SQLite
@@ -5165,6 +5177,11 @@ function Do-MigrateDatabase {
                 & $migrateBin -mode backup -src $dstDb 2>&1 | ForEach-Object { Write-Host $_ }
             }
 
+            # The install's own database: the server stops for the copy and
+            # starts again on the new database
+            $ownPg = ((Get-ConsoleEnvValue -Key "DATABASE_URL") -eq $pgUri) -and ($dstDb -eq (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"))
+            if ($ownPg) { Stop-ServerService }
+
             Print-Step "Running PostgreSQL -> SQLite migration..."
             $migrateArgs = @("-mode", "pg2sqlite", "-src", $pgUri, "-dst", $dstDb)
             if ($script:MIGRATE_OVERWRITE) { $migrateArgs += $script:MIGRATE_OVERWRITE }
@@ -5172,9 +5189,14 @@ function Do-MigrateDatabase {
 
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "PostgreSQL -> SQLite migration completed successfully!"
+                if ($ownPg) {
+                    Use-SQLiteInstall $dstDb
+                    Print-Success "The install now runs on SQLite ($dstDb)"
+                }
             } else {
                 Print-Error "Migration failed. Check the output above for details."
             }
+            if ($ownPg) { Start-ServerService }
         }
         "4" {
             # Backup

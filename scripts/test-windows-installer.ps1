@@ -188,6 +188,22 @@ function Test-MigrationMenusPassOverwrite {
     $runs = Invoke-TestMenu '2' @('', 'postgres://u@h/db', 'n')
     if ("$runs" -ne "-mode sqlite2pg -src $src -dst postgres://u@h/db") { Fail "sqlite2pg after a declined replace ran as: $runs" }
 
+    # L72: a move of the install's own database points .env at the new one
+    # and restarts the server
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'DB_TYPE=sqlite', 'DATABASE_URL=', "DB_URL=$src")
+    $script:restarted = $false
+    function script:Stop-ServerService { }
+    function script:Start-ServerService { $script:restarted = $true }
+    Invoke-TestMenu '2' @('', 'postgres://u@h/db', 'n') | Out-Null
+    if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'postgres' -or (Get-ConsoleEnvValue -Key 'DATABASE_URL') -ne 'postgres://u@h/db' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne 'postgres://u@h/db') {
+        Fail "after the menu's move .env does not point at PostgreSQL: $(Get-Content $envFile)"
+    }
+    if (-not $script:restarted) { Fail 'the server was not started again after the move' }
+    Invoke-TestMenu '3' @('postgres://u@h/db', '', 'y') | Out-Null
+    if ((Get-ConsoleEnvValue -Key 'DB_TYPE') -ne 'sqlite' -or (Get-ConsoleEnvValue -Key 'DB_URL') -ne $src) { Fail "after the menu's move back .env does not point at SQLite: $(Get-Content $envFile)" }
+    Remove-Item -Force $envFile
+
     $runs = Invoke-TestMenu '3' @('postgres://u@h/db', '', 'y')
     if ($runs -notcontains "-mode pg2sqlite -src postgres://u@h/db -dst $src -overwrite") { Fail "pg2sqlite after an agreed overwrite ran as: $runs" }
     $runs = Invoke-TestMenu '3' @('postgres://u@h/db', '', 'n')

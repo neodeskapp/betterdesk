@@ -7612,15 +7612,24 @@ do_migrate_database() {
             print_step "Creating backup before migration..."
             "$migrate_bin" -mode backup -src "$src_db" 2>&1 || true
 
-            print_step "Running SQLite → PostgreSQL migration..."
-            "$migrate_bin" -mode sqlite2pg -src "$src_db" -dst "$pg_uri" ${pg_overwrite:+"$pg_overwrite"} 2>&1
+            # The install's own database: the server stops for the copy and
+            # starts again on the new database
+            local own_db=false
+            [ "$src_db" = "$RUSTDESK_PATH/db_v2.sqlite3" ] && [ -f "$CONSOLE_PATH/.env" ] && own_db=true
+            [ "$own_db" = true ] && systemctl stop "$SERVER_SERVICE" 2>/dev/null
 
-            if [ $? -eq 0 ]; then
+            print_step "Running SQLite → PostgreSQL migration..."
+            if "$migrate_bin" -mode sqlite2pg -src "$src_db" -dst "$pg_uri" ${pg_overwrite:+"$pg_overwrite"} 2>&1; then
                 print_success "SQLite → PostgreSQL migration completed successfully!"
-                print_info "Update your BetterDesk Go server config: DB_URL=$pg_uri"
+                if [ "$own_db" = true ]; then
+                    use_database_in_env postgres "$pg_uri"
+                    print_success "The install now runs on PostgreSQL"
+                fi
             else
                 print_error "Migration failed. Check the output above for details."
+                [ "$own_db" = true ] && print_info "The install stays on $src_db"
             fi
+            [ "$own_db" = true ] && systemctl restart "$SERVER_SERVICE" 2>/dev/null
             ;;
         3)
             # PostgreSQL → SQLite
@@ -7645,13 +7654,25 @@ do_migrate_database() {
                 "$migrate_bin" -mode backup -src "$dst_db" 2>&1 || true
             fi
 
+            # The install's own database: the server stops for the copy and
+            # starts again on the new database
+            local own_pg=false
+            [ -f "$CONSOLE_PATH/.env" ] && [ "$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)" = "$pg_uri" ] \
+                && [ "$dst_db" = "$RUSTDESK_PATH/db_v2.sqlite3" ] && own_pg=true
+            [ "$own_pg" = true ] && systemctl stop "$SERVER_SERVICE" 2>/dev/null
+
             print_step "Running PostgreSQL → SQLite migration..."
             if "$migrate_bin" -mode pg2sqlite -src "$pg_uri" -dst "$dst_db" ${MIGRATE_OVERWRITE:+"$MIGRATE_OVERWRITE"} 2>&1; then
                 migrate_sqlite_dst_done "$dst_db"
                 print_success "PostgreSQL → SQLite migration completed successfully!"
+                if [ "$own_pg" = true ]; then
+                    use_database_in_env sqlite "$dst_db"
+                    print_success "The install now runs on SQLite ($dst_db)"
+                fi
             else
                 print_error "Migration failed. Check the output above for details."
             fi
+            [ "$own_pg" = true ] && systemctl restart "$SERVER_SERVICE" 2>/dev/null
             ;;
         4)
             # Backup

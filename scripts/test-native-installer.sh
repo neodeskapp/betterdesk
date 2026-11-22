@@ -251,6 +251,22 @@ FAKE_MIGRATE
     [ "$(migrations)" = "-mode sqlite2pg -src $src -dst postgres://u@h/db" ] \
         || fail "sqlite2pg after a declined replace ran as: $(migrations)"
 
+    # L72: a move of the install's own database points .env at the new one
+    # and restarts the server
+    mkdir -p "$CONSOLE_PATH"
+    printf 'SESSION_SECRET=kept\nDB_TYPE=sqlite\nDATABASE_URL=\nDB_URL=%s\n' "$src" > "$CONSOLE_PATH/.env"
+    systemctl() { printf 'systemctl %s\n' "$*" >> "$calls"; }
+    run_menu 2 $'\npostgres://u@h/db\nn'
+    grep -qx 'DB_TYPE=postgres' "$CONSOLE_PATH/.env" && grep -qx 'DATABASE_URL=postgres://u@h/db' "$CONSOLE_PATH/.env" \
+        && grep -qx 'DB_URL=postgres://u@h/db' "$CONSOLE_PATH/.env" || fail "after the menu's move .env does not point at PostgreSQL: $(cat "$CONSOLE_PATH/.env")"
+    grep -qx 'SESSION_SECRET=kept' "$CONSOLE_PATH/.env" || fail "the menu's move lost a line of .env"
+    grep -q 'systemctl restart betterdesk-server' "$calls" || fail "the server was not restarted after the move"
+    run_menu 3 $'postgres://u@h/db\n\ny'
+    grep -qx 'DB_TYPE=sqlite' "$CONSOLE_PATH/.env" && grep -qxF "DB_URL=$src" "$CONSOLE_PATH/.env" \
+        || fail "after the menu's move back .env does not point at SQLite: $(cat "$CONSOLE_PATH/.env")"
+    rm -f "$CONSOLE_PATH/.env"
+    unset -f systemctl
+
     # pg2sqlite into the existing default file: agreed, then declined
     run_menu 3 $'postgres://u@h/db\n\ny'
     [[ "$(migrations)" == *"-mode pg2sqlite -src postgres://u@h/db -dst $src -overwrite"* ]] \
