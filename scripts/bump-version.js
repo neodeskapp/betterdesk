@@ -20,6 +20,8 @@ const REPO_ROOT = path.join(__dirname, '..');
 const VERSION_FILE = path.join(REPO_ROOT, 'VERSION');
 const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 
+// README.md is not one of these files: its version badge is a picture
+// (docs/assets/badges/*/version.svg) that is redrawn by hand for a release.
 const FILE_RULES = [
     {
         id: 'version-file',
@@ -64,31 +66,6 @@ const FILE_RULES = [
                 [`VERSION="${fileVersion}"`, `VERSION="${version}"`],
                 [`BetterDesk Console Manager v${fileVersion}`, `BetterDesk Console Manager v${version}`],
             ]);
-        },
-    },
-    {
-        id: 'readme-badge',
-        path: 'README.md',
-        extract: (content) => {
-            const m = content.match(/img\.shields\.io\/badge\/version-([^-]+(?:--[^-]+)?)-/);
-            if (!m) return null;
-            return m[1].replace(/--/g, '-');
-        },
-        apply: (content, version) => {
-            const m = content.match(/img\.shields\.io\/badge\/version-([^-]+(?:--[^-]+)?)-/);
-            const fileVersion = m ? m[1].replace(/--/g, '-') : null;
-            if (!fileVersion || fileVersion === version) return content;
-            const badgeOld = fileVersion.replace(/-/g, '--');
-            const badgeNew = version.replace(/-/g, '--');
-            return content
-                .replace(
-                    new RegExp(`(img\\.shields\\.io\\/badge\\/version-)${escapeRegExp(badgeOld)}(-)`, 'g'),
-                    `$1${badgeNew}$2`
-                )
-                .replace(
-                    new RegExp(`(img\\.shields\\.io\\/badge\\/version-)${escapeRegExp(fileVersion)}(-)`, 'g'),
-                    `$1${badgeNew}$2`
-                );
         },
     },
     {
@@ -187,10 +164,6 @@ function getManagedPaths() {
         paths.push(CHANGELOG_PATH);
     }
     return paths;
-}
-
-function escapeRegExp(value) {
-    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function replaceAllLiteral(content, pairs) {
