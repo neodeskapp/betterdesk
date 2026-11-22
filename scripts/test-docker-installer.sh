@@ -58,9 +58,17 @@ docker() {
                 stop|down) rm -f "$TEST_DIR/running" ;;
                 start) touch "$TEST_DIR/running" ;;
                 config) [ "${3:-}" = --hash ] && printf 'betterdesk newhash\n' ;;
+                run)
+                    printf '%s\n' "${DATABASE_URL:-}" > "$TEST_DIR/run-env"
+                    if [ -f "$TEST_DIR/move-fails" ]; then printf 'ERROR: the move broke\n' >&2; return 1; fi
+                    printf 'Migration complete: 12 rows in 30 tables moved to PostgreSQL\n' ;;
             esac
             return 0 ;;
         container)
+            if [ "${!#}" = betterdesk-postgres ]; then
+                [[ "$format" != *Health* ]] || printf 'healthy\n'
+                return 0
+            fi
             [ -f "$TEST_DIR/exists" ] && [ "${!#}" = betterdesk ] || return 1
             case "$format" in
                 *State.Running*) if [ -f "$TEST_DIR/running" ]; then printf 'true\n'; else printf 'false\n'; fi ;;
@@ -273,6 +281,65 @@ test_help_lists_every_option() (
     done
 )
 
+# L43: the switch to PostgreSQL stops BetterDesk, backs the volumes up,
+# starts the postgres service, moves the data with the server's sqlite2pg
+# and starts BetterDesk on PostgreSQL. The database address reaches the
+# tool through the environment, never the command line.
+test_postgres_switch_moves_the_data() (
+    load
+    (COMMAND=install; do_install) > /dev/null 2>&1 || fail "the install failed"
+    : > "$CALLS"
+    ASSUME_YES=true
+    local out pass stop_line run_line
+    out=$(do_postgres 2>&1) || fail "the switch failed: $out"
+    pass=$(env_get POSTGRES_PASSWORD)
+    [ "${#pass}" -ge 32 ] || fail "no PostgreSQL password made"
+    [ "$(env_get DATABASE_URL)" = "postgres://betterdesk:${pass}@postgres:5432/betterdesk?sslmode=disable" ] \
+        || fail "DATABASE_URL after the switch: $(env_get DATABASE_URL)"
+    [ "$(env_get COMPOSE_PROFILES)" = postgres ] || fail "the postgres service is not on after the switch"
+    grep -q 'compose run --rm --no-deps -T --user 10001:10001 --entrypoint sh betterdesk -c exec /usr/local/bin/betterdesk-migrate -mode sqlite2pg -src /opt/rustdesk/db_v2.sqlite3' "$CALLS" \
+        || fail "the data was not moved with sqlite2pg: $(cat "$CALLS")"
+    [ "$(cat "$TEST_DIR/run-env")" = "$(env_get DATABASE_URL)" ] || fail "the tool did not get the address in its environment"
+    if grep -qF "$pass" "$CALLS"; then fail "the PostgreSQL password is on a command line"; fi
+    if printf '%s' "$out" | grep -qF "$pass"; then fail "the PostgreSQL password was printed"; fi
+    stop_line=$(grep -n 'compose stop -t 30 betterdesk' "$CALLS" | head -n 1 | cut -d: -f1)
+    run_line=$(grep -n 'compose run' "$CALLS" | head -n 1 | cut -d: -f1)
+    { [ -n "$stop_line" ] && [ "$stop_line" -lt "$run_line" ]; } || fail "the data was moved while BetterDesk ran"
+    grep -q '^run .*tar' "$CALLS" || fail "no backup before the move"
+    printf '%s' "$out" | grep -q 'Migration complete: 12 rows' || fail "the tool's result is not shown: $out"
+    rm -rf "$TEST_DIR"
+)
+
+# L43, decision 26: declining the move keeps the install on SQLite and
+# changes nothing.
+test_postgres_declined_keeps_sqlite() (
+    load
+    (COMMAND=install; do_install) > /dev/null 2>&1 || fail "the install failed"
+    : > "$CALLS"
+    MOVE_DATA=no
+    local out
+    out=$(do_postgres 2>&1) || fail "declining failed: $out"
+    printf '%s' "$out" | grep -q 'stays on SQLite' || fail "declining does not say the install stays on SQLite: $out"
+    [ -z "$(env_get DATABASE_URL)" ] || fail "declining set DATABASE_URL"
+    if grep -qE '^compose (stop|run|--profile postgres up)' "$CALLS"; then fail "declining touched the containers: $(cat "$CALLS")"; fi
+    rm -rf "$TEST_DIR"
+)
+
+# L43: a move that fails leaves the install on SQLite and starts it again.
+test_postgres_failed_move_keeps_sqlite() (
+    load
+    (COMMAND=install; do_install) > /dev/null 2>&1 || fail "the install failed"
+    touch "$TEST_DIR/move-fails"
+    ASSUME_YES=true
+    local out
+    if out=$(do_postgres 2>&1); then fail "a failed move reported success: $out"; fi
+    printf '%s' "$out" | grep -q 'stays on SQLite' || fail "the error does not say the install stays on SQLite: $out"
+    [ -z "$(env_get DATABASE_URL)" ] || fail "a failed move left DATABASE_URL set"
+    [ -z "$(env_get COMPOSE_PROFILES)" ] || fail "a failed move left the postgres service on"
+    [ -f "$TEST_DIR/running" ] || fail "BetterDesk was not started again on SQLite"
+    rm -rf "$TEST_DIR"
+)
+
 test_fresh_install
 test_update_goes_back_when_unhealthy
 test_update_keeps_compose_edits
@@ -281,5 +348,8 @@ test_foreign_install_is_left_alone
 test_errors_say_what_to_do
 test_uninstall_says_what_it_leaves
 test_help_lists_every_option
+test_postgres_switch_moves_the_data
+test_postgres_declined_keeps_sqlite
+test_postgres_failed_move_keeps_sqlite
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"

@@ -42,6 +42,8 @@ BUILD_LOCAL=false
 INSTALL_DOCKER=true
 ADOPT=false
 RESET_USER="admin"
+MOVE_DATA=""
+OVERWRITE_POSTGRES=false
 MANAGED_CONFIG_CHANGES=()
 
 CONTAINER="betterdesk"
@@ -106,6 +108,10 @@ Options:
                          5000)
   --postgres             A new install on PostgreSQL instead of SQLite
                          (BETTERDESK_POSTGRES=true)
+  --no-move              postgres: do not move the data; the install stays on
+                         SQLite and nothing changes
+  --overwrite-postgres   postgres: delete the PostgreSQL volume of an earlier
+                         try before the move
   --user NAME            reset-password: the account (admin)
   --purge                uninstall: also delete the volumes (all data)
   --yes                  Answer yes to every question
@@ -162,6 +168,8 @@ parse_args() {
             --user) [ $# -ge 2 ] || die "--user needs an account name"; RESET_USER="$2"; shift ;;
             --user=*) RESET_USER="${1#*=}" ;;
             --postgres) USE_POSTGRES=true ;;
+            --no-move) MOVE_DATA=no ;;
+            --overwrite-postgres) OVERWRITE_POSTGRES=true ;;
             --purge) PURGE=true ;;
             --yes|-y) ASSUME_YES=true ;;
             --adopt) ADOPT=true ;;
@@ -1097,10 +1105,105 @@ do_menu() {
 # SQLite to PostgreSQL
 #===============================================================================
 
+MIGRATE_TOOL=/usr/local/bin/betterdesk-migrate
+
+# wait_postgres: the postgres service answers within a minute
+wait_postgres() {
+    local waited=0
+    while [ "$waited" -lt 60 ]; do
+        [ "$(docker container inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$PG_CONTAINER" 2>/dev/null || true)" = healthy ] && return 0
+        sleep 2
+        waited=$((waited + 2))
+    done
+    return 1
+}
+
+# back_to_sqlite MESSAGE [HINT...]: the install as it was, on SQLite, and
+# the error
+back_to_sqlite() {
+    env_unset DATABASE_URL
+    env_unset DB_TYPE
+    env_unset COMPOSE_PROFILES
+    compose --profile postgres stop -t 10 postgres >/dev/null 2>&1 || true
+    compose up -d betterdesk >/dev/null 2>&1 || true
+    wait_healthy || warn "BetterDesk on SQLite did not answer either; its log: cd $BETTERDESK_DIR && docker compose logs betterdesk"
+    die "$@"
+}
+
+# do_postgres: moves the install from SQLite to the postgres service with
+# the server's own tool (sqlite2pg: every table of the server and the
+# console, ids kept). Declining the move changes nothing; a failed move
+# or a server that does not get healthy on PostgreSQL leaves it on SQLite.
 do_postgres() {
     require_install
-    die "Moving an install to PostgreSQL is not in this version yet." \
-        "A new install can start on PostgreSQL: --postgres"
+    if on_postgres; then
+        ok "The install runs on PostgreSQL already."
+        return 0
+    fi
+    container_exists "$CONTAINER" || die "BetterDesk is not installed in $BETTERDESK_DIR yet." \
+        "Install it on PostgreSQL right away: sudo bash betterdesk-docker.sh --postgres"
+    local image uid gid pass out
+    image=$(docker container inspect -f '{{.Config.Image}}' "$CONTAINER")
+    docker run --rm --entrypoint sh "$image" -c "test -x $MIGRATE_TOOL" >/dev/null 2>&1 \
+        || die "The image $image has no move tool yet." "Update first: sudo bash betterdesk-docker.sh, then run this again."
+
+    say "This moves every device, account and setting from SQLite into a PostgreSQL"
+    say "container (betterdesk-postgres, volume $PG_VOLUME). BetterDesk stops for it;"
+    say "the data volumes are backed up first, and the SQLite file stays as it is."
+    if [ "$MOVE_DATA" = no ] || ! confirm "Move the data into PostgreSQL? Without the move the install stays on SQLite." y; then
+        say "Nothing changed: the install stays on SQLite."
+        return 0
+    fi
+
+    if docker volume inspect "$PG_VOLUME" >/dev/null 2>&1; then
+        [ "$OVERWRITE_POSTGRES" = true ] || die "The volume $PG_VOLUME holds a PostgreSQL database from before; nothing was changed." \
+            "Delete it and move again: sudo bash betterdesk-docker.sh postgres --overwrite-postgres"
+        compose --profile postgres rm -sf postgres >/dev/null 2>&1 || true
+        docker volume rm "$PG_VOLUME" >/dev/null || die "The volume $PG_VOLUME could not be deleted (is a container using it?)."
+        env_unset POSTGRES_PASSWORD
+    fi
+    pass=$(env_get POSTGRES_PASSWORD)
+    [ -n "$pass" ] || pass=$(new_secret 24)
+    env_set POSTGRES_PASSWORD "$pass"
+
+    step "Stopping BetterDesk for the backup and the move"
+    compose stop -t 30 betterdesk >/dev/null 2>&1 || true
+    local backup
+    backup=$(backup_volumes)
+    ok "Backup: $backup"
+
+    step "Starting PostgreSQL"
+    compose --profile postgres up -d postgres >/dev/null || back_to_sqlite "PostgreSQL did not start; the install stays on SQLite." \
+        "Its log: cd $BETTERDESK_DIR && docker compose logs postgres"
+    wait_postgres || back_to_sqlite "PostgreSQL did not get ready within a minute; the install stays on SQLite." \
+        "Its log: cd $BETTERDESK_DIR && docker compose logs postgres"
+
+    step "Moving the data (the server's sqlite2pg)"
+    uid=$(env_get PUID)
+    gid=$(env_get PGID)
+    # The address reaches the tool through the container's environment,
+    # not its arguments on this machine
+    if ! out=$(DATABASE_URL="$(postgres_url "$pass")" compose run --rm --no-deps -T --user "${uid:-10001}:${gid:-10001}" \
+        --entrypoint sh betterdesk -c "exec $MIGRATE_TOOL -mode sqlite2pg -src /opt/rustdesk/db_v2.sqlite3 -dst \"\$DATABASE_URL\"" 2>&1); then
+        printf '%s\n' "$out" >&2
+        back_to_sqlite "The move failed (output above); the install stays on SQLite and nothing of it changed." \
+            "Run it again after the cause is fixed: sudo bash betterdesk-docker.sh postgres --overwrite-postgres"
+    fi
+    printf '%s\n' "$out" | grep -E 'Migration complete|Backup created' || true
+
+    step "Starting BetterDesk on PostgreSQL"
+    env_set COMPOSE_PROFILES postgres
+    env_set DB_TYPE postgres
+    env_set DATABASE_URL "$(postgres_url "$pass")"
+    compose up -d >/dev/null || true
+    if ! wait_healthy; then
+        local log
+        log=$(save_failed_log)
+        back_to_sqlite "BetterDesk did not get healthy on PostgreSQL; it runs on SQLite again with its data as it was." \
+            "The failed start's log: $log"
+    fi
+    ok "BetterDesk runs on PostgreSQL. The SQLite file stays in the volume $DATA_VOLUME; the backup is $backup."
+    print_summary
 }
 
 main() {

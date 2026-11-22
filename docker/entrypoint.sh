@@ -17,7 +17,6 @@ echo "========================================"
 echo ""
 echo "  Server:       signal + relay + API (ports 21115-21121)"
 echo "  Web console:  port ${CONSOLE_PORT:-5000}"
-echo "  DB_TYPE:      ${DB_TYPE:-sqlite}"
 echo "  DATA_DIR:     ${DATA_DIR:-/app/data}"
 echo ""
 
@@ -102,8 +101,13 @@ fi
 # The server's database: DB_URL, the SQLite path or the postgres:// URI. A
 # separate auth.db of an older install (AUTH_DB_PATH) is imported into it at
 # the first start. Log lines name the database without its credentials.
-if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
-    if [ -n "${DATABASE_URL}" ]; then
+# DATABASE_URL names the database by its scheme; DB_TYPE=postgres is still
+# read for older compose files.
+case "${DATABASE_URL:-}" in
+    postgres://*|postgresql://*) DB_TYPE=postgres ;;
+esac
+if [ "${DB_TYPE:-}" = "postgres" ] || [ "${DB_TYPE:-}" = "postgresql" ]; then
+    if [ -n "${DATABASE_URL:-}" ]; then
         export DB_URL="${DATABASE_URL}"
         echo "Database:     PostgreSQL ($(dsn_for_log "$DATABASE_URL"))"
     else
@@ -117,8 +121,8 @@ else
 fi
 
 # Wait for PostgreSQL if configured
-if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
-    if [ -n "${DATABASE_URL}" ]; then
+if [ "${DB_TYPE:-}" = "postgres" ] || [ "${DB_TYPE:-}" = "postgresql" ]; then
+    if [ -n "${DATABASE_URL:-}" ]; then
         echo "Waiting for PostgreSQL..."
         PG_HOST=$(dsn_host "$DATABASE_URL")
         PG_PORT=$(dsn_port "$DATABASE_URL")
