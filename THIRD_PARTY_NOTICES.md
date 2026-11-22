@@ -9,26 +9,25 @@ required by each dependency.
 The authoritative dependency manifests for a release are:
 
 - `betterdesk-server/go.mod` and `betterdesk-server/go.sum`
-- `betterdesk-agent/go.mod` and `betterdesk-agent/go.sum`
-- `betterdesk-support-agent/go.mod` and `betterdesk-support-agent/go.sum`
-- `web-nodejs/package.json` and `web-nodejs/package-lock.json`
-- `rdclient-desktop/package.json`, Cargo manifests, and
-  `rdclient-desktop/vendor/wry/LICENSE.spdx`
+- `web-ui/package.json` and `web-ui/package-lock.json`
+- `sdks/nodejs/package.json` and `sdks/nodejs/package-lock.json`
+- `sdks/python/pyproject.toml`
+- `bridges/*/requirements.txt`
 
 The build/release process must archive resolved dependency lists from those
 manifests with the matching source revision as an SBOM.
 
-## Support Agent distribution
+## Desktop client
 
-The Support Agent is built with Go and Fyne. Its code declares the dependency
-licenses in [LICENSE](LICENSE); a release must also include the notices supplied
-by Fyne and all resolved Go modules when they are distributed in a form that
-requires them.
-
-External system tools such as FFmpeg, GStreamer, PipeWire, xdg-desktop-portal,
-xdotool, and ydotool are not silently relicensed by BetterDesk. A package may
-only bundle one of them after its license, redistributability, provenance, and
-security-update path are recorded in the release SBOM.
+The BetterDesk desktop client is not in this repository. It is built in
+[trybetterdesk/betterdesk-client](https://github.com/trybetterdesk/betterdesk-client)
+under AGPL-3.0, and its dependency manifests and notices are there. The
+server hands out its release packages for join and support codes
+(`betterdesk-server/console/clientrelease`): it downloads them from that
+repository's releases, checks them against the signed checksums and serves
+them unchanged. The console's Support agents page imports agent releases
+from UNITRONIX/BetterDesk-Client by default
+(`betterdesk-server/console/agentreleases`); those ship their own notices.
 
 ## Server code
 
@@ -92,40 +91,36 @@ TweetNaCl-js (`tweetnacl`, the remote desktop viewer's encryption) is public
 domain under the Unlicense.
 
 Build and test tools in `web-ui/package.json` (Vite, TypeScript, Vitest,
-Playwright, ESLint and others) are not part of what the console serves.
+Playwright, ESLint, jiti and others) are not part of what the console serves.
 
 ## Web console fonts
 
-The console self-hosts these fonts in `web-nodejs/public/fonts/`, and the
-Svelte console the same files in `web-ui/static/fonts/`:
+The console self-hosts these fonts in `web-ui/static/fonts/`:
 
 - IBM Plex Sans (Latin, Latin Extended, Cyrillic, Greek and Vietnamese
   subsets, variable weight) and IBM Plex Mono (Latin, Latin Extended and
   Cyrillic subsets, weights 400 and 600), SIL Open Font License 1.1,
   copyright IBM Corp. License text:
-  `web-nodejs/public/fonts/IBMPlex-OFL.txt`.
+  `web-ui/static/fonts/IBMPlex-OFL.txt`.
 - Material Symbols (subset), Apache License 2.0, see
-  `web-nodejs/public/fonts/MATERIAL_SYMBOLS_VERSION.txt`.
+  `web-ui/static/fonts/MATERIAL_SYMBOLS_VERSION.txt`.
 
-Operating system marks in `web-nodejs/public/img/os-icons.svg` are from
+Operating system marks in `web-ui/static/img/os-icons.svg` are from
 Phosphor Icons (https://phosphoricons.com), MIT License, copyright Phosphor
 Icons. The logos are trademarks of their owners and only name the operating
 system a device runs.
 
-Language flags in `web-nodejs/public/img/flags/` are from Twemoji
+Language flags in `web-ui/static/img/flags/` are from Twemoji
 (https://github.com/jdecked/twemoji), taken from the `@twemoji/svg` 15.0.0
 package. Graphics licensed under CC-BY 4.0
 (https://creativecommons.org/licenses/by/4.0/), copyright Twitter, Inc and
 other contributors. The files are renamed to the language code they stand
 for; the drawings are unchanged.
 
-The Svelte console has copies of the OS marks and the flags in
-`web-ui/static/img/`.
-
 ## Compatibility components
 
-Any desktop-client compatibility adapter is subject to
-[support-agent-provenance.md](docs/important/support-agent-provenance.md).
+Any desktop-client compatibility adapter is subject to the provenance
+register at <https://betterde.sk/docs/development/provenance>.
 Before distribution, its release record must include:
 
 1. the compatibility specification revision;

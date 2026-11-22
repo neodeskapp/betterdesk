@@ -22,7 +22,7 @@ BetterDesk is transitioning to **AGPL-3.0** across the entire project
   published in their release artifacts.
 - **Sponsor Commercial Grant (optional, low-admin):** GitHub Sponsors **Bronze
   ($50/mo) and above**, plus Honorary Supporters — see
-  [docs/COMMERCIAL-GRANT.md](docs/COMMERCIAL-GRANT.md). $5 / $15 tiers and Buy
+  <https://betterde.sk/docs/project/license#commercial-grant>. $5 / $15 tiers and Buy
   Me a Coffee do not include the grant.
 - **Paid commercial license:** May be added later for special cases; not required
   for normal sponsor use.
@@ -38,8 +38,8 @@ BetterDesk Server (`betterdesk-server/`) is an independent, clean-room
 implementation of the RustDesk rendezvous and relay protocol. It contains
 **no code derived from the RustDesk project**.
 
-BetterDesk Console (`web-nodejs/`) is an entirely original Node.js/Express
-web application with no code-level dependency on RustDesk.
+The BetterDesk web console (`betterdesk-server/console/` and the web app in
+`web-ui/`) has no code-level dependency on RustDesk.
 
 Protocol definitions (`.proto` files) describe message formats for
 interoperability and are not derived from any copyrighted source code.
@@ -68,10 +68,8 @@ affiliation with or endorsement by the RustDesk Team.
 
 | Component | License | Location |
 |-----------|---------|----------|
-| BetterDesk Server (Go) | AGPL-3.0 | `betterdesk-server/` |
-| BetterDesk Console (Node.js) | AGPL-3.0 | `web-nodejs/` |
-| BetterDesk Agent | AGPL-3.0 | `betterdesk-agent/` |
-| BetterDesk Support Agent | AGPL-3.0 | `betterdesk-support-agent/` |
+| BetterDesk Server (Go) with its web console | AGPL-3.0 | `betterdesk-server/` |
+| BetterDesk web app (Svelte) | AGPL-3.0 | `web-ui/` |
 | CDAP SDKs | AGPL-3.0 | `sdks/` |
 | CDAP Bridges | AGPL-3.0 | `bridges/` |
 
@@ -81,18 +79,27 @@ affiliation with or endorsement by the RustDesk Team.
 
 ### Go server dependencies
 - coder/websocket — ISC License
+- go-ldap/ldap/v3 — MIT License
+- google/uuid — BSD-3-Clause
 - jackc/pgx/v5 — MIT License
 - golang.org/x/crypto — BSD-3-Clause
+- golang.org/x/text — BSD-3-Clause
 - google.golang.org/protobuf — BSD-3-Clause
 - modernc.org/sqlite — BSD-3-Clause
 
-### Node.js console dependencies
-- express, bcrypt, better-sqlite3, helmet, ws, otplib, pg — MIT License
-- ejs — Apache-2.0 License
+### Web app dependencies (bundled into the console)
+- Svelte, SvelteKit, devalue, clsx, Valibot, xterm.js, qrcode-generator,
+  JMuxer — MIT License
+- protobuf.js — BSD-3-Clause
 - tweetnacl — Unlicense
 
-### Frontend
-- Material Icons — Apache-2.0 License (Google Inc.)
+### Fonts and icons
+- IBM Plex Sans and IBM Plex Mono — SIL Open Font License 1.1
+- Material Symbols — Apache-2.0 License (Google Inc.)
+- Phosphor Icons (operating system marks) — MIT License
+- Twemoji (language flags) — CC-BY 4.0
+
+THIRD_PARTY_NOTICES.md lists them with their sources and copyright holders.
 
 ---
 
