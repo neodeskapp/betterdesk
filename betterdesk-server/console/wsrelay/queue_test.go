@@ -24,7 +24,7 @@ func TestWaitingMessagesAreBoundedByBytes(t *testing.T) {
 	}})
 	defer h.close()
 	c := h.dial("/ws/relay", adminHeader())
-	const size, count = 1 << 20, 48
+	const size, count = 1 << 20, 128
 	var sent atomic.Int64
 	done := make(chan struct{})
 	go func() {
@@ -48,8 +48,14 @@ func TestWaitingMessagesAreBoundedByBytes(t *testing.T) {
 		still++
 	}
 	// The bridge holds writeQueueBytes and the message it waits to queue;
-	// the rest is in the sockets' buffers of the operating system
-	if n := sent.Load(); n*size > writeQueueBytes+size+12<<20 {
+	// the rest is in the sockets' buffers of the operating system, which
+	// grow with the kernel's autotuning (up to tens of MiB on CI runners).
+	// Without the bound every message would go through.
+	n := sent.Load()
+	if n >= count {
+		t.Fatalf("the browser sent all %d MiB while nothing went to the server", n)
+	}
+	if n*size > writeQueueBytes+size+64<<20 {
 		t.Errorf("the browser sent %d MiB while nothing went to the server", n)
 	}
 	c.Drop()
