@@ -78,7 +78,8 @@
   },
   {
    "roles": [
-    "operator"
+    "operator",
+    "global_admin"
    ],
    "status": 200,
    "headers": {
@@ -164,7 +165,6 @@
   },
   {
    "roles": [
-    "global_admin",
     "super_admin",
     "admin"
    ],
