@@ -43,7 +43,7 @@ func init() {
 			run:   checkPairingI18n,
 		},
 		"check-port-docs": {
-			about: "check docs/CONNECTION_PORTS.md against the ports in the code",
+			about: "fail on scripts and Go files that present port 21120, which never shipped, as live",
 			run:   checkPortDocs,
 		},
 		"check-js": {
