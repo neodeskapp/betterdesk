@@ -11,14 +11,12 @@ on:
       - 'betterdesk-server/**'
       - 'web-ui/**'
       - '.github/test-stack/**'
-      - '.github/test-times.json'
       - '.github/workflows/console-ci.yml'
   pull_request:
     paths:
       - 'betterdesk-server/**'
       - 'web-ui/**'
       - '.github/test-stack/**'
-      - '.github/test-times.json'
       - '.github/workflows/console-ci.yml'
 
 permissions:
@@ -30,7 +28,7 @@ concurrency:
   group: console-ci-${{ github.ref }}
   cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
-# As the release builds the server; the suite and repotool share its cache
+# As the release builds the server; the suite shares its build cache
 env:
   CGO_ENABLED: '0'
 
@@ -88,7 +86,6 @@ jobs:
           go build -o "$RUNNER_TEMP/bin/betterdesk-server" .
           go build -o "$RUNNER_TEMP/bin/devseed" ./cmd/devseed
           go test -tags contract -c -o /dev/null ./console/contract
-          go build -o /dev/null ./cmd/repotool
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -97,36 +94,34 @@ jobs:
           retention-days: 1
 
   # The contract suite as `contract.sh check all` runs it on the local
-  # stack: the matrix on one fresh instance, the cases on another. The
-  # goldens are answers of SQLite installs, so the instances use SQLite.
+  # stack, each part on a fresh instance: the matrix, which writes to
+  # everything it reaches, and the cases. The goldens are answers of
+  # SQLite installs, so the instances use SQLite.
   #
-  # The cases run on one runner, all groups in name order: some goldens
-  # hold what earlier groups left on the instance, so a group alone gives
-  # other answers. repotool test-shards can deal the groups over several
-  # runners by their times in .github/test-times.json (set
-  # contract-cases, --under TestCases) once they no longer depend on each
-  # other: raise "shards" below.
+  # The case groups run in name order on one instance, because some
+  # goldens hold what earlier groups left there. ws-remote, half of the
+  # cases' time, needs none of that and runs on an instance of its own.
   contract:
     needs: build
     name: contract (${{ matrix.part.name }})
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    continue-on-error: ${{ matrix.part.trial == true }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         part:
-          - { name: matrix, layer: matrix }
-          - { name: cases, layer: cases, shard: 1, shards: 1 }
-          - { name: cases 1 of 3 trial, layer: cases, shard: 1, shards: 3, trial: true }
-          - { name: cases 2 of 3 trial, layer: cases, shard: 2, shards: 3, trial: true }
-          - { name: cases 3 of 3 trial, layer: cases, shard: 3, shards: 3, trial: true }
+          - name: matrix
+            run: '^(TestMatrix|TestEveryRouteIsCovered)$'
+          - name: cases
+            run: '^TestCases$'
+            skip: '^TestCases$/^ws-remote$'
+          - name: cases ws-remote
+            run: '^TestCases$/^ws-remote$'
     env:
       # What contract.sh sets: uncovered routes are listed, not failed
       CONTRACT_COVERAGE: report
-      LAYER: ${{ matrix.part.layer }}
-      SHARD: ${{ matrix.part.shard }}
-      SHARDS: ${{ matrix.part.shards }}
+      RUN: ${{ matrix.part.run }}
+      SKIP: ${{ matrix.part.skip }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -138,6 +133,8 @@ jobs:
       # The instance seeds itself while the suite builds. Its name has the
       # shape of the local stack's (ct-<6 hex>-<layer>).
       - name: Start a test instance
+        env:
+          LAYER: ${{ matrix.part.name == 'matrix' && 'matrix' || 'cases' }}
         run: |
           name="ct-$(head -c 3 /dev/urandom | od -An -tx1 | tr -d ' \n')-$LAYER"
           echo "INSTANCE=$name" >> "$GITHUB_ENV"
@@ -163,61 +160,43 @@ jobs:
 
       - name: Build the suite
         working-directory: betterdesk-server
-        run: |
-          go test -tags contract -c -o /dev/null ./console/contract
-          go build -o /dev/null ./cmd/repotool
+        run: go test -tags contract -c -o /dev/null ./console/contract
 
       - name: go vet with the contract tag
-        if: matrix.part.layer == 'matrix'
+        if: matrix.part.name == 'matrix'
         working-directory: betterdesk-server
         run: go vet -tags contract ./console/contract
 
       - name: Wait for the test instance
         run: bash .github/test-stack/up.sh wait "$INSTANCE"
 
-      - name: Check the matrix
-        if: matrix.part.layer == 'matrix'
+      # From the suite's folder without a package argument, so a passing
+      # run prints its summary too
+      - name: Check ${{ matrix.part.name }}
         working-directory: betterdesk-server/console/contract
         run: |
           export BD_URL="http://bdgo-$INSTANCE:5000"
           export BD_PASSWORD_FILE="$RUNNER_TEMP/bdgo-$INSTANCE/secrets/e2e_password"
           export BD_SECRETS_DIR="$RUNNER_TEMP/bdgo-$INSTANCE/secrets"
-          go test -tags contract -count=1 -timeout 60m -run '^(TestMatrix|TestEveryRouteIsCovered)$'
-
-      - name: Check the cases
-        if: matrix.part.layer == 'cases'
-        working-directory: betterdesk-server
-        run: |
-          export BD_URL="http://bdgo-$INSTANCE:5000"
-          export BD_PASSWORD_FILE="$RUNNER_TEMP/bdgo-$INSTANCE/secrets/e2e_password"
-          export BD_SECRETS_DIR="$RUNNER_TEMP/bdgo-$INSTANCE/secrets"
-          go run ./cmd/repotool test-shards run --set contract-cases --packages ./console/contract \
-            --under TestCases --shards "$SHARDS" --shard "$SHARD" --times-out "$RUNNER_TEMP/test-times.json" \
-            -- -tags contract -count=1 -timeout 60m
+          args=(-run "$RUN")
+          [ -z "$SKIP" ] || args+=(-skip "$SKIP")
+          go test -tags contract -count=1 -timeout 25m "${args[@]}"
 
       - name: Logs of the test instance
         if: failure()
         run: bash .github/test-stack/up.sh logs "$INSTANCE"
 
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        if: always() && matrix.part.layer == 'cases'
-        with:
-          name: test-times-contract-cases-${{ matrix.part.shard }}-of-${{ matrix.part.shards }}
-          path: ${{ runner.temp }}/test-times.json
-          retention-days: 30
-          if-no-files-found: ignore
-
   # The Playwright tests in Chromium and Firefox, cut into shards by
   # Playwright (--shard), each against its own fresh instance
   e2e:
     needs: build
-    name: e2e (${{ matrix.shard }} of 2)
+    name: e2e (${{ matrix.shard }} of 6)
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -247,6 +226,7 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT }}-chromium-firefox
 
+      # The sign-in of the global setup uses Chromium, so every shard needs both
       - name: Install the browsers
         working-directory: web-ui
         env:
@@ -268,7 +248,7 @@ jobs:
         run: |
           export BD_URL=http://bdgo-e2e:5000
           export E2E_PASSWORD_FILE="$RUNNER_TEMP/bdgo-e2e/secrets/e2e_password"
-          npx playwright test --shard="$SHARD/2"
+          npx playwright test --shard="$SHARD/6"
 
       - name: Logs of the test instance
         if: failure()

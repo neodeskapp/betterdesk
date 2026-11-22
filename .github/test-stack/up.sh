@@ -24,13 +24,15 @@ case "$cmd" in
         chmod +x "$bin/betterdesk-server" "$bin/devseed"
         docker network inspect bdgo >/dev/null 2>&1 || docker network create bdgo >/dev/null
         # The console keeps its state in /repo/web-nodejs, a fresh tmpfs here
-        # as in the local stack
+        # as in the local stack. The image is the base of the local stack's
+        # (Debian with Node): the server terminal's answers name its first
+        # account, node.
         docker run -d --name "bdgo-$name" --hostname "bdgo-$name" --network bdgo \
             -v "$GITHUB_WORKSPACE:/repo" --tmpfs /repo/web-nodejs:exec,mode=0755 \
             -v "$dir/secrets:/stack/secrets" -v "$dir/logs:/stack/logs" \
             -v "$bin/betterdesk-server:/usr/local/bin/betterdesk-server:ro" \
             -v "$bin/devseed:/usr/local/bin/devseed:ro" \
-            debian:bookworm-slim bash /repo/.github/test-stack/instance.sh >/dev/null
+            node:22-bookworm-slim bash /repo/.github/test-stack/instance.sh >/dev/null
         echo "bdgo-$name started"
         ;;
     wait)
