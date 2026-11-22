@@ -25,6 +25,9 @@ WORKDIR /web-ui
 COPY web-ui/package.json web-ui/package-lock.json ./
 RUN npx -y npm@11.6.2 ci --no-audit --no-fund
 
+# The web app build generates the remote viewer's protobuf code from the
+# server's schema (web-ui/vite-plugins/protos.ts reads ../betterdesk-server/protos)
+COPY betterdesk-server/protos/ /betterdesk-server/protos/
 COPY web-ui/ .
 RUN npm run build
 
