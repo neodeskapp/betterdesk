@@ -604,6 +604,12 @@ type Database interface {
 	DeleteBlocklistEntry(kind, value string) error
 	ListBlocklistEntries() ([]*BlocklistEntry, error)
 
+	// Server events (package audit), kept for audit.RetentionDays
+	AddServerEvents(events []*ServerEvent) error
+	ListServerEvents(action string, limit, offset int) ([]*ServerEvent, error)
+	CountServerEvents(action string) (int64, error)
+	PruneServerEvents(cutoff time.Time) (int64, error)
+
 	// ID change
 	ChangePeerID(oldID, newID, reason string) error
 	GetIDChangeHistory(id string) ([]*IDChangeHistory, error)

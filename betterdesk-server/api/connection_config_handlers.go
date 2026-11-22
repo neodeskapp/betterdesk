@@ -118,7 +118,7 @@ func (s *Server) handleSetConnectionConfig(w http.ResponseWriter, r *http.Reques
 	s.cfg.ApplyConnectionSettings(next)
 
 	if s.auditLog != nil {
-		s.auditLog.Log("connection_config_changed", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("connection_config_changed", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"mode":                       next.Mode,
 			"p2p_fallback_ms":            strconv.Itoa(next.P2PFallbackMs),
 			"same_nat_relay":             formatBool(next.SameNATRelay),

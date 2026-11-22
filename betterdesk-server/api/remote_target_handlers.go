@@ -142,7 +142,7 @@ func (s *Server) handleCreateRemoteTarget(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.Action("remote_target_created"), s.remoteIP(r), target.ID,
+		s.auditLog.Log(audit.Action("remote_target_created"), s.eventActor(r), target.ID,
 			map[string]string{"protocol": target.Protocol, "host": target.Host})
 	}
 	writeJSON(w, http.StatusCreated, target)
@@ -236,7 +236,7 @@ func (s *Server) handleUpdateRemoteTarget(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.Action("remote_target_updated"), s.remoteIP(r), target.ID,
+		s.auditLog.Log(audit.Action("remote_target_updated"), s.eventActor(r), target.ID,
 			map[string]string{"protocol": target.Protocol, "host": target.Host})
 	}
 	writeJSON(w, http.StatusOK, target)
@@ -249,7 +249,7 @@ func (s *Server) handleDeleteRemoteTarget(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.Action("remote_target_deleted"), s.remoteIP(r), id, nil)
+		s.auditLog.Log(audit.Action("remote_target_deleted"), s.eventActor(r), id, nil)
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted", "id": id})
 }
@@ -316,7 +316,7 @@ func (s *Server) handleSetRemoteTargetCredentials(w http.ResponseWriter, r *http
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.Action("remote_target_credential_set"), s.remoteIP(r), target.ID,
+		s.auditLog.Log(audit.Action("remote_target_credential_set"), s.eventActor(r), target.ID,
 			map[string]string{"actor": getUsernameFromCtx(r)})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -343,7 +343,7 @@ func (s *Server) handleClearRemoteTargetCredentials(w http.ResponseWriter, r *ht
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.Action("remote_target_credential_cleared"), s.remoteIP(r), target.ID,
+		s.auditLog.Log(audit.Action("remote_target_credential_cleared"), s.eventActor(r), target.ID,
 			map[string]string{"actor": getUsernameFromCtx(r)})
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "credential_mode": "prompt"})
@@ -377,7 +377,7 @@ func (s *Server) handleAcceptRemoteTargetCertificate(w http.ResponseWriter, r *h
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.Action("remote_target_certificate_trusted"), s.remoteIP(r), target.ID,
+		s.auditLog.Log(audit.Action("remote_target_certificate_trusted"), s.eventActor(r), target.ID,
 			map[string]string{"actor": getUsernameFromCtx(r), "fingerprint": body.Fingerprint})
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "fingerprint": body.Fingerprint})

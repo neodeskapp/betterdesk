@@ -284,7 +284,7 @@ func (s *Server) finishClientOIDCCallback(w http.ResponseWriter, r *http.Request
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionAuthLogin, s.remoteIP(r), user.Username, map[string]string{
+		s.auditLog.Log(audit.ActionAuthLogin, s.eventActor(r), user.Username, map[string]string{
 			"method": "oidc_client_callback",
 		})
 	}

@@ -416,7 +416,7 @@ func (s *Server) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Audit log
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionAuthLogin, s.remoteIP(r), user.Username, map[string]string{"method": "oidc"})
+		s.auditLog.Log(audit.ActionAuthLogin, s.eventActor(r), user.Username, map[string]string{"method": "oidc"})
 	}
 
 	_ = s.db.UpdateUserLogin(user.ID)

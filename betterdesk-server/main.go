@@ -415,7 +415,7 @@ func main() {
 	}
 
 	// Initialize audit logger
-	auditLogger := audit.NewLogger(cfg.AuditLogFile)
+	auditLogger := openAuditLog(cfg.AuditLogFile, database)
 	defer auditLogger.Close()
 	auditLogger.Log(audit.ActionServerStart, "system", "", map[string]string{
 		"version": Version, "mode": cfg.Mode,
@@ -715,6 +715,15 @@ func applyEnrollmentMode(cfg *config.Config, database db.Database) (string, erro
 		}
 	}
 	return source, nil
+}
+
+// openAuditLog is the server's event log: it keeps the events in the
+// database for audit.RetentionDays, so the Server events tab has them
+// after a restart, and appends them to file when one is named.
+func openAuditLog(file string, database db.Database) *audit.Logger {
+	l := audit.NewLogger(file)
+	l.UseStore(database)
+	return l
 }
 
 // openBlocklist is the blocklist of the start: the entries of the file,

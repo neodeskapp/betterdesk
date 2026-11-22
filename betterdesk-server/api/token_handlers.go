@@ -289,7 +289,7 @@ func (s *Server) handleRevokeDeviceToken(w http.ResponseWriter, r *http.Request)
 
 	// Audit log
 	if s.auditLog != nil {
-		s.auditLog.Log("token_revoked", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("token_revoked", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"token_id":   strconv.FormatInt(id, 10),
 			"token_name": token.Name,
 			"peer_id":    token.PeerID,
@@ -447,7 +447,7 @@ func (s *Server) handleBindTokenToPeer(w http.ResponseWriter, r *http.Request) {
 
 	// Audit log
 	if s.auditLog != nil {
-		s.auditLog.Log("token_bound", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("token_bound", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"token_id":   strconv.FormatInt(id, 10),
 			"token_name": token.Name,
 			"peer_id":    req.PeerID,
@@ -507,7 +507,7 @@ func (s *Server) handleSetEnrollmentMode(w http.ResponseWriter, r *http.Request)
 
 	// Audit log
 	if s.auditLog != nil {
-		s.auditLog.Log("enrollment_mode_changed", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("enrollment_mode_changed", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"new_mode": mode,
 		})
 	}

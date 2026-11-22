@@ -158,7 +158,7 @@ func (s *Server) handleSetTimeSyncConfig(w http.ResponseWriter, r *http.Request)
 	status := s.timeSync.CheckNow()
 
 	if s.auditLog != nil {
-		s.auditLog.Log("timesync_config_changed", s.remoteIP(r), "", map[string]string{
+		s.auditLog.Log("timesync_config_changed", s.eventActor(r), "", map[string]string{
 			"ntp_servers":          next.NTPServers,
 			"max_skew_ms":          strconv.Itoa(next.MaxSkewMS),
 			"require_synced_clock": strconv.FormatBool(next.RequireSyncedClock),

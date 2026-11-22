@@ -293,7 +293,7 @@ func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[LDAP] Configuration saved (enabled=%v, host=%s, port=%d)", cfg.Enabled, cfg.Host, cfg.Port)
 
 	if s.auditLog != nil {
-		s.auditLog.Log("ldap_config_updated", s.remoteIP(r), getUsernameFromCtx(r), map[string]string{
+		s.auditLog.Log("ldap_config_updated", s.eventActor(r), getUsernameFromCtx(r), map[string]string{
 			"enabled": strconv.FormatBool(cfg.Enabled),
 			"host":    cfg.Host,
 			"port":    strconv.Itoa(cfg.Port),

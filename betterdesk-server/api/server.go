@@ -1355,7 +1355,7 @@ func (s *Server) handleUpdatePeerFields(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUpdated, s.remoteIP(r), id, nil)
+		s.auditLog.Log(audit.ActionPeerUpdated, s.eventActor(r), id, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "updated", "id": id})
@@ -1491,7 +1491,7 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 		if len(cascadedIDs) > 0 {
 			details["cascaded_ids"] = fmt.Sprintf("%v", cascadedIDs)
 		}
-		s.auditLog.Log(action, s.remoteIP(r), id, details)
+		s.auditLog.Log(action, s.eventActor(r), id, details)
 	}
 
 	resp := map[string]interface{}{
@@ -1533,7 +1533,7 @@ func (s *Server) handleBanPeer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerBanned, s.remoteIP(r), id, map[string]string{"reason": body.Reason})
+		s.auditLog.Log(audit.ActionPeerBanned, s.eventActor(r), id, map[string]string{"reason": body.Reason})
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "banned", "id": id})
@@ -1560,7 +1560,7 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if s.auditLog != nil {
-			s.auditLog.Log(audit.ActionPeerUnbanned, s.remoteIP(r), id, map[string]string{
+			s.auditLog.Log(audit.ActionPeerUnbanned, s.eventActor(r), id, map[string]string{
 				"peer_removed": "true",
 				"reason":       enrollmentRejectBanReason,
 			})
@@ -1580,7 +1580,7 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 	s.clearEnrollmentRejectionState(id)
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUnbanned, s.remoteIP(r), id, nil)
+		s.auditLog.Log(audit.ActionPeerUnbanned, s.eventActor(r), id, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "unbanned", "id": id})
@@ -1633,7 +1633,7 @@ func (s *Server) handleRestorePeer(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerRestored, s.remoteIP(r), id, nil)
+		s.auditLog.Log(audit.ActionPeerRestored, s.eventActor(r), id, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "restored", "id": id})
@@ -1698,7 +1698,7 @@ func (s *Server) handleChangePeerID(w http.ResponseWriter, r *http.Request) {
 	s.peers.Rename(oldID, body.NewID)
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerIDChanged, s.remoteIP(r), oldID, map[string]string{"new_id": body.NewID})
+		s.auditLog.Log(audit.ActionPeerIDChanged, s.eventActor(r), oldID, map[string]string{"new_id": body.NewID})
 	}
 
 	if s.eventBus != nil {
@@ -1770,7 +1770,7 @@ func (s *Server) handleSetConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionConfigChanged, s.remoteIP(r), key, nil)
+		s.auditLog.Log(audit.ActionConfigChanged, s.eventActor(r), key, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "key": key})
@@ -2032,7 +2032,7 @@ func (s *Server) handleAddBlocklist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionBlocklistAdd, s.remoteIP(r), body.Value, map[string]string{
+		s.auditLog.Log(audit.ActionBlocklistAdd, s.eventActor(r), body.Value, map[string]string{
 			"type": body.Type, "reason": body.Reason,
 		})
 	}
@@ -2058,7 +2058,7 @@ func (s *Server) handleRemoveBlocklist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionBlocklistRemove, s.remoteIP(r), entry, nil)
+		s.auditLog.Log(audit.ActionBlocklistRemove, s.eventActor(r), entry, nil)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "unblocked", "entry": entry})
@@ -2116,6 +2116,17 @@ func (s *Server) remoteIP(r *http.Request) string {
 		return ip
 	}
 	return socket
+}
+
+// eventActor names who acted, for a server event: the account the console
+// acts for on an in-process call, else the caller's account or API key
+// (actorFromCtx), else the client's address, where no account acted (a
+// sign-in, a device).
+func (s *Server) eventActor(r *http.Request) string {
+	if actor := actorFromCtx(r); actor != "" {
+		return actor
+	}
+	return s.remoteIP(r)
 }
 
 // forwardedIP is the address of a forwarded entry with or without a port,
@@ -2181,7 +2192,7 @@ func (s *Server) handleSetPeerTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerTagsUpdated, s.remoteIP(r), id, map[string]string{"tags": tagsStr})
+		s.auditLog.Log(audit.ActionPeerTagsUpdated, s.eventActor(r), id, map[string]string{"tags": tagsStr})
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "updated", "id": id, "tags": tagsStr})
@@ -2223,8 +2234,10 @@ func (s *Server) handlePeersByTag(w http.ResponseWriter, r *http.Request) {
 
 // --- Audit Handler ---
 
-// handleAuditEvents returns recent audit events.
-// GET /api/audit/events?limit=50&action=peer_banned
+// handleAuditEvents returns the server events newest first, those of one
+// action when it is given, from offset on, and how many there are of them
+// (total): the events kept in the database for audit.RetentionDays.
+// GET /api/audit/events?limit=50&offset=0&action=peer_banned
 func (s *Server) handleAuditEvents(w http.ResponseWriter, r *http.Request) {
 	if s.auditLog == nil {
 		writeJSON(w, http.StatusOK, map[string]any{
@@ -2244,17 +2257,26 @@ func (s *Server) handleAuditEvents(w http.ResponseWriter, r *http.Request) {
 		limit = 1000
 	}
 
+	offset := 0
+	if v := r.URL.Query().Get("offset"); v != "" {
+		if n, err := fmt.Sscanf(v, "%d", &offset); err != nil || n != 1 || offset < 0 {
+			offset = 0
+		}
+	}
+
 	action := r.URL.Query().Get("action")
-	var events []audit.Event
-	if action != "" {
-		events = s.auditLog.RecentByAction(audit.Action(action), limit)
-	} else {
-		events = s.auditLog.Recent(limit)
+	events, total, err := s.auditLog.Page(audit.Action(action), limit, offset)
+	if err != nil {
+		writeInternalError(w, err, "audit events")
+		return
+	}
+	if events == nil && action != "" {
+		events = []audit.Event{}
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"enabled": true,
-		"total":   s.auditLog.Total(),
+		"total":   total,
 		"count":   len(events),
 		"events":  events,
 	})
@@ -2409,7 +2431,7 @@ func (s *Server) handleWakeOnLan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUpdated, s.remoteIP(r), id, map[string]string{"action": "wol", "mac": mac})
+		s.auditLog.Log(audit.ActionPeerUpdated, s.eventActor(r), id, map[string]string{"action": "wol", "mac": mac})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "mac": mac})
 }
@@ -2556,7 +2578,7 @@ func (s *Server) handleSaveAccessPolicy(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUpdated, s.remoteIP(r), id, map[string]string{
+		s.auditLog.Log(audit.ActionPeerUpdated, s.eventActor(r), id, map[string]string{
 			"action":     "access_policy_updated",
 			"unattended": fmt.Sprintf("%v", body.UnattendedEnabled),
 			"schedule":   fmt.Sprintf("%v", body.ScheduleEnabled),
@@ -2579,7 +2601,7 @@ func (s *Server) handleDeleteAccessPolicy(w http.ResponseWriter, r *http.Request
 	}
 
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionPeerUpdated, s.remoteIP(r), id, map[string]string{
+		s.auditLog.Log(audit.ActionPeerUpdated, s.eventActor(r), id, map[string]string{
 			"action": "access_policy_deleted",
 		})
 	}

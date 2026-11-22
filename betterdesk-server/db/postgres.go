@@ -718,6 +718,9 @@ func (pg *PostgresDB) Migrate() error {
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
 		postgresBlocklistTable,
+		postgresServerEventsTable,
+		serverEventsCreatedIndex,
+		serverEventsActionIndex,
 	}
 
 	for _, stmt := range statements {

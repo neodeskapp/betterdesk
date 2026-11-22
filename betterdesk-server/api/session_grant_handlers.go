@@ -123,7 +123,7 @@ func (s *Server) handleIssueSupportSessionGrant(w http.ResponseWriter, r *http.R
 		return
 	}
 	if s.auditLog != nil {
-		s.auditLog.Log("support_session_grant_issued", s.remoteIP(r), deviceID, map[string]string{
+		s.auditLog.Log("support_session_grant_issued", s.eventActor(r), deviceID, map[string]string{
 			"operator":   operatorID,
 			"transport":  body.Transport,
 			"session_id": body.SessionID,

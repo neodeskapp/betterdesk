@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/audit"
 	"github.com/unitronix/betterdesk-server/config"
 	"github.com/unitronix/betterdesk-server/db"
 )
@@ -271,5 +272,28 @@ func TestInitialAdminPasswordKeepsThePasswordRule(t *testing.T) {
 		if got := initialAdminPassword(given); got != want {
 			t.Errorf("initialAdminPassword(%q) = %q, want %q", given, got, want)
 		}
+	}
+}
+
+// TestServerEventsOutliveARestart: the event log main starts with keeps
+// its events in the database, so the next start reads them (L91).
+func TestServerEventsOutliveARestart(t *testing.T) {
+	database, err := db.OpenSQLite(filepath.Join(t.TempDir(), "db_v2.sqlite3"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	if err := database.Migrate(); err != nil {
+		t.Fatal(err)
+	}
+	first := openAuditLog("", database)
+	first.Log(audit.ActionAuthLoginFailed, "203.0.113.7", "alice", nil)
+	if err := first.Close(); err != nil {
+		t.Fatal(err)
+	}
+	next := openAuditLog("", database)
+	defer next.Close()
+	if events := next.Recent(5); len(events) != 1 || events[0].Target != "alice" {
+		t.Fatalf("after a restart: %+v", events)
 	}
 }
