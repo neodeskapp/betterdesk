@@ -17,9 +17,9 @@
 # Options (pass after "bash -s --"):
 #   --docker | --native          Installation mode (default: docker)
 #   --migrate-split              Replace a split install (server + console containers)
-#                                with the one container; same volumes and image tag
+#                                with the one container, which takes its data over
 #   --install-dir PATH             Install directory (default: /opt/betterdesk)
-#   --version TAG                  Docker image tag / release baseline (default: 3.5.270)
+#   --version TAG                  Docker image tag to pin (default: latest, the newest release)
 #   --branch BRANCH                Git branch for native install (default: this installer channel)
 #   --relay-mode auto|local|public Relay auto-detection strategy
 #   --relay-servers IP[:port]      Fixed relay address (overrides --relay-mode)
@@ -49,6 +49,9 @@ BETTERDESK_REPO="${BETTERDESK_REPO:-trybetterdesk/betterdesk}"
 # --branch / BETTERDESK_BRANCH. Flip to "main" when releasing this file on main.
 BETTERDESK_INSTALLER_CHANNEL="dev"
 BETTERDESK_BRANCH="${BETTERDESK_BRANCH:-$BETTERDESK_INSTALLER_CHANNEL}"
+# An image tag given (--version, BETTERDESK_VERSION) pins it; without one
+# the install runs latest, the newest release (DECISIONS A163)
+BETTERDESK_VERSION_GIVEN="${BETTERDESK_VERSION:-}"
 BETTERDESK_VERSION="${BETTERDESK_VERSION:-3.5.270}"
 BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/${BETTERDESK_REPO}/${BETTERDESK_BRANCH}}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/betterdesk}"
@@ -66,8 +69,8 @@ RESCUE_ACTION="rescue"
 CHECK_CAPABILITIES=false
 MANAGED_CONFIG_CHANGES=()
 
-# Docker ports: web console 5000, API 21121, signal and relay
-DOCKER_PORTS="21115 21116 21117 21118 21119 21121 5000"
+# Docker ports: web console 5000, API 21121, CDAP 21122, signal and relay
+DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122 5000"
 
 # ── Output helpers ────────────────────────────────────────────────────────────
 
@@ -103,7 +106,7 @@ while [ $# -gt 0 ]; do
         --split) die "--split is gone: BetterDesk runs as one container. An existing split install moves with --migrate-split" ;;
         --native) INSTALL_MODE="native"; shift ;;
         --install-dir) INSTALL_DIR="$2"; shift 2 ;;
-        --version) BETTERDESK_VERSION="$2"; shift 2 ;;
+        --version) BETTERDESK_VERSION="$2"; BETTERDESK_VERSION_GIVEN="$2"; shift 2 ;;
         --branch) BETTERDESK_BRANCH="$2"; BETTERDESK_RAW_BASE="https://raw.githubusercontent.com/${BETTERDESK_REPO}/${BETTERDESK_BRANCH}"; shift 2 ;;
         --relay-mode) RELAY_MODE="$2"; shift 2 ;;
         --relay-servers) RELAY_SERVERS="$2"; shift 2 ;;
@@ -215,14 +218,6 @@ fetch_url_to_file() {
     fi
 }
 
-validate_compose_quick() {
-    local file="$1"
-    grep -q 'services:' "$file" || die "Invalid compose file (missing services:)"
-    # Any owner's image, so a fork's compose file passes too
-    grep -Eq 'ghcr\.io/[a-z0-9._-]+/betterdesk:' "$file" || die "Invalid compose file (unexpected content)"
-    grep -q 'BETTERDESK_DOCKER_LAYOUT=single' "$file" || die "Invalid compose file (missing single layout marker)"
-}
-
 # ── Docker helpers ────────────────────────────────────────────────────────────
 
 check_docker() {
@@ -241,46 +236,6 @@ check_docker_compose() {
         return 0
     fi
     return 1
-}
-
-install_docker_engine() {
-    log "Installing Docker..."
-    require_command curl
-
-    if command -v apt-get >/dev/null 2>&1; then
-        apt-get update -qq
-        DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ca-certificates curl
-        install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc 2>/dev/null \
-            || curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-        chmod a+r /etc/apt/keyrings/docker.asc
-
-        local distro codename
-        if [ -f /etc/os-release ]; then
-            # shellcheck disable=SC1091
-            . /etc/os-release
-            distro="${ID:-ubuntu}"
-            codename="${VERSION_CODENAME:-$(lsb_release -cs 2>/dev/null || echo bookworm)}"
-        else
-            distro="ubuntu"
-            codename="jammy"
-        fi
-
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${distro} ${codename} stable" \
-            > /etc/apt/sources.list.d/docker.list
-        apt-get update -qq
-        DEBIAN_FRONTEND=noninteractive apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
-    elif command -v dnf >/dev/null 2>&1; then
-        dnf install -y -q docker docker-compose-plugin
-    elif command -v yum >/dev/null 2>&1; then
-        yum install -y -q docker docker-compose-plugin
-    else
-        die "Unsupported package manager. Install Docker manually: https://docs.docker.com/engine/install/"
-    fi
-
-    systemctl enable docker >/dev/null 2>&1 || true
-    systemctl start docker
-    ok "Docker installed"
 }
 
 configure_firewall() {
@@ -323,88 +278,6 @@ configure_firewall() {
     fi
 }
 
-wait_for_http() {
-    local url="$1"
-    local label="$2"
-    local attempts="${3:-60}"
-    local i
-
-    for i in $(seq 1 "$attempts"); do
-        if curl -fsS --max-time 3 "$url" >/dev/null 2>&1; then
-            ok "$label is ready"
-            return 0
-        fi
-        sleep 2
-    done
-    warn "$label did not become ready in time ($url)"
-    return 1
-}
-
-fetch_admin_credentials() {
-    # Prefer helper (#195); fall back to cat as betterdesk when image lacks the binary (#299).
-    local service="$1"
-    local compose_file="$INSTALL_DIR/docker/docker-compose.yml"
-    local out=""
-
-    out=$("${COMPOSE_CMD[@]}" -f "$compose_file" exec -T "$service" \
-        betterdesk-show-admin-credentials 2>/dev/null || true)
-    if [ -n "$out" ]; then
-        printf '%s\n' "$out"
-        return 0
-    fi
-
-    out=$("${COMPOSE_CMD[@]}" -f "$compose_file" exec -T -u betterdesk "$service" \
-        sh -c 'cat /opt/rustdesk/.admin_credentials 2>/dev/null || cat /app/data/.admin_credentials 2>/dev/null' \
-        2>/dev/null || true)
-    if [ -n "$out" ]; then
-        printf '%s\n' "$out"
-        return 0
-    fi
-    return 1
-}
-
-print_docker_summary() {
-    local relay="$1"
-    local host_ip="${relay%%:*}"
-    local creds=""
-    local pubkey=""
-    local api_port="21121"
-
-    creds=$(fetch_admin_credentials betterdesk || true)
-    pubkey=$("${COMPOSE_CMD[@]}" -f "$INSTALL_DIR/docker/docker-compose.yml" exec -T betterdesk \
-        sh -c 'cat /opt/rustdesk/id_ed25519.pub 2>/dev/null' 2>/dev/null || true)
-
-    echo ""
-    echo -e "${C_CYAN}╔══════════════════════════════════════════════════════════════╗${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}  ${C_BOLD}BetterDesk Docker installation complete${C_RESET}                     ${C_CYAN}║${C_RESET}"
-    echo -e "${C_CYAN}╠══════════════════════════════════════════════════════════════╣${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}  Web panel:    ${C_WHITE}http://${host_ip}:5000${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}  API health:   ${C_WHITE}http://${host_ip}:${api_port}/api/health${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}  Relay:        ${C_WHITE}${relay}${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}  Install dir:  ${C_WHITE}${INSTALL_DIR}/docker${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}  Image tag:    ${C_WHITE}${BETTERDESK_VERSION}${C_RESET}"
-    if [ -n "$pubkey" ]; then
-        echo -e "${C_CYAN}║${C_RESET}  Public key:   ${C_WHITE}${pubkey:0:32}...${C_RESET}"
-    fi
-    echo -e "${C_CYAN}╠══════════════════════════════════════════════════════════════╣${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}  ${C_YELLOW}RustDesk client settings:${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}    ID server:    ${C_WHITE}${host_ip}:21116${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}    Relay server: ${C_WHITE}${relay}${C_RESET}"
-    echo -e "${C_CYAN}║${C_RESET}    API server:   ${C_WHITE}http://${host_ip}:${api_port}${C_RESET}"
-    echo -e "${C_CYAN}╠══════════════════════════════════════════════════════════════╣${C_RESET}"
-    if [ -n "$creds" ]; then
-        echo -e "${C_CYAN}║${C_RESET}  ${C_BOLD}Admin credentials:${C_RESET}"
-        while IFS= read -r line; do
-            [ -n "$line" ] && echo -e "${C_CYAN}║${C_RESET}    ${C_WHITE}${line}${C_RESET}"
-        done <<< "$creds"
-    else
-        echo -e "${C_CYAN}║${C_RESET}  Admin creds:   ${C_DIM}docker compose -f ${INSTALL_DIR}/docker/docker-compose.yml exec betterdesk betterdesk-show-admin-credentials${C_RESET}"
-    fi
-    echo -e "${C_CYAN}╚══════════════════════════════════════════════════════════════╝${C_RESET}"
-    echo ""
-    log "Manage: cd ${INSTALL_DIR}/docker && ${COMPOSE_CMD[*]} ps|logs|restart"
-}
-
 # A two-container (split) install in the compose folder: its .env says so,
 # or its compose file runs a console service.
 is_split_install() {
@@ -413,100 +286,57 @@ is_split_install() {
         || grep -Eqs 'ghcr\.io/[a-z0-9._-]+/betterdesk-console' "${compose_dir}/docker-compose.yml"
 }
 
-# Stops the split install's containers. The named volumes (betterdesk-data,
-# betterdesk-console-data) stay; the one container mounts the same ones.
-stop_split_install() {
-    local compose_dir="$1"
-    log "Stopping the split install (server and console containers); its volumes stay..."
-    if [ -f "${compose_dir}/docker-compose.yml" ]; then
-        cp -a "${compose_dir}/docker-compose.yml" "${compose_dir}/docker-compose.split.yml.bak"
-        (cd "$compose_dir" && "${COMPOSE_CMD[@]}" --env-file .env down --remove-orphans) \
-            || die "Could not stop the split install; nothing was changed"
+# fetch_docker_manager DEST: betterdesk-docker.sh of this installer's
+# branch, which installs, updates and removes BetterDesk on Docker.
+fetch_docker_manager() {
+    local dest="$1"
+    mkdir -p "$(dirname "$dest")"
+    fetch_url_to_file "${BETTERDESK_RAW_BASE}/betterdesk-docker.sh" "$dest.tmp" 4096 524288
+    if ! grep -q 'BETTERDESK_DOCKER_SOURCED' "$dest.tmp"; then
+        rm -f "$dest.tmp"
+        die "The downloaded betterdesk-docker.sh is not BetterDesk's Docker manager (${BETTERDESK_RAW_BASE})"
     fi
-    ok "Split install stopped (its compose file is kept as docker-compose.split.yml.bak)"
+    install -m 0755 "$dest.tmp" "$dest"
+    rm -f "$dest.tmp"
 }
 
+# install_docker_mode: betterdesk-docker.sh in the compose folder installs
+# the one container there (or updates the install it finds), with the
+# options given here; a split install is taken over (--adopt) on its data.
 install_docker_mode() {
     local compose_dir="${INSTALL_DIR}/docker"
-    local compose_file="${compose_dir}/docker-compose.yml"
-    local env_file="${compose_dir}/.env"
-    local relay tmp_compose compose_src="docker-compose.quick.single.yml"
-    local api_health_url="http://127.0.0.1:21121/api/health"
+    local manager="${compose_dir}/betterdesk-docker.sh"
+    local args=(install --dir "$compose_dir" --yes)
 
-    log "BetterDesk Docker installer v${VERSION} (one container, image: ${BETTERDESK_VERSION})"
-
-    if ! check_docker; then
-        if [ "$SKIP_DOCKER_INSTALL" = true ]; then
-            die "Docker is not available. Install Docker or remove --skip-docker-install"
-        fi
-        install_docker_engine
-    fi
-    check_docker || die "Docker daemon is not running"
-    check_docker_compose || die "Docker Compose plugin is not available"
-
-    mkdir -p "$compose_dir"
-    # The server with its console runs alone: a split install is replaced
-    # by the one container on the same volumes (spec 4.3)
+    log "BetterDesk Docker installer v${VERSION}: betterdesk-docker.sh installs the one container in ${compose_dir}"
     if is_split_install "$compose_dir"; then
         if [ "$MIGRATE_SPLIT" != true ]; then
             warn "This is a split install (server and console containers). BetterDesk now runs as one container."
-            warn "Moving it to the one container on the same volumes (as --migrate-split does)."
         fi
-        stop_split_install "$compose_dir"
+        warn "Its data moves into the one container (betterdesk-docker.sh --adopt); the old containers are kept, stopped and renamed."
+        args+=(--adopt)
     elif [ "$MIGRATE_SPLIT" = true ]; then
         log "No split install in ${compose_dir}; installing the one container"
     fi
-    relay=$(resolve_relay_address)
-
-    log "Downloading ${compose_src}..."
-    tmp_compose=$(mktemp)
-    trap 'rm -f "$tmp_compose"' RETURN
-    fetch_url_to_file "${BETTERDESK_RAW_BASE}/${compose_src}" "$tmp_compose" 1024 131072
-    validate_compose_quick "$tmp_compose"
-    install -m 0644 "$tmp_compose" "$compose_file"
-
-    log "Writing ${env_file}..."
-    cat > "$env_file" <<ENVEOF
-# Generated by BetterDesk install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ)
-BETTERDESK_IMAGE_TAG=${BETTERDESK_VERSION}
-BETTERDESK_DOCKER_LAYOUT=single
-RELAY_SERVERS=${relay}
-BETTERDESK_CLIENT_REPO=${BETTERDESK_CLIENT_REPO:-UNITRONIX/BetterDesk-Client}
-BETTERDESK_CLIENT_RELEASE_TAG=${BETTERDESK_CLIENT_RELEASE_TAG:-}
-BETTERDESK_GITHUB_TOKEN=${BETTERDESK_GITHUB_TOKEN:-}
-BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=${BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED:-}
-AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
-AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
-AGENT_BUILD_COOLDOWN_MS=${AGENT_BUILD_COOLDOWN_MS:-1000}
-ENVEOF
-    if [ -n "$ADMIN_PASSWORD" ]; then
-        printf 'ADMIN_PASSWORD=%s\n' "$ADMIN_PASSWORD" >> "$env_file"
+    if [ -n "$RELAY_SERVERS" ]; then
+        args+=(--relay "$RELAY_SERVERS")
+    else
+        args+=(--relay-mode "$RELAY_MODE")
     fi
-    chmod 0600 "$env_file"
+    [ -z "$BETTERDESK_VERSION_GIVEN" ] || args+=(--tag "$BETTERDESK_VERSION_GIVEN")
+    [ "$SKIP_DOCKER_INSTALL" != true ] || args+=(--no-install-docker)
 
-    log "Pulling images..."
-    (cd "$compose_dir" && "${COMPOSE_CMD[@]}" --env-file .env pull)
-
-    log "Starting containers..."
-    (cd "$compose_dir" && "${COMPOSE_CMD[@]}" --env-file .env up -d --remove-orphans)
-
+    fetch_docker_manager "$manager"
+    ok "Docker manager: $manager"
+    export ADMIN_PASSWORD BETTERDESK_RAW_BASE
+    "$manager" "${args[@]}"
     configure_firewall
-
-    log "Waiting for services..."
-    local health_failed=0
-    wait_for_http "$api_health_url" "BetterDesk API" 90 || health_failed=1
-    wait_for_http "http://127.0.0.1:5000/health" "Web console" 60 || health_failed=1
-    if [ "$health_failed" -ne 0 ]; then
-        die "BetterDesk containers did not pass health checks; inspect ${compose_dir}/docker-compose.yml logs before retrying"
-    fi
-
-    print_docker_summary "$relay"
+    log "Later: sudo bash $manager (update), status, logs, backup, uninstall (see --help)"
 }
 
 rescue_docker_mode() {
     local rescue_dir="${INSTALL_DIR}/rescue"
     local rescue_script="${rescue_dir}/betterdesk-docker.sh"
-    local rescue_url="${BETTERDESK_RAW_BASE}/betterdesk-docker.sh"
     local rescue_flag
 
     case "$RESCUE_ACTION" in
@@ -522,22 +352,27 @@ rescue_docker_mode() {
         check_docker_compose || die "Docker Compose plugin is not available"
     fi
 
-    mkdir -p "$rescue_dir"
-    fetch_url_to_file "$rescue_url" "$rescue_script.tmp" 4096 524288
-    install -m 0755 "$rescue_script.tmp" "$rescue_script"
-    rm -f "$rescue_script.tmp"
+    fetch_docker_manager "$rescue_script"
     ok "Rescue script ready: $rescue_script"
 
     log "Running Docker rescue action: $RESCUE_ACTION"
     DATA_DIR="${DATA_DIR:-}" COMPOSE_FILE="${COMPOSE_FILE:-}" \
-        "$rescue_script" "$rescue_flag"
+        "$rescue_script" "$rescue_flag" --dir "${INSTALL_DIR}/docker"
 }
 
 uninstall_docker_mode() {
     local compose_dir="${INSTALL_DIR}/docker"
     local compose_file="${compose_dir}/docker-compose.yml"
+    local manager="${compose_dir}/betterdesk-docker.sh"
 
     require_root
+    # The manager of the install removes it and says what it leaves
+    if [ -x "$manager" ]; then
+        local args=(uninstall --dir "$compose_dir")
+        [ "$DO_PURGE" != true ] || args+=(--purge --yes)
+        "$manager" "${args[@]}"
+        return
+    fi
     check_docker_compose || die "Docker Compose not available"
 
     if [ ! -f "$compose_file" ]; then
@@ -744,7 +579,7 @@ run_native_management_action() {
 run_docker_management_action() {
     local manager="${INSTALL_DIR}/docker/betterdesk-docker.sh"
     [ -x "$manager" ] || die "Docker BetterDesk manager not found at ${manager}"
-    local args=()
+    local args=(--dir "${INSTALL_DIR}/docker")
     [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
     [ "$REPAIR_PERMISSIONS" = true ] && args+=(--repair-permissions)
     local change

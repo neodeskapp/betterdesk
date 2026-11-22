@@ -386,6 +386,46 @@ test_rerun_without_changes_keeps_the_container() (
     rm -rf "$TEST_DIR"
 )
 
+# install.sh's Docker path runs betterdesk-docker.sh in the compose folder
+# of the install folder with the options it was given (a split install is
+# taken over with --adopt), and its uninstall runs it for the same folder.
+test_install_sh_runs_the_manager() (
+    local dir
+    dir=$(mktemp -d)
+    # install_sh ARGS...: install.sh's main with ARGS; the download of the
+    # manager gives a stand-in that records how it ran
+    install_sh() {
+        (
+            INSTALL_DIR="$dir/opt"
+            BETTERDESK_RAW_BASE="https://raw.githubusercontent.com/example/fork/dev"
+            # shellcheck disable=SC1091
+            source "$SCRIPT_ROOT/install.sh"
+            require_root() { :; }
+            configure_firewall() { :; }
+            fetch_url_to_file() {
+                printf '#!/bin/sh\n# BETTERDESK_DOCKER_SOURCED stand-in\nprintf "%%s\\n" "$*" > "%s/manager-args"\nprintf "%%s\\n" "$ADMIN_PASSWORD|$BETTERDESK_RAW_BASE" > "%s/manager-env"\n' "$dir" "$dir" > "$2"
+            }
+            main
+        ) > "$dir/out" 2>&1
+    }
+    ADMIN_PASSWORD='Docker-Admin-1' install_sh || fail "install.sh's Docker path failed: $(cat "$dir/out")"
+    [ -x "$dir/opt/docker/betterdesk-docker.sh" ] || fail "the manager is not in the compose folder"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto" ] \
+        || fail "the manager ran as: $(cat "$dir/manager-args")"
+    [ "$(cat "$dir/manager-env")" = "Docker-Admin-1|https://raw.githubusercontent.com/example/fork/dev" ] \
+        || fail "the manager did not get the admin password and the branch's files: $(cat "$dir/manager-env")"
+    install_sh --relay-servers 203.0.113.9 --version 3.6.0 --skip-docker-install || fail "install.sh with options failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay 203.0.113.9 --tag 3.6.0 --no-install-docker" ] \
+        || fail "the manager ran with the options as: $(cat "$dir/manager-args")"
+    printf 'BETTERDESK_DOCKER_LAYOUT=split\n' > "$dir/opt/docker/.env"
+    install_sh || fail "install.sh on a split install failed: $(cat "$dir/out")"
+    case "$(cat "$dir/manager-args")" in *" --adopt"*) ;; *) fail "a split install is not taken over: $(cat "$dir/manager-args")" ;; esac
+    install_sh --uninstall --purge || fail "install.sh's uninstall failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "uninstall --dir $dir/opt/docker --purge --yes" ] \
+        || fail "the uninstall ran the manager as: $(cat "$dir/manager-args")"
+    rm -rf "$dir"
+)
+
 test_fresh_install
 test_update_goes_back_when_unhealthy
 test_update_keeps_compose_edits
@@ -399,5 +439,6 @@ test_postgres_declined_keeps_sqlite
 test_postgres_failed_move_keeps_sqlite
 test_failed_first_install_resumes
 test_rerun_without_changes_keeps_the_container
+test_install_sh_runs_the_manager
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"
