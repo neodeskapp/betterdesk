@@ -133,8 +133,11 @@ func jsFindings(list string, files []string) (int, []string) {
 	return allowed, failures
 }
 
+// isJavaScript is a file ending in .js, .mjs or .cjs, in any case
+// (UPPER.JS is JavaScript too).
 func isJavaScript(file string) bool {
-	return strings.HasSuffix(file, ".js") || strings.HasSuffix(file, ".mjs") || strings.HasSuffix(file, ".cjs")
+	lower := strings.ToLower(file)
+	return strings.HasSuffix(lower, ".js") || strings.HasSuffix(lower, ".mjs") || strings.HasSuffix(lower, ".cjs")
 }
 
 // globMatch matches a slash-separated path against a pattern whose parts

@@ -29,17 +29,22 @@ func TestJSFindings(t *testing.T) {
 		"web/app/site/sub/main.js",
 		"scripts/tool.js",
 		"scripts/tool.cjs",
+		"scripts/OLD.JS",
+		"scripts/old.Mjs",
+		"fixtures/UPPER.JS",
 		"src/types.d.mts",
 		"README.md",
 	}
 	allowed, failures := jsFindings(testAllowList, files)
-	if allowed != 4 {
-		t.Errorf("allowed %d, want 4", allowed)
+	if allowed != 5 {
+		t.Errorf("allowed %d, want 5", allowed)
 	}
 	want := []string{
 		"web/app/site/sub/main.js is JavaScript and not on the allow list (.github/javascript-allowlist.txt); write it in TypeScript or Go",
 		"scripts/tool.js is JavaScript and not on the allow list (.github/javascript-allowlist.txt); write it in TypeScript or Go",
 		"scripts/tool.cjs is JavaScript and not on the allow list (.github/javascript-allowlist.txt); write it in TypeScript or Go",
+		"scripts/OLD.JS is JavaScript and not on the allow list (.github/javascript-allowlist.txt); write it in TypeScript or Go",
+		"scripts/old.Mjs is JavaScript and not on the allow list (.github/javascript-allowlist.txt); write it in TypeScript or Go",
 	}
 	if !reflect.DeepEqual(failures, want) {
 		t.Errorf("failures:\n%s\nwant:\n%s", strings.Join(failures, "\n"), strings.Join(want, "\n"))
