@@ -27,8 +27,8 @@ defaults:
   run:
     working-directory: web-ui
 
-# Each check is a job of its own, so they run side by side. The unit tests
-# are split in two with vitest --shard (by test file).
+# The checks run side by side in jobs of about two minutes each; the unit
+# tests are split in two with vitest --shard (by test file).
 jobs:
   check:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[version-bump]')
@@ -39,12 +39,14 @@ jobs:
       fail-fast: false
       matrix:
         check:
-          - { name: npm audit, run: 'npx -y npm@11.6.2 audit --audit-level=high' }
-          - { name: lint, run: 'npm run lint' }
-          - { name: type check, run: 'npm run check' }
-          - { name: unit tests (1 of 2), run: 'npx vitest run --shard=1/2' }
-          - { name: unit tests (2 of 2), run: 'npx vitest run --shard=2/2' }
-          - { name: build, run: 'npm run build' }
+          - name: lint
+            run: npm run lint
+          - name: audit, type check and build
+            run: npx -y npm@11.6.2 audit --audit-level=high && npm run check && npm run build
+          - name: unit tests (1 of 2)
+            run: npx vitest run --shard=1/2
+          - name: unit tests (2 of 2)
+            run: npx vitest run --shard=2/2
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
