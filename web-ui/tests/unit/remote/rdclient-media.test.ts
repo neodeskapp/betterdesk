@@ -15,6 +15,11 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
+/** Makes RDAudio.isSupported() true; the tests replace what would touch it */
+class SomeAudio {
+	state = 'suspended';
+}
+
 async function streaming(opts: Record<string, unknown> = {}) {
 	const frame = document.createElement('div');
 	const canvas = document.createElement('canvas');
@@ -65,6 +70,29 @@ describe('recording the session', () => {
 		expect(tracks).toEqual([sound]);
 		s.c.audio.audioCtx = null;
 		s.c.audio.gainNode = null;
+		s.c.disconnect();
+	});
+});
+
+describe("the device's sound format", () => {
+	test('the sample rate and channels the device announces are the ones the sound plays with', async () => {
+		vi.stubGlobal('AudioContext', SomeAudio);
+		const s = await streaming({ disableAudio: false });
+		vi.spyOn(s.c.audio, 'init').mockResolvedValue(undefined);
+		const configure = vi.spyOn(s.c.audio, 'configure').mockResolvedValue(undefined);
+		const wire = s.c.proto.serializeMessage({ misc: { audioFormat: { sampleRate: 44100, channels: 1 } } });
+		s.c._dispatchMessage(s.c.proto.decodeMessage(wire));
+		expect(configure).toHaveBeenCalledWith({ sampleRate: 44100, channels: 1 });
+		s.c.disconnect();
+	});
+
+	test('a session with sound off does not start the sound for it', async () => {
+		vi.stubGlobal('AudioContext', SomeAudio);
+		const s = await streaming({ disableAudio: true });
+		const configure = vi.spyOn(s.c.audio, 'configure').mockResolvedValue(undefined);
+		const wire = s.c.proto.serializeMessage({ misc: { audioFormat: { sampleRate: 44100, channels: 1 } } });
+		s.c._dispatchMessage(s.c.proto.decodeMessage(wire));
+		expect(configure).not.toHaveBeenCalled();
 		s.c.disconnect();
 	});
 });

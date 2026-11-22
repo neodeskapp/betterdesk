@@ -1435,6 +1435,20 @@ export class RDClient {
 			this._emit('peer_encoding', this._peerEncoding);
 			return;
 		}
+		// The format of the device's sound, sent before its first audio frame
+		if (misc.audioFormat) {
+			if (!this.opts.disableAudio && RDAudio.isSupported()) {
+				this.audio
+					.configure({
+						sampleRate: Number(misc.audioFormat.sampleRate) || undefined,
+						channels: Number(misc.audioFormat.channels) || undefined
+					})
+					.catch(() => {
+						this._emit('log', 'Audio init failed');
+					});
+			}
+			return;
+		}
 	}
 
 	// ---- Session Management ----
