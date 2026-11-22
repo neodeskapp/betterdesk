@@ -19,7 +19,7 @@ BetterDesk is a remote desktop server you run yourself. It speaks the RustDesk
 protocol, so the normal RustDesk client connects to it, and it comes with a web
 console for the devices you look after. Your data stays on your server: the
 project sends no analytics, crash reports or usage data anywhere
-([PRIVACY.md](PRIVACY.md)).
+([Privacy](https://betterde.sk/docs/project/privacy)).
 
 This repository is a fork of [UNITRONIX/BetterDesk](https://github.com/UNITRONIX/BetterDesk).
 It replaces the Node.js console with one written in Svelte that the Go server
@@ -76,67 +76,85 @@ there. Around that, the console has what a team needs to share a server:
 
 ## Install
 
+The [documentation](https://betterde.sk/docs) has each way step by step.
+
 ### Docker
 
-One container runs the server and the web console. It builds from this
-repository, so the first start takes a few minutes.
+One container runs the server and the web console from the published image
+`ghcr.io/trybetterdesk/betterdesk`. The script sets it up in
+`/opt/betterdesk/docker`, installs Docker when it is missing, and prints the
+admin password at the end:
 
 ```bash
-git clone https://github.com/trybetterdesk/betterdesk.git
-cd betterdesk
-docker compose -f docker-compose.single.yml up -d --build
-docker compose -f docker-compose.single.yml exec betterdesk betterdesk-show-admin-credentials
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash
 ```
 
-The last command prints the admin username and password. Sign in with them at
-`http://your-server:5000`, which is plain HTTP, not HTTPS. To update, run
-`git pull` and the `up -d --build` command again.
+Or with the compose file by hand:
 
-For PostgreSQL instead of SQLite, see the comments at the top of
-[docker-compose.single.yml](docker-compose.single.yml).
+```bash
+mkdir betterdesk && cd betterdesk
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+docker compose up -d
+docker compose exec betterdesk betterdesk-show-admin-credentials
+```
+
+The console is then at `http://your-server:5000`, which is plain HTTP. See
+[Install with Docker](https://betterde.sk/docs/getting-started/docker).
 
 ### Linux
 
 ```bash
-git clone https://github.com/trybetterdesk/betterdesk.git
-cd betterdesk
-sudo ./betterdesk.sh
+curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh | sudo bash
 ```
 
-Choose **1** in the menu for a new install, or run `sudo ./betterdesk.sh --auto`
-to skip the menu. The installer shows the admin username and password.
+This installs the newest release as the service `betterdesk-server` with the
+default settings and shows the admin password. To answer the installer's
+questions instead, download `betterdesk.sh` and run it with `sudo bash`. See
+[Install on Linux](https://betterde.sk/docs/getting-started/linux).
 
 ### Windows
 
-Run `betterdesk.ps1` in PowerShell as Administrator. Add `-Auto` to install
-with the default settings.
+In PowerShell as Administrator:
+
+```powershell
+Invoke-WebRequest https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.ps1 -OutFile betterdesk.ps1 -UseBasicParsing
+.\betterdesk.ps1
+```
+
+Add `-Auto` to install with the default settings. See
+[Install on Windows](https://betterde.sk/docs/getting-started/windows).
 
 ## Connect a RustDesk client
 
 1. Install the [RustDesk client](https://rustdesk.com) on the device.
-2. In the console, open **Devices**, then **Overview**. Enter your server's
-   public address under **Client server address**.
-3. Copy the ID server, relay server, API server and key into the client's
-   network settings, in the ID/Relay server section. **Copy all** copies them
-   together, and **Show QR** is for phones.
+2. In the console, open **Devices**, then **Overview**. The **Client setup**
+   column shows the ID server, relay server, API server and key for the
+   address under **Client server address**.
+3. Copy them into the client's network settings, in the ID/Relay server
+   section. **Copy all** copies them together, and **Show QR** is for phones.
 
-The device then shows up in the device list, or under **Enrollment requests**
-if you require approval.
+The device then waits under **Enrollment requests** until someone approves
+it, as every new install starts in the Managed enrollment mode. See
+[Connect a RustDesk client](https://betterde.sk/docs/getting-started/connect-a-client).
 
 ## Ports
 
 | Port | Used for |
 |------|----------|
-| 5000 | Web console |
+| 5000 | Web console (HTTP) |
 | 21115 | NAT type test |
 | 21116, TCP and UDP | ID server |
 | 21117 | Relay server |
 | 21118, 21119 | ID and relay server over WebSocket |
 | 21121 | API server for RustDesk clients |
+| 21122 | CDAP gateway for device agents |
 
-Open 21115 to 21119 and 21121 to the networks your devices connect from. Keep
-5000 behind a reverse proxy with TLS if the console is reachable from the
-internet ([TLS guide](docs/wiki/TLS-SSL.md)).
+Open 21115 to 21117 and 21121 to the networks your devices connect from, and
+21118, 21119 and 21122 only for clients and agents that use them. Keep 5000
+behind a reverse proxy with TLS if the console is reachable from the internet.
+[Ports and firewall](https://betterde.sk/docs/operations/ports) and
+[Reverse proxy and TLS](https://betterde.sk/docs/operations/reverse-proxy-tls)
+have the details.
 
 ## More of the console
 
@@ -153,27 +171,26 @@ Demo data, in both themes.
 
 ## Documentation
 
-The guides are in [docs/wiki](docs/wiki/Home.md). Some of them were written for
-the Node.js console and still mention it.
+Everything is on [betterde.sk/docs](https://betterde.sk/docs):
 
 | Topic | Guides |
 |-------|--------|
-| Setting up | [Installation](docs/wiki/Installation.md), [Docker](docs/wiki/Docker.md), [Client setup](docs/wiki/Client-Setup.md) |
-| Running it | [Configuration](docs/wiki/Configuration.md), [TLS](docs/wiki/TLS-SSL.md), [Security](docs/wiki/Security.md), [Monitoring](docs/wiki/Monitoring.md) |
-| People | [User management](docs/wiki/User-Management.md), [LDAP and Active Directory](docs/wiki/LDAP-AD.md), [OIDC](docs/wiki/OIDC-SSO.md) |
-| Help | [Troubleshooting](docs/wiki/Troubleshooting.md), [FAQ](docs/wiki/FAQ.md) |
-| Developers | [docs/](docs/), [API reference](docs/wiki/API-Reference.md), [the console's frontend](web-ui/README.md), [contributing](docs/development/CONTRIBUTING.md) |
+| Getting started | [Docker](https://betterde.sk/docs/getting-started/docker), [Linux](https://betterde.sk/docs/getting-started/linux), [Windows](https://betterde.sk/docs/getting-started/windows), [first sign-in](https://betterde.sk/docs/getting-started/first-sign-in), [moving from a RustDesk server](https://betterde.sk/docs/getting-started/migrate-from-rustdesk) |
+| Using the console | [The device list](https://betterde.sk/docs/console/devices), [enrollment](https://betterde.sk/docs/console/enrollment), [remote desktop in the browser](https://betterde.sk/docs/console/remote-in-browser) |
+| People and sign-in | [Users and roles](https://betterde.sk/docs/people/users-and-roles), [two-factor sign-in](https://betterde.sk/docs/people/two-factor), [LDAP](https://betterde.sk/docs/people/ldap), [OIDC](https://betterde.sk/docs/people/oidc) |
+| Running the server | [Configuration](https://betterde.sk/docs/operations/configuration), [hardening](https://betterde.sk/docs/operations/security), [updating](https://betterde.sk/docs/operations/updating), [backup](https://betterde.sk/docs/operations/backup), [troubleshooting](https://betterde.sk/docs/operations/troubleshooting) |
+| Development | [Contributing](https://betterde.sk/docs/development/contributing), [building from source](https://betterde.sk/docs/development/building), [architecture](https://betterde.sk/docs/development/architecture), [the HTTP API](https://betterde.sk/docs/development/api) |
 
 ## Credits
 
 BetterDesk was created by [UNITRONIX](https://github.com/UNITRONIX), and most
 of the server in this repository is that project's work. If BetterDesk is
-useful to you, [SPONSORS.md](SPONSORS.md) lists how to support it and who
-already does.
+useful to you, [Sponsors and credits](https://betterde.sk/docs/project/sponsors)
+lists how to support it and who already does.
 
 BetterDesk is created and maintained with the assistance of AI tools.
 
 ## License
 
 [AGPL-3.0](LICENSE). There is an optional Commercial Grant for eligible
-sponsors, described in [docs/COMMERCIAL-GRANT.md](docs/COMMERCIAL-GRANT.md).
+sponsors, described in [License](https://betterde.sk/docs/project/license#commercial-grant).
