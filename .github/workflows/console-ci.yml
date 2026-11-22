@@ -220,7 +220,7 @@ jobs:
           npx -y npm@11.6.2 ci --no-audit --no-fund
           echo "PLAYWRIGHT=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_ENV"
 
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: browsers
         with:
           path: ~/.cache/ms-playwright
@@ -237,6 +237,13 @@ jobs:
           else
             npx playwright install --with-deps chromium firefox
           fi
+
+      # Saved before the tests run: after a failed test the job would save nothing
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.browsers.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.browsers.outputs.cache-primary-key }}
 
       - name: Wait for the test instance
         run: bash .github/test-stack/up.sh wait e2e
