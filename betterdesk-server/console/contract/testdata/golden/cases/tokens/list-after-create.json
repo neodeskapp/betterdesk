@@ -113,29 +113,65 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
-     "path": "data.tokens[*].expires_at",
-     "format": "9999-99-99A99:99:99A"
-    },
-    {
      "path": "data.tokens[*].token_prefix",
      "pattern": "^[9aA+/_=-]{8}$"
+    },
+    {
+     "path": "data.tokens[0].expires_at",
+     "format": "9999-99-99A99:99:99A"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "count": 1,
+      "count": 4,
       "tokens": [
        {
         "created_at": "<volatile>",
         "created_by": "e2e_global_admin",
         "expires_at": "<volatile>",
-        "id": 1,
+        "id": 7,
         "max_uses": 3,
         "name": "contract token",
         "note": "made by the contract cases",
         "status": "pending",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 6,
+        "max_uses": 0,
+        "name": "Auto-900100021",
+        "note": "Issued at the approval of its registration",
+        "peer_id": "900100021",
+        "status": "active",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 2,
+        "max_uses": 0,
+        "name": "Auto-900100002",
+        "note": "Issued by devseed",
+        "peer_id": "900100002",
+        "status": "active",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 1,
+        "max_uses": 0,
+        "name": "Auto-900100001",
+        "note": "Issued by devseed",
+        "peer_id": "900100001",
+        "status": "active",
         "token_prefix": "<volatile>",
         "use_count": 0
        }
@@ -179,29 +215,65 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
-     "path": "data.tokens[*].expires_at",
-     "format": "9999-99-99A99:99:99A"
-    },
-    {
      "path": "data.tokens[*].token_prefix",
      "pattern": "^[9aA+/_=-]{8}$"
+    },
+    {
+     "path": "data.tokens[0].expires_at",
+     "format": "9999-99-99A99:99:99A"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "count": 1,
+      "count": 4,
       "tokens": [
        {
         "created_at": "<volatile>",
         "created_by": "e2e_server_admin",
         "expires_at": "<volatile>",
-        "id": 4,
+        "id": 10,
         "max_uses": 3,
         "name": "contract token",
         "note": "made by the contract cases",
         "status": "pending",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 6,
+        "max_uses": 0,
+        "name": "Auto-900100021",
+        "note": "Issued at the approval of its registration",
+        "peer_id": "900100021",
+        "status": "active",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 2,
+        "max_uses": 0,
+        "name": "Auto-900100002",
+        "note": "Issued by devseed",
+        "peer_id": "900100002",
+        "status": "active",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 1,
+        "max_uses": 0,
+        "name": "Auto-900100001",
+        "note": "Issued by devseed",
+        "peer_id": "900100001",
+        "status": "active",
         "token_prefix": "<volatile>",
         "use_count": 0
        }
@@ -245,29 +317,65 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
-     "path": "data.tokens[*].expires_at",
-     "format": "9999-99-99A99:99:99A"
-    },
-    {
      "path": "data.tokens[*].token_prefix",
      "pattern": "^[9aA+/_=-]{8}$"
+    },
+    {
+     "path": "data.tokens[0].expires_at",
+     "format": "9999-99-99A99:99:99A"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "count": 1,
+      "count": 4,
       "tokens": [
        {
         "created_at": "<volatile>",
         "created_by": "e2e_super_admin",
         "expires_at": "<volatile>",
-        "id": 8,
+        "id": 14,
         "max_uses": 3,
         "name": "contract token",
         "note": "made by the contract cases",
         "status": "pending",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 6,
+        "max_uses": 0,
+        "name": "Auto-900100021",
+        "note": "Issued at the approval of its registration",
+        "peer_id": "900100021",
+        "status": "active",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 2,
+        "max_uses": 0,
+        "name": "Auto-900100002",
+        "note": "Issued by devseed",
+        "peer_id": "900100002",
+        "status": "active",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 1,
+        "max_uses": 0,
+        "name": "Auto-900100001",
+        "note": "Issued by devseed",
+        "peer_id": "900100001",
+        "status": "active",
         "token_prefix": "<volatile>",
         "use_count": 0
        }
@@ -311,29 +419,65 @@
      "format": "9999-99-99A99:99:99A"
     },
     {
-     "path": "data.tokens[*].expires_at",
-     "format": "9999-99-99A99:99:99A"
-    },
-    {
      "path": "data.tokens[*].token_prefix",
      "pattern": "^[9aA+/_=-]{8}$"
+    },
+    {
+     "path": "data.tokens[0].expires_at",
+     "format": "9999-99-99A99:99:99A"
     }
    ],
    "body": {
     "kind": "json",
     "json": {
      "data": {
-      "count": 1,
+      "count": 4,
       "tokens": [
        {
         "created_at": "<volatile>",
         "created_by": "e2e_admin",
         "expires_at": "<volatile>",
-        "id": 11,
+        "id": 17,
         "max_uses": 3,
         "name": "contract token",
         "note": "made by the contract cases",
         "status": "pending",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 6,
+        "max_uses": 0,
+        "name": "Auto-900100021",
+        "note": "Issued at the approval of its registration",
+        "peer_id": "900100021",
+        "status": "active",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 2,
+        "max_uses": 0,
+        "name": "Auto-900100002",
+        "note": "Issued by devseed",
+        "peer_id": "900100002",
+        "status": "active",
+        "token_prefix": "<volatile>",
+        "use_count": 0
+       },
+       {
+        "created_at": "<volatile>",
+        "created_by": "system",
+        "id": 1,
+        "max_uses": 0,
+        "name": "Auto-900100001",
+        "note": "Issued by devseed",
+        "peer_id": "900100001",
+        "status": "active",
         "token_prefix": "<volatile>",
         "use_count": 0
        }

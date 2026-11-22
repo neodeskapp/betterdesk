@@ -55,7 +55,7 @@
      "data": {
       "created_at": "<volatile>",
       "created_by": "e2e_server_admin",
-      "id": 5,
+      "id": 11,
       "max_uses": 2,
       "name": "contract fraction twice",
       "status": "pending",
@@ -112,7 +112,7 @@
      "data": {
       "created_at": "<volatile>",
       "created_by": "e2e_admin",
-      "id": 12,
+      "id": 18,
       "max_uses": 2,
       "name": "contract fraction twice",
       "status": "pending",
