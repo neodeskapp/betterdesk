@@ -1,7 +1,7 @@
 ﻿#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    BetterDesk Console Manager v3.5.277 - All-in-One Interactive Tool for Windows
+    BetterDesk Console Manager v3.5.278 - All-in-One Interactive Tool for Windows
 
 .DESCRIPTION
     Features:
@@ -178,7 +178,7 @@ if ($Help) {
 # Configuration
 #===============================================================================
 
-$script:VERSION = "3.5.277"
+$script:VERSION = "3.5.278"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 # This file; empty when the script runs from Invoke-Expression
 $script:SELF_PATH = $MyInvocation.MyCommand.Path

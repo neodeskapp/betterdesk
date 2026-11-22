@@ -5,6 +5,13 @@
 
 ---
 
+## [3.5.278] — 2026-11-22
+
+### Changed
+- _(none yet)_
+
+---
+
 ## [3.5.277] — 2026-11-22
 
 ### Changed
@@ -5417,3 +5424,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.275]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.274...v3.5.275
 [3.5.276]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.275...v3.5.276
 [3.5.277]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.276...v3.5.277
+[3.5.278]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.277...v3.5.278
