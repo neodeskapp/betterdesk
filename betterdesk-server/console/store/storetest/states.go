@@ -141,6 +141,14 @@ func openGoServer(t *testing.T, sdb *store.DB) db.Database {
 	return gdb
 }
 
+// DSN is the address of the test database for another program, such as
+// a command of betterdesk-server: the file path on SQLite, the server's
+// address with the test's schema as search path on PostgreSQL.
+func DSN(t *testing.T, sdb *store.DB) string {
+	t.Helper()
+	return goServerDSN(t, sdb)
+}
+
 // goServerDSN returns what the signal server needs to open the same
 // database: the file path on SQLite, the server's address with the test's
 // schema as search path on PostgreSQL.
