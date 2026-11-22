@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
@@ -503,4 +504,33 @@ func mustRow(t *testing.T, body string) string {
 		t.Fatalf("no row in %s", data)
 	}
 	return data[start : end+1]
+}
+
+// Changing the enrollment mode asks enrollment.manage besides
+// server.config, the permission the Device tokens page asks: an account
+// whose enrollment.manage is taken away reads the mode but cannot change
+// it (DECISIONS A170, A129).
+func TestEnrollmentModeChangeAsksEnrollmentManage(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		s := newSite(t, db, routetest.Overrides{"server_admin": {"enrollment.manage": false}}, nil)
+		s.API.On("GET /api/enrollment/mode", http.StatusOK, `{"mode":"managed"}`)
+		s.API.On("GET /api/enrollment/pending", http.StatusOK, `{"devices":[],"count":0}`)
+		s.API.On("PUT /api/enrollment/mode", http.StatusOK, `{"status":"ok"}`)
+		limited := s.As("server_admin")
+		if res := limited.Do("GET", "/api/settings/enrollment", ""); res.Status != http.StatusOK {
+			t.Errorf("read without enrollment.manage: %d %s", res.Status, res.Body)
+		}
+		s.API.Calls()
+		if res := limited.Do("PUT", "/api/settings/enrollment", `{"mode":"open"}`); res.Status != http.StatusForbidden {
+			t.Errorf("change without enrollment.manage: %d %s, want 403", res.Status, res.Body)
+		}
+		for _, call := range s.API.Calls() {
+			if strings.HasPrefix(call, "PUT ") {
+				t.Errorf("the refused change reached the API server: %s", call)
+			}
+		}
+		if res := s.As("admin").Do("PUT", "/api/settings/enrollment", `{"mode":"open"}`); res.Status != http.StatusOK {
+			t.Errorf("change as admin: %d %s", res.Status, res.Body)
+		}
+	})
 }
