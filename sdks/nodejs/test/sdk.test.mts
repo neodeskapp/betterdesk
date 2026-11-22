@@ -22,7 +22,8 @@ import { authApiKey, authDeviceToken, authUserPassword } from 'betterdesk-cdap/p
 interface BridgeInternals {
   _send(type: string, payload: unknown): void;
   _register(): void;
-  _handleCommand(msg: { id: string; payload: Record<string, unknown> }): void;
+  _registered: boolean;
+  _handleCommand(msg: { id: string | null; payload: Record<string, unknown> }): void;
 }
 
 interface Sent {
@@ -91,7 +92,8 @@ test('widget factories produce CDAP-compatible manifests', () => {
   assert.equal(restart.toJSON().confirm, true);
 });
 
-test('bridge registration and command handling are testable without a network', async () => {
+/** A bridge whose messages go into sent instead of a socket */
+function offlineBridge(): { bridge: CDAPBridge; internals: BridgeInternals; sent: Sent[] } {
   const bridge = new CDAPBridge({
     server: 'ws://127.0.0.1:1/cdap',
     apiKey: 'test-only-key',
@@ -103,23 +105,82 @@ test('bridge registration and command handling are testable without a network', 
   internals._send = (type, payload) => {
     sent.push({ type, payload: payload as Record<string, any> });
   };
+  return { bridge, internals, sent };
+}
 
+test('a bridge needs a device id the gateway takes', () => {
+  assert.throws(() => new CDAPBridge({ server: 'ws://127.0.0.1:1/cdap', deviceId: '' }), /deviceId is required/);
+  assert.throws(() => new CDAPBridge({ server: 'ws://127.0.0.1:1/cdap', deviceId: 'a b' }), /deviceId is required/);
+  assert.equal(new CDAPBridge({ server: 'ws://127.0.0.1:1/cdap', deviceId: 'plc_1-a' }).deviceType, 'custom');
+});
+
+test('the register message carries the manifest with widgets and alerts', () => {
+  const { bridge, internals, sent } = offlineBridge();
   bridge.addWidget(toggle('heater', 'Heater'));
-  bridge.onCommand('heater', ({ value }) => Boolean(value));
+  bridge.addAlert('frost', 'temp < 2', { label: 'Frost', message: 'Temperature is {temp}' });
+  assert.throws(() => bridge.addAlert('hot', 'temp > 30', { severity: 'loud' }), /severity/);
   internals._register();
 
   assert.equal(sent[0]?.type, 'register');
-  assert.equal(sent[0]?.payload.widgets[0].id, 'heater');
-  assert.deepEqual(sent[0]?.payload.capabilities, ['telemetry', 'commands', 'alerts', 'logs']);
+  const manifest = sent[0]?.payload.manifest;
+  assert.deepEqual(manifest.device, { name: bridge.deviceName, type: 'custom' });
+  assert.equal(manifest.widgets[0].id, 'heater');
+  assert.deepEqual(manifest.capabilities, ['telemetry', 'commands', 'alerts', 'logs']);
+  assert.deepEqual(manifest.alerts, [
+    { id: 'frost', label: 'Frost', severity: 'warning', condition: 'temp < 2', message: 'Temperature is {temp}' },
+  ]);
+});
 
-  await internals._handleCommand({
-    id: 'command-1',
-    payload: { widget_id: 'heater', action: Action.SET, value: true },
+test('values wait for the registration, then go out as the gateway reads them', () => {
+  const { bridge, internals, sent } = offlineBridge();
+  bridge.bulkUpdate({ temp: 21 });
+  bridge.sendLog('info', 'early');
+  assert.equal(sent.length, 0);
+
+  internals._registered = true;
+  bridge.updateState('temp', 22);
+  bridge.bulkUpdate({ temp: 23, humidity: 40 });
+  bridge.sendLog('warning', 'late', { sensor: 'a' });
+  assert.deepEqual(sent, [
+    { type: 'state_update', payload: { widget_id: 'temp', value: 22 } },
+    {
+      type: 'bulk_update',
+      payload: { updates: [{ widget_id: 'temp', value: 23 }, { widget_id: 'humidity', value: 40 }] },
+    },
+    { type: 'log', payload: { level: 'warning', message: 'late', context: { sensor: 'a' } } },
+  ]);
+});
+
+test('a command gets an answer the gateway reads and its value goes out', async () => {
+  const { bridge, internals, sent } = offlineBridge();
+  internals._registered = true;
+  bridge.addWidget(toggle('heater', 'Heater'));
+  bridge.onCommand('heater', async ({ value }) => Boolean(value));
+  bridge.onCommand('broken', () => {
+    throw new Error('relay stuck');
   });
-  const response = sent.at(-1);
-  assert.equal(response?.type, 'command_response');
-  assert.equal(response?.payload.success, true);
-  assert.equal(response?.payload.value, true);
+
+  internals._handleCommand({
+    id: 'command-1',
+    payload: { command_id: 'command-1', widget_id: 'heater', action: Action.SET, value: true },
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(sent[0]?.type, 'command_response');
+  assert.equal(sent[0]?.payload.command_id, 'command-1');
+  assert.equal(sent[0]?.payload.status, 'ok');
+  assert.equal(sent[0]?.payload.result, true);
+  assert.equal(typeof sent[0]?.payload.execution_time_ms, 'number');
+  assert.deepEqual(sent[1], { type: 'state_update', payload: { widget_id: 'heater', value: true } });
+
+  internals._handleCommand({ id: null, payload: { command_id: 'command-2', widget_id: 'broken', action: 'trigger' } });
+  internals._handleCommand({ id: null, payload: { command_id: 'command-3', widget_id: 'nothing', action: 'trigger' } });
+  assert.deepEqual(
+    sent.slice(2).map((m) => [m.payload.command_id, m.payload.status, m.payload.error_message]),
+    [
+      ['command-2', 'error', 'relay stuck'],
+      ['command-3', 'error', 'No handler for widget nothing'],
+    ],
+  );
 });
 
 test('the package loads with require, as the README shows', () => {

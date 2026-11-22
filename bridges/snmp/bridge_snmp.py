@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from betterdesk_cdap import CDAPBridge, gauge, textWidget
+from betterdesk_cdap import CDAPBridge, gauge, text_widget
 
 logger = logging.getLogger("bridge_snmp")
 
@@ -74,10 +74,12 @@ class SNMPBridge:
             server=cdap["server"],
             auth_method="api_key",
             api_key=cdap.get("api_key", ""),
+            device_id=cdap.get("device_id", ""),
             device_name=cdap.get("device_name", "SNMP Bridge"),
-            device_type=cdap.get("device_type", "bridge"),
+            device_type=cdap.get("device_type", "network"),
             bridge_name=cdap.get("bridge_name", "snmp"),
             bridge_version="1.0.0",
+            bridge_protocol="snmp-v" + str(self.scfg.get("version", "2c")),
             heartbeat_sec=cdap.get("heartbeat_sec", 15),
         )
 
@@ -94,7 +96,7 @@ class SNMPBridge:
                     gauge(wid, label, unit=entry.get("unit", ""), min_val=entry.get("min", 0), max_val=entry.get("max", 100))
                 )
             else:
-                self.bridge.add_widget(textWidget(wid, label))
+                self.bridge.add_widget(text_widget(wid, label))
 
     # ── SNMP engine ───────────────────────────────────────────────
 
@@ -194,7 +196,7 @@ class SNMPBridge:
                     logger.warning("Poll %s failed: %s", entry["widget_id"], exc)
 
             if updates:
-                self.bridge.bulk_update(updates)
+                await self.bridge.bulk_update(updates)
 
             await asyncio.sleep(interval)
 
@@ -206,7 +208,7 @@ class SNMPBridge:
 
         async def _main() -> None:
             poll_task = asyncio.create_task(self._poll_loop())
-            cdap_task = asyncio.create_task(self.bridge._run_forever())
+            cdap_task = asyncio.create_task(self.bridge.run_async())
             done, pending = await asyncio.wait(
                 [poll_task, cdap_task], return_when=asyncio.FIRST_EXCEPTION
             )

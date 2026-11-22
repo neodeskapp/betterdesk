@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from betterdesk_cdap import CDAPBridge, gauge, toggle, slider, textWidget
+from betterdesk_cdap import CDAPBridge, gauge, slider, text_widget, toggle
 
 logger = logging.getLogger("bridge_modbus")
 
@@ -76,10 +76,12 @@ class ModbusBridge:
             server=cdap["server"],
             auth_method="api_key",
             api_key=cdap.get("api_key", ""),
+            device_id=cdap.get("device_id", ""),
             device_name=cdap.get("device_name", "Modbus Bridge"),
-            device_type=cdap.get("device_type", "bridge"),
+            device_type=cdap.get("device_type", "scada"),
             bridge_name=cdap.get("bridge_name", "modbus"),
             bridge_version="1.0.0",
+            bridge_protocol="modbus-" + self.mcfg.get("transport", "tcp"),
             heartbeat_sec=cdap.get("heartbeat_sec", 15),
         )
 
@@ -102,7 +104,7 @@ class ModbusBridge:
             elif wtype == "slider":
                 self.bridge.add_widget(slider(wid, label, min_val=reg.get("min", 0), max_val=reg.get("max", 100), step=reg.get("step", 1), unit=reg.get("unit", "")))
             else:
-                self.bridge.add_widget(textWidget(wid, label, readonly=ro))
+                self.bridge.add_widget(text_widget(wid, label, readonly=ro))
 
     def _register_handlers(self) -> None:
         for reg in self.registers:
@@ -201,7 +203,7 @@ class ModbusBridge:
                     logger.warning("Read %s failed: %s", reg["widget_id"], exc)
 
             if updates:
-                self.bridge.bulk_update(updates)
+                await self.bridge.bulk_update(updates)
 
             await asyncio.sleep(interval)
 
@@ -214,7 +216,7 @@ class ModbusBridge:
         # Start poll loop alongside CDAP bridge
         async def _main() -> None:
             poll_task = asyncio.create_task(self._poll_loop())
-            cdap_task = asyncio.create_task(self.bridge._run_forever())
+            cdap_task = asyncio.create_task(self.bridge.run_async())
             done, pending = await asyncio.wait(
                 [poll_task, cdap_task], return_when=asyncio.FIRST_EXCEPTION
             )
