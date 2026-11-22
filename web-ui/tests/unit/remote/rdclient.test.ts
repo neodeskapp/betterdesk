@@ -70,6 +70,28 @@ describe('loading the remote client', () => {
 		expect(m.touchInput()).not.toBeNull();
 	});
 
+	test("the viewer's console calls carry the CSRF token of the viewer data", async () => {
+		const m = await fresh();
+		const fetchMock = vi.fn(
+			async (_url: string, _init: RequestInit) =>
+				new Response('{"password":"x"}', { status: 200, headers: { 'content-type': 'application/json' } })
+		);
+		vi.stubGlobal('fetch', fetchMock);
+		try {
+			await load(m, '900100012');
+			// The quick support password of the device, asked by the viewer before the password prompt
+			const client = await import('../../../src/lib/api/client.ts');
+			await client.request('/api/support/devices/900100012/password', {
+				method: 'POST',
+				allowAnonymous: true
+			});
+			const init = fetchMock.mock.calls[0]?.[1];
+			expect((init?.headers as Record<string, string>)['X-CSRF-Token']).toBe('t');
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
 	test('before the client loaded, there is no client, sheet or touch input', async () => {
 		const m = await fresh();
 		const canvas = document.createElement('canvas');

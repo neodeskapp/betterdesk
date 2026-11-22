@@ -13,6 +13,7 @@
  * the flag the viewer data has no mock and the chunk is never fetched.
  */
 
+import { setCsrfToken } from '#lib/api/client.ts';
 import { t } from '#lib/i18n/i18n.svelte.ts';
 import { installCapabilities } from './capabilities.ts';
 import type { ViewerCapabilities } from './access.ts';
@@ -187,6 +188,8 @@ export interface LoadOptions {
 /** The globals the client reads before and while it runs */
 export function setGlobals(opts: LoadOptions): void {
 	installCapabilities();
+	// The viewer's own console calls (the quick support password) go through the API client
+	setCsrfToken(opts.csrfToken);
 	const win = w();
 	win.BetterDesk = { ...(win.BetterDesk ?? {}), csrfToken: opts.csrfToken, t };
 	// The file sheet, CDAP and mesh code translate through window.t (key back when missing)
