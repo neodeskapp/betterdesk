@@ -1,12 +1,10 @@
-'use strict';
-
 /**
  * CDAP protocol constants, message helpers, and auth payload builders.
  */
 
 // ── Widget types ─────────────────────────────────────────────────────
 
-const WidgetType = Object.freeze({
+export const WidgetType = Object.freeze({
   TOGGLE: 'toggle',
   GAUGE: 'gauge',
   BUTTON: 'button',
@@ -20,35 +18,48 @@ const WidgetType = Object.freeze({
   DESKTOP: 'desktop',
   VIDEO_STREAM: 'video_stream',
   FILE_BROWSER: 'file_browser',
-});
+} as const);
 
 // ── Command actions ──────────────────────────────────────────────────
 
-const Action = Object.freeze({
+export const Action = Object.freeze({
   SET: 'set',
   TRIGGER: 'trigger',
   EXECUTE: 'execute',
   RESET: 'reset',
   QUERY: 'query',
-});
+} as const);
 
 // ── Severities ───────────────────────────────────────────────────────
 
-const Severity = Object.freeze({
+export const Severity = Object.freeze({
   CRITICAL: 'critical',
   WARNING: 'warning',
   INFO: 'info',
-});
+} as const);
 
 // ── Message envelope ─────────────────────────────────────────────────
 
-function createMessage(type, payload, id) {
-  const msg = { type, payload, timestamp: new Date().toISOString() };
+/** A message as parseMessage returns it */
+export interface Message<P = Record<string, unknown>> {
+  type: string;
+  payload: P;
+  id: string | null;
+  timestamp: string | null;
+}
+
+export function createMessage(type: string, payload: unknown, id?: string): string {
+  const msg: { type: string; payload: unknown; timestamp: string; id?: string } = {
+    type,
+    payload,
+    timestamp: new Date().toISOString(),
+  };
   if (id) msg.id = id;
   return JSON.stringify(msg);
 }
 
-function parseMessage(raw) {
+/** Parses a message from a string, or from a Buffer or anything else by its text */
+export function parseMessage(raw: string | { toString(): string }): Message {
   const data = typeof raw === 'string' ? JSON.parse(raw) : JSON.parse(raw.toString());
   return {
     type: data.type || '',
@@ -60,25 +71,14 @@ function parseMessage(raw) {
 
 // ── Auth payload builders ────────────────────────────────────────────
 
-function authApiKey(key, deviceId = '', clientVersion = '1.0.0') {
+export function authApiKey(key: string, deviceId = '', clientVersion = '1.0.0') {
   return { method: 'api_key', key, device_id: deviceId, client_version: clientVersion };
 }
 
-function authDeviceToken(token, deviceId = '', clientVersion = '1.0.0') {
+export function authDeviceToken(token: string, deviceId = '', clientVersion = '1.0.0') {
   return { method: 'device_token', token, device_id: deviceId, client_version: clientVersion };
 }
 
-function authUserPassword(username, password, deviceId = '', clientVersion = '1.0.0') {
+export function authUserPassword(username: string, password: string, deviceId = '', clientVersion = '1.0.0') {
   return { method: 'user_password', username, password, device_id: deviceId, client_version: clientVersion };
 }
-
-module.exports = {
-  WidgetType,
-  Action,
-  Severity,
-  createMessage,
-  parseMessage,
-  authApiKey,
-  authDeviceToken,
-  authUserPassword,
-};

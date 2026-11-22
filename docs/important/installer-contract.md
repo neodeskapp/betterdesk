@@ -13,7 +13,7 @@ result.
 | `betterdesk.sh` | Linux | Native lifecycle manager for `betterdesk-server` (server and web console) |
 | `betterdesk.ps1` | Windows | Native lifecycle manager for `betterdesk-server` (server and web console) |
 | `betterdesk-docker.sh` | Linux + Docker | Compose lifecycle, rescue, migration and diagnostics |
-| `betterdesk-server check` | Linux, Windows, Docker | Shared HTTP/HTTPS, redirect, SAN and TCP verification from the server binary (`scripts/installer-protocol-check.js` takes the same options and needs Node.js) |
+| `betterdesk-server check` | Linux, Windows, Docker | Shared HTTP/HTTPS, redirect, SAN and TCP verification from the server binary |
 
 `install.sh` embeds `BETTERDESK_INSTALLER_CHANNEL` so a one-line install from
 `.../dev/install.sh` clones `dev` and `.../main/install.sh` clones `main`.

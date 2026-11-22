@@ -2,7 +2,7 @@ import js from '@eslint/js';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import ts from 'typescript-eslint';
-import noLiteralUiText from './eslint-rules/no-literal-ui-text.js';
+import noLiteralUiText from './eslint-rules/no-literal-ui-text.ts';
 
 export default ts.config(
 	{ ignores: ['build/', '.svelte-kit/', 'node_modules/', 'test-results/', 'playwright-report/', 'static/'] },

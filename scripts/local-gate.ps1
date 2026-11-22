@@ -6,9 +6,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
-Set-Location -LiteralPath $repoRoot
+Set-Location -LiteralPath (Join-Path $repoRoot "betterdesk-server")
 
-$arguments = @("scripts/local-gate.js")
+$arguments = @("run", "./cmd/repotool", "local-gate")
 if ($DryRun) { $arguments += "--dry-run" }
 if ($PreflightOnly) { $arguments += "--preflight-only" }
 if ($ReportDir) {
@@ -16,5 +16,5 @@ if ($ReportDir) {
     $arguments += $ReportDir
 }
 
-& node @arguments
+& go @arguments
 exit $LASTEXITCODE

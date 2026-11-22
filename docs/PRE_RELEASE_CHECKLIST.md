@@ -111,7 +111,7 @@ Use this checklist before every tagged release to ensure quality and stability.
   disk-space preflight and binary-rollback tests; the non-mutating `--help`
   checks pass.
 - [ ] **Protocol matrix**: run
-  `node scripts/installer-protocol-check.js` against the selected API,
+  `betterdesk-server check` against the selected API,
   console/reverse-proxy URL and signal/relay ports; for HTTPS confirm the
   certificate SAN and redirect behaviour.
 - [ ] **Agent fallback**: Linux agent service and Windows NSSM service start;

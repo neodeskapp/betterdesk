@@ -8,9 +8,15 @@ that expose widgets and handle commands through the BetterDesk web panel.
 
 ```bash
 npm install betterdesk-cdap
-# or from local path
+# or from local path: build it first
+(cd sdks/nodejs && npm ci && npm run build)
 npm install ./sdks/nodejs
 ```
+
+The SDK is written in TypeScript (`src/`) and ships the compiled JavaScript
+with its type declarations (`dist/`), so it works with `require` and
+`import` and gives editors the types. `npm test` builds it and runs the
+tests against the build.
 
 ## Quick Start
 
@@ -117,7 +123,7 @@ All helpers accept `(id, label, opts?)` and return a `Widget` object.
 
 ## Requirements
 
-- Node.js >= 18.0.0
+- Node.js 22 or newer (22.18 or newer to run the tests, which Node runs as TypeScript)
 - BetterDesk server with CDAP enabled (port 21122)
 
 ## License

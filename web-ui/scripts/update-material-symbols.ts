@@ -1,0 +1,241 @@
+/**
+ * Maintainer-only: refresh the self-hosted Material Symbols subsets of the
+ * console. Nothing in the server or the console runs it; it downloads from
+ * the Google Fonts CSS API (and the woff2 files from gstatic) on the
+ * developer's machine.
+ *
+ * Usage (in web-ui, Node 22.18 or newer runs TypeScript as it is):
+ *   node scripts/update-material-symbols.ts
+ *
+ * The icon names come from scripts/icon-names.ts, which scans the console
+ * (src and the remote viewer's scripts in static) and the icons the server
+ * sends it (the navigation in betterdesk-server/console/access/nav.go). Its
+ * header says which ways of writing a name it reads. tests/unit/icons.test.ts
+ * checks the font against the same scan.
+ *
+ * Writes into static/fonts/:
+ *   MaterialSymbolsOutlined.woff2, MaterialSymbolsRounded.woff2,
+ *   MATERIAL_SYMBOLS_VERSION.txt
+ * and the ?v= cache busters in src/lib/styles/base.css and src/app.html.
+ */
+/* eslint-disable no-console -- a command-line tool that reports its progress */
+
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { collectCandidateIcons } from './icon-names.ts';
+
+const UI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const REPO_ROOT = path.join(UI, '..');
+const FONTS_DIR = path.join(UI, 'static', 'fonts');
+const CODEPOINTS_CACHE = path.join(UI, 'scripts', '.cache', 'MaterialSymbolsOutlined.codepoints');
+const CODEPOINTS_URL =
+	'https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsOutlined%5BFILL%2CGRAD%2Copsz%2Cwght%5D.codepoints';
+
+const USER_AGENT =
+	'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+const NAME_RE = /^[a-z][a-z0-9_]{1,48}$/;
+
+export async function loadValidIconNames(): Promise<Set<string>> {
+	fs.mkdirSync(path.dirname(CODEPOINTS_CACHE), { recursive: true });
+	if (!fs.existsSync(CODEPOINTS_CACHE)) {
+		console.log('Downloading Material Symbols codepoints…');
+		const res = await fetch(CODEPOINTS_URL, { headers: { 'User-Agent': USER_AGENT } });
+		if (!res.ok) {
+			throw new Error(`Failed to fetch codepoints: HTTP ${res.status}`);
+		}
+		fs.writeFileSync(CODEPOINTS_CACHE, await res.text(), 'utf8');
+	}
+	const valid = new Set<string>();
+	for (const line of fs.readFileSync(CODEPOINTS_CACHE, 'utf8').split(/\r?\n/)) {
+		const name = line.split(/\s+/)[0];
+		if (name && NAME_RE.test(name)) {
+			valid.add(name);
+		}
+	}
+	if (valid.size < 1000) {
+		throw new Error(`Codepoints look incomplete (${valid.size} names).`);
+	}
+	return valid;
+}
+
+/** Candidates that are real Material Symbols names, sorted; the rest is reported. */
+export function collectIcons(valid: Set<string>, candidates = collectCandidateIcons()): string[] {
+	const icons: string[] = [];
+	const skipped: string[] = [];
+	for (const [name, files] of candidates) {
+		if (valid.has(name)) {
+			icons.push(name);
+		} else {
+			skipped.push(`${name} (${[...files].join(', ')})`);
+		}
+	}
+	icons.sort((a, b) => a.localeCompare(b));
+	if (skipped.length) {
+		// An icon place holds a name the font doesn't know: a typo, or a word the scan shouldn't read.
+		// icons.test.ts fails until it is fixed.
+		console.warn(`Not Material Symbols names, left out:\n  ${skipped.join('\n  ')}`);
+	}
+	return icons;
+}
+
+async function fetchText(url: string): Promise<string> {
+	const res = await fetch(url, {
+		headers: {
+			'User-Agent': USER_AGENT,
+			Accept: 'text/css,*/*;q=0.1'
+		}
+	});
+	if (!res.ok) {
+		throw new Error(`HTTP ${res.status} for ${url}`);
+	}
+	return res.text();
+}
+
+async function fetchBinary(url: string): Promise<Buffer> {
+	const res = await fetch(url, {
+		headers: {
+			'User-Agent': USER_AGENT,
+			Accept: 'font/woff2,*/*;q=0.1'
+		}
+	});
+	if (!res.ok) {
+		throw new Error(`HTTP ${res.status} for ${url}`);
+	}
+	return Buffer.from(await res.arrayBuffer());
+}
+
+export function extractWoff2Url(css: string): string {
+	// Subset kits often use /l/font?kit=… (no .woff2 suffix); full families use *.woff2.
+	const m = css.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)\s]+)\)/);
+	if (!m?.[1]) {
+		throw new Error(
+			'No fonts.gstatic.com URL in CSS response. ' +
+				'Google may have changed the API; inspect the CSS manually.\n' +
+				css.slice(0, 500)
+		);
+	}
+	return m[1];
+}
+
+function sha256(buf: Buffer): string {
+	return crypto.createHash('sha256').update(buf).digest('hex');
+}
+
+export function buildCssUrl(familyApiName: string, icons: string[]): string {
+	// Google expects unencoded "+" for spaces in family; avoid URLSearchParams
+	// which encodes "+" as "%2B" and breaks the CSS2 API.
+	const family = `${familyApiName}:opsz,wght,FILL,GRAD@24,400,0,0`;
+	const iconNames = encodeURIComponent(icons.join(','));
+	return `https://fonts.googleapis.com/css2?family=${family}&icon_names=${iconNames}&display=block`;
+}
+
+interface Download {
+	outName: string;
+	size: number;
+	sha256: string;
+	fontUrl: string;
+	cssUrl: string;
+}
+
+async function downloadFamily(
+	familyLabel: string,
+	familyApiName: string,
+	outName: string,
+	icons: string[]
+): Promise<Download> {
+	const cssUrl = buildCssUrl(familyApiName, icons);
+	console.log(`Fetching CSS for ${familyLabel} (${icons.length} icons)…`);
+	console.log(`  ${cssUrl.slice(0, 140)}…`);
+	const css = await fetchText(cssUrl);
+	const fontUrl = extractWoff2Url(css);
+	console.log(`  woff2: ${fontUrl}`);
+	const buf = await fetchBinary(fontUrl);
+	const outPath = path.join(FONTS_DIR, outName);
+	fs.writeFileSync(outPath, buf);
+	const hash = sha256(buf);
+	console.log(`  wrote ${outName} (${buf.length} bytes, sha256=${hash})`);
+	return { outName, size: buf.length, sha256: hash, fontUrl, cssUrl };
+}
+
+function updateFontCacheBusters(outlined: Download): void {
+	// base.css declares the font and app.html preloads it
+	for (const basePath of [
+		path.join(UI, 'src', 'lib', 'styles', 'base.css'),
+		path.join(UI, 'src', 'app.html')
+	]) {
+		const base = fs
+			.readFileSync(basePath, 'utf8')
+			.replace(
+				/MaterialSymbolsOutlined\.woff2(?:\?v=[^'")]+)?/g,
+				`MaterialSymbolsOutlined.woff2?v=${outlined.sha256.slice(0, 12)}`
+			);
+		fs.writeFileSync(basePath, base, 'utf8');
+	}
+}
+
+async function main(): Promise<void> {
+	fs.mkdirSync(FONTS_DIR, { recursive: true });
+	const valid = await loadValidIconNames();
+	const icons = collectIcons(valid);
+	if (icons.length < 20) {
+		throw new Error(`Suspiciously few icons scanned (${icons.length}); aborting.`);
+	}
+	if (!icons.includes('expand_more') || !icons.includes('devices')) {
+		throw new Error('The scan missed expand_more or devices; check scripts/icon-names.ts.');
+	}
+
+	console.log(`Collected ${icons.length} unique Material Symbols ligatures.`);
+
+	const outlined = await downloadFamily(
+		'Outlined',
+		'Material+Symbols+Outlined',
+		'MaterialSymbolsOutlined.woff2',
+		icons
+	);
+	const rounded = await downloadFamily(
+		'Rounded',
+		'Material+Symbols+Rounded',
+		'MaterialSymbolsRounded.woff2',
+		icons
+	);
+	updateFontCacheBusters(outlined);
+
+	const versionPath = path.join(FONTS_DIR, 'MATERIAL_SYMBOLS_VERSION.txt');
+	const lines = [
+		'BetterDesk self-hosted Material Symbols (Apache-2.0)',
+		'Upstream: https://github.com/google/material-design-icons (variablefont / Google Fonts CSS API)',
+		'License: Apache License 2.0',
+		`Generated: ${new Date().toISOString()}`,
+		`Icon count: ${icons.length}`,
+		'',
+		`File: ${outlined.outName}`,
+		`  size: ${outlined.size}`,
+		`  sha256: ${outlined.sha256}`,
+		`  source: ${outlined.fontUrl}`,
+		'',
+		`File: ${rounded.outName}`,
+		`  size: ${rounded.size}`,
+		`  sha256: ${rounded.sha256}`,
+		`  source: ${rounded.fontUrl}`,
+		'',
+		'Axes instance: opsz=24, wght=400, FILL=0, GRAD=0',
+		'display=block',
+		'',
+		'Icons (alphabetical):',
+		icons.join(','),
+		''
+	];
+	fs.writeFileSync(versionPath, lines.join('\n'), 'utf8');
+	console.log(`Wrote ${path.relative(REPO_ROOT, versionPath)}`);
+	console.log('Done. Review hashes, then commit fonts + CSS together.');
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+	main().catch((err: unknown) => {
+		console.error(err);
+		process.exit(1);
+	});
+}

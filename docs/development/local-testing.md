@@ -40,7 +40,7 @@ any host service configuration.
 Run the complete gate manually:
 
 ```powershell
-npm run local:gate
+.\scripts\local-gate.ps1
 ```
 
 The same command is called by both local hooks. A non-zero exit code blocks
@@ -54,7 +54,7 @@ the commit or push. The report files are written to `.local-test-results/`:
 To inspect the planned categories without claiming a pass:
 
 ```powershell
-npm run local:gate:dry-run
+.\scripts\local-gate.ps1 -DryRun
 ```
 
 ## What is checked
