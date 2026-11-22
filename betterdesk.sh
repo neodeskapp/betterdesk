@@ -4064,13 +4064,6 @@ generate_ssl_certificates() {
         return 0
     fi
     
-    # Ensure openssl is available
-    if ! command -v openssl &>/dev/null; then
-        print_warning "openssl not found - skipping TLS certificate generation"
-        print_info "Install openssl and use SSL config menu (option C) to generate later"
-        return 1
-    fi
-    
     mkdir -p "$ssl_dir"
     
     # Detect server IPs for SAN (Subject Alternative Name)
@@ -4099,25 +4092,45 @@ generate_ssl_certificates() {
     # Determine CN (Common Name) — prefer domain, fallback to public IP
     local cn="${SSL_DOMAIN:-$server_ip}"
     
-    # Generate certificate with SAN extension (valid for 10 years for self-signed)
-    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-        -keyout "$ssl_dir/betterdesk.key" \
-        -out "$ssl_dir/betterdesk.crt" \
-        -subj "/CN=$cn/O=BetterDesk/C=PL" \
-        -addext "subjectAltName=$san_list" \
-        2>&1 || {
-        print_warning "Certificate generation failed (openssl too old for -addext?)"
-        # Fallback without SAN for older openssl
+    # The binary makes the pair (no OpenSSL needed); an older binary
+    # without the cert command leaves it to openssl
+    local bin
+    bin=$(server_binary_path)
+    if [ -x "$bin" ] && grep -q 'cert --out DIR' "$bin" 2>/dev/null; then
+        local -a cert_args=(cert --out "$ssl_dir" --force)
+        [ -n "${SSL_DOMAIN:-}" ] && cert_args+=(--host "$SSL_DOMAIN")
+        cert_args+=(--host "$server_ip")
+        [ -n "$lan_ip" ] && [ "$lan_ip" != "$server_ip" ] && cert_args+=(--host "$lan_ip")
+        if ! "$bin" "${cert_args[@]}" >/dev/null; then
+            print_error "Failed to generate self-signed certificate"
+            return 1
+        fi
+    else
+        if ! command -v openssl &>/dev/null; then
+            print_warning "openssl not found - skipping TLS certificate generation"
+            print_info "Install openssl and use SSL config menu (option C) to generate later"
+            return 1
+        fi
+        # Generate certificate with SAN extension (valid for 10 years for self-signed)
         openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
             -keyout "$ssl_dir/betterdesk.key" \
             -out "$ssl_dir/betterdesk.crt" \
             -subj "/CN=$cn/O=BetterDesk/C=PL" \
-            2>&1 || {
-            print_error "Failed to generate self-signed certificate"
-            return 1
+            -addext "subjectAltName=$san_list" \
+            >/dev/null 2>&1 || {
+            print_warning "Certificate generation failed (openssl too old for -addext?)"
+            # Fallback without SAN for older openssl
+            openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+                -keyout "$ssl_dir/betterdesk.key" \
+                -out "$ssl_dir/betterdesk.crt" \
+                -subj "/CN=$cn/O=BetterDesk/C=PL" \
+                2>&1 || {
+                print_error "Failed to generate self-signed certificate"
+                return 1
+            }
         }
-    }
-    
+    fi
+
     # Deploy with console-user-readable permissions (#219)
     if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key"; then
         print_error "Failed to set permissions on self-signed certificate"

@@ -580,6 +580,41 @@ function Test-FirewallPorts {
     Remove-Item -Recurse -Force $dir
 }
 
+# L66: the server binary makes the certificate, so Windows needs no
+# OpenSSL; a certificate that could not be written as PEM files leaves the
+# console on HTTP instead of turning HTTPS on without files.
+function Test-CertificateFromTheBinary {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('HTTPS_ENABLED=false', 'SSL_CERT_PATH=', 'SSL_KEY_PATH=', 'RUSTDESK_API_TLS=auto')
+    function script:Get-PublicIP { '203.0.113.7' }
+    function script:Get-LocalIP { '192.168.1.5' }
+    function script:Test-BinaryHasCertCommand { $true }
+    function script:Invoke-ServerCommand {
+        param([string[]]$Arguments, $InputText, $Binary)
+        $script:certArgs = $Arguments -join ' '
+        $out = $Arguments[2]
+        Set-Content -Path (Join-Path $out 'betterdesk.crt') -Value 'crt'
+        Set-Content -Path (Join-Path $out 'betterdesk.key') -Value 'key'
+        return 0
+    }
+    if (-not (Generate-SSLCertificates 6> $null)) { Fail 'the cert command made no certificate' }
+    if ($script:certArgs -notmatch '--host 203\.0\.113\.7' -or $script:certArgs -notmatch '--host 192\.168\.1\.5') { Fail "the cert command was given: $($script:certArgs)" }
+    if ((Get-ConsoleEnvValue -Key 'HTTPS_ENABLED') -ne 'true' -or (Get-ConsoleEnvValue -Key 'RUSTDESK_API_TLS') -ne 'false') { Fail "after the certificate .env has: $(Get-Content $envFile)" }
+
+    Remove-Item -Recurse -Force (Join-Path $script:RUSTDESK_PATH 'ssl')
+    Set-Content -Path $envFile -Value @('HTTPS_ENABLED=false', 'SSL_CERT_PATH=', 'SSL_KEY_PATH=')
+    function script:Test-BinaryHasCertCommand { $false }
+    function script:New-SelfSignedCertificate { [pscustomobject]@{ Thumbprint = 'AB' } }
+    function script:Export-Certificate { }
+    function script:Export-PfxCertificate { }
+    function script:Get-Command { param($Name, $ErrorAction) if ($Name -eq 'openssl') { return $null }; Microsoft.PowerShell.Core\Get-Command $Name -ErrorAction SilentlyContinue }
+    $ok = Generate-SSLCertificates 6> $null
+    Remove-Item function:Get-Command, function:New-SelfSignedCertificate, function:Export-Certificate, function:Export-PfxCertificate -ErrorAction SilentlyContinue
+    if ($ok -or (Get-ConsoleEnvValue -Key 'HTTPS_ENABLED') -eq 'true') { Fail "HTTPS was turned on without PEM files: $(Get-Content $envFile)" }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -595,6 +630,7 @@ Test-PanelPublicHost
 Test-WindowsFirstHour
 Test-UpdateAsksTheFork
 Test-FirewallPorts
+Test-CertificateFromTheBinary
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

@@ -53,6 +53,10 @@ var subcommands = map[string]subcommand{
 		usage: "check [--api URL] [--panel URL] [--port HOST:PORT] [--insecure]   check an install's addresses and ports",
 		run:   withEnv(cli.Check),
 	},
+	"cert": {
+		usage: "cert --out DIR [--host NAME]... [--days N] [--force]   make an install's self-signed certificate",
+		run:   withEnv(cli.Cert),
+	},
 }
 
 // withEnv runs a command of package cli with the process's environment

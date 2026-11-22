@@ -783,6 +783,13 @@ function Test-BinaryHasSubcommands {
     return [bool](Select-String -Path $Path -Pattern 'upgrade-env --from FILE' -SimpleMatch -Quiet)
 }
 
+# True when the binary can make the install's certificate (cert).
+function Test-BinaryHasCertCommand {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'cert --out DIR' -SimpleMatch -Quiet)
+}
+
 # The NSSM environment of a service as a list of KEY=VALUE lines.
 function Get-NssmEnvironment {
     param([string]$Nssm, [string]$Service)
@@ -2763,13 +2770,33 @@ function Generate-SSLCertificates {
     
     # Detect server IP for SAN
     $serverIP = Get-PublicIP
-    
+
+    # The binary makes the pair as PEM files, no OpenSSL needed (ten years,
+    # as on Linux); an older binary without the cert command leaves it to
+    # Windows and OpenSSL
+    if (Test-BinaryHasCertCommand) {
+        $certArgs = @("cert", "--out", $sslDir, "--force")
+        if ($env:SSL_DOMAIN) { $certArgs += @("--host", $env:SSL_DOMAIN) }
+        $certArgs += @("--host", $serverIP)
+        $lanIP = Get-LocalIP
+        if ($lanIP -and $lanIP -ne $serverIP) { $certArgs += @("--host", $lanIP) }
+        if (((Invoke-ServerCommand -Arguments $certArgs) -eq 0) -and (Test-Path $certPath) -and (Test-Path $keyPath)) {
+            # HTTPS for the web console (5443, a redirect on its HTTP port)
+            Update-EnvForTLS -CertPath $certPath -KeyPath $keyPath
+            # RustDesk clients refuse a self-signed certificate: the client API port stays on HTTP
+            Set-ConsoleEnvValue -Key "RUSTDESK_API_TLS" -Value "false"
+            Print-Success "Self-signed TLS certificate made (valid 10 years): $sslDir"
+            return $true
+        }
+        Print-Warning "betterdesk-server cert failed (output above)"
+    }
+
     # Try PowerShell native certificate generation first
     try {
         $cert = New-SelfSignedCertificate `
             -DnsName "localhost", $serverIP `
             -CertStoreLocation "Cert:\LocalMachine\My" `
-            -NotAfter (Get-Date).AddYears(3) `
+            -NotAfter (Get-Date).AddYears(10) `
             -KeyAlgorithm RSA `
             -KeyLength 2048 `
             -FriendlyName "BetterDesk Server" `
@@ -2797,7 +2824,14 @@ function Generate-SSLCertificates {
         
         # Clean up certificate from store
         Remove-Item "Cert:\LocalMachine\My\$($cert.Thumbprint)" -ErrorAction SilentlyContinue
-        
+
+        # The server reads PEM files only: without them HTTPS stays off
+        if (-not ((Test-Path $certPath) -and (Test-Path $keyPath))) {
+            Print-Warning "The certificate could not be written as PEM files (OpenSSL is missing): the console stays on HTTP"
+            Print-Info "Update to a release whose betterdesk-server makes the certificate, or install OpenSSL, then use the SSL menu (option C)"
+            return $false
+        }
+
         # HTTPS for the web console (5443, a redirect on its HTTP port)
         Update-EnvForTLS -CertPath $certPath -KeyPath $keyPath
         # RustDesk clients refuse a self-signed certificate: the client API port stays on HTTP
@@ -2806,7 +2840,7 @@ function Generate-SSLCertificates {
         Print-Success "Self-signed TLS certificate generated"
         Print-Info "Certificate: $sslDir"
         Print-Info "SAN: DNS:localhost, IP:$serverIP, IP:127.0.0.1"
-        Print-Info "Valid for 3 years"
+        Print-Info "Valid for 10 years"
         return $true
     } catch {
         Print-Warning "PowerShell certificate generation failed: $_"
@@ -2816,7 +2850,7 @@ function Generate-SSLCertificates {
         if ($opensslCmd) {
             Print-Info "Falling back to openssl..."
             try {
-                & openssl req -x509 -nodes -days 1095 -newkey rsa:2048 `
+                & openssl req -x509 -nodes -days 3650 -newkey rsa:2048 `
                     -keyout $keyPath `
                     -out $certPath `
                     -subj "/CN=$serverIP/O=BetterDesk/C=US" `

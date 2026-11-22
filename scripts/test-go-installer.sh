@@ -565,6 +565,22 @@ test_self_signed_keeps_the_client_api_on_http() (
     generate_ssl_certificates >/dev/null 2>&1 || fail "no certificate was made"
     grep -qx 'HTTPS_ENABLED=true' "$CONSOLE_PATH/.env" || fail "HTTPS is not on"
     grep -qx 'RUSTDESK_API_TLS=false' "$CONSOLE_PATH/.env" || fail "the client API port takes the self-signed certificate: $(grep RUSTDESK_API_TLS "$CONSOLE_PATH/.env")"
+
+    # L66: a binary with the cert command makes the pair, no OpenSSL needed
+    rm -rf "$RUSTDESK_PATH/ssl"
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+#!/bin/bash
+# Stands in for the binary: cert --out DIR [--host NAME]... (the commands it has)
+[ "$1" = cert ] || exit 2
+printf '%s\n' "$*" > "$3/args"
+printf 'crt\n' > "$3/betterdesk.crt"
+printf 'key\n' > "$3/betterdesk.key"
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    openssl() { echo "openssl was used" >> "$TEST_DIR/openssl"; command openssl "$@"; }
+    generate_ssl_certificates >/dev/null 2>&1 || fail "the cert command made no certificate"
+    [ ! -e "$TEST_DIR/openssl" ] || fail "OpenSSL made the certificate although the binary can"
+    grep -q -- '--host 203.0.113.7' "$RUSTDESK_PATH/ssl/args" || fail "the cert command was not given the public address: $(cat "$RUSTDESK_PATH/ssl/args")"
     rm -rf "$TEST_DIR"
 )
 
