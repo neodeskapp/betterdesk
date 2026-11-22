@@ -93,6 +93,18 @@
 .PARAMETER SetConfig
     Apply one or more allowlisted .env settings as KEY=VALUE.
 
+.PARAMETER Minimal
+    Install the server with its web console off (CONSOLE_PORT=0 in .env).
+
+.PARAMETER Help
+    Show this help: every parameter, and the environment variables
+    ADMIN_PASSWORD, RELAY_SERVERS, RELAY_MODE, POSTGRESQL_URI,
+    POSTGRESQL_USER, POSTGRESQL_PASS, POSTGRESQL_HOST, POSTGRESQL_PORT,
+    POSTGRESQL_DB, UPDATE_GITHUB_BRANCH, UPDATE_GITHUB_OWNER,
+    UPDATE_GITHUB_REPO, RELEASE_BASE_URL, SSL_DOMAIN, RUSTDESK_PATH,
+    CONSOLE_PATH, BACKUP_DIR, GO_API_PORT, CLIENT_API_PORT,
+    STORE_ADMIN_CREDENTIALS and BETTERDESK_RUN_AS_ROOT.
+
 .EXAMPLE
     .\betterdesk.ps1
     Interactive mode
@@ -151,8 +163,14 @@ param(
     [switch]$CheckPermissions,
     [switch]$RepairPermissions,
     [string[]]$SetConfig = @(),
-    [switch]$Flask  # No longer needed: the web console is part of the server
+    [switch]$Flask,  # No longer needed: the web console is part of the server
+    [switch]$Help
 )
+
+if ($Help) {
+    Get-Help $MyInvocation.MyCommand.Path -Detailed
+    exit 0
+}
 
 #===============================================================================
 # Configuration
@@ -160,6 +178,8 @@ param(
 
 $script:VERSION = "3.5.270"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# This file; empty when the script runs from Invoke-Expression
+$script:SELF_PATH = $MyInvocation.MyCommand.Path
 
 # Auto mode flags
 $script:AUTO_MODE = $Auto
@@ -966,6 +986,7 @@ function Setup-ConsoleHome {
     New-Item -ItemType Directory -Path (Join-Path $script:CONSOLE_PATH "logs") -Force | Out-Null
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
     $isFresh = -not (Test-Path $envFile)
+    $script:FRESH_CONSOLE_ENV = $isFresh
     if ($isFresh) {
         if (-not $env:ADMIN_PASSWORD) { $env:ADMIN_PASSWORD = Generate-RandomPassword }
         New-Item -ItemType File -Path (Join-Path $script:CONSOLE_PATH "data\.force_password_update") -Force | Out-Null
@@ -1597,6 +1618,8 @@ function Update-GoInstall {
     if ($before -ne $after -and (Test-Path $record) -and (Test-Path (Join-Path $script:CONSOLE_PATH "server.js"))) {
         Remove-NodeLeftovers | Out-Null
     }
+    Remove-FirstAdminPassword
+    Install-ManagerScript
     Print-Success "betterdesk-server: $(& $serverExe -version 2>$null | Select-Object -First 1)"
     return $true
 }
@@ -2039,10 +2062,17 @@ function Do-ResetPassword {
     Press-Enter
 }
 
+# Shows the admin's first password, once: only when this run made the
+# console's .env. The server makes the admin at its first start from
+# DEFAULT_ADMIN_PASSWORD.
 function Create-AdminUser {
     Print-Step "Admin account..."
 
-    # The server makes the admin at its first start from DEFAULT_ADMIN_PASSWORD.
+    if (-not $script:FRESH_CONSOLE_ENV) {
+        Print-Info "The admin account and its password stay as they are."
+        Print-Info "Forgot it? Reset admin password in the menu of $(Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1')"
+        return $null
+    }
     $adminPassword = $env:ADMIN_PASSWORD
     if (-not $adminPassword) { $adminPassword = Get-ConsoleEnvValue -Key "DEFAULT_ADMIN_PASSWORD" }
 
@@ -2067,6 +2097,78 @@ function Create-AdminUser {
     Print-Warning "No admin password found"
     Print-Info "Use password reset option to set a new admin password"
     return $null
+}
+
+# Once the server has started and made the admin, .env and its kept
+# copies hold no admin password any more (the server reads
+# DEFAULT_ADMIN_PASSWORD and INIT_ADMIN_PASS only to make the first account).
+function Remove-FirstAdminPassword {
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    foreach ($f in @($envFile) + @(Get-ChildItem -Path $script:CONSOLE_PATH -Filter ".env.pre-go*" -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })) {
+        if (-not (Test-Path $f)) { continue }
+        $lines = @(Get-Content $f)
+        $kept = @($lines | Where-Object { $_ -notmatch '^INIT_ADMIN_PASS=' } | ForEach-Object { if ($_ -match '^DEFAULT_ADMIN_PASSWORD=') { 'DEFAULT_ADMIN_PASSWORD=' } else { $_ } })
+        if (($kept -join "`n") -ne ($lines -join "`n")) { Set-Content -Path $f -Value $kept -Encoding UTF8 }
+    }
+}
+
+# This script as C:\BetterDesk\betterdesk.ps1, for updates, repairs and the
+# uninstall later. Run from that copy (an update), it takes the newest one
+# of the update channel; run from Invoke-Expression, it fetches itself.
+function Install-ManagerScript {
+    $target = Join-Path $script:RUSTDESK_PATH "betterdesk.ps1"
+    try {
+        if ($script:SELF_PATH -and (Test-Path $script:SELF_PATH) -and ((Resolve-Path $script:SELF_PATH).Path -ne $target)) {
+            Copy-Item -Path $script:SELF_PATH -Destination $target -Force -ErrorAction Stop
+        } else {
+            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:UPDATE_GITHUB_BRANCH)/betterdesk.ps1"
+            $tmp = "$target.download"
+            Invoke-WebRequest -Uri $url -OutFile $tmp -UseBasicParsing -ErrorAction Stop
+            if (-not (Select-String -Path $tmp -Pattern 'function Install-ManagerScript' -SimpleMatch -Quiet)) { throw "not the installer" }
+            Move-Item -Path $tmp -Destination $target -Force
+        }
+        Print-Info "Manage this install with: & '$target'"
+    } catch {
+        if (-not (Test-Path $target)) { Print-Warning "Could not keep a copy of the installer at ${target}: run this installer again for updates" }
+    }
+}
+
+# What the admin needs after an install, and no password: the console's
+# address, the first sign-in, what RustDesk clients are given, the log,
+# the settings file and the commands for later.
+function Show-InstallSummary {
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    $manager = Join-Path $script:RUSTDESK_PATH "betterdesk.ps1"
+    $hostName = Get-ConsoleEnvValue -Key "PANEL_PUBLIC_HOST"
+    if (-not $hostName) { $hostName = Get-PublicIP }
+    $pubKeyPath = Join-Path $script:RUSTDESK_PATH "id_ed25519.pub"
+    $key = if (Test-Path $pubKeyPath) { (Get-Content $pubKeyPath -Raw).Trim() } else { "" }
+    $console = "off (set CONSOLE_PORT in $envFile to turn it on)"
+    $healthUrl = Get-ConsoleHealthUrl
+    if (-not $script:MINIMAL_MODE -and $healthUrl) { $console = ($healthUrl -replace '/health$', '') -replace '127\.0\.0\.1', $hostName }
+    $signal = Get-SignalPort
+    $relay = Get-RelayPort
+    $idServer = if ($signal -eq "21116") { $hostName } else { "${hostName}:$signal" }
+    $relayServer = if ($relay -eq "21117") { $hostName } else { "${hostName}:$relay" }
+    Write-Host ""
+    Write-Host "BetterDesk is installed" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  Web console:   " -NoNewline; Write-Host $console -ForegroundColor White
+    if ($script:FRESH_CONSOLE_ENV) {
+        Write-Host "  First sign-in: user admin, with the password shown above (it is not shown again)"
+    } else {
+        Write-Host "  Sign in:       user admin; forgot the password? Reset admin password in the menu of $manager"
+    }
+    Write-Host "  RustDesk clients (Settings > Network > ID/Relay server):"
+    Write-Host "    ID server:     " -NoNewline; Write-Host $idServer -ForegroundColor White
+    Write-Host "    Relay server:  " -NoNewline; Write-Host $relayServer -ForegroundColor White
+    Write-Host "    API server:    " -NoNewline; Write-Host "http://${hostName}:$($script:GO_API_PORT)" -ForegroundColor White
+    Write-Host "    Key:           " -NoNewline; Write-Host $key -ForegroundColor White
+    Write-Host "  Log:           $(Get-ServerLogPath)"
+    Write-Host "  Settings:      $envFile (then: Restart-Service $($script:SERVER_SERVICE))"
+    Write-Host "  Update:        & '$manager' -Update"
+    Write-Host "  Uninstall:     & '$manager' -Uninstall"
+    Write-Host ""
 }
 
 function Update-EnvForTLS {
@@ -2927,6 +3029,10 @@ function Do-Install {
     Configure-Firewall | Out-Null
 
     $installOk = Start-ServicesWithVerification
+    if ($installOk) {
+        Remove-FirstAdminPassword
+        Install-ManagerScript
+    }
 
     Write-Host ""
     if ($installOk) {
@@ -2936,56 +3042,7 @@ function Do-Install {
     }
     Write-Host ""
     
-    $serverIP = Get-PublicIP
-    $publicKey = ""
-    $pubKeyPath = Join-Path $script:RUSTDESK_PATH "id_ed25519.pub"
-    if (Test-Path $pubKeyPath) {
-        $publicKey = (Get-Content $pubKeyPath -Raw).Trim()
-    }
-    
-    $dbTypeInfo = "SQLite"
-    if ($script:USE_POSTGRESQL) { $dbTypeInfo = "PostgreSQL" }
-    
-    $tlsStatus = "Disabled"
-    $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
-    if ((Test-Path (Join-Path $sslDir "betterdesk.crt")) -and (Test-Path (Join-Path $sslDir "betterdesk.key"))) {
-        $tlsStatus = "Self-signed (auto-generated)"
-    }
-    
-    Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host "              INSTALLATION INFO                             " -ForegroundColor Cyan
-    Write-Host "============================================================" -ForegroundColor Cyan
-    $panelUrl = "off (minimal installation)"
-    if (-not $script:MINIMAL_MODE) {
-        $healthUrl = Get-ConsoleHealthUrl
-        if ($healthUrl) { $panelUrl = ($healthUrl -replace '/health$', '') -replace '127\.0\.0\.1', $serverIP }
-    }
-    Write-Host "  Panel Web:     " -NoNewline; Write-Host $panelUrl -ForegroundColor White
-    Write-Host "  API Port:      " -NoNewline; Write-Host $script:API_PORT -ForegroundColor White
-    Write-Host "  Server ID:     " -NoNewline; Write-Host $serverIP -ForegroundColor White
-    Write-Host "  Database:      " -NoNewline; Write-Host $dbTypeInfo -ForegroundColor White
-    Write-Host "  TLS:           " -NoNewline; Write-Host $tlsStatus -ForegroundColor White
-    if ($publicKey) {
-        Write-Host "  Key:           " -NoNewline; Write-Host "$($publicKey.Substring(0, [Math]::Min(20, $publicKey.Length)))..." -ForegroundColor White
-    }
-    Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  Required ports (ensure firewall allows):" -ForegroundColor Yellow
-    Write-Host "    TCP/UDP 21116  - ID Server (client registration)"
-    Write-Host "    TCP    21115  - NAT type test"
-    Write-Host "    TCP    21117  - Relay Server"
-    Write-Host "    TCP    $($script:GO_API_PORT)  - Go API (default, direct)"
-    Write-Host "    TCP    5000   - Web Console (admin panel; 5443 with HTTPS)"
-    Write-Host "    TCP    $($script:CLIENT_API_PORT)  - RustDesk client API (served by the web console)"
-    Write-Host ""
-    Write-Host "  RustDesk Client Configuration:" -ForegroundColor Yellow
-    Write-Host "    ID Server:    $serverIP"
-    Write-Host "    Relay Server: $serverIP"
-    if ($publicKey) {
-        Write-Host "    Key:          $publicKey"
-    }
-    Write-Host ""
-    
+    Show-InstallSummary
     # Auto-configure firewall rules
     Write-Host "  Configuring Windows Firewall rules..." -ForegroundColor Cyan
     Configure-Firewall
@@ -5150,6 +5207,19 @@ function Show-Menu {
     Write-Host ""
 }
 
+# What a run without questions does here: install, update (an install of
+# the server with its console is there), upgrade (the Node.js console is
+# there), minimal or uninstall. -PostgreSQL on an install that runs on
+# SQLite installs again, which moves it to PostgreSQL.
+function Get-AutoAction {
+    if ($script:UNINSTALL_MODE) { return "uninstall" }
+    if (Test-NodeEraInstall) { return "upgrade" }
+    if ((Test-GoOnlyInstall) -and (Test-Path (Get-ServerBinaryPath)) -and (Test-Path (Join-Path $script:CONSOLE_PATH ".env")) -and
+        (-not $script:USE_POSTGRESQL -or (Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres")) { return "update" }
+    if ($script:MINIMAL_MODE) { return "minimal" }
+    return "install"
+}
+
 function Main {
     # Auto-detect paths on startup
     Write-Host "Detecting installation..." -ForegroundColor Cyan
@@ -5186,19 +5256,16 @@ function Main {
         exit ([int](-not (Do-Update)))
     }
 
-    # Auto mode - run installation directly; an install with the Node.js
-    # console is upgraded in place
+    # Without questions: install, or update an install that is there (run
+    # again, the installer updates); an install with the Node.js console is
+    # upgraded in place
     if ($script:AUTO_MODE) {
-        Print-Info "Running in AUTO mode..."
         $ok = $true
-        if ($script:UNINSTALL_MODE) {
-            Do-Uninstall
-        } elseif (Test-NodeEraInstall) {
-            $ok = Do-Update
-        } elseif ($script:MINIMAL_MODE) {
-            $ok = Do-InstallMinimal
-        } else {
-            $ok = Do-Install
+        switch (Get-AutoAction) {
+            "uninstall" { Do-Uninstall }
+            { $_ -in "upgrade", "update" } { Print-Info "BetterDesk is installed here: updating it"; $ok = Do-Update }
+            "minimal" { $ok = Do-InstallMinimal }
+            default { $ok = Do-Install }
         }
         exit ([int](-not $ok))
     }

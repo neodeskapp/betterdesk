@@ -465,6 +465,65 @@ function Test-PanelPublicHost {
     Remove-Item -Recurse -Force $dir
 }
 
+# L151: -Help documents every parameter; a second -Auto run updates; the
+# password shows only when the install made it and leaves .env after the
+# first start; the install keeps a copy of the script for updates; the
+# summary names the log and the commands for later.
+function Test-WindowsFirstHour {
+    $documented = @([regex]::Matches((Get-Content $installer -Raw), '(?m)^\.PARAMETER\s+(\w+)') | ForEach-Object { $_.Groups[1].Value })
+    foreach ($p in $ast.ParamBlock.Parameters) {
+        $name = $p.Name.VariablePath.UserPath
+        if ($name -in 'NodeJs', 'Flask') { continue }
+        if ($documented -notcontains $name) { Fail "the help does not document -$name" }
+    }
+    if (-not ($ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Help' })) { Fail 'there is no -Help' }
+
+    # The real binary path again (Use-FakeServerBinary replaced it)
+    foreach ($fn in $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq 'Get-ServerBinaryPath' }, $false)) {
+        . ([scriptblock]::Create(($fn.Extent.Text -replace '^function ', 'function script:')))
+    }
+    $dir = New-TestInstall
+    $script:UNINSTALL_MODE = $false
+    $script:MINIMAL_MODE = $false
+    if ((Get-AutoAction) -ne 'install') { Fail "a machine without BetterDesk gets $(Get-AutoAction)" }
+    Setup-Services | Out-Null
+    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'betterdesk-server.exe') -Value 'exe'
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('DEFAULT_ADMIN_PASSWORD=First-Pass-1', 'INIT_ADMIN_PASS=First-Pass-1', 'SESSION_SECRET=kept', 'DB_TYPE=sqlite')
+    Copy-Item $envFile "$envFile.pre-go"
+    if ((Get-AutoAction) -ne 'update') { Fail "a second run on an install gets $(Get-AutoAction)" }
+    $script:USE_POSTGRESQL = $true
+    if ((Get-AutoAction) -ne 'install') { Fail "-PostgreSQL on a SQLite install gets $(Get-AutoAction), not the move" }
+    $script:USE_POSTGRESQL = $false
+
+    $env:ADMIN_PASSWORD = $null
+    $script:FRESH_CONSOLE_ENV = $false
+    $out = (Create-AdminUser 6>&1 | Out-String)
+    if ($out -match 'First-Pass-1') { Fail 'a run that kept .env showed the admin password again' }
+    $script:FRESH_CONSOLE_ENV = $true
+    $out = (Create-AdminUser 6>&1 | Out-String)
+    if ($out -notmatch 'First-Pass-1') { Fail 'a fresh install did not show the admin password' }
+    Remove-FirstAdminPassword
+    foreach ($f in $envFile, "$envFile.pre-go") {
+        if ((Get-Content $f -Raw) -match 'First-Pass-1') { Fail "$(Split-Path -Leaf $f) keeps the admin password after the first start" }
+    }
+    if ((Get-ConsoleEnvValue -Key 'SESSION_SECRET') -ne 'kept') { Fail 'forgetting the password lost a line of .env' }
+
+    $script:SELF_PATH = $installer
+    Install-ManagerScript 6> $null
+    $copy = Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1'
+    if (-not (Test-Path $copy) -or (Get-FileHash $copy).Hash -ne (Get-FileHash $installer).Hash) { Fail "the install keeps no copy of the script at $copy" }
+
+    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'id_ed25519.pub') -Value 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ='
+    Set-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST' -Value 'desk.example.org'
+    $out = (Show-InstallSummary 6>&1 | Out-String)
+    foreach ($want in 'desk.example.org', 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=', (Get-ServerLogPath), $envFile, '-Update', '-Uninstall', 'admin') {
+        if (-not $out.Contains($want)) { Fail "the summary does not name $want" }
+    }
+    $script:FRESH_CONSOLE_ENV = $false
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -477,6 +536,7 @@ Test-ServerLogFile
 Test-UpdateKeepsTheAdminsPorts
 Test-ChannelAndDownloadErrors
 Test-PanelPublicHost
+Test-WindowsFirstHour
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'
