@@ -3596,7 +3596,7 @@
     "new_report": "Lag en rapport",
     "new_report_note": "Velg perioden, og lag rapporten du trenger. Den vises nedenfor og lagres ikke før du lagrer den.",
     "period": "Periode",
-    "period_hint": "La begge stå tomme for alle datoer. Perioden gjelder appbruk og nettverksdata; de andre rapportene viser gjeldende status.",
+    "period_hint": "La begge stå tomme for alle datoer. Perioden gjelder appbruk, sikkerhetshendelser, saker, nettverkssjekker og varsler; enhets- og inventarrapportene viser gjeldende status.",
     "generating": "Lager…",
     "download_json": "Som JSON",
     "download_csv": "Som CSV (hovedtabell)",

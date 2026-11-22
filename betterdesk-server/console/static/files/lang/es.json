@@ -3590,7 +3590,7 @@
     "new_report": "Crear un informe",
     "new_report_note": "Elija el periodo y genere el informe que necesite. Se muestra abajo y no se guarda hasta que usted lo guarde.",
     "period": "Periodo",
-    "period_hint": "Deje ambos vacíos para incluir todas las fechas. El periodo se aplica al uso de aplicaciones y a los datos de red; los demás informes muestran el estado actual.",
+    "period_hint": "Deje ambos vacíos para incluir todas las fechas. El periodo se aplica al uso de aplicaciones, los eventos de seguridad, los tickets, las comprobaciones de red y las alertas; los informes de dispositivos e inventario muestran el estado actual.",
     "generating": "Generando…",
     "download_json": "Como JSON",
     "download_csv": "Como CSV (tabla principal)",

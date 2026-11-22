@@ -3596,7 +3596,7 @@
     "new_report": "Tạo báo cáo",
     "new_report_note": "Chọn khoảng thời gian, rồi tạo báo cáo bạn cần. Báo cáo hiển thị bên dưới và chỉ được lưu khi bạn lưu nó.",
     "period": "Khoảng thời gian",
-    "period_hint": "Để trống cả hai để lấy mọi ngày. Khoảng thời gian áp dụng cho mức sử dụng ứng dụng và dữ liệu mạng; các báo cáo khác hiển thị trạng thái hiện tại.",
+    "period_hint": "Để trống cả hai để lấy mọi ngày. Khoảng thời gian áp dụng cho mức sử dụng ứng dụng, sự kiện bảo mật, phiếu hỗ trợ, kiểm tra mạng và cảnh báo; báo cáo thiết bị và kiểm kê hiển thị trạng thái hiện tại.",
     "generating": "Đang tạo…",
     "download_json": "Dạng JSON",
     "download_csv": "Dạng CSV (bảng chính)",

@@ -3590,7 +3590,7 @@
     "new_report": "Crea un report",
     "new_report_note": "Scegli il periodo, poi genera il report che ti serve. Compare qui sotto e non viene salvato finché non lo salvi.",
     "period": "Periodo",
-    "period_hint": "Lascia entrambi vuoti per tutte le date. Il periodo vale per l'utilizzo delle app e i dati di rete; gli altri report mostrano lo stato attuale.",
+    "period_hint": "Lascia entrambi vuoti per tutte le date. Il periodo vale per l'utilizzo delle app, gli eventi di sicurezza, i ticket, i controlli di rete e gli avvisi; i report di dispositivi e inventario mostrano lo stato attuale.",
     "generating": "Generazione…",
     "download_json": "Come JSON",
     "download_csv": "Come CSV (tabella principale)",

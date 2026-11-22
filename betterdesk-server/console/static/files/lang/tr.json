@@ -3596,7 +3596,7 @@
     "new_report": "Rapor oluştur",
     "new_report_note": "Dönemi seçin, ardından ihtiyacınız olan raporu oluşturun. Rapor aşağıda gösterilir ve siz kaydedene kadar kaydedilmez.",
     "period": "Dönem",
-    "period_hint": "Tüm tarihler için ikisini de boş bırakın. Dönem uygulama kullanımı ve ağ verileri için geçerlidir; diğer raporlar güncel durumu gösterir.",
+    "period_hint": "Tüm tarihler için ikisini de boş bırakın. Dönem uygulama kullanımı, güvenlik olayları, biletler, ağ denetimleri ve uyarılar için geçerlidir; cihaz ve envanter raporları güncel durumu gösterir.",
     "generating": "Oluşturuluyor…",
     "download_json": "JSON olarak",
     "download_csv": "CSV olarak (ana tablo)",

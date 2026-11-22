@@ -3590,7 +3590,7 @@
     "new_report": "Rapport maken",
     "new_report_note": "Kies de periode en genereer het rapport dat u nodig hebt. Het verschijnt hieronder en wordt pas bewaard als u het opslaat.",
     "period": "Periode",
-    "period_hint": "Laat beide leeg voor alle datums. De periode geldt voor app-gebruik en netwerkgegevens; de andere rapporten tonen de huidige stand.",
+    "period_hint": "Laat beide leeg voor alle datums. De periode geldt voor app-gebruik, beveiligingsgebeurtenissen, tickets, netwerkcontroles en waarschuwingen; de apparaat- en inventarisrapporten tonen de huidige stand.",
     "generating": "Genereren…",
     "download_json": "Als JSON",
     "download_csv": "Als CSV (hoofdtabel)",

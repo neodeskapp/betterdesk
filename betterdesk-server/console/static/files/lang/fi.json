@@ -3596,7 +3596,7 @@
     "new_report": "Luo raportti",
     "new_report_note": "Valitse ajanjakso ja luo tarvitsemasi raportti. Se näkyy alla, eikä sitä tallenneta ennen kuin tallennat sen.",
     "period": "Ajanjakso",
-    "period_hint": "Jätä molemmat tyhjiksi, jos haluat kaikki päivät. Ajanjakso koskee sovellusten käyttöä ja verkkotietoja; muut raportit näyttävät nykytilan.",
+    "period_hint": "Jätä molemmat tyhjiksi, jos haluat kaikki päivät. Ajanjakso koskee sovellusten käyttöä, tietoturvatapahtumia, tikettejä, verkkotarkistuksia ja hälytyksiä; laite- ja inventaarioraportit näyttävät nykytilan.",
     "generating": "Luodaan…",
     "download_json": "JSON-muodossa",
     "download_csv": "CSV-muodossa (päätaulukko)",

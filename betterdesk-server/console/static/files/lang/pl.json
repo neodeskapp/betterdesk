@@ -3608,7 +3608,7 @@
     "new_report": "Utwórz raport",
     "new_report_note": "Wybierz okres, a potem wygeneruj potrzebny raport. Pojawi się poniżej i nie zostanie zapisany, dopóki go nie zapiszesz.",
     "period": "Okres",
-    "period_hint": "Zostaw oba pola puste, aby uwzględnić wszystkie daty. Okres dotyczy użycia aplikacji i danych sieciowych; pozostałe raporty pokazują bieżący stan.",
+    "period_hint": "Zostaw oba pola puste, aby uwzględnić wszystkie daty. Okres dotyczy użycia aplikacji, zdarzeń bezpieczeństwa, zgłoszeń, kontroli sieci i alertów; raporty urządzeń i inwentarza pokazują bieżący stan.",
     "generating": "Generowanie…",
     "download_json": "Jako JSON",
     "download_csv": "Jako CSV (główna tabela)",

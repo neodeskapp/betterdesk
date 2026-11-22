@@ -3596,7 +3596,7 @@
     "new_report": "Skapa en rapport",
     "new_report_note": "Välj period och skapa den rapport du behöver. Den visas nedan och sparas inte förrän du sparar den.",
     "period": "Period",
-    "period_hint": "Lämna båda tomma för alla datum. Perioden gäller appanvändning och nätverksdata; de andra rapporterna visar nuvarande läge.",
+    "period_hint": "Lämna båda tomma för alla datum. Perioden gäller appanvändning, säkerhetshändelser, ärenden, nätverkskontroller och larm; enhets- och inventarierapporterna visar nuvarande läge.",
     "generating": "Skapar…",
     "download_json": "Som JSON",
     "download_csv": "Som CSV (huvudtabell)",

@@ -3612,7 +3612,7 @@
     "new_report": "Créer un rapport",
     "new_report_note": "Choisissez la période, puis générez le rapport voulu. Il s'affiche ci-dessous et n'est enregistré que si vous l'enregistrez.",
     "period": "Période",
-    "period_hint": "Laissez les deux champs vides pour toutes les dates. La période s'applique à l'utilisation des applications et aux données réseau ; les autres rapports montrent l'état actuel.",
+    "period_hint": "Laissez les deux champs vides pour toutes les dates. La période s'applique à l'utilisation des applications, aux événements de sécurité, aux tickets, aux vérifications réseau et aux alertes ; les rapports d'appareils et d'inventaire montrent l'état actuel.",
     "generating": "Génération…",
     "download_json": "En JSON",
     "download_csv": "En CSV (tableau principal)",

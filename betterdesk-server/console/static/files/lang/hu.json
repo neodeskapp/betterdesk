@@ -3596,7 +3596,7 @@
     "new_report": "Jelentés készítése",
     "new_report_note": "Válassza ki az időszakot, majd készítse el a kívánt jelentést. A jelentés lent jelenik meg, és csak akkor kerül mentésre, ha Ön menti.",
     "period": "Időszak",
-    "period_hint": "Az összes dátumhoz hagyja üresen mindkét mezőt. Az időszak az alkalmazáshasználatra és a hálózati adatokra vonatkozik; a többi jelentés az aktuális állapotot mutatja.",
+    "period_hint": "Az összes dátumhoz hagyja üresen mindkét mezőt. Az időszak az alkalmazáshasználatra, a biztonsági eseményekre, a jegyekre, a hálózati ellenőrzésekre és a riasztásokra vonatkozik; az eszköz- és leltárjelentések az aktuális állapotot mutatják.",
     "generating": "Készítés…",
     "download_json": "JSON formátumban",
     "download_csv": "CSV formátumban (fő táblázat)",

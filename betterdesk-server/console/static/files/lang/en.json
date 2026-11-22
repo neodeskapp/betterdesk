@@ -3669,7 +3669,7 @@
         "new_report": "Create a report",
         "new_report_note": "Choose the period, then generate the report you need. It shows below and is not saved until you save it.",
         "period": "Period",
-        "period_hint": "Leave both empty for all dates. The period applies to app usage and network data; the other reports show the current state.",
+        "period_hint": "Leave both empty for all dates. The period applies to app usage, security events, tickets, network checks and alerts; the device and inventory reports show the current state.",
         "generating": "Generating…",
         "download_json": "As JSON",
         "download_csv": "As CSV (main table)",

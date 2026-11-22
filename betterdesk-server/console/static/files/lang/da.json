@@ -3596,7 +3596,7 @@
     "new_report": "Opret en rapport",
     "new_report_note": "Vælg perioden, og opret den rapport, du har brug for. Den vises nedenfor og gemmes først, når du gemmer den.",
     "period": "Periode",
-    "period_hint": "Lad begge felter være tomme for alle datoer. Perioden gælder for appbrug og netværksdata; de andre rapporter viser den aktuelle tilstand.",
+    "period_hint": "Lad begge felter være tomme for alle datoer. Perioden gælder for appbrug, sikkerhedshændelser, sager, netværkstjek og advarsler; enheds- og inventarrapporterne viser den aktuelle tilstand.",
     "generating": "Opretter…",
     "download_json": "Som JSON",
     "download_csv": "Som CSV (hovedtabel)",

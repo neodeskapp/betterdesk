@@ -3596,7 +3596,7 @@
     "new_report": "Creați un raport",
     "new_report_note": "Alegeți perioada, apoi generați raportul de care aveți nevoie. Apare mai jos și nu este salvat până nu îl salvați.",
     "period": "Perioadă",
-    "period_hint": "Lăsați ambele câmpuri goale pentru toate datele. Perioada se aplică utilizării aplicațiilor și datelor de rețea; celelalte rapoarte arată starea curentă.",
+    "period_hint": "Lăsați ambele câmpuri goale pentru toate datele. Perioada se aplică utilizării aplicațiilor, evenimentelor de securitate, tichetelor, verificărilor de rețea și alertelor; rapoartele de dispozitive și inventar arată starea curentă.",
     "generating": "Se generează…",
     "download_json": "Ca JSON",
     "download_csv": "Ca CSV (tabelul principal)",

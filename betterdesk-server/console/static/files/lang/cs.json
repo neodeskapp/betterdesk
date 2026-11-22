@@ -3590,7 +3590,7 @@
     "new_report": "Vytvořit report",
     "new_report_note": "Zvolte období a vygenerujte report, který potřebujete. Zobrazí se níže a uloží se, až když ho uložíte.",
     "period": "Období",
-    "period_hint": "Pro všechna data nechte obě pole prázdná. Období platí pro využití aplikací a síťová data, ostatní reporty ukazují aktuální stav.",
+    "period_hint": "Pro všechna data nechte obě pole prázdná. Období platí pro využití aplikací, bezpečnostní události, tikety, kontroly sítě a upozornění; reporty zařízení a inventáře ukazují aktuální stav.",
     "generating": "Generování…",
     "download_json": "Jako JSON",
     "download_csv": "Jako CSV (hlavní tabulka)",

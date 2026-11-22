@@ -3590,7 +3590,7 @@
     "new_report": "Bericht erstellen",
     "new_report_note": "Wählen Sie den Zeitraum und erstellen Sie den gewünschten Bericht. Er erscheint unten und wird erst gespeichert, wenn Sie ihn speichern.",
     "period": "Zeitraum",
-    "period_hint": "Lassen Sie beide Felder leer für alle Daten. Der Zeitraum gilt für App-Nutzung und Netzwerkdaten; die anderen Berichte zeigen den aktuellen Stand.",
+    "period_hint": "Lassen Sie beide Felder leer für alle Daten. Der Zeitraum gilt für App-Nutzung, Sicherheitsereignisse, Tickets, Netzwerkprüfungen und Warnungen; die Geräte- und Inventarberichte zeigen den aktuellen Stand.",
     "generating": "Wird erstellt…",
     "download_json": "Als JSON",
     "download_csv": "Als CSV (Haupttabelle)",

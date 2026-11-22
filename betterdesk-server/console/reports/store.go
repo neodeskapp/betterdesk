@@ -182,6 +182,21 @@ func (e *Engine) rangeArgs(from, to string, fromCondition, toCondition string) (
 	return conditions, args, nil
 }
 
+// inPeriod is the condition that keeps the rows whose column of times lies
+// in a report's period (see bound), the ends included, and its arguments;
+// nothing without a period. SQLite reads both sides as times, so a stored
+// "2026-11-01 10:00:00" and a bound "2026-11-01T00:00:00.000Z" compare as
+// times.
+func (e *Engine) inPeriod(column, from, to string) (string, []any, error) {
+	compare := func(op string) string {
+		if e.db.IsPostgres() {
+			return " AND " + column + " " + op + " CAST(? AS TIMESTAMPTZ)"
+		}
+		return " AND datetime(" + column + ") " + op + " datetime(?)"
+	}
+	return e.rangeArgs(from, to, compare(">="), compare("<="))
+}
+
 // summaryConditions are the conditions on the activity summaries s of a
 // range (see bound) and a scope, and their arguments.
 func (e *Engine) summaryConditions(from, to string, scope *access.DeviceScope) (string, []any, error) {
@@ -266,11 +281,16 @@ func (e *Engine) appsPerDevice(ctx context.Context, from, to string, scope *acce
 	return out, nil
 }
 
-// dlpEventStats is getDlpEventStats() over the events of the scope. On
-// SQLite the sums of no events are null, on PostgreSQL every count is a
-// number.
-func (e *Engine) dlpEventStats(ctx context.Context, scope *access.DeviceScope) (*goapi.Object, error) {
-	condition, args := e.andInScope(scope, "device_id", nil)
+// dlpEventStats is getDlpEventStats() over the events of the scope and
+// the report's period. On SQLite the sums of no events are null, on
+// PostgreSQL every count is a number.
+func (e *Engine) dlpEventStats(ctx context.Context, f Filters) (*goapi.Object, error) {
+	period, args, err := e.inPeriod("created_at", f.from, f.to)
+	if err != nil {
+		return nil, err
+	}
+	condition, args := e.andInScope(f.Scope, "device_id", args)
+	condition = period + condition
 	rows, err := e.rows(ctx, e.db.Pick(`
                 SELECT
                     COUNT(*) AS total,
@@ -294,12 +314,17 @@ func (e *Engine) dlpEventStats(ctx context.Context, scope *access.DeviceScope) (
 	return rows[0], nil
 }
 
-// dlpEvents is getDlpEvents({limit}): the newest events of the scope. On
-// SQLite created_at is declared DATETIME, which the Go driver would turn
-// into a time; the second created_at (+created_at has no declared type)
-// puts the stored text in its place.
-func (e *Engine) dlpEvents(ctx context.Context, limit int, scope *access.DeviceScope) ([]*goapi.Object, error) {
-	condition, args := e.andInScope(scope, "dlp_events.device_id", nil)
+// dlpEvents is getDlpEvents({limit}): the newest events of the scope and
+// the report's period. On SQLite created_at is declared DATETIME, which
+// the Go driver would turn into a time; the second created_at
+// (+created_at has no declared type) puts the stored text in its place.
+func (e *Engine) dlpEvents(ctx context.Context, limit int, f Filters) ([]*goapi.Object, error) {
+	period, args, err := e.inPeriod("dlp_events.created_at", f.from, f.to)
+	if err != nil {
+		return nil, err
+	}
+	condition, args := e.andInScope(f.Scope, "dlp_events.device_id", args)
+	condition = period + condition
 	rows, err := e.rows(ctx, e.db.Pick(
 		"SELECT *, +created_at AS created_at FROM dlp_events WHERE 1=1"+condition+" ORDER BY dlp_events.created_at DESC LIMIT ?",
 		"SELECT * FROM dlp_events WHERE 1=1"+condition+" ORDER BY created_at DESC LIMIT ?",
@@ -310,23 +335,31 @@ func (e *Engine) dlpEvents(ctx context.Context, limit int, scope *access.DeviceS
 	return rows, nil
 }
 
-// auditLogs is getAuditLogs(limit, offset): the newest entries with the
-// account's name.
-func (e *Engine) auditLogs(ctx context.Context, limit, offset int) ([]*goapi.Object, error) {
+// auditLogs is getAuditLogs(limit, offset): the newest entries of the
+// report's period with the account's name.
+func (e *Engine) auditLogs(ctx context.Context, limit, offset int, f Filters) ([]*goapi.Object, error) {
+	period, args, err := e.inPeriod("a.created_at", f.from, f.to)
+	if err != nil {
+		return nil, err
+	}
 	rows, err := e.rows(ctx, `
                 SELECT a.*, u.username FROM audit_log a
-                LEFT JOIN users u ON a.user_id = u.id
+                LEFT JOIN users u ON a.user_id = u.id WHERE 1=1`+period+`
                 ORDER BY a.created_at DESC LIMIT ? OFFSET ?
-            `, limit, offset)
+            `, append(args, limit, offset)...)
 	if err != nil {
 		return nil, fmt.Errorf("read the audit log: %w", err)
 	}
 	return rows, nil
 }
 
-// ticketStats is getTicketStats(): {total, open, in_progress, resolved,
-// closed}.
-func (e *Engine) ticketStats(ctx context.Context) (*goapi.Object, error) {
+// ticketStats is getTicketStats() over the tickets made in the report's
+// period: {total, open, in_progress, resolved, closed}.
+func (e *Engine) ticketStats(ctx context.Context, f Filters) (*goapi.Object, error) {
+	period, args, err := e.inPeriod("created_at", f.from, f.to)
+	if err != nil {
+		return nil, err
+	}
 	if e.db.IsPostgres() {
 		rows, err := e.rows(ctx, `
                 SELECT COUNT(*) as total,
@@ -334,8 +367,7 @@ func (e *Engine) ticketStats(ctx context.Context) (*goapi.Object, error) {
                     COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress,
                     COUNT(*) FILTER (WHERE status = 'resolved') as resolved,
                     COUNT(*) FILTER (WHERE status = 'closed') as closed
-                FROM tickets
-            `)
+                FROM tickets WHERE 1=1`+period, args...)
 		if err != nil {
 			return nil, fmt.Errorf("count the tickets: %w", err)
 		}
@@ -348,13 +380,13 @@ func (e *Engine) ticketStats(ctx context.Context) (*goapi.Object, error) {
 	}
 	stats := goapi.NewObject()
 	for _, c := range []struct{ key, query string }{
-		{"total", "SELECT COUNT(*) as c FROM tickets"},
+		{"total", "SELECT COUNT(*) as c FROM tickets WHERE 1=1"},
 		{"open", "SELECT COUNT(*) as c FROM tickets WHERE status = 'open'"},
 		{"in_progress", "SELECT COUNT(*) as c FROM tickets WHERE status = 'in_progress'"},
 		{"resolved", "SELECT COUNT(*) as c FROM tickets WHERE status = 'resolved'"},
 		{"closed", "SELECT COUNT(*) as c FROM tickets WHERE status = 'closed'"},
 	} {
-		n, err := e.count(ctx, c.query)
+		n, err := e.count(ctx, c.query+period, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -363,12 +395,16 @@ func (e *Engine) ticketStats(ctx context.Context) (*goapi.Object, error) {
 	return stats, nil
 }
 
-// ticketsBy counts the tickets by the values of a column: {name, n}, the
-// value of the newest ticket first, as the old console met them in
-// getAllTickets().
-func (e *Engine) ticketsBy(ctx context.Context, column string) ([]*goapi.Object, error) {
-	rows, err := e.rows(ctx, "SELECT "+column+" AS name, COUNT(*) AS n FROM tickets GROUP BY "+column+
-		" ORDER BY MAX(created_at) DESC, MIN(id)")
+// ticketsBy counts the tickets made in the report's period by the values
+// of a column: {name, n}, the value of the newest ticket first, as the old
+// console met them in getAllTickets().
+func (e *Engine) ticketsBy(ctx context.Context, column string, f Filters) ([]*goapi.Object, error) {
+	period, args, err := e.inPeriod("created_at", f.from, f.to)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := e.rows(ctx, "SELECT "+column+" AS name, COUNT(*) AS n FROM tickets WHERE 1=1"+period+" GROUP BY "+column+
+		" ORDER BY MAX(created_at) DESC, MIN(id)", args...)
 	if err != nil {
 		return nil, fmt.Errorf("count the tickets by %s: %w", column, err)
 	}
@@ -421,16 +457,19 @@ func (e *Engine) alertRules(ctx context.Context) ([]*goapi.Object, error) {
 }
 
 // alertHistory is getAlertHistory() without filters: the 200 newest
-// alerts with their rule's name. A scope keeps the alerts of its devices
-// and those that name no device.
-func (e *Engine) alertHistory(ctx context.Context, scope *access.DeviceScope) ([]*goapi.Object, error) {
-	condition, arg, scoped := e.inScope(scope, "h.device_id")
-	var args []any
+// alerts of the report's period with their rule's name. A scope keeps the
+// alerts of its devices and those that name no device.
+func (e *Engine) alertHistory(ctx context.Context, f Filters) ([]*goapi.Object, error) {
+	period, args, err := e.inPeriod("h.triggered_at", f.from, f.to)
+	if err != nil {
+		return nil, err
+	}
+	condition, arg, scoped := e.inScope(f.Scope, "h.device_id")
 	if scoped {
 		condition = " AND (h.device_id IS NULL OR " + condition + ")"
 		args = append(args, arg)
 	}
-	rows, err := e.rows(ctx, "SELECT h.*, r.name as rule_name FROM alert_history h LEFT JOIN alert_rules r ON h.rule_id = r.id WHERE 1=1"+condition+" ORDER BY h.triggered_at DESC LIMIT 200", args...)
+	rows, err := e.rows(ctx, "SELECT h.*, r.name as rule_name FROM alert_history h LEFT JOIN alert_rules r ON h.rule_id = r.id WHERE 1=1"+period+condition+" ORDER BY h.triggered_at DESC LIMIT 200", args...)
 	if err != nil {
 		return nil, fmt.Errorf("read the alert history: %w", err)
 	}
@@ -466,6 +505,28 @@ func (e *Engine) networkTargets(ctx context.Context) ([]*goapi.Object, error) {
 		}
 		row.Set("last_check_at", e.timeValue(t.LastCheckAt))
 		out = append(out, row)
+	}
+	return out, nil
+}
+
+// lastChecks is, for each network target, its newest check in the
+// report's period: status, rtt_ms and checked_at as the old drivers gave
+// them.
+func (e *Engine) lastChecks(ctx context.Context, f Filters) (map[string]*goapi.Object, error) {
+	period, args, err := e.inPeriod("checked_at", f.from, f.to)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := e.rows(ctx, "SELECT target_id, status, rtt_ms, checked_at FROM network_checks WHERE 1=1"+period+" ORDER BY checked_at DESC, id DESC", args...)
+	if err != nil {
+		return nil, fmt.Errorf("read the network checks: %w", err)
+	}
+	out := map[string]*goapi.Object{}
+	for _, row := range rows {
+		key := e.clock.String(row.Get("target_id"))
+		if _, seen := out[key]; !seen {
+			out[key] = row
+		}
 	}
 	return out, nil
 }

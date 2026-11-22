@@ -3596,7 +3596,7 @@
     "new_report": "Buat laporan",
     "new_report_note": "Pilih periode, lalu buat laporan yang Anda perlukan. Laporan muncul di bawah dan baru tersimpan setelah Anda menyimpannya.",
     "period": "Periode",
-    "period_hint": "Kosongkan keduanya untuk semua tanggal. Periode berlaku untuk penggunaan aplikasi dan data jaringan; laporan lain menampilkan kondisi saat ini.",
+    "period_hint": "Kosongkan keduanya untuk semua tanggal. Periode berlaku untuk penggunaan aplikasi, peristiwa keamanan, tiket, pemeriksaan jaringan, dan peringatan; laporan perangkat dan inventaris menampilkan kondisi saat ini.",
     "generating": "Membuat…",
     "download_json": "Sebagai JSON",
     "download_csv": "Sebagai CSV (tabel utama)",
