@@ -135,9 +135,19 @@ func TestEmbeddedPlatformsMatchNode(t *testing.T) {
 		FailedFor int `json:"failedFor"`
 	}
 	load(t, "embedded_platforms", &cases)
+	// The recording machine had python3, dpkg-deb and tar and none of
+	// cargo, flutter, rpmbuild and zstd. The builder finds tools by name on
+	// PATH, so a PATH with just those three gives it the same machine, also
+	// on a CI runner that has cargo and rpmbuild.
+	bin := t.TempDir()
+	for _, tool := range []string{"python3", "dpkg-deb", "tar"} {
+		if err := os.WriteFile(filepath.Join(bin, tool), []byte("#!/bin/sh\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
 	for i, c := range cases {
 		scratch := t.TempDir()
-		env := []string{"PATH=" + os.Getenv("PATH")}
+		env := []string{"PATH=" + bin}
 		add := func(k, v string) {
 			if v != "" {
 				env = append(env, k+"="+v)
