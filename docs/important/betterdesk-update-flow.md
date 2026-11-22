@@ -86,17 +86,17 @@ requirement). If the host exposes `statfsSync` without usable block
 statistics, the check is reported as unsupported rather than blocking every
 Windows update.
 
-The same cross-platform protocol harness is available after installation:
+The same cross-platform protocol check is a command of the server binary:
 
 ```bash
-node scripts/installer-protocol-check.js \
-  --api-url http://127.0.0.1:21114/api/health \
-  --panel-url http://127.0.0.1:5000/health \
+betterdesk-server check \
+  --api http://127.0.0.1:21114/api/health \
+  --panel http://127.0.0.1:5000/health \
   --port 127.0.0.1:21116
 ```
 
 Use `21121` instead of `21114` for the Docker single-container layout. The
-harness distinguishes TCP reachability from HTTP success, accepts a recorded
+check distinguishes TCP reachability from HTTP success, accepts a recorded
 3xx redirect, validates HTTPS certificate SANs by default, and supports
 `--insecure` only for explicitly disposable/self-signed checks.
 
