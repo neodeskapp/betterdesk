@@ -5,6 +5,45 @@
 
 ---
 
+## [3.6.0-rc.1] — 2026-11-22
+
+First release candidate of the BetterDesk fork (trybetterdesk/betterdesk).
+
+### Added
+- Add a computer: a join link or code from the console sets up a computer
+  with nothing typed (Windows setup exe named for the invite, a Linux
+  command, a deep link on macOS).
+- Quick support: a one-hour link for one session; the person allows it in
+  the BetterDesk quick support app and the supporter connects without a
+  password.
+- The console serves the official BetterDesk client from the signed
+  releases of trybetterdesk/betterdesk-client.
+- `betterdesk-server backup`, `migrate` (SQLite and PostgreSQL both ways),
+  `cert` and `verify-release`.
+- Releases are signed (ed25519); the installers check the signature on
+  updates.
+
+### Changed
+- One branch, main. Stable releases and release candidates come from v*
+  tags; the installers take the newest release, then the newest
+  pre-release, then the development build.
+- Docker images on ghcr.io/trybetterdesk are public; a v* tag publishes
+  them.
+- The installers show the BetterDesk mark and use colours readable on
+  every terminal.
+- The documentation left this repository for the website,
+  github.com/trybetterdesk/website.
+
+### Removed
+- The console's server terminal. The server file browser is read-only.
+- The Node.js console; the Go server serves the web console.
+
+### Fixed
+- About 230 defects found during the launch, 40 of them security issues.
+  See the release notes for the list.
+
+---
+
 ## [3.5.280] — 2026-11-22
 
 ### Changed
@@ -5441,3 +5480,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.278]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.277...v3.5.278
 [3.5.279]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.278...v3.5.279
 [3.5.280]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.279...v3.5.280
+[3.6.0-rc.1]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.280...v3.6.0-rc.1
