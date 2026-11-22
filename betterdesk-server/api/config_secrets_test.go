@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -78,5 +79,37 @@ func TestAPIKeyRoleNeedsAssignRight(t *testing.T) {
 	}
 	if status, body := asConsole(t, srv, http.MethodPost, "/api/keys", `{"name":"k-console","role":"super_admin"}`); status != http.StatusCreated {
 		t.Errorf("console creates a super_admin key: %d %s, want 201", status, body)
+	}
+}
+
+// TestServerAdminListsAndDeletesKeysButCreatesNone: server_admin holds
+// server.keys but may give no role, so it lists and deletes API keys and
+// creates none: POST /api/keys answers it a clear 403 before the body is
+// read (L51).
+func TestServerAdminListsAndDeletesKeysButCreatesNone(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	addTestAPIKey(t, database, testServerAdminKey, "srvadmin-key", auth.RoleServerAdmin)
+	serverAdmin := map[string]string{"X-API-Key": testServerAdminKey}
+	const refusal = `{"error":"This role can list and delete API keys but not create them"}`
+	for _, body := range []string{`{}`, `not json`, `{"name":"k-viewer","role":"viewer"}`} {
+		if status, answer := listenerCall(t, srv, http.MethodPost, "/api/keys", body, serverAdmin); status != http.StatusForbidden || answer != refusal {
+			t.Errorf("server_admin creates a key with %s: %d %s, want 403 %s", body, status, answer, refusal)
+		}
+	}
+	status, body := asConsole(t, srv, http.MethodPost, "/api/keys", `{"name":"k-console","role":"viewer"}`)
+	if status != http.StatusCreated {
+		t.Fatalf("console creates a viewer key: %d %s, want 201", status, body)
+	}
+	var created struct {
+		ID int64 `json:"id"`
+	}
+	if err := json.Unmarshal([]byte(body), &created); err != nil || created.ID == 0 {
+		t.Fatalf("the created key: %s", body)
+	}
+	if status, answer := listenerCall(t, srv, http.MethodGet, "/api/keys", "", serverAdmin); status != http.StatusOK || !strings.Contains(answer, `"name":"k-console"`) {
+		t.Errorf("server_admin lists the keys: %d %s", status, answer)
+	}
+	if status, answer := listenerCall(t, srv, http.MethodDelete, fmt.Sprintf("/api/keys/%d", created.ID), "", serverAdmin); status != http.StatusOK {
+		t.Errorf("server_admin deletes a key: %d %s, want 200", status, answer)
 	}
 }
