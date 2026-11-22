@@ -143,10 +143,11 @@ func FuzzSettingsBody(f *testing.F) {
 		if err != nil {
 			existing = undefined
 		}
-		config, refused := nextConfig(body, existing)
+		config, refused := nextConfig(body, existing, true)
 		if refused != "" {
-			if refused == passwordRequired {
-				// BUGS RV33: only to keep a stored password for another account
+			if refused == passwordRequired || refused == passwordRequiredUnverified {
+				// BUGS RV33, L57: only to keep a stored password for another
+				// account, or with the certificate check turned off
 				if sent := bodyValue(body, "pass"); !existing.member("pass").truthy() || sent.kind == kindString && sent.str != MaskedPass {
 					t.Fatalf("%s over %s: refused with %q", raw, storedText, refused)
 				}

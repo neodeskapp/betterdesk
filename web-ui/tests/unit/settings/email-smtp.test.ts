@@ -63,3 +63,35 @@ describe('SMTP password', () => {
 		expect(vi.mocked(api.saveSmtp).mock.calls[0]![0]).toMatchObject({ pass: '' });
 	});
 });
+
+/**
+ * The page has no switch for the certificate check: a save sends the
+ * saved tlsVerify back as it was, so saving the form never turns the
+ * check off or on (BUGS L57).
+ */
+describe('certificate check', () => {
+	test('a saved tlsVerify goes back as it was', async () => {
+		vi.mocked(api.getSmtp).mockResolvedValueOnce({
+			configured: true,
+			host: 'smtp.example.com',
+			port: 587,
+			secure: false,
+			user: 'alerts',
+			pass: '********',
+			from: 'alerts@example.com',
+			alert_email: '',
+			tlsVerify: false
+		});
+		const user = await setup();
+		await user.click(screen.getByRole('button', { name: 'settings.email.smtp_save' }));
+		await vi.waitFor(() => expect(api.saveSmtp).toHaveBeenCalledTimes(1));
+		expect(vi.mocked(api.saveSmtp).mock.calls[0]![0]).toMatchObject({ pass: '********', tlsVerify: false });
+	});
+
+	test('settings without one send none', async () => {
+		const user = await setup();
+		await user.click(screen.getByRole('button', { name: 'settings.email.smtp_save' }));
+		await vi.waitFor(() => expect(api.saveSmtp).toHaveBeenCalledTimes(1));
+		expect(vi.mocked(api.saveSmtp).mock.calls[0]![0]).not.toHaveProperty('tlsVerify');
+	});
+});

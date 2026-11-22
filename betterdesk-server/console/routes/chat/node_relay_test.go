@@ -270,6 +270,16 @@ var fixes = []fix{
 		`{"socket":"panel","text":"{\"type\":\"status\",\"device_id\":\"dev1\",\"agent_connected\":false}"},` +
 		`{"socket":"panel","text":"{\"type\":\"presence\",\"device_id\":\"dev1\",\"online\":false}"}]`},
 	{"RV166", "agent session", 46, `[]`},
+	// An agent makes groups of its own device and operators only: a group
+	// with another device is not made, and the operator's group that
+	// follows gets the answer the made-up API server held for the agent's.
+	// An agent socket's 41st message at once is dropped
+	{"L56", "agent session", 31, `[]`},
+	{"L56", "agent session", 44, `[]`},
+	{"L56", "fallbacks and odd answers", 13, `[]`},
+	{"L56", "fallbacks and odd answers", 14, `[{"api":{"method":"POST","path":"/chat/groups","body":"{\"name\":\"G\",\"members\":[\"x\"],\"created_by\":\"anna\"}"}},` +
+		`{"api":{"method":"GET","path":"/chat/groups/dev1"}},` +
+		`{"socket":"o1","text":"{\"0\":\"m\",\"1\":\"a\",\"2\":\"d\",\"3\":\"e\",\"type\":\"group_created\"}"}]`},
 }
 
 // fixedEvents is what a step of the recording looks like since the fixes:

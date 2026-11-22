@@ -362,6 +362,7 @@ type Applied struct {
 // at the end, the old content goes to <env file>.bak.<time> first, the
 // new one is written to a temporary file and renamed over the env file,
 // both with mode 0600. Line ends become "\n" and the file ends with one.
+// The KeptBackups newest backups stay (PruneBackups).
 func (c *Config) Apply(settings []Setting) (Applied, error) {
 	writing.Lock()
 	defer writing.Unlock()
@@ -421,6 +422,9 @@ func (c *Config) Apply(settings []Setting) (Applied, error) {
 		return Applied{}, fmt.Errorf("replace %s: %w", p.EnvPath, err)
 	}
 	_ = os.Chmod(p.EnvPath, 0o600)
+	// The write stands also when an old backup cannot be removed; the
+	// next write tries again
+	_ = PruneBackups(p.EnvPath)
 	return Applied{EnvPath: p.EnvPath, BackupPath: backup, Changed: changed, Values: shown}, nil
 }
 

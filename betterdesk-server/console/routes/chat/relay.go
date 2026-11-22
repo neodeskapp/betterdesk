@@ -67,7 +67,9 @@ type RelayOptions struct {
 type Relay struct {
 	opts RelayOptions
 	// operators counts the open operator sockets per account
-	operators accounts
+	operators openSockets[int64]
+	// agentTokens counts the open agent sockets per token (its hash)
+	agentTokens openSockets[string]
 
 	mu    sync.Mutex
 	rooms map[string]*room
@@ -111,7 +113,9 @@ func (r *Relay) nowMillis() float64 { return float64(r.opts.Now().UnixMilli()) }
 // whose room is the inbox's), then the device token (the query's token,
 // else a bearer header) checked for the device in the path: refused 403,
 // a failed check 500. A second socket of the device replaces the first,
-// which is closed with 1001 "New agent connected".
+// which is closed with 1001 "New agent connected". MaxAgentSocketsPerToken
+// sockets of the token open answer 429. The socket's messages are held to
+// AgentFrameBurst at once and AgentFramesPerSecond after that.
 func (r *Relay) serveAgent(u *ws.Upgrade) {
 	if !u.CheckOrigin("chat-agent " + u.Path) {
 		return
@@ -134,12 +138,19 @@ func (r *Relay) serveAgent(u *ws.Upgrade) {
 		u.Refuse(http.StatusForbidden)
 		return
 	}
+	key := tokenKey(token)
+	if !r.agentTokens.take(key, MaxAgentSocketsPerToken) {
+		u.Refuse(http.StatusTooManyRequests)
+		return
+	}
+	defer r.agentTokens.release(key)
 	conn, answers, accepted := accept(u)
 	if !accepted {
 		return
 	}
 	defer conn.Wait()
 	c := r.newClient(u, conn, answers, deviceID, "")
+	c.budget = &frameBudget{}
 	c.name = r.deviceName(u.R.Context(), deviceID)
 	r.agentJoins(c)
 	c.run(r.agentFrame)
@@ -186,7 +197,7 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 		return
 	}
 	account := session.UserID()
-	if !r.operators.take(account) {
+	if !r.operators.take(account, MaxOperatorSockets) {
 		u.Refuse(http.StatusTooManyRequests)
 		return
 	}
@@ -232,6 +243,8 @@ type client struct {
 	name string
 	// user is the operator's account, nil for an agent
 	user *session.User
+	// budget holds an agent's messages to their rate, nil for an operator
+	budget *frameBudget
 	// api is the context of the socket's calls to the API server: it ends
 	// with the console, not with the socket, so a message sent just
 	// before the socket closed is still stored
@@ -277,6 +290,12 @@ func (c *client) run(handle func(*client, jsjson.Value) error) {
 			break
 		}
 		if binary {
+			continue
+		}
+		if c.budget != nil && !c.budget.allow(c.relay.opts.Now()) {
+			if c.budget.dropped == 1 {
+				logging.Logf("console", "WARN: [Chat] agent %s sends more messages than %d at once and %d a second: the relay drops the rest", c.id, AgentFrameBurst, AgentFramesPerSecond)
+			}
 			continue
 		}
 		frame, err := jsjson.Parse(string(data))

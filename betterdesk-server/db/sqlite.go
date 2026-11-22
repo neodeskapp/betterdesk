@@ -49,8 +49,18 @@ func (s *SQLiteDB) Close() error {
 	return s.db.Close()
 }
 
-// Migrate creates all required tables if they don't exist.
+// Migrate creates all required tables if they don't exist, then gives
+// directory accounts the name their directory signs them in under.
 func (s *SQLiteDB) Migrate() error {
+	if err := s.migrateSchema(); err != nil {
+		return err
+	}
+	return s.lowerCaseDirectoryAccounts()
+}
+
+// migrateSchema creates the tables, adds the columns later versions added
+// and runs the one-time data fixes that went with them.
+func (s *SQLiteDB) migrateSchema() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -1196,8 +1206,9 @@ func (s *SQLiteDB) DeletePeer(id string) error {
 }
 
 // HardDeletePeer permanently removes a peer from the database, revokes its
-// device tokens and releases any id_change_history reservations for that
-// ID (#213).
+// device tokens, releases any id_change_history reservations for that
+// ID (#213) and removes its data loss prevention events (the console's
+// dlp_events, when the console made the table).
 func (s *SQLiteDB) HardDeletePeer(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1220,6 +1231,9 @@ func (s *SQLiteDB) HardDeletePeer(id string) error {
 	}
 	if _, err := tx.Exec(
 		`DELETE FROM server_config WHERE key = ?`, "telemetry_seq_"+id); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM dlp_events WHERE device_id = ?`, id); err != nil && !isMissingTable(err) {
 		return err
 	}
 	return tx.Commit()

@@ -163,7 +163,8 @@ func latestAuditEntry(ctx context.Context, db *store.DB, action, prefix string) 
 // deleted for good: its system information, its metrics, its folder, its
 // manual device groups, its row in the console's device table, its
 // inventory and telemetry, its app usage and the accounts' direct grants
-// to it. Its tickets and data guard events stay.
+// to it. Its tickets stay and keep its id. Its data guard events went
+// with the server's hard delete already (db.HardDeletePeer).
 func clearDeletedDevice(ctx context.Context, db *store.DB, id string) error {
 	return db.InTx(ctx, func(tx *store.Tx) error {
 		for _, query := range []string{

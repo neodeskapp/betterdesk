@@ -145,6 +145,27 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 				}
 			}
 
+			// Directory names are compared in lower case: a directory
+			// account made under a mixed-case name signs in as itself
+			// and gets no second account. A name two accounts share in
+			// lower case, or a local or single sign-on account's name in
+			// another case, is refused.
+			if user == nil {
+				others, err := s.accountsInOtherCase(username)
+				if err != nil {
+					return passwordLoginResult{Status: passwordLoginInternal}
+				}
+				switch {
+				case len(others) == 1 && others[0].AuthProvider == db.AuthProviderLDAP:
+					user = others[0]
+				case len(others) > 0:
+					if s.auditLog != nil {
+						s.auditLog.Log(audit.ActionAuthLoginFailed, clientIP, username, map[string]string{"method": "ldap", "reason": "username_collision"})
+					}
+					return passwordLoginResult{Status: passwordLoginInvalid}
+				}
+			}
+
 			if user != nil && user.Disabled {
 				return s.refuseDisabled(user, clientIP, "ldap")
 			}
@@ -235,4 +256,21 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 	}
 
 	return passwordLoginResult{User: user, Status: passwordLoginOK}
+}
+
+// accountsInOtherCase returns the accounts whose name is name in another
+// letter case or with spaces at its ends.
+func (s *Server) accountsInOtherCase(name string) ([]*db.User, error) {
+	users, err := s.db.ListUsers()
+	if err != nil {
+		return nil, err
+	}
+	want := strings.ToLower(strings.TrimSpace(name))
+	var out []*db.User
+	for _, u := range users {
+		if u.Username != name && strings.ToLower(strings.TrimSpace(u.Username)) == want {
+			out = append(out, u)
+		}
+	}
+	return out, nil
 }

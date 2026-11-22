@@ -375,3 +375,55 @@ func TestMtimeRounds(t *testing.T) {
 		t.Errorf("list: %s", *files[3].Mtime)
 	}
 }
+
+// TestWritesKeepTheFiveNewestBackups: every write of a file that exists
+// leaves a backup, and only the managedconfig.KeptBackups newest of that
+// file stay, the one of this write among them; a copy of another name
+// stays (BUGS L58).
+func TestWritesKeepTheFiveNewestBackups(t *testing.T) {
+	root := t.TempDir()
+	clock := time.Date(2026, 11, 22, 9, 0, 0, 0, time.UTC)
+	s := New(Options{
+		ConsoleDir: filepath.Join(root, "web-nodejs"),
+		DataDir:    filepath.Join(root, "data"),
+		KeysPath:   filepath.Join(root, "keys"),
+		Getenv:     func(string) string { return "" },
+		Platform:   "linux",
+		Now:        func() time.Time { return clock },
+	})
+	dir := filepath.Join(root, "web-nodejs")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, ".env"), []byte("A=0\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, ".env.bak.manual"), []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var last *Written
+	for i := 0; i < 8; i++ {
+		clock = clock.Add(time.Minute)
+		written, err := s.WriteFile("console-env", "A="+string(rune('1'+i))+"\n")
+		if err != nil {
+			t.Fatal(err)
+		}
+		last = written
+	}
+	matches, err := filepath.Glob(filepath.Join(dir, ".env.bak.*"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, m := range matches {
+		names = append(names, filepath.Base(m))
+	}
+	want := ".env.bak.2026-11-22T09-04-00-000Z,.env.bak.2026-11-22T09-05-00-000Z,.env.bak.2026-11-22T09-06-00-000Z," +
+		".env.bak.2026-11-22T09-07-00-000Z,.env.bak.2026-11-22T09-08-00-000Z,.env.bak.manual"
+	if got := strings.Join(names, ","); got != want {
+		t.Errorf("backups:\n%s\nwant:\n%s", got, want)
+	}
+	if last.BackupPath == nil || *last.BackupPath != filepath.Join(dir, ".env.bak.2026-11-22T09-08-00-000Z") {
+		t.Errorf("the last write's backup: %v", last.BackupPath)
+	}
+}

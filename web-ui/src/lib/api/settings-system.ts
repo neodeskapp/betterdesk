@@ -419,7 +419,9 @@ export const SmtpConfig = v.looseObject({
 	/** The server's mask (********) when a password is saved, else empty */
 	pass: Text,
 	from: Text,
-	alert_email: Text
+	alert_email: Text,
+	/** Whether the server's certificate is checked; missing where the console's default applies */
+	tlsVerify: v.optional(v.boolean())
 });
 export type SmtpConfig = v.InferOutput<typeof SmtpConfig>;
 
@@ -437,6 +439,8 @@ export interface SmtpInput {
 	pass: string;
 	from: string;
 	alert_email: string;
+	/** Sent back as it was read: the page has no switch for it */
+	tlsVerify?: boolean;
 }
 
 export function saveSmtp(input: SmtpInput) {
