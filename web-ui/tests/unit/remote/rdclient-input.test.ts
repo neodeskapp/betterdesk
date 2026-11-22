@@ -5,7 +5,7 @@
  */
 import { describe, expect, test, vi } from 'vitest';
 import type { MessageInit } from '../../../src/lib/remote/client/generated/protos.ts';
-import { RDCliprdr } from '../../../src/lib/remote/client/cliprdr.ts';
+import { RDCliprdr, type RDCliprdrClient } from '../../../src/lib/remote/client/cliprdr.ts';
 import { RDInput } from '../../../src/lib/remote/client/input.ts';
 import { RDProtocol } from '../../../src/lib/remote/client/protocol.ts';
 import { RDTouch } from '../../../src/lib/remote/client/touch.ts';
@@ -108,7 +108,7 @@ describe('the file clipboard of the desktop shell', () => {
 		canvas.getBoundingClientRect = () => new DOMRect(0, 0, 100, 100);
 		const input = new g.RDInput(canvas, renderer, (m: Sent) => sent.push(m));
 		input.start();
-		const client = {
+		const client: RDCliprdrClient = {
 			_state: 'streaming',
 			viewOnly: false,
 			proto,
