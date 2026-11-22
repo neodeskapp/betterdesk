@@ -29,6 +29,10 @@ export HBBS_API_URL=http://127.0.0.1:21121/api BETTERDESK_API_URL=http://127.0.0
 export ENCRYPTED_ONLY=1 SIGNAL_PORT=21116 SIGNAL_RATE_LIMIT_PER_IP=0 HOST=0.0.0.0 API_HOST=0.0.0.0
 export NTP_SERVERS=pool.ntp.org BILLING_MAX_CLOCK_SKEW_MS=2000 BILLING_REQUIRE_SYNCED_CLOCK=0 BILLING_TRUST_OS_NTP=Y
 export AGENT_BUILD_WORKER=off
+# No client release: the goldens of Add a computer expect none, and a
+# release of the client fork would otherwise reach the instance. GitHub
+# answers 404 for this tag, so the console says release_unavailable.
+export BETTERDESK_CLIENT_RELEASE_TAG=contract-no-release
 # Test suites send everything from one address: no rate limit may stop them
 export RATE_LIMIT_MAX=1000000 PANEL_READ_RATE_LIMIT_MAX=1000000 WIDGET_RATE_LIMIT_MAX=1000000
 export LOGIN_RATE_LIMIT_MAX=1000000 UPLOAD_RATE_LIMIT_MAX=1000000 FILE_ACCESS_RATE_LIMIT_MAX=1000000
