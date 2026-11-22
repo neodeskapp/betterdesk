@@ -145,6 +145,8 @@
     "totp_enter_recovery": "Vui lòng nhập mã khôi phục",
     "totp_session_expired": "Phiên đã hết hạn. Vui lòng đăng nhập lại.",
     "totp_already_enabled": "Xác thực hai yếu tố đã được bật",
+    "totp_setup_required_title": "Thiết lập đăng nhập hai bước",
+    "totp_setup_required": "Máy chủ này yêu cầu đăng nhập hai bước. Quét mã QR bằng ứng dụng xác thực, rồi nhập mã 6 chữ số mà ứng dụng hiển thị.",
     "pro_only_account": "Tài khoản này chỉ dành cho máy khách để bàn RustDesk. Vui lòng sử dụng ứng dụng RustDesk để đăng nhập.",
     "account_disabled": "Tài khoản này đã bị vô hiệu hóa. Hãy liên hệ quản trị viên.",
     "too_many_attempts": "Quá nhiều lần đăng nhập. Vui lòng thử lại sau.",
@@ -1349,6 +1351,8 @@
       "ldap_effect": "Áp dụng từ lần đăng nhập tiếp theo. Những người đã đăng nhập vẫn giữ phiên đăng nhập.",
       "oidc_effect": "Áp dụng từ lần đăng nhập tiếp theo. Những người đã đăng nhập vẫn giữ phiên đăng nhập.",
       "totp_note": "Mỗi lần đăng nhập, bạn cũng nhập mã từ một ứng dụng trên điện thoại, như Google Authenticator, Microsoft Authenticator hoặc Authy.",
+      "require_2fa": "Bắt buộc đăng nhập hai bước",
+      "require_2fa_hint": "Tài khoản cục bộ chưa có đăng nhập hai bước sẽ thiết lập ngay sau lần đăng nhập bằng mật khẩu tiếp theo và không làm được gì khác trước đó; ứng dụng máy tính và API từ chối nó cho đến khi thiết lập xong. Tài khoản thư mục và đăng nhập một lần do nhà cung cấp của chúng quản lý.",
       "ldap_enabled_hint": "Người trong thư mục của bạn đăng nhập bằng tên người dùng và mật khẩu thư mục. Mỗi tài khoản dùng một cách đăng nhập, nên tài khoản thư mục không thể dùng mật khẩu đặt trong bảng điều khiển này.",
       "attrs_note": "Giá trị mặc định dùng được trong hầu hết trường hợp. Chỉ đổi khi tên hoặc địa chỉ email nhận về bị sai hoặc trống."
     },

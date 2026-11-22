@@ -145,6 +145,8 @@
     "totp_enter_recovery": "Anna palautuskoodi",
     "totp_session_expired": "Istunto vanhentunut. Kirjaudu uudelleen sisään.",
     "totp_already_enabled": "Kaksivaiheinen todennus on jo käytössä",
+    "totp_setup_required_title": "Ota kaksivaiheinen kirjautuminen käyttöön",
+    "totp_setup_required": "Tämä palvelin vaatii kaksivaiheisen kirjautumisen. Skannaa QR-koodi todennussovelluksella ja anna sen näyttämä 6-numeroinen koodi.",
     "pro_only_account": "Tämä tili on tarkoitettu vain RustDesk-työpöytäasiakkaalle. Käytä RustDesk-sovellusta kirjautuaksesi sisään.",
     "account_disabled": "Tämä tili on poistettu käytöstä. Ota yhteyttä ylläpitäjään.",
     "too_many_attempts": "Liian monta kirjautumisyritystä. Yritä myöhemmin uudelleen.",
@@ -1349,6 +1351,8 @@
       "ldap_effect": "Koskee seuraavaa kirjautumista. Jo kirjautuneet käyttäjät pysyvät kirjautuneina.",
       "oidc_effect": "Koskee seuraavaa kirjautumista. Jo kirjautuneet käyttäjät pysyvät kirjautuneina.",
       "totp_note": "Joka kirjautumisella annat myös koodin puhelimesi sovelluksesta, kuten Google Authenticator, Microsoft Authenticator tai Authy.",
+      "require_2fa": "Vaadi kaksivaiheinen kirjautuminen",
+      "require_2fa_hint": "Paikallinen tili ilman kaksivaiheista kirjautumista ottaa sen käyttöön heti seuraavan salasanakirjautumisen jälkeen eikä voi sitä ennen tehdä muuta; työpöytäsovellus ja API hylkäävät sen siihen asti. Hakemisto- ja kertakirjautumistilit jätetään niiden palveluntarjoajalle.",
       "ldap_enabled_hint": "Hakemistosi käyttäjät kirjautuvat hakemiston käyttäjätunnuksella ja salasanalla. Jokainen tili käyttää yhtä kirjautumistapaa, joten hakemistotilit eivät voi käyttää tässä konsolissa asetettua salasanaa.",
       "attrs_note": "Oletukset toimivat useimmiten. Muuta niitä vain, jos nimet tai sähköpostiosoitteet tulevat väärin tai tyhjinä."
     },

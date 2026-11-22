@@ -139,6 +139,8 @@
     "totp_enter_recovery": "Inserisci un codice di recupero",
     "totp_session_expired": "Sessione scaduta. Accedi di nuovo.",
     "totp_already_enabled": "L'autenticazione a due fattori è già attiva",
+    "totp_setup_required_title": "Configura l'accesso in due passaggi",
+    "totp_setup_required": "Questo server richiede l'accesso in due passaggi. Scansiona il codice QR con un'app di autenticazione, poi inserisci il codice a 6 cifre che mostra.",
     "pro_only_account": "Questo account e riservato solo al client desktop RustDesk. Usa l'app RustDesk per accedere.",
     "account_disabled": "Questo account è disattivato. Rivolgiti a un amministratore.",
     "too_many_attempts": "Troppi tentativi di accesso. Riprova più tardi.",
@@ -1343,6 +1345,8 @@
       "ldap_effect": "Si applica dal prossimo accesso. Chi ha già effettuato l'accesso resta connesso.",
       "oidc_effect": "Si applica dal prossimo accesso. Chi ha già effettuato l'accesso resta connesso.",
       "totp_note": "A ogni accesso inserisci anche un codice da un'app sul telefono, ad esempio Google Authenticator, Microsoft Authenticator o Authy.",
+      "require_2fa": "Richiedi l'accesso in due passaggi",
+      "require_2fa_hint": "Un account locale senza accesso in due passaggi lo configura subito dopo il prossimo accesso con password e fino ad allora non può fare altro; il client desktop e l'API lo rifiutano finché non l'ha fatto. Gli account della directory e dell'accesso singolo sono lasciati al loro provider.",
       "ldap_enabled_hint": "Le persone della tua directory accedono con nome utente e password della directory. Ogni account usa un solo modo di accesso, quindi gli account della directory non possono usare una password impostata in questa console.",
       "attrs_note": "I valori predefiniti vanno bene nella maggior parte dei casi. Cambiali solo se nomi o indirizzi email arrivano errati o vuoti."
     },

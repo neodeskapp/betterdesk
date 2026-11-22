@@ -145,6 +145,8 @@
     "totp_enter_recovery": "Vennligst skriv inn en gjenopprettingskode",
     "totp_session_expired": "Økten er utløpt. Logg på igjen.",
     "totp_already_enabled": "Tofaktorautentisering er allerede aktivert",
+    "totp_setup_required_title": "Sett opp totrinnspålogging",
+    "totp_setup_required": "Denne serveren krever totrinnspålogging. Skann QR-koden med en autentiseringsapp, og skriv inn den 6-sifrede koden den viser.",
     "pro_only_account": "Denne kontoen er kun for RustDesk desktop-klient. Vennligst bruk RustDesk-appen for å logge på.",
     "account_disabled": "Denne kontoen er deaktivert. Kontakt en administrator.",
     "too_many_attempts": "For mange påloggingsforsøk. Prøv igjen senere.",
@@ -1349,6 +1351,8 @@
       "ldap_effect": "Gjelder fra neste pålogging. De som allerede er logget på, forblir pålogget.",
       "oidc_effect": "Gjelder fra neste pålogging. De som allerede er logget på, forblir pålogget.",
       "totp_note": "Hver gang du logger inn, skriver du også inn en kode fra en app på telefonen, for eksempel Google Authenticator, Microsoft Authenticator eller Authy.",
+      "require_2fa": "Krev totrinnspålogging",
+      "require_2fa_hint": "En lokal konto uten totrinnspålogging setter det opp rett etter neste pålogging med passord og kan ikke gjøre noe annet før det; skrivebordsklienten og API-et avviser den til da. Katalog- og enkeltpåloggingskontoer overlates til leverandøren.",
       "ldap_enabled_hint": "Personer fra katalogen logger inn med katalogbrukernavn og passord. Hver konto bruker én måte å logge inn på, så katalogkontoer kan ikke bruke et passord satt i denne konsollen.",
       "attrs_note": "Standardverdiene fungerer i de fleste tilfeller. Endre dem bare hvis navn eller e-postadresser kommer feil eller tomme."
     },

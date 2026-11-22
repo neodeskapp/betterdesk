@@ -145,6 +145,8 @@
     "totp_enter_recovery": "Indtast venligst en gendannelseskode",
     "totp_session_expired": "Session udløb. Log venligst ind igen.",
     "totp_already_enabled": "To-faktor-godkendelse er allerede aktiveret",
+    "totp_setup_required_title": "Opsæt totrinslogin",
+    "totp_setup_required": "Denne server kræver totrinslogin. Scan QR-koden med en godkendelsesapp, og indtast den 6-cifrede kode, den viser.",
     "pro_only_account": "Denne konto er kun til RustDesk desktop-klient. Brug venligst RustDesk-appen til at logge ind.",
     "account_disabled": "Denne konto er deaktiveret. Kontakt en administrator.",
     "too_many_attempts": "For mange loginforsøg. Prøv igen senere.",
@@ -1349,6 +1351,8 @@
       "ldap_effect": "Gælder fra næste login. Brugere, der allerede er logget på, forbliver logget på.",
       "oidc_effect": "Gælder fra næste login. Brugere, der allerede er logget på, forbliver logget på.",
       "totp_note": "Hver gang du logger ind, indtaster du også en kode fra en app på din telefon, for eksempel Google Authenticator, Microsoft Authenticator eller Authy.",
+      "require_2fa": "Kræv totrinslogin",
+      "require_2fa_hint": "En lokal konto uden totrinslogin opsætter det lige efter næste login med adgangskode og kan ikke andet indtil da; skrivebordsklienten og API'et afviser den, indtil det er gjort. Katalog- og single sign-on-konti overlades til deres udbyder.",
       "ldap_enabled_hint": "Personer fra dit katalog logger ind med deres katalogbrugernavn og adgangskode. Hver konto bruger én måde at logge ind på, så katalogkonti kan ikke bruge en adgangskode sat i denne konsol.",
       "attrs_note": "Standardværdierne passer i de fleste tilfælde. Ændr dem kun, hvis navne eller e-mailadresser kommer forkert eller tomme igennem."
     },

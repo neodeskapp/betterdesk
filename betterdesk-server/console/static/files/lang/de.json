@@ -143,6 +143,8 @@
     "totp_enter_recovery": "Bitte geben Sie einen Wiederherstellungscode ein",
     "totp_session_expired": "Sitzung abgelaufen. Bitte melden Sie sich erneut an.",
     "totp_already_enabled": "Zwei-Faktor-Authentifizierung ist bereits aktiviert",
+    "totp_setup_required_title": "Zwei-Faktor-Anmeldung einrichten",
+    "totp_setup_required": "Dieser Server verlangt die Zwei-Faktor-Anmeldung. Scannen Sie den QR-Code mit einer Authentifizierungs-App und geben Sie den 6-stelligen Code ein, den sie anzeigt.",
     "passwords_mismatch": "Passwörter stimmen nicht überein",
     "or": "oder",
     "login_sso": "Mit SSO anmelden",
@@ -1343,6 +1345,8 @@
       "ldap_effect": "Gilt ab der nächsten Anmeldung. Bereits angemeldete Personen bleiben angemeldet.",
       "oidc_effect": "Gilt ab der nächsten Anmeldung. Bereits angemeldete Personen bleiben angemeldet.",
       "totp_note": "Bei jeder Anmeldung geben Sie zusätzlich einen Code aus einer App auf Ihrem Telefon ein, zum Beispiel Google Authenticator, Microsoft Authenticator oder Authy.",
+      "require_2fa": "Zwei-Faktor-Anmeldung verlangen",
+      "require_2fa_hint": "Ein lokales Konto ohne Zwei-Faktor-Anmeldung richtet sie direkt nach der nächsten Anmeldung mit Passwort ein und kann bis dahin nichts anderes tun; Desktop-Client und API weisen es bis dahin ab. Verzeichnis- und Single-Sign-On-Konten bleiben ihrem Anbieter überlassen.",
       "ldap_enabled_hint": "Personen aus Ihrem Verzeichnis melden sich mit ihrem Verzeichnis-Benutzernamen und -Passwort an. Jedes Konto nutzt eine Anmeldeart, daher können Verzeichniskonten kein in dieser Konsole gesetztes Passwort verwenden.",
       "attrs_note": "Die Standardwerte passen in den meisten Fällen. Ändern Sie sie nur, wenn Namen oder E-Mail-Adressen falsch oder leer ankommen."
     },

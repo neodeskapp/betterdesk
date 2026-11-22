@@ -139,6 +139,8 @@
     "totp_enter_recovery": "Zadejte prosím záchranný kód",
     "totp_session_expired": "Relace vypršela. Přihlaste se prosím znovu.",
     "totp_already_enabled": "Dvoufaktorová autentizace je již povolena",
+    "totp_setup_required_title": "Nastavte dvoufázové přihlášení",
+    "totp_setup_required": "Tento server vyžaduje dvoufázové přihlášení. Naskenujte QR kód ověřovací aplikací a zadejte šestimístný kód, který zobrazí.",
     "pro_only_account": "Tento účet je pouze pro desktopový klient RustDesk. Použijte prosím aplikaci RustDesk k přihlášení.",
     "account_disabled": "Tento účet je zakázaný. Obraťte se na správce.",
     "too_many_attempts": "Příliš mnoho pokusů o přihlášení. Zkuste to prosím později.",
@@ -1343,6 +1345,8 @@
       "ldap_effect": "Platí od příštího přihlášení. Kdo už je přihlášen, zůstane přihlášen.",
       "oidc_effect": "Platí od příštího přihlášení. Kdo už je přihlášen, zůstane přihlášen.",
       "totp_note": "Při každém přihlášení zadáte také kód z aplikace v telefonu, například Google Authenticator, Microsoft Authenticator nebo Authy.",
+      "require_2fa": "Vyžadovat dvoufázové přihlášení",
+      "require_2fa_hint": "Místní účet bez dvoufázového přihlášení si ho nastaví hned po dalším přihlášení heslem a do té doby nemůže dělat nic jiného; desktopový klient a API ho do té doby odmítají. Účty z adresáře a jednotného přihlášení řídí jejich poskytovatel.",
       "ldap_enabled_hint": "Lidé z vašeho adresáře se přihlašují adresářovým jménem a heslem. Každý účet používá jeden způsob přihlášení, takže adresářové účty nemohou použít heslo nastavené v této konzoli.",
       "attrs_note": "Výchozí hodnoty ve většině případů fungují. Změňte je jen tehdy, když jména nebo e-mailové adresy přicházejí chybně nebo prázdné."
     },

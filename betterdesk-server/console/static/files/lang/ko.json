@@ -139,6 +139,8 @@
     "totp_enter_recovery": "복구 코드를 입력하세요",
     "totp_session_expired": "세션이 만료되었습니다. 다시 로그인하세요.",
     "totp_already_enabled": "2단계 인증이 이미 활성화되어 있습니다",
+    "totp_setup_required_title": "2단계 로그인 설정",
+    "totp_setup_required": "이 서버는 2단계 로그인이 필요합니다. 인증 앱으로 QR 코드를 스캔한 다음 표시되는 6자리 코드를 입력하세요.",
     "pro_only_account": "이 계정은 RustDesk 데스크톱 클라이언트 전용입니다. 로그인하려면 RustDesk 앱을 사용하세요.",
     "account_disabled": "이 계정은 비활성화되었습니다. 관리자에게 문의하세요.",
     "too_many_attempts": "로그인 시도가 너무 많습니다. 잠시 후 다시 시도하세요.",
@@ -1343,6 +1345,8 @@
       "ldap_effect": "다음 로그인부터 적용됩니다. 이미 로그인한 사용자는 로그인 상태를 유지합니다.",
       "oidc_effect": "다음 로그인부터 적용됩니다. 이미 로그인한 사용자는 로그인 상태를 유지합니다.",
       "totp_note": "로그인할 때마다 휴대폰 앱(Google Authenticator, Microsoft Authenticator, Authy 등)의 코드도 입력합니다.",
+      "require_2fa": "2단계 로그인 필수",
+      "require_2fa_hint": "2단계 로그인이 없는 로컬 계정은 다음 비밀번호 로그인 직후 이를 설정하며 그 전에는 다른 작업을 할 수 없습니다. 설정할 때까지 데스크톱 클라이언트와 API는 이를 거부합니다. 디렉터리 및 SSO 계정은 해당 공급자에 맡깁니다.",
       "ldap_enabled_hint": "디렉터리 사용자는 디렉터리 사용자 이름과 비밀번호로 로그인합니다. 계정마다 로그인 방식은 하나이므로 디렉터리 계정은 이 콘솔에서 설정한 비밀번호를 쓸 수 없습니다.",
       "attrs_note": "대부분 기본값으로 충분합니다. 이름이나 이메일 주소가 잘못되거나 비어 있을 때만 바꾸세요."
     },

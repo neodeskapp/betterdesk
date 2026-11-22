@@ -55,6 +55,10 @@ type User struct {
 	// TOTPRequired says the sign-in is not finished: the second factor is
 	// due.
 	TOTPRequired bool
+	// TOTPSetupRequired says the sign-in is not finished either: two-factor
+	// sign-in is mandatory (TwoFactorRequired) and this local account has
+	// none, so it sets it up first. It is not part of the JSON.
+	TOTPSetupRequired bool
 	// nullPartialToken adds "goPartialToken": null to the JSON. The answer
 	// for a local account with two-factor sign-in carries it, and sessions
 	// that wait for the second factor store it.
@@ -355,7 +359,14 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 	if result == nil {
 		return Outcome{Failure: FailureProOnly}, nil
 	}
-	if !result.TOTPRequired {
+	if !result.TOTPRequired && normalizeAuthProvider(user.AuthProvider.String) == providerLocal {
+		required, err := s.TwoFactorRequired(ctx)
+		if err != nil {
+			return Outcome{}, err
+		}
+		result.TOTPSetupRequired = required
+	}
+	if !result.TOTPRequired && !result.TOTPSetupRequired {
 		if err := touchLastLogin(ctx, s.db, user.ID.V); err != nil {
 			return Outcome{}, err
 		}
@@ -387,8 +398,9 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 // An account with the role "pro" is refused: with FailureProOnly when its
 // credentials were accepted, plainly otherwise. So is a disabled account,
 // with FailureAccountDisabled. The outcome's user has
-// TOTPRequired set when the second factor is due; only otherwise is the
-// sign-in noted on the row (last_login).
+// TOTPRequired set when the second factor is due, and TOTPSetupRequired
+// when two-factor sign-in is mandatory and the local account has none yet;
+// only otherwise is the sign-in noted on the row (last_login).
 //
 // Authenticate does not look at lockouts and does not record the attempt:
 // CheckBruteForce and RecordAttempt are separate calls.

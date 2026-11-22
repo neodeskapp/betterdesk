@@ -252,6 +252,16 @@ export function disableTotp(password: string) {
 	return api(Ok, '/api/auth/totp/disable', { method: 'POST', body: { password } });
 }
 
+/** Settings › Sign-in: whether every local account must have two-factor sign-in */
+export async function getTwoFactorPolicy(signal?: AbortSignal): Promise<boolean> {
+	const out = await api(wrapped(v.looseObject({ required: BoolLike })), '/api/settings/two-factor', { signal });
+	return out.required === true;
+}
+
+export function saveTwoFactorPolicy(required: boolean) {
+	return api(Ok, '/api/settings/two-factor', { method: 'PUT', body: { required } });
+}
+
 /* ── Sign-in: for everyone ── */
 
 export const Enrollment = v.looseObject({

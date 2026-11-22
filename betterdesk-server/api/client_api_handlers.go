@@ -231,6 +231,10 @@ func (s *Server) handleClientLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := login.User
+	if s.twoFactorSetupDue(user) {
+		writeTwoFactorSetupDue(w)
+		return
+	}
 
 	// Check if TOTP 2FA is required
 	if user.TOTPEnabled && user.TOTPSecret != "" {

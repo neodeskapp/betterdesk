@@ -139,6 +139,8 @@
     "totp_enter_recovery": "Voer een herstelcode in",
     "totp_session_expired": "Sessie verlopen. Log opnieuw in.",
     "totp_already_enabled": "Tweefactorauthenticatie is al ingeschakeld",
+    "totp_setup_required_title": "Aanmelden in twee stappen instellen",
+    "totp_setup_required": "Deze server vereist aanmelden in twee stappen. Scan de QR-code met een authenticator-app en voer de 6-cijferige code in die deze toont.",
     "pro_only_account": "Dit account is alleen voor de RustDesk-desktopclient. Gebruik de RustDesk-app om in te loggen.",
     "account_disabled": "Dit account is uitgeschakeld. Neem contact op met een beheerder.",
     "too_many_attempts": "Te veel inlogpogingen. Probeer het later opnieuw.",
@@ -1343,6 +1345,8 @@
       "ldap_effect": "Geldt vanaf de volgende aanmelding. Wie al is aangemeld, blijft aangemeld.",
       "oidc_effect": "Geldt vanaf de volgende aanmelding. Wie al is aangemeld, blijft aangemeld.",
       "totp_note": "Bij elke aanmelding voert u ook een code in uit een app op uw telefoon, zoals Google Authenticator, Microsoft Authenticator of Authy.",
+      "require_2fa": "Aanmelden in twee stappen vereisen",
+      "require_2fa_hint": "Een lokaal account zonder aanmelden in twee stappen stelt het in direct na de volgende aanmelding met wachtwoord en kan tot die tijd niets anders; de desktopclient en de API weigeren het tot dan. Directory- en eenmalige-aanmeldingsaccounts worden aan hun provider overgelaten.",
       "ldap_enabled_hint": "Mensen uit uw directory melden zich aan met hun directorygebruikersnaam en -wachtwoord. Elk account gebruikt één manier van aanmelden, dus directoryaccounts kunnen geen wachtwoord uit deze console gebruiken.",
       "attrs_note": "De standaardwaarden werken in de meeste gevallen. Wijzig ze alleen als namen of e-mailadressen verkeerd of leeg binnenkomen."
     },

@@ -174,6 +174,11 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.TOTPSetupRequired {
+		_ = h.d.Authn.RecordAttempt(ctx, username, ip, false)
+		kit.JSON(w, r, http.StatusForbidden, collisionAnswer{Error: authn.TOTPSetupDueMessage, Code: authn.TOTPSetupDueCode})
+		return
+	}
 	userID := user.ID.V
 	if user.TOTPRequired && !h.totpBypass {
 		secret, err := randomSecret()

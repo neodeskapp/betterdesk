@@ -394,6 +394,10 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := login.User
+	if s.twoFactorSetupDue(user) {
+		writeTwoFactorSetupDue(w)
+		return
+	}
 
 	// If TOTP is enabled, issue a short-lived partial token that requires 2FA completion.
 	// H4: Use 5-minute TTL instead of the default 24h to limit brute-force window.

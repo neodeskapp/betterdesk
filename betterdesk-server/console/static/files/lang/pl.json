@@ -152,6 +152,8 @@
     "totp_session_expired": "Sesja wygasła. Zaloguj się ponownie.",
     "totp_rate_limited": "Zbyt wiele prób. Spróbuj ponownie później.",
     "totp_already_enabled": "Uwierzytelnianie dwuskładnikowe jest już włączone",
+    "totp_setup_required_title": "Skonfiguruj logowanie dwuetapowe",
+    "totp_setup_required": "Ten serwer wymaga logowania dwuetapowego. Zeskanuj kod QR aplikacją uwierzytelniającą, a potem wpisz wyświetlony 6-cyfrowy kod.",
     "passwords_mismatch": "Hasła nie są identyczne",
     "emergency_mode_banner": "Serwer Go jest nieosiągalny — tryb awaryjny (tylko admin, ograniczona funkcjonalność)",
     "session_expired": "Twoja sesja wygasła lub została zastąpiona nowym logowaniem. Zaloguj się ponownie.",
@@ -1343,6 +1345,8 @@
       "ldap_effect": "Obowiązuje od następnego logowania. Zalogowane osoby pozostają zalogowane.",
       "oidc_effect": "Obowiązuje od następnego logowania. Zalogowane osoby pozostają zalogowane.",
       "totp_note": "Przy każdym logowaniu wpisujesz też kod z aplikacji w telefonie, na przykład Google Authenticator, Microsoft Authenticator lub Authy.",
+      "require_2fa": "Wymagaj logowania dwuetapowego",
+      "require_2fa_hint": "Konto lokalne bez logowania dwuetapowego konfiguruje je zaraz po następnym logowaniu hasłem i do tego czasu nie może robić nic innego; klient na komputer i API odrzucają je do tego czasu. Konta z katalogu i logowania jednokrotnego zostają w gestii ich dostawcy.",
       "ldap_enabled_hint": "Osoby z katalogu logują się nazwą użytkownika i hasłem z katalogu. Każde konto używa jednego sposobu logowania, więc konta z katalogu nie mogą używać hasła ustawionego w tej konsoli.",
       "attrs_note": "Wartości domyślne działają w większości przypadków. Zmień je tylko wtedy, gdy nazwy lub adresy e-mail przychodzą błędne lub puste."
     },

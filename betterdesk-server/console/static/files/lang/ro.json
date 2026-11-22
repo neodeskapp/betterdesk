@@ -145,6 +145,8 @@
     "totp_enter_recovery": "Vă rugăm să introduceți un cod de recuperare",
     "totp_session_expired": "Sesiunea a expirat. Vă rugăm să vă conectați din nou.",
     "totp_already_enabled": "Autentificarea cu doi factori este deja activată",
+    "totp_setup_required_title": "Configurați autentificarea în doi pași",
+    "totp_setup_required": "Acest server cere autentificarea în doi pași. Scanați codul QR cu o aplicație de autentificare, apoi introduceți codul de 6 cifre afișat.",
     "pro_only_account": "Acest cont este numai pentru clientul desktop RustDesk. Vă rugăm să utilizați aplicația RustDesk pentru a vă conecta.",
     "account_disabled": "Acest cont este dezactivat. Contactați un administrator.",
     "too_many_attempts": "Prea multe încercări de autentificare. Încercați din nou mai târziu.",
@@ -1349,6 +1351,8 @@
       "ldap_effect": "Se aplică la următoarea conectare. Cei deja conectați rămân conectați.",
       "oidc_effect": "Se aplică la următoarea conectare. Cei deja conectați rămân conectați.",
       "totp_note": "La fiecare conectare introduceți și un cod dintr-o aplicație de pe telefon, de exemplu Google Authenticator, Microsoft Authenticator sau Authy.",
+      "require_2fa": "Cere autentificarea în doi pași",
+      "require_2fa_hint": "Un cont local fără autentificare în doi pași o configurează imediat după următoarea autentificare cu parolă și nu poate face altceva până atunci; clientul desktop și API-ul îl refuză până atunci. Conturile din director și cele cu autentificare unică rămân în grija furnizorului lor.",
       "ldap_enabled_hint": "Persoanele din director se conectează cu numele de utilizator și parola din director. Fiecare cont folosește un singur mod de conectare, deci conturile din director nu pot folosi o parolă setată în această consolă.",
       "attrs_note": "Valorile implicite merg în majoritatea cazurilor. Schimbați-le doar dacă numele sau adresele de e-mail ajung greșit sau goale."
     },

@@ -145,6 +145,8 @@
     "totp_enter_recovery": "Adjon meg egy helyreállítási kódot",
     "totp_session_expired": "A munkamenet lejárt. Kérjük, jelentkezzen be újra.",
     "totp_already_enabled": "A kéttényezős hitelesítés már engedélyezve van",
+    "totp_setup_required_title": "Kétlépcsős bejelentkezés beállítása",
+    "totp_setup_required": "Ez a szerver megköveteli a kétlépcsős bejelentkezést. Olvassa be a QR-kódot egy hitelesítő alkalmazással, majd írja be a megjelenő 6 számjegyű kódot.",
     "pro_only_account": "Ez a fiók csak a RustDesk asztali klienshez használható. Kérjük, használja a RustDesk alkalmazást a bejelentkezéshez.",
     "account_disabled": "Ez a fiók le van tiltva. Forduljon egy rendszergazdához.",
     "too_many_attempts": "Túl sok bejelentkezési kísérlet. Kérjük, próbálja újra később.",
@@ -1349,6 +1351,8 @@
       "ldap_effect": "A következő bejelentkezéstől érvényes. A már bejelentkezett felhasználók bejelentkezve maradnak.",
       "oidc_effect": "A következő bejelentkezéstől érvényes. A már bejelentkezett felhasználók bejelentkezve maradnak.",
       "totp_note": "Minden bejelentkezéskor egy telefonos alkalmazás kódját is meg kell adnia, például Google Authenticator, Microsoft Authenticator vagy Authy.",
+      "require_2fa": "Kétlépcsős bejelentkezés megkövetelése",
+      "require_2fa_hint": "A kétlépcsős bejelentkezés nélküli helyi fiók a következő jelszavas bejelentkezése után azonnal beállítja azt, és addig mást nem tehet; az asztali kliens és az API addig elutasítja. A címtár- és egyszeri bejelentkezéses fiókokat a szolgáltatójuk kezeli.",
       "ldap_enabled_hint": "A címtár felhasználói a címtárbeli felhasználónevükkel és jelszavukkal jelentkeznek be. Minden fiók egyféle bejelentkezést használ, így a címtárfiókok nem használhatnak ebben a konzolban beállított jelszót.",
       "attrs_note": "Az alapértékek a legtöbb esetben megfelelnek. Csak akkor módosítsa, ha a nevek vagy e-mail-címek hibásan vagy üresen érkeznek."
     },

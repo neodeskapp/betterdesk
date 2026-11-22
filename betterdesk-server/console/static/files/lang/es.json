@@ -143,6 +143,8 @@
     "totp_enter_recovery": "Introduzca un código de recuperación",
     "totp_session_expired": "Sesión expirada. Inicie sesión de nuevo.",
     "totp_already_enabled": "La autenticación de dos factores ya está activada",
+    "totp_setup_required_title": "Configure el inicio de sesión en dos pasos",
+    "totp_setup_required": "Este servidor exige el inicio de sesión en dos pasos. Escanee el código QR con una aplicación de autenticación y escriba el código de 6 dígitos que muestra.",
     "passwords_mismatch": "Las contraseñas no coinciden",
     "or": "o",
     "login_sso": "Iniciar sesión con SSO",
@@ -1343,6 +1345,8 @@
       "ldap_effect": "Se aplica en el siguiente inicio de sesión. Quienes ya hayan iniciado sesión la mantienen.",
       "oidc_effect": "Se aplica en el siguiente inicio de sesión. Quienes ya hayan iniciado sesión la mantienen.",
       "totp_note": "Cada vez que inicie sesión, también introducirá un código de una app del teléfono, como Google Authenticator, Microsoft Authenticator o Authy.",
+      "require_2fa": "Exigir el inicio de sesión en dos pasos",
+      "require_2fa_hint": "Una cuenta local sin inicio de sesión en dos pasos lo configura justo después de su siguiente inicio de sesión con contraseña y no puede hacer nada más hasta entonces; el cliente de escritorio y la API la rechazan hasta que lo haga. Las cuentas del directorio y de inicio de sesión único quedan a cargo de su proveedor.",
       "ldap_enabled_hint": "Las personas de su directorio inician sesión con su usuario y contraseña del directorio. Cada cuenta usa una sola forma de iniciar sesión, así que las cuentas del directorio no pueden usar una contraseña definida en esta consola.",
       "attrs_note": "Los valores predeterminados sirven en la mayoría de los casos. Cámbielos solo si los nombres o correos llegan mal o vacíos."
     },

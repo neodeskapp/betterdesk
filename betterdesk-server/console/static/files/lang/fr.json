@@ -156,6 +156,8 @@
     "totp_session_expired": "Session expirée. Veuillez vous reconnecter.",
     "totp_rate_limited": "Zu viele Versuche. Bitte versuchen Sie es später erneut.",
     "totp_already_enabled": "L'authentification à deux facteurs est déjà activée",
+    "totp_setup_required_title": "Configurer la connexion à deux facteurs",
+    "totp_setup_required": "Ce serveur exige la connexion à deux facteurs. Scannez le code QR avec une application d'authentification, puis saisissez le code à 6 chiffres qu'elle affiche.",
     "passwords_mismatch": "Les mots de passe ne correspondent pas",
     "emergency_mode_banner": "Go-Server nicht erreichbar — Notfallmodus aktiv (nur Admin, eingeschränkte Funktionalität)",
     "session_expired": "Votre session a expiré ou a été remplacée par une nouvelle connexion. Veuillez vous reconnecter.",
@@ -1347,6 +1349,8 @@
       "ldap_effect": "S'applique à la prochaine connexion. Les personnes déjà connectées le restent.",
       "oidc_effect": "S'applique à la prochaine connexion. Les personnes déjà connectées le restent.",
       "totp_note": "À chaque connexion, vous saisissez aussi un code d'une appli sur votre téléphone, comme Google Authenticator, Microsoft Authenticator ou Authy.",
+      "require_2fa": "Exiger la connexion à deux facteurs",
+      "require_2fa_hint": "Un compte local sans connexion à deux facteurs la configure juste après sa prochaine connexion par mot de passe et ne peut rien faire d'autre d'ici là ; le client de bureau et l'API le refusent jusque-là. Les comptes de l'annuaire et de l'authentification unique sont laissés à leur fournisseur.",
       "ldap_enabled_hint": "Les personnes de votre annuaire se connectent avec leur identifiant et mot de passe de l'annuaire. Chaque compte utilise une seule méthode de connexion : les comptes de l'annuaire ne peuvent pas utiliser un mot de passe défini dans cette console.",
       "attrs_note": "Les valeurs par défaut conviennent dans la plupart des cas. Modifiez-les seulement si les noms ou adresses e-mail arrivent faux ou vides."
     },

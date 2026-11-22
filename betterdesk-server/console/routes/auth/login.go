@@ -264,8 +264,12 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	// The sign-in of an account with a second factor counts as a success
 	// only once the code is right (finishSecondFactor): until then the
 	// failed attempts before it, and wrong codes, keep counting
-	if !user.TOTPRequired {
+	if !user.TOTPRequired && !user.TOTPSetupRequired {
 		h.recordAttempt(r, name, true)
+	}
+	if user.TOTPSetupRequired {
+		h.beginRequiredSetup(w, r, user, meta)
+		return
 	}
 
 	if user.TOTPRequired {

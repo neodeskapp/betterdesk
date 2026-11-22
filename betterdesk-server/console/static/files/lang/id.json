@@ -145,6 +145,8 @@
     "totp_enter_recovery": "Silakan masukkan kode pemulihan",
     "totp_session_expired": "Sesi berakhir. Silakan masuk lagi.",
     "totp_already_enabled": "Otentikasi dua faktor sudah diaktifkan",
+    "totp_setup_required_title": "Siapkan masuk dua langkah",
+    "totp_setup_required": "Server ini mewajibkan masuk dua langkah. Pindai kode QR dengan aplikasi autentikator, lalu masukkan kode 6 digit yang ditampilkannya.",
     "pro_only_account": "Akun ini hanya untuk klien desktop RustDesk. Silakan gunakan aplikasi RustDesk untuk login.",
     "account_disabled": "Akun ini dinonaktifkan. Hubungi administrator.",
     "too_many_attempts": "Terlalu banyak percobaan masuk. Silakan coba lagi nanti.",
@@ -1349,6 +1351,8 @@
       "ldap_effect": "Berlaku pada proses masuk berikutnya. Orang yang sudah masuk tetap masuk.",
       "oidc_effect": "Berlaku pada proses masuk berikutnya. Orang yang sudah masuk tetap masuk.",
       "totp_note": "Setiap kali masuk, Anda juga memasukkan kode dari aplikasi di ponsel, misalnya Google Authenticator, Microsoft Authenticator, atau Authy.",
+      "require_2fa": "Wajibkan masuk dua langkah",
+      "require_2fa_hint": "Akun lokal tanpa masuk dua langkah menyiapkannya tepat setelah masuk berikutnya dengan kata sandi dan tidak dapat melakukan hal lain sebelum itu; klien desktop dan API menolaknya sampai selesai. Akun direktori dan single sign-on diserahkan ke penyedianya.",
       "ldap_enabled_hint": "Orang dari direktori Anda masuk dengan nama pengguna dan kata sandi direktori. Setiap akun memakai satu cara masuk, jadi akun direktori tidak bisa memakai kata sandi yang diatur di konsol ini.",
       "attrs_note": "Nilai bawaan cocok untuk sebagian besar kasus. Ubah hanya jika nama atau alamat email masuk salah atau kosong."
     },

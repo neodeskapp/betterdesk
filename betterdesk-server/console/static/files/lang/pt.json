@@ -139,6 +139,8 @@
     "totp_enter_recovery": "Insira um código de recuperação",
     "totp_session_expired": "Sessão expirada. Por favor, inicie sessão novamente.",
     "totp_already_enabled": "A autenticação de dois fatores já está ativada",
+    "totp_setup_required_title": "Configure o login em duas etapas",
+    "totp_setup_required": "Este servidor exige o login em duas etapas. Leia o código QR com um app autenticador e introduza o código de 6 dígitos que ele mostra.",
     "pro_only_account": "Esta conta e apenas para o cliente de ambiente de trabalho RustDesk. Utilize a aplicacao RustDesk para iniciar sessao.",
     "account_disabled": "Esta conta está desativada. Fale com um administrador.",
     "too_many_attempts": "Demasiadas tentativas de início de sessão. Tente novamente mais tarde.",
@@ -1343,6 +1345,8 @@
       "ldap_effect": "Aplica-se ao próximo início de sessão. Quem já tem sessão iniciada mantém-na.",
       "oidc_effect": "Aplica-se ao próximo início de sessão. Quem já tem sessão iniciada mantém-na.",
       "totp_note": "Sempre que entrar, também introduz um código de uma app no telemóvel, como Google Authenticator, Microsoft Authenticator ou Authy.",
+      "require_2fa": "Exigir o login em duas etapas",
+      "require_2fa_hint": "Uma conta local sem login em duas etapas configura-o logo após o próximo login com senha e não pode fazer mais nada até lá; o cliente de desktop e a API recusam-na até lá. As contas do diretório e de login único ficam a cargo do seu provedor.",
       "ldap_enabled_hint": "As pessoas do seu diretório entram com o nome de utilizador e a palavra-passe do diretório. Cada conta usa uma única forma de entrar, por isso as contas do diretório não podem usar uma palavra-passe definida nesta consola.",
       "attrs_note": "Os valores predefinidos funcionam na maioria dos casos. Altere-os só se nomes ou endereços de email chegarem errados ou vazios."
     },

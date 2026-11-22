@@ -145,6 +145,8 @@
     "totp_enter_recovery": "Lütfen bir kurtarma kodu girin",
     "totp_session_expired": "Oturumun süresi doldu. Lütfen tekrar giriş yapın.",
     "totp_already_enabled": "İki faktörlü kimlik doğrulama zaten etkin",
+    "totp_setup_required_title": "İki adımlı oturum açmayı kurun",
+    "totp_setup_required": "Bu sunucu iki adımlı oturum açma gerektirir. QR kodunu bir kimlik doğrulama uygulamasıyla tarayın, ardından gösterdiği 6 haneli kodu girin.",
     "pro_only_account": "Bu hesap yalnızca RustDesk masaüstü istemcisi içindir. Giriş yapmak için lütfen RustDesk uygulamasını kullanın.",
     "account_disabled": "Bu hesap devre dışı. Bir yöneticiye başvurun.",
     "too_many_attempts": "Çok fazla oturum açma denemesi. Lütfen daha sonra tekrar deneyin.",
@@ -1349,6 +1351,8 @@
       "ldap_effect": "Bir sonraki oturum açmada uygulanır. Zaten oturum açmış olanların oturumu açık kalır.",
       "oidc_effect": "Bir sonraki oturum açmada uygulanır. Zaten oturum açmış olanların oturumu açık kalır.",
       "totp_note": "Her oturum açışınızda telefonunuzdaki bir uygulamadan, örneğin Google Authenticator, Microsoft Authenticator veya Authy'den bir kod da girersiniz.",
+      "require_2fa": "İki adımlı oturum açmayı zorunlu kıl",
+      "require_2fa_hint": "İki adımlı oturum açması olmayan yerel bir hesap, bir sonraki parolalı oturum açışından hemen sonra bunu kurar ve o zamana kadar başka bir şey yapamaz; masaüstü istemcisi ve API o zamana kadar onu reddeder. Dizin ve çoklu oturum açma hesapları kendi sağlayıcılarına bırakılır.",
       "ldap_enabled_hint": "Dizininizdeki kişiler dizin kullanıcı adı ve parolasıyla oturum açar. Her hesap tek bir oturum açma yolu kullanır; bu nedenle dizin hesapları bu konsolda belirlenen parolayı kullanamaz.",
       "attrs_note": "Varsayılanlar çoğu durumda işe yarar. Yalnızca adlar veya e-posta adresleri yanlış ya da boş geliyorsa değiştirin."
     },

@@ -156,6 +156,8 @@
     "totp_session_expired": "會話已過期，請重新登錄。",
     "totp_rate_limited": "嘗試次數過多，請稍後再試。",
     "totp_already_enabled": "雙因素認證已啓用",
+    "totp_setup_required_title": "設定兩步驟登入",
+    "totp_setup_required": "此伺服器要求兩步驟登入。請用驗證器應用程式掃描 QR 碼，然後輸入它顯示的 6 位數代碼。",
     "passwords_mismatch": "兩次輸入的密碼不一致",
     "emergency_mode_banner": "Go 服務器不可達 — 緊急模式運行中（僅管理員，功能受限）",
     "session_expired": "您的工作階段已過期或被新的登入取代。請重新登入。",
@@ -1347,6 +1349,8 @@
       "ldap_effect": "從下次登入開始套用。已登入的人會保持登入狀態。",
       "oidc_effect": "從下次登入開始套用。已登入的人會保持登入狀態。",
       "totp_note": "每次登入時，您還要輸入手機應用程式中的驗證碼，例如 Google Authenticator、Microsoft Authenticator 或 Authy。",
+      "require_2fa": "要求兩步驟登入",
+      "require_2fa_hint": "沒有兩步驟登入的本機帳戶會在下次以密碼登入後立即設定，在此之前不能做其他操作；桌面用戶端與 API 在設定完成前會拒絕它。目錄與單一登入帳戶交由其提供者管理。",
       "ldap_enabled_hint": "目錄中的人員使用目錄的使用者名稱和密碼登入。每個帳號只使用一種登入方式，因此目錄帳號無法使用在此主控台設定的密碼。",
       "attrs_note": "預設值適用於大多數情況。只有在名稱或電子郵件地址錯誤或空白時才需變更。"
     },

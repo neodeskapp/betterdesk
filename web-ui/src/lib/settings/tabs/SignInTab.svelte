@@ -17,11 +17,13 @@
 		getLdap,
 		getOidc,
 		getTotpEnabled,
+		getTwoFactorPolicy,
 		renewRecoveryCodes,
 		saveClientSessions,
 		saveEnrollment,
 		saveLdap,
 		saveOidc,
+		saveTwoFactorPolicy,
 		setupTotp,
 		testLdap,
 		testOidc
@@ -347,6 +349,24 @@
 		}
 	});
 
+	/* ── Mandatory two-factor sign-in ── */
+
+	const twoFactor = createForm({
+		initial: { required: false },
+		submit: async (v) => {
+			await saveTwoFactorPolicy(v.required);
+			return { required: await getTwoFactorPolicy() };
+		}
+	});
+
+	async function loadTwoFactor() {
+		try {
+			twoFactor.reset({ required: await getTwoFactorPolicy() });
+		} catch (err) {
+			twoFactor.status = { state: 'error', message: errText(err) };
+		}
+	}
+
 	async function loadSessions() {
 		try {
 			const d = await getClientSessions();
@@ -551,7 +571,9 @@
 	/* ── Start ── */
 
 	$effect(() =>
-		trackDirty(() => password.dirty || enrollment.dirty || sessions.dirty || ldap.dirty || oidc.dirty)
+		trackDirty(
+			() => password.dirty || enrollment.dirty || sessions.dirty || twoFactor.dirty || ldap.dirty || oidc.dirty
+		)
 	);
 
 	$effect(() => {
@@ -559,6 +581,7 @@
 		if (!canConfig) return;
 		void loadEnrollment();
 		void loadSessions();
+		void loadTwoFactor();
 		void loadLdap();
 		void loadOidc();
 	});
@@ -903,6 +926,21 @@
 							status={sessions.status}
 							label={t('settings.client_sessions_save')}
 						/>
+					</form>
+
+					<form
+						id="two-factor-policy-form"
+						class="form-column settings-subgroup"
+						onsubmit={twoFactor.onsubmit}
+						novalidate
+					>
+						<Checkbox
+							id="require-two-factor"
+							label={t('settings.signin.require_2fa')}
+							hint={t('settings.signin.require_2fa_hint')}
+							bind:checked={twoFactor.values.required}
+						/>
+						<SaveBar form={twoFactor} label={t('actions.save')} />
 					</form>
 				{/snippet}
 				{#snippet end()}

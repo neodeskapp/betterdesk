@@ -83,6 +83,10 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 			"error", "Two-factor authentication is required for this account", "code", "totp_required"))
 		return
 	}
+	if user.TOTPSetupRequired {
+		kit.JSON(w, r, http.StatusForbidden, goapi.NewObject("error", authn.TOTPSetupDueMessage, "code", authn.TOTPSetupDueCode))
+		return
+	}
 	device, err := textOr(jsreq.Prop(body, "device_id"), "")
 	if err != nil {
 		h.serverError(w, r, "Operator login error:", err, "Authentication failed")

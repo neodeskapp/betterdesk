@@ -145,6 +145,8 @@
     "totp_enter_recovery": "Ange en återställningskod",
     "totp_session_expired": "Sessionen har löpt ut. Logga in igen.",
     "totp_already_enabled": "Tvåfaktorsautentisering är redan aktiverad",
+    "totp_setup_required_title": "Konfigurera tvåstegsinloggning",
+    "totp_setup_required": "Den här servern kräver tvåstegsinloggning. Skanna QR-koden med en autentiseringsapp och ange den 6-siffriga kod den visar.",
     "pro_only_account": "Det här kontot är endast till för RustDesk stationär klient. Använd RustDesk-appen för att logga in.",
     "account_disabled": "Det här kontot är inaktiverat. Kontakta en administratör.",
     "too_many_attempts": "För många inloggningsförsök. Försök igen senare.",
@@ -1349,6 +1351,8 @@
       "ldap_effect": "Gäller från nästa inloggning. De som redan är inloggade förblir inloggade.",
       "oidc_effect": "Gäller från nästa inloggning. De som redan är inloggade förblir inloggade.",
       "totp_note": "Varje gång du loggar in anger du också en kod från en app i telefonen, till exempel Google Authenticator, Microsoft Authenticator eller Authy.",
+      "require_2fa": "Kräv tvåstegsinloggning",
+      "require_2fa_hint": "Ett lokalt konto utan tvåstegsinloggning konfigurerar det direkt efter nästa inloggning med lösenord och kan inte göra något annat innan dess; skrivbordsklienten och API:et avvisar det tills dess. Katalog- och enkel inloggning-konton lämnas åt sin leverantör.",
       "ldap_enabled_hint": "Personer från katalogen loggar in med sitt katalogkonto och lösenord. Varje konto använder ett sätt att logga in, så katalogkonton kan inte använda ett lösenord som satts i den här konsolen.",
       "attrs_note": "Standardvärdena fungerar i de flesta fall. Ändra dem bara om namn eller e-postadresser kommer fel eller tomma."
     },
