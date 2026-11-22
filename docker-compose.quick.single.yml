@@ -159,6 +159,45 @@ services:
       retries: 3
       start_period: 45s
 
+  # PostgreSQL instead of SQLite (the profile "postgres"; betterdesk-docker.sh
+  # sets it up). By hand, in .env next to this file:
+  #   COMPOSE_PROFILES=postgres
+  #   POSTGRES_PASSWORD=<a long random password>
+  #   DATABASE_URL=postgres://betterdesk:<the same password>@postgres:5432/betterdesk?sslmode=disable
+  # A volume with SQLite data is not moved by that: betterdesk-docker.sh
+  # postgres moves it.
+  postgres:
+    image: postgres:16-alpine
+    container_name: betterdesk-postgres
+    profiles:
+      - postgres
+    environment:
+      - POSTGRES_USER=betterdesk
+      # Compose reads this also while the profile is off; PostgreSQL itself
+      # refuses to start with an empty one.
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-}
+      - POSTGRES_DB=betterdesk
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - betterdesk-net
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+      - CHOWN
+      - FOWNER
+      - DAC_OVERRIDE
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U betterdesk -d betterdesk"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
 networks:
   betterdesk-net:
     driver: bridge
@@ -168,3 +207,5 @@ volumes:
     name: betterdesk-data
   console-data:
     name: betterdesk-console-data
+  postgres-data:
+    name: betterdesk-postgres-data
