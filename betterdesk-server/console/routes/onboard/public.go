@@ -207,6 +207,9 @@ type joinedDevice struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	FolderID *int64 `json:"folder_id"`
+	// FolderName is the folder's name, for the client to show; "" without
+	// a folder.
+	FolderName string `json:"folder_name"`
 }
 
 // joinAnswer is POST /api/onboard/join.
@@ -271,6 +274,7 @@ func (h *handlers) join(w http.ResponseWriter, r *http.Request) {
 		} else {
 			folder := rec.FolderID
 			device.FolderID = &folder
+			device.FolderName = h.folderName(ctx, folder)
 		}
 	}
 	creator := rec.CreatedByID
