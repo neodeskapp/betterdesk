@@ -28,15 +28,15 @@ const CB_RESPONSE_FAIL = 0x2;
 const FILECONTENTS_SIZE = 0x1;
 const FILECONTENTS_RANGE = 0x2;
 
-/** What RDCliprdr uses of the client's input (RDInput); the optional members are not on RDInput */
+/** What RDCliprdr uses of the client's input (RDInput) */
 export interface RDCliprdrInput {
 	canvas: HTMLCanvasElement;
-	onPotentialFileDragOut?: () => void;
-	_sendSyntheticMouseUp?: (button: number) => void;
-	sendCtrlC?: () => void;
-	sendCtrlV?: () => void;
-	setMouseSuppressed?: (suppressed: boolean) => void;
-	clickAtCanvas?: (x: number, y: number) => void;
+	onPotentialFileDragOut: (() => void) | null;
+	_sendSyntheticMouseUp(button: number): void;
+	sendCtrlC(): void;
+	sendCtrlV(): void;
+	setMouseSuppressed(suppressed: boolean): void;
+	clickAtCanvas(x: number, y: number): void;
 }
 
 /** A request to the peer waiting for its FormatDataResponse or FileContentsResponse */
@@ -311,7 +311,7 @@ export const RDCliprdr = {
 
 		// End remote Explorer drag only — do not freeze local input for seconds.
 		// Full mouse suppress happens once file FormatList arrives.
-		if (client.input && typeof client.input._sendSyntheticMouseUp === 'function') {
+		if (client.input) {
 			client.input._sendSyntheticMouseUp(RDInput.MOUSE_BUTTON_LEFT);
 		}
 		try {
@@ -327,7 +327,7 @@ export const RDCliprdr = {
 		}
 		setTimeout(() => {
 			if (!client._cliprdrDragOutConverting) return;
-			if (client.input && typeof client.input.sendCtrlC === 'function') {
+			if (client.input) {
 				client.input.sendCtrlC();
 			}
 		}, 60);
@@ -340,7 +340,7 @@ export const RDCliprdr = {
 			client._cliprdrOleDragIntent = false;
 			client._cliprdrOleDragWhenReady = false;
 			RDCliprdr._disarmOleDrag(client);
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+			if (client.input) {
 				client.input.setMouseSuppressed(false);
 			}
 			console.warn(
@@ -356,7 +356,7 @@ export const RDCliprdr = {
 			clearTimeout(client._cliprdrDragOutTimer);
 			client._cliprdrDragOutTimer = null;
 		}
-		if (restoreMouse && client.input && typeof client.input.setMouseSuppressed === 'function') {
+		if (restoreMouse && client.input) {
 			client.input.setMouseSuppressed(false);
 		}
 	},
@@ -519,7 +519,7 @@ export const RDCliprdr = {
 					});
 				if (client._state !== 'streaming' || client.viewOnly) return;
 
-				if (position && typeof client.input.clickAtCanvas === 'function') {
+				if (position) {
 					const mapped = RDCliprdr._mapDropPositionToCanvas(client, position);
 					if (mapped) {
 						debugLog('auto-paste: click at canvas', mapped.x, mapped.y);
@@ -529,10 +529,8 @@ export const RDCliprdr = {
 						});
 					}
 				}
-				if (typeof client.input.sendCtrlV === 'function') {
-					debugLog('auto-paste: sending synthetic Ctrl+V after drop');
-					client.input.sendCtrlV();
-				}
+				debugLog('auto-paste: sending synthetic Ctrl+V after drop');
+				client.input.sendCtrlV();
 			} catch (err) {
 				console.warn('[RDCliprdr] auto-paste after drop failed:', err);
 			}
@@ -690,7 +688,7 @@ export const RDCliprdr = {
 			client._cliprdrReceiving = true;
 			suppressOutbound(client, OUTBOUND_SUPPRESS_MS);
 			if (dragIntent) {
-				if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+				if (client.input) {
 					client.input.setMouseSuppressed(true);
 				}
 				try {
@@ -711,7 +709,7 @@ export const RDCliprdr = {
 			}
 			RDCliprdr._disarmOleDrag(client);
 			client._cliprdrOleDragIntent = false;
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+			if (client.input) {
 				client.input.setMouseSuppressed(false);
 			}
 		} finally {
@@ -762,7 +760,7 @@ export const RDCliprdr = {
 				return;
 			}
 			// Stop forwarding mouse to remote so the cursor can leave the window.
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+			if (client.input) {
 				client.input.setMouseSuppressed(true);
 			}
 			debugInfo('[RDCliprdr] starting OLE drag-out with', paths.length, 'path(s)');
@@ -772,7 +770,7 @@ export const RDCliprdr = {
 			console.warn('[RDCliprdr] OLE drag-out failed:', err);
 		} finally {
 			client._cliprdrOleDragStarting = false;
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+			if (client.input) {
 				client.input.setMouseSuppressed(false);
 			}
 		}
@@ -852,7 +850,7 @@ export const RDCliprdr = {
 			// Download finished but nothing to drag — restore local mouse.
 			client._cliprdrOleDragIntent = false;
 			RDCliprdr._disarmOleDrag(client);
-			if (client.input && typeof client.input.setMouseSuppressed === 'function') {
+			if (client.input) {
 				client.input.setMouseSuppressed(false);
 			}
 		}

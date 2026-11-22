@@ -58,6 +58,17 @@ export class RDInput {
 	_composing: boolean;
 	/** Physical codes suppressed while awaiting compositionend */
 	_deadCodes: Set<string>;
+	/**
+	 * Called once per press when a drag with the left button reaches the
+	 * screen's edge: the file clipboard turns a file drag on the device into
+	 * a drag out of the viewer (RDCliprdr)
+	 */
+	onPotentialFileDragOut: (() => void) | null;
+	/** The current left-button drag was reported to onPotentialFileDragOut */
+	_dragOutSignalled: boolean;
+	/** While set, mouse moves, presses and the wheel go nowhere: a local file drag is under way */
+	_mouseSuppressed: boolean;
+	_onMouseLeave: (e: MouseEvent) => void;
 
 	/**
 	 * @param canvas - The canvas element to capture events from
@@ -95,6 +106,13 @@ export class RDInput {
 
 		this._composing = false;
 		this._deadCodes = new Set();
+
+		this.onPotentialFileDragOut = null;
+		this._dragOutSignalled = false;
+		this._mouseSuppressed = false;
+		this._onMouseLeave = (e) => {
+			if (this.enabled && !this._mouseSuppressed) this._signalDragOut(e);
+		};
 	}
 
 	/**
@@ -123,6 +141,7 @@ export class RDInput {
 
 		const c = this.canvas;
 		c.addEventListener('mousemove', this._onMouseMove);
+		c.addEventListener('mouseleave', this._onMouseLeave);
 		c.addEventListener('mousedown', this._onMouseDown);
 		// A button pressed on the screen may be let go anywhere: listen on the window
 		window.addEventListener('mouseup', this._onMouseUp);
@@ -151,6 +170,7 @@ export class RDInput {
 
 		const c = this.canvas;
 		c.removeEventListener('mousemove', this._onMouseMove);
+		c.removeEventListener('mouseleave', this._onMouseLeave);
 		c.removeEventListener('mousedown', this._onMouseDown);
 		window.removeEventListener('mouseup', this._onMouseUp);
 		c.removeEventListener('wheel', this._onWheel);
@@ -201,7 +221,8 @@ export class RDInput {
 	}
 
 	_handleMouseMove(e: MouseEvent): void {
-		if (!this.enabled) return;
+		if (!this.enabled || this._mouseSuppressed) return;
+		this._signalDragOut(e);
 
 		const now = performance.now();
 		if (now - this._lastMouseSendTime < this._mouseThrottleMs) return;
@@ -221,7 +242,7 @@ export class RDInput {
 	}
 
 	_handleMouseDown(e: MouseEvent): void {
-		if (!this.enabled) return;
+		if (!this.enabled || this._mouseSuppressed) return;
 		e.preventDefault();
 		this.canvas.focus();
 
@@ -242,6 +263,7 @@ export class RDInput {
 		}
 
 		if (button) {
+			if (button === RDInput.MOUSE_BUTTON_LEFT) this._dragOutSignalled = false;
 			this._buttonsDown.set(button, { x: pos.x, y: pos.y });
 			const mask = RDInput.MOUSE_TYPE_DOWN | (button << 3);
 			this.sendMessage({
@@ -286,6 +308,81 @@ export class RDInput {
 		});
 	}
 
+	/** A drag with the left button at or past the screen's edge: tell onPotentialFileDragOut, once per press */
+	_signalDragOut(e: { clientX: number; clientY: number }): void {
+		if (!this.onPotentialFileDragOut || this._dragOutSignalled) return;
+		if (!this._buttonsDown.has(RDInput.MOUSE_BUTTON_LEFT)) return;
+		const rect = this.canvas.getBoundingClientRect();
+		const edge = 4;
+		const inside =
+			e.clientX > rect.left + edge &&
+			e.clientX < rect.right - edge &&
+			e.clientY > rect.top + edge &&
+			e.clientY < rect.bottom - edge;
+		if (inside) return;
+		this._dragOutSignalled = true;
+		this.onPotentialFileDragOut();
+	}
+
+	/** Let go of a button on the device while the operator still holds it (ends a drag there) */
+	_sendSyntheticMouseUp(button: number): void {
+		const pos = this._buttonsDown.get(button);
+		if (!pos) return;
+		this._buttonsDown.delete(button);
+		this.sendMessage({
+			mouseEvent: { mask: RDInput.MOUSE_TYPE_UP | (button << 3), x: pos.x, y: pos.y, modifiers: [] }
+		});
+	}
+
+	/** Stop or resume sending mouse moves, presses and the wheel (a button held on the device is still let go) */
+	setMouseSuppressed(suppressed: boolean): void {
+		this._mouseSuppressed = !!suppressed;
+	}
+
+	/** A left click on the device at a point of the canvas (CSS pixels from its top left corner) */
+	clickAtCanvas(x: number, y: number): void {
+		if (!this.enabled) return;
+		const pos = this.renderer.canvasToRemote(x, y);
+		if (pos.x < 0 || pos.y < 0 || pos.x > this.renderer.remoteWidth || pos.y > this.renderer.remoteHeight) {
+			return;
+		}
+		const left = RDInput.MOUSE_BUTTON_LEFT << 3;
+		this.sendMessage({
+			mouseEvent: { mask: RDInput.MOUSE_TYPE_DOWN | left, x: pos.x, y: pos.y, modifiers: [] }
+		});
+		this.sendMessage({
+			mouseEvent: { mask: RDInput.MOUSE_TYPE_UP | left, x: pos.x, y: pos.y, modifiers: [] }
+		});
+	}
+
+	/** Copy on the device (Ctrl+C) */
+	sendCtrlC(): void {
+		this._pressWithCtrl('KeyC', 'c');
+	}
+
+	/** Paste on the device (Ctrl+V) */
+	sendCtrlV(): void {
+		this._pressWithCtrl('KeyV', 'v');
+	}
+
+	/** Press and let go of a key with Ctrl held, as the keyboard would send it */
+	_pressWithCtrl(code: string, key: string): void {
+		if (!this.enabled) return;
+		const ctrlHeld = this.pressedKeys.has('ControlLeft') || this.pressedKeys.has('ControlRight');
+		if (!ctrlHeld) {
+			this.pressedKeys.set('ControlLeft', { key: 'Control' });
+			this._sendKeyForCode('ControlLeft', 'Control', true, false, null);
+		}
+		this.pressedKeys.set(code, { key });
+		this._sendKeyForCode(code, key, true, false, null);
+		this.pressedKeys.delete(code);
+		this._sendKeyForCode(code, key, false, false, null);
+		if (!ctrlHeld) {
+			this.pressedKeys.delete('ControlLeft');
+			this._sendKeyForCode('ControlLeft', 'Control', false, false, null);
+		}
+	}
+
 	/** Send a release for every button still held on the device */
 	_releaseAllButtons(): void {
 		for (const [button, pos] of this._buttonsDown) {
@@ -297,7 +394,7 @@ export class RDInput {
 	}
 
 	_handleWheel(e: WheelEvent): void {
-		if (!this.enabled) return;
+		if (!this.enabled || this._mouseSuppressed) return;
 		e.preventDefault();
 
 		const delta = this._normalizeWheelDelta(e);
