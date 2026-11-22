@@ -66,12 +66,5 @@ func TestReplacedAgentLeavesAfterItsSuccessor(t *testing.T) {
 	}
 	op := relay.open(t, "anna", "dev1")
 	op.sync(t)
-	// The history goes out from the socket's queue of API calls, and on a
-	// busy machine it can come later than take's 150 ms
-	waitFor(func() bool {
-		op.mu.Lock()
-		defer op.mu.Unlock()
-		return len(op.got) >= 2
-	})
-	want(t, "a new operator", op.take(), `{"type":"status","agent_connected":false}`, `{"type":"history","messages":[]}`)
+	want(t, "a new operator", op.takeAtLeast(2), `{"type":"status","agent_connected":false}`, `{"type":"history","messages":[]}`)
 }
