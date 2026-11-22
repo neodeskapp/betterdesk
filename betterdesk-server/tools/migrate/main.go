@@ -184,7 +184,7 @@ func runRust2Go(srcPath, dstPath string, overwrite bool) error {
 		if err != nil {
 			return fmt.Errorf("write to PostgreSQL: %w", err)
 		}
-		log.Printf("Migration complete: %d peers → PostgreSQL", count)
+		log.Printf("Migration complete: %d peers copied to PostgreSQL, %d already there and left as they were", count.copied, count.existed)
 		return nil
 	}
 	count, err := writeRustPeersSQLite(dstPath, overwrite, peers)
@@ -306,25 +306,50 @@ func copyRustPeers2SQLite(db *sql.DB, peers []rustPeer) (int, error) {
 	return count, tx.Commit()
 }
 
+// insertCount is what a copy into PostgreSQL did with the rows it read: those
+// it inserted, and those it left as they were because a row with their
+// key was there already (ON CONFLICT DO NOTHING).
+type insertCount struct {
+	copied, existed int
+}
+
+// note counts one row by the rows its insert affected.
+func (c *insertCount) note(affected int64) {
+	if affected == 0 {
+		c.existed++
+	} else {
+		c.copied++
+	}
+}
+
+// add counts the rows of another copy.
+func (c *insertCount) add(o insertCount) {
+	c.copied += o.copied
+	c.existed += o.existed
+}
+
+// read is how many rows were counted.
+func (c insertCount) read() int { return c.copied + c.existed }
+
 // writeRustPeersPG writes Rust peers to a BetterDesk Go PostgreSQL database.
-func writeRustPeersPG(dsn string, peers []rustPeer) (int, error) {
+func writeRustPeersPG(dsn string, peers []rustPeer) (insertCount, error) {
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
-		return 0, fmt.Errorf("connect: %w", err)
+		return insertCount{}, fmt.Errorf("connect: %w", err)
 	}
 	defer pool.Close()
 
 	for _, stmt := range pgSchemaStatements() {
 		if _, err := pool.Exec(ctx, stmt); err != nil {
-			return 0, fmt.Errorf("schema: %w", err)
+			return insertCount{}, fmt.Errorf("schema: %w", err)
 		}
 	}
 
-	count := 0
+	var count insertCount
 	for _, p := range peers {
 		info, uuid, status, user, lastOnline, note, banned, deleted := convertRustPeer(p)
-		_, err := pool.Exec(ctx, `
+		tag, err := pool.Exec(ctx, `
 			INSERT INTO peers (id, uuid, pk, "user", hostname, os, version,
 			                   status, last_online, created_at, banned, soft_deleted, note)
 			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
@@ -335,7 +360,7 @@ func writeRustPeersPG(dsn string, peers []rustPeer) (int, error) {
 		if err != nil {
 			return count, fmt.Errorf("peer %s: %w", p.ID, err)
 		}
-		count++
+		count.note(tag.RowsAffected())
 	}
 	return count, nil
 }
@@ -413,7 +438,7 @@ func runNodeJS2Go(srcPeerPath, srcAuthPath, dstPath string, overwrite bool) erro
 		if err != nil {
 			return fmt.Errorf("migration failed: %w", err)
 		}
-		log.Printf("Migration complete: %d total rows → PostgreSQL", total)
+		log.Printf("Migration complete: %d rows copied to PostgreSQL, %d already there and left as they were", total.copied, total.existed)
 		return nil
 	}
 	total, err := writeSQLiteFile(dstPath, overwrite, func(tmp string) (int, error) {
@@ -468,25 +493,25 @@ func migrateNodeJS2SQLite(srcPeerPath, srcAuthPath string, dstDB *sql.DB) (int, 
 	return total, nil
 }
 
-func migrateNodeJS2PG(srcPeerPath, srcAuthPath, dstDSN string) (int, error) {
+func migrateNodeJS2PG(srcPeerPath, srcAuthPath, dstDSN string) (insertCount, error) {
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, dstDSN)
 	if err != nil {
-		return 0, fmt.Errorf("connect: %w", err)
+		return insertCount{}, fmt.Errorf("connect: %w", err)
 	}
 	defer pool.Close()
 
 	for _, stmt := range pgSchemaStatements() {
 		if _, err := pool.Exec(ctx, stmt); err != nil {
-			return 0, fmt.Errorf("schema: %w", err)
+			return insertCount{}, fmt.Errorf("schema: %w", err)
 		}
 	}
 
-	total := 0
+	var total insertCount
 
 	srcPeerDB, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=ro", srcPeerPath))
 	if err != nil {
-		return 0, err
+		return total, err
 	}
 	defer srcPeerDB.Close()
 
@@ -495,8 +520,8 @@ func migrateNodeJS2PG(srcPeerPath, srcAuthPath, dstDSN string) (int, error) {
 		if err != nil {
 			return total, fmt.Errorf("peers: %w", err)
 		}
-		log.Printf("  peers: %d rows (from Node.js peer table)", n)
-		total += n
+		log.Printf("  peers: %d rows copied (from Node.js peer table), %d already in PostgreSQL and left as they were", n.copied, n.existed)
+		total.add(n)
 	}
 
 	if srcAuthPath != "" {
@@ -511,8 +536,8 @@ func migrateNodeJS2PG(srcPeerPath, srcAuthPath, dstDSN string) (int, error) {
 			if err != nil {
 				return total, fmt.Errorf("users: %w", err)
 			}
-			log.Printf("  users: %d rows (from Node.js auth)", n)
-			total += n
+			log.Printf("  users: %d rows copied (from Node.js auth), %d already in PostgreSQL and left as they were", n.copied, n.existed)
+			total.add(n)
 		}
 	}
 
@@ -646,7 +671,7 @@ func copyNodePeers2SQLite(src, dst *sql.DB) (int, error) {
 }
 
 // copyNodePeers2PG converts Node.js peer table → Go peers table (PostgreSQL).
-func copyNodePeers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int, error) {
+func copyNodePeers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (insertCount, error) {
 	cols := getColumns(src, "peer")
 	hasIP := contains(cols, "ip")
 	hasUser := contains(cols, "user")
@@ -686,11 +711,11 @@ func copyNodePeers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 
 	rows, err := src.Query(query)
 	if err != nil {
-		return 0, err
+		return insertCount{}, err
 	}
 	defer rows.Close()
 
-	count := 0
+	var count insertCount
 	for rows.Next() {
 		var (
 			id, uuid, createdAt, infoStr      string
@@ -728,7 +753,7 @@ func copyNodePeers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 		}
 
 		if err := rows.Scan(scanArgs...); err != nil {
-			return count, fmt.Errorf("read Node.js peer row %d: %w", count+1, err)
+			return count, fmt.Errorf("read Node.js peer row %d: %w", count.read()+1, err)
 		}
 
 		var info peerInfo
@@ -741,7 +766,7 @@ func copyNodePeers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 			status = "ONLINE"
 		}
 
-		_, err := dst.Exec(ctx, `
+		tag, err := dst.Exec(ctx, `
 			INSERT INTO peers (id, uuid, pk, ip, "user", hostname, os, version,
 			    status, last_online, created_at, banned, ban_reason, banned_at,
 			    soft_deleted, note)
@@ -755,7 +780,7 @@ func copyNodePeers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 		if err != nil {
 			return count, fmt.Errorf("Node.js peer %s: %w", id, err)
 		}
-		count++
+		count.note(tag.RowsAffected())
 	}
 	return count, rows.Err()
 }
@@ -833,7 +858,7 @@ func copyNodeUsers2SQLite(src, dst *sql.DB) (int, error) {
 }
 
 // copyNodeUsers2PG converts Node.js users → Go users (PostgreSQL).
-func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int, error) {
+func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (insertCount, error) {
 	cols := getColumns(src, "users")
 	hasTotpSecret := contains(cols, "totp_secret")
 	hasTotpEnabled := contains(cols, "totp_enabled")
@@ -849,11 +874,11 @@ func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 
 	rows, err := src.Query(query)
 	if err != nil {
-		return 0, err
+		return insertCount{}, err
 	}
 	defer rows.Close()
 
-	count := 0
+	var count insertCount
 	for rows.Next() {
 		var (
 			username, role string
@@ -871,7 +896,7 @@ func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 			scanArgs = append(scanArgs, &totpEnabled)
 		}
 		if err := rows.Scan(scanArgs...); err != nil {
-			return count, fmt.Errorf("read Node.js user row %d: %w", count+1, err)
+			return count, fmt.Errorf("read Node.js user row %d: %w", count.read()+1, err)
 		}
 
 		secret := ""
@@ -880,7 +905,7 @@ func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 		}
 		enabled := totpEnabled != nil && *totpEnabled == 1
 
-		_, err := dst.Exec(ctx, `
+		tag, err := dst.Exec(ctx, `
 			INSERT INTO users (username, password_hash, role, totp_secret, totp_enabled,
 			    created_at, last_login)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -890,7 +915,7 @@ func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (int,
 		if err != nil {
 			return count, fmt.Errorf("Node.js user %s: %w", username, err)
 		}
-		count++
+		count.note(tag.RowsAffected())
 	}
 	return count, rows.Err()
 }
