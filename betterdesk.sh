@@ -61,6 +61,7 @@ REPAIR_PERMISSIONS=false
 MANAGED_CONFIG_CHANGES=()
 UPDATE_MODE=false
 ROLLBACK_GO_MODE=false
+RESET_PASSWORD_MODE=false
 CLEANUP_NODE_MODE=false
 # Where the server binary comes from: a file (--binary), a build of this
 # checkout (--from-source), else the release of the update channel.
@@ -123,6 +124,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --rollback-go)
             ROLLBACK_GO_MODE=true
+            shift
+            ;;
+        --reset-password)
+            RESET_PASSWORD_MODE=true
             shift
             ;;
         --cleanup-node)
@@ -192,6 +197,8 @@ while [[ $# -gt 0 ]]; do
             echo "                   with the Node.js console this runs the upgrade (--update)"
             echo "  --update         Update without questions; an install with the Node.js"
             echo "                   console is upgraded in place to the server with its console"
+            echo "  --reset-password Give the admin account a new password (ADMIN_PASSWORD, else"
+            echo "                   a random one) and show it once"
             echo "  --rollback-go    Put the Node.js console and the server from before the"
             echo "                   upgrade back (binaries, services, .env); data stays"
             echo "  --cleanup-node   Delete the Node.js console's code and its disabled service"
@@ -3996,6 +4003,7 @@ setup_console_home() {
     if [ ! -f "$CONSOLE_PATH/.env" ]; then
         is_fresh=true
     fi
+    FRESH_CONSOLE_ENV="$is_fresh"
     if [ "$is_fresh" = true ]; then
         if [ -z "$ADMIN_PASSWORD" ]; then
             ADMIN_PASSWORD=$(openssl rand -hex 16)
@@ -4868,7 +4876,9 @@ update_go_install() {
     set_server_folder_permissions
     systemctl reset-failed "$SERVER_SERVICE" 2>/dev/null || true
     systemctl restart "$SERVER_SERVICE" || true
-    if ! verify_go_install 90; then
+    if verify_go_install 90; then
+        forget_first_admin_password
+    else
         if [ "$before" != "$after" ] && [ -f "$bin.prev" ]; then
             print_error "The new binary did not come up; putting the previous one back"
             systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
@@ -4892,12 +4902,17 @@ update_go_install() {
     install_manager_command
 }
 
-# Shows the admin's first password after a fresh install.
+# Shows the admin's first password, once: only when this run made the
+# console's .env. The server makes the admin at its first start from
+# DEFAULT_ADMIN_PASSWORD.
 create_admin_user() {
     print_step "Admin account..."
 
-    # The server makes the admin at its first start from
-    # DEFAULT_ADMIN_PASSWORD. Prefer the installer's password, then .env.
+    if [ "${FRESH_CONSOLE_ENV:-false}" != true ]; then
+        print_info "The admin account and its password stay as they are."
+        print_info "Forgot it? sudo $(basename "$MANAGER_COMMAND") --reset-password"
+        return 0
+    fi
     local admin_password="${ADMIN_PASSWORD:-}"
     if [ -z "$admin_password" ]; then
         admin_password=$(env_file_value "$CONSOLE_PATH/.env" DEFAULT_ADMIN_PASSWORD)
@@ -4935,6 +4950,21 @@ CREDEOF
 
 start_services() {
     start_services_with_verification
+}
+
+# forget_first_admin_password: once the server has started and made the
+# admin, .env and its kept copies hold no admin password any more (the
+# server reads DEFAULT_ADMIN_PASSWORD and INIT_ADMIN_PASS only to make the
+# first account).
+forget_first_admin_password() {
+    local f
+    for f in "$CONSOLE_PATH/.env" "$CONSOLE_PATH"/.env.pre-go*; do
+        [ -f "$f" ] || continue
+        if grep -q '^DEFAULT_ADMIN_PASSWORD=.' "$f" || grep -q '^INIT_ADMIN_PASS=' "$f"; then
+            sed -i -e 's/^DEFAULT_ADMIN_PASSWORD=.*/DEFAULT_ADMIN_PASSWORD=/' -e '/^INIT_ADMIN_PASS=/d' "$f"
+        fi
+    done
+    return 0
 }
 
 #===============================================================================
@@ -5019,6 +5049,7 @@ do_install() {
     if ! start_services; then
         install_ok=false
     fi
+    [ "$install_ok" = true ] && forget_first_admin_password
 
     echo ""
     if [ "$install_ok" = true ]; then
@@ -5731,29 +5762,41 @@ do_reset_password() {
     if [ "$CONSOLE_TYPE" = "none" ]; then
         print_error "No console installation detected!"
         press_enter
-        return
+        return 1
     fi
     if [ "$CONSOLE_TYPE" = "nodejs" ]; then
         print_error "This install runs the Node.js console; use Update to move it into betterdesk-server first"
         press_enter
-        return
+        return 1
     fi
 
-    local _menu_items=(
-        $'Generate random password\tCreate a strong random admin password'
-        $'Set custom password\tType a new password (min. 8 characters)'
-        $'Back\tReturn to the main menu'
-    )
-    local _menu_returns=( 1 2 0 )
-    menu_choose "Admin Password Reset" "The account admin of the web console"
-    local pw_choice="$MENU_CHOICE"
-
-    local new_password
+    local pw_choice new_password
+    if [ "$AUTO_MODE" = true ]; then
+        # --reset-password: ADMIN_PASSWORD, else a random one
+        pw_choice=1
+        [ -n "${ADMIN_PASSWORD:-}" ] && pw_choice=env
+    else
+        local _menu_items=(
+            $'Generate random password\tCreate a strong random admin password'
+            $'Set custom password\tType a new password (min. 8 characters)'
+            $'Back\tReturn to the main menu'
+        )
+        local _menu_returns=( 1 2 0 )
+        menu_choose "Admin Password Reset" "The account admin of the web console"
+        pw_choice="$MENU_CHOICE"
+    fi
 
     case $pw_choice in
         1)
             # M-05: full hex entropy
             new_password=$(openssl rand -hex 16)
+            ;;
+        env)
+            new_password="$ADMIN_PASSWORD"
+            if [ ${#new_password} -lt 8 ]; then
+                print_error "ADMIN_PASSWORD must be at least 8 characters"
+                return 1
+            fi
             ;;
         2)
             echo ""
@@ -5779,13 +5822,9 @@ do_reset_password() {
 
     echo ""
     if [ "$success" = "true" ]; then
-        # DEFAULT_ADMIN_PASSWORD in .env must match, or the next start with a
-        # forced password update would set the old one again
-        if grep -q '^DEFAULT_ADMIN_PASSWORD=' "$CONSOLE_PATH/.env" 2>/dev/null; then
-            # awk handles passwords with special characters (|, &, $, etc.)
-            awk -v pw="$new_password" '/^DEFAULT_ADMIN_PASSWORD=/{print "DEFAULT_ADMIN_PASSWORD=" pw; next}{print}' "$CONSOLE_PATH/.env" > "$CONSOLE_PATH/.env.tmp" \
-                && cat "$CONSOLE_PATH/.env.tmp" > "$CONSOLE_PATH/.env" && rm -f "$CONSOLE_PATH/.env.tmp"
-        fi
+        # .env keeps no password: an old one there would come back at a
+        # start with a forced password update
+        forget_first_admin_password
 
         echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
         echo -e "${GREEN}║              NEW LOGIN CREDENTIALS                       ║${NC}"
@@ -5810,6 +5849,7 @@ CREDEOF
     fi
 
     press_enter
+    [ "$success" = true ]
 }
 
 #===============================================================================
@@ -7671,19 +7711,25 @@ main() {
         exit $?
     fi
 
-    # Auto mode - run installation directly; an install with the Node.js
-    # console is upgraded in place
+    if [ "$RESET_PASSWORD_MODE" = true ]; then
+        AUTO_MODE=true
+        do_reset_password
+        exit $?
+    fi
+
+    # Without questions: install, or update an install that is there (run
+    # again, the installer updates); an install with the Node.js console is
+    # upgraded in place
     if [ "$AUTO_MODE" = true ]; then
-        print_info "Running in AUTO mode..."
-        if [ "$UNINSTALL_MODE" = true ]; then
-            do_uninstall
-        elif is_node_era_install; then
-            do_update
-        elif [ "$MINIMAL_MODE" = true ]; then
-            do_install_minimal
-        else
-            do_install
-        fi
+        case "$(auto_action)" in
+            uninstall) do_uninstall ;;
+            upgrade|update)
+                print_info "BetterDesk is installed here: updating it"
+                do_update
+                ;;
+            minimal) do_install_minimal ;;
+            *) do_install ;;
+        esac
         exit $?
     fi
 
@@ -7757,6 +7803,25 @@ main() {
                 ;;
         esac
     done
+}
+
+# auto_action: what a run without questions does here: install, update (an
+# install of the server with its console is there), upgrade (the Node.js
+# console is there), minimal or uninstall. --postgresql on an install that
+# runs on SQLite installs again, which moves it to PostgreSQL.
+auto_action() {
+    if [ "$UNINSTALL_MODE" = true ]; then
+        echo uninstall
+    elif is_node_era_install; then
+        echo upgrade
+    elif is_go_only_install && [ -x "$(server_binary_path)" ] && [ -f "$CONSOLE_PATH/.env" ] \
+        && { [ "$USE_POSTGRESQL" != true ] || [ "$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)" = postgres ]; }; then
+        echo update
+    elif [ "$MINIMAL_MODE" = true ]; then
+        echo minimal
+    else
+        echo install
+    fi
 }
 
 # Run only when executed directly or piped into bash (curl ... | sudo bash,

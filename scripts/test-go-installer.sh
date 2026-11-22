@@ -413,6 +413,43 @@ test_one_command_install() (
     rm -rf "$TEST_DIR"
 )
 
+# L143: a second run updates instead of installing again, the password
+# shows only when the install made it, and after the first start .env and
+# its copies keep no admin password.
+test_rerun_updates_and_forgets_the_password() (
+    load
+    [ "$(auto_action)" = install ] || fail "a machine without BetterDesk gets $(auto_action)"
+    write_server_unit "-mode all" ""
+    printf '#!/bin/sh\n' > "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    printf 'DEFAULT_ADMIN_PASSWORD=First-Pass-1\nINIT_ADMIN_PASS=First-Pass-1\nSESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    cp "$CONSOLE_PATH/.env" "$CONSOLE_PATH/.env.pre-go"
+    [ "$(auto_action)" = update ] || fail "a second run on an install gets $(auto_action)"
+    USE_POSTGRESQL=true
+    [ "$(auto_action)" = install ] || fail "--postgresql on a SQLite install gets $(auto_action), not the move"
+    USE_POSTGRESQL=false
+    UNINSTALL_MODE=true
+    [ "$(auto_action)" = uninstall ] || fail "--uninstall on an install gets $(auto_action)"
+    UNINSTALL_MODE=false
+
+    local out
+    FRESH_CONSOLE_ENV=false
+    ADMIN_PASSWORD=""
+    out=$(create_admin_user 2>&1)
+    case "$out" in *First-Pass-1*) fail "a run that kept .env showed the admin password again" ;; esac
+    FRESH_CONSOLE_ENV=true
+    out=$(create_admin_user 2>&1)
+    case "$out" in *First-Pass-1*) ;; *) fail "a fresh install did not show the admin password" ;; esac
+
+    forget_first_admin_password
+    for f in "$CONSOLE_PATH/.env" "$CONSOLE_PATH/.env.pre-go"; do
+        if grep -q 'First-Pass-1' "$f"; then fail "$(basename "$f") keeps the admin password after the first start"; fi
+    done
+    grep -qx 'DEFAULT_ADMIN_PASSWORD=' "$CONSOLE_PATH/.env" || fail "DEFAULT_ADMIN_PASSWORD is not left empty"
+    grep -qx 'SESSION_SECRET=kept' "$CONSOLE_PATH/.env" || fail "forgetting the password lost a line of .env"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -429,4 +466,5 @@ test_releases_come_from_the_fork
 test_update_keeps_the_admins_ports
 test_channel_and_download_errors
 test_one_command_install
+test_rerun_updates_and_forgets_the_password
 echo "Go installer unit checks passed"
