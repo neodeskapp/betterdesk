@@ -247,3 +247,31 @@ describe('saving a download into the chosen local folder', () => {
 		expect(d.t.named('file_transfer_error')[0]?.error).toBe('Failed to save file: disk full');
 	});
 });
+
+describe('a folder walk and the sheet listing at the same time', () => {
+	test("each listing goes where it was asked for: the sheet's to the sheet, the walk's to the walk", async () => {
+		const t = await setup();
+		const entries = (name: string) => [{ name, entryType: 4, size: 3 }];
+		let walked: string[] | null = null;
+		void t.ft.readDirAsync('/data/docs').then((list) => (walked = list.map((e) => e.name)));
+		t.ft.browseDir('/data/other');
+		t.respond({ dir: { id: 0, path: '/data/other', entries: entries('b.txt') } });
+		await tick();
+		expect(t.named('file_dir')).toEqual([
+			{ path: '/data/other', entries: [expect.objectContaining({ name: 'b.txt' })] }
+		]);
+		expect(walked).toBeNull();
+		t.respond({ dir: { id: 0, path: '/data/docs', entries: entries('a.txt') } });
+		await vi.waitFor(() => expect(walked).toEqual(['a.txt']));
+		expect(t.named('file_dir')).toHaveLength(1);
+	});
+
+	test('a device that names the folder a little differently still answers the walk', async () => {
+		const t = await setup();
+		let walked: string[] | null = null;
+		void t.ft.readDirAsync('C:/data/docs').then((list) => (walked = list.map((e) => e.name)));
+		t.respond({ dir: { id: 0, path: 'C:/Data/Docs', entries: [{ name: 'a.txt', entryType: 4 }] } });
+		await vi.waitFor(() => expect(walked).toEqual(['a.txt']));
+		expect(t.named('file_dir')).toEqual([]);
+	});
+});

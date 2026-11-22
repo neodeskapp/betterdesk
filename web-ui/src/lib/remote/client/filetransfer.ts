@@ -426,6 +426,8 @@ export class RDFileTransfer {
 	_activeFolderJob: RDFolderJob | null;
 	_browseTimeout?: ReturnType<typeof setTimeout> | null;
 	_browseTimedOut?: boolean;
+	/** The folder the sheet's own listing (browseDir) waits for, as _normalizeRemotePathKey writes it */
+	_browsePending?: string | null;
 	/**
 	 * Set by the file sheet: saves a finished browser download into the
 	 * chosen local folder; false (or a promise of false) falls back to the
@@ -855,6 +857,7 @@ export class RDFileTransfer {
 		const dir = path != null ? path : '';
 		const run = (): void => {
 			debugLog('[FileTransfer] browseDir:', JSON.stringify(dir));
+			this._browsePending = this._normalizeRemotePathKey(dir);
 			this._sendMessageSafe(this._proto.buildReadDir(dir, this._showHidden));
 			this._emit('file_browsing', { path: dir } satisfies RDFileBrowseEvent);
 			if (this._browseTimeout) clearTimeout(this._browseTimeout);
@@ -1800,11 +1803,14 @@ export class RDFileTransfer {
 		});
 
 		const pathKey = this._normalizeRemotePathKey(dir.path || '');
+		// The sheet's listing of this folder, or of the home folder (the device answers with its path)
+		const forSheet =
+			this._browsePending != null && (this._browsePending === pathKey || this._browsePending === '');
 		let pending: RDPendingDirRead | null | undefined = null;
 		if (this._pendingDirReads.has(pathKey)) {
 			pending = this._pendingDirReads.get(pathKey);
 			this._pendingDirReads.delete(pathKey);
-		} else if (this._pendingDirReads.size === 1) {
+		} else if (!forSheet && this._pendingDirReads.size === 1) {
 			// Peers may return a slightly different path string — match the sole pending read.
 			const onlyKey = this._pendingDirReads.keys().next().value ?? '';
 			pending = this._pendingDirReads.get(onlyKey);
@@ -1816,6 +1822,7 @@ export class RDFileTransfer {
 			return;
 		}
 
+		this._browsePending = null;
 		this._currentPath = dir.path || '';
 		this._entries = entries;
 		this._emit('file_dir', {
