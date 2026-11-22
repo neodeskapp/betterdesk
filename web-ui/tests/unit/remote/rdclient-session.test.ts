@@ -446,4 +446,28 @@ describe('the file transfer session asks for a second factor', () => {
 		expect(t.seen).toEqual(['2fa_required']);
 		expect(t.outcome()).toBe('pending');
 	});
+
+	test('the login waits while the operator types the code, then for the answer to it', async () => {
+		vi.useFakeTimers();
+		try {
+			const t = await fileLogin();
+			t.f._handleLoginResponse({ error: '2FA Required' });
+			await vi.advanceTimersByTimeAsync(120_000);
+			expect(t.outcome()).toBe('pending');
+			t.f.submit2FA('123456');
+			await vi.advanceTimersByTimeAsync(29_000);
+			expect(t.outcome()).toBe('pending');
+			t.f._handleLoginResponse({});
+			await t.login;
+			expect(t.outcome()).toBe('signed in');
+
+			const silent = await fileLogin();
+			silent.f._handleLoginResponse({ error: '2FA Required' });
+			silent.f.submit2FA('123456');
+			await vi.advanceTimersByTimeAsync(30_000);
+			expect(silent.outcome()).toBe('File transfer login timeout (30s)');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
 });

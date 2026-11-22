@@ -57,6 +57,8 @@ export class RDFileConnection {
 	_connectPromise: Promise<void> | null;
 	_loginResolve: (() => void) | null;
 	_loginReject: ((err: unknown) => void) | null;
+	/** The device's time to answer the login or the second factor */
+	_loginTimer: ReturnType<typeof setTimeout> | null;
 	_peerSignedPk: Uint8Array | null;
 	_rendezvousTimeoutMs: number;
 	_signalRelayTimeoutMs: number;
@@ -80,6 +82,7 @@ export class RDFileConnection {
 		this._connectPromise = null;
 		this._loginResolve = null;
 		this._loginReject = null;
+		this._loginTimer = null;
 		this._peerSignedPk = null;
 
 		const resolvedTimeouts = RDConnectionParams.resolveConnectTimeouts(opts.connection);
@@ -248,32 +251,37 @@ export class RDFileConnection {
 
 	_waitForLogin(password: string): Promise<void> {
 		return new Promise((resolve, reject) => {
-			this._loginResolve = resolve;
-			this._loginReject = reject;
-			const timeout = setTimeout(() => {
-				reject(new Error('File transfer login timeout (30s)'));
-			}, 30000);
-
 			const done = () => {
-				clearTimeout(timeout);
+				this._stopLoginTimeout();
 				this._loginResolve = null;
 				this._loginReject = null;
 			};
-
-			const origResolve = resolve;
-			const origReject = reject;
 			this._loginResolve = () => {
 				done();
-				origResolve();
+				resolve();
 			};
 			this._loginReject = (e) => {
 				done();
-				origReject(e);
+				reject(e);
 			};
+			this._armLoginTimeout();
 
 			// If password provided upfront, authenticate when hash arrives or immediately after signedId
 			this._pendingPassword = password;
 		});
+	}
+
+	/** The device has 30 seconds to answer; the time the operator takes to type a code does not count */
+	_armLoginTimeout(): void {
+		this._stopLoginTimeout();
+		this._loginTimer = setTimeout(() => {
+			if (this._loginReject) this._loginReject(new Error('File transfer login timeout (30s)'));
+		}, 30000);
+	}
+
+	_stopLoginTimeout(): void {
+		if (this._loginTimer) clearTimeout(this._loginTimer);
+		this._loginTimer = null;
 	}
 
 	async _authenticate(password: string): Promise<void> {
@@ -292,6 +300,7 @@ export class RDFileConnection {
 
 	submit2FA(code: string): void {
 		this._sendPeerMessageRaw(this.proto.buildAuth2FA(String(code || '').trim()));
+		if (this._loginReject) this._armLoginTimeout();
 	}
 
 	sendMessage(msgObj: MessageInit): void {
@@ -557,6 +566,7 @@ export class RDFileConnection {
 		if (resp.error && resp.error.length > 0) {
 			const errLower = (resp.error || '').toLowerCase();
 			if (errLower.includes('wrong 2fa') || errLower.includes('invalid 2fa')) {
+				this._stopLoginTimeout();
 				this._emit('2fa_error', resp.error);
 				return;
 			}
@@ -566,6 +576,7 @@ export class RDFileConnection {
 				errLower.includes('totp') ||
 				errLower.includes('verification code')
 			) {
+				this._stopLoginTimeout();
 				this._emit('2fa_required');
 				return;
 			}
