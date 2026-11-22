@@ -20,6 +20,12 @@ func TestGuestIssuerIsGivenByWhoGivesViewer(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
 		ctx := context.Background()
+		if db.IsPostgres() {
+			// The test accounts were inserted with their ids
+			if _, err := db.Exec(ctx, `SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users))`); err != nil {
+				t.Fatal(err)
+			}
+		}
 		role := func(username string) string {
 			t.Helper()
 			var r string
@@ -31,8 +37,11 @@ func TestGuestIssuerIsGivenByWhoGivesViewer(t *testing.T) {
 		for i, by := range []string{"global_admin", "super_admin", "admin"} {
 			name := "issuer_" + by
 			got := w.As(by).Do("POST", "/api/users", `{"username":"`+name+`","password":"Strong-Pass-1!","role":"guest_issuer"}`, "X-Forwarded-For", "10.9.0."+string(rune('1'+i)))
-			if got.Status != 200 || !strings.Contains(got.Body, `"role":"guest_issuer"`) || role(name) != "guest_issuer" {
-				t.Errorf("%s creates a guest_issuer: %d %s, stored %s", by, got.Status, got.Body, role(name))
+			if got.Status != 200 || !strings.Contains(got.Body, `"role":"guest_issuer"`) {
+				t.Fatalf("%s creates a guest_issuer: %d %s", by, got.Status, got.Body)
+			}
+			if stored := role(name); stored != "guest_issuer" {
+				t.Errorf("%s created a guest_issuer stored as %s", by, stored)
 			}
 		}
 		// operator (5) becomes guest_issuer and back
