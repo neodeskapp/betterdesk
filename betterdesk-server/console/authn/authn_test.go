@@ -274,7 +274,7 @@ func TestDeviceRequestChecks(t *testing.T) {
 		s, _, _ := testService(t, db, nil)
 		id := addUser(t, s, "operator", "pw", "operator", "local")
 		bound, _ := s.IssueDeviceToken(ctx, id, "device-a", "")
-		unbound, _ := s.issue(ctx, TokenKindDevice, id, "", "uuid-b", "")
+		unbound, _ := s.issue(ctx, TokenKindDevice, id, "", "uuid-b", "", store.DeviceTokenExpiry())
 
 		// X-Device-Id alone is no credential.
 		var refused *DeviceAuthError

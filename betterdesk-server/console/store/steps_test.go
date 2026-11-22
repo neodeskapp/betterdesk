@@ -281,6 +281,45 @@ func TestMigrateMakesEarlierTokensAccountTokens(t *testing.T) {
 	})
 }
 
+// Device tokens issued with the lifetime of a sign-in get the expiry of a
+// device token at the next start: device tokens do not expire by time. A
+// revoked device token and an account's token keep theirs (L44).
+func TestMigrateKeepsDeviceTokensWithoutAnExpiry(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		mustMigrate(t, db)
+		user := insertUser(t, db, "token-owner")
+		insert := `INSERT INTO access_tokens (token, token_hash, user_id, client_id, expires_at, revoked, token_kind) VALUES (?, ?, ?, ?, ?, ?, ?)`
+		soon := db.Pick("2026-12-01 00:00:00.000", "2026-12-01 00:00:00.000+00")
+		for _, row := range []struct {
+			name, kind string
+			revoked    bool
+		}{{"device-live", "device", false}, {"device-revoked", "device", true}, {"account-live", "account", false}} {
+			var revoked any = row.revoked
+			if db.Dialect() == store.SQLite {
+				revoked = 0
+				if row.revoked {
+					revoked = 1
+				}
+			}
+			mustExec(t, db, insert, store.StoredAccessToken(store.HashAccessToken(row.name)), store.HashAccessToken(row.name), user, "900100001", soon, revoked, row.kind)
+		}
+		for run := 1; run <= 2; run++ {
+			mustMigrate(t, db)
+			for name, want := range map[string]string{"device-live": "2999-12-31 23:59:59", "device-revoked": "2026-12-01 00:00:00", "account-live": "2026-12-01 00:00:00"} {
+				var expires string
+				query := db.Pick(`SELECT expires_at FROM access_tokens WHERE token_hash = ?`,
+					`SELECT to_char(expires_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') FROM access_tokens WHERE token_hash = ?`)
+				if err := db.QueryRow(context.Background(), query, store.HashAccessToken(name)).Scan(&expires); err != nil {
+					t.Fatal(err)
+				}
+				if !strings.HasPrefix(expires, want) {
+					t.Errorf("run %d: %s expires at %s, want %s", run, name, expires, want)
+				}
+			}
+		}
+	})
+}
+
 type backfillVectors struct {
 	Slugify []struct {
 		Name string `json:"name"`

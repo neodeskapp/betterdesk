@@ -1595,13 +1595,13 @@ func (pg *PostgresDB) cascadePeerIDInTx(ctx context.Context, tx pgx.Tx, oldID, n
 			return fmt.Errorf("db: cascadePeerID %s→%s: %w", oldID, newID, err)
 		}
 	}
-	return pgMoveDeviceAccessTokens(ctx, tx, oldID, newID)
+	return pgEndRenamedDeviceAccessTokens(ctx, tx, oldID, newID)
 }
 
 // ChangePeerID changes a peer's ID and records it in history. What is
-// bound to the old ID, the device tokens among it, moves along
-// (cascadePeerIDInTx). Uses a PostgreSQL transaction with row-level
-// locking.
+// bound to the old ID moves along (cascadePeerIDInTx); the console's
+// device tokens of the device end there. Uses a PostgreSQL transaction
+// with row-level locking.
 func (pg *PostgresDB) ChangePeerID(oldID, newID, reason string) error {
 	tx, err := pg.pool.Begin(pg.ctx)
 	if err != nil {

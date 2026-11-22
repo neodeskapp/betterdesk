@@ -1867,12 +1867,13 @@ func (s *SQLiteDB) cascadePeerIDInTx(tx *sql.Tx, oldID, newID string) error {
 			return fmt.Errorf("db: cascadePeerID %s→%s: %w", oldID, newID, err)
 		}
 	}
-	return sqliteMoveDeviceAccessTokens(tx, oldID, newID)
+	return sqliteEndRenamedDeviceAccessTokens(tx, oldID, newID)
 }
 
 // ChangePeerID changes a peer's ID and records it in history. What is
-// bound to the old ID, the device tokens among it, moves along in the same
-// transaction (cascadePeerIDInTx).
+// bound to the old ID moves along in the same transaction
+// (cascadePeerIDInTx); the console's device tokens of the device end
+// there.
 func (s *SQLiteDB) ChangePeerID(oldID, newID, reason string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
