@@ -5,7 +5,18 @@ import ts from 'typescript-eslint';
 import noLiteralUiText from './eslint-rules/no-literal-ui-text.js';
 
 export default ts.config(
-	{ ignores: ['build/', '.svelte-kit/', 'node_modules/', 'test-results/', 'playwright-report/', 'static/'] },
+	{
+		ignores: [
+			'build/',
+			'.svelte-kit/',
+			'node_modules/',
+			'test-results/',
+			'playwright-report/',
+			'static/',
+			// Written by vite-plugins/protos.ts, not committed
+			'src/lib/remote/client/generated/'
+		]
+	},
 	js.configs.recommended,
 	...ts.configs.strict,
 	...svelte.configs.recommended,

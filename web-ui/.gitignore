@@ -5,3 +5,5 @@ node_modules
 /playwright-report
 /coverage
 /e2e/.auth
+# The remote viewer's protobuf messages, written by vite-plugins/protos.ts
+/src/lib/remote/client/generated

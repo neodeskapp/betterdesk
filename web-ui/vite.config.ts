@@ -3,6 +3,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { Agent } from 'node:http';
 import { defineConfig } from 'vitest/config';
 import { licenses } from './vite-plugins/licenses.ts';
+import { protos } from './vite-plugins/protos.ts';
 import { withRoutesList } from './vite-plugins/routes.ts';
 
 // Where the console is served from: the root, or the path in BD_UI_BASE
@@ -30,6 +31,8 @@ export default defineConfig({
 	// Several dev servers share this folder (one per worker); each keeps its own dependency cache
 	cacheDir: process.env.BD_VITE_CACHE,
 	plugins: [
+		// The remote viewer's protobuf messages, generated from betterdesk-server/protos
+		protos(),
 		// licenses.txt next to the code; fails the build on a license the console may not ship
 		licenses(),
 		sveltekit({
@@ -138,7 +141,11 @@ export default defineConfig({
 		environment: 'jsdom',
 		globals: true,
 		setupFiles: ['tests/unit/setup.ts'],
-		restoreMocks: true
+		restoreMocks: true,
+		// The remote viewer's libraries run in the test's realm, like the viewer's own
+		// code: jsdom's Uint8Array is not Node's, and tweetnacl and protobuf.js check
+		// byte arrays with instanceof
+		server: { deps: { inline: ['protobufjs', /@protobufjs[\\/]/, 'tweetnacl', 'jmuxer'] } }
 	},
 	resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined
 });
