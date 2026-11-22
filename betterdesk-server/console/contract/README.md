@@ -1,9 +1,12 @@
 # Contract suite for the console
 
-This suite records what a console answers over HTTP and checks that another
-console answers the same. The goldens in `testdata/golden` were recorded
-against the Node console (`web-nodejs`). They are the specification for the
-Go console: a route is ported when the Go console passes its goldens.
+This suite checks that the Go console answers over HTTP what the old Node
+console (`web-nodejs`) answered. The goldens in `testdata/golden` are fixed
+records of the Node console's answers, made while it still existed. They
+can't be recorded again and are the specification for the Go console. A
+golden changes only when a fix changes an answer on purpose (see "Rewriting
+goldens for a bug fix"); a new case gets its golden from the Go console (see
+"Recording a new case").
 
 The suite is a black box. It talks to a base URL and imports nothing from
 the console.
@@ -32,8 +35,7 @@ either layer. Routes on the skip list (`matrix_skip.go`) need a case.
 
 Everything runs on test instances through one script (Git Bash):
 
-    .ui-rework/go/tools/contract.sh check all                    # Go front door in front of Node
-    .ui-rework/go/tools/contract.sh check all STACK_MODE=go      # Go alone
+    .ui-rework/go/tools/contract.sh check all
     .ui-rework/go/tools/contract.sh check cases/devices
     .ui-rework/go/tools/contract.sh check 'cases/(i18n|languages)'
     .ui-rework/go/tools/contract.sh check matrix STACK_DB=postgres
@@ -41,20 +43,13 @@ Everything runs on test instances through one script (Git Bash):
     .ui-rework/go/tools/contract.sh check cases --on c1          # use the running bdgo-c1
     CONTRACT_REQUIRE_GO=1 .ui-rework/go/tools/contract.sh check all
 
-    .ui-rework/go/tools/contract.sh record matrix
-    .ui-rework/go/tools/contract.sh record cases
-    .ui-rework/go/tools/contract.sh record cases/devices
+    CONTRACT_REWRITE='cases/devices/(list|list-all)' .ui-rework/go/tools/contract.sh record cases/devices
 
-`check` starts a fresh instance, compares, prints the summary and exits
-non-zero on a mismatch. `record` starts two fresh instances and writes the
-goldens of the routes Node still answers (see "Frozen goldens"). `all` runs
-the matrix and the cases on separate instances, because the matrix writes
-to everything it reaches.
-
-Both run with the Go console in front of Node (`STACK_MODE=front`). `check`
-also takes `STACK_MODE=go`, the Go console without Node: a route Go does not
-answer fails there. Node alone cannot be checked or recorded, and the script
-refuses `STACK_MODE=node`: Node no longer has the routes that moved to Go.
+`check` starts a fresh instance of the Go console, compares, prints the
+summary and exits non-zero on a mismatch. `record` starts two fresh
+instances and writes only the goldens `CONTRACT_REWRITE` names (see
+"Frozen goldens"). `all` runs the matrix and the cases on separate
+instances, because the matrix writes to everything it reaches.
 
 To run the tests by hand against a console you started yourself:
 
@@ -70,12 +65,11 @@ hides the summary of a passing run.
 | `BD_PASSWORD_FILE` | File with the password of the `e2e_<role>` accounts. Default `/stack/secrets/e2e_password`. |
 | `BD_SECRETS_DIR` | Folder of the secrets cases send as `{secret:<file name>}` (see "Secrets"). Default `/stack/secrets`. |
 | `CONTRACT_RECORD` | `1` writes goldens from this run. `merge` adds a second run to them (see below). Unset compares. |
-| `CONTRACT_RECORD_NEW` | `1` with `CONTRACT_RECORD` also writes new goldens of requests the Go console answers (see "Recording a new case of a moved route"). |
+| `CONTRACT_RECORD_NEW` | `1` with `CONTRACT_RECORD` also writes new goldens of requests the Go console answers (see "Recording a new case"). |
 | `CONTRACT_REWRITE` | With `CONTRACT_RECORD`, a regular expression of golden names (`cases/devices/list`, `matrix/devices/GET_api_devices`) that a recording writes although the Go console answers them (see "Rewriting goldens for a bug fix"). |
 | `CONTRACT_GOLDEN` | Golden folder. Default `testdata/golden`. |
 | `CONTRACT_ROUTES` | Route list. Default `testdata/routes.json`. |
 | `CONTRACT_REQUIRE_GO` | `1` fails every route and case the Go console did not answer itself. |
-| `CONTRACT_NODE_ONLY` | `1`: the console is the Node console alone (`STACK_MODE=node`), with no routing report. Every answer counts as Node's, so a recording writes all goldens and freezes none. For spec recordings of a Node tree: it needs `CONTRACT_GOLDEN` set to another folder and refuses `CONTRACT_REQUIRE_GO`. `contract.sh spec` sets it. |
 | `CONTRACT_COVERAGE` | `report` lists uncovered routes without failing. `contract.sh` sets it until the cases exist. |
 | `CONTRACT_TIMEOUT` | Limit for one request. Default `60s`: a 50 MB upload takes 20 seconds on a loaded machine. |
 
@@ -186,10 +180,9 @@ request. Do not name a group after an operating system or CPU (`windows`,
 `linux`, `arm64`, `js`): Go would read `cases_windows_test.go` as a file for
 that system only.
 
-Record a new group with `contract.sh record cases/<group>`, look at the
-goldens, then run `contract.sh check cases` once to see that the group also
-passes after the others. Write and record the cases of a group while Node
-still answers its routes: after the move their goldens are frozen.
+Record the goldens of a new case as "Recording a new case" says, look at
+them, then run `contract.sh check cases` once to see that the group also
+passes after the others.
 
 ## Secrets
 
@@ -323,10 +316,10 @@ The client is part of the suite (`socket.go`, standard library only). The
 upgrade of a socket case goes outside the suite's HTTP client, so its
 answer has none of the default request headers but `User-Agent`.
 
-## Recording a new case of a moved route
+## Recording a new case
 
-The goldens of a route the Go console answers are frozen, so a case added
-after the route moved cannot be recorded the usual way. With
+The Go console answers every route, so its goldens are frozen and a new
+case cannot be recorded the usual way. With
 `CONTRACT_RECORD_NEW=1` a recording also writes the golden of a request the
 Go console answers when that golden is new: it does not exist, or it holds
 only the first of the two recordings (`"recordings": 1`), which is what the
@@ -334,11 +327,11 @@ first half of the same recording left. A golden with both recordings is
 never written; the summary counts the new ones (`recorded new: N`).
 
 Use it only for a case whose answers were checked against what Node
-answered (a recording of the Node routes the group's package replays), and
-say so in the case file. `contract.sh` does not pass the variable on; run
-the two halves by hand on two fresh instances:
+answered (the recording of the old console that the group's package
+replays), and say so in the case file. `contract.sh` does not pass the
+variable on; run the two halves by hand on two fresh instances:
 
-    stack.sh up ft1 STACK_MODE=front; stack.sh up ft2 STACK_MODE=front
+    stack.sh up ft1; stack.sh up ft2
     DEV_DOCKER_ARGS="-e CONTRACT_RECORD=1 -e CONTRACT_RECORD_NEW=1" stack.sh run ft1 \
       "cd betterdesk-server/console/contract && go test -tags contract -count=1 -run '^TestCases\$/^tickets\$'"
     DEV_DOCKER_ARGS="-e CONTRACT_RECORD=merge -e CONTRACT_RECORD_NEW=1" stack.sh run ft2 \
@@ -362,14 +355,12 @@ fix changes may differ. The commit of the fix carries them.
 
 ## Frozen goldens
 
-A golden is what the Node console answered. Once the Go console answers a
-route, its goldens are the specification and nothing may change them, least
-of all Go's own answer. So recording goes through the Go console in front of
-Node and asks the routing report (see "Who answered") about every matrix
-route and every case:
+A golden is what the Node console answered. The goldens are the
+specification and nothing may change them, least of all Go's own answer,
+but for `CONTRACT_REWRITE` and `CONTRACT_RECORD_NEW` above. A recording
+asks the routing report (see "Who answered") about every matrix route and
+every case:
 
-- Node answers: the answer is recorded as before. The front door passes
-  Node's answers through unchanged.
 - Go answers: the request is sent, because a later step of the group may
   need what it creates or captures, but the golden file is neither read nor
   written. A route that has no golden yet gets none.
@@ -588,16 +579,15 @@ seconds.
   matrix/devices                          531 passed      0 failed
   ...
   total                                  6800 passed      0 failed   (55 groups, 2m10s)
-  answered by Go: 12 of 757 matrix routes (node 745, nobody 0)
+  answered by Go: 757 of 757 matrix routes (node 0, nobody 0)
 ```
 
 ## Who answered
 
-A Go console started with `CONSOLE_DEBUG_ROUTING=1` (the test stack sets it
-in the modes `front` and `go`) answers
-`GET /__bd/routing?method=GET&path=/api/x` with `{"handler":"go"}`,
-`"node"` or `"none"`, from the lookup it uses for real requests. The suite
-asks once per route and case. Without `CONTRACT_REQUIRE_GO` the summary
+A Go console started with `CONSOLE_DEBUG_ROUTING=1` (the test stack sets
+it) answers `GET /__bd/routing?method=GET&path=/api/x` with
+`{"handler":"go"}`: it answers every request itself. The suite asks once
+per route and case. Without `CONTRACT_REQUIRE_GO` the summary
 only counts. For a socket case it adds `upgrade=websocket` and the answer
 says whether a Go socket takes the upgrade.
 
