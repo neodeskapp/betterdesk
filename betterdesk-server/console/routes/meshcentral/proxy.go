@@ -1,13 +1,16 @@
 package meshcentral
 
 import (
+	"net"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/unitronix/betterdesk-server/console/onboard"
 )
 
 // apiFailure is the answer when the API server gave none to pass on.
@@ -144,11 +147,16 @@ func (h *handlers) saveGroups(w http.ResponseWriter, r *http.Request) {
 
 // download answers GET /api/mesh/download.msh: the settings file a mesh
 // agent is installed with. The parameters the API server reads (name,
-// mesh_id, mesh_server) go on, each one text; others are left out.
-// Whatever type the API server names, the file goes out as
-// application/octet-stream under the name meshagents.msh.
+// mesh_id, mesh_server) go on, each one text; others are left out. A
+// request without a mesh_server gets the console's public address
+// (agentServer). Whatever type the API server names, the file goes out
+// as application/octet-stream under the name meshagents.msh.
 func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
-	search, bad := requestQuery(r).only("name", "mesh_id", "mesh_server")
+	q := requestQuery(r)
+	if server := q.get("mesh_server"); server == nil || server == "" {
+		q.set("mesh_server", h.agentServer(r))
+	}
+	search, bad := q.only("name", "mesh_id", "mesh_server")
 	if bad != "" {
 		badParameter(w, r, bad)
 		return
@@ -160,6 +168,36 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Disposition", `attachment; filename="meshagents.msh"`)
 	httpx.WriteBody(w, r, resp.Status, "application/octet-stream", resp.Body)
+}
+
+// agentServer is the address a mesh agent reaches the console's
+// /agent.ashx at: the console's public address of the settings
+// (PANEL_PUBLIC_URL, PANEL_PUBLIC_HOST), else the address the request
+// came to, as the onboarding downloads name the console. A console on
+// plain HTTP is taken to be behind a proxy with HTTPS on 443; one that
+// serves HTTPS itself keeps its port.
+func (h *handlers) agentServer(r *http.Request) string {
+	c, ok := onboard.Console{}, false
+	if h.deps.Mail != nil {
+		c, ok = onboard.ParseConsole(h.deps.Mail.GetPanelBaseURL())
+	}
+	if !ok {
+		scheme := "http"
+		if kit.Secure(r) {
+			scheme = "https"
+		}
+		c, ok = onboard.ParseConsole(scheme + "://" + r.Host)
+	}
+	if !ok {
+		c = onboard.Console{Host: "localhost"}
+	}
+	host := c.Host
+	if c.HTTPS && c.Port != 0 {
+		host = net.JoinHostPort(host, strconv.Itoa(c.Port))
+	} else if strings.Contains(host, ":") {
+		host = "[" + host + "]"
+	}
+	return "wss://" + host + "/agent.ashx"
 }
 
 // validateShare answers GET /api/mesh/share/validate, which needs no

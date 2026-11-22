@@ -1,9 +1,11 @@
 package meshcentral
 
 import (
+	"crypto/tls"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -15,6 +17,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/kit"
 	"github.com/unitronix/betterdesk-server/console/limits"
+	"github.com/unitronix/betterdesk-server/console/mail"
 	"github.com/unitronix/betterdesk-server/console/middleware"
 )
 
@@ -66,8 +69,9 @@ func newLimitedWorld(t *testing.T, answers func(method, path string) answer, lim
 }
 
 // newWorldWith is newLimitedWorld with the console's access service, for
-// the accounts' client features; nil for none.
-func newWorldWith(t *testing.T, answers func(method, path string) answer, limit string, features *access.Service) *world {
+// the accounts' client features; nil for none. configure sets more of the
+// group's dependencies before it registers.
+func newWorldWith(t *testing.T, answers func(method, path string) answer, limit string, features *access.Service, configure ...func(*kit.Deps)) *world {
 	t.Helper()
 	w := &world{t: t, answers: answers}
 	api := goapi.New(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
@@ -96,6 +100,9 @@ func newWorldWith(t *testing.T, answers func(method, path string) answer, limit 
 			}
 			return ""
 		}}),
+	}
+	for _, set := range configure {
+		set(d)
 	}
 	Register(d)
 	w.handler = middleware.Bodies(middleware.BodyOptions{})(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
@@ -209,7 +216,7 @@ func TestGuards(t *testing.T) {
 		{"GET", "/api/mesh/server-id", "server.config", "server_admin", "global_admin", "GET /mesh/server-id"},
 		{"GET", "/api/mesh/groups", "server.config", "server_admin", "global_admin", "GET /mesh/groups"},
 		{"POST", "/api/mesh/groups", "server.config", "server_admin", "global_admin", "POST /mesh/groups {}"},
-		{"GET", "/api/mesh/download.msh", "server.config", "server_admin", "global_admin", "GET /mesh/download.msh"},
+		{"GET", "/api/mesh/download.msh", "server.config", "server_admin", "global_admin", "GET /mesh/download.msh?mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
 		{"POST", "/api/mesh/devices/d1/desktop", "device.connect", "operator", "viewer", "POST /mesh/devices/d1/desktop"},
 		{"POST", "/api/mesh/devices/d1/terminal", "mesh.terminal", "global_admin", "operator", "POST /mesh/devices/d1/terminal"},
 		{"POST", "/api/mesh/devices/d1/files", "mesh.files", "global_admin", "operator", "POST /mesh/devices/d1/files"},
@@ -378,7 +385,9 @@ func TestDownload(t *testing.T) {
 	if h.Get("Content-Type") != "application/octet-stream" || h.Get("Content-Disposition") != `attachment; filename="meshagents.msh"` || h.Get("Content-Length") != "36" || !strings.HasPrefix(h.Get("ETag"), `W/"24-`) {
 		t.Errorf("download headers: %v", h)
 	}
-	if got := w.sent(); got != "GET /mesh/download.msh" {
+	// The file names the address the request came to (example.com, the
+	// host of httptest requests) unless the request names a server
+	if got := w.sent(); got != "GET /mesh/download.msh?mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx" {
 		t.Errorf("the API server got %q", got)
 	}
 
@@ -386,9 +395,10 @@ func TestDownload(t *testing.T) {
 	// them out
 	queries := []struct{ query, sent string }{
 		{"name=Contract%20Mesh&mesh_server=wss://example.test/agent.ashx", "?name=Contract+Mesh&mesh_server=wss%3A%2F%2Fexample.test%2Fagent.ashx"},
-		{"name=a~*", "?name=a%7E*"},
-		{"name=", "?name="},
-		{"=x&&", ""},
+		{"name=a~*", "?name=a%7E*&mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
+		{"name=", "?name=&mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
+		{"=x&&", "?mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
+		{"mesh_server=&name=x", "?mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx&name=x"},
 	}
 	for _, c := range queries {
 		expect(t, "download ?"+c.query, w.do("admin", "GET", "/api/mesh/download.msh?"+c.query, ""), 200, file)
@@ -422,6 +432,60 @@ func TestDownload(t *testing.T) {
 	expect(t, "mesh disabled", w.do("admin", "GET", "/api/mesh/download.msh", ""), 500, `{"error":"Request failed with status code 404"}`)
 	next = answer{}
 	expect(t, "no answer", w.do("admin", "GET", "/api/mesh/download.msh", ""), 500, `{"error":"socket hang up"}`)
+}
+
+// L218: the .msh file names the console's public address as the
+// onboarding downloads name it (PANEL_PUBLIC_URL, PANEL_PUBLIC_HOST, else
+// the address the request came to), not the address the console reaches
+// the API server at in this process. The port stays where the console
+// serves HTTPS on a port of its own.
+func TestTheMSHFileNamesTheConsolesPublicAddress(t *testing.T) {
+	env := map[string]string{}
+	servesHTTPS := false
+	mailer := mail.New(mail.Options{
+		Getenv:      func(key string) string { return env[key] },
+		Port:        5000,
+		HTTPSPort:   5443,
+		PanelHost:   func() string { return env["PANEL_PUBLIC_HOST"] },
+		ServesHTTPS: func() bool { return servesHTTPS },
+	})
+	file := answer{status: 200, contentType: "application/octet-stream", body: "MeshName=BetterDesk Mesh\n"}
+	w := newWorldWith(t, func(string, string) answer { return file }, "", nil, func(d *kit.Deps) { d.Mail = mailer })
+
+	cases := []struct {
+		name        string
+		env         map[string]string
+		servesHTTPS bool
+		host        string
+		overTLS     bool
+		want        string
+	}{
+		{"the request's host", nil, false, "panel.example.org:5000", false, "wss://panel.example.org/agent.ashx"},
+		{"the request's host over HTTPS on a port of its own", nil, true, "panel.example.org:5443", true, "wss://panel.example.org:5443/agent.ashx"},
+		{"PANEL_PUBLIC_HOST, HTTPS at a proxy", map[string]string{"PANEL_PUBLIC_HOST": "desk.example.com"}, false, "127.0.0.1:5000", false, "wss://desk.example.com/agent.ashx"},
+		{"PANEL_PUBLIC_HOST, HTTPS on the console", map[string]string{"PANEL_PUBLIC_HOST": "desk.example.com"}, true, "127.0.0.1:5443", true, "wss://desk.example.com:5443/agent.ashx"},
+		{"PANEL_PUBLIC_HOST, an IPv6 address", map[string]string{"PANEL_PUBLIC_HOST": "2001:db8::5"}, true, "127.0.0.1:5443", true, "wss://[2001:db8::5]:5443/agent.ashx"},
+		{"PANEL_PUBLIC_URL", map[string]string{"PANEL_PUBLIC_URL": "https://remote.example.net/"}, true, "127.0.0.1:5443", true, "wss://remote.example.net/agent.ashx"},
+	}
+	for _, c := range cases {
+		env, servesHTTPS = c.env, c.servesHTTPS
+		r := httptest.NewRequest("GET", "/api/mesh/download.msh?name=Office", nil)
+		r.Host = c.host
+		if c.overTLS {
+			r.TLS = &tls.ConnectionState{}
+		}
+		r.Header.Set("X-Test-Role", "admin")
+		rec := httptest.NewRecorder()
+		w.handler.ServeHTTP(rec, r)
+		if rec.Code != 200 {
+			t.Errorf("%s: %d %s", c.name, rec.Code, rec.Body.String())
+		}
+		_, query, _ := strings.Cut(w.sent(), "?")
+		got, err := url.ParseQuery(query)
+		if err != nil || got.Get("mesh_server") != c.want || got.Get("name") != "Office" {
+			t.Errorf("%s: the API server got %q, want mesh_server %s", c.name, query, c.want)
+		}
+	}
 }
 
 func TestValidateShare(t *testing.T) {
@@ -462,7 +526,7 @@ func TestOnlyKnownParametersGoOn(t *testing.T) {
 		{"GET /api/mesh/download.msh?name[]=a", "400 name", ""},
 		{"GET /api/mesh/download.msh?mesh_id[x]=1", "400 mesh_id", ""},
 		{"GET /api/mesh/download.msh?mesh_server[toString]=x", "400 mesh_server", ""},
-		{"GET /api/mesh/download.msh?other[]=1&name=n", "200", "GET /mesh/download.msh?name=n"},
+		{"GET /api/mesh/download.msh?other[]=1&name=n", "200", "GET /mesh/download.msh?name=n&mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
 		{"GET /api/mesh/share/validate?token=t&peer_id=p&relay_base=x", "200", "GET /mesh/share/validate?token=t&peer_id=p"},
 		{"GET /api/mesh/share/validate?token[]=abc", "400 token", ""},
 		{"GET /api/mesh/share/validate?peer_id=1&peer_id=2", "400 peer_id", ""},

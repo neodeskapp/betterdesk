@@ -191,6 +191,26 @@ test_remote_targets_work_out_of_the_box() (
     sed -n '/^  guacd:/,/^  [a-z]/p' "$quick" | grep -qE '^ +- guacd$' || fail "guacd is not an optional service (profile guacd)"
 )
 
+# L244: the start banner names the ports the server listens on, as
+# SIGNAL_PORT and RELAY_PORT move them, and a value that is no number
+# does not stop the start.
+test_banner_names_the_moved_ports() (
+    local ep="$SCRIPT_ROOT/docker/entrypoint.sh" fn got
+    fn=$(sed -n '/^server_ports() {/,/^}/p' "$ep")
+    [ -n "$fn" ] || fail "the entrypoint has no server_ports for its banner"
+    grep -q '^echo "  Server:       \$(server_ports)"' "$ep" || fail "the banner does not print server_ports"
+    eval "$fn"
+    got=$(SIGNAL_PORT=25116 RELAY_PORT=25117 server_ports)
+    [ "$got" = "NAT test 25115, signal 25116, WebSocket signal 25118, relay 25117, WebSocket relay 25119, API 21121" ] \
+        || fail "SIGNAL_PORT=25116 RELAY_PORT=25117 gave '$got'"
+    got=$(unset SIGNAL_PORT RELAY_PORT; server_ports)
+    [ "$got" = "NAT test 21115, signal 21116, WebSocket signal 21118, relay 21117, WebSocket relay 21119, API 21121" ] \
+        || fail "the default ports gave '$got'"
+    got=$(SIGNAL_PORT=abc server_ports) || fail "SIGNAL_PORT=abc stopped the banner"
+    [ "$got" = "signal abc, relay 21117, API 21121" ] || fail "SIGNAL_PORT=abc gave '$got'"
+)
+
+test_banner_names_the_moved_ports
 test_dsn_for_log_drops_credentials
 test_scripts_print_no_raw_dsn
 test_image_has_dsn_helper
