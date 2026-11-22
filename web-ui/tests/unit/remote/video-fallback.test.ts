@@ -38,3 +38,33 @@ describe('the JMuxer path', () => {
 		v.close();
 	});
 });
+
+describe('the hidden video element', () => {
+	const elementErrors = (spy: ReturnType<typeof vi.spyOn>) =>
+		spy.mock.calls.filter((c) => String(c[0]).includes('Video element error'));
+
+	test('closing the path reports no error for the element it lets go', async () => {
+		const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const v = new RDVideo();
+		await v.init('h264');
+		const el = document.getElementById('rd-jmuxer-video')!;
+		v.close();
+		el.dispatchEvent(new Event('error'));
+		expect(elementErrors(logged)).toEqual([]);
+	});
+
+	test("after a restart of JMuxer, only the new element's errors are reported, once", async () => {
+		const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const v = new RDVideo();
+		await v.init('h264');
+		const old = document.getElementById('rd-jmuxer-video')!;
+		v._reinitJMuxer();
+		const current = document.getElementById('rd-jmuxer-video')!;
+		expect(current).not.toBe(old);
+		old.dispatchEvent(new Event('error'));
+		expect(elementErrors(logged)).toEqual([]);
+		current.dispatchEvent(new Event('error'));
+		expect(elementErrors(logged)).toHaveLength(1);
+		v.close();
+	});
+});
