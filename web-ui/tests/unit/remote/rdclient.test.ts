@@ -5,7 +5,7 @@
  * BD_DEV_MOCK_REMOTE=1 and ?mock=1), and the transport picks the client.
  * The client modules are stand-ins that record what was made.
  */
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const made = vi.hoisted(() => [] as string[]);
 const imported = vi.hoisted(() => [] as string[]);
@@ -47,6 +47,11 @@ const mockScript = () => document.head.querySelector<HTMLScriptElement>('script[
 const w = window as unknown as Record<string, unknown>;
 
 describe('loading the remote client', () => {
+	// The first import of the loader (i18n, capabilities) takes a few seconds on a busy machine
+	beforeAll(async () => {
+		await import('../../../src/lib/remote/rdclient.ts');
+	}, 30_000);
+
 	beforeEach(() => {
 		document.head.innerHTML = '';
 	});
