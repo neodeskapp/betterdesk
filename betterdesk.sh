@@ -371,7 +371,9 @@ log() {
 }
 
 print_header() {
-    clear
+    # Without a terminal (cloud-init, CI, a pipe) or without TERM, clear
+    # fails; the run goes on
+    if [ -t 1 ]; then clear 2>/dev/null || true; fi
     echo -e "${CYAN}"
     echo "╔══════════════════════════════════════════════════════════════════╗"
     echo "║                                                                  ║"

@@ -525,6 +525,18 @@ test_one_command_install() (
     rm -rf "$TEST_DIR"
 )
 
+# L201: a run without a terminal or TERM (cloud-init, CI, ssh host cmd)
+# gets past the header instead of stopping at clear under set -e.
+test_runs_without_term() (
+    load
+    local out
+    # A shell of its own: set -e is in force there as in a run of the script
+    out=$(env -u TERM bash -c 'script=$1; set --; source "$script"; print_header; echo "after the header"' \
+        test "$SCRIPT_ROOT/betterdesk.sh" 2>&1 < /dev/null) || true
+    case "$out" in *"after the header"*) ;; *) fail "the header stopped a run without TERM: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
 # A fresh install from the one-liner without --channel takes the stable
 # channel, and while the repository has no stable release it installs the
 # development build, says so and keeps that channel. A channel given
@@ -992,6 +1004,7 @@ test_releases_come_from_the_fork
 test_update_keeps_the_admins_ports
 test_channel_and_download_errors
 test_one_command_install
+test_runs_without_term
 test_no_stable_release_installs_dev
 test_rerun_updates_and_forgets_the_password
 test_panel_public_host
