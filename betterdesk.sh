@@ -238,6 +238,14 @@ while [[ $# -gt 0 ]]; do
             echo "  UPDATE_GITHUB_BRANCH=main|dev  Update channel: stable (main) or development (dev)"
             echo "  UPDATE_GITHUB_OWNER=... / UPDATE_GITHUB_REPO=...  Repository the releases come from"
             echo "  RELEASE_BASE_URL=...    Folder URL with the release files (SHA256SUMS and binaries)"
+            echo "  SSL_DOMAIN=...          Host name for the self-signed certificate and the console's address"
+            echo "  RUSTDESK_PATH=... / CONSOLE_PATH=... / BACKUP_DIR=...  Install folders"
+            echo "                          (default /opt/betterdesk, /opt/BetterDeskConsole, /opt/rustdesk-backups)"
+            echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
+            echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
+            echo ""
+            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh | sudo bash"
+            echo "Later:                     sudo betterdesk (menu), sudo betterdesk --update, sudo betterdesk --uninstall"
             exit 0
             ;;
         *)
