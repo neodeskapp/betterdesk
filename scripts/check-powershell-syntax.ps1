@@ -1,7 +1,6 @@
 param(
     [string[]]$Path = @(
         "betterdesk.ps1",
-        "build-betterdesk.ps1",
         "scripts/check-powershell-syntax.ps1",
         "scripts/check-wiki-staleness.ps1",
         "scripts/local-gate.ps1",
