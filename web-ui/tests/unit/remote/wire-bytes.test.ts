@@ -9,43 +9,14 @@
  */
 import { TextEncoder as NodeTextEncoder } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import tsNacl from 'tweetnacl';
-import { RDClient as TsClient } from '../../../src/lib/remote/client/client.ts';
-import { RDProtocol as TsProtocol } from '../../../src/lib/remote/client/protocol.ts';
-import { loadScripts, RD_CORE, type Loaded } from './rdclient-scripts.ts';
-
-/** The client's scripts as the viewer page loads them (JMuxer and zstd present) */
-const g: Loaded = loadScripts(
-	[
-		...RD_CORE,
-		'vendor/jmuxer.min.js',
-		'video.js',
-		'audio.js',
-		'renderer.js',
-		'keyboard-scancode.js',
-		'keyboard-encoder.js',
-		'input.js',
-		'file-connection.js',
-		'compress.js',
-		'clipboard.js',
-		'cliprdr.js',
-		'filetransfer.js',
-		'client.js'
-	],
-	['RDClient', 'RDProtocol', 'nacl']
-);
-const { nacl } = g;
-
-/** The same tests run on the JavaScript client and its TypeScript port */
-const CLIENTS: [string, Loaded][] = [
-	['JavaScript', g],
-	['TypeScript', { RDClient: TsClient, RDProtocol: TsProtocol, nacl: tsNacl }]
-];
+import nacl from 'tweetnacl';
+import { RDClient } from '../../../src/lib/remote/client/client.ts';
+import type { MessageInit, IRendezvousMessage } from '../../../src/lib/remote/client/generated/protos.ts';
+import { RDProtocol } from '../../../src/lib/remote/client/protocol.ts';
 
 type Bytes = Uint8Array;
 type KeyPair = { publicKey: Bytes; secretKey: Bytes };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Proto = any;
+type Proto = RDProtocol;
 
 const NOW = 1_700_000_000_000;
 const UUID = '1b4e28ba-2fa1-41d2-883f-0016d3cca427';
@@ -58,9 +29,9 @@ const seed = (n: number) => new Uint8Array(32).fill(n);
 const bytes = (...v: number[]) => new Uint8Array(v);
 
 /** A fixed byte stream for tweetnacl's randomBytes (session keys, box key pairs) */
-function fixedRandom(lib: Loaded) {
+function fixedRandom() {
 	let s = 0x2545f491;
-	lib.setPRNG((out: Bytes, n: number) => {
+	nacl.setPRNG((out: Bytes, n: number) => {
 		for (let i = 0; i < n; i++) {
 			s = (Math.imul(s, 1103515245) + 12345) >>> 0;
 			out[i] = s >>> 24;
@@ -100,17 +71,17 @@ function deviceEnd(proto: Proto) {
 			return proto.serializeMessage({ signedId: { id } });
 		},
 		takeKey(frame: Bytes) {
-			const pk = proto.decodeMessage(frame).publicKey;
+			const pk = proto.decodeMessage(frame).publicKey!;
 			key = nacl.box.open(pk.symmetricValue, new Uint8Array(24), pk.asymmetricValue, deviceBox.secretKey);
 		},
-		sealed(msg: unknown): Bytes {
-			return nacl.secretbox(proto.serializeMessage(msg), nonce(++sendSeq), key);
+		sealed(msg: MessageInit): Bytes {
+			return nacl.secretbox(proto.serializeMessage(msg), nonce(++sendSeq), key!);
 		},
 		/** The message in the client's next encrypted frame, as its field and the fields set below it */
 		open(frame: Bytes): string {
-			const plain = nacl.secretbox.open(frame, nonce(++recvSeq), key) as Bytes | null;
+			const plain = nacl.secretbox.open(frame, nonce(++recvSeq), key!);
 			if (!plain) return 'undecryptable';
-			const msg = proto.decodeMessage(plain);
+			const msg: Record<string, unknown> = { ...proto.decodeMessage(plain) };
 			const outer = Object.keys(msg).find((k) => msg[k] != null && k !== 'union') ?? 'empty';
 			const inner = msg[outer];
 			return inner && typeof inner === 'object' && !(inner instanceof Uint8Array)
@@ -180,132 +151,127 @@ beforeEach(() => {
 	FakeSocket.made = [];
 	vi.stubGlobal('WebSocket', FakeSocket);
 	vi.stubGlobal('TextEncoder', PageTextEncoder);
+	fixedRandom();
 });
 afterEach(() => {
 	vi.useRealTimers();
 	vi.unstubAllGlobals();
 });
 
-describe.each(CLIENTS)('%s client', (_name, impl) => {
-	const { RDClient, RDProtocol } = impl;
-	beforeEach(() => fixedRandom(impl.nacl));
-
-	describe('messages the protocol layer builds', () => {
-		test('each builder serializes to the same bytes', async () => {
-			const p = new RDProtocol();
-			await p.load();
-			const msg = (m: unknown) => hex(p.serializeMessage(m));
-			const rdv = (m: unknown) => hex(p.encodeRendezvous(m));
-			const hash = bytes(...Array.from({ length: 32 }, (_, i) => i));
-			const out = {
-				punchHoleRequest: rdv(p.buildPunchHoleRequest(DEVICE_ID, 'c2VydmVya2V5')),
-				punchHoleRequestFiles: rdv(
-					p.buildPunchHoleRequest(DEVICE_ID, '', p.enums.ConnType.values.FILE_TRANSFER)
-				),
-				requestRelayFramed: rdv(p.buildRequestRelay(DEVICE_ID, UUID, RELAY, 'c2VydmVya2V5')),
-				requestRelay: hex(p.serializeRendezvous(p.buildRequestRelay(DEVICE_ID, UUID, '', ''))),
-				publicKey: msg(p.buildPublicKey(bytes(1, 2, 3), bytes(4, 5, 6))),
-				auth2fa: msg(p.buildAuth2FA(' 123456 ')),
-				auth2faHwid: msg(p.buildAuth2FA('654321', bytes(9, 8, 7))),
-				loginRequest: msg(
-					p.buildLoginRequest(hash, {
-						username: DEVICE_ID,
-						myId: 'web-1',
-						myName: 'Operator',
-						fps: 30,
-						imageQuality: 'Balanced',
-						codecAbilities: { vp9: true, h264: true, h265: false, av1: false, vp8: true },
-						preferCodec: 'VP9'
-					})
-				),
-				loginRequestGuest: msg(p.buildLoginRequest(hash, { disableAudio: true, disableKeyboard: true })),
-				loginRequestFiles: msg(
-					p.buildFileTransferLoginRequest(hash, {
-						username: DEVICE_ID,
-						myId: 'ft-1',
-						dir: 'C:\\',
-						showHidden: true
-					})
-				),
-				mouseEvent: msg(p.buildMouseEvent(9, 640, 360, [29, 4])),
-				testDelay: msg(p.buildTestDelay()),
-				clipboard: msg(await p.buildClipboard('hello from the operator')),
-				multiClipboards: msg(await p.buildMultiClipboards({ text: 'plain', html: '<b>rich</b>' })),
-				cliprdrReady: msg(p.buildCliprdrMonitorReady()),
-				cliprdrFormatList: msg(p.buildCliprdrFormatList()),
-				cliprdrFormatListNamed: msg(
-					p.buildCliprdrFormatList({ fileDescriptorFormatId: 50000, fileContentsFormatName: 'Contents' })
-				),
-				cliprdrFormatListResponse: msg(p.buildCliprdrFormatListResponse(1)),
-				cliprdrFormatDataRequest: msg(p.buildCliprdrFormatDataRequest(49334)),
-				cliprdrFormatDataResponse: msg(p.buildCliprdrFormatDataResponse(1, bytes(1, 2, 3, 4))),
-				cliprdrFileContentsRequest: msg(
-					p.buildCliprdrFileContentsRequest({
-						streamId: 7,
-						listIndex: 1,
-						dwFlags: 2,
-						nPositionLow: 4096,
-						cbRequested: 65536,
-						haveClipDataId: true,
-						clipDataId: 3
-					})
-				),
-				cliprdrFileContentsResponse: msg(p.buildCliprdrFileContentsResponse(1, 7, [5, 6, 7])),
-				cliprdrTryEmpty: msg(p.buildCliprdrTryEmpty()),
-				optionMisc: msg(
-					p.buildOptionMisc({
-						imageQuality: 'Low',
-						customImageQuality: 50,
-						customFps: 24,
-						lockAfterSessionEnd: true,
-						showRemoteCursor: false,
-						privacyMode: true,
-						blockInput: false,
-						disableAudio: true,
-						disableClipboard: false,
-						disableKeyboard: true,
-						supportedDecoding: { abilities: { h264: true }, prefer: 'H264' }
-					})
-				),
-				miscRefresh: msg(p.buildMisc('refreshVideo', true)),
-				miscSwitchDisplay: msg(p.buildMisc('switchDisplay', { display: 1, width: 0, height: 0 })),
-				miscSupportedEncoding: msg(
-					p.buildMisc('supportedEncoding', p.buildSupportedEncoding({ h264: true }))
-				),
-				chat: msg(p.buildChatMessage('on my way')),
-				privacyMode: msg(p.buildTogglePrivacyMode(true)),
-				readDir: msg(p.buildReadDir('C:\\Users', true)),
-				fileReceive: msg(
-					p.buildFileReceiveRequest(
-						11,
-						'C:\\dest',
-						[
-							{ name: 'a.txt', size: 3, modifiedTime: 1_699_999_999 },
-							{ name: 'big.bin', size: 5_000_000_000, entry_type: 4, is_hidden: true }
-						],
-						0,
-						5_000_000_003
-					)
-				),
-				fileSend: msg(p.buildFileSendRequest(12, 'C:\\a.txt', true, 2)),
-				fileSendConfirm: msg(p.buildFileSendConfirm(12, 0, false, 5)),
-				fileSendSkip: msg(p.buildFileSendConfirm(12, 1, true)),
-				fileCancel: msg(p.buildFileCancel(12)),
-				fileDirCreate: msg(p.buildFileDirCreate(13, 'C:\\new')),
-				fileRemove: msg(p.buildFileRemove(14, 'C:\\a.txt', 0)),
-				fileRemoveDir: msg(p.buildFileRemoveDir(15, 'C:\\old', true)),
-				fileRename: msg(p.buildFileRename(16, 'C:\\a.txt', 'b.txt')),
-				fileDigest: msg(
-					p.buildFileDigest(11, 0, 3, 1_699_999_999, { isUpload: true, isResume: true, transferredSize: 0 })
-				),
-				fileBlock: msg(p.buildFileBlock(11, 0, bytes(97, 98, 99), false, 0)),
-				fileDone: msg(p.buildFileDone(11, 0)),
-				keyEventSeq: msg({ keyEvent: { seq: 'Hi', down: true, press: true, modifiers: [], mode: 'Legacy' } }),
-				keyEventControl: msg({
-					keyEvent: { controlKey: 'Backspace', down: true, press: false, modifiers: ['Control'], mode: 'Map' }
+describe('messages the protocol layer builds', () => {
+	test('each builder serializes to the same bytes', async () => {
+		const p = new RDProtocol();
+		await p.load();
+		const msg = (m: MessageInit) => hex(p.serializeMessage(m));
+		const rdv = (m: IRendezvousMessage) => hex(p.encodeRendezvous(m));
+		const hash = bytes(...Array.from({ length: 32 }, (_, i) => i));
+		const out = {
+			punchHoleRequest: rdv(p.buildPunchHoleRequest(DEVICE_ID, 'c2VydmVya2V5')),
+			punchHoleRequestFiles: rdv(
+				p.buildPunchHoleRequest(DEVICE_ID, '', p.enums.ConnType.values.FILE_TRANSFER)
+			),
+			requestRelayFramed: rdv(p.buildRequestRelay(DEVICE_ID, UUID, RELAY, 'c2VydmVya2V5')),
+			requestRelay: hex(p.serializeRendezvous(p.buildRequestRelay(DEVICE_ID, UUID, '', ''))),
+			publicKey: msg(p.buildPublicKey(bytes(1, 2, 3), bytes(4, 5, 6))),
+			auth2fa: msg(p.buildAuth2FA(' 123456 ')),
+			auth2faHwid: msg(p.buildAuth2FA('654321', bytes(9, 8, 7))),
+			loginRequest: msg(
+				p.buildLoginRequest(hash, {
+					username: DEVICE_ID,
+					myId: 'web-1',
+					myName: 'Operator',
+					fps: 30,
+					imageQuality: 'Balanced',
+					codecAbilities: { vp9: true, h264: true, h265: false, av1: false, vp8: true },
+					preferCodec: 'VP9'
 				})
-			};
-			expect(out).toMatchInlineSnapshot(`
+			),
+			loginRequestGuest: msg(p.buildLoginRequest(hash, { disableAudio: true, disableKeyboard: true })),
+			loginRequestFiles: msg(
+				p.buildFileTransferLoginRequest(hash, {
+					username: DEVICE_ID,
+					myId: 'ft-1',
+					dir: 'C:\\',
+					showHidden: true
+				})
+			),
+			mouseEvent: msg(p.buildMouseEvent(9, 640, 360, [29, 4])),
+			testDelay: msg(p.buildTestDelay()),
+			clipboard: msg(await p.buildClipboard('hello from the operator')),
+			multiClipboards: msg(await p.buildMultiClipboards({ text: 'plain', html: '<b>rich</b>' })),
+			cliprdrReady: msg(p.buildCliprdrMonitorReady()),
+			cliprdrFormatList: msg(p.buildCliprdrFormatList()),
+			cliprdrFormatListNamed: msg(
+				p.buildCliprdrFormatList({ fileDescriptorFormatId: 50000, fileContentsFormatName: 'Contents' })
+			),
+			cliprdrFormatListResponse: msg(p.buildCliprdrFormatListResponse(1)),
+			cliprdrFormatDataRequest: msg(p.buildCliprdrFormatDataRequest(49334)),
+			cliprdrFormatDataResponse: msg(p.buildCliprdrFormatDataResponse(1, bytes(1, 2, 3, 4))),
+			cliprdrFileContentsRequest: msg(
+				p.buildCliprdrFileContentsRequest({
+					streamId: 7,
+					listIndex: 1,
+					dwFlags: 2,
+					nPositionLow: 4096,
+					cbRequested: 65536,
+					haveClipDataId: true,
+					clipDataId: 3
+				})
+			),
+			cliprdrFileContentsResponse: msg(p.buildCliprdrFileContentsResponse(1, 7, [5, 6, 7])),
+			cliprdrTryEmpty: msg(p.buildCliprdrTryEmpty()),
+			optionMisc: msg(
+				p.buildOptionMisc({
+					imageQuality: 'Low',
+					customImageQuality: 50,
+					customFps: 24,
+					lockAfterSessionEnd: true,
+					showRemoteCursor: false,
+					privacyMode: true,
+					blockInput: false,
+					disableAudio: true,
+					disableClipboard: false,
+					disableKeyboard: true,
+					supportedDecoding: { abilities: { h264: true }, prefer: 'H264' }
+				})
+			),
+			miscRefresh: msg(p.buildMisc('refreshVideo', true)),
+			miscSwitchDisplay: msg(p.buildMisc('switchDisplay', { display: 1, width: 0, height: 0 })),
+			miscSupportedEncoding: msg(p.buildMisc('supportedEncoding', p.buildSupportedEncoding({ h264: true }))),
+			chat: msg(p.buildChatMessage('on my way')),
+			privacyMode: msg(p.buildTogglePrivacyMode(true)),
+			readDir: msg(p.buildReadDir('C:\\Users', true)),
+			fileReceive: msg(
+				p.buildFileReceiveRequest(
+					11,
+					'C:\\dest',
+					[
+						{ name: 'a.txt', size: 3, modifiedTime: 1_699_999_999 },
+						{ name: 'big.bin', size: 5_000_000_000, entry_type: 4, is_hidden: true }
+					],
+					0,
+					5_000_000_003
+				)
+			),
+			fileSend: msg(p.buildFileSendRequest(12, 'C:\\a.txt', true, 2)),
+			fileSendConfirm: msg(p.buildFileSendConfirm(12, 0, false, 5)),
+			fileSendSkip: msg(p.buildFileSendConfirm(12, 1, true)),
+			fileCancel: msg(p.buildFileCancel(12)),
+			fileDirCreate: msg(p.buildFileDirCreate(13, 'C:\\new')),
+			fileRemove: msg(p.buildFileRemove(14, 'C:\\a.txt', 0)),
+			fileRemoveDir: msg(p.buildFileRemoveDir(15, 'C:\\old', true)),
+			fileRename: msg(p.buildFileRename(16, 'C:\\a.txt', 'b.txt')),
+			fileDigest: msg(
+				p.buildFileDigest(11, 0, 3, 1_699_999_999, { isUpload: true, isResume: true, transferredSize: 0 })
+			),
+			fileBlock: msg(p.buildFileBlock(11, 0, bytes(97, 98, 99), false, 0)),
+			fileDone: msg(p.buildFileDone(11, 0)),
+			keyEventSeq: msg({ keyEvent: { seq: 'Hi', down: true, press: true, modifiers: [], mode: 'Legacy' } }),
+			keyEventControl: msg({
+				keyEvent: { controlKey: 'Backspace', down: true, press: false, modifiers: ['Control'], mode: 'Map' }
+			})
+		};
+		expect(out).toMatchInlineSnapshot(`
 			{
 			  "auth2fa": "da01080a06313233343536",
 			  "auth2faHwid": "da010d0a063635343332311203090807",
@@ -353,191 +319,191 @@ describe.each(CLIENTS)('%s client', (_name, impl) => {
 			  "testDelay": "2a0d0880d095ffbc31100118002000",
 			}
 		`);
-		});
 	});
+});
 
-	describe('a whole session on the wire', () => {
-		test('desktop session, then the file transfer session', async () => {
-			vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
-			let perf = 1000;
-			vi.spyOn(performance, 'now').mockImplementation(() => (perf += 100));
+describe('a whole session on the wire', () => {
+	test('desktop session, then the file transfer session', async () => {
+		vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+		let perf = 1000;
+		vi.spyOn(performance, 'now').mockImplementation(() => (perf += 100));
 
-			const canvas = document.createElement('canvas');
-			const c = new RDClient(canvas, {
-				deviceId: DEVICE_ID,
-				serverPubKey: b64(server.publicKey),
-				myName: 'Operator'
-			});
-			const p: Proto = c.proto;
-			const connecting = c.connect();
+		const canvas = document.createElement('canvas');
+		const c = new RDClient(canvas, {
+			deviceId: DEVICE_ID,
+			serverPubKey: b64(server.publicKey),
+			myName: 'Operator'
+		});
+		const p: Proto = c.proto;
+		const connecting = c.connect();
 
-			// Rendezvous: the client asks for the device, then for a relay with its own UUID
-			const rv = await socket(0);
-			rv.open();
-			await sentCount(rv, 1);
-			const d = deviceEnd(p);
-			rv.message(p.encodeRendezvous({ punchHoleResponse: { relayServer: RELAY, natType: 1 } }));
-			await sentCount(rv, 2);
-			rv.message(p.encodeRendezvous({ relayResponse: { uuid: UUID, relayServer: RELAY, pk: d.relayPk } }));
+		// Rendezvous: the client asks for the device, then for a relay with its own UUID
+		const rv = await socket(0);
+		rv.open();
+		await sentCount(rv, 1);
+		const d = deviceEnd(p);
+		rv.message(p.encodeRendezvous({ punchHoleResponse: { relayServer: RELAY, natType: 1 } }));
+		await sentCount(rv, 2);
+		rv.message(p.encodeRendezvous({ relayResponse: { uuid: UUID, relayServer: RELAY, pk: d.relayPk } }));
 
-			// Relay: RequestRelay first, the device's SignedId, our PublicKey, then encrypted frames
-			const relay = await socket(1);
-			relay.open();
-			await connecting;
-			relay.message(d.signedId());
-			await sentCount(relay, 2);
-			d.takeKey(relay.sent[1]!);
-			relay.message(d.sealed({ hash: { salt: 'salt', challenge: 'challenge' } }));
-			await c.authenticate('secret');
-			relay.message(d.sealed({ loginResponse: { error: '2FA Required' } }));
-			c.submit2FA(' 123456 ');
-			relay.message(
-				d.sealed({
-					loginResponse: {
-						peerInfo: {
-							username: 'user',
-							hostname: 'host',
-							platform: 'Windows',
-							displays: [{ x: 0, y: 0, width: 1920, height: 1080, name: 'DISPLAY1', online: true }],
-							currentDisplay: 0,
-							version: '1.4.2'
-						}
+		// Relay: RequestRelay first, the device's SignedId, our PublicKey, then encrypted frames
+		const relay = await socket(1);
+		relay.open();
+		await connecting;
+		relay.message(d.signedId());
+		await sentCount(relay, 2);
+		d.takeKey(relay.sent[1]!);
+		relay.message(d.sealed({ hash: { salt: 'salt', challenge: 'challenge' } }));
+		await c.authenticate('secret');
+		relay.message(d.sealed({ loginResponse: { error: '2FA Required' } }));
+		c.submit2FA(' 123456 ');
+		relay.message(
+			d.sealed({
+				loginResponse: {
+					peerInfo: {
+						username: 'user',
+						hostname: 'host',
+						platform: 'Windows',
+						displays: [{ x: 0, y: 0, width: 1920, height: 1080, name: 'DISPLAY1', online: true }],
+						currentDisplay: 0,
+						version: '1.4.2'
 					}
-				})
-			);
-			expect(c.state).toBe('streaming');
+				}
+			})
+		);
+		expect(c.state).toBe('streaming');
 
-			// The device's QoS probe is echoed, a video frame is acknowledged
-			relay.message(
-				d.sealed({ testDelay: { time: 123456, fromClient: false, lastDelay: 5, targetBitrate: 1000 } })
-			);
-			relay.message(d.sealed({ videoFrame: {} }));
+		// The device's QoS probe is echoed, a video frame is acknowledged
+		relay.message(
+			d.sealed({ testDelay: { time: 123456, fromClient: false, lastDelay: 5, targetBitrate: 1000 } })
+		);
+		relay.message(d.sealed({ videoFrame: {} }));
 
-			// Keyboard and mouse
-			c.renderer.remoteWidth = 1920;
-			c.renderer.remoteHeight = 1080;
-			// The screen is drawn 1:1 at the canvas' top left
-			c.renderer.canvasToRemote = (x: number, y: number) => ({ x, y });
-			c.setSessionActive(true);
-			const key = (type: string, init: KeyboardEventInit) =>
-				document.dispatchEvent(new KeyboardEvent(type, { bubbles: true, cancelable: true, ...init }));
-			key('keydown', { key: 'a', code: 'KeyA' });
-			key('keyup', { key: 'a', code: 'KeyA' });
-			key('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true });
-			key('keydown', { key: 'B', code: 'KeyB', shiftKey: true });
-			key('keyup', { key: 'B', code: 'KeyB', shiftKey: true });
-			key('keyup', { key: 'Shift', code: 'ShiftLeft' });
-			key('keydown', { key: 'Enter', code: 'Enter' });
-			key('keyup', { key: 'Enter', code: 'Enter' });
-			key('keydown', { key: 'Control', code: 'ControlLeft', ctrlKey: true });
-			key('keydown', { key: 'c', code: 'KeyC', ctrlKey: true });
-			key('keyup', { key: 'c', code: 'KeyC', ctrlKey: true });
-			key('keyup', { key: 'Control', code: 'ControlLeft' });
-			key('keydown', { key: 'ArrowLeft', code: 'ArrowLeft' });
-			key('keyup', { key: 'ArrowLeft', code: 'ArrowLeft' });
-			c.setKeyboardMode('Legacy');
-			key('keydown', { key: 'Backspace', code: 'Backspace' });
-			key('keyup', { key: 'Backspace', code: 'Backspace' });
-			key('keydown', { key: 'é', code: 'Digit2' });
-			key('keyup', { key: 'é', code: 'Digit2' });
-			key('keydown', { key: 'F5', code: 'F5' });
-			key('keyup', { key: 'F5', code: 'F5' });
-			c.setKeyboardMode('Map');
-			const mouse = (type: string, init: MouseEventInit) =>
-				canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, ...init }));
-			mouse('mousemove', { clientX: 100, clientY: 200 });
-			mouse('mousedown', { button: 0, clientX: 100, clientY: 200 });
-			mouse('mouseup', { button: 0, clientX: 110, clientY: 210 });
-			mouse('mousedown', { button: 2, clientX: 300, clientY: 400, shiftKey: true });
-			mouse('mouseup', { button: 2, clientX: 300, clientY: 400 });
-			canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true }));
-			canvas.dispatchEvent(new WheelEvent('wheel', { deltaX: -40, bubbles: true, cancelable: true }));
-			c.sendCtrlAltDel();
-			c.sendLockScreen();
-			const typed = relay.sent.length;
-			c.sendText('Hello');
-			await sentCount(relay, typed + 2);
-			c.resetKeyboard();
+		// Keyboard and mouse
+		c.renderer.remoteWidth = 1920;
+		c.renderer.remoteHeight = 1080;
+		// The screen is drawn 1:1 at the canvas' top left
+		c.renderer.canvasToRemote = (x: number, y: number) => ({ x, y });
+		c.setSessionActive(true);
+		const key = (type: string, init: KeyboardEventInit) =>
+			document.dispatchEvent(new KeyboardEvent(type, { bubbles: true, cancelable: true, ...init }));
+		key('keydown', { key: 'a', code: 'KeyA' });
+		key('keyup', { key: 'a', code: 'KeyA' });
+		key('keydown', { key: 'Shift', code: 'ShiftLeft', shiftKey: true });
+		key('keydown', { key: 'B', code: 'KeyB', shiftKey: true });
+		key('keyup', { key: 'B', code: 'KeyB', shiftKey: true });
+		key('keyup', { key: 'Shift', code: 'ShiftLeft' });
+		key('keydown', { key: 'Enter', code: 'Enter' });
+		key('keyup', { key: 'Enter', code: 'Enter' });
+		key('keydown', { key: 'Control', code: 'ControlLeft', ctrlKey: true });
+		key('keydown', { key: 'c', code: 'KeyC', ctrlKey: true });
+		key('keyup', { key: 'c', code: 'KeyC', ctrlKey: true });
+		key('keyup', { key: 'Control', code: 'ControlLeft' });
+		key('keydown', { key: 'ArrowLeft', code: 'ArrowLeft' });
+		key('keyup', { key: 'ArrowLeft', code: 'ArrowLeft' });
+		c.setKeyboardMode('Legacy');
+		key('keydown', { key: 'Backspace', code: 'Backspace' });
+		key('keyup', { key: 'Backspace', code: 'Backspace' });
+		key('keydown', { key: 'é', code: 'Digit2' });
+		key('keyup', { key: 'é', code: 'Digit2' });
+		key('keydown', { key: 'F5', code: 'F5' });
+		key('keyup', { key: 'F5', code: 'F5' });
+		c.setKeyboardMode('Map');
+		const mouse = (type: string, init: MouseEventInit) =>
+			canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, ...init }));
+		mouse('mousemove', { clientX: 100, clientY: 200 });
+		mouse('mousedown', { button: 0, clientX: 100, clientY: 200 });
+		mouse('mouseup', { button: 0, clientX: 110, clientY: 210 });
+		mouse('mousedown', { button: 2, clientX: 300, clientY: 400, shiftKey: true });
+		mouse('mouseup', { button: 2, clientX: 300, clientY: 400 });
+		canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true }));
+		canvas.dispatchEvent(new WheelEvent('wheel', { deltaX: -40, bubbles: true, cancelable: true }));
+		c.sendCtrlAltDel();
+		c.sendLockScreen();
+		const typed = relay.sent.length;
+		c.sendText('Hello');
+		await sentCount(relay, typed + 2);
+		c.resetKeyboard();
 
-			// Clipboard
-			let n = relay.sent.length;
-			c.sendClipboard('hello from the operator');
-			await sentCount(relay, n + 1);
-			n = relay.sent.length;
-			c.sendClipboard({ text: 'plain', html: '<b>rich</b>' });
-			await sentCount(relay, n + 1);
+		// Clipboard
+		let n = relay.sent.length;
+		c.sendClipboard('hello from the operator');
+		await sentCount(relay, n + 1);
+		n = relay.sent.length;
+		c.sendClipboard({ text: 'plain', html: '<b>rich</b>' });
+		await sentCount(relay, n + 1);
 
-			// Settings and commands
-			c.sendRefreshScreen();
-			c.sendChat('on my way');
-			c.setQualityPreset('speed');
-			c.setFpsMode('60');
-			c.setCodec('VP9');
-			c.setImageQuality('Low');
-			c.setCustomFps(24);
-			c.setShowRemoteCursor(false);
-			c.setBlockInput(true);
-			c.setLockAfterSession(true);
-			c.setPrivacyMode(true);
-			c.setDisableClipboard(true);
-			c.setDisableAudio(true);
-			c.switchMonitor(0);
-			c.setSessionActive(false);
-			c.setSessionActive(true);
-			c.sendRestartRemoteDevice();
-			vi.advanceTimersByTime(3000);
+		// Settings and commands
+		c.sendRefreshScreen();
+		c.sendChat('on my way');
+		c.setQualityPreset('speed');
+		c.setFpsMode('60');
+		c.setCodec('VP9');
+		c.setImageQuality('Low');
+		c.setCustomFps(24);
+		c.setShowRemoteCursor(false);
+		c.setBlockInput(true);
+		c.setLockAfterSession(true);
+		c.setPrivacyMode(true);
+		c.setDisableClipboard(true);
+		c.setDisableAudio(true);
+		c.switchMonitor(0);
+		c.setSessionActive(false);
+		c.setSessionActive(true);
+		c.sendRestartRemoteDevice();
+		vi.advanceTimersByTime(3000);
 
-			// The file transfer session: its own rendezvous, relay, handshake and login
-			const fd = deviceEnd(p);
-			const browsing = c.fileTransfer.browseDir('C:\\Users');
-			const frv = await socket(2);
-			frv.open();
-			await sentCount(frv, 1);
-			frv.message(p.encodeRendezvous({ punchHoleResponse: { relayServer: RELAY, natType: 1 } }));
-			await sentCount(frv, 2);
-			frv.message(p.encodeRendezvous({ relayResponse: { uuid: UUID, relayServer: RELAY, pk: fd.relayPk } }));
-			const frelay = await socket(3);
-			frelay.open();
-			await sentCount(frelay, 1);
-			frelay.message(fd.signedId());
-			await sentCount(frelay, 2);
-			fd.takeKey(frelay.sent[1]!);
-			frelay.message(fd.sealed({ hash: { salt: 'fsalt', challenge: 'fchallenge' } }));
-			await sentCount(frelay, 3);
-			frelay.message(fd.sealed({ loginResponse: { peerInfo: { platform: 'Windows' } } }));
-			await browsing;
-			await sentCount(frelay, 4);
-			c.fileTransfer.createDir('C:\\Users\\new');
-			c.fileTransfer.removeFile('C:\\Users\\a.txt');
-			c.fileTransfer.removeDir('C:\\Users\\old', true);
-			c.fileTransfer.rename('C:\\Users\\a.txt', 'b.txt');
-			// Transfer ids count up from 1: the download is 5, the upload 6
-			n = frelay.sent.length;
-			c.fileTransfer.downloadFile('C:\\Users', { name: 'report.txt', size: 3, modifiedTime: 1_699_999_999 });
-			await sentCount(frelay, n + 1);
-			frelay.message(
-				fd.sealed({
-					fileResponse: { digest: { id: 5, fileNum: 0, lastModified: 1_699_999_999, fileSize: 3 } }
-				})
-			);
-			await sentCount(frelay, n + 2);
-			n = frelay.sent.length;
-			c.fileTransfer.uploadFile(new File(['abc'], 'up.txt', { lastModified: NOW }), 'C:\\Users');
-			await sentCount(frelay, n + 2);
-			frelay.message(fd.sealed({ fileAction: { sendConfirm: { id: 6, fileNum: 0, offsetBlk: 0 } } }));
-			await sentCount(frelay, n + 4);
+		// The file transfer session: its own rendezvous, relay, handshake and login
+		const fd = deviceEnd(p);
+		const browsing = c.fileTransfer.browseDir('C:\\Users');
+		const frv = await socket(2);
+		frv.open();
+		await sentCount(frv, 1);
+		frv.message(p.encodeRendezvous({ punchHoleResponse: { relayServer: RELAY, natType: 1 } }));
+		await sentCount(frv, 2);
+		frv.message(p.encodeRendezvous({ relayResponse: { uuid: UUID, relayServer: RELAY, pk: fd.relayPk } }));
+		const frelay = await socket(3);
+		frelay.open();
+		await sentCount(frelay, 1);
+		frelay.message(fd.signedId());
+		await sentCount(frelay, 2);
+		fd.takeKey(frelay.sent[1]!);
+		frelay.message(fd.sealed({ hash: { salt: 'fsalt', challenge: 'fchallenge' } }));
+		await sentCount(frelay, 3);
+		frelay.message(fd.sealed({ loginResponse: { peerInfo: { platform: 'Windows' } } }));
+		await browsing;
+		await sentCount(frelay, 4);
+		c.fileTransfer.createDir('C:\\Users\\new');
+		c.fileTransfer.removeFile('C:\\Users\\a.txt');
+		c.fileTransfer.removeDir('C:\\Users\\old', true);
+		c.fileTransfer.rename('C:\\Users\\a.txt', 'b.txt');
+		// Transfer ids count up from 1: the download is 5, the upload 6
+		n = frelay.sent.length;
+		c.fileTransfer.downloadFile('C:\\Users', { name: 'report.txt', size: 3, modifiedTime: 1_699_999_999 });
+		await sentCount(frelay, n + 1);
+		frelay.message(
+			fd.sealed({
+				fileResponse: { digest: { id: 5, fileNum: 0, lastModified: 1_699_999_999, fileSize: 3 } }
+			})
+		);
+		await sentCount(frelay, n + 2);
+		n = frelay.sent.length;
+		c.fileTransfer.uploadFile(new File(['abc'], 'up.txt', { lastModified: NOW }), 'C:\\Users');
+		await sentCount(frelay, n + 2);
+		frelay.message(fd.sealed({ fileAction: { sendConfirm: { id: 6, fileNum: 0, offsetBlk: 0 } } }));
+		await sentCount(frelay, n + 4);
 
-			const wire = (s: FakeSocket) => s.sent.map(hex);
-			const opened = (end: ReturnType<typeof deviceEnd>, s: FakeSocket) =>
-				s.sent.slice(2).map((f) => end.open(f));
-			expect({
-				rendezvous: wire(rv),
-				relay: wire(relay),
-				relayMessages: opened(d, relay),
-				fileRendezvous: wire(frv),
-				fileRelay: wire(frelay),
-				fileRelayMessages: opened(fd, frelay)
-			}).toMatchInlineSnapshot(`
+		const wire = (s: FakeSocket) => s.sent.map(hex);
+		const opened = (end: ReturnType<typeof deviceEnd>, s: FakeSocket) =>
+			s.sent.slice(2).map((f) => end.open(f));
+		expect({
+			rendezvous: wire(rv),
+			relay: wire(relay),
+			relayMessages: opened(d, relay),
+			fileRendezvous: wire(frv),
+			fileRelay: wire(frelay),
+			fileRelayMessages: opened(fd, frelay)
+		}).toMatchInlineSnapshot(`
 			{
 			  "fileRelay": [
 			    "92017e0a09393030313030303132122431623465323862612d326661312d343164322d383833662d303031366433636361343237221772656c61792e6578616d706c652e636f6d3a32313131372800322c696f6a6a3358514a385a583955747374504c70646373706e436238646c42496238335349416251506231773d38014200",
@@ -747,7 +713,6 @@ describe.each(CLIENTS)('%s client', (_name, impl) => {
 			  ],
 			}
 		`);
-			c.disconnect();
-		});
+		c.disconnect();
 	});
 });

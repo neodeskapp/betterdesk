@@ -32,7 +32,7 @@ query-filters:
   - exclude:
       id: js/insecure-randomness
       paths:
-        - web-ui/static/rdclient/connection.js
+        - web-ui/src/lib/remote/client/connection.ts
 
   # --- MeshAgent tunnel: pin-based TLS via checkServerIdentity (self-signed agent certs) ---
   - exclude:
