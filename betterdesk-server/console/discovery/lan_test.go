@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-// lanRecording is what testdata/nodeoracle/lan.js wrote.
+// lanRecording is what testdata/lan.json.gz holds.
 type lanRecording struct {
 	Announcements []struct {
 		Env        map[string]string `json:"env"`

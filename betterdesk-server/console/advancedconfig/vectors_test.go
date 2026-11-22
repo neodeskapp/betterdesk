@@ -22,7 +22,7 @@ import (
 )
 
 // The vectors are what services/advancedConfigService.js of the Node
-// console did in the scenarios of testdata/nodeoracle/advancedconfig.js:
+// console did in the scenarios of testdata/vectors.json.gz:
 // per step the result or the error, and the files afterwards. The test
 // runs the same scenarios on a temporary folder.
 

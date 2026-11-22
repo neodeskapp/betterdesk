@@ -1,9 +1,8 @@
-// Command gencerts writes the test certificates and keys of the smtpwire
-// tests into the directory given as its argument. They were generated once
-// and are checked in, because the Node fixtures and the Go tests have to use
-// the same ones. Run it again only to add a certificate:
-//
-//	go run ./console/mail/smtpwire/testdata/gencerts console/mail/smtpwire/testdata/certs
+// Command gencerts wrote the test certificates and keys of the smtpwire
+// tests into the directory given as its argument. They are checked in
+// because the recordings in testdata were made with them. Don't run it
+// again: new certificates would no longer match the recordings, which
+// can't be made again.
 package main
 
 import (

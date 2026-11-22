@@ -32,8 +32,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// recording is what testdata/nodeoracle/bdapi.js recorded from the Node
-// console's device API on one database.
+// recording is what testdata/node_<database>.json recorded from the Node
+// console's device API on one database (testdata/README.md).
 type recording struct {
 	Dialect string              `json:"dialect"`
 	Seeds   map[string]string   `json:"seeds"`

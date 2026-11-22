@@ -32,7 +32,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
 
-// recording is what testdata/nodeoracle/registration.js recorded from
+// recording is what testdata/node_<database>.json holds, recorded from
 // the Node console's registration routes on one database.
 type recording struct {
 	Dialect   string              `json:"dialect"`

@@ -16,7 +16,7 @@ import (
 )
 
 // These tests replay what the npm package qrcode produced for the same
-// input. testdata/nodeoracle/README.md says where the files come from.
+// input. testdata/README.md says what the files hold.
 
 // readLines decodes a gzip-compressed file of JSON objects, one per line.
 func readLines[T any](t *testing.T, name string) []T {

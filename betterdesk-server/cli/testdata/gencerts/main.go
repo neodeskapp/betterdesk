@@ -1,9 +1,8 @@
-// Command gencerts writes the certificates the protocol check is recorded
-// and replayed with (testdata/certs): a test CA and server certificates
+// Command gencerts wrote the certificates the protocol check was recorded
+// and is replayed with (testdata/certs): a test CA and server certificates
 // that are good, for another host, expired, self-signed and without
-// subject alternative names. They are for tests only.
-//
-//	cd betterdesk-server && go run ./cli/testdata/gencerts
+// subject alternative names. They are for tests only. Don't run it again:
+// the recording can't be made again to match new certificates.
 package main
 
 import (

@@ -15,8 +15,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// The vectors in testdata were written by testdata/nodeoracle/vectors.js
-// from the real Node modules. Every test here replays one file and
+// The vectors in testdata are fixed recordings of the real Node modules
+// (testdata/README.md). Every test here replays one file and
 // compares byte for byte.
 
 func load(t *testing.T, name string, into any) {

@@ -23,7 +23,7 @@ import (
 
 // deviceWorld is the two device guards in front of a handler that answers
 // what it sees, behind the body step of the pipeline, on db. It answers
-// the paths of testdata/nodeoracle/devicetoken.js:
+// the paths of the recordings (testdata/device_<database>.json):
 //
 //	/api/probe/token        RequireDeviceToken
 //	/api/probe/match        RequireDeviceToken, RequireTokenDeviceMatch
@@ -69,7 +69,7 @@ func probeAnswer(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, r, http.StatusOK, probed{Next: true, DeviceID: device.DeviceID, ClientID: device.Token.ClientID.String, UserID: device.Token.UserID.V})
 }
 
-// deviceRecording is a file of testdata/nodeoracle/devicetoken.js.
+// deviceRecording is testdata/device_sqlite.json or device_postgres.json.
 type deviceRecording struct {
 	Dialect string              `json:"dialect"`
 	RawSeed [][]json.RawMessage `json:"seed"`
@@ -228,7 +228,7 @@ var refusedSteps = map[string]string{
 
 // TestDeviceGuardsAnswerAsNode replays what requireDeviceToken and
 // requireTokenDeviceMatch of the Node console answered to the same bytes
-// on the same token rows (testdata/nodeoracle/devicetoken.js): status,
+// on the same token rows (testdata/device_<database>.json): status,
 // body byte for byte, and which token rows got their use noted.
 func TestDeviceGuardsAnswerAsNode(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {

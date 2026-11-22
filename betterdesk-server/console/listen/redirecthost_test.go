@@ -15,7 +15,7 @@ import (
 )
 
 // redirectRecording is testdata/node_redirect.json: lib/redirectHost.js
-// of upstream 3.5.264 on generated input (nodeoracle/redirect.js).
+// of upstream 3.5.264 on generated input (testdata/README.md).
 // normalize is [raw (null: undefined), host or null], resolve
 // [configured, listen, host, source], build [host, port, target, URL].
 type redirectRecording struct {

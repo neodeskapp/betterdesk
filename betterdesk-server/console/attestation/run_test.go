@@ -82,7 +82,7 @@ func (c *fakeClock) SleepUntil(ctx context.Context, t time.Time, wake <-chan str
 	return true, ctx.Err()
 }
 
-// The records of testdata/nodeoracle/run.js.
+// The records of testdata/runs_sqlite.json.gz and runs_postgres.json.gz.
 
 type wsRule struct {
 	Connect    string `json:"connect"`
@@ -196,7 +196,7 @@ func (w *world) rule(url string) wsRule {
 	return list[n]
 }
 
-// Read gives the bytes run.js's randomBytes gave.
+// Read gives the bytes randomBytes gave in the recording.
 func (w *world) Read(p []byte) (int, error) {
 	for i := range p {
 		p[i] = byte((w.random*167 + 13) & 0xff)

@@ -14,7 +14,7 @@ import (
 )
 
 // scenario is one entry of testdata/trends.json: answers of the API client
-// and what the Node route made of them (testdata/nodeoracle/trends.js).
+// and what the Node route made of them (testdata/README.md).
 type scenario struct {
 	Name     string                     `json:"name"`
 	Now      int64                      `json:"now"`

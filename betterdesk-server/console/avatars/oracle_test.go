@@ -16,8 +16,8 @@ import (
 )
 
 // The tests in this file replay what lib/avatarImage.js of the Node
-// console answered (testdata/nodeoracle/vectors.js). Every record must
-// get the same answer here.
+// console answered (testdata/image.json.gz and fetch.json.gz). Every
+// record must get the same answer here.
 
 func loadVectors(t *testing.T, name string, into any) {
 	t.Helper()

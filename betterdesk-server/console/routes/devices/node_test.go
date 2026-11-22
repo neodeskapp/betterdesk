@@ -21,7 +21,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// recording is what testdata/nodeoracle/routes.js recorded: the rows to
+// recording is what testdata/node_<db>.json recorded: the rows to
 // start from, the API server's table of answers, and each request with
 // the answer of the Node console's route and the calls it made.
 type recording struct {

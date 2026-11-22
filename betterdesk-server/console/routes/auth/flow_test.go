@@ -30,10 +30,10 @@ import (
 //
 //	BD_URL=http://bdgo-au2:5000 go test -tags authflow -count=1 -run TestSignInFlow ./console/routes/auth/
 //
-// AUTHFLOW_RECORD=1 writes the recording instead of comparing, and
-// CONTRACT_REQUIRE_GO=1 fails when the Node console answered one of the
-// sign-in routes. Use a fresh instance: the flow counts on the sign-in
-// attempts and audit entries it finds.
+// The recording is fixed: it can't be made again. CONTRACT_REQUIRE_GO=1
+// fails when a sign-in route was not answered by the Go console. Use a
+// fresh instance: the flow counts on the sign-in attempts and audit
+// entries it finds.
 
 const (
 	flowFile        = "testdata/flow.json"
@@ -291,21 +291,6 @@ func TestSignInFlow(t *testing.T) {
 				t.Errorf("%s was answered by %q, not by the Go console", id, handler)
 			}
 		}
-	}
-
-	if os.Getenv("AUTHFLOW_RECORD") == "1" {
-		raw, err := json.MarshalIndent(f.steps, "", " ")
-		if err != nil {
-			t.Fatalf("encode the recording: %v", err)
-		}
-		if err := os.MkdirAll("testdata", 0o755); err != nil {
-			t.Fatalf("%v", err)
-		}
-		if err := os.WriteFile(flowFile, append(raw, '\n'), 0o644); err != nil {
-			t.Fatalf("write the recording: %v", err)
-		}
-		t.Logf("wrote %d steps to %s", len(f.steps), flowFile)
-		return
 	}
 
 	raw, err := os.ReadFile(flowFile)

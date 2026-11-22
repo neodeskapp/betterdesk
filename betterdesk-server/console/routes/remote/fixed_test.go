@@ -16,7 +16,7 @@ var textDeviceList = regexp.MustCompile(`"peer_ids":"[^"]*"`)
 // changed on purpose to the vector whose recorded answer they get now.
 //
 // GA2: a guest link whose list of devices is a text reaches no device.
-// The oracle sent every guest request also with a link that lists no
+// The recorder sent every guest request also with a link that lists no
 // device; a vector with a text list is held to that vector's answer.
 //
 // DV4: only text names a device. An agent token request whose body names

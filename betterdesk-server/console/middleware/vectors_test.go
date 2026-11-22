@@ -29,8 +29,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/httpx"
 )
 
-// The vectors in testdata were recorded by
-// .ui-rework/go/tools/vectors/middleware.js from the Node console's own
+// The vectors in testdata are a fixed record of the Node console's own
 // middleware (helmet 7.2.0, body-parser 1.20.9, multer 2.5.0, serve-static
 // 1.16.3), mounted in the order of server.js. Each test replays the same
 // bytes against the Go pipeline over a socket.

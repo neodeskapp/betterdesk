@@ -32,11 +32,13 @@ the error message when the API server's socket fails.
 
 A socket has three layers of tests, each against what Node did.
 
-**1. Recordings of the old service, replayed in the package.** A Node script
-under the package's `testdata/nodeoracle/` loads the real service from
-`web-nodejs` on a real HTTP server, with stubs only where the service
-reached out (the session middleware, the permission lookup, the token
-check, the API server's event socket), and records:
+**1. Recordings of the old service, replayed in the package.** The
+package's `testdata/` holds fixed records of what the old service did,
+made while the Node console still existed; they can't be recorded again.
+The recorder loaded the real service from `web-nodejs` on a real HTTP
+server, with stubs only where the service reached out (the session
+middleware, the permission lookup, the token check, the API server's event
+socket), and recorded:
 
 - the raw answer to upgrade requests: every refusal byte for byte (the bare
   status line the services wrote, the websocket library's HTML answer to a
@@ -44,32 +46,32 @@ check, the API server's event socket), and records:
 - conversations: sockets opened, messages sent, the clock moved on,
   functions called, and after each step what every socket got (text and
   binary messages, the close code and reason, the end of the connection)
-  and what each call returned. Timers run on a made-up clock and random
-  ids and tokens come from a made-up source, so the Go test can give the
+  and what each call returned. Timers ran on a made-up clock and random
+  ids and tokens came from a made-up source, so the Go test can give the
   service the same clock and source and compare every byte.
 
 The Go test (`TestNode...`) plays the same requests and steps against the
 Go service on an `httptest` server and must see the same. `wstest` has the
 raw request helper, a client that keeps every frame, the session stub the
-oracles use (`OracleSession`) and the goroutine count for the leak checks.
-Each script's README says how to run it. A recording that holds
-megabytes of one letter (the size limits) is made small with
-`node console/ws/wstest/squeeze.js <file>`, which writes each long run as
-a marker; the tests read recordings through `wstest.Expand`.
+recordings assume (`OracleSession`) and the goroutine count for the leak
+checks. Each package's `testdata/README.md` says what its recordings hold.
+A recording that holds megabytes of one letter (the size limits) stores
+each long run as a marker; the tests read recordings through
+`wstest.Expand`.
 
-| Package | Script | Recording | What |
-|---|---|---|---|
-| `ws` | `targets.js` | `node_targets.json` | 6,000 request targets as `new URL()` read them (path, query values, refusal), 1,320 origin checks under five settings |
-| `statuspush` | `push.js` | `node_push.json` | 1,536 event frames and what each socket got, 88 upgrade requests |
-| `bdrelay` | `relay.js` | `node_relay.json` | 15 scenarios, 230 steps: every check and close code (tokens of another length too), messages (also at the lengths where the frame header changes), replacement, the per-address limit, the size limits, the request and answer of `RequestFromDevice` with its timeouts, pairing, expiry, idle timeout, the sweep, reject, a throw in the relay handler |
-| `routes/devices` | `agent.js` | `node_agent_*.json` | the 17 routes that reach into an agent, with a made-up agent that answers each request, on SQLite and PostgreSQL |
-| `routes/chat` | `relay.js` | `node_relay.json` | 19 scenarios, 235 steps: the checks of both sockets in their order (origin, token in the query or a bearer header, session, permission, the handshake), every message type of agents and operators with odd values, the routing between rooms and the inbox, history, contacts and groups with the API server's answers and failures, the room's memory of 500, replacement, the limits; with every call to the API server (path and body), token check and permission lookup; ten messages that ended the Node process |
-| `cdapproxy` | `proxy.js` | `node_proxy.json` | 15 scenarios, 180 steps: who may open which of the five sockets, the order of the checks, what reaches the API server's socket (path, subprotocol, user headers) and comes back, messages that wait for the handshake, closes and failures on either side, user names that ended the Node process |
-| `meshproxy` | `proxy.js` | `node_proxy.json` | 9 scenarios, 102 steps: the checks, path and query and X-Forwarded-For as the gateway gets them, messages both ways, those lost before the gateway answers, closes and failures |
-| `wsrelay` | `codec.js`, `relay.js` | `node_codec.json`, `node_relay.json` | 7,515 rendezvous payloads and 202 frame streams through the guest check and the codec; 14 scenarios, 213 steps: every check, the dialing of the signal server and the relay, bytes both ways, message transport, the per-address limit, idle timeout, guest links (validate, consume, recheck, expiry, revocation) |
-| `remoterelay` | `remote.js`, `peer.js` | `node_remote.json`, `node_peer_*.json` | 6 scenarios, 160 steps of agents and viewers, 13 cases that ended Node; the device lookup on SQLite and PostgreSQL |
-| `remotetarget` | `gateway.js` | `node_gateway.json` | 5 scenarios, 52 steps: every check, messages both ways, the tunnel's answers and sizes, names that cannot be a header |
-| `servermgmt` | `terminal.js` | `node_terminal_pipe.json`, `node_terminal_pty.json` | 14 upgrades and 37 conversations with a real shell, with node-pty and without (output compared after the steps settle; see the package's oracle README) |
+| Package | Recording | What |
+|---|---|---|
+| `ws` | `node_targets.json` | 6,000 request targets as `new URL()` read them (path, query values, refusal), 1,320 origin checks under five settings |
+| `statuspush` | `node_push.json` | 1,536 event frames and what each socket got, 88 upgrade requests |
+| `bdrelay` | `node_relay.json` | 15 scenarios, 230 steps: every check and close code (tokens of another length too), messages (also at the lengths where the frame header changes), replacement, the per-address limit, the size limits, the request and answer of `RequestFromDevice` with its timeouts, pairing, expiry, idle timeout, the sweep, reject, a throw in the relay handler |
+| `routes/devices` | `node_agent_*.json` | the 17 routes that reach into an agent, with a made-up agent that answers each request, on SQLite and PostgreSQL |
+| `routes/chat` | `node_relay.json` | 19 scenarios, 235 steps: the checks of both sockets in their order (origin, token in the query or a bearer header, session, permission, the handshake), every message type of agents and operators with odd values, the routing between rooms and the inbox, history, contacts and groups with the API server's answers and failures, the room's memory of 500, replacement, the limits; with every call to the API server (path and body), token check and permission lookup; ten messages that ended the Node process |
+| `cdapproxy` | `node_proxy.json` | 15 scenarios, 180 steps: who may open which of the five sockets, the order of the checks, what reaches the API server's socket (path, subprotocol, user headers) and comes back, messages that wait for the handshake, closes and failures on either side, user names that ended the Node process |
+| `meshproxy` | `node_proxy.json` | 9 scenarios, 102 steps: the checks, path and query and X-Forwarded-For as the gateway gets them, messages both ways, those lost before the gateway answers, closes and failures |
+| `wsrelay` | `node_codec.json`, `node_relay.json` | 7,515 rendezvous payloads and 202 frame streams through the guest check and the codec; 14 scenarios, 213 steps: every check, the dialing of the signal server and the relay, bytes both ways, message transport, the per-address limit, idle timeout, guest links (validate, consume, recheck, expiry, revocation) |
+| `remoterelay` | `node_remote.json`, `node_peer_*.json` | 6 scenarios, 160 steps of agents and viewers, 13 cases that ended Node; the device lookup on SQLite and PostgreSQL |
+| `remotetarget` | `node_gateway.json` | 5 scenarios, 52 steps: every check, messages both ways, the tunnel's answers and sizes, names that cannot be a header |
+| `servermgmt` | `node_terminal_pipe.json`, `node_terminal_pty.json` | 14 upgrades and 37 conversations with a real shell, with node-pty and without (output compared after the steps settle; see `servermgmt/testdata/README.md`) |
 
 `wstest.Player` plays these recordings with raw sockets, `wstest.PlayProxy`
 the two proxy recordings against a made-up API server (`wstest.FakeAPI`).
@@ -88,11 +90,11 @@ foreign Origin), sends messages, waits for messages or the close, and its
 answer is the handshake's refusal or a JSON description of what came back.
 Other cases between the steps cause what a socket should push (a new device
 id, a LAN registration). The cases run for every role of
-`contract/roles.go` and signed out, were recorded from Node behind the
-front door, and are checked through the front door and with
-`STACK_MODE=go`. The groups are `ws-device-status`, `ws-panel-events`,
-`ws-bd-signal`, `ws-bd-relay`, `ws-chat`, `ws-cdap`, `ws-mesh`, `ws-rendezvous`,
-`ws-relay`, `ws-remote` and `ws-remote-target`; their names start with `ws-` so they run
+`contract/roles.go` and signed out, were recorded from the Node console
+while it still existed, and are checked against the Go console. The groups
+are `ws-device-status`, `ws-panel-events`, `ws-bd-signal`, `ws-bd-relay`,
+`ws-chat`, `ws-cdap`, `ws-mesh`, `ws-rendezvous`, `ws-relay`, `ws-remote`
+and `ws-remote-target`; their names start with `ws-` so they run
 after the route groups, whose answers they would otherwise change (audit
 entries, a device's id history). The answers of an agent that is connected
 are pinned by the package recordings: a test instance has no agent, so the

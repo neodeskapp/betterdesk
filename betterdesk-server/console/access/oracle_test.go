@@ -20,7 +20,7 @@ import (
 )
 
 // The tests in this file replay vectors recorded from the console's Node
-// modules (testdata/nodeoracle). Each vector is an input and what Node
+// modules (testdata/README.md). Each vector is an input and what Node
 // answered; the Go code must answer the same.
 
 func loadVectors(t *testing.T, name string, into any) {

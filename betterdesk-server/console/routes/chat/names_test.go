@@ -13,7 +13,7 @@ import (
 )
 
 // nameVector is one line of testdata/names.json.gz: what the Node console
-// made of an uploaded file's name (testdata/nodeoracle).
+// made of an uploaded file's name (testdata/README.md).
 type nameVector struct {
 	Name        string          `json:"name"`
 	Ext         string          `json:"ext"`

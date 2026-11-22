@@ -19,7 +19,7 @@ import (
 )
 
 // The tests in this file replay the vectors under testdata/vectors, which
-// testdata/nodeoracle/pure.js computed with the Node console's own code.
+// were computed with the Node console's own code (testdata/README.md).
 
 func readVectorFile(name string) ([]byte, error) {
 	return os.ReadFile(filepath.Join("testdata", "vectors", name))

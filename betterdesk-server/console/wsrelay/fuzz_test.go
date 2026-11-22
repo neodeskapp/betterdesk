@@ -1,80 +1,16 @@
 package wsrelay
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/hex"
-	"encoding/json"
-	"io"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-	"sync"
 	"testing"
 
 	"github.com/unitronix/betterdesk-server/codec"
 )
 
-// The fuzz tests check properties of their own, and with
-// WSRELAY_NODE_HELPER=1 (in the dev container, where Node and web-nodejs
-// are) they also ask testdata/nodeoracle/fuzzhelper.js, which runs the old
-// service's code, about every input and compare.
-
-type nodeHelper struct {
-	mu  sync.Mutex
-	in  io.WriteCloser
-	out *bufio.Reader
-	cmd *exec.Cmd
-}
-
-var (
-	helperOnce sync.Once
-	helper     *nodeHelper
-	helperErr  error
-)
-
-func startHelper(t testing.TB) *nodeHelper {
-	if os.Getenv("WSRELAY_NODE_HELPER") != "1" {
-		return nil
-	}
-	helperOnce.Do(func() {
-		cmd := exec.Command("node", filepath.Join("testdata", "nodeoracle", "fuzzhelper.js"))
-		cmd.Stderr = os.Stderr
-		in, err := cmd.StdinPipe()
-		if err != nil {
-			helperErr = err
-			return
-		}
-		out, err := cmd.StdoutPipe()
-		if err != nil {
-			helperErr = err
-			return
-		}
-		if err := cmd.Start(); err != nil {
-			helperErr = err
-			return
-		}
-		helper = &nodeHelper{in: in, out: bufio.NewReaderSize(out, 1<<20), cmd: cmd}
-	})
-	if helperErr != nil {
-		t.Fatal(helperErr)
-	}
-	return helper
-}
-
-func (h *nodeHelper) ask(t testing.TB, line string) []byte {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	if _, err := io.WriteString(h.in, line+"\n"); err != nil {
-		t.Fatal(err)
-	}
-	answer, err := h.out.ReadBytes('\n')
-	if err != nil {
-		t.Fatal(err)
-	}
-	return answer
-}
+// The fuzz tests check properties of their own. The answers of the old
+// service for the recorded inputs are pinned by the replays of
+// testdata/node_codec.json and testdata/node_relay.json.
 
 // FuzzRendezvousDecode decodes any payload without failing to stop and
 // reads it as the signal server does (codec.DecodeUDP): decoded or not,
@@ -118,9 +54,8 @@ func FuzzRendezvousDecode(f *testing.F) {
 }
 
 // FuzzFrameDecoder feeds a stream in chunks (the input split at 0xFE 0xFE)
-// and checks that the frames come out of the stream in order and that
-// what is held stays below one frame; with the helper it compares the
-// frames and errors with Node's decoder.
+// without failing and, when the chunks decode, checks that the decoder
+// fed the whole stream at once makes no bytes up.
 func FuzzFrameDecoder(f *testing.F) {
 	f.Add([]byte{0x0c, 'a', 'b', 'c', 0x00, 0x01})
 	f.Add([]byte{0x0d, 0x01, 0xfe, 0xfe, 'x'})
@@ -129,24 +64,16 @@ func FuzzFrameDecoder(f *testing.F) {
 	f.Fuzz(func(t *testing.T, input []byte) {
 		chunks := bytes.Split(input, []byte{0xfe, 0xfe})
 		d := &frameDecoder{}
-		var got []string
 		var all []byte
-		failed := ""
+		failed := false
 		for _, c := range chunks {
 			all = append(all, c...)
-			frames, err := d.feed(c)
-			if err != nil {
-				failed = err.Error()
-				got = append(got, "error "+failed)
+			if _, err := d.feed(c); err != nil {
+				failed = true
 				break
 			}
-			var list []string
-			for _, fr := range frames {
-				list = append(list, hex.EncodeToString(fr))
-			}
-			got = append(got, strings.Join(list, "|"))
 		}
-		if failed == "" {
+		if !failed {
 			// The frames and what is held are the stream again.
 			var rebuilt []byte
 			rd := &frameDecoder{}
@@ -157,34 +84,6 @@ func FuzzFrameDecoder(f *testing.F) {
 			if len(rebuilt) > len(all) || len(rd.buf) > len(all) {
 				t.Fatalf("decoder made bytes up")
 			}
-		}
-		h := startHelper(t)
-		if h == nil {
-			return
-		}
-		hexes := make([]string, len(chunks))
-		for i, c := range chunks {
-			hexes[i] = hex.EncodeToString(c)
-		}
-		var steps []json.RawMessage
-		if err := json.Unmarshal(h.ask(t, "F "+strings.Join(hexes, ",")), &steps); err != nil {
-			t.Fatal(err)
-		}
-		var want []string
-		for _, st := range steps {
-			var e struct {
-				Error string `json:"error"`
-			}
-			if json.Unmarshal(st, &e) == nil && e.Error != "" {
-				want = append(want, "error "+e.Error)
-				continue
-			}
-			var list []string
-			_ = json.Unmarshal(st, &list)
-			want = append(want, strings.Join(list, "|"))
-		}
-		if strings.Join(want, "\n") != strings.Join(got, "\n") {
-			t.Fatalf("%x:\n node %q\n   go %q", input, want, got)
 		}
 	})
 }
@@ -225,8 +124,8 @@ func FuzzEncodeRelayFrame(f *testing.F) {
 	})
 }
 
-// FuzzCookieToken reads a guest token from any Cookie header; with the
-// helper it compares with the old handler's own reader.
+// FuzzCookieToken reads a guest token from any Cookie header without
+// failing.
 func FuzzCookieToken(f *testing.F) {
 	f.Add([]byte("bd.guest=abc"), false)
 	f.Add([]byte("x=1; bd.guest=%E0%A4%A; betterdesk.guest=t"), true)
@@ -237,17 +136,6 @@ func FuzzCookieToken(f *testing.F) {
 		if https {
 			name = "betterdesk.guest"
 		}
-		got := cookieToken(latin1(string(header)), name)
-		h := startHelper(t)
-		if h == nil {
-			return
-		}
-		var want string
-		if err := json.Unmarshal(h.ask(t, "C "+hex.EncodeToString(header)+" "+name), &want); err != nil {
-			t.Fatal(err)
-		}
-		if want != got {
-			t.Fatalf("%q: node %q, go %q", header, want, got)
-		}
+		_ = cookieToken(latin1(string(header)), name)
 	})
 }

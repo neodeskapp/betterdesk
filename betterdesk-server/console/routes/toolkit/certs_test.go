@@ -18,16 +18,17 @@ import (
 	"time"
 )
 
-// The certificates of testdata/certs are what the Node oracle's TLS
-// servers showed (testdata/nodeoracle/ssl.js) and what the Go test hands
-// to the certificate check, so both describe the same certificates. Only
-// the certificates are kept: their keys were needed for the recording
-// alone. TestWriteCerts makes new ones, with keys next to them that git
-// ignores:
+// The certificates of testdata/certs are what the TLS servers of the Node
+// recording showed (testdata/ssl-vectors-*.json) and what the Go test
+// hands to the certificate check, so both describe the same certificates.
+// Only the certificates are kept: their keys were needed for the
+// recording alone. TestWriteCerts makes new ones, with keys next to them
+// that git ignores:
 //
 //	TOOLKIT_WRITE_CERTS=1 go test ./console/routes/toolkit/ -run TestWriteCerts
 //
-// and the oracle's answers have to be recorded again afterwards.
+// New certificates no longer match the recordings, which can't be made
+// again, so TestNodeSSLVectors fails with them.
 
 // testServer is a TLS server of the recording: the certificates it sent,
 // in order.

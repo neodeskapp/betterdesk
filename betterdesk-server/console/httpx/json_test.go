@@ -226,9 +226,8 @@ type jsonCompressionVector struct {
 }
 
 // Every recorded answer of res.json behind the old console's compression
-// (testdata/jsoncompress_vectors.json, written by
-// .ui-rework/go/tools/vectors/express-answers.js). Go answers with the same
-// headers. Where the old console compressed with brotli, Go sends gzip to a
+// (testdata/jsoncompress_vectors.json, a fixed record made while the Node
+// console still existed). Go answers with the same headers. Where the old console compressed with brotli, Go sends gzip to a
 // client that offers gzip too and the plain body to one that does not.
 func TestWriteJSONMatchesNodePerAcceptEncoding(t *testing.T) {
 	raw, err := os.ReadFile("testdata/jsoncompress_vectors.json")

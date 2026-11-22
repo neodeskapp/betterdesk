@@ -20,11 +20,10 @@ import (
 	"github.com/unitronix/betterdesk-server/console/httpx"
 )
 
-// The vectors in testdata were recorded by
-// .ui-rework/go/tools/vectors/limits.js from the Node console's own
+// The vectors in testdata are a fixed record of the Node console's own
 // limiters (middleware/rateLimiter.js and middleware/wanSecurity.js on
 // express-rate-limit 7.5.1), mounted the way server.js mounts them, with a
-// clock the script moves by hand. "at" is that clock in milliseconds.
+// clock the recorder moved by hand. "at" is that clock in milliseconds.
 
 type step struct {
 	ID      string      `json:"id"`

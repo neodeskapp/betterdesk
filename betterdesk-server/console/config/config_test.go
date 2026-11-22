@@ -377,7 +377,7 @@ func TestLoadDebugRouting(t *testing.T) {
 
 // TestSettingsAsTheOldConsoleReadThem replays testdata/settings.json: what
 // config/config.js of the Node console made of each environment
-// (testdata/nodeoracle/settings.js).
+// (testdata/README.md).
 func TestSettingsAsTheOldConsoleReadThem(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "settings.json"))
 	if err != nil {

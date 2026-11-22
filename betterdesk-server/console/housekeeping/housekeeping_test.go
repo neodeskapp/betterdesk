@@ -22,7 +22,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// recording is what testdata/nodeoracle/housekeeping.js wrote.
+// recording is what testdata/housekeeping_<database>.json holds.
 type recording struct {
 	Integration []struct {
 		Seed  []string          `json:"seed"`

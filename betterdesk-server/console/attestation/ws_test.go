@@ -14,7 +14,7 @@ import (
 )
 
 // The messages are the bytes protobufjs wrote for the same messages
-// (recorded by testdata/nodeoracle/run.js).
+// (recorded in testdata/runs_sqlite.json.gz).
 func TestMessages(t *testing.T) {
 	if got := hex.EncodeToString(healthCheck()); got != "d2010a0a0862642d62656e6368" {
 		t.Errorf("health check %s", got)

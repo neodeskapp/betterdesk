@@ -15,7 +15,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// The vectors of testdata/nodeoracle/worker.js.
+// The vectors of the generator worker (testdata/README.md).
 
 // TestFolderZipMatchesAdmZip packs the fixture the oracle packed with
 // adm-zip and compares every entry as a program that unpacks it sees it:

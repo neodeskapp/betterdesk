@@ -24,7 +24,7 @@ type outcome struct {
 	Blocked bool            `json:"blocked"`
 }
 
-// guardVectors is testdata/guard.json.gz (testdata/nodeoracle/guard.js).
+// guardVectors is testdata/guard.json.gz (testdata/README.md).
 type guardVectors struct {
 	DNS       map[string]json.RawMessage `json:"dns"`
 	BlockedIP [][]json.RawMessage        `json:"blocked_ip"`

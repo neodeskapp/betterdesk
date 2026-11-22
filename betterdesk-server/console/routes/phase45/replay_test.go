@@ -14,11 +14,11 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// writeReleaseCache puts the release cache of testdata/nodeoracle/releases.json,
+// writeReleaseCache puts the release cache of testdata/releases.json,
 // which the Node routes answered from, into the console's data folder.
 func writeReleaseCache(t *testing.T, dataDir string) {
 	t.Helper()
-	raw, err := os.ReadFile(filepath.Join("testdata", "nodeoracle", "releases.json"))
+	raw, err := os.ReadFile(filepath.Join("testdata", "releases.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

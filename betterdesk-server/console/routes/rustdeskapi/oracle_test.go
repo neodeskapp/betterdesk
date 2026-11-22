@@ -17,7 +17,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// apiStub is the scripted API server of testdata/nodeoracle/rdapi.js: six
+// apiStub is the scripted API server the recordings were made with: six
 // devices, no remote targets, tag writes taken. It keeps the writes.
 type apiStub struct {
 	mu    sync.Mutex

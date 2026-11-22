@@ -15,7 +15,7 @@ import (
 )
 
 // The tests in this file replay vectors recorded from the console's Node
-// modules (testdata/nodeoracle). Each vector is the arguments of a call
+// modules (testdata/README.md). Each vector is the arguments of a call
 // and what Node answered: the JSON text of the value, or the message of
 // the error. The Go code must answer the same, byte for byte.
 
@@ -23,12 +23,7 @@ import (
 // so text with broken surrogate pairs arrives as Node had it.
 func loadVectors(t testing.TB, name string) any {
 	t.Helper()
-	dir := "testdata"
-	if trial := os.Getenv("BRANDING_VECTORS_DIR"); trial != "" {
-		// a trial run of the oracle, see testdata/nodeoracle/README.md
-		dir = trial
-	}
-	file, err := os.Open(filepath.Join(dir, name+".json.gz"))
+	file, err := os.Open(filepath.Join("testdata", name+".json.gz"))
 	if err != nil {
 		t.Fatalf("open vectors: %v", err)
 	}

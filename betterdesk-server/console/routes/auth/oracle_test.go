@@ -14,10 +14,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store"
 )
 
-// The recordings of testdata/nodeoracle/auth.js: what the Node console
-// answered for sign-ins that the lockout check decides, on each database.
-// The script also recorded the account typeahead, which this console does
-// not have (BUGS UM26).
+// The recordings testdata/lockout_<db>.json (testdata/README.md): what the
+// Node console answered for sign-ins that the lockout check decides, on
+// each database.
 
 type oracleSeed struct {
 	SQL    string

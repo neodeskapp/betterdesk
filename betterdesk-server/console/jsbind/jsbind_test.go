@@ -16,7 +16,7 @@ import (
 )
 
 // vectors is testdata/vectors.json: what JavaScript, better-sqlite3 and
-// node-postgres made of strings and values (testdata/nodeoracle).
+// node-postgres made of strings and values (testdata/README.md).
 type vectors struct {
 	Strings []struct {
 		S       string `json:"s"`

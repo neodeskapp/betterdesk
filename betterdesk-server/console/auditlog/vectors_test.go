@@ -9,9 +9,9 @@ import (
 	"testing"
 )
 
-// The vectors in testdata were recorded by testdata/gen.js from the Node
-// console's own lib/logRedact.js on Node 22. Each holds an input and what
-// the Node function answered for it.
+// The vectors in testdata are a fixed recording of the Node console's own
+// lib/logRedact.js on Node 22, made before the Node console was removed.
+// Each holds an input and what the Node function answered for it.
 
 type vector struct {
 	In  string `json:"in"`

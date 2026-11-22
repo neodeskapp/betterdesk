@@ -21,7 +21,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// The accounts of the tests, as in testdata/nodeoracle/flows.js.
+// The accounts of the tests, as in the recording testdata/flows.json.
 var accounts = map[string]session.User{
 	"alice": {ID: 2, Username: "alice", Role: "operator"},
 	"bob":   {ID: 3, Username: "bob", Role: "operator"},
@@ -117,7 +117,7 @@ func expect(t *testing.T, what string, rec *httptest.ResponseRecorder, status in
 }
 
 // step is one line of testdata/flows.json: a request to the Node
-// console's routes and what they answered (testdata/nodeoracle).
+// console's routes and what they answered (testdata/README.md).
 type step struct {
 	Name        string  `json:"name"`
 	As          *string `json:"as"`

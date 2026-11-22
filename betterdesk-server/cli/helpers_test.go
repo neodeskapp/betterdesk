@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-// readVectors reads testdata/<name>.json.gz, written by the Node oracles
-// in testdata/nodeoracle.
+// readVectors reads testdata/<name>.json.gz, a recording of the old Node
+// console's scripts (testdata/README.md).
 func readVectors(t testing.TB, name string, into any) {
 	t.Helper()
 	f, err := os.Open(filepath.Join("testdata", name+".json.gz"))

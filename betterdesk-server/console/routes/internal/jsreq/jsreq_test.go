@@ -15,7 +15,7 @@ import (
 )
 
 // vectors is testdata/query.json: what Express and JavaScript answered
-// (testdata/nodeoracle/query.js).
+// (testdata/README.md).
 type vectors struct {
 	Queries []struct {
 		Query  string          `json:"query"`

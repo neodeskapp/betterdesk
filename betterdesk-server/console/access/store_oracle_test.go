@@ -17,7 +17,7 @@ import (
 )
 
 // TestOracleStore replays a scenario the Node console's real services ran
-// on a scratch database (testdata/nodeoracle/store.js): the same rows, the
+// on a scratch database (testdata/store_*.json.gz): the same rows, the
 // same calls in the same order, and every answer must be the same.
 
 type storeStep struct {

@@ -17,7 +17,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// storeRecording is what testdata/nodeoracle/store.js recorded from the
+// storeRecording is what testdata/store_<database>.json recorded from the
 // Node console's database adapter.
 type storeRecording struct {
 	Dialect string            `json:"dialect"`

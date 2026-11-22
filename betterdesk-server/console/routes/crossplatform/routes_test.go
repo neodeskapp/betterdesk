@@ -14,8 +14,7 @@ import (
 )
 
 // scenario is one entry of testdata/crossplatform.json: an answer of the
-// API server and what the Node route made of it
-// (testdata/nodeoracle/crossplatform.js).
+// API server and what the Node route made of it (testdata/README.md).
 type scenario struct {
 	Name     string `json:"name"`
 	Route    string `json:"route"`

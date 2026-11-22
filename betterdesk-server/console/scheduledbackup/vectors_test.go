@@ -20,7 +20,7 @@ import (
 )
 
 // The vectors are what services/scheduledBackupService.js answered
-// (console/backup/testdata/nodeoracle/vectors.js).
+// (recorded with the backup vectors, console/backup/testdata/README.md).
 
 type jsErr struct {
 	Name    string `json:"name"`

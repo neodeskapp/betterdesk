@@ -18,8 +18,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// deviceVector is one request of testdata/device_vectors.json
-// (testdata/nodeoracle/device.js) with the Node console's answer.
+// deviceVector is one request of testdata/device_vectors.json with the
+// Node console's answer (testdata/README.md).
 type deviceVector struct {
 	Request struct {
 		Method  string            `json:"method"`
@@ -34,9 +34,9 @@ type deviceVector struct {
 	Body    string            `json:"body"`
 }
 
-// deviceTokens are the token rows of testdata/nodeoracle/device.js:
-// token, client id, expiry, revoked. They belong to the operator account
-// (id 5) of the test world.
+// deviceTokens are the token rows testdata/device_vectors.json was
+// recorded with: token, client id, expiry, revoked. They belong to the
+// operator account (id 5) of the test world.
 var deviceTokens = [][4]any{
 	{"tok-device-a", "device-a", "2999-01-01 00:00:00", false},
 	{"tok-device-b", "device-b", "2999-01-01 00:00:00", false},

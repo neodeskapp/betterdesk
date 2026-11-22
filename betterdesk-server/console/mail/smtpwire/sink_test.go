@@ -15,9 +15,9 @@ import (
 
 // The scripted SMTP server of the session tests. It plays the server side a
 // recorded scenario describes and records what the client sends, exactly as
-// testdata/nodeoracle/sink.js did when the scenario was recorded with
-// nodemailer. Both read a script the same way; the format is described in
-// sink.js.
+// the scripted server of the recordings did when the scenario was recorded
+// with nodemailer. Both read a script the same way; the format is described
+// in testdata/README.md.
 
 type sinkScript struct {
 	TLS      bool                  `json:"tls"`

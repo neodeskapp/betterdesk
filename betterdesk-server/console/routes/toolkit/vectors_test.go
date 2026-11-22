@@ -21,7 +21,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/middleware"
 )
 
-// oracleNow is the clock the Node oracle ran with.
+// oracleNow is the clock the Node recording was made with.
 var oracleNow = time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
 
 // swapReader is a random source a test loads with the bytes one request
@@ -38,9 +38,9 @@ type textVector struct {
 	Answer string `json:"answer"`
 }
 
-// TestNodeTextVectors replays testdata/text-vectors.jsonl.gz, recorded by
-// testdata/nodeoracle/gen.js from the handlers of the Node console: every
-// request must get the same status and the same bytes.
+// TestNodeTextVectors replays testdata/text-vectors.jsonl.gz, recorded
+// from the handlers of the Node console: every request must get the same
+// status and the same bytes.
 func TestNodeTextVectors(t *testing.T) {
 	f, err := os.Open("testdata/text-vectors.jsonl.gz")
 	if err != nil {
@@ -167,7 +167,7 @@ type sslVector struct {
 
 // TestNodeSSLVectors replays what the Node console's certificate check
 // answered for TLS servers showing the certificates of testdata/certs
-// (testdata/nodeoracle/ssl.js), once with the test root trusted and once
+// (testdata/ssl-vectors-*.json), once with the test root trusted and once
 // without. The check gets the same certificates here, as the result of a
 // handshake with the protocol and cipher Node had, and must answer the
 // same bytes.

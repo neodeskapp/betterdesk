@@ -9,12 +9,9 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -24,44 +21,17 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/branding"
 	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// The two-way test of the archive format. An install is made up (a
-// database with the console's and the server's tables and rows of every
-// kind, uploads, keys, the .env), and both the Go service and the Node
-// console's backup service make a full backup of it. The two archives
-// must hold the same entries in the same order with the same bytes (the
-// times aside). Then each archive is restored by both programs into fresh
-// installs, and the four results are compared table by table and file by
-// file. It needs node and web-nodejs (the dev image has both) and runs on
-// SQLite and, when a server is configured, on PostgreSQL.
+// Made-up installs for the tests of this package: a database with the
+// console's and the server's tables and rows of every kind, uploads, keys
+// and the .env, on SQLite and, when a server is configured, on PostgreSQL.
 //
-// With BACKUP_RECORD_FIXTURES=1 the Node archives and what the Node
-// restore made of them are written to testdata/node-archives, which
-// TestNodeArchiveFixtures replays without Node.
-
-var webNodeJS = func() string {
-	if dir := os.Getenv("WEB_NODEJS"); dir != "" {
-		return dir
-	}
-	return "/repo/web-nodejs"
-}()
-
-func needNode(t *testing.T) {
-	t.Helper()
-	if _, err := exec.LookPath("node"); err != nil {
-		t.Skip("node is not installed")
-	}
-	if _, err := os.Stat(filepath.Join(webNodeJS, "node_modules", "better-sqlite3")); err != nil {
-		t.Skip("web-nodejs with its modules is not there")
-	}
-	if _, err := os.Stat(filepath.Join(webNodeJS, "services", "backupService.js")); err != nil {
-		t.Skip("the Node console's backup service is gone")
-	}
-}
+// testdata/node-archives holds two full backups the Node console made of
+// such an install and what its own restore made of them.
+// TestNodeArchiveFixtures restores them with Go and compares.
 
 // install is one made-up installation.
 type install struct {
@@ -325,13 +295,13 @@ func (in *install) seed(t *testing.T) {
 	}
 }
 
-// fakeGoServer answers what goserver.json says, as the Node script's stub
-// does.
+// fakeGoServer answers what testdata/goserver.json says, as the stub of
+// the API server answered when the Node archives were made.
 type fakeGoServer struct{ data *goapi.Object }
 
 func loadFakeGoServer(t *testing.T) fakeGoServer {
 	t.Helper()
-	raw, err := os.ReadFile(filepath.Join("testdata", "nodeoracle", "goserver.json"))
+	raw, err := os.ReadFile(filepath.Join("testdata", "goserver.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -369,34 +339,6 @@ func (in *install) service(t *testing.T, appVersion string) *Service {
 		ChatFilesDir:   filepath.Join(in.consoleDir, "data", "chat-files"),
 		AttachmentsDir: filepath.Join(in.consoleDir, "data", "attachments"),
 	})
-}
-
-// node runs the oracle script and decodes what it prints.
-func (in *install) node(t *testing.T, mode string, extra map[string]any, out any) {
-	t.Helper()
-	spec := map[string]any{
-		"dbType": in.dialect, "dbPath": in.dbPath, "databaseUrl": in.dsn,
-		"dataDir": in.dataDir, "keysPath": in.keysPath, "envFile": in.envFile,
-	}
-	for k, v := range extra {
-		spec[k] = v
-	}
-	raw, _ := json.Marshal(spec)
-	specFile := filepath.Join(t.TempDir(), "spec.json")
-	if err := os.WriteFile(specFile, raw, 0o600); err != nil {
-		t.Fatal(err)
-	}
-	cmd := exec.Command("node", filepath.Join("testdata", "nodeoracle", "roundtrip.js"), mode, specFile)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	stdout, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("node %s: %v\n%s", mode, err, stderr.String())
-	}
-	lines := strings.Split(strings.TrimSpace(string(stdout)), "\n")
-	if err := json.Unmarshal([]byte(lines[len(lines)-1]), out); err != nil {
-		t.Fatalf("node %s printed %q: %v", mode, stdout, err)
-	}
 }
 
 // snapshot is every table of a database as sorted rows of typed values.
@@ -512,125 +454,6 @@ func tarEntries(t *testing.T, archive []byte) []tarEntry {
 	return out
 }
 
-// readmeLinesNodeLacks are the lines of README.txt that tell where the
-// parts go that Node never packed. An archive of Node's holds none of
-// these parts, so the entries stay the same when the seed has none.
-var readmeLinesNodeLacks = []string{
-	// CH2: the chat files
-	"     console/chat-files/*    -> <consoleDir>/data/chat-files/",
-	// TK10: the ticket attachments
-	"     console/attachments/*   -> <consoleDir>/data/attachments/",
-}
-
-func compareArchives(t *testing.T, goArchive, nodeArchive []byte) {
-	t.Helper()
-	gos, nodes := tarEntries(t, goArchive), tarEntries(t, nodeArchive)
-	var gn, nn []string
-	for _, e := range gos {
-		gn = append(gn, e.name)
-	}
-	for _, e := range nodes {
-		nn = append(nn, e.name)
-	}
-	if strings.Join(gn, ",") != strings.Join(nn, ",") {
-		t.Fatalf("entries differ:\n go:   %q\n node: %q", gn, nn)
-	}
-	for i := range gos {
-		g, n := gos[i], nodes[i]
-		gd, nd := g.data, n.data
-		switch g.name {
-		case "manifest.json", "README.txt":
-			// the time of the backup differs; everything else must not
-			gd = timeStamp.ReplaceAll(gd, []byte("<time>"))
-			nd = timeStamp.ReplaceAll(nd, []byte("<time>"))
-		}
-		if g.name == "README.txt" {
-			for _, line := range readmeLinesNodeLacks {
-				gd = bytes.Replace(gd, []byte(line+"\n"), nil, 1)
-			}
-		}
-		sizeMayDiffer := false
-		switch g.name {
-		case "console/data.json":
-			asNode := dumpAsNodeWroteIt(gd)
-			sizeMayDiffer = !bytes.Equal(asNode, gd)
-			gd = asNode
-		case "console/auth.db", "goserver/db_v2.sqlite3":
-			// BK6: Go's entry is a VACUUM INTO copy of the open file,
-			// Node's the file's bytes: the two must hold the same rows
-			sameDatabase(t, g.name, gd, nd)
-			gd, sizeMayDiffer = nd, true
-		}
-		if !bytes.Equal(gd, nd) {
-			// An archive holds secrets: the failure names sizes and the
-			// first differing offset, never the content.
-			at := 0
-			for at < len(gd) && at < len(nd) && gd[at] == nd[at] {
-				at++
-			}
-			t.Errorf("entry %s differs: %d and %d bytes, first difference at byte %d", g.name, len(gd), len(nd), at)
-		}
-		gh, nh := g.header, n.header
-		if sizeMayDiffer {
-			gh, nh = withoutSize(gh), withoutSize(nh)
-		}
-		if g.name != "manifest.json" && g.name != "README.txt" && !bytes.Equal(gh, nh) {
-			t.Errorf("entry %s: tar headers differ", g.name)
-		}
-	}
-}
-
-// bigIntegerText is an integer past 2^53-1 that Go's SQLite dump writes as
-// text.
-var bigIntegerText = regexp.MustCompile(`"-?[0-9]{16,}"`)
-
-// microsecondTime is a PostgreSQL time with microseconds in Go's dump.
-var microsecondTime = regexp.MustCompile(`("[0-9+-]+-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3})\d{3}Z"`)
-
-// dumpAsNodeWroteIt is Go's dump with the values Go writes otherwise than
-// Node on purpose put back the way Node wrote them: an integer past
-// 2^53-1 on SQLite is its exact text in Go's dump, an inexact JavaScript
-// number in Node's (BUGS.md BK2); a PostgreSQL time keeps its
-// microseconds in Go's dump, Node's cut them (BUGS.md BK3).
-func dumpAsNodeWroteIt(dump []byte) []byte {
-	if !bytes.HasPrefix(dump, []byte(`{"_engine":"sqlite"`)) {
-		return microsecondTime.ReplaceAll(dump, []byte(`${1}Z"`))
-	}
-	return bigIntegerText.ReplaceAllFunc(dump, func(quoted []byte) []byte {
-		n, err := strconv.ParseInt(string(quoted[1:len(quoted)-1]), 10, 64)
-		if err != nil || (n <= maxSafeInteger && n >= -maxSafeInteger) {
-			return quoted
-		}
-		return []byte(jsbind.NumberString(float64(n)))
-	})
-}
-
-// sameDatabase opens two SQLite files given as bytes and compares their
-// tables row by row.
-func sameDatabase(t *testing.T, name string, a, b []byte) {
-	t.Helper()
-	open := func(data []byte) map[string][]string {
-		path := filepath.Join(t.TempDir(), "db.sqlite3")
-		if err := os.WriteFile(path, data, 0o600); err != nil {
-			t.Fatal(err)
-		}
-		db, err := store.OpenSQLite(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer db.Close()
-		return snapshot(t, db)
-	}
-	diffSnapshots(t, "entry "+name, open(a), open(b))
-}
-
-// withoutSize is a tar header without its size field.
-func withoutSize(h []byte) []byte {
-	h = bytes.Clone(h)
-	copy(h[124:136], bytes.Repeat([]byte{' '}, 12))
-	return h
-}
-
 func restoreResultJSON(r RestoreResult) string {
 	o := branding.NewObject()
 	o.Set("restored", toAny(r.Restored))
@@ -659,174 +482,7 @@ func canonJSON(t *testing.T, raw []byte) string {
 
 var allParts = RestoreOptions{Database: true, Uploads: true, Secrets: true, Env: true}
 
-func nodeOptions(o RestoreOptions) map[string]any {
-	return map[string]any{"restoreDatabase": o.Database, "restoreUploads": o.Uploads, "restoreSecrets": o.Secrets, "restoreEnv": o.Env, "restoreGoDb": o.GoDB}
-}
-
-func TestArchivesRoundTripWithNode(t *testing.T) {
-	needNode(t)
-	for _, dialect := range []string{"sqlite", "postgres"} {
-		t.Run(dialect, func(t *testing.T) {
-			ctx := context.Background()
-			src := newInstall(t, dialect)
-			src.seed(t)
-
-			var made struct {
-				Filename   string `json:"filename"`
-				AppVersion string `json:"appVersion"`
-			}
-			nodeFile := filepath.Join(t.TempDir(), "node.tar.gz")
-			src.node(t, "make", map[string]any{"out": nodeFile}, &made)
-			nodeArchive, err := os.ReadFile(nodeFile)
-			if err != nil {
-				t.Fatal(err)
-			}
-			goArchive, goName, err := src.service(t, made.AppVersion).CreateFullBackup(ctx)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !strings.HasPrefix(goName, "betterdesk-backup-") || len(goName) != len(made.Filename) {
-				t.Errorf("file name %q, node %q", goName, made.Filename)
-			}
-			compareArchives(t, goArchive, nodeArchive)
-			if t.Failed() {
-				return
-			}
-			want := snapshot(t, src.db)
-			wantFiles := src.files(t)
-
-			type outcome struct {
-				result string
-				tables map[string][]string
-				files  map[string]string
-			}
-			restore := func(archive []byte, byNode bool) outcome {
-				dst := newInstall(t, dialect)
-				var result string
-				if byNode {
-					file := filepath.Join(t.TempDir(), "in.tar.gz")
-					if err := os.WriteFile(file, archive, 0o600); err != nil {
-						t.Fatal(err)
-					}
-					var got struct {
-						Result json.RawMessage `json:"result"`
-						Error  string          `json:"error"`
-					}
-					dst.node(t, "restore", map[string]any{"in": file, "opts": nodeOptions(allParts)}, &got)
-					if got.Error != "" {
-						t.Fatalf("node restore: %s", got.Error)
-					}
-					result = canonJSON(t, got.Result)
-				} else {
-					r, err := dst.service(t, made.AppVersion).RestoreFullBackup(ctx, archive, allParts)
-					if err != nil {
-						t.Fatalf("go restore: %v", err)
-					}
-					result = restoreResultJSON(r)
-				}
-				return outcome{result, snapshot(t, dst.db), dst.files(t)}
-			}
-			outcomes := map[string]outcome{
-				"node archive, go restore":   restore(nodeArchive, false),
-				"node archive, node restore": restore(nodeArchive, true),
-				"go archive, node restore":   restore(goArchive, true),
-				"go archive, go restore":     restore(goArchive, false),
-			}
-			base := outcomes["node archive, node restore"]
-			t.Logf("node restore result: %s", base.result)
-			// Where Go's archive holds a table exactly and Node's does not,
-			// a restore of Go's archive, by either program, brings it back
-			// as it was: integers past 2^53 on SQLite (BUGS.md BK2), every
-			// time on PostgreSQL (BUGS.md BK3), but for a table that failed.
-			exactInGoArchive := func(table string) bool {
-				if dialect == "postgres" {
-					return true
-				}
-				return table == "device_telemetry"
-			}
-			for label, o := range outcomes {
-				fromGo, byGo := strings.HasPrefix(label, "go archive"), strings.HasSuffix(label, "go restore")
-				wantResult := base.result
-				if byGo {
-					wantResult = resultOfGo(t, dialect, wantResult)
-				}
-				if o.result != wantResult {
-					t.Errorf("%s: result %s, want %s (node restore of the node archive %s)", label, o.result, wantResult, base.result)
-				}
-				expect := map[string][]string{}
-				for table, rows := range base.tables {
-					failed := "Table " + table + ":"
-					switch {
-					case strings.Contains(o.result, failed):
-					case fromGo && exactInGoArchive(table):
-						rows = want[table]
-					case strings.Contains(base.result, failed):
-						// restored by Go from Node's archive, with Node's
-						// milliseconds
-						rows = append([]string(nil), want[table]...)
-						for i := range rows {
-							rows[i] = microseconds.ReplaceAllStringFunc(rows[i], toMilliseconds)
-						}
-					}
-					expect[table] = rows
-				}
-				diffSnapshots(t, label, expect, o.tables)
-				for name, content := range wantFiles {
-					if strings.HasPrefix(name, "keys/db_v2") {
-						continue
-					}
-					if o.files[name] != content {
-						t.Errorf("%s: file %s is %q, want %q", label, name, o.files[name], content)
-					}
-				}
-			}
-			// What Node's round trip cannot bring back as it was: the tables
-			// with a warning; on SQLite the settings (broken UTF-8 comes
-			// back as U+FFFD, which JSON cannot carry) and an integer above
-			// 2^53, which Node's dump holds as a JavaScript number (BUGS.md
-			// BK2). On PostgreSQL every time keeps its milliseconds only:
-			// Node's dump holds JavaScript dates (BUGS.md BK3).
-			lossy := map[string]bool{}
-			if dialect == "sqlite" {
-				lossy["settings"], lossy["device_telemetry"] = true, true
-			}
-			for table, rows := range want {
-				if strings.Contains(base.result, "Table "+table+":") || lossy[table] {
-					continue
-				}
-				if dialect == "postgres" {
-					rows = append([]string(nil), rows...)
-					for i := range rows {
-						rows[i] = microseconds.ReplaceAllStringFunc(rows[i], toMilliseconds)
-					}
-				}
-				if strings.Join(rows, "\n") != strings.Join(base.tables[table], "\n") {
-					t.Errorf("table %s did not come back as it was:\n  %q\n  %q", table, rows, base.tables[table])
-				}
-			}
-
-			if os.Getenv("BACKUP_RECORD_FIXTURES") == "1" {
-				recordFixture(t, dialect, nodeArchive, base.result, base.tables)
-			}
-		})
-	}
-}
-
 func fixtureDir() string { return filepath.Join("testdata", "node-archives") }
-
-func recordFixture(t *testing.T, dialect string, archive []byte, result string, tables map[string][]string) {
-	t.Helper()
-	if err := os.MkdirAll(fixtureDir(), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(fixtureDir(), dialect+".tar.gz"), archive, 0o644); err != nil {
-		t.Fatal(err)
-	}
-	raw, _ := json.MarshalIndent(map[string]any{"result": json.RawMessage(result), "tables": tables}, "", " ")
-	if err := os.WriteFile(filepath.Join(fixtureDir(), dialect+".restored.json"), raw, 0o644); err != nil {
-		t.Fatal(err)
-	}
-}
 
 // refusedByNodeOnly are the warnings of Node's restore, by dialect, for
 // tables Go restores (BUGS.md BK8: the list in dlp_policies.rules goes in
@@ -950,23 +606,3 @@ func TestNodeArchiveFixtures(t *testing.T) {
 		})
 	}
 }
-
-var microseconds = regexp.MustCompile(`\d\d:\d\d:\d\d\.\d+[+-]\d\d`)
-
-// toMilliseconds cuts the fraction of a PostgreSQL time to three digits,
-// written as PostgreSQL writes it (no zeros at the end).
-func toMilliseconds(s string) string {
-	dot := strings.IndexByte(s, '.')
-	zone := strings.IndexAny(s[dot:], "+-") + dot
-	frac := s[dot+1 : zone]
-	if len(frac) > 3 {
-		frac = frac[:3]
-	}
-	frac = strings.TrimRight(frac, "0")
-	if frac == "" {
-		return s[:dot] + s[zone:]
-	}
-	return s[:dot+1] + frac + s[zone:]
-}
-
-var timeStamp = regexp.MustCompile(`\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z`)

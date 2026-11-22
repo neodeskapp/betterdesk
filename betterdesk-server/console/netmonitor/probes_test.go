@@ -32,9 +32,9 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// probeVectors is testdata/probes.json (testdata/nodeoracle/probes.js):
-// what the checks of the Node console answered against the script's own
-// servers and its own ping command.
+// probeVectors is testdata/probes.json (testdata/README.md): what the
+// checks of the Node console answered against the recording's own servers
+// and its own ping command.
 type probeVectors struct {
 	DNS   map[string]json.RawMessage `json:"dns"`
 	Pings map[string]struct {
@@ -72,7 +72,7 @@ type probeRecord struct {
 	PingArgs []string `json:"ping_args"`
 }
 
-// The servers of the oracle script listened on 0.0.0.0, which the guard
+// The servers of the recording listened on 0.0.0.0, which the guard
 // refuses since BUGS.md SC3. The replay moves them to standIn, a private
 // address the guard lets through, and the dialers of the tests connect
 // that address to the local servers. Only the local address Node names in
@@ -118,9 +118,9 @@ type seenRequest struct {
 	headers           http.Header
 }
 
-// world is what the checks of a test can reach: the servers of the oracle
-// script at standIn, a table of names, and a ping command that prints what
-// the script's did.
+// world is what the checks of a test can reach: the servers of the
+// recording at standIn, a table of names, and a ping command that prints
+// what the recording's did.
 type world struct {
 	t        *testing.T
 	v        *probeVectors
@@ -292,7 +292,7 @@ func (w *world) DialContext(ctx context.Context, network, address string) (net.C
 	return d.DialContext(ctx, network, local(address))
 }
 
-// ping implements PingRunner with the table of the oracle script.
+// ping implements PingRunner with the ping table of the recording.
 func (w *world) ping(ctx context.Context, name string, args ...string) ([]byte, int, error) {
 	if name != "ping" {
 		w.t.Errorf("command %q, want ping", name)
@@ -308,7 +308,7 @@ func (w *world) ping(ctx context.Context, name string, args ...string) ([]byte, 
 	p, ok := w.v.Pings[args[len(args)-1]]
 	if !ok && ssrfguard.IsIP(args[len(args)-1]) != 0 {
 		// The ping of a name goes to the address the guard checked (SC4);
-		// the script's command knew names, so this one answers for the
+		// the recording's command knew names, so this one answers for the
 		// name the guard looked up
 		w.resolver.mu.Lock()
 		if n := len(w.resolver.lookups); n > 0 {
@@ -487,8 +487,8 @@ var probeDifferences = map[string]string{
 	"http v6 any address": `{"success":false,"rtt_ms":null,"status_code":null,"error":"Blocked IP address: ::"}`,
 	"resolve 256":         "thrown: Hostname 256 resolves to blocked address 0.0.1.0",
 	// SC4: the ping goes to the address the guard checked for the name, so
-	// the command no longer sees the name in capitals, which the script's
-	// command did not know
+	// the command no longer sees the name in capitals, which the
+	// recording's command did not know
 	"ping in capitals": `{"success":true,"rtt_ms":"number","error":null}`,
 	// NM5: the check connects to an IPv6 address the guard passed; Node
 	// looked it up as a name, brackets included

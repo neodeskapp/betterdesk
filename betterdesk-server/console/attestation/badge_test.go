@@ -15,7 +15,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// badgeVectors is what testdata/nodeoracle/badge.js recorded from the Node
+// badgeVectors is what testdata/badge.json.gz recorded from the Node
 // code: the stored test result and badge texts, the brand, the texts of
 // the request language, and the "attestation" the sign-in page sent.
 type badgeVectors struct {

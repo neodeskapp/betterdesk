@@ -21,9 +21,8 @@ import (
 )
 
 // The goldens are what the Node console answered for a list of requests
-// against the build in testdata/site (recorded by
-// .ui-rework/go/tools/webui/gen-webui-golden.js, which runs the real
-// lib/webUi.js and lib/mountRoutes.js). Each file is one configuration,
+// against the build in testdata/site, recorded from the real lib/webUi.js
+// and lib/mountRoutes.js while the Node console still existed. Each file is one configuration,
 // compressed with gzip.
 
 type goldenFile struct {

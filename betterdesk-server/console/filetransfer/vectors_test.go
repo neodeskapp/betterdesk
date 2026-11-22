@@ -18,7 +18,7 @@ import (
 )
 
 // The vectors are lives of transfers as services/fileTransferService.js
-// of the Node console lived them (testdata/nodeoracle/filetransfer.js):
+// of the Node console lived them (testdata/vectors.json.gz):
 // per step the call, what it returned or threw, every record afterwards
 // and the files of the transfers folder.
 

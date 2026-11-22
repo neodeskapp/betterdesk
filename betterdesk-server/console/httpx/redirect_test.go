@@ -28,8 +28,8 @@ type redirectVector struct {
 }
 
 // Every recorded answer of Express's res.redirect(status, target)
-// (testdata/redirect_vectors.json, written by
-// .ui-rework/go/tools/vectors/express-answers.js).
+// (testdata/redirect_vectors.json, a fixed record made while the Node
+// console still existed).
 func TestRedirectMatchesExpress(t *testing.T) {
 	raw, err := os.ReadFile("testdata/redirect_vectors.json")
 	if err != nil {

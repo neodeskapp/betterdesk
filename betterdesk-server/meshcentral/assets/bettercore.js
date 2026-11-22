@@ -1,3 +1,9 @@
+// This file runs inside MeshAgent's own JavaScript engine on the managed
+// device, not in Node or a browser: the server sends it to the agent as its
+// core module (meshcore.go). It is the one JavaScript program the
+// repository keeps on purpose; the other .js files are test fixtures that
+// stand for a web app's build output.
+
 /*
  * BetterCore — BetterDesk MeshAgent module (AGPL-3.0).
  * SPDX-License-Identifier: AGPL-3.0-only

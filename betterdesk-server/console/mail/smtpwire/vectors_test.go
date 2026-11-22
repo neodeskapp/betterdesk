@@ -16,8 +16,8 @@ import (
 )
 
 // The tests here replay testdata/vectors.json: what single parts of
-// nodemailer (and Node's certificate name check) answered for many inputs,
-// recorded by testdata/nodeoracle/record_vectors.js.
+// nodemailer (and Node's certificate name check) answered for many inputs
+// (testdata/README.md).
 
 type vectorFile struct {
 	Ehlo []struct {

@@ -19,7 +19,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/middleware"
 )
 
-// The records of testdata/nodeoracle/routes.js: what the Node routes
+// The records of testdata/routes.json.gz: what the Node routes
 // answered for stored settings, bodies, brand names and translations.
 
 type answer struct {

@@ -161,7 +161,7 @@ func describeCalls(calls []proxytest.Call) string {
 
 // TestVectors replays what routes/guest.routes.js of the Node console
 // answered, asked the API server, asked the device scope and told the
-// socket relay (testdata/nodeoracle/run.js). The vectors a bug fix
+// socket relay (testdata/vectors.json). The vectors a bug fix
 // changed on purpose (fixedVectors) are compared with what the fix
 // answers instead.
 func TestVectors(t *testing.T) {

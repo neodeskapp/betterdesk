@@ -21,7 +21,8 @@ import (
 	"github.com/unitronix/betterdesk-server/console/ws/wstest"
 )
 
-// relayRecording is what testdata/nodeoracle/relay.js wrote.
+// relayRecording is testdata/node_relay.json, the Node relay's recording
+// (testdata/README.md).
 type relayRecording struct {
 	Scenarios []struct {
 		Name    string                     `json:"name"`

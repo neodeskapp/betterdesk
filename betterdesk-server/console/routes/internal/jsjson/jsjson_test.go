@@ -14,7 +14,7 @@ import (
 )
 
 // vector is what JavaScript made of one JSON text (testdata/vectors.json,
-// written by testdata/nodeoracle/vectors.js).
+// recorded from the Node console; see testdata/README.md).
 type vector struct {
 	Text        string             `json:"text"`
 	Error       bool               `json:"error"`

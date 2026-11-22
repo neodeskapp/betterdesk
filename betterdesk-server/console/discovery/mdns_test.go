@@ -46,7 +46,7 @@ type nodeEvent struct {
 	Target string  `json:"address"`
 }
 
-// mdnsRecording is what testdata/nodeoracle/mdns.js wrote.
+// mdnsRecording is what testdata/mdns.json.gz holds.
 type mdnsRecording struct {
 	Scenarios []struct {
 		Env        map[string]string `json:"env"`

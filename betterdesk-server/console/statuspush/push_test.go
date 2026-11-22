@@ -20,8 +20,8 @@ import (
 	"github.com/unitronix/betterdesk-server/events"
 )
 
-// recording is what testdata/nodeoracle/push.js recorded from the old
-// console's deviceStatusPush.js.
+// recording is testdata/node_push.json, recorded from the old console's
+// deviceStatusPush.js (testdata/README.md).
 type recording struct {
 	Now    int64 `json:"now"`
 	Events []struct {

@@ -23,7 +23,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/store/storetest"
 )
 
-// recording is a file testdata/nodeoracle/engine.js wrote.
+// recording is one of the files testdata/engine_*.json (testdata/README.md).
 type recording struct {
 	Dialect string `json:"dialect"`
 	Zone    string `json:"zone"`
@@ -727,7 +727,7 @@ func TestCSVKeepsFormulasAsText(t *testing.T) {
 }
 
 // TestNodeReports makes every report the Node engine made
-// (testdata/engine_*.json, written by testdata/nodeoracle/engine.js) on
+// (testdata/engine_*.json, see testdata/README.md) on
 // the same rows and compares the JSON and the CSV of every part, byte for
 // byte, but for the cases the bug fixes change (engineFixes,
 // engineRewrites and engineRules).
