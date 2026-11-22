@@ -119,9 +119,27 @@ for; the drawings are unchanged.
 
 ## Compatibility components
 
-Any desktop-client compatibility adapter is subject to the provenance
-register at <https://betterde.sk/docs/development/provenance>.
-Before distribution, its release record must include:
+Code that talks to the stock RustDesk client follows a protocol BetterDesk
+did not design. The provenance register at
+<https://betterde.sk/docs/development/provenance> holds the whole policy.
+`repotool check-provenance` checks that this section keeps its two parts.
+
+### Clean-room workflow
+
+The specification role records only public standards and black-box
+observations of stock clients, with test vectors it writes itself. The
+implementation role works from that specification and those vectors; it
+receives no external source code, generated artifacts, copied comments or
+test files derived from source. Every new wire feature names the revision of
+the specification it implements.
+
+### Release gate
+
+No code, documentation or release note describes the compatibility code as a
+fork, a clone, an independently licensable component or a clean-room
+implementation until the register and its evidence have been reviewed.
+Before a desktop-client compatibility adapter is distributed, its release
+record must include:
 
 1. the compatibility specification revision;
 2. a source-provenance review result;

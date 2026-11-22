@@ -16,7 +16,7 @@ both `hbbs` (signal) and `hbbr` (relay).
 
 - Do not infer the provenance or copyright status of `.proto` files from their
   protocol role or file headers. Existing schemas are subject to the provenance
-  gate in `docs/important/support-agent-provenance.md`.
+  gate of the provenance register (https://betterde.sk/docs/development/provenance).
 - Do not copy external source, generated artifacts, comments, or test fixtures.
   Implement only from BetterDesk-owned specifications and independently
   authored black-box test vectors.
