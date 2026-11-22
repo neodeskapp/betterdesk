@@ -35,7 +35,11 @@ for (const role of ROLES) {
 			}
 			await expect(page.locator('.package-new')).toHaveCount(can('billing.manage') ? 1 : 0);
 			await expect(page.locator('.contract-new')).toHaveCount(can('billing.manage') ? 1 : 0);
-			const pkg = page.locator('.packages-table tbody tr[data-key]').first();
+			// The admin run's package may be deleted meanwhile: look at a lasting one
+			const pkg = page
+				.locator('.packages-table tbody tr[data-key]')
+				.filter({ hasNotText: /e2e package/ })
+				.first();
 			await expect(pkg).toBeVisible({ timeout: 15_000 });
 			await expect(pkg.getByRole('button', { name: /^Actions for/ })).toHaveCount(
 				can('billing.manage') ? 1 : 0
