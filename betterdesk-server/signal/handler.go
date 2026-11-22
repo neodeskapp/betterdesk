@@ -1732,6 +1732,9 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	// Forward relay request to target peer (supports UDP, TCP, and WebSocket targets).
 	// NOTE: Must use RequestRelay type, not RelayResponse — RustDesk client's
 	// handle_resp() dispatches RequestRelay to create_relay() but drops RelayResponse.
+	// The controller's token and control_permissions stay here: the device
+	// takes control_permissions from its server over its own settings, and
+	// the token is the controller's sign-in.
 	relayReq := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
@@ -1740,13 +1743,11 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 				Id:         msg.Id,
 				// Target validates this against its own relay (see
 				// relayAdvertisedToTarget); prefer what it reported.
-				RelayServer:        relayAdvertisedToTarget(target, relayServer),
-				ControlledContext:  msg.ControlledContext,
-				SwitchCode:         msg.SwitchCode,
-				Secure:             msg.Secure,
-				ConnType:           msg.ConnType,
-				Token:              msg.Token,
-				ControlPermissions: msg.ControlPermissions,
+				RelayServer:       relayAdvertisedToTarget(target, relayServer),
+				ControlledContext: msg.ControlledContext,
+				SwitchCode:        msg.SwitchCode,
+				Secure:            msg.Secure,
+				ConnType:          msg.ConnType,
 			},
 		},
 	}
@@ -1905,6 +1906,8 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 	}
 
 	// Forward RequestRelay to target peer (supports UDP, TCP, and WebSocket targets).
+	// The controller's token and control_permissions stay here, as in
+	// handleRequestRelay.
 	reqRelay := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RequestRelay{
 			RequestRelay: &pb.RequestRelay{
@@ -1914,13 +1917,11 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 				// The target validates this against the relay it configured and
 				// silently drops a mismatch, so prefer the endpoint the target
 				// itself reported before falling back to the server's value.
-				RelayServer:        relayAdvertisedToTarget(target, relayServer),
-				ControlledContext:  msg.ControlledContext,
-				SwitchCode:         msg.SwitchCode,
-				Secure:             msg.Secure,
-				ConnType:           msg.ConnType,
-				Token:              msg.Token,
-				ControlPermissions: msg.ControlPermissions,
+				RelayServer:       relayAdvertisedToTarget(target, relayServer),
+				ControlledContext: msg.ControlledContext,
+				SwitchCode:        msg.SwitchCode,
+				Secure:            msg.Secure,
+				ConnType:          msg.ConnType,
 			},
 		},
 	}
