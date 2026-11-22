@@ -184,7 +184,7 @@ func TestLoadEnv_EnrollmentModeIsADefaultWithoutTheOverride(t *testing.T) {
 }
 
 func TestLoadEnv_EnrollmentModeOverrideForcesTheEnvironment(t *testing.T) {
-	for _, marker := range []string{"Y", "yes", "true", "1"} {
+	for _, marker := range []string{"Y", "yes", "true", "1", "on", " ON "} {
 		t.Setenv("ENROLLMENT_MODE", "locked")
 		t.Setenv("ENROLLMENT_MODE_ENV_OVERRIDE", marker)
 

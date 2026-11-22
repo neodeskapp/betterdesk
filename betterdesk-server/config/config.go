@@ -567,8 +567,7 @@ func (c *Config) LoadEnv() {
 		if mode == "open" || mode == "managed" || mode == "locked" {
 			c.EnrollmentMode = mode
 			c.EnrollmentModeFromEnv = true
-			marker := strings.ToUpper(strings.TrimSpace(os.Getenv("ENROLLMENT_MODE_ENV_OVERRIDE")))
-			c.EnrollmentModeEnvOverride = marker == "Y" || marker == "YES" || marker == "TRUE" || marker == "1"
+			readSwitch("ENROLLMENT_MODE_ENV_OVERRIDE", &c.EnrollmentModeEnvOverride)
 		}
 	}
 	if v := os.Getenv("CDAP_PORT"); v != "" {
