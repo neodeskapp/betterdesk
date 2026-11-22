@@ -533,19 +533,21 @@ var fixtureTables = map[string]map[string][]string{
 	"sqlite": {
 		// RV181: the server's users.credentials_changed_at, after last_login,
 		// holds the time of the restore for every account the database did
-		// not have, so that no sign-in token from before the restore works
+		// not have, so that no sign-in token from before the restore works;
+		// users.disabled after it (L107) is off for every account a Node
+		// archive holds
 		"users": {
-			`50|'seed_admin'|'$2b$10$abcdefghijklmnopqrstuv'|'admin'|'local'|'JBSWY3DPEHPK3PXP'|1|'["AAAA-BBBB","CCCC-DDDD"]'|'2026-11-10 01:05:50'|''|1795000000|0|''|NULL|''|''|'säd😀@example.org'|''|''|''`,
-			`51|'second'|'pbkdf2-sha256$600000$s$h'|'viewer'|'local'|''|0|NULL|'2026-11-18 14:58:36'|''|1795000000|0|''|NULL|''|''|''|''|''|''`,
+			`50|'seed_admin'|'$2b$10$abcdefghijklmnopqrstuv'|'admin'|'local'|'JBSWY3DPEHPK3PXP'|1|'["AAAA-BBBB","CCCC-DDDD"]'|'2026-11-10 01:05:50'|''|1795000000|0|0|''|NULL|''|''|'säd😀@example.org'|''|''|''`,
+			`51|'second'|'pbkdf2-sha256$600000$s$h'|'viewer'|'local'|''|0|NULL|'2026-11-18 14:58:36'|''|1795000000|0|0|''|NULL|''|''|''|''|''|''`,
 		},
 	},
 	"postgres": {
 		// BK8: Node's restore refused dlp_policies
 		"dlp_policies": {`(1,p1,"","",log,"",t,"[{""a"": 1}]","2026-11-10 01:05:50.93+00","2026-11-18 14:58:46.584+00")`},
-		// RV181, as on SQLite
+		// RV181 and L107, as on SQLite
 		"users": {
-			`(50,seed_admin,$2b$10$abcdefghijklmnopqrstuv,admin,local,JBSWY3DPEHPK3PXP,t,"[""AAAA-BBBB"",""CCCC-DDDD""]","2026-11-10 01:05:50.694+00",,1795000000,f,"",,"","",säd😀@example.org,"","","")`,
-			`(51,second,pbkdf2-sha256$600000$s$h,viewer,local,"",f,,"2026-11-18 14:58:46.491+00",,1795000000,f,"",,"","","","","","")`,
+			`(50,seed_admin,$2b$10$abcdefghijklmnopqrstuv,admin,local,JBSWY3DPEHPK3PXP,t,"[""AAAA-BBBB"",""CCCC-DDDD""]","2026-11-10 01:05:50.694+00",,1795000000,f,f,"",,"","",säd😀@example.org,"","","")`,
+			`(51,second,pbkdf2-sha256$600000$s$h,viewer,local,"",f,,"2026-11-18 14:58:46.491+00",,1795000000,f,f,"",,"","","","","","")`,
 		},
 	},
 }
