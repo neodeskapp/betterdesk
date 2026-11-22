@@ -63,7 +63,7 @@ FROM alpine:3.22
 LABEL maintainer="trybetterdesk"
 LABEL description="BetterDesk Server - RustDesk-compatible signal + relay"
 LABEL org.opencontainers.image.source="https://github.com/trybetterdesk/betterdesk"
-LABEL version="3.5.274"
+LABEL version="3.5.275"
 
 RUN apk add --no-cache \
     ca-certificates \
