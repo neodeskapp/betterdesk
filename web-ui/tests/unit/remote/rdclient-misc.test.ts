@@ -74,6 +74,48 @@ describe('CDAP file download', () => {
 	});
 });
 
+describe('CDAP file transfer socket', () => {
+	function transfer() {
+		const events: [string, Record<string, unknown>][] = [];
+		const ft = new g.CDAPFileTransfer({
+			deviceId: 'cdap-1',
+			emit: (ev: string, data?: unknown) => events.push([ev, (data ?? {}) as Record<string, unknown>])
+		});
+		const errorsOf = (id: number) => events.filter(([ev, d]) => ev === 'file_transfer_error' && d.id === id);
+		return { ft, events, errorsOf };
+	}
+
+	test('a download whose socket fails says so', async () => {
+		const t = transfer();
+		const id = t.ft.downloadFile('/docs', { name: 'report.txt', size: 3 });
+		await vi.waitFor(() => expect(FakeSocket.made).toHaveLength(1));
+		FakeSocket.made[0]!.onerror?.({});
+		FakeSocket.made[0]!.onclose?.({});
+		await vi.waitFor(() => expect(t.errorsOf(id)).toHaveLength(1));
+	});
+
+	test('a socket the browser refused to make is tried again on the next transfer', async () => {
+		const t = transfer();
+		const Real = FakeSocket;
+		let refuse = true;
+		vi.stubGlobal(
+			'WebSocket',
+			Object.assign(
+				function (url: string) {
+					if (refuse) throw new Error('blocked');
+					return new Real(url);
+				},
+				{ CONNECTING: 0, OPEN: 1, CLOSED: 3 }
+			)
+		);
+		const first = t.ft.downloadFile('/docs', { name: 'a.txt', size: 1 });
+		await vi.waitFor(() => expect(t.errorsOf(first)).toHaveLength(1));
+		refuse = false;
+		t.ft.downloadFile('/docs', { name: 'b.txt', size: 1 });
+		await vi.waitFor(() => expect(FakeSocket.made).toHaveLength(1));
+	});
+});
+
 describe('Map keyboard mode on Linux peers', () => {
 	test('Delete, Pause and the arrows send their own X11 key codes', () => {
 		const code = (c: string) => g.RDKeyboardScancode.codeToScancode(c, 'Linux');

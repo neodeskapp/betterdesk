@@ -153,19 +153,18 @@ export class CDAPFileTransfer {
 		if (this._connectPromise) return this._connectPromise;
 
 		this._emit('file_connecting');
+		const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+		const url = `${proto}//${window.location.host}/api/cdap/devices/${encodeURIComponent(this._deviceId)}/files`;
+		let ws: WebSocket;
+		try {
+			ws = new WebSocket(url, ['cdap-filebrowser']);
+		} catch (err) {
+			// Nothing to wait for: the next transfer makes a new socket
+			this._emit('file_connect_error', { error: errorMessage(err) || String(err) });
+			return Promise.reject(err);
+		}
+		this._ws = ws;
 		this._connectPromise = new Promise<void>((resolve, reject) => {
-			const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-			const url = `${proto}//${window.location.host}/api/cdap/devices/${encodeURIComponent(this._deviceId)}/files`;
-			let ws: WebSocket;
-			try {
-				ws = new WebSocket(url, ['cdap-filebrowser']);
-			} catch (err) {
-				this._connectPromise = null;
-				this._emit('file_connect_error', { error: errorMessage(err) || String(err) });
-				reject(err);
-				return;
-			}
-			this._ws = ws;
 			const timer = setTimeout(() => {
 				try {
 					ws.close();
@@ -190,15 +189,19 @@ export class CDAPFileTransfer {
 					/* ignore */
 				}
 			};
+			// The transfers waiting for the socket get the failure (after the open it changes nothing)
 			ws.onerror = () => {
 				clearTimeout(timer);
 				this._connectPromise = null;
 				this._emit('file_connect_error', { error: 'websocket error' });
+				reject(new Error('File transfer connection failed'));
 			};
 			ws.onclose = () => {
+				clearTimeout(timer);
 				this._connected = false;
 				this._ws = null;
 				this._connectPromise = null;
+				reject(new Error('File transfer connection closed'));
 			};
 		});
 		return this._connectPromise;
