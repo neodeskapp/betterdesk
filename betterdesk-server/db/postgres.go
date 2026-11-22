@@ -1603,6 +1603,9 @@ func (pg *PostgresDB) cascadePeerIDInTx(ctx context.Context, tx pgx.Tx, oldID, n
 		{`UPDATE device_connection_policies SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_connection_mode_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE server_config SET key = $1 WHERE key = $2`, []any{"telemetry_seq_" + newID, "telemetry_seq_" + oldID}},
+		// The new id is now an existing device's: an enrollment that a
+		// device queued under it meanwhile is stale
+		{`DELETE FROM server_config WHERE key = $1`, []any{"pending_device_" + newID}},
 	}
 	for _, st := range stmts {
 		if _, err := tx.Exec(ctx, st.query, st.args...); err != nil {

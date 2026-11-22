@@ -1882,6 +1882,9 @@ func (s *SQLiteDB) cascadePeerIDInTx(tx *sql.Tx, oldID, newID string) error {
 		{`UPDATE device_connection_policies SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_connection_mode_commands SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE server_config SET key = ? WHERE key = ?`, []any{"telemetry_seq_" + newID, "telemetry_seq_" + oldID}},
+		// The new id is now an existing device's: an enrollment that a
+		// device queued under it meanwhile is stale
+		{`DELETE FROM server_config WHERE key = ?`, []any{"pending_device_" + newID}},
 	}
 	for _, st := range stmts {
 		if _, err := tx.Exec(st.query, st.args...); err != nil {
