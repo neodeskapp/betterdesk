@@ -584,6 +584,26 @@ FAKE
     rm -rf "$TEST_DIR"
 )
 
+# L162: a port held by another program is named and left alone; only
+# BetterDesk's own leftovers are stopped.
+test_port_taken_by_another_program() (
+    load
+    command -v python3 >/dev/null && command -v ss >/dev/null || { echo "skipped: no python3 or ss"; exit 0; }
+    printf 'SIGNAL_PORT=31116\nRELAY_PORT=31117\nCONSOLE_PORT=0\n' > "$CONSOLE_PATH/.env"
+    python3 -m http.server 31116 --bind 127.0.0.1 >/dev/null 2>&1 &
+    local other=$!
+    local i
+    for i in $(seq 1 50); do ss -ltnH "sport = :31116" | grep -q . && break; sleep 0.1; done
+    local out
+    kill_processes_holding_ports > "$TEST_DIR/out" 2>&1
+    out=$(cat "$TEST_DIR/out")
+    if ! kill -0 "$other" 2>/dev/null; then fail "the installer killed another program on port 31116"; fi
+    kill "$other" 2>/dev/null; wait "$other" 2>/dev/null || true
+    case "$out" in *31116*python3*) ;; *) fail "the port taken is not named with its program: $out" ;; esac
+    [ -n "${FOREIGN_PORT_HOLDERS:-}" ] || fail "the install would go on with a port taken"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -607,4 +627,5 @@ test_uninstall_says_what_stays
 test_update_asks_the_fork
 test_firewall_ports
 test_self_signed_keeps_the_client_api_on_http
+test_port_taken_by_another_program
 echo "Go installer unit checks passed"

@@ -1000,30 +1000,49 @@ wait_for_service_stop() {
 
 # Kill any stale processes that might be holding files/ports
 # Free BetterDesk ports when systemd stop left orphan listeners (#219).
+# port_listener_pids PORT: the processes listening on a TCP port.
+port_listener_pids() {
+    ss -ltnpH "sport = :$1" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u
+}
+
+# is_betterdesk_process PID: the server, the old Rust servers, or the old
+# Node.js console of this install.
+is_betterdesk_process() {
+    local comm args
+    comm=$(cat "/proc/$1/comm" 2>/dev/null) || return 1
+    args=$(tr '\0' ' ' < "/proc/$1/cmdline" 2>/dev/null)
+    case "$comm" in
+        betterdesk-serv*|hbbs|hbbr|hbbs-v8-api) return 0 ;;
+        node) [[ "$args" == *"$CONSOLE_PATH"* || "$args" == *"server.js"* ]] && return 0 ;;
+    esac
+    return 1
+}
+
+# kill_processes_holding_ports: BetterDesk's own processes left on its
+# ports are stopped (#219). A port another program holds is named in
+# FOREIGN_PORT_HOLDERS and that program is left alone.
 kill_processes_holding_ports() {
-    local port pids
-    for port in 21116 21117 5000 5443; do
-        if ! ss -tlnH 2>/dev/null | grep -q ":${port} "; then
-            continue
-        fi
-        pids=$(lsof -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null || true)
-        if [ -n "$pids" ]; then
-            print_warning "Port ${port} still in use (pids: $pids) — terminating (#219)"
-            for pid in $pids; do
+    local port pid name
+    FOREIGN_PORT_HOLDERS=""
+    for port in $(signal_port) $(relay_port) $(resolve_panel_http_port) $(resolve_panel_https_port); do
+        [ "$port" = 0 ] && continue
+        for pid in $(port_listener_pids "$port"); do
+            if is_betterdesk_process "$pid"; then
+                print_warning "Port ${port} is still held by an old BetterDesk process (pid $pid): stopping it (#219)"
                 kill -TERM "$pid" 2>/dev/null || true
-            done
-            sleep 1
-            pids=$(lsof -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null || true)
-            if [ -n "$pids" ]; then
-                for pid in $pids; do
-                    kill -9 "$pid" 2>/dev/null || true
-                done
+                sleep 1
+                kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null
+            else
+                name=$(cat "/proc/$pid/comm" 2>/dev/null || echo unknown)
+                FOREIGN_PORT_HOLDERS="${FOREIGN_PORT_HOLDERS:+$FOREIGN_PORT_HOLDERS, }$port ($name, pid $pid)"
             fi
-        elif command -v fuser &>/dev/null; then
-            fuser -k "${port}/tcp" 2>/dev/null || true
-        fi
+        done
     done
-    sleep 1
+    if [ -n "$FOREIGN_PORT_HOLDERS" ]; then
+        print_error "Ports BetterDesk needs are taken by other programs: $FOREIGN_PORT_HOLDERS"
+        print_info "Stop those programs, or give BetterDesk other ports: SIGNAL_PORT, RELAY_PORT, CONSOLE_PORT or HTTPS_PORT in $CONSOLE_PATH/.env"
+    fi
+    return 0
 }
 
 kill_stale_processes() {
@@ -5116,6 +5135,10 @@ do_install() {
 
     # Stop services if running (prevents "Text file busy" error)
     graceful_stop_services
+    if [ -n "${FOREIGN_PORT_HOLDERS:-}" ]; then
+        print_error "Installation stopped: the ports above are in use"
+        return 1
+    fi
 
     install_dependencies
 
