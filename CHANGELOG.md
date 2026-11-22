@@ -498,7 +498,7 @@
 
 ### Changed
 - **Console backend moves toward the Go server, stage by stage.**
-  Implements P1–P3 of [docs/important/console-backend-strangler.md](docs/important/console-backend-strangler.md)
+  Implements P1–P3 of docs/important/console-backend-strangler.md
   (follow-up to the architecture question in
   [discussion #496](https://github.com/UNITRONIX/BetterDesk/discussions/496)).
   - **Panel trust bridge (P1).** `X-BetterDesk-Panel` carries a short-lived
@@ -1664,7 +1664,7 @@
   reports, test cases, and reviewable designs in [#282](https://github.com/UNITRONIX/BetterDesk/pull/282),
   [#348](https://github.com/UNITRONIX/BetterDesk/pull/348), and
   [#357](https://github.com/UNITRONIX/BetterDesk/pull/357). See the
-  [contributor attribution register](docs/development/CONTRIBUTOR-ATTRIBUTIONS.md).
+  contributor attribution register.
 
 ---
 
@@ -2501,8 +2501,8 @@
 - **Support Agent completion (CDAP path):** Web Remote file transfer, in-session chat, remote audio, lock/restart control relay; Generator toolchain diagnostics + per-platform retry; immediate bundle rebuild after panel updates; last-good CDAP/API endpoint failover; branding seal + optional garble/UPX for release builds; capability flags in bundle branding. Ships via panel update (rebuild Support Agent bundles after update).
 
 ### Docs
-- **Support Agent** documented as the active end-user client: [`Desktop-Clients.md`](docs/wiki/Desktop-Clients.md), [`Client-Generator.md`](docs/wiki/Client-Generator.md), [`PROJECT_STRUCTURE.md`](docs/architecture/PROJECT_STRUCTURE.md).
-- **Docker panel HTTPS mismatch (#299):** documented Firefox `SSL_ERROR_RX_RECORD_TOO_LONG` / Chrome `ERR_SSL_PROTOCOL_ERROR` when opening `https://…:5000` against the default HTTP-only GHCR image — [`DOCKER_TROUBLESHOOTING.md`](docs/docker/DOCKER_TROUBLESHOOTING.md), [`DOCKER_QUICKSTART.md`](docs/docker/DOCKER_QUICKSTART.md).
+- **Support Agent** documented as the active end-user client: `Desktop-Clients.md`, `Client-Generator.md`, `PROJECT_STRUCTURE.md`.
+- **Docker panel HTTPS mismatch (#299):** documented Firefox `SSL_ERROR_RX_RECORD_TOO_LONG` / Chrome `ERR_SSL_PROTOCOL_ERROR` when opening `https://…:5000` against the default HTTP-only GHCR image — `DOCKER_TROUBLESHOOTING.md`, `DOCKER_QUICKSTART.md`.
 
 ---
 
@@ -2537,7 +2537,7 @@
 - _(none yet)_
 
 ### Docs
-- **Peer password vs BetterDesk login (discussion #285):** clarified that Access Policy / device groups do not bypass the RustDesk peer password — [`Fleet-and-Policies.md`](docs/wiki/Fleet-and-Policies.md), [`SCOPED_REMOTE_USER.md`](docs/features/SCOPED_REMOTE_USER.md), [`RUSTDESK_CLIENT_DEPLOYMENT.md`](docs/setup/RUSTDESK_CLIENT_DEPLOYMENT.md).
+- **Peer password vs BetterDesk login (discussion #285):** clarified that Access Policy / device groups do not bypass the RustDesk peer password — `Fleet-and-Policies.md`, `SCOPED_REMOTE_USER.md`, `RUSTDESK_CLIENT_DEPLOYMENT.md`.
 
 ---
 
@@ -3123,7 +3123,7 @@
 ## [3.3.141] — 2026-07-14
 
 ### Added
-- **External reverse proxy guidance (#267):** new [docs/setup/REVERSE_PROXY.md](docs/setup/REVERSE_PROXY.md); `betterdesk.sh` **External reverse proxy** mode (SSL menu **C** / Protocol Toggle **T**) applies `TRUST_PROXY=Y`, binds panel to localhost, enables Go `-trust-proxy`, and writes Caddy/Nginx snippets under `$RUSTDESK_PATH/reverse-proxy/`.
+- **External reverse proxy guidance (#267):** new docs/setup/REVERSE_PROXY.md; `betterdesk.sh` **External reverse proxy** mode (SSL menu **C** / Protocol Toggle **T**) applies `TRUST_PROXY=Y`, binds panel to localhost, enables Go `-trust-proxy`, and writes Caddy/Nginx snippets under `$RUSTDESK_PATH/reverse-proxy/`.
 
 ### Changed
 - **Linux HTTP/HTTPS toggle (#219):** Node panel no longer pre-emptively downgrades `HTTPS_PORT=443` / `PORT=80` when `CAP_NET_BIND_SERVICE` is granted — detects ambient capability or `BETTERDESK_HAS_BIND_SERVICE=1` in the systemd unit. Repair HTTPS/TLS syncs `PORT=80` when `HTTPS_PORT=443`; installer health checks and post-toggle tests hint when the panel bound a fallback port (`:5443` / `:5000`).
@@ -3422,7 +3422,7 @@
 ## [3.3.105] — 2026-07-05
 
 ### Added
-- **User scope UX (#227):** User Management now assigns **folders**, **direct devices**, and **RustDesk Pro strategies** per user; effective device count badge; folder ACL supports **allowed user groups**; optional **restricted default visibility** in Settings (`DEVICE_SCOPE_DEFAULT` / panel setting); docs [SCOPED_REMOTE_USER.md](docs/features/SCOPED_REMOTE_USER.md) and draft GitHub reply.
+- **User scope UX (#227):** User Management now assigns **folders**, **direct devices**, and **RustDesk Pro strategies** per user; effective device count badge; folder ACL supports **allowed user groups**; optional **restricted default visibility** in Settings (`DEVICE_SCOPE_DEFAULT` / panel setting); docs SCOPED_REMOTE_USER.md and draft GitHub reply.
 
 ### Changed
 - **Role labels (UI only):** `operator` → “Remote Operator”, `pro` → “Pro License (client API only)”; dynamic role descriptions and scope hints in user form (all 26 locales).
@@ -3795,14 +3795,14 @@
 - **Mesh layer closure**: `MESH_ENABLED=Y` default in Go config; installers (`betterdesk.sh` / `betterdesk.ps1`) and panel updater inject `MESH_ENABLED=Y` on existing Linux/Windows services; mesh cert backup on update.
 - **Panel**: Settings mesh groups + session recordings list + onboarding; Devices `mesh_agent` filter, linked-peer badge, power/port menu; remote server-side recording toggle; i18n for all locales.
 - **Go mesh**: KVM relay multiplex (multi-viewer), WoL wake fallback via `linked_peer_id`, recordings list/download APIs, device group assign, `mesh.terminal` / `mesh.files` / `mesh.power` RBAC.
-- **Docs/tests**: [MESH_REST_AUTOMATION.md](docs/features/MESH_REST_AUTOMATION.md), updated compat gap table; `mesh.routes` Jest test; stabilized MeshAgent live test timeout.
+- **Docs/tests**: MESH_REST_AUTOMATION.md, updated compat gap table; `mesh.routes` Jest test; stabilized MeshAgent live test timeout.
 
 ---
 
 ## [3.3.59] — 2026-06-21
 
 ### Added
-- **MeshCentral compatibility layer** (optional `MESH_ENABLED=Y`): native Go implementation of `/agent.ashx`, `/meshrelay.ashx`, and `/control.ashx` for unmodified MeshAgent binaries; unified inventory with `mesh_agent` device type; rdclient web `transport=mesh`; REST helpers (`/api/mesh/*`, `POST /api/peers/{id}/exec`); panel `.msh` download and `.ashx` WebSocket proxy. See [docs/features/MESHAGENT_ONBOARDING.md](docs/features/MESHAGENT_ONBOARDING.md).
+- **MeshCentral compatibility layer** (optional `MESH_ENABLED=Y`): native Go implementation of `/agent.ashx`, `/meshrelay.ashx`, and `/control.ashx` for unmodified MeshAgent binaries; unified inventory with `mesh_agent` device type; rdclient web `transport=mesh`; REST helpers (`/api/mesh/*`, `POST /api/peers/{id}/exec`); panel `.msh` download and `.ashx` WebSocket proxy. See docs/features/MESHAGENT_ONBOARDING.md.
 
 ### Changed
 - **Mesh agent assets**: AGPL **BetterCore** (`bettercore.js`) and **BetterViewer** (`betterviewer.js`) replace vendored upstream MeshCentral JavaScript.
@@ -4259,7 +4259,7 @@
 
 ### Changed
 
-- **License:** The project transitions to **AGPL-3.0** on the development branch. **v3.4.0** will be the first stable release under AGPL-3.0; **v3.3.x and earlier** remain under Apache 2.0. See [docs/COMMERCIAL-GRANT.md](docs/COMMERCIAL-GRANT.md) for sponsor terms.
+- **License:** The project transitions to **AGPL-3.0** on the development branch. **v3.4.0** will be the first stable release under AGPL-3.0; **v3.3.x and earlier** remain under Apache 2.0. See docs/COMMERCIAL-GRANT.md for sponsor terms.
 - **i18n:** French (`fr.json`) and Traditional Chinese (`zh-TW.json`) translations were withdrawn and recreated by the maintainer under AGPL-3.0.
 
 ---
@@ -4297,7 +4297,7 @@ Stable production release on `main` (merged from `dev`). Ships via **Settings �
 
 - **Organization shared address book (#190)** — admins maintain a shared contact list per organization (Organizations → Address Book). Entries merge into each member's RustDesk address book on `GET /api/ab` when sharing is enabled; personal entries stay private.
 - **Organizations → Device Groups tab** — readout of device groups and user groups linked to the organization (`team_id`), with shortcuts to Devices → Groups and one-click org-scoped group creation.
-- **Docker MACVLAN quick-start (#186)** — `docker-compose.quick.macvlan.yml` plus upgrade notes in [DOCKER_QUICKSTART.md](docs/docker/DOCKER_QUICKSTART.md). Uses `service_started` (not `service_healthy`) and `127.0.0.1` API/WS env when the console uses `network_mode: service:server`.
+- **Docker MACVLAN quick-start (#186)** — `docker-compose.quick.macvlan.yml` plus upgrade notes in DOCKER_QUICKSTART.md. Uses `service_started` (not `service_healthy`) and `127.0.0.1` API/WS env when the console uses `network_mode: service:server`.
 - **`betterdesk-show-admin-credentials` helper (#195)** — re-execs as `betterdesk` to read `.admin_credentials` on hardened images (`cap_drop: ALL`). Bundled in all Docker images; documented in README, install.sh, and Docker troubleshooting.
 
 ### Fixed
@@ -4722,7 +4722,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Generic 500 responses from Go auth handlers** — `betterdesk-server/api/auth_handlers.go` no longer leaks `err.Error()` strings on 9 internal-server-error paths (list/update/delete users, TOTP setup/confirm/disable, list/create/delete API keys). Full error detail is now logged server-side via `log.Printf`. Status codes and non-500 responses are unchanged. (Audit finding #4, Medium)
 
 ### Deferred
-- Plaintext storage of RustDesk client access tokens (audit finding #5) and CSP `'unsafe-inline'`/`'unsafe-eval'` exceptions (audit finding #6) are intentionally **not** included in this batch. They require a phased rollout that would otherwise break existing installations or active client sessions. Tracked in [docs/security/LOGIN_API_SECURITY_AUDIT_2026-04-26.md](docs/security/LOGIN_API_SECURITY_AUDIT_2026-04-26.md#deferred-patches).
+- Plaintext storage of RustDesk client access tokens (audit finding #5) and CSP `'unsafe-inline'`/`'unsafe-eval'` exceptions (audit finding #6) are intentionally **not** included in this batch. They require a phased rollout that would otherwise break existing installations or active client sessions. Tracked in docs/security/LOGIN_API_SECURITY_AUDIT_2026-04-26.md.
 
 ---
 
