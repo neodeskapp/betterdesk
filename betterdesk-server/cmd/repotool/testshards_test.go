@@ -9,7 +9,9 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 // runs tells whether go test, called with a part's -run and -skip, runs
@@ -108,35 +110,52 @@ func TestPlanDealsLongestFirstToTheEmptiestShard(t *testing.T) {
 	if s0, s1 := shardSeconds(shards[0]), shardSeconds(shards[1]); s0 != 155 || s1 != 150 {
 		t.Errorf("shard seconds %v and %v, want 155 and 150", s0, s1)
 	}
-	// One go test for the whole packages, which starts them in that order
-	wantRun := append([]string{"test", "-json", "-race", "-p", "4"}, want[0]...)
-	if runs := shardRuns(shards[0], []string{"-race"}, 4); !reflect.DeepEqual(runs, [][]string{wantRun}) {
-		t.Errorf("go test runs %q, want %q", runs, wantRun)
-	}
 }
 
-func TestShardRunsShareTheCPUs(t *testing.T) {
-	parts := []shardPart{
-		{pkg: "./big", seconds: 200, split: true, names: []string{"TestA"}},
+func TestShardRunsOnePerPartLongestFirst(t *testing.T) {
+	parts := joinParts([]shardPart{
+		{pkg: "./b", seconds: 50},
 		{pkg: "./users", seconds: 150, split: true, test: "TestLong", names: []string{"sqlite"}},
 		{pkg: "./a", seconds: 100},
-		{pkg: "./b", seconds: 50},
-	}
+		{pkg: "./big", seconds: 200, split: true, names: []string{"TestA"}},
+	})
 	want := [][]string{
 		{"test", "-json", "-race", "-run", "^(TestA)$", "./big"},
 		{"test", "-json", "-race", "-run", "^TestLong$/^(sqlite)$", "./users"},
-		// Two CPUs are left for the whole packages
-		{"test", "-json", "-race", "-p", "2", "./a", "./b"},
+		{"test", "-json", "-race", "./a"},
+		{"test", "-json", "-race", "./b"},
 	}
-	if runs := shardRuns(parts, []string{"-race"}, 4); !reflect.DeepEqual(runs, want) {
+	if runs := shardRuns(parts, []string{"-race"}); !reflect.DeepEqual(runs, want) {
 		t.Errorf("go test runs %q, want %q", runs, want)
 	}
-	// Never fewer than one, and a -p of the caller stays
-	if runs := shardRuns(parts, nil, 2); runs[2][3] != "1" {
-		t.Errorf("whole packages run with %q", runs[2])
+}
+
+func TestPoolRunsInOrderAndAtMostSlotsAtATime(t *testing.T) {
+	var mu sync.Mutex
+	running, most := 0, 0
+	var started []int
+	inPool(12, 3, func(i int) {
+		mu.Lock()
+		started = append(started, i)
+		running++
+		most = max(most, running)
+		mu.Unlock()
+		time.Sleep(5 * time.Millisecond)
+		mu.Lock()
+		running--
+		mu.Unlock()
+	})
+	if most != 3 {
+		t.Errorf("%d ran at a time, want 3", most)
 	}
-	if runs := shardRuns(parts, []string{"-p=8"}, 4); !reflect.DeepEqual(runs[2], []string{"test", "-json", "-p=8", "./a", "./b"}) {
-		t.Errorf("whole packages run with %q", runs[2])
+	if len(started) != 12 {
+		t.Fatalf("%d started, want 12", len(started))
+	}
+	// A call starts only after the calls three before it took their slot
+	for pos, i := range started {
+		if i > pos+2 {
+			t.Errorf("call %d started as number %d", i, pos+1)
+		}
 	}
 }
 

@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -53,10 +52,11 @@ const (
 // must then not need each other). The last part of each cut runs
 // everything the times do not name, so a new test always runs once.
 //
-// run starts one go test -json for the whole packages and one per part,
-// side by side in --dir (default betterdesk-server), prints the results
-// of the packages and the output of failed tests, and writes the times of
-// this run to --times-out. merge adds such files up into a times file.
+// run starts one go test -json per package or part in --dir (default
+// betterdesk-server), the longest first and one per CPU at a time,
+// prints the results of the packages and the output of failed tests, and
+// writes the times of this run to --times-out. merge adds such files up
+// into a times file.
 func testShards(root string, args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
 		fmt.Fprintln(stderr, "usage: repotool test-shards plan|run|merge [flags]")
@@ -521,35 +521,37 @@ func goOutput(dir string, args ...string) (string, error) {
 	return string(out), nil
 }
 
-// shardRuns are the go arguments of a shard's calls: one go test per part
-// of a cut package, and one for the whole packages, the longest first (go
-// test starts them in that order). Together they run about one test
-// binary per CPU: the whole packages get the CPUs the parts leave (-p),
-// at least one, unless goFlags set -p.
-func shardRuns(parts []shardPart, goFlags []string, cpus int) [][]string {
+// shardRuns are the go arguments of a shard's calls, the longest first:
+// one go test per whole package and per part of a cut package.
+func shardRuns(parts []shardPart, goFlags []string) [][]string {
 	base := append([]string{"test", "-json"}, goFlags...)
-	var whole []string
-	var runs [][]string
+	runs := make([][]string, 0, len(parts))
 	for _, p := range parts {
-		if a := p.args(); len(a) > 0 {
-			runs = append(runs, append(append(append([]string{}, base...), a...), p.pkg))
-		} else {
-			whole = append(whole, p.pkg)
-		}
-	}
-	if len(whole) > 0 {
-		args := append([]string{}, base...)
-		if !slices.ContainsFunc(goFlags, func(a string) bool { return a == "-p" || strings.HasPrefix(a, "-p=") }) {
-			args = append(args, "-p", strconv.Itoa(max(1, cpus-len(runs))))
-		}
-		runs = append(runs, append(args, whole...))
+		runs = append(runs, append(append(append([]string{}, base...), p.args()...), p.pkg))
 	}
 	return runs
 }
 
-// runShard runs the go test calls of a shard side by side.
+// inPool calls do(i) for i from 0 to n-1 in that order, at most slots of
+// them at a time.
+func inPool(n, slots int, do func(i int)) {
+	free := make(chan struct{}, max(1, slots))
+	var wg sync.WaitGroup
+	for i := range n {
+		free <- struct{}{}
+		wg.Add(1)
+		go func() {
+			defer func() { <-free; wg.Done() }()
+			do(i)
+		}()
+	}
+	wg.Wait()
+}
+
+// runShard runs the go test calls of a shard, longest first and one test
+// binary per CPU at a time, as go test runs the packages of one call.
 func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Writer) int {
-	runs := shardRuns(parts, f.goFlags, runtime.NumCPU())
+	runs := shardRuns(parts, f.goFlags)
 	module, err := goOutput(dir, "list", "-m")
 	if err != nil {
 		fmt.Fprintln(stderr, "test-shards run:", err)
@@ -557,10 +559,9 @@ func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Wr
 	}
 	out := newTestOutput(stdout, strings.TrimSpace(module))
 	out.annotate = os.Getenv("GITHUB_ACTIONS") == "true"
-	var wg sync.WaitGroup
 	failed := make([]bool, len(runs))
-	for i, args := range runs {
-		cmd := exec.Command("go", args...)
+	inPool(len(runs), runtime.NumCPU(), func(i int) {
+		cmd := exec.Command("go", runs[i]...)
 		cmd.Dir = dir
 		cmd.Stderr = stderr
 		pipe, err := cmd.StdoutPipe()
@@ -568,20 +569,15 @@ func runShard(dir string, f *shardFlags, parts []shardPart, stdout, stderr io.Wr
 			err = cmd.Start()
 		}
 		if err != nil {
-			fmt.Fprintf(stderr, "test-shards run: go %s: %v\n", strings.Join(args, " "), err)
+			fmt.Fprintf(stderr, "test-shards run: go %s: %v\n", strings.Join(runs[i], " "), err)
 			failed[i] = true
-			continue
+			return
 		}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			out.read(pipe)
-			if err := cmd.Wait(); err != nil {
-				failed[i] = true
-			}
-		}()
-	}
-	wg.Wait()
+		out.read(pipe)
+		if err := cmd.Wait(); err != nil {
+			failed[i] = true
+		}
+	})
 	code := out.summary()
 	for _, bad := range failed {
 		if bad {
