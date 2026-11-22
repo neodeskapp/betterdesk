@@ -238,3 +238,73 @@ func TestPassKeepsWhatWaits(t *testing.T) {
 	reg.Close()
 	check()
 }
+
+// TestPassFilters: a message ToUpstream says no to never reaches the
+// upstream, one ToSocket says no to never reaches the socket; the others
+// pass in order.
+func TestPassFilters(t *testing.T) {
+	check := wstest.Goroutines(t)
+	got := make(chan []string, 1)
+	upstream := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
+		if err != nil {
+			got <- nil
+			return
+		}
+		var texts []string
+		for len(texts) < 3 {
+			_, data, err := c.Read(context.Background())
+			if err != nil {
+				break
+			}
+			texts = append(texts, string(data))
+			_ = c.Write(context.Background(), websocket.MessageText, []byte("echo:"+string(data)))
+		}
+		got <- texts
+		_, _, _ = c.Read(context.Background())
+	})
+	reg := ws.New(ws.Options{})
+	reg.Handle("/p", func(u *ws.Upgrade) {
+		conn, ok := u.Accept(ws.AcceptOptions{})
+		if !ok {
+			return
+		}
+		defer conn.Wait()
+		ws.Pass(conn, ws.PassOptions{
+			Queue: true,
+			Dial: func(ctx context.Context) (*ws.Upstream, error) {
+				return ws.DialHandler(ctx, upstream, "/up", ws.DialOptions{})
+			},
+			ToUpstream: func(_ bool, data []byte) bool { return string(data) != "drop-up" },
+			ToSocket:   func(_ bool, data []byte) bool { return string(data) != "echo:drop-down" },
+		})
+	})
+	srv := httptest.NewServer(reg)
+	client, _, err := wstest.Dial(strings.TrimPrefix(srv.URL, "http://"), "/p", nil)
+	if err != nil || client == nil {
+		t.Fatal(err)
+	}
+	for _, text := range []string{"a", "drop-up", "drop-down", "b"} {
+		if err := client.Text(text); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if texts := <-got; strings.Join(texts, ",") != "a,drop-down,b" {
+		t.Errorf("the upstream got %q", texts)
+	}
+	if !client.Wait(2*time.Second, func(f []wstest.Frame, _ bool) bool { return len(f) >= 2 }) {
+		t.Fatalf("the socket got %d messages", len(client.Frames()))
+	}
+	time.Sleep(100 * time.Millisecond)
+	var echoes []string
+	for _, f := range client.Frames() {
+		echoes = append(echoes, f.Text())
+	}
+	if strings.Join(echoes, ",") != "echo:a,echo:b" {
+		t.Errorf("the socket got %q", echoes)
+	}
+	client.Close(1000)
+	srv.Close()
+	reg.Close()
+	check()
+}

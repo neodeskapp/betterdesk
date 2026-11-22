@@ -4,14 +4,15 @@
 // old console). Each is passed on to the API server's socket of the same
 // path, in this process, after the console's own checks: the origin, a
 // signed-in session, the channel's permission with the role overrides
-// applied, the account's device scope, and a limit of sockets per
-// account. An open socket is pinged, and closed when its client stops
-// answering (limits.go).
+// applied, the account's device scope, the account's client features
+// (features.go), and a limit of sockets per account. An open socket is
+// pinged, and closed when its client stops answering (limits.go).
 package cdapproxy
 
 import (
 	"context"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/unitronix/betterdesk-server/console/goapi"
@@ -35,6 +36,8 @@ type Channel struct {
 	Label string
 	// Binary passes every message on as binary, both ways.
 	Binary bool
+	// Feature is the client feature the channel needs; "" for none.
+	Feature string
 }
 
 // Channels are the device's sockets in the order the old console set
@@ -42,11 +45,11 @@ type Channel struct {
 // control of the device, like the terminal: cdap.terminal; video and
 // audio need cdap.command.
 var Channels = []Channel{
-	{Name: "terminal", Subprotocol: "cdap-terminal", Permission: "cdap.terminal", Label: "Terminal", Binary: true},
+	{Name: "terminal", Subprotocol: "cdap-terminal", Permission: "cdap.terminal", Label: "Terminal", Binary: true, Feature: "terminal"},
 	{Name: "desktop", Subprotocol: "cdap-desktop", Permission: "cdap.terminal", Label: "Desktop"},
 	{Name: "video", Subprotocol: "cdap-video", Permission: "cdap.command", Label: "Video"},
-	{Name: "files", Subprotocol: "cdap-filebrowser", Permission: "cdap.files", Label: "FileBrowser"},
-	{Name: "audio", Subprotocol: "cdap-audio", Permission: "cdap.command", Label: "Audio"},
+	{Name: "files", Subprotocol: "cdap-filebrowser", Permission: "cdap.files", Label: "FileBrowser", Feature: "file_transfer"},
+	{Name: "audio", Subprotocol: "cdap-audio", Permission: "cdap.command", Label: "Audio", Feature: "audio"},
 }
 
 // Options configure the proxy.
@@ -60,6 +63,9 @@ type Options struct {
 	// CanAccess is the account's device scope
 	// (devicegroups.Service.UserCanAccessDevice).
 	CanAccess func(ctx context.Context, user *session.User, device *goapi.Object) (bool, error)
+	// FeaturesOff returns the client features the account may not use
+	// (access.Service.ClientFeaturesOff); nil turns no feature off.
+	FeaturesOff func(ctx context.Context, userID int64) ([]string, error)
 	// PingInterval overrides PingInterval (tests).
 	PingInterval time.Duration
 }
@@ -95,8 +101,10 @@ func (p *Proxy) Register(reg *ws.Registry) {
 // no signed-in session 401, the channel's permission missing or its
 // lookup failing 403 (the old proxy's checks, in its order); then a
 // device that is unknown or outside the account's scope 404, the scope
-// check failing 403, the account's MaxSocketsPerAccount sockets of the
-// channel open 429. Then the handshake, and the socket is passed on.
+// check failing 403, a channel whose client feature the account may not
+// use 403, the account's MaxSocketsPerAccount sockets of the channel open
+// 429. Then the handshake, and the socket is passed on; the desktop's
+// messages are filtered by the account's features (desktopFilters).
 func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 	deviceID := u.Param("id")
 	if !u.CheckOrigin("cdap-" + ch.Name + " " + u.Path) {
@@ -118,6 +126,12 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 	if status := p.inScope(u.R.Context(), session.User(), deviceID); status != 0 {
 		logf("WARN: [CDAP %s] %d upgrade rejected for %s (device scope)", ch.Label, status, u.Path)
 		u.Refuse(status)
+		return
+	}
+	off := p.featuresOff(u.R.Context(), session.UserID())
+	if ch.Feature != "" && slices.Contains(off, ch.Feature) {
+		logf("WARN: [CDAP %s] 403 upgrade rejected for %s (client feature %s is off for the account)", ch.Label, u.Path, ch.Feature)
+		u.Refuse(http.StatusForbidden)
 		return
 	}
 	key := accountChannel{account: session.UserID(), channel: ch.Name}
@@ -142,7 +156,7 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 	if user := session.User(); user != nil {
 		account = user.Username
 	}
-	ws.Pass(conn, ws.PassOptions{
+	pass := ws.PassOptions{
 		// The API server records the account as the one who started the
 		// session (goapi.ActingFor)
 		Dial: func(ctx context.Context) (*ws.Upstream, error) {
@@ -154,7 +168,11 @@ func (p *Proxy) serve(u *ws.Upgrade, ch Channel) {
 		OnFail: func(err error) {
 			logf("ERROR: [CDAP %s] Go WS error for %s: %v", ch.Label, deviceID, err)
 		},
-	})
+	}
+	if ch.Name == "desktop" {
+		pass.ToUpstream, pass.ToSocket = desktopFilters(off)
+	}
+	ws.Pass(conn, pass)
 }
 
 // inScope checks the device of a socket as /ws/remote-viewer does: 0 when

@@ -40,7 +40,7 @@ func registerSockets(d *kit.Deps, signalProof func(userID int64) []byte) {
 	chat.NewRelay(chat.RelayOptions{API: d.GoAPI, VerifyDevice: d.Authn.VerifyDeviceWSAuth, Scope: chat.ScopeOf(d), FilesDir: chat.FilesDir(d.Config)}).Register(d.Sockets)
 	d.RemoteRelay.Register(d.Sockets) // services/remoteRelay.js: /ws/remote-agent/<id>, /ws/remote-viewer/<id>
 	// services/cdapTerminalProxy.js, services/cdapMediaProxy.js: /api/cdap/devices/<id>/terminal, desktop, video, files, audio
-	cdapproxy.New(cdapproxy.Options{API: d.GoAPI.Handler(), Devices: d.Backend, CanAccess: d.DeviceGroups.UserCanAccessDevice}).Register(d.Sockets)
+	cdapproxy.New(cdapproxy.Options{API: d.GoAPI.Handler(), Devices: d.Backend, CanAccess: d.DeviceGroups.UserCanAccessDevice, FeaturesOff: d.Access.ClientFeaturesOff}).Register(d.Sockets)
 	d.ServerMgmt.Register(d.Sockets) // services/serverTerminalProxy.js: /ws/server-management/terminal
 	// services/meshAshxProxy.js: /agent.ashx, /meshrelay.ashx, /control.ashx
 	meshproxy.New(meshproxy.Options{API: d.GoAPI.ForwardHandler(), ClientIP: d.Config.TrustProxy.ClientIP}).Register(d.Sockets)
