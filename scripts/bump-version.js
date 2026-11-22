@@ -22,6 +22,8 @@ const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 
 // README.md is not one of these files: its version badge is a picture
 // (docs/assets/badges/*/version.svg) that is redrawn by hand for a release.
+// Nor are the quick-start compose files, whose image tag is "latest" unless
+// BETTERDESK_IMAGE_TAG pins a release.
 const FILE_RULES = [
     {
         id: 'version-file',
@@ -106,28 +108,6 @@ const FILE_RULES = [
             );
             return next;
         },
-    },
-    {
-        id: 'docker-compose-quick-single',
-        path: 'docker-compose.quick.single.yml',
-        extract: (content) => {
-            const m = content.match(/\$\{BETTERDESK_IMAGE_TAG:-([^}]+)\}/);
-            return m?.[1];
-        },
-        apply: (content, version) => content
-            .replace(/\$\{BETTERDESK_IMAGE_TAG:-[^}]+\}/g, `\${BETTERDESK_IMAGE_TAG:-${version}}`)
-            .replace(/(#\s+Default:\s+)[^ \t]+(\s+\|\s+Rolling:)/, `$1${version}$2`)
-            .replace(/(BETTERDESK_IMAGE_TAG=)[^ \s]+(\s+docker compose up -d)/, `$1${version}$2`),
-    },
-    {
-        id: 'docker-compose-quick-single-macvlan',
-        path: 'docker-compose.quick.single.macvlan.yml',
-        extract: (content) => {
-            const m = content.match(/\$\{BETTERDESK_IMAGE_TAG:-([^}]+)\}/);
-            return m?.[1];
-        },
-        apply: (content, version) =>
-            content.replace(/\$\{BETTERDESK_IMAGE_TAG:-[^}]+\}/g, `\${BETTERDESK_IMAGE_TAG:-${version}}`),
     },
     {
         id: 'docker-entrypoint',
