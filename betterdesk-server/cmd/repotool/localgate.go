@@ -245,7 +245,7 @@ func (g *gate) run(opts gateOptions) *gateReport {
 		if opts.preflightOnly || !env.ok {
 			return
 		}
-		g.runVersionAndDiffChecks(env.tools)
+		g.runVersionAndDiffChecks()
 		g.runNodeChecks(env.tools)
 		g.runPythonChecks(env.tools, env.manifests)
 		g.runRustChecks(env.tools, env.manifests)
@@ -888,9 +888,8 @@ func (g *gate) path(parts ...string) string {
 	return filepath.Join(append([]string{g.root}, parts...)...)
 }
 
-func (g *gate) runVersionAndDiffChecks(tools gateTools) {
-	g.runCheck("version-parity", "Verify repository version parity", tools["node"],
-		[]string{"scripts/bump-version.js", "--verify"}, runOptions{timeout: time.Minute})
+func (g *gate) runVersionAndDiffChecks() {
+	g.runRepotool("version-parity", "Verify repository version parity", []string{"bump-version", "--verify"})
 	g.runCheck("git-diff-check", "Check whitespace and patch errors", "git", []string{"diff", "--check"}, runOptions{timeout: time.Minute})
 }
 

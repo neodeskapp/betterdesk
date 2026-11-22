@@ -58,16 +58,16 @@ Sub-project versions (the SDKs under `sdks/`) are **not** bumped with the main p
 
 ```bash
 # Verify all Tier 1/2 files match VERSION (CI runs this too)
-node scripts/bump-version.js --verify
+go -C betterdesk-server run ./cmd/repotool bump-version --verify
 
 # List every path touched by automated bumps (used by CI git add)
-node scripts/bump-version.js --list-paths
+go -C betterdesk-server run ./cmd/repotool bump-version --list-paths
 
 # Manual bump (normally CI handles this)
-node scripts/bump-version.js --patch    # +0.0.1
-node scripts/bump-version.js --minor    # +0.1.0
-node scripts/bump-version.js --set 3.2.0
-node scripts/bump-version.js --patch --dry-run
+go -C betterdesk-server run ./cmd/repotool bump-version --patch    # +0.0.1
+go -C betterdesk-server run ./cmd/repotool bump-version --minor    # +0.1.0
+go -C betterdesk-server run ./cmd/repotool bump-version --set 3.2.0
+go -C betterdesk-server run ./cmd/repotool bump-version --patch --dry-run
 ```
 
 ## GitHub repository settings (operator)

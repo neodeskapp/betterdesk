@@ -54,9 +54,10 @@ jobs:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          node-version: '24'
+          go-version-file: betterdesk-server/go.mod
+          cache-dependency-path: betterdesk-server/go.sum
 
       - name: Bump version (minor release or hotfix patch)
         id: bump
@@ -75,7 +76,7 @@ jobs:
           else
             echo "Stable release - using minor bump (+0.1.0)"
           fi
-          node scripts/bump-version.js "${BUMP_ARGS[@]}"
+          go -C betterdesk-server run ./cmd/repotool bump-version "${BUMP_ARGS[@]}"
           NEW_VERSION=$(cat VERSION | tr -d '\n')
           echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           echo "branch=release/v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
@@ -89,7 +90,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          node scripts/bump-version.js --list-paths | xargs git add --
+          go -C betterdesk-server run ./cmd/repotool bump-version --list-paths | xargs git add --
           if git diff --cached --quiet; then
             echo "No version files changed - tagging current main tip only"
             echo "has_bump=false" >> "$GITHUB_OUTPUT"

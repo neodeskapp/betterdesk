@@ -145,7 +145,7 @@ Applies only to merges into **`main`** (stable). Version bump, tag, and GitHub R
 - [ ] **PR source:** changes merged from `dev` → `main` (not direct commits to `main`)
 - [ ] **CHANGELOG.md:** `[Unreleased]` section reflects this release (CI moves it into the version section on merge)
 - [ ] **README.md:** reflects current features
-- [ ] **Version parity:** `node scripts/bump-version.js --verify` passes locally (CI enforces on version file changes)
+- [ ] **Version parity:** `go -C betterdesk-server run ./cmd/repotool bump-version --verify` passes locally (CI enforces on version file changes)
 - [ ] **After merge:** verify CI created tag `v<version>` and GitHub Release
 - [ ] **GHCR image tags:** verify `ghcr.io/unitronix/betterdesk` (official) and `betterdesk-server` show semver tag (e.g. `3.1.0`) and git ref (`v3.1.0`) after workflow completes
 - [ ] **Sync dev:** merge `main` → `dev` so development continues from the new minor version

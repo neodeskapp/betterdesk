@@ -2,7 +2,6 @@ name: BetterDesk CodeQL
 
 # Dev-only tooling and test harnesses are not production attack surface.
 paths-ignore:
-  - scripts/bump-version.js
   - scripts/local-gate.js
   - betterdesk-mgmt
   # MeshAgent tunnel TLS pin (checkServerIdentity); not default chain validation.

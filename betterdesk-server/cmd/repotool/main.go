@@ -50,6 +50,10 @@ func init() {
 			about: "fail on tracked JavaScript outside .github/javascript-allowlist.txt",
 			run:   checkJS,
 		},
+		"bump-version": {
+			about: "check or bump the product version [--verify | --sync | --patch | --minor | --set X.Y.Z] [--dry-run] [--list-paths]",
+			run:   bumpVersion,
+		},
 		"i18n-check": {
 			about: "audit the translation files [--system ID] [--json] [--verbose]",
 			run:   i18nCheck,

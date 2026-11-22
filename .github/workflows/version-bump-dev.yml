@@ -2,7 +2,7 @@
 # BetterDesk — automatic patch version bump on dev branch
 # =============================================================================
 # Every push to dev (except version-bump commits) bumps product version +0.0.1
-# across Tier 1/2 files via scripts/bump-version.js.
+# across Tier 1/2 files via repotool bump-version (betterdesk-server/cmd/repotool).
 #
 # After a successful bump push, explicitly dispatch docker-publish (tag=dev).
 # GITHUB_TOKEN branch pushes do not re-trigger other workflows, so relying on
@@ -38,14 +38,15 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          node-version: '24'
+          go-version-file: betterdesk-server/go.mod
+          cache-dependency-path: betterdesk-server/go.sum
 
       - name: Bump patch version
         id: bump
         run: |
-          node scripts/bump-version.js --patch
+          go -C betterdesk-server run ./cmd/repotool bump-version --patch
           NEW_VERSION=$(cat VERSION | tr -d '\n')
           echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
 
@@ -56,7 +57,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          node scripts/bump-version.js --list-paths | xargs git add --
+          go -C betterdesk-server run ./cmd/repotool bump-version --list-paths | xargs git add --
           if git diff --cached --quiet; then
             echo "No version files changed — skipping commit"
             echo "pushed=false" >> "$GITHUB_OUTPUT"

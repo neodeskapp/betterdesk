@@ -422,11 +422,14 @@ func TestGateRefusesGitHubActions(t *testing.T) {
 	}
 }
 
-func TestVersionCheckRunsTheScriptWithNode(t *testing.T) {
-	g, _ := newTestGate(t, t.TempDir())
-	g.runVersionAndDiffChecks(gateTools{"node": "no-such-node-here", "npm": "no-such-npm-here"})
+func TestVersionCheckRunsBumpVersion(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root, versionTree("3.5.270"))
+	g, _ := newTestGate(t, root)
+	g.runVersionAndDiffChecks()
 	rec := g.report.Results[0]
-	if rec.ID != "version-parity" || rec.Command != "no-such-node-here scripts/bump-version.js --verify" || rec.Status != "BLOCKED" {
+	if rec.ID != "version-parity" || rec.Command != "repotool bump-version --verify" || rec.Status != "PASS" ||
+		rec.Stdout != "All Tier 1/2 version files match VERSION (3.5.270).\n" {
 		t.Errorf("version check %+v", rec)
 	}
 	if rec := g.report.Results[1]; rec.ID != "git-diff-check" || rec.Command != "git diff --check" {
