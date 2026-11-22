@@ -335,6 +335,32 @@ function Test-FreshInstallStartsManaged {
     Remove-Item -Recurse -Force $dir
 }
 
+# L124: Windows does not create the PostgreSQL database, so an unattended
+# install takes the address it is given as it is, and without one it needs
+# the password of the existing database instead of making one up.
+function Test-PostgreSQLAddressIsKept {
+    $dir = New-TestInstall
+    $script:POSTGRESQL_USER, $script:POSTGRESQL_HOST, $script:POSTGRESQL_PORT, $script:POSTGRESQL_DB = 'betterdesk', 'localhost', '5432', 'betterdesk'
+    $script:USE_POSTGRESQL = $true
+    $script:POSTGRESQL_URI = 'postgres://bd:Given-Pass@db.example:5433/desk?sslmode=require'
+    $script:POSTGRESQL_PASS = ''
+    $ok = Setup-PostgreSQLDatabase 6> $null
+    if (-not $ok) { Fail 'the PostgreSQL set-up refused a given address' }
+    if ($script:POSTGRESQL_URI -ne 'postgres://bd:Given-Pass@db.example:5433/desk?sslmode=require') { Fail "the given address was replaced: $($script:POSTGRESQL_URI)" }
+
+    $script:POSTGRESQL_URI = ''
+    $ok = Setup-PostgreSQLDatabase 6> $null
+    if ($ok) { Fail "an unattended install without an address or password went on with $($script:POSTGRESQL_URI)" }
+
+    $script:POSTGRESQL_PASS = 'p@ss/word'
+    $ok = Setup-PostgreSQLDatabase 6> $null
+    if (-not $ok -or $script:POSTGRESQL_URI -ne 'postgres://betterdesk:p%40ss%2Fword@localhost:5432/betterdesk?sslmode=disable') { Fail "the address from the parts is $($script:POSTGRESQL_URI)" }
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    $script:POSTGRESQL_PASS = ''
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -342,6 +368,7 @@ Test-ConsoleHomeCopiesNoConsoleFiles
 Test-MigrationMenusPassOverwrite
 Test-PostgreSQLSwitchMovesTheWholeInstall
 Test-ReleasesComeFromTheFork
+Test-PostgreSQLAddressIsKept
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

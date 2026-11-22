@@ -2436,9 +2436,7 @@ function Choose-DatabaseType {
             $pgUser = Read-Host "PostgreSQL user [$($script:POSTGRESQL_USER)]"
             if (![string]::IsNullOrEmpty($pgUser)) { $script:POSTGRESQL_USER = $pgUser }
             
-            $pgPass = Read-Host "PostgreSQL password (leave empty to generate)" -AsSecureString
-            $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pgPass)
-            $script:POSTGRESQL_PASS = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+            Print-Info "The database must exist: Windows does not install PostgreSQL. The next step asks for its password."
         }
         default {
             $script:USE_POSTGRESQL = $false
@@ -2447,25 +2445,35 @@ function Choose-DatabaseType {
     }
 }
 
+# The PostgreSQL address. Windows does not install PostgreSQL or create
+# its database, so the database must exist: the address comes from -PgUri
+# or POSTGRESQL_URI as it is, else from its parts with the password of the
+# existing user (POSTGRESQL_PASS, or asked for in an interactive run).
 function Setup-PostgreSQLDatabase {
-    Print-Step "Setting up PostgreSQL database for BetterDesk..."
-    
-    # Generate password if not set
-    if ([string]::IsNullOrEmpty($script:POSTGRESQL_PASS)) {
-        $script:POSTGRESQL_PASS = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 16 | ForEach-Object {[char]$_})
-        Print-Info "Generated PostgreSQL password"
+    Print-Step "Setting up PostgreSQL for BetterDesk..."
+    $where = "$($script:POSTGRESQL_HOST):$($script:POSTGRESQL_PORT)/$($script:POSTGRESQL_DB)"
+    if ($script:POSTGRESQL_URI) {
+        Print-Info "Using the PostgreSQL address given (-PgUri or POSTGRESQL_URI)"
+        return $true
     }
-    
-    # Build connection URI
-    $script:POSTGRESQL_URI = "postgres://$($script:POSTGRESQL_USER):$($script:POSTGRESQL_PASS)@$($script:POSTGRESQL_HOST):$($script:POSTGRESQL_PORT)/$($script:POSTGRESQL_DB)?sslmode=disable"
-    
-    Print-Info "PostgreSQL URI configured: postgres://$($script:POSTGRESQL_USER):****@$($script:POSTGRESQL_HOST):$($script:POSTGRESQL_PORT)/$($script:POSTGRESQL_DB)"
-    Print-Warning "Note: On Windows, you must set up PostgreSQL manually before installation."
-    Print-Info "Required PostgreSQL setup:"
-    Print-Info "  1. Install PostgreSQL from https://www.postgresql.org/download/windows/"
-    Print-Info "  2. Create user: CREATE USER $($script:POSTGRESQL_USER) WITH PASSWORD '...' CREATEDB;"
-    Print-Info "  3. Create database: CREATE DATABASE $($script:POSTGRESQL_DB) OWNER $($script:POSTGRESQL_USER);"
-    
+    if ([string]::IsNullOrEmpty($script:POSTGRESQL_PASS) -and -not $script:AUTO_MODE) {
+        $secure = Read-Host "Password of the PostgreSQL user $($script:POSTGRESQL_USER) on $where" -AsSecureString
+        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+        try { $script:POSTGRESQL_PASS = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr) }
+        finally { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+    }
+    if ([string]::IsNullOrEmpty($script:POSTGRESQL_PASS)) {
+        Print-Error "PostgreSQL needs an existing database and its password. The installer does not create one on Windows."
+        Print-Info "Create the user and the database, then run the installer again with one of:"
+        Print-Info "  -PgUri 'postgres://USER:PASSWORD@HOST:5432/DATABASE?sslmode=disable'"
+        Print-Info "  `$env:POSTGRESQL_PASS (with POSTGRESQL_USER, POSTGRESQL_HOST, POSTGRESQL_PORT, POSTGRESQL_DB for other values than $($script:POSTGRESQL_USER)@$where)"
+        Print-Info "Or leave out -PostgreSQL: SQLite needs no set-up."
+        return $false
+    }
+    $user = [uri]::EscapeDataString($script:POSTGRESQL_USER)
+    $pass = [uri]::EscapeDataString($script:POSTGRESQL_PASS)
+    $script:POSTGRESQL_URI = "postgres://${user}:${pass}@$($script:POSTGRESQL_HOST):$($script:POSTGRESQL_PORT)/$($script:POSTGRESQL_DB)?sslmode=disable"
+    Print-Info "PostgreSQL: $($script:POSTGRESQL_USER)@$where"
     return $true
 }
 
