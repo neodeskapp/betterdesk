@@ -59,6 +59,10 @@ type Options struct {
 	// EnvPath is the console's own ".env" file, in which the public
 	// endpoints are mirrored.
 	EnvPath string
+	// OnPublicRelay is told the public relay server in force after each
+	// save of the public endpoints ("" for none), so the signal server
+	// gives devices that relay. Nil tells nobody.
+	OnPublicRelay func(relay string)
 	// IsDocker says the console runs in a container (config.isDocker): the
 	// file /.dockerenv exists or DOCKER is "true".
 	IsDocker bool
@@ -146,11 +150,9 @@ type Service struct {
 	goKey   string
 	goKeyAt int64 // Unix milliseconds
 
-	// envMu guards the values saved over the process environment and the
-	// mark of the one-time copy into the public endpoints file.
+	// envMu guards the values saved over the process environment.
 	envMu    sync.Mutex
 	envSaved map[string]*string
-	migrated bool
 
 	// fileMu lets one request at a time rewrite the env files, the systemd
 	// unit or the compose file, and keeps readers of those files out

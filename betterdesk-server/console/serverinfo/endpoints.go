@@ -6,12 +6,17 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 )
 
 // The public endpoints are the addresses an operator sets for clients when
 // they differ from where the console runs: the ID server, the relay and
-// the API address. They are kept in a file in the data folder, which
-// outlives a new container, and mirrored in the console's ".env" file.
+// the API address. A save in the console keeps them in a file in the data
+// folder, which outlives a new container, and mirrors them in the
+// console's ".env" file. A value saved in the console wins over the
+// environment, which is the first default (DECISIONS A105), unless
+// PUBLIC_ENDPOINTS_ENV_OVERRIDE is on.
 
 const (
 	// DurableBasename is the name of the public endpoints file in the data
@@ -25,6 +30,9 @@ const (
 	EnvPublicServerID    = "PUBLIC_SERVER_ID"
 	EnvPublicRelayServer = "PUBLIC_RELAY_SERVER"
 	EnvPublicAPIURL      = "PUBLIC_API_URL"
+	// EnvPublicEndpointsOverride on makes a public endpoint the environment
+	// sets win over the one saved in the console.
+	EnvPublicEndpointsOverride = "PUBLIC_ENDPOINTS_ENV_OVERRIDE"
 )
 
 // durableKeys are the variables kept in the public endpoints file.
@@ -62,9 +70,8 @@ var (
 )
 
 // ParseEnvFile reads env file text into a map: the lines KEY=value, with
-// key and value trimmed. Comments, blank lines and lines without a key are
-// skipped; a key set twice has its last value. This is the rule the Node
-// console read its own ".env" file by.
+// the key trimmed and the value read by EnvValue. Comments, blank lines
+// and lines without a key are skipped; a key set twice has its last value.
 func ParseEnvFile(content string) map[string]string {
 	out := map[string]string{}
 	for _, line := range splitEnvLines(content) {
@@ -80,7 +87,7 @@ func ParseEnvFile(content string) map[string]string {
 		if key == "__proto__" {
 			continue
 		}
-		out[key] = jsTrim(trimmed[eq+1:])
+		out[key] = EnvValue(trimmed[eq+1:])
 	}
 	return out
 }
@@ -101,40 +108,68 @@ func (s *Service) readEnvFileMap(path string) map[string]string {
 // and PANEL_PUBLIC_HOST come from, taken while no save is under way.
 type publicEnv struct {
 	env, durable, legacy map[string]string
+	// override is PUBLIC_ENDPOINTS_ENV_OVERRIDE on
+	override bool
 }
 
-// readPublicEnv takes that look, after the one-time copy into the public
-// endpoints file.
+// readPublicEnv takes that look.
 func (s *Service) readPublicEnv() publicEnv {
-	s.EnsureMigratedPublicEndpoints()
 	s.fileMu.RLock()
 	defer s.fileMu.RUnlock()
 	return publicEnv{
-		env:     s.envValues(durableKeys),
-		durable: s.readEnvFileMap(s.durableEnvPath()),
-		legacy:  s.readEnvFileMap(s.opts.EnvPath),
+		env:      s.envValues(durableKeys),
+		durable:  s.readEnvFileMap(s.durableEnvPath()),
+		legacy:   s.readEnvFileMap(s.opts.EnvPath),
+		override: envvar.SwitchOr(s.getenv(EnvPublicEndpointsOverride), false),
 	}
 }
 
-// get returns the value of key: from the environment when it is not blank
-// there, else from the public endpoints file, else from the console's env
-// file.
-func (p publicEnv) get(key string) string {
-	if v := jsTrim(p.env[key]); v != "" {
-		return v
+// lookup returns the value of a public endpoint setting and where it comes
+// from, the first that is not blank of: the environment when
+// PUBLIC_ENDPOINTS_ENV_OVERRIDE is on (SourceEnv), the value saved in the
+// console (the public endpoints file, SourceSaved), the environment and
+// the console's env file (SourceEnv). Source is "" for no value.
+func (p publicEnv) lookup(key string) (value, source string) {
+	env := jsTrim(p.env[key])
+	if p.override && env != "" {
+		return env, SourceEnv
 	}
 	if v := jsTrim(p.durable[key]); v != "" {
-		return v
+		return v, SourceSaved
 	}
-	return jsTrim(p.legacy[key])
+	if env != "" {
+		return env, SourceEnv
+	}
+	if v := jsTrim(p.legacy[key]); v != "" {
+		return v, SourceEnv
+	}
+	return "", ""
 }
 
-func (p publicEnv) endpoints() PublicEndpoints {
-	return PublicEndpoints{
-		PublicServerID:    p.get(EnvPublicServerID),
-		PublicRelayServer: p.get(EnvPublicRelayServer),
-		PublicAPIURL:      p.get(EnvPublicAPIURL),
+// panelHost returns PANEL_PUBLIC_HOST, which the console does not save:
+// from the environment when it is not blank there, else from the public
+// endpoints file, else from the console's env file.
+func (p publicEnv) panelHost() string {
+	if v := jsTrim(p.env[PanelPublicHostKey]); v != "" {
+		return v
 	}
+	if v := jsTrim(p.durable[PanelPublicHostKey]); v != "" {
+		return v
+	}
+	return jsTrim(p.legacy[PanelPublicHostKey])
+}
+
+// publicSources says where each public endpoint setting comes from
+// (lookup).
+type publicSources struct{ id, relay, api string }
+
+func (p publicEnv) endpoints() (PublicEndpoints, publicSources) {
+	var out PublicEndpoints
+	var from publicSources
+	out.PublicServerID, from.id = p.lookup(EnvPublicServerID)
+	out.PublicRelayServer, from.relay = p.lookup(EnvPublicRelayServer)
+	out.PublicAPIURL, from.api = p.lookup(EnvPublicAPIURL)
+	return out, from
 }
 
 // hasEnvInjection reports whether value could add a line to an env file.
@@ -284,57 +319,20 @@ func (s *Service) upsertKeysToFile(path string, values []envValue) error {
 	return s.writeEnvFileAtomic(path, content)
 }
 
-// EnsureMigratedPublicEndpoints fills the public endpoints file once per
-// process when it has none of its variables: from the environment and the
-// console's env file. A file that has a value is left alone.
-func (s *Service) EnsureMigratedPublicEndpoints() {
-	s.envMu.Lock()
-	done := s.migrated
-	s.migrated = true
-	s.envMu.Unlock()
-	if done {
-		return
-	}
-	s.fileMu.Lock()
-	defer s.fileMu.Unlock()
-
-	durablePath := s.durableEnvPath()
-	durable := s.readEnvFileMap(durablePath)
-	for _, key := range durableKeys {
-		if jsTrim(durable[key]) != "" {
-			return
-		}
-	}
-
-	legacy := s.readEnvFileMap(s.opts.EnvPath)
-	var values []envValue
-	for _, key := range durableKeys {
-		value := jsTrim(s.env(key))
-		if value == "" {
-			value = jsTrim(legacy[key])
-		}
-		if value != "" && !hasEnvInjection(value) {
-			values = append(values, envValue{key, value})
-		}
-	}
-	if len(values) == 0 {
-		return
-	}
-	if err := s.upsertKeysToFile(durablePath, values); err != nil {
-		s.log.Warn("[public-endpoints] durable migration failed:", err.Error())
-	}
-}
-
-// ReadPublicEndpointEnv returns the three settings in force. For each one
-// the environment wins when it is not blank there, then the public
-// endpoints file, then the console's env file.
+// ReadPublicEndpointEnv returns the three settings in force: for each one
+// the value saved in the console, else the one of the environment, else
+// the one of the console's env file; the environment first when
+// PUBLIC_ENDPOINTS_ENV_OVERRIDE is on.
 func (s *Service) ReadPublicEndpointEnv() PublicEndpoints {
-	return s.readPublicEnv().endpoints()
+	public, _ := s.readPublicEnv().endpoints()
+	return public
 }
 
-// ReadPanelPublicHostValue returns PANEL_PUBLIC_HOST by the same order.
+// ReadPanelPublicHostValue returns PANEL_PUBLIC_HOST: from the
+// environment, else the public endpoints file, else the console's env
+// file.
 func (s *Service) ReadPanelPublicHostValue() string {
-	return s.readPublicEnv().get(PanelPublicHostKey)
+	return s.readPublicEnv().panelHost()
 }
 
 // GetPublicEndpointSettings is ReadPublicEndpointEnv under the name the
@@ -370,8 +368,21 @@ func (s *Service) SyncProcessEnv(p PublicEndpoints) {
 // over the environment values the service reads. It returns the settings
 // as stored. The public endpoints file is where they last; the console's
 // env file only mirrors them, so a failure to write it (read-only in a
-// container) is logged and the save goes on.
+// container) is logged and the save goes on. After a save the relay in
+// force goes to Options.OnPublicRelay.
 func (s *Service) WritePublicEndpointSettingsToEnv(in PublicEndpointsInput) (PublicEndpoints, error) {
+	normalized, err := s.storePublicEndpoints(in)
+	if err != nil {
+		return PublicEndpoints{}, err
+	}
+	if s.opts.OnPublicRelay != nil {
+		s.opts.OnPublicRelay(s.ReadPublicEndpointEnv().PublicRelayServer)
+	}
+	return normalized, nil
+}
+
+// storePublicEndpoints is the save of WritePublicEndpointSettingsToEnv.
+func (s *Service) storePublicEndpoints(in PublicEndpointsInput) (PublicEndpoints, error) {
 	normalized, err := ValidateSettings(in)
 	if err != nil {
 		return PublicEndpoints{}, err

@@ -16,6 +16,12 @@ import (
 // Lines end at "\n" or "\r\n". UpsertEnvKey writes every line back with
 // "\n" alone; MergeEnv keeps the existing text and appends lines that end
 // in "\n".
+//
+// A value is read as dotenv files are read (EnvValue): in single quotes
+// as written, in double quotes with the escapes \n, \r, \t, \" and \\, and
+// without quotes up to a " #" comment, white space around it dropped. A
+// value that needs quotes to read back the same is written quoted
+// (EnvQuote).
 
 // ProtectedEnvKeys are the keys a merge must never overwrite.
 var ProtectedEnvKeys = []string{
@@ -37,17 +43,19 @@ const (
 	EnvPair    = "pair"
 )
 
-// EnvLine is one line of an env file. Key and Value are set for a pair.
-// Raw is the line without its line ending.
+// EnvLine is one line of an env file. Key, Value and RawValue are set for
+// a pair: Value is the value the line gives (EnvValue), RawValue the text
+// after the first "=" as written. Raw is the line without its line ending.
 type EnvLine struct {
-	Type  string
-	Key   string
-	Value string
-	Raw   string
+	Type     string
+	Key      string
+	Value    string
+	RawValue string
+	Raw      string
 }
 
 // EnvFile is a parsed env file: its lines in order, and the value of each
-// key. A key that is set twice has the value of its last line.
+// key (EnvValue). A key that is set twice has the value of its last line.
 type EnvFile struct {
 	Entries []EnvLine
 	keys    []string
@@ -82,7 +90,7 @@ func splitEnvLines(content string) []string {
 
 // ParseEnvLines reads env file text. A line without "=" or without a key
 // before it counts as a comment. The key is trimmed; the value is what
-// follows the first "=", untouched.
+// follows the first "=", read by EnvValue.
 func ParseEnvLines(content string) *EnvFile {
 	f := &EnvFile{values: map[string]string{}}
 	for _, raw := range splitEnvLines(content) {
@@ -101,14 +109,108 @@ func ParseEnvLines(content string) *EnvFile {
 			f.Entries = append(f.Entries, EnvLine{Type: EnvComment, Raw: raw})
 			continue
 		}
-		value := raw[eq+1:]
-		f.Entries = append(f.Entries, EnvLine{Type: EnvPair, Key: key, Value: value, Raw: raw})
+		text := raw[eq+1:]
+		value := EnvValue(text)
+		f.Entries = append(f.Entries, EnvLine{Type: EnvPair, Key: key, Value: value, RawValue: text, Raw: raw})
 		if _, seen := f.values[key]; !seen {
 			f.keys = append(f.keys, key)
 		}
 		f.values[key] = value
 	}
 	return f
+}
+
+// EnvValue is the value the text after a "=" stands for, as dotenv files
+// are read. White space before an opening quote is dropped. In single
+// quotes the value is the text up to the next single quote as written; in
+// double quotes it is the text up to the next double quote that is not
+// escaped, with \n, \r, \t, \" and \\ read as escapes and any other
+// backslash kept. Only white space and a "#" comment may follow the
+// closing quote. Any other text is a value without quotes: it ends where
+// a "#" after a space or a tab begins a comment, and white space around it
+// is dropped. A quote that is not closed, or text after it that is no
+// comment, leaves the value as text without quotes, as files without
+// quotes read.
+func EnvValue(text string) string {
+	if start := strings.TrimLeftFunc(text, isJSSpace); start != "" && (start[0] == '"' || start[0] == '\'') {
+		if value, rest, ok := unquoteEnvValue(start); ok {
+			if rest = strings.TrimLeftFunc(rest, isJSSpace); rest == "" || rest[0] == '#' {
+				return value
+			}
+		}
+	}
+	for i := 1; i < len(text); i++ {
+		if text[i] == '#' && (text[i-1] == ' ' || text[i-1] == '\t') {
+			text = text[:i]
+			break
+		}
+	}
+	return jsTrim(text)
+}
+
+// unquoteEnvValue reads the quoted value text starts with and returns it
+// and the text after its closing quote; ok is false when the quote is not
+// closed.
+func unquoteEnvValue(text string) (value, rest string, ok bool) {
+	if text[0] == '\'' {
+		end := strings.IndexByte(text[1:], '\'')
+		if end < 0 {
+			return "", "", false
+		}
+		return text[1 : 1+end], text[2+end:], true
+	}
+	var b strings.Builder
+	for i := 1; i < len(text); i++ {
+		c := text[i]
+		switch {
+		case c == '"':
+			return b.String(), text[i+1:], true
+		case c == '\\' && i+1 < len(text):
+			i++
+			switch next := text[i]; next {
+			case 'n':
+				b.WriteByte('\n')
+			case 'r':
+				b.WriteByte('\r')
+			case 't':
+				b.WriteByte('\t')
+			case '"', '\\':
+				b.WriteByte(next)
+			default:
+				b.WriteByte('\\')
+				b.WriteByte(next)
+			}
+		default:
+			b.WriteByte(c)
+		}
+	}
+	return "", "", false
+}
+
+// EnvQuote is value as an env file holds it so that EnvValue reads value
+// back: as it is when it reads back the same, else in double quotes with
+// backslashes, double quotes and line breaks escaped.
+func EnvQuote(value string) string {
+	if !strings.ContainsAny(value, "\r\n") && EnvValue(value) == value {
+		return value
+	}
+	var b strings.Builder
+	b.WriteByte('"')
+	for i := 0; i < len(value); i++ {
+		switch c := value[i]; c {
+		case '\\', '"':
+			b.WriteByte('\\')
+			b.WriteByte(c)
+		case '\n':
+			b.WriteString(`\n`)
+		case '\r':
+			b.WriteString(`\r`)
+		default:
+			b.WriteByte(c)
+		}
+	}
+	b.WriteByte('"')
+	return b.String()
 }
 
 // Substitution is one placeholder of an env template and its value: the
@@ -120,12 +222,36 @@ type Substitution struct {
 
 // ApplySubstitutions replaces every "__KEY__" in text, one substitution
 // after the other in the order given. A value that holds the placeholder
-// of a later substitution is therefore replaced too.
+// of a later substitution is therefore replaced too. Where the placeholder
+// is the whole value of a KEY=value line, the value goes in as EnvQuote
+// gives it, so the line reads back the value; elsewhere as it is.
 func ApplySubstitutions(text string, subs []Substitution) string {
 	for _, s := range subs {
-		text = strings.ReplaceAll(text, "__"+s.Key+"__", s.Value)
+		placeholder := "__" + s.Key + "__"
+		if !strings.Contains(text, placeholder) {
+			continue
+		}
+		lines := strings.Split(text, "\n")
+		for i, line := range lines {
+			if strings.Contains(line, placeholder) {
+				lines[i] = substituteLine(line, placeholder, s.Value)
+			}
+		}
+		text = strings.Join(lines, "\n")
 	}
 	return text
+}
+
+// substituteLine replaces placeholder in one line of a template (with its
+// "\r", if any).
+func substituteLine(line, placeholder, value string) string {
+	body := strings.TrimSuffix(line, "\r")
+	trimmed := jsTrim(body)
+	if eq := strings.IndexByte(body, '='); eq > 0 && !strings.HasPrefix(trimmed, "#") &&
+		jsTrim(body[:eq]) != "" && jsTrim(body[eq+1:]) == placeholder {
+		return body[:eq+1] + EnvQuote(value) + line[len(body):]
+	}
+	return strings.ReplaceAll(line, placeholder, value)
 }
 
 // EnvConfig holds the console settings BuildEnvSubstitutions falls back on
@@ -276,7 +402,7 @@ func MergeEnv(existingContent, templateContent string) (content string, added []
 		pending.Reset()
 		b.WriteString(entry.Key)
 		b.WriteByte('=')
-		b.WriteString(entry.Value)
+		b.WriteString(entry.RawValue)
 		b.WriteByte('\n')
 		added = append(added, entry.Key)
 	}
@@ -294,13 +420,15 @@ func BuildFreshEnv(templateContent string) string {
 
 // UpsertEnvKey sets one key in env file text. Every line that sets the key
 // becomes "KEY=value", without the indent it may have had; when no line
-// sets it, "KEY=value" is appended. All other lines stay as they are and
-// in place. The result ends with a line break, and "\r\n" line endings
-// come out as "\n".
+// sets it, "KEY=value" is appended. The value is written as EnvQuote
+// gives it, so the file reads back the value. All other lines stay as
+// they are and in place. The result ends with a line break, and "\r\n"
+// line endings come out as "\n".
 //
 // A line sets the key when the text before its first "=" is the key once
 // trimmed. Comment lines and "export KEY=value" lines do not.
 func UpsertEnvKey(existingContent, key, value string) string {
+	written := EnvQuote(value)
 	lines := splitEnvLines(existingContent)
 	replaced := false
 	for i, line := range lines {
@@ -313,14 +441,14 @@ func UpsertEnvKey(existingContent, key, value string) string {
 			continue
 		}
 		replaced = true
-		lines[i] = key + "=" + value
+		lines[i] = key + "=" + written
 	}
 	content := strings.Join(lines, "\n")
 	if !replaced {
 		if content != "" && !strings.HasSuffix(content, "\n") {
 			content += "\n"
 		}
-		return content + key + "=" + value + "\n"
+		return content + key + "=" + written + "\n"
 	}
 	if !strings.HasSuffix(content, "\n") {
 		content += "\n"

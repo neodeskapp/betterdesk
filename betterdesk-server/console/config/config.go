@@ -15,6 +15,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
 	"github.com/unitronix/betterdesk-server/console/static"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 	"github.com/unitronix/betterdesk-server/internal/productversion"
 )
 
@@ -34,7 +35,7 @@ type Config struct {
 	TrustProxy httpx.TrustProxy
 
 	// DebugRouting adds GET /__bd/routing, where the contract suite asks
-	// who answers a route (CONSOLE_DEBUG_ROUTING=1). Test stacks set it;
+	// who answers a route (CONSOLE_DEBUG_ROUTING on). Test stacks set it;
 	// an install does not.
 	DebugRouting bool
 
@@ -45,7 +46,7 @@ type Config struct {
 	Production bool
 
 	// Docker says the console runs in a container: /.dockerenv exists or
-	// DOCKER is "true". It moves the default folders.
+	// DOCKER is on. It moves the default folders.
 	Docker bool
 
 	// ConsoleDir is the folder that holds the console's state: its .env
@@ -124,18 +125,19 @@ type Config struct {
 	CertFile string
 	KeyFile  string
 	CAFile   string
-	// HSTSEnabled is the raw HSTS_ENABLED value and AllowSelfSignedCerts
-	// is ALLOW_SELF_SIGNED_CERTS; together with HTTPS they decide whether
+	// HSTSEnabled is HSTS_ENABLED: "true" or "false" for an on or off
+	// value, as written otherwise. AllowSelfSignedCerts is
+	// ALLOW_SELF_SIGNED_CERTS. Together with HTTPS they decide whether
 	// Strict-Transport-Security is sent (middleware.HSTSEnabled).
 	HSTSEnabled          string
 	AllowSelfSignedCerts bool
 	// SMTPTLSVerify says whether the mail server's certificate is checked
 	// when the saved SMTP settings do not say: yes unless SMTP_TLS_VERIFY
-	// is "false" in any letter case.
+	// is off.
 	SMTPTLSVerify bool
 	// SMTPRequireTLS says whether a login to the mail server has to go
 	// over TLS (STARTTLS or a TLS port): yes unless SMTP_REQUIRE_TLS is
-	// "false" in any letter case, for a mail server on a trusted network.
+	// off, for a mail server on a trusted network.
 	SMTPRequireTLS bool
 
 	// DefaultLanguage is the language of a request that names none
@@ -193,9 +195,10 @@ type Config struct {
 	// API on to the server's API (RUSTDESK_API_PROXY, default true) or
 	// answers it from the console's own routes.
 	ClientAPIProxy bool
-	// ClientAPITLS is RUSTDESK_API_TLS in lower case, "auto" when unset:
-	// false, 0, off and http keep the client API port on plain HTTP;
-	// anything else gives it TLS when the certificate loads.
+	// ClientAPITLS is RUSTDESK_API_TLS in lower case, "auto" when unset and
+	// "false" for any off value: "false" and "http" keep the client API
+	// port on plain HTTP; anything else gives it TLS when the certificate
+	// loads.
 	ClientAPITLS string
 	// SignalHost and SignalPort are where the console reaches the signal
 	// server, RelayHost and RelayPort the relay (WS_HBBS_HOST,
@@ -213,7 +216,7 @@ type Config struct {
 	// letter case, space around it): the support generator builds the
 	// client from source instead of using the downloaded templates.
 	GeneratorEmbedded bool
-	// AgentBuildWorker is false with AGENT_BUILD_WORKER=off.
+	// AgentBuildWorker is false when AGENT_BUILD_WORKER is off.
 	AgentBuildWorker bool
 	// AgentBuildPoll and AgentBuildCooldown are AGENT_BUILD_POLL_MS
 	// (default 5000) and AGENT_BUILD_COOLDOWN_MS (default 1000). A poll
@@ -290,11 +293,11 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	}
 	cfg.TrustProxy = trust
 
-	cfg.DebugRouting = strings.TrimSpace(getenv("CONSOLE_DEBUG_ROUTING")) == "1"
+	cfg.DebugRouting = envvar.SwitchOr(getenv("CONSOLE_DEBUG_ROUTING"), false)
 
 	cfg.NodeEnv = orDefault(getenv("NODE_ENV"), "development")
 	cfg.Production = cfg.NodeEnv == "production"
-	cfg.Docker = getenv("DOCKER") == "true" || p.exists("/.dockerenv")
+	cfg.Docker = envvar.SwitchOr(getenv("DOCKER"), false) || p.exists("/.dockerenv")
 
 	cfg.ConsoleDir = consoleDir(getenv, p, cfg.Docker)
 	cfg.DataDir = getenv("DATA_DIR")
@@ -332,16 +335,16 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.FontCacheFile = filepath.Join(cfg.ConsoleDir, "data", "google-fonts-cache.json")
 	cfg.TempDir = filepath.Join(cfg.ConsoleDir, "data", "tmp")
 
-	cfg.HTTPS = isTrue(getenv("HTTPS_ENABLED"))
+	cfg.HTTPS = isOn(getenv("HTTPS_ENABLED"))
 	cfg.HTTPSPort = parseIntOr(getenv("HTTPS_PORT"), 5443)
-	cfg.HTTPRedirect = isTrue(orDefault(getenv("HTTP_REDIRECT_HTTPS"), "true"))
+	cfg.HTTPRedirect = isOn(orDefault(getenv("HTTP_REDIRECT_HTTPS"), "true"))
 	cfg.CertFile = getenv("SSL_CERT_PATH")
 	cfg.KeyFile = getenv("SSL_KEY_PATH")
 	cfg.CAFile = getenv("SSL_CA_PATH")
-	cfg.HSTSEnabled = getenv("HSTS_ENABLED")
-	cfg.AllowSelfSignedCerts = isTrue(getenv("ALLOW_SELF_SIGNED_CERTS"))
-	cfg.SMTPTLSVerify = strings.ToLower(getenv("SMTP_TLS_VERIFY")) != "false"
-	cfg.SMTPRequireTLS = strings.ToLower(getenv("SMTP_REQUIRE_TLS")) != "false"
+	cfg.HSTSEnabled = switchText(getenv("HSTS_ENABLED"))
+	cfg.AllowSelfSignedCerts = isOn(getenv("ALLOW_SELF_SIGNED_CERTS"))
+	cfg.SMTPTLSVerify = envvar.SwitchOr(getenv("SMTP_TLS_VERIFY"), true)
+	cfg.SMTPRequireTLS = envvar.SwitchOr(getenv("SMTP_REQUIRE_TLS"), true)
 
 	cfg.DefaultLanguage = orDefault(getenv("DEFAULT_LANGUAGE"), "en")
 	cfg.DeviceScopeDefault = strings.ToLower(orDefault(getenv("DEVICE_SCOPE_DEFAULT"), "open"))
@@ -358,10 +361,13 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.APIURL = orDefault(orDefault(getenv("BETTERDESK_API_URL"), getenv("HBBS_API_URL")), defaultAPIURL)
 	cfg.GoAPIPort = parseIntOr(getenv("GO_API_PORT"), apiURLPort(cfg.APIURL, defaultGoAPIPort))
 	cfg.APIPort = parseIntOr(getenv("API_PORT"), 21121)
-	cfg.APIEnabled = isTrue(nullish(getenv, p, "API_ENABLED", "true"))
+	cfg.APIEnabled = isOn(nullish(getenv, p, "API_ENABLED", "true"))
 	cfg.ClientAPIHost = orDefault(getenv("API_HOST"), "0.0.0.0")
-	cfg.ClientAPIProxy = isTrue(nullish(getenv, p, "RUSTDESK_API_PROXY", "true"))
+	cfg.ClientAPIProxy = isOn(nullish(getenv, p, "RUSTDESK_API_PROXY", "true"))
 	cfg.ClientAPITLS = strings.ToLower(orDefault(getenv("RUSTDESK_API_TLS"), "auto"))
+	if on, ok := envvar.Switch(cfg.ClientAPITLS); ok && !on {
+		cfg.ClientAPITLS = "false"
+	}
 	cfg.SignalHost = orDefault(getenv("WS_HBBS_HOST"), "localhost")
 	cfg.SignalPort = parseIntOr(getenv("WS_HBBS_PORT"), 21116)
 	cfg.RelayHost = orDefault(getenv("WS_HBBR_HOST"), "localhost")
@@ -369,7 +375,7 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.EnvPath = filepath.Join(cfg.ConsoleDir, ".env")
 	cfg.ComposePath = filepath.Join(cfg.ConsoleDir, "..", "docker-compose.yml")
 	cfg.GeneratorEmbedded = strings.ToLower(strings.TrimSpace(orDefault(getenv("BETTERDESK_CLIENT_GENERATOR_MODE"), "download"))) == "embedded"
-	cfg.AgentBuildWorker = getenv("AGENT_BUILD_WORKER") != "off"
+	cfg.AgentBuildWorker = envvar.SwitchOr(getenv("AGENT_BUILD_WORKER"), true)
 	cfg.AgentBuildPoll = timerDelay(orDefault(getenv("AGENT_BUILD_POLL_MS"), "5000"))
 	if ms, ok := parseInt(orDefault(getenv("AGENT_BUILD_COOLDOWN_MS"), "1000")); ok && ms > 0 {
 		cfg.AgentBuildCooldown = time.Duration(ms) * time.Millisecond
@@ -438,9 +444,22 @@ func nullish(getenv func(string) string, p probe, name, fallback string) string 
 	return fallback
 }
 
-// isTrue is the old console's reading of a switch: "true" in any letter
-// case, nothing else.
-func isTrue(value string) bool { return strings.ToLower(value) == "true" }
+// isOn reads a switch that only an on value turns on (envvar.Switch):
+// anything else, the empty text included, is off.
+func isOn(value string) bool { return envvar.SwitchOr(value, false) }
+
+// switchText is "true" for an on value, "false" for an off value and the
+// value itself otherwise.
+func switchText(value string) string {
+	on, ok := envvar.Switch(value)
+	switch {
+	case !ok:
+		return value
+	case on:
+		return "true"
+	}
+	return "false"
+}
 
 // consoleDir finds the folder that holds the console's state:
 // CONSOLE_DIR, else the first usual place that has a .env or, where a

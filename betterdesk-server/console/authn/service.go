@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -17,6 +16,7 @@ import (
 	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/goapi"
 	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 )
 
 // Logger takes the service's log lines. The arguments of a call are the
@@ -68,7 +68,7 @@ func (osFS) Remove(name string) error                  { return os.Remove(name) 
 type Settings struct {
 	// AutoCreate lets an unknown user sign in through the signal server
 	// and get a local account, also when no single sign-on is configured.
-	// BETTERDESK_AUTH_AUTOCREATE, on only for the exact value "true".
+	// BETTERDESK_AUTH_AUTOCREATE, an on value (envvar.Switch); off unset.
 	AutoCreate bool
 
 	// TokenExpiryDays is how long an access token lasts.
@@ -94,8 +94,8 @@ type Settings struct {
 	// up.
 	DefaultAdminPassword string
 	// ForcePasswordUpdate makes the next EnsureDefaultAdmin overwrite the
-	// admin's password with the known one. FORCE_PASSWORD_UPDATE, on only
-	// for the exact value "true". It works once.
+	// admin's password with the known one. FORCE_PASSWORD_UPDATE, an on
+	// value (envvar.Switch). It works once.
 	ForcePasswordUpdate bool
 
 	// DataDir is the console's data folder (DATA_DIR): the place of the
@@ -113,8 +113,9 @@ type Settings struct {
 	// EnsureDefaultAdmin wait for the signal server's admin; the exact
 	// "true" adds /app/data to the places for .admin_credentials.
 	Docker string
-	// DBType is DB_TYPE, else "postgres" when DATABASE_URL is a PostgreSQL
-	// address, else "sqlite".
+	// DBType is the type of the database the server opens: "postgres" or
+	// "sqlite" by the scheme of DATABASE_URL (envvar.DatabaseFrom, which
+	// reads DB_URL for older installs), else DB_TYPE, else "sqlite".
 	DBType string
 	// SQLiteAuthDBMode is SQLITE_AUTH_DB_MODE: "legacy", "consolidated" or
 	// empty.
@@ -125,14 +126,12 @@ type Settings struct {
 	DockerAdminBootstrapWait time.Duration
 }
 
-var postgresURL = regexp.MustCompile(`(?i)^postgres(ql)?://`)
-
 // SettingsFromEnv reads the settings the way the console read them from
 // its environment. dataDir and keysPath are the folders the console's
 // configuration resolved.
 func SettingsFromEnv(getenv func(string) string, dataDir, keysPath string) Settings {
 	s := Settings{
-		AutoCreate:           getenv("BETTERDESK_AUTH_AUTOCREATE") == "true",
+		AutoCreate:           envvar.SwitchOr(getenv("BETTERDESK_AUTH_AUTOCREATE"), false),
 		TokenExpiryDays:      intOr(getenv("API_TOKEN_EXPIRY_DAYS"), 7),
 		MaxFailedAttempts:    intOr(getenv("API_MAX_FAILED_ATTEMPTS"), 10),
 		LockoutMinutes:       intOr(getenv("API_LOCKOUT_MINUTES"), 15),
@@ -140,19 +139,22 @@ func SettingsFromEnv(getenv func(string) string, dataDir, keysPath string) Setti
 		AttemptWindowMinutes: intOr(getenv("API_ATTEMPT_WINDOW"), 15),
 		DefaultAdminUsername: getenv("DEFAULT_ADMIN_USERNAME"),
 		DefaultAdminPassword: getenv("DEFAULT_ADMIN_PASSWORD"),
-		ForcePasswordUpdate:  getenv("FORCE_PASSWORD_UPDATE") == "true",
+		ForcePasswordUpdate:  envvar.SwitchOr(getenv("FORCE_PASSWORD_UPDATE"), false),
 		DataDir:              dataDir,
 		KeysPath:             keysPath,
 		AuthDBPath:           getenv("AUTH_DB_PATH"),
 		Docker:               getenv("DOCKER"),
-		DBType:               getenv("DB_TYPE"),
 		SQLiteAuthDBMode:     getenv("SQLITE_AUTH_DB_MODE"),
 	}
-	if s.DBType == "" {
+	switch database := envvar.DatabaseFrom(getenv); {
+	case database.Postgres:
+		s.DBType = "postgres"
+	case database.DSN != "":
 		s.DBType = "sqlite"
-		if postgresURL.MatchString(getenv("DATABASE_URL")) {
-			s.DBType = "postgres"
-		}
+	case getenv("DB_TYPE") != "":
+		s.DBType = getenv("DB_TYPE")
+	default:
+		s.DBType = "sqlite"
 	}
 	wait := getenv("DOCKER_ADMIN_BOOTSTRAP_WAIT_MS")
 	if wait == "" {

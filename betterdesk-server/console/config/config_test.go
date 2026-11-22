@@ -138,7 +138,7 @@ func TestLoadValues(t *testing.T) {
 	if !cfg.TrustProxy.Enabled() {
 		t.Error("TrustProxy is off")
 	}
-	if !cfg.Production || !cfg.HTTPS || cfg.HSTSEnabled != "On" || !cfg.AllowSelfSignedCerts {
+	if !cfg.Production || !cfg.HTTPS || cfg.HSTSEnabled != "true" || !cfg.AllowSelfSignedCerts {
 		t.Errorf("mode = %+v", cfg)
 	}
 	if cfg.DefaultLanguage != "de" || cfg.DeviceScopeDefault != "restricted" || cfg.LogLevel != " Debug " || cfg.APIHost != "127.0.0.1:21121" {
@@ -208,10 +208,11 @@ func TestStaticDir(t *testing.T) {
 	}
 }
 
-func TestSwitchesReadAsTheOldConsoleDid(t *testing.T) {
+// L84: HTTPS_ENABLED takes every on value, not only "true".
+func TestSwitchesReadAsTheServersDo(t *testing.T) {
 	for value, want := range map[string]bool{
 		"true": true, "True": true, "TRUE": true,
-		"1": false, "yes": false, "": false, " true": false,
+		"1": true, "yes": true, " true": true, "": false, "no": false, "enabled": false,
 	} {
 		cfg, err := load(env(map[string]string{"HTTPS_ENABLED": value}), machine())
 		if err != nil {
@@ -238,10 +239,14 @@ func TestDockerRule(t *testing.T) {
 			t.Errorf("%s: %+v", name, cfg)
 		}
 	}
-	// DOCKER has to be "true" exactly, and DATA_DIR wins over the rule
+	// DOCKER is a switch (L84), and DATA_DIR wins over the rule
 	other, _ := load(env(map[string]string{"DOCKER": "TRUE", "DATA_DIR": "/d"}), machine())
-	if other.Docker || other.DataDir != "/d" {
+	if !other.Docker || other.DataDir != "/d" {
 		t.Errorf("DOCKER=TRUE: %+v", other)
+	}
+	off, _ := load(env(map[string]string{"DOCKER": "no"}), machine())
+	if off.Docker || off.DataDir == "/app/data" {
+		t.Errorf("DOCKER=no: %+v", off)
 	}
 	set, _ := load(env(map[string]string{"DOCKER": "true", "DATA_DIR": "/d"}), machine())
 	if set.DataDir != "/d" || set.UploadsDir != filepath.Join("/d", "uploads") {
@@ -364,7 +369,7 @@ func TestLoadRejectsBadValues(t *testing.T) {
 }
 
 func TestLoadDebugRouting(t *testing.T) {
-	for value, want := range map[string]bool{"1": true, " 1 ": true, "": false, "0": false, "true": false} {
+	for value, want := range map[string]bool{"1": true, " 1 ": true, "": false, "0": false, "true": true, "off": false} {
 		cfg, err := Load(env(map[string]string{"CONSOLE_DEBUG_ROUTING": value}))
 		if err != nil {
 			t.Fatal(err)
@@ -410,6 +415,7 @@ func TestSettingsAsTheOldConsoleReadThem(t *testing.T) {
 	if len(cases) < 100 {
 		t.Fatalf("only %d cases in testdata/settings.json", len(cases))
 	}
+	intended := 0
 	for _, c := range cases {
 		var files []string
 		if c.Docker {
@@ -421,6 +427,10 @@ func TestSettingsAsTheOldConsoleReadThem(t *testing.T) {
 			continue
 		}
 		want := c.Config
+		if enabled, ok := intendedAPIEnabled[c.Env["API_ENABLED"]]; ok {
+			intended++
+			want.APIEnabled = enabled
+		}
 		if cfg.GoAPIPort != want.GoAPIPort || cfg.APIPort != want.APIPort || cfg.APIEnabled != want.APIEnabled {
 			t.Errorf("%q: GoAPIPort %d, APIPort %d, APIEnabled %v; the old console read %d, %d, %v",
 				c.Env, cfg.GoAPIPort, cfg.APIPort, cfg.APIEnabled, want.GoAPIPort, want.APIPort, want.APIEnabled)
@@ -438,7 +448,16 @@ func TestSettingsAsTheOldConsoleReadThem(t *testing.T) {
 				c.Env, cfg.SignalHost, cfg.SignalPort, cfg.RelayHost, cfg.RelayPort, want.WSProxy)
 		}
 	}
+	if intended != len(intendedAPIEnabled) {
+		t.Errorf("%d recorded cases differ on purpose, want %d: the list of intended differences is stale", intended, len(intendedAPIEnabled))
+	}
 }
+
+// intendedAPIEnabled are the recorded API_ENABLED values the console reads
+// otherwise than the old console on purpose, with its reading: they are on
+// values, which the old console took for off as they are not "true"
+// (BUGS L84).
+var intendedAPIEnabled = map[string]bool{" true": true, "true ": true, "1": true, "yes": true}
 
 func TestKeysPathSearch(t *testing.T) {
 	windows := func(files ...string) probe {

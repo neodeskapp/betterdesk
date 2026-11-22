@@ -1443,7 +1443,7 @@
       "general_title": "Was Clients jetzt erhalten",
       "general_note": "Die Adressen, die RustDesk-Clients jetzt von diesem Server erhalten: in der Client-Einrichtung, in QR-Codes und Installationsbefehlen.",
       "src_page": "Auf dieser Seite festgelegt",
-      "src_overview": "In der Client-Einrichtung auf der Übersicht festgelegt",
+      "src_env": "Aus {name} in der Umgebung des Servers",
       "src_auto": "Automatisch ermittelt",
       "local_warning": "Diese Adressen funktionieren nur auf diesem Computer. Andere Computer und Telefone erreichen sie nicht. Geben Sie die Adresse des Servers unter „Öffentliche Client-Endpunkte“ ein.",
       "preview_title": "Vorschau",

@@ -1449,7 +1449,7 @@
       "general_title": "Amit a kliensek most kapnak",
       "general_note": "A címek, amelyeket a RustDesk-kliensek most kapnak ettől a szervertől: a kliensbeállításban, a QR-kódokban és a telepítőparancsokban.",
       "src_page": "Ezen az oldalon beállítva",
-      "src_overview": "Az áttekintés kliensbeállításában megadva",
+      "src_env": "A szerver környezetének {name} változójából",
       "src_auto": "Automatikusan észlelve",
       "local_warning": "Ezek a címek csak ezen a gépen működnek. Más gépek és telefonok nem érik el őket. Adja meg a szerver címét a Nyilvános kliens végpontok résznél.",
       "preview_title": "Előnézet",

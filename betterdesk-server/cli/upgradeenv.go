@@ -11,6 +11,7 @@ import (
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 )
 
 const upgradeEnvUsage = "Usage: betterdesk-server upgrade-env --from FILE [--write] [--supervisor systemd|nssm|docker]"
@@ -220,7 +221,7 @@ func UpgradeEnv(args []string, env Env) int {
 	case "windows":
 		supervisor = "nssm"
 	}
-	if env.Getenv("DOCKER") == "true" {
+	if envvar.SwitchOr(env.Getenv("DOCKER"), false) {
 		supervisor = "docker"
 	}
 	for i := 0; i < len(args); i++ {

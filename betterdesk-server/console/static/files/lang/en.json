@@ -1451,7 +1451,7 @@
             "general_title": "What clients get now",
             "general_note": "The addresses RustDesk clients get from this server right now: in the client setup, QR codes and install commands.",
             "src_page": "Set on this page",
-            "src_overview": "Set in the client setup on the overview",
+            "src_env": "From {name} in the server's environment",
             "src_auto": "Found automatically",
             "local_warning": "These addresses only work on this computer. Other computers and phones can't reach them. Enter the server's address under Public client endpoints.",
             "preview_title": "Preview",

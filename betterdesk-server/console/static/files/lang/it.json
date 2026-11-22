@@ -1443,7 +1443,7 @@
       "general_title": "Cosa ricevono ora i client",
       "general_note": "Gli indirizzi che i client RustDesk ricevono ora da questo server: nella configurazione client, nei codici QR e nei comandi di installazione.",
       "src_page": "Impostato in questa pagina",
-      "src_overview": "Impostato nella configurazione client della panoramica",
+      "src_env": "Da {name} nell'ambiente del server",
       "src_auto": "Rilevato automaticamente",
       "local_warning": "Questi indirizzi funzionano solo su questo computer. Altri computer e telefoni non li raggiungono. Inserisca l'indirizzo del server in «Endpoint client pubblici».",
       "preview_title": "Anteprima",

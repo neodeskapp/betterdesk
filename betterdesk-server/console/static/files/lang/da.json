@@ -1449,7 +1449,7 @@
       "general_title": "Hvad klienter får nu",
       "general_note": "De adresser, RustDesk-klienter får fra denne server nu: i klientopsætningen, QR-koder og installationskommandoer.",
       "src_page": "Angivet på denne side",
-      "src_overview": "Angivet i klientopsætningen på oversigten",
+      "src_env": "Fra {name} i serverens miljø",
       "src_auto": "Fundet automatisk",
       "local_warning": "Disse adresser virker kun på denne computer. Andre computere og telefoner kan ikke nå dem. Angiv serverens adresse under Offentlige klient-endpoints.",
       "preview_title": "Forhåndsvisning",

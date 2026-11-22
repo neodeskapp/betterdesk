@@ -66,3 +66,26 @@ export function splitHostPort(value: string, fallbackPort: number): { host: stri
 export function savedLine(saved: readonly string[], sentence: (parts: string) => string): string {
 	return saved.length ? sentence(saved.join(', ')) : '';
 }
+
+/** The variable that sets each address of the side column */
+export const ENDPOINT_VARIABLES = {
+	host: 'PUBLIC_SERVER_ID',
+	relay: 'PUBLIC_RELAY_SERVER',
+	api: 'PUBLIC_API_URL'
+} as const;
+
+/**
+ * Where an address of the side column comes from, as its label says:
+ * saved on this page, a variable of the server's environment (named), or
+ * found automatically. PANEL_PUBLIC_HOST comes from the environment too.
+ */
+export function endpointSourceLabel(
+	source: string | undefined,
+	variable: string,
+	t: (key: string, params?: Record<string, string>) => string
+): string {
+	if (source === 'saved') return t('settings.side.src_page');
+	if (source === 'env') return t('settings.side.src_env', { name: variable });
+	if (source === 'panel_host') return t('settings.side.src_env', { name: 'PANEL_PUBLIC_HOST' });
+	return t('settings.side.src_auto');
+}

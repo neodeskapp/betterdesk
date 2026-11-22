@@ -1449,7 +1449,7 @@
       "general_title": "İstemcilerin şu an aldıkları",
       "general_note": "RustDesk istemcilerinin şu an bu sunucudan aldığı adresler: istemci kurulumunda, QR kodlarında ve kurulum komutlarında.",
       "src_page": "Bu sayfada ayarlandı",
-      "src_overview": "Genel bakıştaki istemci kurulumunda ayarlandı",
+      "src_env": "Sunucu ortamındaki {name} değişkeninden",
       "src_auto": "Otomatik bulundu",
       "local_warning": "Bu adresler yalnızca bu bilgisayarda çalışır. Diğer bilgisayarlar ve telefonlar onlara ulaşamaz. Sunucunun adresini Genel istemci uç noktaları bölümüne girin.",
       "preview_title": "Önizleme",

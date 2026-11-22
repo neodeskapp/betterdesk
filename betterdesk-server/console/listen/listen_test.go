@@ -277,7 +277,7 @@ func TestCapabilityBit(t *testing.T) {
 		}
 	}
 	if os.Getuid() != 0 {
-		for value, want := range map[string]bool{"1": true, "true": true, " YES ": true, "y": true, "0": false, "": false} {
+		for value, want := range map[string]bool{"1": true, "true": true, " YES ": true, "y": true, "On": true, "0": false, "n": false, "": false} {
 			getenv := func(string) string { return value }
 			if got := CanBindLowPorts(getenv); got != want && !(mayBindAnyway() && !want) {
 				t.Errorf("BETTERDESK_HAS_BIND_SERVICE=%q: %v", value, got)

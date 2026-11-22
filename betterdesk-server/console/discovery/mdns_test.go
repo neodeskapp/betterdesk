@@ -451,7 +451,7 @@ func TestMDNSScheduleAgainstNode(t *testing.T) {
 	if len(rec.Scenarios) < 10 {
 		t.Fatalf("recording has %d scenarios", len(rec.Scenarios))
 	}
-	silent := 0
+	silent, intended := 0, 0
 	for i, s := range rec.Scenarios {
 		settings := mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname)
 		if published := asPublished(settings); published.PublicURL != settings.PublicURL && settings.mdnsEnabled() {
@@ -469,6 +469,12 @@ func TestMDNSScheduleAgainstNode(t *testing.T) {
 			settings = published
 		}
 		want := localized(t, nodeSends(s.Events), s.Hostname)
+		if s.Env["PANEL_MDNS"] == "OFF" {
+			// Every off value turns the announcement off, where Node took
+			// only "off" and "0" (BUGS L84): nothing is sent or logged
+			intended++
+			want, s.Logs, s.LaterLogs = nil, nil, nil
+		}
 		h := startHarness(settings, s.Random, len(want))
 		if len(want) > 0 {
 			<-h.opened
@@ -501,6 +507,9 @@ func TestMDNSScheduleAgainstNode(t *testing.T) {
 	}
 	if silent == 0 {
 		t.Error("no scenario of a console on loopback")
+	}
+	if intended != 1 {
+		t.Errorf("%d scenarios with PANEL_MDNS=OFF, want the one recorded", intended)
 	}
 }
 

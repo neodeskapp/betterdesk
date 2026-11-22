@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 )
 
 // settingKey is the row of the settings table with the SMTP configuration.
@@ -106,7 +107,7 @@ func (s *Service) LoadSMTPConfig(ctx context.Context) *Config {
 	return &Config{doc: objectValue(
 		"host", stringValue(host),
 		"port", numberValue(parseInt10(orDefault("SMTP_PORT", "587"))),
-		"secure", boolValue(s.getenv("SMTP_SECURE") == "true"),
+		"secure", boolValue(envvar.SwitchOr(s.getenv("SMTP_SECURE"), false)),
 		"user", stringValue(s.getenv("SMTP_USER")),
 		"pass", stringValue(s.getenv("SMTP_PASS")),
 		"from", stringValue(orDefault("SMTP_FROM", defaultFrom)),

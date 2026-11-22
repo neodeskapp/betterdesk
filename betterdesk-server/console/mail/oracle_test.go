@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"maps"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -264,7 +265,7 @@ func (r *replay) setState(step oracleStep) {
 	} else if err := setSetting(ctx, r.db, settingKey, *step.Stored); err != nil {
 		r.t.Fatal(err)
 	}
-	r.env = step.Env
+	r.setEnv(step.Env)
 	r.transport = &fakeTransport{}
 	r.log = &logLines{}
 	r.service = New(Options{
@@ -275,6 +276,19 @@ func (r *replay) setState(step oracleStep) {
 		Port:      step.Cfg.Port,
 		Logger:    r.log,
 	})
+}
+
+// setEnv gives the console a step's environment. SMTP_SECURE takes every
+// on value, where Node took only "true" (BUGS L84): the replay gives the
+// on values Node read as off as "false", and
+// TestSMTPSecureFromTheEnvironmentIsASwitch checks the new reading.
+func (r *replay) setEnv(env map[string]string) {
+	r.env = env
+	if smtpSecureOnValues[env["SMTP_SECURE"]] {
+		r.env = maps.Clone(env)
+		r.env["SMTP_SECURE"] = "false"
+		r.counts["L84: an SMTP_SECURE on value Node read as off"]++
+	}
 }
 
 var tlsOption = regexp.MustCompile(`"tls":\{"rejectUnauthorized":(true|false)\}\}$`)
@@ -732,7 +746,7 @@ func (r *replay) run(i int, step oracleStep) {
 		r.refusedSave = false
 		r.setState(step)
 	case "env":
-		r.env = step.Env
+		r.setEnv(step.Env)
 	case "reset":
 		r.service.ResetTransporter()
 	case "load":
@@ -1051,6 +1065,11 @@ func show(p *string) string {
 	}
 	return strconv.Quote(*p)
 }
+
+// smtpSecureOnValues are the recorded SMTP_SECURE values that are on
+// values (envvar.Switch) and that Node took for off, as it took only
+// "true".
+var smtpSecureOnValues = map[string]bool{" true": true, "1": true, "TRUE": true, "True": true, "yes": true}
 
 func marshal(t testing.TB, v any) string {
 	t.Helper()

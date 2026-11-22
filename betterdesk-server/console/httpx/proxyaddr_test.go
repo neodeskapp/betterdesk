@@ -52,6 +52,16 @@ func TestClientIP(t *testing.T) {
 	}
 }
 
+// L84: TRUST_PROXY takes every on/off value in any letter case.
+func TestParseTrustProxyTakesEveryOnOffValue(t *testing.T) {
+	for raw, on := range map[string]bool{"N": false, "n": false, "No": false, "OFF": false, "0": false, "Y": true, "yes": true, "ON": true, "True": true} {
+		tp, err := ParseTrustProxy(raw)
+		if err != nil || tp.Enabled() != on {
+			t.Errorf("ParseTrustProxy(%q) = %v, %v; want trust %v", raw, tp.Enabled(), err, on)
+		}
+	}
+}
+
 func TestParseTrustProxyRejectsGarbage(t *testing.T) {
 	for _, raw := range []string{"not-an-address", "10.0.0.0/99", "loopback, nope"} {
 		if _, err := ParseTrustProxy(raw); err == nil {

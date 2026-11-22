@@ -1443,7 +1443,7 @@
       "general_title": "Wat clients nu krijgen",
       "general_note": "De adressen die RustDesk-clients nu van deze server krijgen: in de clientinstelling, QR-codes en installatieopdrachten.",
       "src_page": "Ingesteld op deze pagina",
-      "src_overview": "Ingesteld in de clientinstelling op het overzicht",
+      "src_env": "Uit {name} in de omgeving van de server",
       "src_auto": "Automatisch gevonden",
       "local_warning": "Deze adressen werken alleen op deze computer. Andere computers en telefoons kunnen ze niet bereiken. Vul het adres van de server in onder Openbare client-eindpunten.",
       "preview_title": "Voorbeeld",

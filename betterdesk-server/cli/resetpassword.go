@@ -22,10 +22,10 @@ import (
 	"github.com/unitronix/betterdesk-server/auth"
 	"github.com/unitronix/betterdesk-server/console/authn"
 	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
 	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/db"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 )
 
 const resetUsage = "Usage: betterdesk-server reset-password [username]   (the new password is the first line of standard input)"
@@ -46,11 +46,11 @@ type resetOptions struct {
 // ResetPassword is "reset-password [username]", what reset-password.js
 // did: it sets the password of an account, or makes an admin account of
 // that name when there is none (the name is "admin" when not given), on
-// the database the server and its console use: DB_URL as the server reads
-// it (PostgreSQL for a postgres:// URL, else a SQLite file), else DB_TYPE
-// postgres with DATABASE_URL, else the SQLite file DB_PATH, or
-// db_v2.sqlite3 in KEYS_PATH, RUSTDESK_DIR or the data folder. It reads
-// the console's env file for
+// the database the server and its console use: DATABASE_URL as the
+// server reads it, the type from its scheme (envvar.DatabaseFrom, which
+// reads DB_URL and DB_TYPE for older installs), else the SQLite file
+// DB_PATH, or db_v2.sqlite3 in KEYS_PATH, RUSTDESK_DIR or the data folder.
+// It reads the console's env file for
 // what the environment does not set, as the script read its .env: the
 // file BETTERDESK_ENV_FILE names (main loads it), else the .env in
 // CONSOLE_DIR. A database without a users table is first set up as a
@@ -127,20 +127,16 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 
 	ctx := context.Background()
 	var users *sql.DB
-	// The database is the one the server opens: DB_URL by its scheme,
-	// then the console's keys
+	// The database is the one the server opens, then the console's keys
 	dialect, dsn := "sqlite", ""
-	dbURL := getenv("DB_URL")
+	database := envvar.DatabaseFrom(getenv)
 	dbType := strings.ToLower(orElse(getenv("DB_TYPE"), "sqlite"))
 	switch {
-	case isPostgresURL(dbURL):
-		dialect, dsn = "postgres", dbURL
-	case dbURL == "" && (dbType == "postgres" || dbType == "postgresql"):
-		dialect, dsn = "postgres", getenv("DATABASE_URL")
-		if dsn == "" {
-			fmt.Fprintln(e, "DB_TYPE=postgres but DATABASE_URL is not set")
-			return 1
-		}
+	case database.Postgres:
+		dialect, dsn = "postgres", database.DSN
+	case database.DSN == "" && (dbType == "postgres" || dbType == "postgresql"):
+		fmt.Fprintln(e, "DB_TYPE=postgres but DATABASE_URL is not set")
+		return 1
 	}
 	if dialect == "postgres" {
 		u, err := url.Parse(dsn)
@@ -160,7 +156,7 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 		}
 		users = stdlib.OpenDB(*cfg)
 	} else {
-		dsn = sqlitePath(getenv, opts)
+		dsn = sqlitePath(database.DSN, getenv, opts)
 		fmt.Fprintf(o, "Auth database (SQLite): %s\n", dsn)
 		if !opts.exists(filepath.Dir(dsn)) {
 			fmt.Fprintln(e, "Error: Cannot open database because the directory does not exist")
@@ -251,7 +247,7 @@ func consoleEnv(getenv func(string) string) func(string) string {
 	file := map[string]string{}
 	for _, line := range serverinfo.ParseEnvLines(serverinfo.DecodeUTF8(raw)).Entries {
 		if line.Type == serverinfo.EnvPair && file[line.Key] == "" {
-			file[line.Key] = jsbind.Trim(line.Value)
+			file[line.Key] = line.Value
 		}
 	}
 	return func(key string) string {
@@ -279,18 +275,11 @@ func firstLine(r io.Reader) (line string, ok bool, err error) {
 	return serverinfo.DecodeUTF8([]byte(text)), true, nil
 }
 
-// isPostgresURL reports whether a DB_URL names PostgreSQL, as the server
-// tells it (db.Open).
-func isPostgresURL(dsn string) bool {
-	lower := strings.ToLower(dsn)
-	return strings.HasPrefix(lower, "postgres://") || strings.HasPrefix(lower, "postgresql://")
-}
-
-// sqlitePath is the SQLite file of the server and the console: DB_URL,
-// else DB_PATH, else db_v2.sqlite3 in KEYS_PATH, RUSTDESK_DIR or the data
-// folder.
-func sqlitePath(getenv func(string) string, opts resetOptions) string {
-	if p := orElse(getenv("DB_URL"), getenv("DB_PATH")); p != "" {
+// sqlitePath is the SQLite file of the server and the console: the one the
+// environment names (envvar.DatabaseFrom), else DB_PATH, else
+// db_v2.sqlite3 in KEYS_PATH, RUSTDESK_DIR or the data folder.
+func sqlitePath(named string, getenv func(string) string, opts resetOptions) string {
+	if p := orElse(named, getenv("DB_PATH")); p != "" {
 		return p
 	}
 	dir := orElse(getenv("KEYS_PATH"), getenv("RUSTDESK_DIR"))

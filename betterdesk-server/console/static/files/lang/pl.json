@@ -1443,7 +1443,7 @@
       "general_title": "Co teraz dostają klienci",
       "general_note": "Adresy, które klienci RustDesk dostają teraz z tego serwera: w konfiguracji klienta, kodach QR i poleceniach instalacji.",
       "src_page": "Ustawione na tej stronie",
-      "src_overview": "Ustawione w konfiguracji klienta na przeglądzie",
+      "src_env": "Z {name} w środowisku serwera",
       "src_auto": "Wykryte automatycznie",
       "local_warning": "Te adresy działają tylko na tym komputerze. Inne komputery i telefony ich nie osiągną. Wpisz adres serwera w sekcji Publiczne endpointy klienta.",
       "preview_title": "Podgląd",

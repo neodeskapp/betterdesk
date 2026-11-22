@@ -13,6 +13,7 @@ import (
 	"github.com/unitronix/betterdesk-server/config"
 	"github.com/unitronix/betterdesk-server/console"
 	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
+	"github.com/unitronix/betterdesk-server/console/serverinfo"
 	"github.com/unitronix/betterdesk-server/console/store"
 	"github.com/unitronix/betterdesk-server/db"
 	"github.com/unitronix/betterdesk-server/events"
@@ -58,6 +59,7 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		Exit:        requestRestart,
 		ServerDB:    cfg.DBPath,
 		SignalProof: signalProof,
+		PublicRelay: cfg.SetPublicRelayServer,
 	})
 	if err != nil {
 		_ = sdb.Close()
@@ -80,6 +82,23 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		srv.Stop()
 		_ = sdb.Close()
 	}, nil
+}
+
+// applySavedPublicRelay gives the signal server the relay the console's
+// settings name ("Public relay server": saved in the console, else
+// PUBLIC_RELAY_SERVER), before any device asks for a relay. The console
+// tells it again after each save (Options.PublicRelay). A console
+// configuration that does not load leaves RELAY_SERVERS.
+func applySavedPublicRelay(cfg *config.Config, getenv func(string) string) {
+	ccfg, err := consoleconfig.Load(getenv)
+	if err != nil {
+		return
+	}
+	info := serverinfo.New(serverinfo.Options{DataDir: ccfg.DataDir, EnvPath: ccfg.EnvPath, Getenv: getenv})
+	if relay := info.ReadPublicEndpointEnv().PublicRelayServer; relay != "" {
+		cfg.SetPublicRelayServer(relay)
+		log.Printf("Relay for devices: %s, the public relay server of the console's settings", relay)
+	}
 }
 
 // openConsoleStore opens the console's access to the server's database.

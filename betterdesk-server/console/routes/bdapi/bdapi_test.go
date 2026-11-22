@@ -56,9 +56,10 @@ func TestRegisterIsLimited(t *testing.T) {
 }
 
 // BD_REGISTER_ALLOW_OPEN lets a device register without a proof when it
-// is true, 1 or yes, in any letter case and with white space around.
+// is on (L84: 1, true, yes, y, on), in any letter case and with white
+// space around.
 func TestOpenRegistration(t *testing.T) {
-	for value, open := range map[string]bool{"": false, "true": true, " YES ": true, "1": true, "on": false, "false": false} {
+	for value, open := range map[string]bool{"": false, "true": true, " YES ": true, "1": true, "on": true, "y": true, "false": false, "maybe": false} {
 		w := routetest.New(t, routetest.Options{Env: map[string]string{"BD_REGISTER_ALLOW_OPEN": value}})
 		got := w.SignedOut().Do("POST", "/api/bd/register", `{"device_id":"NEWDEV1"}`, "X-Device-Id", "NEWDEV1")
 		if (got.Status == 200) != open {

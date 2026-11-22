@@ -3086,7 +3086,9 @@ func (s *Server) applyNetworkRelayPolicy(defaultRelay string, peerIDs ...string)
 
 // getRelayServer returns the relay server address to advertise to clients.
 // Priority:
-//  1. Explicitly configured relay servers (-relay-servers flag / RELAY_SERVERS env)
+//  1. The relay the console's settings name ("Public relay server"), else
+//     the configured relay servers (-relay-servers flag / RELAY_SERVERS
+//     env): config.GetRelayServers
 //  2. Server's detected public IP + relay port (auto-detected via external service)
 //  3. LAN IP + relay port (from OS routing table — works for LAN-only setups)
 //

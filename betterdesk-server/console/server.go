@@ -58,6 +58,7 @@ import (
 	"github.com/unitronix/betterdesk-server/console/webui"
 	"github.com/unitronix/betterdesk-server/console/ws"
 	"github.com/unitronix/betterdesk-server/events"
+	"github.com/unitronix/betterdesk-server/internal/envvar"
 	"github.com/unitronix/betterdesk-server/logging"
 )
 
@@ -100,6 +101,11 @@ type Options struct {
 	// (signal.Server.PanelProof). nil: the bridge sends none, and the
 	// signal server treats it as any client.
 	SignalProof []byte
+	// PublicRelay is told the relay the console's settings name after each
+	// save of the public endpoints, so the signal server of this process
+	// gives devices that relay (config.Config.SetPublicRelayServer). nil
+	// tells nobody.
+	PublicRelay func(relay string)
 	// updaterOptions changes the updater's options before it is built:
 	// tests give it a GitHub and a binary of their own.
 	updaterOptions func(*updater.Options)
@@ -245,18 +251,19 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Jobs:  s.jobs,
 	}
 	s.deps.ServerInfo = serverinfo.New(serverinfo.Options{
-		PubKeyPath:  cfg.PubKeyPath,
-		APIKeyPath:  cfg.APIKeyPath,
-		DBPath:      cfg.DBPath,
-		APIURL:      cfg.APIURL,
-		GoAPIPort:   cfg.GoAPIPort,
-		APIPort:     cfg.APIPort,
-		DataDir:     cfg.DataDir,
-		EnvPath:     cfg.EnvPath,
-		IsDocker:    cfg.Docker,
-		Getenv:      getenv,
-		ComposePath: cfg.ComposePath,
-		GoAPI:       api,
+		PubKeyPath:    cfg.PubKeyPath,
+		APIKeyPath:    cfg.APIKeyPath,
+		DBPath:        cfg.DBPath,
+		APIURL:        cfg.APIURL,
+		GoAPIPort:     cfg.GoAPIPort,
+		APIPort:       cfg.APIPort,
+		DataDir:       cfg.DataDir,
+		EnvPath:       cfg.EnvPath,
+		OnPublicRelay: opts.PublicRelay,
+		IsDocker:      cfg.Docker,
+		Getenv:        getenv,
+		ComposePath:   cfg.ComposePath,
+		GoAPI:         api,
 		QR: func(text string) (string, error) {
 			return qr.PNGDataURL(text, qr.Options{Width: 256, Margin: 2})
 		},
@@ -383,7 +390,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		SectionAccess: ws.SectionAccessOf(s.deps.Access),
 		Origins: ws.OriginPolicy{
 			Allowed:      ws.ParseAllowedOrigins(getenv("WS_ALLOWED_ORIGINS")),
-			AllowMissing: getenv("BD_ALLOW_MISSING_ORIGIN") == "true",
+			AllowMissing: envvar.SwitchOr(getenv("BD_ALLOW_MISSING_ORIGIN"), false),
 		},
 		ClientIP: cfg.TrustProxy.ClientIP,
 	})
@@ -428,7 +435,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	// The old console announced itself over mDNS only where someone had
 	// installed bonjour-service by hand; no installer or image did. So the
 	// announcement runs only when PANEL_MDNS asks for it.
-	if mdns := getenv("PANEL_MDNS"); mdns != "" && mdns != "off" && mdns != "0" {
+	if mdns := getenv("PANEL_MDNS"); mdns != "" && envvar.SwitchOr(mdns, true) {
 		s.jobs.Add("mDNS announcement", func(ctx context.Context) { discovery.NewMDNS(s.announced(lan)).Run(ctx) })
 	}
 	registerRoutes(s.deps, backups)

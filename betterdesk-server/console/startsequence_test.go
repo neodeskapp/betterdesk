@@ -28,7 +28,7 @@ func TestDiscoveryAndCleanUpsRun(t *testing.T) {
 // PANEL_MDNS asks for it: the old console announced only where
 // bonjour-service had been installed by hand.
 func TestMDNSOnlyWhenAsked(t *testing.T) {
-	for _, value := range []string{"", "off", "0"} {
+	for _, value := range []string{"", "off", "0", "no", "N", "FALSE"} {
 		w := newWorld(t, setup{env: map[string]string{"PANEL_MDNS": value}})
 		if slices.Contains(w.s.Jobs().Names(), "mDNS announcement") {
 			t.Errorf("PANEL_MDNS=%q: the announcement runs, jobs = %q", value, w.s.Jobs().Names())

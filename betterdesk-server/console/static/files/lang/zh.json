@@ -1443,7 +1443,7 @@
       "general_title": "客户端当前获得的值",
       "general_note": "RustDesk 客户端当前从本服务器获得的地址：用于客户端设置、二维码和安装命令。",
       "src_page": "在本页设置",
-      "src_overview": "在概览的客户端设置中设置",
+      "src_env": "来自服务器环境中的 {name}",
       "src_auto": "自动检测",
       "local_warning": "这些地址只在本机有效，其他电脑和手机无法访问。请在“公共客户端端点”中填写服务器地址。",
       "preview_title": "预览",

@@ -6671,7 +6671,7 @@
        "preview_note": "Die Konsole mit den Einstellungen auf dieser Seite. Speichern Sie, um sie zu übernehmen.",
        "preview_title": "Vorschau",
        "src_auto": "Automatisch ermittelt",
-       "src_overview": "In der Client-Einrichtung auf der Übersicht festgelegt",
+       "src_env": "Aus {name} in der Umgebung des Servers",
        "src_page": "Auf dieser Seite festgelegt",
        "state_title": "Aktueller Stand",
        "your_2fa": "Ihre Zwei-Faktor-Anmeldung"
@@ -14486,7 +14486,7 @@
        "preview_note": "Die Konsole mit den Einstellungen auf dieser Seite. Speichern Sie, um sie zu übernehmen.",
        "preview_title": "Vorschau",
        "src_auto": "Automatisch ermittelt",
-       "src_overview": "In der Client-Einrichtung auf der Übersicht festgelegt",
+       "src_env": "Aus {name} in der Umgebung des Servers",
        "src_page": "Auf dieser Seite festgelegt",
        "state_title": "Aktueller Stand",
        "your_2fa": "Ihre Zwei-Faktor-Anmeldung"

@@ -72,7 +72,15 @@
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { trackDirty } from '../dirty.ts';
-	import { GENERAL_PARTS, connectionFacts, savedLine, splitHostPort, type GeneralPart } from '../general.ts';
+	import {
+		ENDPOINT_VARIABLES,
+		GENERAL_PARTS,
+		connectionFacts,
+		endpointSourceLabel,
+		savedLine,
+		splitHostPort,
+		type GeneralPart
+	} from '../general.ts';
 	import { onRestartCanceled, showRestartPrompt } from '../restart.svelte.ts';
 	import SettingsGrid from '../SettingsGrid.svelte';
 	import SettingsLayout from '../SettingsLayout.svelte';
@@ -310,11 +318,8 @@
 		}
 	}
 
-	function sourceLabel(source: string | undefined): string {
-		if (source === 'env') return t('settings.side.src_page');
-		if (source === 'panel_host') return t('settings.side.src_overview');
-		return t('settings.side.src_auto');
-	}
+	const sourceLabel = (source: string | undefined, variable: string) =>
+		endpointSourceLabel(source, variable, t);
 
 	// The diagram: the addresses typed above, or the ones clients get now
 	const diagram = $derived.by(() => {
@@ -575,16 +580,17 @@
 	</section>
 {/snippet}
 
-{#snippet address(value: string, source: string | undefined, label: string)}
+{#snippet address(value: string, source: string | undefined, variable: string, label: string)}
 	<span class="side-value">
 		<ValueCopy {value} {label} />
-		<span><Tag label={sourceLabel(source)} /></span>
+		<span><Tag label={sourceLabel(source, variable)} /></span>
 	</span>
 {/snippet}
 {#snippet idValue()}
 	{@render address(
 		clientConfig?.server_id ?? '',
 		clientConfig?.endpoint_sources?.host,
+		ENDPOINT_VARIABLES.host,
 		t('dashboard.config_server_id')
 	)}
 {/snippet}
@@ -592,6 +598,7 @@
 	{@render address(
 		clientConfig?.relay_server ?? '',
 		clientConfig?.endpoint_sources?.relay,
+		ENDPOINT_VARIABLES.relay,
 		t('dashboard.config_relay_server')
 	)}
 {/snippet}
@@ -599,6 +606,7 @@
 	{@render address(
 		clientConfig?.api_url ?? '',
 		clientConfig?.endpoint_sources?.api,
+		ENDPOINT_VARIABLES.api,
 		t('dashboard.config_api_server')
 	)}
 {/snippet}

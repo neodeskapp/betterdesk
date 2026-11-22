@@ -627,9 +627,9 @@ func TestResetPasswordMakesTheUsersTableOfAServerStart(t *testing.T) {
 	startServerSchema(t, pgDSN)
 }
 
-// reset-password writes into the database the server opens: DB_URL first,
-// by its scheme, where the installers put a PostgreSQL install's URL;
-// then the console's keys (BN7).
+// reset-password writes into the database the server opens: DATABASE_URL
+// first, by its scheme (L70), then DB_URL of an older install (BN7); then
+// the console's keys.
 func TestResetPasswordUsesTheServersDatabase(t *testing.T) {
 	root := t.TempDir()
 	serverFile, consoleFile := filepath.Join(root, "server.sqlite3"), filepath.Join(root, "console.sqlite3")
@@ -642,10 +642,14 @@ func TestResetPasswordUsesTheServersDatabase(t *testing.T) {
 		var n int
 		return sdb.QueryRow("SELECT count(*) FROM users WHERE username = 'admin'").Scan(&n) == nil && n == 1
 	}
-	// A file in DB_URL wins over DB_PATH and over DB_TYPE=postgres
+	// DATABASE_URL wins over DB_URL and DB_PATH; a file in DB_URL wins over
+	// DB_PATH; DB_TYPE=sqlite keeps an older install on its file where
+	// DATABASE_URL still names PostgreSQL
 	for _, env := range []map[string]string{
+		{"DATABASE_URL": serverFile, "DB_URL": consoleFile, "DB_PATH": consoleFile},
+		{"DATABASE_URL": "sqlite://" + serverFile, "DB_TYPE": "sqlite", "DB_PATH": consoleFile},
 		{"DB_URL": serverFile, "DB_PATH": consoleFile},
-		{"DB_URL": serverFile, "DB_TYPE": "postgres", "DATABASE_URL": "postgres://nobody@127.0.0.1:1/none"},
+		{"DB_URL": serverFile, "DB_TYPE": "sqlite", "DATABASE_URL": "postgres://nobody@127.0.0.1:1/none"},
 	} {
 		env["CONSOLE_DIR"] = root
 		if status, out := runReset(t, env, root); status != 0 || !strings.Contains(out, "Auth database (SQLite): "+serverFile+"\n") {
@@ -661,11 +665,12 @@ func TestResetPasswordUsesTheServersDatabase(t *testing.T) {
 		t.Logf("no %s: PostgreSQL is left out", storetest.PostgresEnv)
 		return
 	}
-	// A postgres:// DB_URL is PostgreSQL, without DB_TYPE and next to a
-	// DB_PATH
+	// A postgres:// DATABASE_URL or DB_URL is PostgreSQL, without DB_TYPE
+	// and next to a DB_PATH
 	pgDSN, schema, drop := freshSchema(t, dsn, "bd_reset_url")
 	defer drop()
 	for _, env := range []map[string]string{
+		{"DATABASE_URL": pgDSN, "DB_URL": consoleFile},
 		{"DB_URL": pgDSN},
 		{"DB_URL": strings.Replace(pgDSN, "postgres://", "postgresql://", 1), "DB_PATH": consoleFile},
 	} {
