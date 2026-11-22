@@ -3,11 +3,11 @@ package branding
 // supporterLinks are the project links the Help panel shows when
 // SupportersFile names no others.
 var supporterLinks = [][2]string{
-	{"repo", "https://github.com/UNITRONIX/BetterDesk"},
-	{"issues", "https://github.com/UNITRONIX/BetterDesk/issues"},
+	{"repo", "https://github.com/trybetterdesk/betterdesk"},
+	{"issues", "https://github.com/trybetterdesk/betterdesk/issues"},
 	{"sponsors", "https://github.com/sponsors/UNITRONIX"},
 	{"buyMeACoffee", "https://buymeacoffee.com/unitronix"},
-	{"sponsorsMd", "https://github.com/UNITRONIX/BetterDesk/blob/main/SPONSORS.md"},
+	{"sponsorsMd", "https://github.com/trybetterdesk/betterdesk/blob/main/SPONSORS.md"},
 }
 
 func defaultSupporterLinks() *Object {

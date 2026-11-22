@@ -137,7 +137,7 @@ describe('Sidebar', () => {
 		await setup('/devices');
 		// Unit tests show string keys: the name is "branding.powered_by BetterDesk 3.5.219"
 		const powered = screen.getByRole('link', { name: /BetterDesk 3\.5\.219$/ });
-		expect(powered).toHaveAttribute('href', 'https://github.com/UNITRONIX/BetterDesk');
+		expect(powered).toHaveAttribute('href', 'https://github.com/trybetterdesk/betterdesk');
 		expect(powered).toHaveAttribute('target', '_blank');
 		expect(powered).toHaveAttribute('rel', 'noopener noreferrer');
 		expect(powered).toHaveTextContent('3.5.219');

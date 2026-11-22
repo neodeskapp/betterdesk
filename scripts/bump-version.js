@@ -226,7 +226,9 @@ function updateChangelog(oldVersion, newVersion, dryRun) {
         content = `${newReleaseHeader}\n\n### Changed\n- Version bump to ${newVersion}.\n\n---\n\n${content}`;
     }
 
-    const compareAnchor = `[${newVersion}]: https://github.com/UNITRONIX/BetterDesk/compare/v${oldVersion}...v${newVersion}`;
+    // The compare link points at the repository the workflow runs in
+    const repository = process.env.GITHUB_REPOSITORY || 'trybetterdesk/betterdesk';
+    const compareAnchor = `[${newVersion}]: https://github.com/${repository}/compare/v${oldVersion}...v${newVersion}`;
     if (!content.includes(`[${newVersion}]:`)) {
         content = `${content.trimEnd()}\n${compareAnchor}\n`;
     }

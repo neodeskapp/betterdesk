@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WIKI_SRC="${REPO_ROOT}/docs/wiki"
-WIKI_REPO="${WIKI_REPO:-https://github.com/UNITRONIX/BetterDesk.wiki.git}"
+WIKI_REPO="${WIKI_REPO:-https://github.com/trybetterdesk/betterdesk.wiki.git}"
 WIKI_DIR="${WIKI_DIR:-${TMPDIR:-/tmp}/BetterDesk-wiki-sync}"
 COMMIT_MSG="${1:-Sync wiki from docs/wiki/}"
 

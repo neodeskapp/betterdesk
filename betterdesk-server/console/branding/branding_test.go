@@ -1375,7 +1375,7 @@ func TestSupporters(t *testing.T) {
 	s.opts.Logf = func(string, ...any) { logged++ }
 	s.ResetSupportersCache()
 	empty := s.LoadSupporters()
-	if Stringify(empty) != `{"honorary":[],"individuals":[],"links":{"repo":"https://github.com/UNITRONIX/BetterDesk","issues":"https://github.com/UNITRONIX/BetterDesk/issues","sponsors":"https://github.com/sponsors/UNITRONIX","buyMeACoffee":"https://buymeacoffee.com/unitronix","sponsorsMd":"https://github.com/UNITRONIX/BetterDesk/blob/main/SPONSORS.md"}}` || logged != 1 {
+	if Stringify(empty) != `{"honorary":[],"individuals":[],"links":{"repo":"https://github.com/trybetterdesk/betterdesk","issues":"https://github.com/trybetterdesk/betterdesk/issues","sponsors":"https://github.com/sponsors/UNITRONIX","buyMeACoffee":"https://buymeacoffee.com/unitronix","sponsorsMd":"https://github.com/trybetterdesk/betterdesk/blob/main/SPONSORS.md"}}` || logged != 1 {
 		t.Errorf("supporters without the file: %s (%d log lines)", Stringify(empty), logged)
 	}
 }

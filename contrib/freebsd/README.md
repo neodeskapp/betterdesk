@@ -34,8 +34,8 @@ Go must satisfy `betterdesk-server/go.mod` (see its toolchain line). Node.js 22.
 The web app in `web-ui/` is built first and then embedded into the binary.
 
 ```sh
-git clone https://github.com/UNITRONIX/BetterDesk.git
-cd BetterDesk/web-ui
+git clone https://github.com/trybetterdesk/betterdesk.git
+cd betterdesk/web-ui
 npx -y npm@11.6.2 ci --no-audit --no-fund   # npm 10 can't resolve its dependencies
 npm run build
 

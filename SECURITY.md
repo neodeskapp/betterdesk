@@ -22,7 +22,7 @@ maintainers' discretion.
 Preferred channels (in order):
 
 1. **GitHub Security Advisory (private):**
-   <https://github.com/UNITRONIX/Rustdesk-FreeConsole/security/advisories/new>
+   <https://github.com/trybetterdesk/betterdesk/security/advisories/new>
 2. **Encrypted email:** `security@betterdesk.invalid` *(replace with your real
    address before publishing; PGP key TBD)*
 
