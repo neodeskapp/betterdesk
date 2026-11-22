@@ -580,18 +580,18 @@ test_install_sh_uses_the_fork() (
     set --
     # shellcheck disable=SC1091
     source "$SCRIPT_ROOT/install.sh"
-    [ "$BETTERDESK_REPO" = trybetterdesk/betterdesk ] || fail "install.sh clones $BETTERDESK_REPO"
+    [ "$BETTERDESK_REPO" = neodeskapp/betterdesk ] || fail "install.sh clones $BETTERDESK_REPO"
     case "$BETTERDESK_RAW_BASE" in
-        https://raw.githubusercontent.com/trybetterdesk/betterdesk/*) ;;
+        https://raw.githubusercontent.com/neodeskapp/betterdesk/*) ;;
         *) fail "install.sh downloads from $BETTERDESK_RAW_BASE" ;;
     esac
     # The one-liners and the installers' own downloads name the fork's
     # only branch, main; there is no dev branch, and upstream's main holds
     # its older installer
-    [ "$BETTERDESK_RAW_BASE" = https://raw.githubusercontent.com/trybetterdesk/betterdesk/main ] \
+    [ "$BETTERDESK_RAW_BASE" = https://raw.githubusercontent.com/neodeskapp/betterdesk/main ] \
         || fail "install.sh downloads from $BETTERDESK_RAW_BASE"
     local hits
-    hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(trybetterdesk/betterdesk/dev/|UNITRONIX/BetterDesk/main/(install\.sh|betterdesk(-docker)?\.(sh|ps1)|docker-compose))|github\.com/trybetterdesk/betterdesk/(blob|tree)/dev/' \
+    hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(neodeskapp/betterdesk/dev/|UNITRONIX/BetterDesk/main/(install\.sh|betterdesk(-docker)?\.(sh|ps1)|docker-compose))|github\.com/neodeskapp/betterdesk/(blob|tree)/dev/' \
         install.sh betterdesk.sh betterdesk.ps1 betterdesk-docker.sh docker-compose*.yml README.md SECURITY.md || true)
     [ -z "$hits" ] || fail "one-liners name a branch without the current installers: $hits"
     local docker_base
@@ -602,7 +602,7 @@ test_install_sh_uses_the_fork() (
         source "$SCRIPT_ROOT/betterdesk-docker.sh"
         printf '%s\n' "$BETTERDESK_RAW_BASE"
     )
-    [ "$docker_base" = https://raw.githubusercontent.com/trybetterdesk/betterdesk/main ] \
+    [ "$docker_base" = https://raw.githubusercontent.com/neodeskapp/betterdesk/main ] \
         || fail "betterdesk-docker.sh downloads from $docker_base"
     grep -qF '$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "main" }' "$SCRIPT_ROOT/betterdesk.ps1" \
         || fail "betterdesk.ps1 does not fetch itself from main"

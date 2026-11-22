@@ -216,7 +216,7 @@ describe('updates', () => {
 	});
 
 	test('the repository of the channel, the project when the server names none', () => {
-		expect(channelRepo({ owner: '', repo: '' })).toBe('trybetterdesk/betterdesk');
+		expect(channelRepo({ owner: '', repo: '' })).toBe('neodeskapp/betterdesk');
 		expect(channelRepo({ owner: 'acme', repo: 'desk' })).toBe('acme/desk');
 	});
 

@@ -3444,7 +3444,7 @@ function Do-Install {
 # A repository given to the installer wins over .env, and .env over these
 $script:UPDATE_GITHUB_OWNER_GIVEN = "$env:UPDATE_GITHUB_OWNER"
 $script:UPDATE_GITHUB_REPO_GIVEN = "$env:UPDATE_GITHUB_REPO"
-$script:UPDATE_GITHUB_OWNER = if ($env:UPDATE_GITHUB_OWNER) { $env:UPDATE_GITHUB_OWNER } else { "trybetterdesk" }
+$script:UPDATE_GITHUB_OWNER = if ($env:UPDATE_GITHUB_OWNER) { $env:UPDATE_GITHUB_OWNER } else { "neodeskapp" }
 $script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_REPO } else { "betterdesk" }
 # A channel given to the installer (-Channel, else UPDATE_GITHUB_BRANCH) wins
 # over .env and is written into it. UPDATE_GITHUB_BRANCH holds the channel's

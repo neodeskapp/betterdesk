@@ -81,19 +81,19 @@ The [documentation](https://betterde.sk/docs) has each way step by step.
 ### Docker
 
 One container runs the server and the web console from the published image
-`ghcr.io/trybetterdesk/betterdesk`. The script sets it up in
+`ghcr.io/neodeskapp/betterdesk`. The script sets it up in
 `/opt/betterdesk/docker`, installs Docker when it is missing, and prints the
 admin password at the end:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/install.sh | sudo bash
 ```
 
 Or with the compose file by hand:
 
 ```bash
 mkdir betterdesk && cd betterdesk
-curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/docker-compose.quick.single.yml -o docker-compose.yml
 docker compose up -d
 docker compose exec betterdesk betterdesk-show-admin-credentials
 ```
@@ -104,7 +104,7 @@ The console is then at `http://your-server:5000`, which is plain HTTP. See
 ### Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk.sh | sudo bash
 ```
 
 This installs the newest release as the service `betterdesk-server` with the
@@ -117,7 +117,7 @@ questions instead, download `betterdesk.sh` and run it with `sudo bash`. See
 In PowerShell as Administrator:
 
 ```powershell
-Invoke-WebRequest https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.ps1 -OutFile betterdesk.ps1 -UseBasicParsing
+Invoke-WebRequest https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk.ps1 -OutFile betterdesk.ps1 -UseBasicParsing
 .\betterdesk.ps1
 ```
 

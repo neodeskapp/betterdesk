@@ -3,14 +3,14 @@
 # BetterDesk — one-line installer (Linux)
 #
 # Docker (default: the published image in one container, betterdesk-docker.sh):
-#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/install.sh | sudo bash
 #
 # Docker, move a two-container (split) install to the one container:
 #   curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
 #
 # Native (git clone + betterdesk.sh --auto): the newest stable release, or
 # the development build while the repository has none:
-#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/install.sh | sudo bash -s -- --native
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/install.sh | sudo bash -s -- --native
 # Native, the development build: add --channel dev
 #
 # Options (pass after "bash -s --"):
@@ -43,7 +43,7 @@
 set -euo pipefail
 
 VERSION="1.0.0"
-BETTERDESK_REPO="${BETTERDESK_REPO:-trybetterdesk/betterdesk}"
+BETTERDESK_REPO="${BETTERDESK_REPO:-neodeskapp/betterdesk}"
 # The branch whose files this installer fetches (betterdesk.sh for a native
 # install, betterdesk-docker.sh for Docker): the repository's branch, main.
 # Override with --branch / BETTERDESK_BRANCH. The branch names no release

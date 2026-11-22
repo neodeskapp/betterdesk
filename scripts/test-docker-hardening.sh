@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE_TAG="${BETTERDESK_IMAGE_TAG:-dev}"
-IMAGE="${BETTERDESK_HARDENING_IMAGE:-ghcr.io/trybetterdesk/betterdesk:${IMAGE_TAG}}"
+IMAGE="${BETTERDESK_HARDENING_IMAGE:-ghcr.io/neodeskapp/betterdesk:${IMAGE_TAG}}"
 PROJECT="betterdesk-hardening-$RANDOM"
 TEST_DIR="$(mktemp -d)"
 OVERRIDE_FILE="$TEST_DIR/compose.override.yml"

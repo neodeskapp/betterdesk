@@ -89,7 +89,7 @@ docker() {
                 *State.Running*) if [ -f "$TEST_DIR/running" ]; then printf 'true\n'; else printf 'false\n'; fi ;;
                 *working_dir*) cat "$TEST_DIR/dir" 2>/dev/null || printf '%s\n' "$BETTERDESK_DIR" ;;
                 *config-hash*) printf 'oldhash\n' ;;
-                *Config.Image*) printf 'ghcr.io/trybetterdesk/betterdesk:latest\n' ;;
+                *Config.Image*) printf 'ghcr.io/neodeskapp/betterdesk:latest\n' ;;
                 *Image*) cat "$TEST_DIR/current-image" ;;
             esac
             return 0 ;;

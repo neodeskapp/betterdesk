@@ -60,9 +60,9 @@ RUN version="${BETTERDESK_PRODUCT_VERSION:-$(tr -d '[:space:]' < VERSION)}" && \
 # ---- Runtime stage ----
 FROM alpine:3.22
 
-LABEL maintainer="trybetterdesk"
+LABEL maintainer="neodeskapp"
 LABEL description="BetterDesk Server - RustDesk-compatible signal + relay"
-LABEL org.opencontainers.image.source="https://github.com/trybetterdesk/betterdesk"
+LABEL org.opencontainers.image.source="https://github.com/neodeskapp/betterdesk"
 LABEL version="3.6.0-rc.1"
 
 RUN apk add --no-cache \

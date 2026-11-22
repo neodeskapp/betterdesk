@@ -20,7 +20,7 @@ manifests with the matching source revision as an SBOM.
 ## Desktop client
 
 The BetterDesk desktop client is not in this repository. It is built in
-[trybetterdesk/betterdesk-client](https://github.com/trybetterdesk/betterdesk-client)
+[neodeskapp/betterdesk-client](https://github.com/neodeskapp/betterdesk-client)
 under AGPL-3.0, and its dependency manifests and notices are there. The
 server hands out its release packages for join and support codes
 (`betterdesk-server/console/clientrelease`): it downloads them from that

@@ -303,10 +303,10 @@ function Test-ReleasesComeFromTheFork {
     if ($defaults.Count -lt 2) { Fail "the installer sets no repository for releases ($($defaults.Count) lines)" }
     foreach ($a in $defaults) { . ([scriptblock]::Create($a.Extent.Text)) }
     $base = Get-ReleaseBaseUrl
-    if ($base -ne 'https://github.com/trybetterdesk/betterdesk/releases/latest/download') { Fail "the stable channel downloads from $base" }
+    if ($base -ne 'https://github.com/neodeskapp/betterdesk/releases/latest/download') { Fail "the stable channel downloads from $base" }
     $script:UPDATE_GITHUB_BRANCH = 'dev'
     $base = Get-ReleaseBaseUrl
-    if ($base -ne 'https://github.com/trybetterdesk/betterdesk/releases/download/dev') { Fail "the development channel downloads from $base" }
+    if ($base -ne 'https://github.com/neodeskapp/betterdesk/releases/download/dev') { Fail "the development channel downloads from $base" }
     $script:UPDATE_GITHUB_BRANCH = 'main'
     foreach ($k in $saved.Keys) { [Environment]::SetEnvironmentVariable($k, $saved[$k]) }
 }
@@ -587,7 +587,7 @@ function Test-WindowsFirstHour {
 # in .env stays.
 function Test-UpdateAsksTheFork {
     $dir = New-TestInstall
-    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'trybetterdesk', 'betterdesk'
+    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'neodeskapp', 'betterdesk'
     $script:UPDATE_GITHUB_OWNER_GIVEN, $script:UPDATE_GITHUB_REPO_GIVEN = '', ''
     function script:Invoke-ServerCommand { param([string[]]$Arguments, $InputText, $Binary) $script:seenRepo = "$env:UPDATE_GITHUB_OWNER/$env:UPDATE_GITHUB_REPO"; return 1 }
     function script:Do-BackupSilent { }
@@ -598,7 +598,7 @@ function Test-UpdateAsksTheFork {
     $envFile = Join-Path $script:CONSOLE_PATH '.env'
     Set-Content -Path $envFile -Value @('SESSION_SECRET=kept')
     Update-GoInstall *> $null
-    if ($script:seenRepo -ne 'trybetterdesk/betterdesk') { Fail "betterdesk-server update ran for $($script:seenRepo)" }
+    if ($script:seenRepo -ne 'neodeskapp/betterdesk') { Fail "betterdesk-server update ran for $($script:seenRepo)" }
     Set-Content -Path $envFile -Value @('UPDATE_GITHUB_OWNER=acme', 'UPDATE_GITHUB_REPO=desk')
     Update-GoInstall *> $null
     if ($script:seenRepo -ne 'acme/desk') { Fail "the repository of .env lost to the default: $($script:seenRepo)" }
@@ -769,7 +769,7 @@ function Test-ReleaseSignatureOnWindows {
     Set-Content -Path (Join-Path $rel $asset) -Value 'the new server'
     $sum = (Get-FileHash -Path (Join-Path $rel $asset) -Algorithm SHA256).Hash.ToLower()
     Set-Content -Path (Join-Path $rel 'SHA256SUMS') -Value "$sum  $asset"
-    Set-Content -Path (Join-Path $rel 'manifest.json') -Value @('{', '  "owner": "trybetterdesk",', '  "branch": "main",', '  "files": []', '}')
+    Set-Content -Path (Join-Path $rel 'manifest.json') -Value @('{', '  "owner": "neodeskapp",', '  "branch": "main",', '  "files": []', '}')
     Set-Content -Path (Join-Path $rel 'manifest.sig') -Value 'c2lnbmF0dXJl'
     function Invoke-WebRequest {
         param($Uri, $OutFile, [switch]$UseBasicParsing, $ErrorAction)
@@ -869,20 +869,20 @@ function Test-NoStableReleaseTakesTheNewestPrerelease {
     $script:latest = $null
     function Invoke-RestMethod {
         param($Uri, $Headers, [switch]$UseBasicParsing, $ErrorAction)
-        if ($Uri -eq 'https://api.github.com/repos/trybetterdesk/betterdesk/releases/latest') {
+        if ($Uri -eq 'https://api.github.com/repos/neodeskapp/betterdesk/releases/latest') {
             if ($script:latest) { return $script:latest }
             throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.')
         }
-        if ($Uri -ne 'https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50') { throw "unexpected $Uri" }
+        if ($Uri -ne 'https://api.github.com/repos/neodeskapp/betterdesk/releases?per_page=50') { throw "unexpected $Uri" }
         return $script:releases
     }
     function Invoke-WebRequest {
         param($Uri, $OutFile, [switch]$UseBasicParsing, $ErrorAction)
-        if ($Uri -like 'https://github.com/trybetterdesk/betterdesk/releases/latest/*') { throw [System.Net.WebException]::new('The underlying connection was closed: The connection was closed unexpectedly.') }
-        if ($Uri -notlike 'https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0-rc.2/*' -and $Uri -notlike 'https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/*') { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+        if ($Uri -like 'https://github.com/neodeskapp/betterdesk/releases/latest/*') { throw [System.Net.WebException]::new('The underlying connection was closed: The connection was closed unexpectedly.') }
+        if ($Uri -notlike 'https://github.com/neodeskapp/betterdesk/releases/download/v3.6.0-rc.2/*' -and $Uri -notlike 'https://github.com/neodeskapp/betterdesk/releases/download/v3.6.0/*') { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
         Copy-Item -Path (Join-Path $rel (($Uri -split '/')[-1])) -Destination $OutFile -Force
     }
-    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'trybetterdesk', 'betterdesk'
+    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'neodeskapp', 'betterdesk'
     $script:SKIP_VERIFY = $true
     foreach ($given in @('', 'main')) {
         $stage = Join-Path $dir "stage-$given"

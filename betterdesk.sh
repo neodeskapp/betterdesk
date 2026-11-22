@@ -253,7 +253,7 @@ while [[ $# -gt 0 ]]; do
             echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
-            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh | sudo bash"
+            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk.sh | sudo bash"
             echo "Later:                     sudo betterdesk (menu), sudo betterdesk --update, sudo betterdesk --uninstall"
             exit 0
             ;;
@@ -4692,7 +4692,7 @@ write_server_unit() {
     cat << EOF | grep -v '^__EMPTY__$' > "$SERVER_UNIT"
 [Unit]
 Description=BetterDesk server and web console v$VERSION
-Documentation=https://github.com/trybetterdesk/betterdesk
+Documentation=https://github.com/neodeskapp/betterdesk
 After=network-online.target postgresql.service
 Wants=network-online.target
 
@@ -5607,7 +5607,7 @@ do_install() {
 # A repository given to the installer wins over .env, and .env over these
 UPDATE_GITHUB_OWNER_GIVEN="${UPDATE_GITHUB_OWNER:-}"
 UPDATE_GITHUB_REPO_GIVEN="${UPDATE_GITHUB_REPO:-}"
-UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-trybetterdesk}"
+UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-neodeskapp}"
 UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-betterdesk}"
 # A channel given to the installer (--channel, or install.sh's --channel)
 # wins over .env and is written into it. UPDATE_GITHUB_BRANCH holds the

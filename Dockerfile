@@ -4,7 +4,7 @@
 # betterdesk-server serves the signal and relay server, the API and the web
 # console (DECISIONS A32). The web app is built into the binary.
 #
-# Published as ghcr.io/trybetterdesk/betterdesk (docker-compose.quick.single.yml
+# Published as ghcr.io/neodeskapp/betterdesk (docker-compose.quick.single.yml
 # runs it). Build it from a checkout instead:
 #   docker build -t betterdesk:local .
 #   docker compose -f docker-compose.single.yml up -d
@@ -70,9 +70,9 @@ RUN version="${BETTERDESK_PRODUCT_VERSION:-$(tr -d '[:space:]' < VERSION)}" && \
 # ============= Runtime =============
 FROM alpine:3.22
 
-LABEL maintainer="trybetterdesk"
+LABEL maintainer="neodeskapp"
 LABEL description="BetterDesk — server and web console in one process"
-LABEL org.opencontainers.image.source="https://github.com/trybetterdesk/betterdesk"
+LABEL org.opencontainers.image.source="https://github.com/neodeskapp/betterdesk"
 LABEL version="3.6.0-rc.1"
 
 # Runtime packages (retry for transient DNS failures). sqlite stays for the

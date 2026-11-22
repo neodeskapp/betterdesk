@@ -69,7 +69,7 @@ test_enrollment_mode_is_not_forced() (
 # nothing and follows releases; every compose file says which one is which.
 test_quick_compose_pulls_the_published_image() (
     local quick="$SCRIPT_ROOT/docker-compose.quick.single.yml" f other
-    grep -q 'image: ghcr.io/trybetterdesk/betterdesk:${BETTERDESK_IMAGE_TAG:-latest}' "$quick" || fail "docker-compose.quick.single.yml does not run ghcr.io/trybetterdesk/betterdesk:latest"
+    grep -q 'image: ghcr.io/neodeskapp/betterdesk:${BETTERDESK_IMAGE_TAG:-latest}' "$quick" || fail "docker-compose.quick.single.yml does not run ghcr.io/neodeskapp/betterdesk:latest"
     if grep -qE '^[[:space:]]+build:' "$quick"; then fail "docker-compose.quick.single.yml builds an image"; fi
     if grep -qE 'pull_policy:[[:space:]]*never' "$quick"; then fail "docker-compose.quick.single.yml never pulls"; fi
     for f in "$SCRIPT_ROOT"/docker-compose*.yml; do

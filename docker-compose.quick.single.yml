@@ -14,15 +14,15 @@
 # Install with the script. It saves this file as docker-compose.yml with a
 # .env next to it in /opt/betterdesk/docker, starts it and prints how to
 # sign in:
-#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk-docker.sh -o betterdesk-docker.sh
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk-docker.sh -o betterdesk-docker.sh
 #   sudo bash betterdesk-docker.sh
 #
 # Or by hand:
-#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/docker-compose.quick.single.yml -o docker-compose.yml
 #   docker compose up -d
 #   docker compose exec betterdesk betterdesk-show-admin-credentials
 #
-# Image: ghcr.io/trybetterdesk/betterdesk with the tag "latest", the newest
+# Image: ghcr.io/neodeskapp/betterdesk with the tag "latest", the newest
 # release. Update to the newest release:
 #   docker compose pull && docker compose up -d
 # Pin a release instead: put BETTERDESK_IMAGE_TAG=<version> (for example
@@ -45,7 +45,7 @@
 
 services:
   betterdesk:
-    image: ghcr.io/trybetterdesk/betterdesk:${BETTERDESK_IMAGE_TAG:-latest}
+    image: ghcr.io/neodeskapp/betterdesk:${BETTERDESK_IMAGE_TAG:-latest}
     container_name: betterdesk
     hostname: betterdesk
     ports:
@@ -81,7 +81,7 @@ services:
       - BETTERDESK_API_URL=http://127.0.0.1:21121/api
       - RUSTDESK_PATH=/opt/rustdesk
       - DATA_DIR=/app/data
-      - BETTERDESK_CLIENT_REPO=${BETTERDESK_CLIENT_REPO:-trybetterdesk/betterdesk-client}
+      - BETTERDESK_CLIENT_REPO=${BETTERDESK_CLIENT_REPO:-neodeskapp/betterdesk-client}
       - BETTERDESK_CLIENT_RELEASE_TAG=${BETTERDESK_CLIENT_RELEASE_TAG:-}
       - BETTERDESK_GITHUB_TOKEN=${BETTERDESK_GITHUB_TOKEN:-}
       - BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=${BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED:-}

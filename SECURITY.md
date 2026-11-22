@@ -19,7 +19,7 @@ discretion.
 
 Please don't open a public GitHub issue for a security problem. Report it
 privately through GitHub:
-<https://github.com/trybetterdesk/betterdesk/security/advisories/new>
+<https://github.com/neodeskapp/betterdesk/security/advisories/new>
 
 Please include, where you can:
 
@@ -63,7 +63,7 @@ In scope, everything in this repository:
 Out of scope:
 
 - The BetterDesk desktop client. It is built in
-  [trybetterdesk/betterdesk-client](https://github.com/trybetterdesk/betterdesk-client);
+  [neodeskapp/betterdesk-client](https://github.com/neodeskapp/betterdesk-client);
   report its issues there.
 - Issues that need an attacker who already controls the host's operating
   system, the database file, or an administrator's browser session.

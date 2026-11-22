@@ -4,7 +4,7 @@
 #   BetterDesk Console Manager v3.6.0-rc.1 (Docker)
 #
 #   Installs, updates and removes BetterDesk on Docker: one container that
-#   runs the published image ghcr.io/trybetterdesk/betterdesk (signal,
+#   runs the published image ghcr.io/neodeskapp/betterdesk (signal,
 #   relay, API and the web console), with docker-compose.yml and .env in
 #   one folder (/opt/betterdesk/docker).
 #
@@ -26,9 +26,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)
 # Settings: flags win over these variables, which win over the defaults
 BETTERDESK_DIR="${BETTERDESK_DIR:-/opt/betterdesk/docker}"
 # The image the compose file runs (a mirror goes into docker-compose.override.yml)
-BETTERDESK_IMAGE="ghcr.io/trybetterdesk/betterdesk"
+BETTERDESK_IMAGE="ghcr.io/neodeskapp/betterdesk"
 BETTERDESK_IMAGE_TAG_SET="${BETTERDESK_IMAGE_TAG:-}"
-BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/trybetterdesk/betterdesk/${BETTERDESK_BRANCH:-main}}"
+BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/neodeskapp/betterdesk/${BETTERDESK_BRANCH:-main}}"
 RELAY_SERVERS_SET="${RELAY_SERVERS:-}"
 RELAY_MODE="${RELAY_MODE:-auto}"
 CONSOLE_PORT_SET="${BETTERDESK_CONSOLE_PORT:-}"
@@ -446,7 +446,7 @@ fetch_compose_file() {
     curl -fsSL --connect-timeout 15 --max-time 60 -o "$1" "$BETTERDESK_RAW_BASE/docker-compose.quick.single.yml" \
         || die "Could not download the compose file from $BETTERDESK_RAW_BASE" \
             "Check the internet connection, or run the script from a checkout of the repository."
-    grep -q 'ghcr.io/trybetterdesk/betterdesk' "$1" || die "The downloaded compose file is not BetterDesk's ($BETTERDESK_RAW_BASE)"
+    grep -q 'ghcr.io/neodeskapp/betterdesk' "$1" || die "The downloaded compose file is not BetterDesk's ($BETTERDESK_RAW_BASE)"
 }
 
 # write_compose_file: docker-compose.yml of this release. A file the user
@@ -695,7 +695,7 @@ pull_image() {
 build_image() {
     [ -f "$SCRIPT_DIR/Dockerfile" ] && [ -d "$SCRIPT_DIR/betterdesk-server" ] \
         || die "--build needs a checkout of the repository next to this script." \
-            "git clone https://github.com/trybetterdesk/betterdesk.git && sudo bash betterdesk/betterdesk-docker.sh --build"
+            "git clone https://github.com/neodeskapp/betterdesk.git && sudo bash betterdesk/betterdesk-docker.sh --build"
     BETTERDESK_IMAGE_TAG_SET="local"
     env_set BETTERDESK_IMAGE_TAG local
     step "Building $(image_ref) from $SCRIPT_DIR (several minutes)"

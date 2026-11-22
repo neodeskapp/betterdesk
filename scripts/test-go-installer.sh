@@ -441,14 +441,14 @@ test_releases_come_from_the_fork() (
     load
     local base
     base=$(release_base_url)
-    [ "$base" = "https://github.com/trybetterdesk/betterdesk/releases/latest/download" ] \
+    [ "$base" = "https://github.com/neodeskapp/betterdesk/releases/latest/download" ] \
         || fail "the stable channel downloads from $base"
     UPDATE_GITHUB_BRANCH=dev
     base=$(release_base_url)
-    [ "$base" = "https://github.com/trybetterdesk/betterdesk/releases/download/dev" ] \
+    [ "$base" = "https://github.com/neodeskapp/betterdesk/releases/download/dev" ] \
         || fail "the development channel downloads from $base"
     write_server_unit "-mode all" ""
-    grep -qx "Documentation=https://github.com/trybetterdesk/betterdesk" "$SERVER_UNIT" \
+    grep -qx "Documentation=https://github.com/neodeskapp/betterdesk" "$SERVER_UNIT" \
         || fail "the unit's documentation link: $(grep '^Documentation=' "$SERVER_UNIT")"
     rm -rf "$TEST_DIR"
 )
@@ -519,7 +519,7 @@ test_one_command_install() (
         cp "$SCRIPT_ROOT/betterdesk.sh" "$dest"
     }
     install_manager_command >/dev/null
-    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk.sh" ] \
+    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk.sh" ] \
         || fail "the betterdesk command came from $(cat "$TEST_DIR/fetched")"
     unset -f curl
     rm -rf "$TEST_DIR"
@@ -652,7 +652,7 @@ test_no_stable_release_installs_the_newest_prerelease() (
         local a prev="" dest="" url="${!#}"
         for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
         case "$url" in
-            https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50)
+            https://api.github.com/repos/neodeskapp/betterdesk/releases?per_page=50)
                 printf '[\n  {\n    "url": "x",\n    "author": {"login": "bot"},\n    "tag_name": "dev",\n    "draft": false,\n    "prerelease": true,\n    "assets": [{"name": "manifest.json"}]\n  },\n'
                 printf '  {"tag_name": "v3.7.0-rc.1", "draft": true, "prerelease": true, "assets": []},\n'
                 printf '  {"tag_name": "v3.6.0-rc.2", "name": "BetterDesk 3.6.0-rc.2", "draft": false, "prerelease": true, "assets": []},\n'
@@ -852,7 +852,7 @@ test_update_asks_the_fork() (
     server_cmd() { printf '%s/%s\n' "${UPDATE_GITHUB_OWNER:-}" "${UPDATE_GITHUB_REPO:-}" > "$TEST_DIR/seen"; return 1; }
     printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
     update_go_install >/dev/null 2>&1 || true
-    [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = trybetterdesk/betterdesk ] \
+    [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = neodeskapp/betterdesk ] \
         || fail "betterdesk-server update ran for $(cat "$TEST_DIR/seen" 2>/dev/null || echo 'no repository')"
     printf 'UPDATE_GITHUB_OWNER=acme\nUPDATE_GITHUB_REPO=desk\n' > "$CONSOLE_PATH/.env"
     update_go_install >/dev/null 2>&1 || true
@@ -988,7 +988,7 @@ write_release() {
   "version": "3.6.0",
   "channel": "$channel",
   "created": "2026-11-22T10:00:00Z",
-  "owner": "trybetterdesk",
+  "owner": "neodeskapp",
   "repo": "betterdesk",
   "branch": "$branch",
   "sha": "$RELEASE_COMMIT",
@@ -1019,7 +1019,7 @@ sign_release() {
     local dir="$1" amd arm
     amd=$(sha256sum "$dir/betterdesk-server-linux-amd64" | cut -d' ' -f1)
     arm=$(sha256sum "$dir/betterdesk-server-linux-arm64" | cut -d' ' -f1)
-    printf 'betterdesk-update-manifest-v1\nowner=trybetterdesk\nrepo=betterdesk\nbranch=%s\nsha=%s\nfiles=2\n%s  betterdesk-server-linux-amd64\n%s  betterdesk-server-linux-arm64\n' \
+    printf 'betterdesk-update-manifest-v1\nowner=neodeskapp\nrepo=betterdesk\nbranch=%s\nsha=%s\nfiles=2\n%s  betterdesk-server-linux-amd64\n%s  betterdesk-server-linux-arm64\n' \
         "$3" "$RELEASE_COMMIT" "$amd" "$arm" > "$dir/.payload"
     openssl pkeyutl -sign -inkey "$2" -rawin -in "$dir/.payload" -out "$dir/.sig" 2>/dev/null || fail "openssl could not sign"
     { base64 -w0 "$dir/.sig"; echo; } > "$dir/manifest.sig"

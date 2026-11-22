@@ -16,7 +16,7 @@ export type UpdateState = 'idle' | 'checking' | 'uptodate' | 'available' | 'base
 
 /** owner/repo the channel's releases come from; the project's repository when the server names none */
 export function channelRepo(channel: Pick<Channel, 'owner' | 'repo'>): string {
-	return `${channel.owner || 'trybetterdesk'}/${channel.repo || 'betterdesk'}`;
+	return `${channel.owner || 'neodeskapp'}/${channel.repo || 'betterdesk'}`;
 }
 
 /**
