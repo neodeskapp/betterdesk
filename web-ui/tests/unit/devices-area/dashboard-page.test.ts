@@ -4,7 +4,7 @@
  */
 import { cleanup, render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const pageUrl = vi.hoisted(() => ({ url: new URL('http://localhost/app') }));
 vi.mock('$app/state', () => ({ page: pageUrl }));
@@ -15,6 +15,20 @@ import Page from '../../../src/routes/(console)/+page.svelte';
 import { session } from '../../../src/lib/state/session.svelte.ts';
 import { dismissAll } from '../../../src/lib/ui/toasts.svelte.ts';
 import { pageInfo } from '../../../src/lib/shell/page.svelte.ts';
+
+// The page imports the trends and its dialogs when they show. The first
+// import of a Svelte module compiles it, which on a busy machine takes
+// longer than the second that findByRole and vi.waitFor wait (BUGS L167),
+// so they are compiled here once, before the first test looks for them.
+beforeAll(async () => {
+	await Promise.all([
+		import('../../../src/lib/people/Trends.svelte'),
+		import('../../../src/lib/devices-area/ConfigQrDialog.svelte'),
+		import('../../../src/lib/devices-area/InstallScriptSheet.svelte'),
+		import('../../../src/lib/devices-area/PairCodeDialog.svelte'),
+		import('../../../src/lib/devices-area/AgentActivation.svelte')
+	]);
+}, 60_000);
 
 let requests: string[] = [];
 let writes: { method: string; path: string; body: unknown }[] = [];
