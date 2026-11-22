@@ -62,6 +62,13 @@ func newWorld(t *testing.T, answers func(method, path string) answer) *world {
 // default of 120 a minute).
 func newLimitedWorld(t *testing.T, answers func(method, path string) answer, limit string) *world {
 	t.Helper()
+	return newWorldWith(t, answers, limit, nil)
+}
+
+// newWorldWith is newLimitedWorld with the console's access service, for
+// the accounts' client features; nil for none.
+func newWorldWith(t *testing.T, answers func(method, path string) answer, limit string, features *access.Service) *world {
+	t.Helper()
 	w := &world{t: t, answers: answers}
 	api := goapi.New(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
@@ -80,6 +87,8 @@ func newLimitedWorld(t *testing.T, answers func(method, path string) answer, lim
 	}), goapi.WithTimeout(2*time.Second))
 	d := &kit.Deps{
 		Router: kit.NewRouter(),
+		Access: features,
+		Log:    kit.NewLogger("error", false),
 		GoAPI:  api,
 		Limits: limits.NewSet(limits.Options{Getenv: func(name string) string {
 			if name == "RDCLIENT_PAGE_RATE_LIMIT_MAX" {
