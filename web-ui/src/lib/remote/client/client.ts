@@ -554,10 +554,11 @@ export class RDClient {
 				}
 			});
 			this.conn.on('relay:error', (e) => {
-				const message = errorField(e, 'message');
-				this._handleDisconnect('Relay error: ' + String(message), {
+				// A WebSocket error event carries no message
+				const message = String(errorField(e, 'message') || 'the relay connection failed');
+				this._handleDisconnect('Relay error: ' + message, {
 					source: 'relay-error',
-					error: message ? String(message) : String(e)
+					error: message
 				});
 			});
 

@@ -96,3 +96,28 @@ describe("the device's sound format", () => {
 		s.c.disconnect();
 	});
 });
+
+describe('the relay socket fails', () => {
+	test('the session ends with a reason in words, not "undefined" or "[object Event]"', async () => {
+		const c = new RDClient(document.createElement('canvas'), { deviceId: '900100012' });
+		vi.spyOn(c.conn, 'connectRendezvous').mockResolvedValue(undefined);
+		vi.spyOn(c.conn, 'sendRendezvous').mockImplementation(() => {});
+		vi.spyOn(c.conn, 'closeRendezvous').mockImplementation(() => {});
+		vi.spyOn(c.conn, 'connectRelay').mockResolvedValue(undefined);
+		vi.spyOn(c.conn, 'sendRelay').mockImplementation(() => {});
+		vi.spyOn(c, '_waitForRendezvousResponse').mockResolvedValue({
+			uuid: '1b4e28ba-2fa1-41d2-883f-0016d3cca427',
+			relayServer: 'relay.example.com:21117'
+		});
+		const ended: [string, { error?: string }][] = [];
+		c.on('disconnected', (reason: string, info: { error?: string }) => ended.push([reason, info]));
+		await c.connect();
+		c.conn._emit('relay:error', new Event('error'));
+		expect(ended).toHaveLength(1);
+		const [reason, info] = ended[0]!;
+		expect(reason).toMatch(/^Relay error: /);
+		expect(reason).not.toMatch(/undefined/);
+		expect(info.error).not.toBe('[object Event]');
+		expect(info.error).toBeTruthy();
+	});
+});
