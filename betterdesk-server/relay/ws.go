@@ -3,6 +3,7 @@ package relay
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
@@ -32,34 +33,31 @@ func wsFirstReadTimeout() time.Duration {
 	return time.Duration(atomic.LoadInt64(&wsFirstReadNs))
 }
 
-// serveWS starts the WebSocket relay listener (e.g., port 21119).
-// RustDesk WebSocket Mode clients use this for relay traffic over WSS.
-// Phase 3: Supports WSS when TLS is enabled for relay server.
-func (s *Server) serveWS() {
-	defer s.wg.Done()
-
+// newWSServer is the WebSocket relay listener (e.g., port 21119), with the
+// TLS config when TLS is enabled for the relay server (WSS). RustDesk
+// WebSocket Mode clients use it for relay traffic over WSS. Start builds it
+// before serveWS runs, so Stop always finds it.
+func (s *Server) newWSServer(tlsCfg *tls.Config) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleWSRelayUpgrade)
-
-	addr := fmt.Sprintf(":%d", s.cfg.WSRelayPort())
-	s.wsHTTP = &http.Server{
-		Addr:              addr,
+	return &http.Server{
+		Addr:              fmt.Sprintf(":%d", s.cfg.WSRelayPort()),
 		Handler:           mux,
 		ReadHeaderTimeout: config.WSConnTimeout,
 		WriteTimeout:      0, // No write timeout for relay pipe
+		TLSConfig:         tlsCfg,
 		BaseContext: func(l net.Listener) context.Context {
 			return s.ctx
 		},
 	}
+}
 
-	// Phase 3: Enable WSS if TLS is configured for relay server.
-	if s.cfg.RelayTLSEnabled() {
-		tlsCfg, err := config.LoadTLSConfig(s.cfg.TLSCertFile, s.cfg.TLSKeyFile)
-		if err != nil {
-			log.Printf("[relay] WSS TLS config error: %v", err)
-			return
-		}
-		s.wsHTTP.TLSConfig = tlsCfg
+// serveWS serves the WebSocket relay listener until Stop shuts it down.
+func (s *Server) serveWS() {
+	defer s.wg.Done()
+
+	addr := s.wsHTTP.Addr
+	if s.wsHTTP.TLSConfig != nil {
 		log.Printf("[relay] WSS listening on %s (TLS enabled)", addr)
 		if err := s.wsHTTP.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 			log.Printf("[relay] WSS server error: %v", err)

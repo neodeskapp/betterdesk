@@ -5,6 +5,7 @@ package relay
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -272,8 +273,9 @@ func (s *Server) Start(ctx context.Context) error {
 	// Phase 3: Wrap relay TCP listener with dual-mode TLS if enabled.
 	// Dual-mode auto-detects TLS ClientHello (0x16) vs plain protobuf,
 	// allowing both legacy and TLS clients on the same port.
+	var tlsCfg *tls.Config
 	if s.cfg.RelayTLSEnabled() {
-		tlsCfg, err := config.LoadTLSConfig(s.cfg.TLSCertFile, s.cfg.TLSKeyFile)
+		tlsCfg, err = config.LoadTLSConfig(s.cfg.TLSCertFile, s.cfg.TLSKeyFile)
 		if err != nil {
 			return fmt.Errorf("relay: %w", err)
 		}
@@ -282,6 +284,8 @@ func (s *Server) Start(ctx context.Context) error {
 	} else {
 		log.Printf("[relay] TCP listening on :%d", s.cfg.RelayPort)
 	}
+	// The WebSocket listener uses the same TLS config (WSS)
+	s.wsHTTP = s.newWSServer(tlsCfg)
 
 	s.wg.Add(3)
 	go s.serveTCP()

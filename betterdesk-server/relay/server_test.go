@@ -346,3 +346,35 @@ func TestRelayHealthCheck(t *testing.T) {
 		t.Error("expected health check response with matching token")
 	}
 }
+
+// A Stop right after Start shuts the WebSocket listener down too (BUGS
+// L165): the listener's http.Server exists before Start returns, so Stop
+// neither races with the goroutine that serves it nor misses it and waits
+// for a listener nobody closes.
+func TestRelayStopRightAfterStart(t *testing.T) {
+	for i := 0; i < 20; i++ {
+		ln, err := net.Listen("tcp", ":0")
+		if err != nil {
+			t.Fatalf("listen: %v", err)
+		}
+		port := ln.Addr().(*net.TCPAddr).Port
+		ln.Close()
+
+		cfg := config.DefaultConfig()
+		cfg.RelayPort = port
+		srv := New(cfg)
+		if err := srv.Start(context.Background()); err != nil {
+			t.Fatalf("Start: %v", err)
+		}
+		stopped := make(chan struct{})
+		go func() {
+			srv.Stop()
+			close(stopped)
+		}()
+		select {
+		case <-stopped:
+		case <-time.After(5 * time.Second):
+			t.Fatalf("run %d: Stop did not return: the WebSocket listener on :%d kept running", i, cfg.WSRelayPort())
+		}
+	}
+}
