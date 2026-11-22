@@ -170,27 +170,57 @@ func encodeKey(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
 // Goroutines notes how many goroutines run now and returns a check for
 // the end of a test: it fails when more run then, after giving them five
-// seconds to end.
+// seconds to end. The PostgreSQL driver's goroutines are not counted: they
+// belong to the test's database, which outlives the check, and on a slow
+// database a connection's background reader or close runs on for longer
+// than five seconds after the test ended its query (BUGS L150).
 func Goroutines(t testing.TB) func() {
 	t.Helper()
-	before := runtime.NumGoroutine()
+	before := countGoroutines(allStacks())
 	return func() {
 		t.Helper()
 		deadline := time.Now().Add(5 * time.Second)
 		for {
-			now := runtime.NumGoroutine()
+			stacks := allStacks()
+			now := countGoroutines(stacks)
 			if now <= before {
 				return
 			}
 			if time.Now().After(deadline) {
-				buf := make([]byte, 1<<20)
-				n := runtime.Stack(buf, true)
-				t.Errorf("%d goroutines still run, %d before the test:\n%s", now, before, buf[:n])
+				t.Errorf("%d goroutines still run, %d before the test:\n%s", now, before, stacks)
 				return
 			}
 			time.Sleep(20 * time.Millisecond)
 		}
 	}
+}
+
+// allStacks is the stack of every goroutine, as runtime.Stack writes them.
+func allStacks() []byte {
+	buf := make([]byte, 1<<20)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, 2*len(buf))
+	}
+}
+
+// countGoroutines counts the goroutines of a dump of allStacks, without
+// those the PostgreSQL driver (github.com/jackc) started.
+func countGoroutines(stacks []byte) int {
+	n := 0
+	for _, g := range bytes.Split(stacks, []byte("\n\n")) {
+		if !bytes.HasPrefix(bytes.TrimSpace(g), []byte("goroutine ")) {
+			continue
+		}
+		if bytes.Contains(g, []byte("\ncreated by github.com/jackc/")) {
+			continue
+		}
+		n++
+	}
+	return n
 }
 
 func (c *Client) read() {
