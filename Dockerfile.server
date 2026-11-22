@@ -38,19 +38,28 @@ COPY betterdesk-server/ .
 COPY --from=web-ui-builder /web-ui/build /web-ui-build
 RUN go run ./cmd/embed-webui -from /web-ui-build
 
-ARG BETTERDESK_PRODUCT_VERSION=dev
+# The binary's version, build date and commit (-version, the update check).
+# Without build arguments: the version in VERSION and the time of the build;
+# the commit only when BETTERDESK_COMMIT_SHA names it (the publish workflow
+# and docker-compose.single.yml pass it).
+ARG BETTERDESK_PRODUCT_VERSION=
+ARG BETTERDESK_COMMIT_SHA=
+ARG BETTERDESK_BUILD_DATE=
 
 # Build static binary (modernc.org/sqlite is pure Go — no CGO needed)
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build \
-    -ldflags="-s -w -X main.Version=${BETTERDESK_PRODUCT_VERSION}" \
+RUN version="${BETTERDESK_PRODUCT_VERSION:-$(tr -d '[:space:]' < VERSION)}" && \
+    built="${BETTERDESK_BUILD_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath \
+    -ldflags="-s -w -X main.Version=${version} -X main.Commit=${BETTERDESK_COMMIT_SHA} -X main.BuildDate=${built}" \
     -tags "netgo osusergo" \
     -o /betterdesk-server .
 
 # ---- Runtime stage ----
 FROM alpine:3.22
 
-LABEL maintainer="UNITRONIX"
+LABEL maintainer="trybetterdesk"
 LABEL description="BetterDesk Server - RustDesk-compatible signal + relay"
+LABEL org.opencontainers.image.source="https://github.com/trybetterdesk/betterdesk"
 LABEL version="3.5.270"
 
 RUN apk add --no-cache \
@@ -82,7 +91,8 @@ COPY docker/ensure-app-user.sh /ensure-app-user.sh
 COPY docker/server-entrypoint.sh /server-entrypoint.sh
 COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.sh
 COPY docker/show-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
-RUN chmod +x /ensure-app-user.sh /server-entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
+COPY docker/healthcheck.sh /usr/local/bin/betterdesk-healthcheck
+RUN chmod +x /ensure-app-user.sh /server-entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials /usr/local/bin/betterdesk-healthcheck
 
 WORKDIR /opt/rustdesk
 
@@ -92,16 +102,17 @@ ENV CONSOLE_PORT=0
 
 # Ports:
 # 21121 - HTTP API (RustDesk client API + REST)
+# 21122 - CDAP gateway (custom devices and agents)
 # 21115 - NAT type test
 # 21116 - Signal (TCP+UDP)
 # 21117 - Relay (TCP)
 # 21118 - WebSocket Signal
 # 21119 - WebSocket Relay
-EXPOSE 21115 21116/tcp 21116/udp 21117 21118 21119 21121
+EXPOSE 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 
-# Health check via API
+# Health check via the API (the console is off here), over HTTPS with TLS_API
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -sf http://localhost:21121/api/health || exit 1
+    CMD /usr/local/bin/betterdesk-healthcheck
 
 # Note: Container starts as root so entrypoint can fix volume permissions.
 # server-entrypoint.sh drops to betterdesk user via su-exec before running the server.

@@ -579,6 +579,8 @@
     "remote_password": "Mentett jelszó",
     "remote_password_hint": "Titkosítva tárolódik ezen a szerveren, és minden kapcsolódáskor kitöltődik.",
     "remote_password_keep_hint": "Hagyja üresen a mentett jelszó megtartásához.",
+    "remote_guacd_missing": "A kapcsolatok még nem indulhatnak: a guacd, a szerver RDP- és VNC-átjárója, nem válaszol. Egy rendszergazdának be kell állítania.",
+    "remote_vault_missing": "Ez a szerver még nem tud jelszavakat menteni: a mentett jelszavak kulcsa (REMOTE_TARGET_VAULT_KEY) nincs beállítva. Válassza ezt: „Minden kapcsolódáskor kérdezze”, vagy kérje meg a rendszergazdát a kulcs beállítására.",
     "remote_password_required": "Adja meg a mentendő jelszót.",
     "remote_section_security": "Biztonság",
     "remote_tls": "TLS-titkosítás",

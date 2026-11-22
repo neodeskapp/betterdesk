@@ -579,6 +579,8 @@
     "remote_password": "Mật khẩu đã lưu",
     "remote_password_hint": "Được lưu mã hóa trên máy chủ này và tự điền mỗi lần kết nối.",
     "remote_password_keep_hint": "Để trống để giữ mật khẩu đã lưu.",
+    "remote_guacd_missing": "Chưa thể bắt đầu kết nối: guacd, cổng RDP và VNC của máy chủ này, không phản hồi. Quản trị viên cần thiết lập nó.",
+    "remote_vault_missing": "Máy chủ này chưa thể lưu mật khẩu: khóa dành cho mật khẩu đã lưu (REMOTE_TARGET_VAULT_KEY) chưa được đặt. Chọn \"Hỏi mỗi lần kết nối\" hoặc nhờ quản trị viên đặt khóa.",
     "remote_password_required": "Nhập mật khẩu cần lưu.",
     "remote_section_security": "Bảo mật",
     "remote_tls": "Mã hóa TLS",

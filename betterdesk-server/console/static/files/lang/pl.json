@@ -573,6 +573,8 @@
     "remote_password": "Zapisane hasło",
     "remote_password_hint": "Przechowywane w postaci zaszyfrowanej na tym serwerze i wpisywane przy każdym połączeniu.",
     "remote_password_keep_hint": "Pozostaw puste, aby zachować zapisane hasło.",
+    "remote_guacd_missing": "Połączenia nie mogą się jeszcze rozpocząć: guacd, brama RDP i VNC tego serwera, nie odpowiada. Administrator musi ją skonfigurować.",
+    "remote_vault_missing": "Ten serwer nie może jeszcze zapisywać haseł: jego klucz do zapisanych haseł (REMOTE_TARGET_VAULT_KEY) nie jest ustawiony. Wybierz „Pytaj przy każdym połączeniu” albo poproś administratora o ustawienie klucza.",
     "remote_password_required": "Wpisz hasło do zapisania.",
     "remote_section_security": "Bezpieczeństwo",
     "remote_tls": "Szyfrowanie TLS",

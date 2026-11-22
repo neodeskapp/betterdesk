@@ -579,6 +579,8 @@
     "remote_password": "Tallennettu salasana",
     "remote_password_hint": "Tallennetaan salattuna tälle palvelimelle ja täytetään joka yhteydellä.",
     "remote_password_keep_hint": "Jätä tyhjäksi, niin tallennettu salasana säilyy.",
+    "remote_guacd_missing": "Yhteydet eivät voi vielä alkaa: guacd, tämän palvelimen RDP- ja VNC-yhdyskäytävä, ei vastaa. Ylläpitäjän on otettava se käyttöön.",
+    "remote_vault_missing": "Tämä palvelin ei voi vielä tallentaa salasanoja: sen avainta tallennetuille salasanoille (REMOTE_TARGET_VAULT_KEY) ei ole asetettu. Valitse ”Kysy joka yhteydellä” tai pyydä ylläpitäjää asettamaan avain.",
     "remote_password_required": "Kirjoita tallennettava salasana.",
     "remote_section_security": "Tietoturva",
     "remote_tls": "TLS-salaus",

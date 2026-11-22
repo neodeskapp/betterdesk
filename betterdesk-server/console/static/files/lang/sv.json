@@ -579,6 +579,8 @@
     "remote_password": "Sparat lösenord",
     "remote_password_hint": "Lagras krypterat på den här servern och fylls i vid varje anslutning.",
     "remote_password_keep_hint": "Lämna tomt för att behålla det sparade lösenordet.",
+    "remote_guacd_missing": "Anslutningar kan inte starta ännu: guacd, RDP- och VNC-gatewayen på den här servern, svarar inte. En administratör behöver konfigurera den.",
+    "remote_vault_missing": "Den här servern kan inte spara lösenord ännu: dess nyckel för sparade lösenord (REMOTE_TARGET_VAULT_KEY) är inte satt. Välj ”Fråga vid varje anslutning” eller be en administratör att sätta nyckeln.",
     "remote_password_required": "Ange lösenordet som ska sparas.",
     "remote_section_security": "Säkerhet",
     "remote_tls": "TLS-kryptering",

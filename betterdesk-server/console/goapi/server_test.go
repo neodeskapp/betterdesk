@@ -349,6 +349,8 @@ func TestAgainstAPIServer(t *testing.T) {
 		wantJSON(t, "SetRemoteTargetCredentials", c.SetRemoteTargetCredentials(ctx, "rt_nosuch0000", NewObject("username", "u", "password", "p")),
 			`{"success":false,"error":"remote target credential vault is not configured"}`)
 		wantJSON(t, "ClearRemoteTargetCredentials", c.ClearRemoteTargetCredentials(ctx, "rt_nosuch0000"), missing)
+		// L83: no vault key and no guacd in the test server
+		wantJSON(t, "GetRemoteTargetReadiness", c.GetRemoteTargetReadiness(ctx), `{"success":true,"data":{"guacd":false,"vault":false}}`)
 		wantJSON(t, "AcceptRemoteTargetCertificate", c.AcceptRemoteTargetCertificate(ctx, "rt_nosuch0000", "ab"), missing)
 
 		created := c.CreateRemoteTarget(ctx, NewObject("name", "Server", "protocol", "rdp", "host", "10.0.0.9", "port", 3389.0))

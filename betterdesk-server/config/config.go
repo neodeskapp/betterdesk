@@ -169,8 +169,12 @@ type Config struct {
 	// "open" (default) - Accept all device registrations (backward compatible)
 	// "managed" - New devices need to be approved or have a valid token
 	// "locked" - Only devices with valid tokens can register
+	// ENROLLMENT_MODE is the first default: it applies while the database
+	// holds no mode, and the start stores it. A mode saved in the console
+	// wins over it, unless ENROLLMENT_MODE_ENV_OVERRIDE=Y forces it.
 	EnrollmentMode            string
-	EnrollmentModeEnvOverride bool // ENROLLMENT_MODE was explicitly configured by the operator
+	EnrollmentModeFromEnv     bool // EnrollmentMode came from ENROLLMENT_MODE
+	EnrollmentModeEnvOverride bool // ENROLLMENT_MODE_ENV_OVERRIDE=Y: the environment wins at every start
 
 	// CDAP Gateway
 	CDAPPort        int  // WebSocket gateway port (default 21122)
@@ -595,12 +599,14 @@ func (c *Config) LoadEnv() {
 	if strings.ToUpper(os.Getenv("TLS_API")) == "Y" {
 		c.TLSApi = true
 	}
+	c.EnrollmentModeFromEnv, c.EnrollmentModeEnvOverride = false, false
 	if v := os.Getenv("ENROLLMENT_MODE"); v != "" {
 		mode := strings.ToLower(v)
 		if mode == "open" || mode == "managed" || mode == "locked" {
 			c.EnrollmentMode = mode
+			c.EnrollmentModeFromEnv = true
 			marker := strings.ToUpper(strings.TrimSpace(os.Getenv("ENROLLMENT_MODE_ENV_OVERRIDE")))
-			c.EnrollmentModeEnvOverride = marker != "N" && marker != "NO" && marker != "FALSE" && marker != "0"
+			c.EnrollmentModeEnvOverride = marker == "Y" || marker == "YES" || marker == "TRUE" || marker == "1"
 		}
 	}
 	if v := os.Getenv("CDAP_PORT"); v != "" {
@@ -907,13 +913,12 @@ func (c *Config) CDAPTLSRequiredEnabled() bool {
 	return c.CDAPTLSRequired && c.HasTLSCert()
 }
 
-// RedactedDBPath returns a loggable form of DBPath with credentials removed.
+// RedactedDBPath returns a loggable form of DBPath without credentials.
 //
-// GHSA-qxwx-jg77-5v67: the startup banner printed DBPath verbatim, so a
-// PostgreSQL DSN leaked the database password into container logs on every
-// start. Only the scheme, user, host, port and database name are kept; the
-// password is replaced with "xxxxx". SQLite file paths contain no credentials
-// and are returned unchanged.
+// The startup banner prints it (GHSA-qxwx-jg77-5v67). A PostgreSQL DSN keeps
+// its scheme, host, port, database name and query options; the user name and
+// the password go, in the user part and in the query. SQLite file paths
+// contain no credentials and are returned unchanged.
 func RedactedDBPath(dsn string) string {
 	if dsn == "" {
 		return ""
@@ -927,23 +932,17 @@ func RedactedDBPath(dsn string) string {
 		// Unparseable: avoid echoing anything that might contain a secret.
 		return "<unparseable database DSN>"
 	}
-	if parsed.User != nil {
-		if _, hasPassword := parsed.User.Password(); hasPassword {
-			username := parsed.User.Username()
-			parsed.User = url.UserPassword(username, "xxxxx")
-		}
-	}
-	// Query strings can also carry credentials (e.g. password=).
+	parsed.User = nil
 	if parsed.RawQuery != "" {
 		query := parsed.Query()
-		redacted := false
-		for _, key := range []string{"password", "passwd", "pwd"} {
+		removed := false
+		for _, key := range []string{"user", "password", "passwd", "pwd"} {
 			if query.Has(key) {
-				query.Set(key, "xxxxx")
-				redacted = true
+				query.Del(key)
+				removed = true
 			}
 		}
-		if redacted {
+		if removed {
 			parsed.RawQuery = query.Encode()
 		}
 	}

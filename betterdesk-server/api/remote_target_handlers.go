@@ -382,3 +382,26 @@ func (s *Server) handleAcceptRemoteTargetCertificate(w http.ResponseWriter, r *h
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "fingerprint": body.Fingerprint})
 }
+
+// remoteTargetReadinessDial is how long the readiness waits for guacd.
+const remoteTargetReadinessDial = time.Second
+
+// handleRemoteTargetReadiness answers GET /api/remote-targets/readiness:
+// whether passwords of targets can be saved (the credential vault has its
+// key, REMOTE_TARGET_VAULT_KEY) and whether sessions can start (guacd
+// answers on its loopback address, GUACD_ADDRESS). The address is not
+// part of the answer.
+func (s *Server) handleRemoteTargetReadiness(w http.ResponseWriter, r *http.Request) {
+	guacd := false
+	if s.cfg != nil && s.cfg.GuacdAddress != "" && validateGuacdAddress(s.cfg.GuacdAddress) == nil {
+		dialer := net.Dialer{Timeout: remoteTargetReadinessDial}
+		if conn, err := dialer.DialContext(r.Context(), "tcp", s.cfg.GuacdAddress); err == nil {
+			_ = conn.Close()
+			guacd = true
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{
+		"vault": s.remoteTargetVault != nil,
+		"guacd": guacd,
+	})
+}

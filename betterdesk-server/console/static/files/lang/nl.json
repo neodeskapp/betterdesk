@@ -573,6 +573,8 @@
     "remote_password": "Opgeslagen wachtwoord",
     "remote_password_hint": "Wordt versleuteld op deze server bewaard en bij elke verbinding ingevuld.",
     "remote_password_keep_hint": "Laat leeg om het opgeslagen wachtwoord te houden.",
+    "remote_guacd_missing": "Verbindingen kunnen nog niet starten: guacd, de RDP- en VNC-gateway van deze server, antwoordt niet. Een beheerder moet die instellen.",
+    "remote_vault_missing": "Deze server kan nog geen wachtwoorden opslaan: de sleutel voor opgeslagen wachtwoorden (REMOTE_TARGET_VAULT_KEY) is niet ingesteld. Kies ‘Bij elke verbinding vragen’ of laat een beheerder de sleutel instellen.",
     "remote_password_required": "Voer het wachtwoord in dat moet worden opgeslagen.",
     "remote_section_security": "Beveiliging",
     "remote_tls": "TLS-versleuteling",

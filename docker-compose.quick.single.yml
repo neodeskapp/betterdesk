@@ -1,52 +1,72 @@
 # =============================================================================
-# BetterDesk — Official Quick Start (Single Container, Pre-built Image)
+# BetterDesk with Docker: the compose file to start from
 # =============================================================================
-# NO BUILD REQUIRED — uses the official all-in-one image from GHCR.
-# One container, one process: signal, relay, API and the web console.
+# It runs the published image and builds nothing: one container, one process
+# (signal, relay, API and the web console).
 #
-# Image tag (aligned with CHANGELOG / git tag):
-#   Default: 3.5.270  |  Rolling: BETTERDESK_IMAGE_TAG=latest
+# Which compose file is which:
+#   docker-compose.quick.single.yml          this file: the published image
+#   docker-compose.quick.single.macvlan.yml  the published image on a macvlan
+#                                            network, with its own LAN address
+#   docker-compose.single.yml                builds the image from a checkout
+#                                            of the repository (development)
 #
-# Usage (automated — recommended):
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/install.sh | sudo bash
+# Install with the script. It saves this file as docker-compose.yml with a
+# .env next to it in /opt/betterdesk/docker, starts it and prints how to
+# sign in:
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/betterdesk-docker.sh -o betterdesk-docker.sh
+#   sudo bash betterdesk-docker.sh
 #
-# Usage (manual):
-#   curl -fsSL https://raw.githubusercontent.com/UNITRONIX/BetterDesk/main/docker-compose.quick.single.yml -o docker-compose.yml
-#   docker compose pull && docker compose up -d
-#
-# Pin a specific release:
-#   BETTERDESK_IMAGE_TAG=3.5.270 docker compose up -d
-#
-# Web Console: http://localhost:5000
-# RustDesk client API: http://localhost:21121 (Go server — all-in-one default port)
-# Default credentials are written to the shared credentials file:
+# Or by hand:
+#   curl -fsSL https://raw.githubusercontent.com/trybetterdesk/betterdesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+#   docker compose up -d
 #   docker compose exec betterdesk betterdesk-show-admin-credentials
 #
-# MACVLAN / dedicated LAN IP: use docker-compose.quick.single.macvlan.yml instead.
-# See docs/docker/DOCKER_QUICKSTART.md
+# Image: ghcr.io/trybetterdesk/betterdesk with the tag "latest", the newest
+# release. Update to the newest release:
+#   docker compose pull && docker compose up -d
+# Pin a release instead: put BETTERDESK_IMAGE_TAG=<version> (for example
+# 3.5.270) into .env next to this file.
 #
-# TROUBLESHOOTING: If you get "denied" or "pull access denied" error,
-# images may not be published yet. Build from source instead:
-#   docker compose -f docker-compose.single.yml up -d --build
+# Settings go into .env next to this file, one KEY=value per line; every
+# key reaches the server (Docker Compose 2.24 or newer reads it):
+#   RELAY_SERVERS=203.0.113.10     the address clients reach this server at
+#                                  (found by itself at every start when empty)
+#   BETTERDESK_CONSOLE_PORT=5080   the host port of the web console (5000)
+#   BETTERDESK_CONSOLE_BIND=127.0.0.1  publish the console on this host
+#                                  address only (behind a reverse proxy)
+#   ADMIN_PASSWORD=...             the admin's password, at the first start only
+#   TRUST_PROXY=1                  the console is behind one reverse proxy
+#
+# Web console: http://<server>:5000
+# RustDesk clients: ID server and relay <server>, API http://<server>:21121
+# Logs: docker compose logs -f betterdesk
 # =============================================================================
 
 services:
   betterdesk:
-    image: ghcr.io/unitronix/betterdesk:${BETTERDESK_IMAGE_TAG:-3.5.270}
+    image: ghcr.io/trybetterdesk/betterdesk:${BETTERDESK_IMAGE_TAG:-latest}
     container_name: betterdesk
     hostname: betterdesk
     ports:
-      - "5000:5000"             # Web Console (LAN)
+      - "${BETTERDESK_CONSOLE_BIND:-0.0.0.0}:${BETTERDESK_CONSOLE_PORT:-5000}:5000"  # Web console
+      - "${BETTERDESK_CONSOLE_BIND:-0.0.0.0}:${BETTERDESK_CONSOLE_HTTPS_PORT:-5443}:5443"  # Web console with HTTPS_ENABLED=true
       - "21115:21115"           # NAT type test
       - "21116:21116/tcp"       # Signal TCP
       - "21116:21116/udp"       # Signal UDP
       - "21117:21117"           # Relay TCP
       - "21118:21118"           # WebSocket Signal
       - "21119:21119"           # WebSocket Relay
-      - "21121:21121"           # HTTP API (RustDesk client + REST, WAN-facing)
+      - "21121:21121"           # HTTP API (RustDesk client + REST)
+      - "21122:21122"           # CDAP gateway (custom devices and agents)
     volumes:
       - betterdesk-data:/opt/rustdesk
       - console-data:/app/data
+    # Every KEY=value of .env next to this file reaches the server; the
+    # entries under environment below win over it.
+    env_file:
+      - path: .env
+        required: false
     environment:
       - NODE_ENV=production
       # Set TRUST_PROXY=1 when the panel is behind one reverse proxy.
@@ -90,29 +110,30 @@ services:
       - PGID=${PGID:-10001}
       - BETTERDESK_UPDATE_MODE=image
       - BETTERDESK_DOCKER_LAYOUT=single
-      - BETTERDESK_IMAGE_TAG=${BETTERDESK_IMAGE_TAG:-3.5.270}
+      - BETTERDESK_IMAGE_TAG=${BETTERDESK_IMAGE_TAG:-latest}
       - DB_TYPE=${DB_TYPE:-sqlite}
       - DATABASE_URL=${DATABASE_URL:-}
       - DB_URL=${DATABASE_URL:-}
-      # Set this when clients are outside the Docker network. Use the host's
-      # public IP/DNS, or the host LAN IP for LAN-only deployments.
-      # Example: RELAY_SERVERS=203.0.113.10:21117 docker compose up -d
+      # The address clients reach this server at: the host's public IP or
+      # DNS name, or its LAN address for a LAN-only server. Found at every
+      # start when empty.
       - RELAY_SERVERS=${RELAY_SERVERS:-}
       - SIGNAL_RATE_LIMIT_PER_IP=${SIGNAL_RATE_LIMIT_PER_IP:-20}
       - ALLOW_LEGACY_OUTBOUND=${ALLOW_LEGACY_OUTBOUND:-N}
-      # Enrollment policy. Fresh volumes default to "managed" (operator approves
-      # new devices); pre-existing volumes keep their current mode. Override with
-      # "open", "managed", or "locked".
+      # Enrollment mode of the first start ("open", "managed" or "locked").
+      # Fresh volumes default to "managed"; a mode saved in the console stays
+      # across restarts. ENROLLMENT_MODE_ENV_OVERRIDE=Y forces this value at
+      # every start instead.
       - ENROLLMENT_MODE=${ENROLLMENT_MODE:-}
+      - ENROLLMENT_MODE_ENV_OVERRIDE=${ENROLLMENT_MODE_ENV_OVERRIDE:-}
       - NTP_SERVERS=${NTP_SERVERS:-pool.ntp.org,time.google.com,time.cloudflare.com}
       - BILLING_MAX_CLOCK_SKEW_MS=${BILLING_MAX_CLOCK_SKEW_MS:-2000}
       - BILLING_REQUIRE_SYNCED_CLOCK=${BILLING_REQUIRE_SYNCED_CLOCK:-1}
       - BILLING_TRUST_OS_NTP=${BILLING_TRUST_OS_NTP:-Y}
       - AUTH_DB_PATH=/app/data/auth.db
-      # Admin credentials (first run only; existing users are not overwritten).
-      # Do NOT comment these out — ADMIN_PASSWORD on the host shell only reaches
-      # the container when referenced here (issue #385). Fresh installs also need
-      # DEFAULT_ADMIN_PASSWORD for the web console's first admin.
+      # The admin account of the first start. Without ADMIN_PASSWORD the
+      # container makes a random password; betterdesk-show-admin-credentials
+      # prints it. An account that exists keeps its password.
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - INIT_ADMIN_USER=${ADMIN_USERNAME:-admin}
       - INIT_ADMIN_PASS=${ADMIN_PASSWORD:-}
@@ -132,11 +153,68 @@ services:
       - CHOWN
       - FOWNER
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:21121/api/health && curl -sf http://localhost:5000/health"]
+      test: ["CMD", "/usr/local/bin/betterdesk-healthcheck"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 45s
+
+  # guacd for RDP and VNC targets in the browser (the profile "guacd": put
+  # COMPOSE_PROFILES=guacd into .env, or postgres,guacd with PostgreSQL). It
+  # shares the betterdesk container's network, because the server talks to
+  # guacd only on loopback (GUACD_ADDRESS, 127.0.0.1:4822).
+  guacd:
+    image: guacamole/guacd:1.5.5
+    container_name: betterdesk-guacd
+    profiles:
+      - guacd
+    network_mode: "service:betterdesk"
+    depends_on:
+      - betterdesk
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # PostgreSQL instead of SQLite (the profile "postgres"; betterdesk-docker.sh
+  # sets it up). By hand, in .env next to this file:
+  #   COMPOSE_PROFILES=postgres
+  #   POSTGRES_PASSWORD=<a long random password>
+  #   DATABASE_URL=postgres://betterdesk:<the same password>@postgres:5432/betterdesk?sslmode=disable
+  # A volume with SQLite data is not moved by that: betterdesk-docker.sh
+  # postgres moves it.
+  postgres:
+    image: postgres:16-alpine
+    container_name: betterdesk-postgres
+    profiles:
+      - postgres
+    environment:
+      - POSTGRES_USER=betterdesk
+      # Compose reads this also while the profile is off; PostgreSQL itself
+      # refuses to start with an empty one.
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-}
+      - POSTGRES_DB=betterdesk
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - betterdesk-net
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+      - CHOWN
+      - FOWNER
+      - DAC_OVERRIDE
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U betterdesk -d betterdesk"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
 networks:
   betterdesk-net:
@@ -147,3 +225,5 @@ volumes:
     name: betterdesk-data
   console-data:
     name: betterdesk-console-data
+  postgres-data:
+    name: betterdesk-postgres-data

@@ -235,7 +235,11 @@ func (s *Service) ChangePassword(ctx context.Context, userID int64, currentPassw
 	if err != nil {
 		return err
 	}
-	return updateUserPassword(ctx, s.db, user.ID.V, hash)
+	if err := updateUserPassword(ctx, s.db, user.ID.V, hash); err != nil {
+		return err
+	}
+	s.removeFirstPassword(user.Username)
+	return nil
 }
 
 // verifyStored checks a password against the hash column of a row. A row

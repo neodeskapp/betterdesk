@@ -573,6 +573,8 @@
     "remote_password": "저장할 비밀번호",
     "remote_password_hint": "이 서버에 암호화되어 저장되고 연결할 때마다 입력됩니다.",
     "remote_password_keep_hint": "비워 두면 저장된 비밀번호를 그대로 씁니다.",
+    "remote_guacd_missing": "아직 연결을 시작할 수 없습니다: 이 서버의 RDP 및 VNC 게이트웨이인 guacd가 응답하지 않습니다. 관리자가 설정해야 합니다.",
+    "remote_vault_missing": "이 서버는 아직 비밀번호를 저장할 수 없습니다: 저장된 비밀번호용 키(REMOTE_TARGET_VAULT_KEY)가 설정되지 않았습니다. '연결할 때마다 묻기'을(를) 선택하거나 관리자에게 키 설정을 요청하세요.",
     "remote_password_required": "저장할 비밀번호를 입력하세요.",
     "remote_section_security": "보안",
     "remote_tls": "TLS 암호화",

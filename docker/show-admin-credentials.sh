@@ -21,7 +21,19 @@ for creds_file in /opt/rustdesk/.admin_credentials /app/data/.admin_credentials;
     fi
 done
 
+# The console removes the first password once the admin changed it and
+# leaves this note without the password.
+for note in /opt/rustdesk/.admin_credentials.removed /app/data/.admin_credentials.removed; do
+    if [ -f "$note" ] && [ -r "$note" ]; then
+        cat "$note" >&2
+        echo "To set a new password for admin, on the Docker host:" >&2
+        echo "  sudo bash betterdesk-docker.sh reset-password      (prints a new random password)" >&2
+        echo "  or pipe one in: printf '%s\\n' 'the new password' | docker compose exec -T -u betterdesk betterdesk betterdesk-server reset-password admin" >&2
+        exit 1
+    fi
+done
+
 echo "No readable admin credentials file found." >&2
 echo "  Checked: /opt/rustdesk/.admin_credentials, /app/data/.admin_credentials" >&2
-echo "  Wait for first boot to finish, then retry. Or: docker compose logs server" >&2
+echo "  Wait for the first start to finish, then retry. Its log: docker compose logs betterdesk" >&2
 exit 1

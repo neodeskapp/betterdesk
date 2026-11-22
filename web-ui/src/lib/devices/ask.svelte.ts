@@ -16,7 +16,7 @@
 
 import { mount } from 'svelte';
 import type { AccessPolicy, AccessPolicyInput, DeviceGroup, Folder } from '#lib/api/devices.ts';
-import type { RemoteTargetInput } from '#lib/api/remoteTargets.ts';
+import type { RemoteTargetInput, RemoteTargetReadiness } from '#lib/api/remoteTargets.ts';
 import type { GuestLinkInput } from '#lib/api/guest.ts';
 import type { DeviceLike } from './model.ts';
 
@@ -73,6 +73,7 @@ export interface AskMap {
 			save: (input: RemoteTargetInput, password: string) => Promise<void>;
 			test: (input: RemoteTargetInput) => Promise<string>;
 			canTest: boolean;
+			readiness: () => Promise<RemoteTargetReadiness>;
 		};
 		result: true;
 	};

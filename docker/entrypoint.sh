@@ -7,6 +7,8 @@ set -e
 # shellcheck source=/dev/null
 . /ensure-app-user.sh
 ensure_betterdesk_user
+# shellcheck source=docker/dsn.sh
+. /docker/dsn.sh
 
 echo "========================================"
 echo "  BetterDesk"
@@ -15,7 +17,6 @@ echo "========================================"
 echo ""
 echo "  Server:       signal + relay + API (ports 21115-21121)"
 echo "  Web console:  port ${CONSOLE_PORT:-5000}"
-echo "  DB_TYPE:      ${DB_TYPE:-sqlite}"
 echo "  DATA_DIR:     ${DATA_DIR:-/app/data}"
 echo ""
 
@@ -47,16 +48,29 @@ elif [ -n "${API_KEY:-}" ] && ! file_exists_as_betterdesk "$API_KEY_FILE"; then
     echo "API key from env → $API_KEY_FILE"
 fi
 
-# Default enrollment policy.
+# Key of the vault that holds the passwords of RDP and VNC targets: made at
+# the first start and kept in the data volume, unless REMOTE_TARGET_VAULT_KEY
+# is set
+VAULT_KEY_FILE="/opt/rustdesk/.remote_target_vault_key"
+if [ -z "${REMOTE_TARGET_VAULT_KEY:-}" ]; then
+    if ! file_exists_as_betterdesk "$VAULT_KEY_FILE"; then
+        write_as_betterdesk "$VAULT_KEY_FILE" "$(openssl rand -hex 32)"
+        echo "Made the remote target vault key → $VAULT_KEY_FILE"
+    fi
+    REMOTE_TARGET_VAULT_KEY=$(su-exec betterdesk cat "$VAULT_KEY_FILE")
+fi
+export REMOTE_TARGET_VAULT_KEY
+
+# Default enrollment policy. The server stores the mode of its first start
+# and keeps the one saved in the console from then on; ENROLLMENT_MODE is
+# only that first default (ENROLLMENT_MODE_ENV_OVERRIDE=Y forces it at
+# every start).
 # Fresh volumes default to "managed": stock RustDesk clients are queued for
 # operator approval instead of connecting silently. Pre-existing installs keep
 # their current behavior (Go default "open", or whatever was set via the panel
 # and persisted in the database). A volume that already contains a server key
 # or SQLite database is treated as pre-existing.
-if [ -n "${ENROLLMENT_MODE:-}" ]; then
-    export ENROLLMENT_MODE_ENV_OVERRIDE="Y"
-else
-    export ENROLLMENT_MODE_ENV_OVERRIDE="N"
+if [ -z "${ENROLLMENT_MODE:-}" ]; then
     ENROLLMENT_SENTINEL="/opt/rustdesk/.enrollment_initialized"
     if ! file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"; then
         if file_exists_as_betterdesk /opt/rustdesk/db_v2.sqlite3 \
@@ -99,11 +113,16 @@ fi
 
 # The server's database: DB_URL, the SQLite path or the postgres:// URI. A
 # separate auth.db of an older install (AUTH_DB_PATH) is imported into it at
-# the first start.
-if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
-    if [ -n "${DATABASE_URL}" ]; then
+# the first start. Log lines name the database without its credentials.
+# DATABASE_URL names the database by its scheme; DB_TYPE=postgres is still
+# read for older compose files.
+case "${DATABASE_URL:-}" in
+    postgres://*|postgresql://*) DB_TYPE=postgres ;;
+esac
+if [ "${DB_TYPE:-}" = "postgres" ] || [ "${DB_TYPE:-}" = "postgresql" ]; then
+    if [ -n "${DATABASE_URL:-}" ]; then
         export DB_URL="${DATABASE_URL}"
-        echo "Database:     PostgreSQL (${DATABASE_URL%%@*}@***)"
+        echo "Database:     PostgreSQL ($(dsn_for_log "$DATABASE_URL"))"
     else
         echo "WARNING: DB_TYPE=postgres but DATABASE_URL not set — falling back to SQLite"
         export DB_URL="/opt/rustdesk/db_v2.sqlite3"
@@ -111,16 +130,15 @@ if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
 else
     export DB_URL="${DB_PATH:-/opt/rustdesk/db_v2.sqlite3}"
     export AUTH_DB_PATH="${AUTH_DB_PATH:-/app/data/auth.db}"
-    echo "Database:     SQLite (${DB_URL})"
+    echo "Database:     SQLite ($(dsn_for_log "$DB_URL"))"
 fi
 
 # Wait for PostgreSQL if configured
-if [ "${DB_TYPE}" = "postgres" ] || [ "${DB_TYPE}" = "postgresql" ]; then
-    if [ -n "${DATABASE_URL}" ]; then
+if [ "${DB_TYPE:-}" = "postgres" ] || [ "${DB_TYPE:-}" = "postgresql" ]; then
+    if [ -n "${DATABASE_URL:-}" ]; then
         echo "Waiting for PostgreSQL..."
-        PG_HOST=$(echo "$DATABASE_URL" | sed -n 's|.*@\([^:/]*\).*|\1|p')
-        PG_PORT=$(echo "$DATABASE_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
-        PG_PORT=${PG_PORT:-5432}
+        PG_HOST=$(dsn_host "$DATABASE_URL")
+        PG_PORT=$(dsn_port "$DATABASE_URL")
         RETRIES=0
         MAX_RETRIES=30
         while [ "$RETRIES" -lt "$MAX_RETRIES" ]; do

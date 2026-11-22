@@ -37,6 +37,13 @@ func (c *Client) TestRemoteTarget(ctx context.Context, payload any) *Object {
 	return c.wrapped(ctx, f2, http.MethodPost, "/remote-targets/test", Body(payload))
 }
 
+// GetRemoteTargetReadiness calls GET /api/remote-targets/readiness:
+// {success:true, data:{vault, guacd}}, whether passwords can be saved and
+// sessions can start. W or F2.
+func (c *Client) GetRemoteTargetReadiness(ctx context.Context) *Object {
+	return c.wrapped(ctx, f2, http.MethodGet, "/remote-targets/readiness")
+}
+
 // GetRemoteTarget calls GET /api/remote-targets/{id} and returns the target
 // as a device. Every failure gives nil.
 func (c *Client) GetRemoteTarget(ctx context.Context, id string) *Object {

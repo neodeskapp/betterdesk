@@ -573,6 +573,8 @@
     "remote_password": "保存するパスワード",
     "remote_password_hint": "このサーバーに暗号化して保存され、接続のたびに入力されます。",
     "remote_password_keep_hint": "空のままにすると保存済みのパスワードを使い続けます。",
+    "remote_guacd_missing": "まだ接続を開始できません: このサーバーの RDP/VNC ゲートウェイである guacd が応答しません。管理者による設定が必要です。",
+    "remote_vault_missing": "このサーバーはまだパスワードを保存できません: 保存されたパスワード用の鍵 (REMOTE_TARGET_VAULT_KEY) が設定されていません。「接続のたびに確認する」を選ぶか、管理者に鍵の設定を依頼してください。",
     "remote_password_required": "保存するパスワードを入力してください。",
     "remote_section_security": "セキュリティ",
     "remote_tls": "TLS 暗号化",

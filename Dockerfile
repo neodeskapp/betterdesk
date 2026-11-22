@@ -4,12 +4,15 @@
 # betterdesk-server serves the signal and relay server, the API and the web
 # console (DECISIONS A32). The web app is built into the binary.
 #
-# Build:  docker build -t betterdesk:local .
-# Run:    docker compose -f docker-compose.single.yml up -d
+# Published as ghcr.io/trybetterdesk/betterdesk (docker-compose.quick.single.yml
+# runs it). Build it from a checkout instead:
+#   docker build -t betterdesk:local .
+#   docker compose -f docker-compose.single.yml up -d
 #
 # Ports:
 #   5000  - Web console (5443 with HTTPS_ENABLED)
 #   21121 - HTTP API (RustDesk client API + REST)
+#   21122 - CDAP gateway (custom devices and agents)
 #   21115 - NAT type test
 #   21116 - Signal TCP/UDP
 #   21117 - Relay TCP
@@ -46,19 +49,32 @@ COPY betterdesk-server/ .
 COPY --from=web-ui-builder /web-ui/build /web-ui-build
 RUN go run ./cmd/embed-webui -from /web-ui-build
 
-ARG BETTERDESK_PRODUCT_VERSION=dev
+# The binary's version, build date and commit (-version, the update check).
+# Without build arguments: the version in VERSION and the time of the build;
+# the commit only when BETTERDESK_COMMIT_SHA names it (the publish workflow
+# and docker-compose.single.yml pass it).
+ARG BETTERDESK_PRODUCT_VERSION=
 ARG BETTERDESK_COMMIT_SHA=
+ARG BETTERDESK_BUILD_DATE=
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath \
-    -ldflags="-s -w -X main.Version=${BETTERDESK_PRODUCT_VERSION} -X main.Commit=${BETTERDESK_COMMIT_SHA}" \
+RUN version="${BETTERDESK_PRODUCT_VERSION:-$(tr -d '[:space:]' < VERSION)}" && \
+    built="${BETTERDESK_BUILD_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath \
+    -ldflags="-s -w -X main.Version=${version} -X main.Commit=${BETTERDESK_COMMIT_SHA} -X main.BuildDate=${built}" \
     -tags "netgo osusergo" \
     -o /betterdesk-server .
+
+# The server's tool that moves an install from SQLite to PostgreSQL
+# (betterdesk-docker.sh postgres runs it in a one-off container)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath -ldflags="-s -w" \
+    -tags "netgo osusergo" -o /betterdesk-migrate ./tools/migrate
 
 # ============= Runtime =============
 FROM alpine:3.22
 
-LABEL maintainer="UNITRONIX"
+LABEL maintainer="trybetterdesk"
 LABEL description="BetterDesk — server and web console in one process"
+LABEL org.opencontainers.image.source="https://github.com/trybetterdesk/betterdesk"
 LABEL version="3.5.270"
 
 # Runtime packages (retry for transient DNS failures). sqlite stays for the
@@ -73,15 +89,18 @@ RUN addgroup -g 10001 -S betterdesk && \
     chown -R betterdesk:betterdesk /opt/rustdesk /app/data
 
 COPY --from=go-builder /betterdesk-server /usr/local/bin/betterdesk-server
+COPY --from=go-builder /betterdesk-migrate /usr/local/bin/betterdesk-migrate
 
 ARG BETTERDESK_IMAGE_VERSION=unknown
 ENV BETTERDESK_IMAGE_VERSION=${BETTERDESK_IMAGE_VERSION}
 
 COPY docker/ensure-app-user.sh /ensure-app-user.sh
 COPY docker/entrypoint.sh /entrypoint.sh
+COPY docker/dsn.sh /docker/dsn.sh
+COPY docker/healthcheck.sh /usr/local/bin/betterdesk-healthcheck
 COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.sh
 COPY docker/show-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
-RUN chmod +x /ensure-app-user.sh /entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
+RUN chmod +x /ensure-app-user.sh /entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials /usr/local/bin/betterdesk-healthcheck
 
 # The console on 5000 (DECISIONS A27), the API on 21121. The console's own
 # client API listener stays off: the API serves RustDesk clients on 21121.
@@ -114,14 +133,15 @@ ENV NODE_ENV=production \
     BETTERDESK_UPDATE_MODE=image \
     BETTERDESK_SUPERVISOR=docker
 
-EXPOSE 5000 21115 21116/tcp 21116/udp 21117 21118 21119 21121
+EXPOSE 5000 5443 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 
 # The server writes files of its own (mesh_agent_server.pem) in its folder
 WORKDIR /opt/rustdesk
 
-# The API and the web console of the one process
+# The API and the web console of the one process, over HTTPS where they
+# serve it (TLS_API, HTTPS_ENABLED)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -sf http://localhost:21121/api/health && curl -sf http://localhost:5000/health || exit 1
+    CMD /usr/local/bin/betterdesk-healthcheck
 
 ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
 CMD ["/usr/local/bin/betterdesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/rustdesk/id_ed25519"]

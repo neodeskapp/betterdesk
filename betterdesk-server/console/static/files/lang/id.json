@@ -579,6 +579,8 @@
     "remote_password": "Kata sandi tersimpan",
     "remote_password_hint": "Disimpan terenkripsi di server ini dan diisi setiap kali terhubung.",
     "remote_password_keep_hint": "Biarkan kosong untuk mempertahankan kata sandi tersimpan.",
+    "remote_guacd_missing": "Koneksi belum dapat dimulai: guacd, gateway RDP dan VNC server ini, tidak menjawab. Administrator harus menyiapkannya.",
+    "remote_vault_missing": "Server ini belum dapat menyimpan kata sandi: kuncinya untuk kata sandi tersimpan (REMOTE_TARGET_VAULT_KEY) belum diatur. Pilih \"Tanyakan setiap kali terhubung\" atau minta administrator mengatur kuncinya.",
     "remote_password_required": "Masukkan kata sandi yang akan disimpan.",
     "remote_section_security": "Keamanan",
     "remote_tls": "Enkripsi TLS",

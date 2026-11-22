@@ -581,6 +581,8 @@
         "remote_password": "Saved password",
         "remote_password_hint": "Stored encrypted on this server and filled in at each connection.",
         "remote_password_keep_hint": "Leave empty to keep the saved password.",
+        "remote_guacd_missing": "Connections cannot start yet: guacd, the RDP and VNC gateway of this server, does not answer. An administrator has to set it up.",
+        "remote_vault_missing": "This server cannot save passwords yet: its key for saved passwords (REMOTE_TARGET_VAULT_KEY) is not set. Choose Ask at every connection, or have an administrator set the key.",
         "remote_password_required": "Enter the password to save.",
         "remote_section_security": "Security",
         "remote_tls": "TLS encryption",

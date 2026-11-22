@@ -4,17 +4,26 @@
   shows only when the password is saved here; the fingerprint only with TLS.
   Switching the technology moves the port along while it is still the other
   one's default. A test result belongs to the values it was made with, so
-  changing a field clears the status line.
+  changing a field clears the status line. While the server cannot run what
+  the form sets up, the form says so: guacd does not answer (no session can
+  start), or the vault has no key (a password cannot be saved there).
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import type { CredentialMode, RemoteProtocol, RemoteTargetInput, TlsMode } from '#lib/api/remoteTargets.ts';
+	import type {
+		CredentialMode,
+		RemoteProtocol,
+		RemoteTargetInput,
+		RemoteTargetReadiness,
+		TlsMode
+	} from '#lib/api/remoteTargets.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import FormSection from '#lib/ui/FormSection.svelte';
 	import Input from '#lib/ui/Input.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
 	import ShowWhen from '#lib/ui/ShowWhen.svelte';
@@ -26,12 +35,15 @@
 		save,
 		test,
 		canTest,
+		readiness,
 		settle
 	}: {
 		device: DeviceLike | null;
 		save: (input: RemoteTargetInput, password: string) => Promise<void>;
 		test: (input: RemoteTargetInput) => Promise<string>;
 		canTest: boolean;
+		/** What the server can do for targets; a failed answer shows no warning */
+		readiness: () => Promise<RemoteTargetReadiness>;
 		settle: (done: true | null) => void;
 	} = $props();
 
@@ -60,6 +72,12 @@
 		};
 	});
 	const hasSavedPassword = untrack(() => device?.credential_mode === 'saved');
+
+	let ready = $state<RemoteTargetReadiness | null>(null);
+	untrack(() => readiness()).then(
+		(r) => (ready = r),
+		() => {}
+	);
 
 	let statusOverride = $state<{ message: string; tone: 'neutral' | 'ok' | 'error' } | null>(null);
 	let testing = $state(false);
@@ -162,6 +180,16 @@
 	onclose={() => settle(null)}
 >
 	<form id={form.id} onsubmit={form.onsubmit} novalidate>
+		{#if ready && !ready.guacd}
+			<Notice
+				class="ready-notice"
+				tone="warning"
+				message={tf(
+					'devices.remote_guacd_missing',
+					'Connections cannot start yet: guacd, the RDP and VNC gateway of this server, does not answer. An administrator has to set it up.'
+				)}
+			/>
+		{/if}
 		<Field
 			label={tf('devices.remote_name', 'Display name')}
 			hint={tf('devices.remote_name_hint', 'How it appears in the device list.')}
@@ -268,6 +296,16 @@
 					/>
 				{/snippet}
 			</Field>
+			{#if form.values.credential_mode === 'saved' && ready && !ready.vault}
+				<Notice
+					class="ready-notice"
+					tone="warning"
+					message={tf(
+						'devices.remote_vault_missing',
+						'This server cannot save passwords yet: its key for saved passwords (REMOTE_TARGET_VAULT_KEY) is not set. Choose Ask at every connection, or have an administrator set the key.'
+					)}
+				/>
+			{/if}
 			<ShowWhen id="{uid}-password" when={form.values.credential_mode === 'saved'}>
 				<Field
 					label={tf('devices.remote_password', 'Saved password')}
@@ -353,6 +391,9 @@
 </Sheet>
 
 <style>
+	:global(.ready-notice) {
+		margin-block: var(--space-3);
+	}
 	.enabled {
 		margin-top: var(--space-5);
 		padding-top: var(--space-5);

@@ -29,6 +29,9 @@ import (
 const (
 	credentialsFile = ".admin_credentials"
 	forceFile       = ".force_password_update"
+	// credentialsRemovedFile stays where a credentials file was removed
+	// after the admin changed the first password; it holds no password.
+	credentialsRemovedFile = ".admin_credentials.removed"
 )
 
 // retryDelays are the waits for the signal server's credentials file on
@@ -318,6 +321,45 @@ func (s *Service) reviewExistingAdmin(ctx context.Context, username, password st
 	}
 	s.log.Info(fmt.Sprintf("[AUTH] Default admin account exists (%s) — password unchanged", hashType))
 	return nil
+}
+
+// adminUserLine finds the line "Admin Username: <value>" of a credentials
+// file.
+var adminUserLine = regexp.MustCompile(`(?m)^Admin Username:[ \t]*(\S+)`)
+
+// removeFirstPassword removes the credentials files that hold the first
+// password of the account username, after its password changed: the
+// password in them signs nobody in any more. A file without a user name
+// line is the admin's. A note without the password takes each file's place,
+// so the credentials command can say what happened. Failures are logged.
+func (s *Service) removeFirstPassword(username string) {
+	for _, dir := range s.credentialDirs() {
+		path := filepath.Join(dir, credentialsFile)
+		if !s.fs.Exists(path) {
+			continue
+		}
+		content, err := s.fs.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		owner := "admin"
+		if match := adminUserLine.FindStringSubmatch(string(content)); match != nil {
+			owner = match[1]
+		}
+		if owner != username {
+			continue
+		}
+		if err := s.fs.Remove(path); err != nil {
+			s.log.Warn(fmt.Sprintf("[AUTH] Could not remove the first password in %s: %s", path, err.Error()))
+			continue
+		}
+		note := "The first password of " + username + " was removed on " + store.ISOTime(s.now()) +
+			" after the account changed it.\n"
+		if err := s.fs.WriteFile(filepath.Join(dir, credentialsRemovedFile), []byte(note), 0o600); err != nil {
+			s.log.Warn(fmt.Sprintf("[AUTH] Could not leave a note in %s: %s", dir, err.Error()))
+		}
+		s.log.Info("[AUTH] Removed the first password in " + path + " after " + username + " changed it")
+	}
 }
 
 // writeCredentials writes the made-up password where the user and the
