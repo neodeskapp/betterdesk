@@ -1058,7 +1058,21 @@ function Test-HeaderAndColours {
     Remove-Item -Recurse -Force $dir
 }
 
+# The menus' title box and descriptions use no colour that is hard to read
+# on PowerShell's blue: no blue, magenta or dark gray.
+function Test-MenuColours {
+    function Clear-Host { }
+    function Test-TuiAvailable { $false }
+    function Read-Host { param($Prompt) '1' }
+    $got = Get-HostLines { Invoke-MenuChoose -Title 'Title' -Subtitle 'Subtitle' -Items @("One`tthe first", "Back`tthe menu before") -Returns @('1', '0') }
+    if (-not $got.Colors) { Fail 'the menu has no colours to check' }
+    foreach ($c in $got.Colors) {
+        if ('Blue', 'DarkBlue', 'Magenta', 'DarkMagenta', 'DarkGray' -contains $c) { Fail "the menu uses $c" }
+    }
+}
+
 Test-HeaderAndColours
+Test-MenuColours
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised

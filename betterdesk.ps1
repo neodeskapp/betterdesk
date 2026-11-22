@@ -527,7 +527,7 @@ function Invoke-TuiSelect {
             try { [Console]::SetCursorPosition(0, 0) } catch {}
             Write-Host "+--------------------------------------------------------------+" -ForegroundColor Cyan
             Write-Host ("| {0,-60} |" -f $Title) -ForegroundColor White
-            if ($Subtitle) { Write-Host ("| {0,-60} |" -f $Subtitle) -ForegroundColor DarkGray }
+            if ($Subtitle) { Write-Host ("| {0,-60} |" -f $Subtitle) -ForegroundColor Gray }
             Write-Host "+--------------------------------------------------------------+" -ForegroundColor Cyan
             Write-Host ""
 
@@ -545,7 +545,7 @@ function Invoke-TuiSelect {
             }
 
             Write-Host ""
-            Write-Host ("  Up/Down navigate   Enter select   q/Esc back".PadRight(78)) -ForegroundColor DarkGray
+            Write-Host ("  Up/Down navigate   Enter select   q/Esc back".PadRight(78)) -ForegroundColor Gray
 
             $key = [Console]::ReadKey($true)
             switch ($key.Key) {
@@ -576,7 +576,7 @@ function Show-PanelHeader {
     Clear-Host
     Write-Host "+--------------------------------------------------------------+" -ForegroundColor Cyan
     Write-Host ("| {0,-60} |" -f $Title) -ForegroundColor White
-    if ($Subtitle) { Write-Host ("| {0,-60} |" -f $Subtitle) -ForegroundColor DarkGray }
+    if ($Subtitle) { Write-Host ("| {0,-60} |" -f $Subtitle) -ForegroundColor Gray }
     Write-Host "+--------------------------------------------------------------+" -ForegroundColor Cyan
     Write-Host ""
 }
@@ -612,7 +612,7 @@ function Invoke-MenuChoose {
         $desc  = if ($parts.Count -gt 1) { $parts[1] } else { '' }
         Write-Host ("  {0,2}) " -f $Returns[$i]) -ForegroundColor Green -NoNewline
         Write-Host ("{0,-28}" -f $label) -NoNewline
-        Write-Host " $desc" -ForegroundColor DarkGray
+        Write-Host " $desc" -ForegroundColor Gray
     }
     Write-Host ""
     $script:MENU_CHOICE = Read-Host "  Select option"
