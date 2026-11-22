@@ -2,10 +2,8 @@ param(
     [string[]]$Path = @(
         "betterdesk.ps1",
         "scripts/check-powershell-syntax.ps1",
-        "scripts/check-wiki-staleness.ps1",
         "scripts/local-gate.ps1",
-        "scripts/setup-local-gates.ps1",
-        "scripts/sync-wiki.ps1"
+        "scripts/setup-local-gates.ps1"
     )
 )
 
