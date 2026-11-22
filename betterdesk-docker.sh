@@ -1147,7 +1147,9 @@ do_menu() {
 # SQLite to PostgreSQL
 #===============================================================================
 
-MIGRATE_TOOL=/usr/local/bin/betterdesk-migrate
+# The server's migrate command (sqlite2pg moves every table of the server
+# and the console); an image older than the command answers its -h with 2
+MIGRATE_TOOL="/usr/local/bin/betterdesk-server migrate"
 
 # wait_postgres: the postgres service answers within a minute
 wait_postgres() {
@@ -1186,7 +1188,7 @@ do_postgres() {
         "Install it on PostgreSQL right away: sudo bash betterdesk-docker.sh --postgres"
     local image uid gid pass out
     image=$(docker container inspect -f '{{.Config.Image}}' "$CONTAINER")
-    docker run --rm --entrypoint sh "$image" -c "test -x $MIGRATE_TOOL" >/dev/null 2>&1 \
+    docker run --rm --entrypoint sh "$image" -c "$MIGRATE_TOOL -h" >/dev/null 2>&1 \
         || die "The image $image has no move tool yet." "Update first: sudo bash betterdesk-docker.sh, then run this again."
 
     say "This moves every device, account and setting from SQLite into a PostgreSQL"

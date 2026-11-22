@@ -67,11 +67,6 @@ RUN version="${BETTERDESK_PRODUCT_VERSION:-$(tr -d '[:space:]' < VERSION)}" && \
     -tags "netgo osusergo" \
     -o /betterdesk-server .
 
-# The server's tool that moves an install from SQLite to PostgreSQL
-# (betterdesk-docker.sh postgres runs it in a one-off container)
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath -ldflags="-s -w" \
-    -tags "netgo osusergo" -o /betterdesk-migrate ./tools/migrate
-
 # ============= Runtime =============
 FROM alpine:3.22
 
@@ -92,7 +87,6 @@ RUN addgroup -g 10001 -S betterdesk && \
     chown -R betterdesk:betterdesk /opt/rustdesk /app/data
 
 COPY --from=go-builder /betterdesk-server /usr/local/bin/betterdesk-server
-COPY --from=go-builder /betterdesk-migrate /usr/local/bin/betterdesk-migrate
 
 ARG BETTERDESK_IMAGE_VERSION=unknown
 ENV BETTERDESK_IMAGE_VERSION=${BETTERDESK_IMAGE_VERSION}

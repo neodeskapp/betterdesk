@@ -1,7 +1,10 @@
 package main
 
 import (
+	"database/sql"
+	"errors"
 	"io"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -55,6 +58,44 @@ func TestCLICommandsAreWired(t *testing.T) {
 		code := subcommands[c.name].run(c.args, strings.NewReader(""), &out, &errOut)
 		if code != c.code || !strings.Contains(out.String()+errOut.String(), c.usage) {
 			t.Errorf("%s %v: %d %q %q", c.name, c.args, code, out.String(), errOut.String())
+		}
+	}
+}
+
+// betterdesk-server migrate is the migration tool with its flags: -mode
+// backup copies a SQLite file next to it, -h prints the modes and
+// succeeds, a mode it does not know prints them and fails (L71).
+func TestMigrateCommand(t *testing.T) {
+	cmd, ok := subcommands["migrate"]
+	if !ok {
+		t.Fatal("betterdesk-server has no migrate command")
+	}
+	dir := t.TempDir()
+	src := filepath.Join(dir, "db_v2.sqlite3")
+	file, err := sql.Open("sqlite", src)
+	if err == nil {
+		_, err = file.Exec(`CREATE TABLE peers (id TEXT)`)
+		err = errors.Join(err, file.Close())
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out, errOut strings.Builder
+	if code := cmd.run([]string{"-mode", "backup", "-src", src}, strings.NewReader(""), &out, &errOut); code != 0 {
+		t.Fatalf("migrate -mode backup: %d %q %q", code, out.String(), errOut.String())
+	}
+	backups, _ := filepath.Glob(filepath.Join(dir, "db_v2_backup_*.sqlite3"))
+	if len(backups) != 1 {
+		t.Errorf("backups next to the file: %v", backups)
+	}
+	for _, c := range []struct {
+		args []string
+		code int
+	}{{[]string{"-h"}, 0}, {[]string{"-mode", "nope"}, 1}} {
+		out.Reset()
+		errOut.Reset()
+		if code := cmd.run(c.args, strings.NewReader(""), &out, &errOut); code != c.code || !strings.Contains(out.String()+errOut.String(), "sqlite2pg") {
+			t.Errorf("migrate %v: %d %q %q", c.args, code, out.String(), errOut.String())
 		}
 	}
 }
