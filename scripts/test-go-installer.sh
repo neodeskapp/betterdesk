@@ -27,6 +27,13 @@ load() {
     print_info() { :; }
 }
 
+# fake_current_binary: an installed binary that checks release signatures
+# itself (it names verify-release in its help), as this release's does.
+fake_current_binary() {
+    printf '#!/bin/sh\n# verify-release --manifest FILE (the commands it has)\nexit 0\n' > "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+}
+
 # The units an install with the Node.js console has (betterdesk.sh 3.5.221).
 write_node_era_units() {
     cat > "$SERVER_UNIT" <<'UNIT'
@@ -352,6 +359,7 @@ test_update_channel_before_server_update() (
     SERVER_BINARY_FILE=""
     FROM_SOURCE=false
     unset RELEASE_BASE_URL
+    fake_current_binary
     server_cmd() {
         grep '^UPDATE_GITHUB_BRANCH=' "$CONSOLE_PATH/.env" > "$TEST_DIR/seen"
         return 1
@@ -616,6 +624,7 @@ test_update_asks_the_fork() (
     SERVER_BINARY_FILE=""
     FROM_SOURCE=false
     unset RELEASE_BASE_URL
+    fake_current_binary
     server_cmd() { printf '%s/%s\n' "${UPDATE_GITHUB_OWNER:-}" "${UPDATE_GITHUB_REPO:-}" > "$TEST_DIR/seen"; return 1; }
     printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
     update_go_install >/dev/null 2>&1 || true
@@ -692,6 +701,214 @@ test_port_taken_by_another_program() (
     rm -rf "$TEST_DIR"
 )
 
+# write_release DIR BRANCH: a release folder for BRANCH (main or dev) with
+# two binaries, SHA256SUMS, and manifest.json as release-manifest writes it
+# (json.MarshalIndent), its files out of order. RELEASE_COMMIT is the commit.
+RELEASE_COMMIT=0123456789abcdef0123456789abcdef01234567
+write_release() {
+    local dir="$1" branch="$2" channel=stable amd arm
+    [ "$branch" = dev ] && channel=development
+    mkdir -p "$dir"
+    [ -f "$dir/betterdesk-server-linux-amd64" ] || printf 'the new amd64 server\n' > "$dir/betterdesk-server-linux-amd64"
+    printf 'the new arm64 server\n' > "$dir/betterdesk-server-linux-arm64"
+    amd=$(sha256sum "$dir/betterdesk-server-linux-amd64" | cut -d' ' -f1)
+    arm=$(sha256sum "$dir/betterdesk-server-linux-arm64" | cut -d' ' -f1)
+    cat > "$dir/manifest.json" <<JSON
+{
+  "schema_version": 1,
+  "product": "betterdesk-server",
+  "version": "3.6.0",
+  "channel": "$channel",
+  "created": "2026-11-22T10:00:00Z",
+  "owner": "trybetterdesk",
+  "repo": "betterdesk",
+  "branch": "$branch",
+  "sha": "$RELEASE_COMMIT",
+  "files": [
+    {
+      "path": "betterdesk-server-linux-arm64",
+      "sha256": "$arm",
+      "size": 21,
+      "os": "linux",
+      "arch": "arm64"
+    },
+    {
+      "path": "betterdesk-server-linux-amd64",
+      "sha256": "$amd",
+      "size": 21,
+      "os": "linux",
+      "arch": "amd64"
+    }
+  ]
+}
+JSON
+    printf '%s  betterdesk-server-linux-amd64\n%s  betterdesk-server-linux-arm64\n' "$amd" "$arm" > "$dir/SHA256SUMS"
+}
+
+# sign_release DIR KEY BRANCH: manifest.sig with KEY over the text the
+# release workflow signs (updater.CanonicalPayload), written out here.
+sign_release() {
+    local dir="$1" amd arm
+    amd=$(sha256sum "$dir/betterdesk-server-linux-amd64" | cut -d' ' -f1)
+    arm=$(sha256sum "$dir/betterdesk-server-linux-arm64" | cut -d' ' -f1)
+    printf 'betterdesk-update-manifest-v1\nowner=trybetterdesk\nrepo=betterdesk\nbranch=%s\nsha=%s\nfiles=2\n%s  betterdesk-server-linux-amd64\n%s  betterdesk-server-linux-arm64\n' \
+        "$3" "$RELEASE_COMMIT" "$amd" "$arm" > "$dir/.payload"
+    openssl pkeyutl -sign -inkey "$2" -rawin -in "$dir/.payload" -out "$dir/.sig" 2>/dev/null || fail "openssl could not sign"
+    { base64 -w0 "$dir/.sig"; echo; } > "$dir/manifest.sig"
+    rm -f "$dir/.payload" "$dir/.sig"
+}
+
+# A152: a downloaded binary is installed only when the release's manifest
+# carries a valid signature of the release key and names that binary for
+# the channel. The installed betterdesk-server checks it when it has
+# verify-release, else openssl with the key in the script; an openssl that
+# cannot check ed25519 is said plainly and the SHA-256 check stays.
+test_release_signature() (
+    load
+    if ! command -v openssl >/dev/null || ! openssl pkeyutl -help 2>&1 | grep -q -- -rawin; then
+        echo "skipped: no OpenSSL 3"
+        exit 0
+    fi
+    local rel="$TEST_DIR/release" asset=betterdesk-server-linux-amd64 out rc
+    openssl genpkey -algorithm ed25519 -out "$TEST_DIR/key.pem" 2>/dev/null
+    openssl genpkey -algorithm ed25519 -out "$TEST_DIR/other.pem" 2>/dev/null
+    RELEASE_PUBLIC_KEY_PEM=$(openssl pkey -in "$TEST_DIR/key.pem" -pubout 2>/dev/null)
+    print_error() { echo "$1"; }
+    print_success() { echo "$1"; }
+    # check BRANCH: verify_release_files' status and output
+    check() { rc=0; out=$(verify_release_files "$rel" "$asset" "$1" 2>&1) || rc=$?; }
+
+    write_release "$rel" main
+    sign_release "$rel" "$TEST_DIR/key.pem" main
+    check main
+    [ "$rc" = 0 ] || fail "a release signed with the release key was refused ($rc): $out"
+    case "$out" in *openssl*) ;; *) fail "the check does not say openssl checked it: $out" ;; esac
+    check dev
+    [ "$rc" = 1 ] || fail "a stable release passed for the development channel ($rc): $out"
+
+    printf 'another server\n' > "$rel/$asset"
+    check main
+    [ "$rc" = 1 ] || fail "a binary the manifest does not name passed ($rc): $out"
+    rm -f "$rel/$asset"
+    write_release "$rel" main
+    sign_release "$rel" "$TEST_DIR/key.pem" main
+    sed -i "s/$RELEASE_COMMIT/fedcba9876543210fedcba9876543210fedcba98/" "$rel/manifest.json"
+    check main
+    [ "$rc" = 1 ] || fail "a manifest changed after signing passed ($rc): $out"
+    write_release "$rel" main
+    sign_release "$rel" "$TEST_DIR/other.pem" main
+    check main
+    [ "$rc" = 1 ] || fail "a release signed with another key passed ($rc): $out"
+    rm -f "$rel/manifest.sig"
+    check main
+    [ "$rc" = 1 ] || fail "a release without manifest.sig passed ($rc): $out"
+    write_release "$rel" dev
+    sign_release "$rel" "$TEST_DIR/key.pem" dev
+    check dev
+    [ "$rc" = 0 ] || fail "a development release signed with the release key was refused ($rc): $out"
+
+    # OpenSSL 1.1 checks no ed25519 signature over raw data
+    openssl() { if [ "$1 ${2:-}" = "pkeyutl -help" ]; then echo "Usage: pkeyutl [options] -in file -inkey file"; else echo "OpenSSL 1.1.1w  11 Sep 2023"; fi; }
+    rc=0
+    verify_release_files "$rel" "$asset" dev > "$TEST_DIR/out" 2>&1 || rc=$?
+    unset -f openssl
+    [ "$rc" = 2 ] || fail "an openssl without ed25519 gave $rc: $(cat "$TEST_DIR/out")"
+    case "$RELEASE_CHECK_PROBLEM" in *"OpenSSL 1.1.1w"*) ;; *) fail "the reason names no OpenSSL version: $RELEASE_CHECK_PROBLEM" ;; esac
+
+    # An installed binary with verify-release checks the release itself,
+    # with the release key it carries
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+#!/bin/sh
+# Stands in for the binary: verify-release --manifest FILE (the commands it has)
+printf '%s\n' "$*" > "$(dirname "$0")/verify-args"
+if [ -f "$(dirname "$0")/refuse" ]; then
+    echo "betterdesk-server verify-release: the signature of the manifest does not verify against the release key" >&2
+    exit 1
+fi
+echo "verified: betterdesk-server 3.6.0 (0123456), $7"
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    sign_release "$rel" "$TEST_DIR/other.pem" dev
+    check dev
+    [ "$rc" = 0 ] || fail "the installed binary's check was not used ($rc): $out"
+    [ "$(cat "$RUSTDESK_PATH/verify-args")" = "verify-release --manifest $rel/manifest.json --signature $rel/manifest.sig --name $asset $rel/$asset" ] \
+        || fail "verify-release ran as: $(cat "$RUSTDESK_PATH/verify-args")"
+    case "$out" in *"installed betterdesk-server"*"3.6.0"*) ;; *) fail "the check does not say who checked it: $out" ;; esac
+    check main
+    [ "$rc" = 1 ] || fail "the installed binary's check let another channel's release pass ($rc): $out"
+    touch "$RUSTDESK_PATH/refuse"
+    check dev
+    [ "$rc" = 1 ] || fail "a release the installed binary refused passed ($rc): $out"
+    case "$out" in *"does not verify"*) ;; *) fail "the refusal does not say why: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# A152: the download checks SHA256SUMS and the signature, installs nothing
+# when one fails and says so; --skip-verify skips both.
+test_download_checks_the_signature() (
+    load
+    if ! command -v openssl >/dev/null || ! openssl pkeyutl -help 2>&1 | grep -q -- -rawin; then
+        echo "skipped: no OpenSSL 3"
+        exit 0
+    fi
+    local rel="$TEST_DIR/release" out
+    openssl genpkey -algorithm ed25519 -out "$TEST_DIR/key.pem" 2>/dev/null
+    RELEASE_PUBLIC_KEY_PEM=$(openssl pkey -in "$TEST_DIR/key.pem" -pubout 2>/dev/null)
+    print_info() { echo "$1"; }
+    print_error() { echo "$1"; }
+    print_warning() { echo "$1"; }
+    release_asset_name() { echo betterdesk-server-linux-amd64; }
+    write_release "$rel" main
+    sign_release "$rel" "$TEST_DIR/key.pem" main
+    unset UPDATE_GITHUB_BRANCH_GIVEN RELEASE_BASE_URL
+    UPDATE_GITHUB_BRANCH=main
+    # curl: the stable release's files are the ones in $rel
+    curl() {
+        local a prev="" dest="" url="${!#}"
+        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
+        if [ -f "$rel/${url##*/}" ]; then cp "$rel/${url##*/}" "$dest"; printf '200'; else printf '404'; fi
+    }
+    mkdir -p "$TEST_DIR/stage"
+    out=$(download_release_binary "$TEST_DIR/stage" 2>&1) || fail "a signed release was not installed: $out"
+    [ -f "$TEST_DIR/stage/betterdesk-server" ] || fail "the checked binary is not staged"
+    case "$out" in *"SHA-256"*"signature checked"*) ;; *) fail "the download does not say what it checked: $out" ;; esac
+
+    rm -rf "$TEST_DIR/stage" && mkdir -p "$TEST_DIR/stage"
+    rm -f "$rel/manifest.sig"
+    if out=$(download_release_binary "$TEST_DIR/stage" 2>&1); then fail "a release without a signature was installed: $out"; fi
+    [ ! -f "$TEST_DIR/stage/betterdesk-server" ] || fail "a binary without a signature is staged"
+    case "$out" in *"no signed manifest"*"--skip-verify"*) ;; *) fail "the refusal does not say what to do: $out" ;; esac
+    SKIP_VERIFY=true
+    out=$(download_release_binary "$TEST_DIR/stage" 2>&1) || fail "--skip-verify did not install: $out"
+    case "$out" in *"checks skipped (--skip-verify)"*) ;; *) fail "--skip-verify does not say what it skipped: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# A152: an update of an install whose binary is older than the release key
+# (no verify-release) goes through this installer's own download and
+# check, from the repository .env names, instead of the old updater, which
+# would take a release without checking its signature.
+test_older_binary_updates_through_the_installer() (
+    unset UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO
+    load
+    do_backup_silent() { :; }
+    print_step() { :; }
+    print_error() { :; }
+    SERVER_BINARY_FILE=""
+    FROM_SOURCE=false
+    unset RELEASE_BASE_URL
+    printf '#!/bin/sh\n# upgrade-env --from FILE (an older binary)\n' > "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    printf 'UPDATE_GITHUB_OWNER=acme\nUPDATE_GITHUB_REPO=desk\n' > "$CONSOLE_PATH/.env"
+    server_cmd() { echo "server's updater" > "$TEST_DIR/seen"; return 1; }
+    curl() { printf '%s\n' "${!#}" >> "$TEST_DIR/urls"; printf '000'; }
+    update_go_install >/dev/null 2>&1 || true
+    [ ! -e "$TEST_DIR/seen" ] || fail "the older binary's updater ran"
+    grep -q '^https://github.com/acme/desk/releases/' "$TEST_DIR/urls" \
+        || fail "the installer's download did not ask the repository of .env: $(cat "$TEST_DIR/urls" 2>/dev/null)"
+    rm -rf "$TEST_DIR"
+)
+
 test_unit_environment
 test_exec_args
 test_carry_unit_environment
@@ -717,4 +934,7 @@ test_update_asks_the_fork
 test_firewall_ports
 test_self_signed_keeps_the_client_api_on_http
 test_port_taken_by_another_program
+test_release_signature
+test_download_checks_the_signature
+test_older_binary_updates_through_the_installer
 echo "Go installer unit checks passed"

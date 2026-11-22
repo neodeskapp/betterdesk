@@ -8,7 +8,8 @@
 #     - Fresh installation: one service, betterdesk-server, that serves the
 #       signal and relay server, the API and the web console
 #     - Minimal installation (the same server with its web console off)
-#     - Update an installation (release binaries checked by SHA-256)
+#     - Update an installation (release binaries checked by SHA-256 and the
+#       release signature)
 #     - Upgrade an install with the Node.js console in place, and roll it back
 #     - Repair/fix issues (enhanced with graceful shutdown)
 #     - Validate installation
@@ -16,7 +17,7 @@
 #     - Reset admin password
 #     - Build & deploy server (rebuild Go binary with rollback)
 #     - Full diagnostics
-#     - SHA256 binary verification
+#     - SHA-256 and signature checks of release binaries
 #     - Auto mode (non-interactive)
 #     - Enhanced service management with health verification
 #     - Port conflict detection
@@ -67,6 +68,12 @@ CLEANUP_NODE_MODE=false
 # checkout (--from-source), else the release of the update channel.
 SERVER_BINARY_FILE="${SERVER_BINARY_FILE:-}"
 FROM_SOURCE=false
+# The release key (DECISIONS A152): the public half of the ed25519 key
+# that signs each release's manifest. A binary with verify-release carries
+# the same key; without one, openssl checks a download with this copy.
+RELEASE_PUBLIC_KEY_PEM='-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAiwissiXvSjeFFsG8SdKEZq11uAtRLWCrD7Ky1vfY2n4=
+-----END PUBLIC KEY-----'
 
 # Relay server selection mode:
 #   auto   - detect public IP (default, best for internet-facing servers)
@@ -214,7 +221,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --check-permissions  Report panel/update/config/restart capabilities"
             echo "  --repair-permissions Repair BetterDesk ownership and service access"
             echo "  --set-config K=V Apply an allowlisted .env setting (repeatable)"
-            echo "  --skip-verify    Skip SHA256 verification of binaries"
+            echo "  --skip-verify    Skip the SHA-256 and signature checks of a downloaded binary"
             echo "  --minimal        Install the server with its web console off"
             echo "  --postgresql     Use PostgreSQL instead of SQLite"
             echo "  --pg-uri URI     PostgreSQL connection URI (implies --postgresql)"
@@ -237,7 +244,8 @@ while [[ $# -gt 0 ]]; do
             echo "  ADMIN_PASSWORD=...      Set custom admin password (default: auto-generated)"
             echo "  UPDATE_GITHUB_BRANCH=main|dev  Update channel: stable (main) or development (dev)"
             echo "  UPDATE_GITHUB_OWNER=... / UPDATE_GITHUB_REPO=...  Repository the releases come from"
-            echo "  RELEASE_BASE_URL=...    Folder URL with the release files (SHA256SUMS and binaries)"
+            echo "  RELEASE_BASE_URL=...    Folder URL with the release files (SHA256SUMS, manifest.json,"
+            echo "                          manifest.sig and the binaries)"
             echo "  SSL_DOMAIN=...          Host name for the self-signed certificate and the console's address"
             echo "  RUSTDESK_PATH=... / CONSOLE_PATH=... / BACKUP_DIR=...  Install folders"
             echo "                          (default /opt/betterdesk, /opt/BetterDeskConsole, /opt/rustdesk-backups)"
@@ -3851,22 +3859,34 @@ release_base_url() {
     fi
 }
 
+# fetch_release_file BASE NAME DEST: downloads BASE/NAME to DEST and prints
+# the HTTP status (000 when the server was not reached).
+fetch_release_file() {
+    local code progress=(-sS)
+    [ "$2" != SHA256SUMS ] && [ "${2#manifest}" = "$2" ] && [ -t 1 ] && progress=(--progress-bar)
+    code=$(curl -L --retry 3 --connect-timeout 20 "${progress[@]}" -o "$3" -w '%{http_code}' "$1/$2" 2>/dev/null) || true
+    printf '%s\n' "${code:-000}"
+}
+
 # download_release_binary DIR: the release binary for this machine into
-# DIR/betterdesk-server, checked against the release's SHA256SUMS.
+# DIR/betterdesk-server, checked against the release's SHA256SUMS and the
+# signature of its manifest (verify_release_files).
 download_release_binary() {
-    local dir="$1" asset base expected actual
+    local dir="$1" asset base expected actual code
     asset=$(release_asset_name) || {
         print_error "There is no release binary for $(uname -m); use --from-source"
         return 1
     }
     read_update_github_branch_from_env
+    # The repository given to the installer, else the one .env names
+    [ -n "${UPDATE_GITHUB_OWNER_GIVEN:-}" ] || UPDATE_GITHUB_OWNER=$(env_file_value "${CONSOLE_PATH:-}/.env" UPDATE_GITHUB_OWNER | grep . || printf '%s\n' "$UPDATE_GITHUB_OWNER")
+    [ -n "${UPDATE_GITHUB_REPO_GIVEN:-}" ] || UPDATE_GITHUB_REPO=$(env_file_value "${CONSOLE_PATH:-}/.env" UPDATE_GITHUB_REPO | grep . || printf '%s\n' "$UPDATE_GITHUB_REPO")
     base=$(release_base_url)
     print_info "Downloading $asset ($UPDATE_GITHUB_BRANCH channel) from $base"
-    local code
-    code=$(curl -sSL --retry 3 --connect-timeout 20 -o "$dir/SHA256SUMS" -w '%{http_code}' "$base/SHA256SUMS" 2>/dev/null) || true
+    code=$(fetch_release_file "$base" SHA256SUMS "$dir/SHA256SUMS")
     case "$code" in
         200) ;;
-        000|"")
+        000)
             print_error "Could not reach $base"
             print_info "Check this server's internet access and DNS (a proxy goes in HTTPS_PROXY),"
             print_info "or install offline: download the binary elsewhere and run with --binary FILE"
@@ -3887,16 +3907,15 @@ download_release_binary() {
             return 1
             ;;
     esac
-    local progress=(-s)
-    [ -t 1 ] && progress=(--progress-bar)
-    if ! curl -fSL --retry 3 --connect-timeout 20 "${progress[@]}" -o "$dir/$asset" "$base/$asset"; then
-        print_error "Could not download $base/$asset"
+    code=$(fetch_release_file "$base" "$asset" "$dir/$asset")
+    if [ "$code" != 200 ]; then
+        print_error "Could not download $base/$asset (HTTP $code)"
         return 1
     fi
     expected=$(awk -v name="$asset" '$2 == name || $2 == "*" name { print tolower($1); exit }' "$dir/SHA256SUMS")
     actual=$(sha256sum "$dir/$asset" | awk '{ print $1 }')
     if [ "$SKIP_VERIFY" = true ]; then
-        print_warning "SHA-256 check skipped (--skip-verify)"
+        print_warning "SHA-256 and signature checks skipped (--skip-verify)"
     elif [ -z "$expected" ]; then
         print_error "SHA256SUMS of the release does not list $asset"
         return 1
@@ -3905,8 +3924,154 @@ download_release_binary() {
         return 1
     else
         print_success "SHA-256 of $asset matches the release"
+        local name rc=0
+        for name in manifest.json manifest.sig; do
+            code=$(fetch_release_file "$base" "$name" "$dir/$name")
+            if [ "$code" != 200 ]; then
+                rm -f -- "${dir:?}/${name:?}"
+                if [ "$code" != 404 ]; then
+                    print_error "Could not download $base/$name (HTTP $code); try again later"
+                    return 1
+                fi
+            fi
+        done
+        verify_release_files "$dir" "$asset" "$UPDATE_GITHUB_BRANCH" || rc=$?
+        case "$rc" in
+            0) ;;
+            2)
+                print_warning "The release signature cannot be checked on this machine: $RELEASE_CHECK_PROBLEM."
+                print_warning "The binary is checked by its SHA-256 over HTTPS only. From the next update on,"
+                print_warning "the installed betterdesk-server checks the signature itself."
+                ;;
+            *)
+                print_info "Nothing was installed. A release signed with another key (a fork's) installs with --skip-verify"
+                return 1
+                ;;
+        esac
     fi
     mv -f "$dir/$asset" "$dir/betterdesk-server"
+}
+
+# binary_verifies_releases [BIN]: true when the binary checks a release's
+# signature itself, with the release key it carries (verify-release).
+binary_verifies_releases() {
+    local bin="${1:-$(server_binary_path)}"
+    [ -x "$bin" ] && grep -a -q -F 'verify-release --manifest FILE' "$bin" 2>/dev/null
+}
+
+# manifest_field MANIFEST KEY CHARS: the value of the field KEY of
+# manifest.json, when the file has it once and the value is made of CHARS
+# (an extended regular expression); fails otherwise.
+manifest_field() {
+    local values
+    values=$(tr -d '\r\n' < "$1" | grep -oE "\"$2\"[[:space:]]*:[[:space:]]*\"$3\"" \
+        | sed -E 's/^.*:[[:space:]]*"//; s/"$//') || return 1
+    [ -n "$values" ] && [ "$(printf '%s\n' "$values" | wc -l)" -eq 1 ] || return 1
+    printf '%s\n' "$values"
+}
+
+# release_payload MANIFEST: the text the release signature covers, made
+# from manifest.json as the server makes it (updater.CanonicalPayload): the
+# owner, repository, branch and commit, and each binary's SHA-256 and name,
+# sorted by name. Fails when manifest.json has a field it cannot read.
+release_payload() {
+    local manifest="$1" owner repo branch sha files count paths
+    owner=$(manifest_field "$manifest" owner '[A-Za-z0-9_.-]+') || return 1
+    repo=$(manifest_field "$manifest" repo '[A-Za-z0-9_.-]+') || return 1
+    branch=$(manifest_field "$manifest" branch '[A-Za-z0-9_./-]+') || return 1
+    sha=$(manifest_field "$manifest" sha '[0-9a-f]{40}') || return 1
+    files=$(tr -d '\r\n' < "$manifest" \
+        | grep -oE '"path"[[:space:]]*:[[:space:]]*"[a-z0-9.-]+"[[:space:]]*,[[:space:]]*"sha256"[[:space:]]*:[[:space:]]*"[0-9a-f]{64}"' \
+        | sed -E 's/^"path"[[:space:]]*:[[:space:]]*"([^"]*)".*"([0-9a-f]{64})"$/\2  \1/' \
+        | LC_ALL=C sort -s -k2,2) || return 1
+    count=$(printf '%s\n' "$files" | grep -c .) || true
+    paths=$(tr -d '\r\n' < "$manifest" | grep -oE '"path"[[:space:]]*:' | wc -l)
+    [ "$count" -gt 0 ] && [ "$count" -eq "$paths" ] || return 1
+    printf 'betterdesk-update-manifest-v1\nowner=%s\nrepo=%s\nbranch=%s\nsha=%s\nfiles=%s\n%s\n' \
+        "$owner" "$repo" "$branch" "$sha" "$count" "$files"
+}
+
+# ensure_openssl: openssl, installed with the package manager when missing.
+ensure_openssl() {
+    command -v openssl >/dev/null 2>&1 && return 0
+    print_info "Installing openssl to check the release signature..."
+    if command -v apt-get >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openssl >/dev/null 2>&1 \
+            || { apt-get update -qq >/dev/null 2>&1 && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openssl >/dev/null 2>&1; }
+    elif command -v dnf >/dev/null 2>&1; then
+        dnf install -y -q openssl >/dev/null 2>&1
+    elif command -v yum >/dev/null 2>&1; then
+        yum install -y -q openssl >/dev/null 2>&1
+    elif command -v pacman >/dev/null 2>&1; then
+        pacman -Sy --noconfirm openssl >/dev/null 2>&1
+    fi
+    command -v openssl >/dev/null 2>&1
+}
+
+# verify_release_files DIR ASSET BRANCH: DIR/ASSET is a binary the signed
+# manifest of the release (DIR/manifest.json and DIR/manifest.sig) names,
+# and the release is of the channel's BRANCH. The installed binary checks
+# it when it can (verify-release, with the release key it carries), else
+# openssl with RELEASE_PUBLIC_KEY_PEM. Returns 0 when checked, 1 when
+# refused, 2 when this machine cannot check an ed25519 signature
+# (RELEASE_CHECK_PROBLEM says why).
+verify_release_files() {
+    local dir="$1" asset="$2" branch="$3" installed out rc=0 work sum
+    RELEASE_CHECK_PROBLEM=""
+    installed=$(server_binary_path)
+    if [ ! -s "$dir/manifest.json" ] || [ ! -s "$dir/manifest.sig" ]; then
+        print_error "The release has no signed manifest (manifest.json and manifest.sig), so $asset is not installed"
+        return 1
+    fi
+    if binary_verifies_releases "$installed"; then
+        out=$("$installed" verify-release --manifest "$dir/manifest.json" --signature "$dir/manifest.sig" \
+            --name "$asset" "$dir/$asset" 2>&1) || rc=$?
+        case "$rc" in
+            0)
+                if [ "$(manifest_field "$dir/manifest.json" branch '[A-Za-z0-9_./-]+' || true)" != "$branch" ]; then
+                    print_error "The release is not one of the $branch channel, so $asset is not installed"
+                    return 1
+                fi
+                print_success "Release signature checked by the installed betterdesk-server (${out#verified: })"
+                return 0
+                ;;
+            1)
+                print_error "The installed betterdesk-server refused the release: ${out#betterdesk-server verify-release: }"
+                return 1
+                ;;
+        esac
+    fi
+    if ! ensure_openssl; then
+        RELEASE_CHECK_PROBLEM="openssl is missing and could not be installed"
+        return 2
+    fi
+    if ! openssl pkeyutl -help 2>&1 | grep -q -- '-rawin'; then
+        RELEASE_CHECK_PROBLEM="$(openssl version 2>/dev/null | cut -d' ' -f1-2) checks no ed25519 signatures (OpenSSL 3 does)"
+        return 2
+    fi
+    work=$(mktemp -d) || return 1
+    printf '%s\n' "$RELEASE_PUBLIC_KEY_PEM" > "$work/key.pem"
+    rc=0
+    if ! release_payload "$dir/manifest.json" > "$work/payload"; then
+        print_error "manifest.json of the release has fields this installer cannot read, so $asset is not installed"
+        rc=1
+    elif ! tr -d '[:space:]' < "$dir/manifest.sig" | base64 -d > "$work/sig" 2>/dev/null \
+        || ! openssl pkeyutl -verify -pubin -inkey "$work/key.pem" -rawin -in "$work/payload" -sigfile "$work/sig" >/dev/null 2>&1; then
+        print_error "The release signature does not verify against the release key, so $asset is not installed"
+        rc=1
+    elif ! grep -qx "branch=$branch" "$work/payload"; then
+        print_error "The release is not one of the $branch channel, so $asset is not installed"
+        rc=1
+    else
+        sum=$(sha256sum "$dir/$asset" | awk '{ print $1 }')
+        if ! grep -qxF "$sum  $asset" "$work/payload"; then
+            print_error "$asset is not the binary the release's signed manifest names, so it is not installed"
+            rc=1
+        fi
+    fi
+    rm -rf -- "${work:?}"
+    [ "$rc" -eq 0 ] && print_success "Release signature checked against the release key (openssl)"
+    return "$rc"
 }
 
 # build_server_from_source DEST: builds betterdesk-server from this checkout,
@@ -4956,7 +5121,11 @@ update_go_install() {
     # The server's updater reads the channel from .env
     save_given_update_channel
 
-    if [ -n "$SERVER_BINARY_FILE" ] || [ "$FROM_SOURCE" = true ] || [ -n "${RELEASE_BASE_URL:-}" ]; then
+    # An installed binary without verify-release is older than the release
+    # key, and its updater would take a release without checking the
+    # signature: this installer downloads and checks the release itself
+    if [ -n "$SERVER_BINARY_FILE" ] || [ "$FROM_SOURCE" = true ] || [ -n "${RELEASE_BASE_URL:-}" ] \
+        || ! binary_verifies_releases "$bin"; then
         obtain_server_binary || { rm -rf "${STAGED_SERVER_DIR:-}"; return 1; }
         systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
         wait_for_service_stop "$SERVER_SERVICE" 15 || true
@@ -4964,8 +5133,9 @@ update_go_install() {
         rm -rf "$STAGED_SERVER_DIR"
     else
         # The server's own updater: the release of the channel, its manifest
-        # signature and SHA-256 checked, the old binary kept as .prev
-        print_step "Installing the newest release with betterdesk-server update..."
+        # signature (with the release key the installed binary carries) and
+        # SHA-256 checked, the old binary kept as .prev
+        print_step "Installing the newest release with betterdesk-server update (it checks the release signature)..."
         # The repository goes to the updater: an installed binary may have
         # an older default
         local owner repo
@@ -5425,7 +5595,7 @@ do_update() {
             $'Back\tReturn to the main menu'
         )
         local _menu_returns=( 1 2 0 )
-        menu_choose "Update" "Releases are checked by SHA-256 before they replace the binary"
+        menu_choose "Update" "Releases are checked by SHA-256 and their signature before they replace the binary"
         case "${MENU_CHOICE:-1}" in
             0) return 0 ;;
             2) switch_update_channel; return 0 ;;

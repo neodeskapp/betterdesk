@@ -8,7 +8,8 @@
       - Fresh installation: one service, BetterDeskServer, that serves the
         signal and relay server, the API and the web console
       - Minimal installation (the same server with its web console off)
-      - Update an installation (release binaries checked by SHA-256)
+      - Update an installation (release binaries checked by SHA-256 and,
+        from the second install on, the release signature)
       - Upgrade an install with the Node.js console in place, and roll it back
       - Repair/fix issues (enhanced with graceful shutdown)
       - Validate installation
@@ -16,7 +17,7 @@
       - Reset admin password
       - Build & deploy server (rebuild Go binary with rollback)
       - Full diagnostics
-      - SHA256 binary verification
+      - SHA-256 and signature checks of release binaries
       - Auto mode (non-interactive)
       - Enhanced service management with health verification
       - Port conflict detection
@@ -38,7 +39,7 @@
     With -Uninstall, also remove installation data and keys
 
 .PARAMETER SkipVerify
-    Skip SHA256 verification of binaries
+    Skip the SHA-256 and signature checks of a downloaded binary
 
 .PARAMETER Update
     Update without questions. An install with the Node.js console is upgraded
@@ -936,7 +937,9 @@ function Get-ReleaseBaseUrl {
 }
 
 # Downloads the release binary for this machine into $Dir, checked against
-# the release's SHA256SUMS. Returns the path or $null.
+# the release's SHA256SUMS and, when the installed binary can check it
+# (verify-release), the signature of the release's manifest. Returns the
+# path or $null.
 function Get-ReleaseBinary {
     param([string]$Dir)
     $asset = "betterdesk-server-windows-amd64.exe"
@@ -945,6 +948,9 @@ function Get-ReleaseBinary {
         return $null
     }
     Read-UpdateGitHubBranchFromEnv
+    # The repository given to the installer, else the one .env names
+    if (-not $script:UPDATE_GITHUB_OWNER_GIVEN -and (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER")) { $script:UPDATE_GITHUB_OWNER = Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER" }
+    if (-not $script:UPDATE_GITHUB_REPO_GIVEN -and (Get-ConsoleEnvValue -Key "UPDATE_GITHUB_REPO")) { $script:UPDATE_GITHUB_REPO = Get-ConsoleEnvValue -Key "UPDATE_GITHUB_REPO" }
     $base = Get-ReleaseBaseUrl
     Print-Info "Downloading $asset ($($script:UPDATE_GITHUB_BRANCH) channel) from $base"
     $sums = Join-Path $Dir "SHA256SUMS"
@@ -979,7 +985,7 @@ function Get-ReleaseBinary {
     }
     $actual = (Get-FileHash -Path $file -Algorithm SHA256).Hash.ToLower()
     if ($script:SKIP_VERIFY) {
-        Print-Warning "SHA-256 check skipped (-SkipVerify)"
+        Print-Warning "SHA-256 and signature checks skipped (-SkipVerify)"
     } elseif (-not $expected) {
         Print-Error "SHA256SUMS of the release does not list $asset"
         return $null
@@ -988,10 +994,62 @@ function Get-ReleaseBinary {
         return $null
     } else {
         Print-Success "SHA-256 of $asset matches the release"
+        if (-not (Test-ReleaseSignature -Dir $Dir -Base $base -Asset $asset)) {
+            Print-Info "Nothing was installed. A release signed with another key (a fork's) installs with -SkipVerify"
+            return $null
+        }
     }
     $target = Join-Path $Dir "betterdesk-server.exe"
     Move-Item -Path $file -Destination $target -Force
     return $target
+}
+
+# True when the binary checks a release's signature itself, with the
+# release key it carries (verify-release).
+function Test-BinaryVerifiesReleases {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'verify-release --manifest FILE' -SimpleMatch -Quiet)
+}
+
+# Checks the downloaded $Dir\$Asset against the signed manifest of the
+# release at $Base with the installed betterdesk-server (verify-release).
+# Windows has no tool for an ed25519 signature before the server is
+# installed, so a first install (or one of a binary older than the release
+# key) says so and keeps the SHA-256 check over HTTPS. Returns $false when
+# the release is refused.
+function Test-ReleaseSignature {
+    param([string]$Dir, [string]$Base, [string]$Asset)
+    $installed = Get-ServerBinaryPath
+    if (-not (Test-BinaryVerifiesReleases -Path $installed)) {
+        Print-Warning "The release signature is checked from the second install on: this install checks the binary's SHA-256 over HTTPS only."
+        Print-Info "Windows has no tool for the signature before betterdesk-server is installed; from the next update on, the installed betterdesk-server checks it."
+        return $true
+    }
+    $manifest = Join-Path $Dir "manifest.json"
+    $signature = Join-Path $Dir "manifest.sig"
+    foreach ($name in @("manifest.json", "manifest.sig")) {
+        try {
+            Invoke-WebRequest -Uri "$Base/$name" -OutFile (Join-Path $Dir $name) -UseBasicParsing -ErrorAction Stop
+        } catch {
+            Print-Error "The release has no signed manifest ($name could not be downloaded), so $Asset is not installed"
+            return $false
+        }
+    }
+    $output = @(& $installed verify-release --manifest $manifest --signature $signature --name $Asset (Join-Path $Dir $Asset) 2>&1 | ForEach-Object { "$_" })
+    $code = $LASTEXITCODE
+    if ($code -eq 0) {
+        $branch = ""
+        if ((Get-Content $manifest -Raw) -match '"branch"\s*:\s*"([A-Za-z0-9_./-]+)"') { $branch = $Matches[1] }
+        if ($branch -ne $script:UPDATE_GITHUB_BRANCH) {
+            Print-Error "The release is not one of the $($script:UPDATE_GITHUB_BRANCH) channel, so $Asset is not installed"
+            return $false
+        }
+        Print-Success "Release signature checked by the installed betterdesk-server ($((($output -join ' ') -replace '^verified: ', '')))"
+        return $true
+    }
+    Print-Error "The installed betterdesk-server refused the release: $((($output -join ' ') -replace '^betterdesk-server verify-release: ', ''))"
+    return $false
 }
 
 # A checked binary for this machine from -Binary, -FromSource or the
@@ -1656,7 +1714,11 @@ function Update-GoInstall {
     Print-Info "Creating backup before update..."
     Do-BackupSilent
 
-    if ($script:BINARY_FILE -or $script:FROM_SOURCE -or $env:RELEASE_BASE_URL) {
+    # An installed binary without verify-release is older than the release
+    # key, and its updater would take a release without checking the
+    # signature: this installer downloads the release itself and says what
+    # it checked
+    if ($script:BINARY_FILE -or $script:FROM_SOURCE -or $env:RELEASE_BASE_URL -or -not (Test-BinaryVerifiesReleases -Path $serverExe)) {
         if (-not (Get-StagedServerBinary)) {
             Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
             return $false
@@ -1667,9 +1729,10 @@ function Update-GoInstall {
         if (-not $installed) { Start-ServerService; return $false }
     } else {
         # The server's own updater: the release of the channel, its manifest
-        # signature and SHA-256 checked; the running exe is renamed aside and
-        # the old one kept as .prev
-        Print-Step "Installing the newest release with betterdesk-server update..."
+        # signature (with the release key the installed binary carries) and
+        # SHA-256 checked; the running exe is renamed aside and the old one
+        # kept as .prev
+        Print-Step "Installing the newest release with betterdesk-server update (it checks the release signature)..."
         # The repository goes to the updater: an installed binary may have
         # an older default
         $owner = if ($script:UPDATE_GITHUB_OWNER_GIVEN) { $script:UPDATE_GITHUB_OWNER_GIVEN } else { Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER" }
@@ -2021,7 +2084,7 @@ function Do-Update {
             "Back`tReturn to the main menu"
         )
         $returns = @("1", "2", "0")
-        Invoke-MenuChoose -Title "Update" -Subtitle "Releases are checked by SHA-256 before they replace the binary" -Items $items -Returns $returns
+        Invoke-MenuChoose -Title "Update" -Subtitle "Releases are checked by SHA-256 and their signature before they replace the binary" -Items $items -Returns $returns
         switch ($script:MENU_CHOICE) {
             "0" { return $true }
             "2" { Switch-UpdateChannel; return $true }

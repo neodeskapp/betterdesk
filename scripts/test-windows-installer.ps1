@@ -552,6 +552,8 @@ function Test-UpdateAsksTheFork {
     $script:UPDATE_GITHUB_OWNER_GIVEN, $script:UPDATE_GITHUB_REPO_GIVEN = '', ''
     function script:Invoke-ServerCommand { param([string[]]$Arguments, $InputText, $Binary) $script:seenRepo = "$env:UPDATE_GITHUB_OWNER/$env:UPDATE_GITHUB_REPO"; return 1 }
     function script:Do-BackupSilent { }
+    # The installed binary checks release signatures, so its updater runs
+    function Test-BinaryVerifiesReleases { param($Path) $true }
     $script:BINARY_FILE = ''
     $script:FROM_SOURCE = $false
     $envFile = Join-Path $script:CONSOLE_PATH '.env'
@@ -713,6 +715,97 @@ function Test-DatabaseUrlOnly {
     Remove-Item -Recurse -Force $dir
 }
 
+# A152: a download is checked against the release's signed manifest by the
+# installed betterdesk-server (verify-release). A first install has no tool
+# for the signature on Windows: it says plainly that the signature is
+# checked from the second install on, and keeps the SHA-256 check. An
+# update of a binary older than the release key goes through this download,
+# not the old updater.
+function Test-ReleaseSignatureOnWindows {
+    $dir = New-TestInstall
+    $asset = 'betterdesk-server-windows-amd64.exe'
+    $rel = Join-Path $dir 'release'
+    $stage = Join-Path $dir 'stage'
+    New-Item -ItemType Directory -Path $rel, $stage -Force | Out-Null
+    Set-Content -Path (Join-Path $rel $asset) -Value 'the new server'
+    $sum = (Get-FileHash -Path (Join-Path $rel $asset) -Algorithm SHA256).Hash.ToLower()
+    Set-Content -Path (Join-Path $rel 'SHA256SUMS') -Value "$sum  $asset"
+    Set-Content -Path (Join-Path $rel 'manifest.json') -Value @('{', '  "owner": "trybetterdesk",', '  "branch": "main",', '  "files": []', '}')
+    Set-Content -Path (Join-Path $rel 'manifest.sig') -Value 'c2lnbmF0dXJl'
+    function Invoke-WebRequest {
+        param($Uri, $OutFile, [switch]$UseBasicParsing, $ErrorAction)
+        $name = ($Uri -split '/')[-1]
+        $script:downloads += $name
+        $from = Join-Path $rel $name
+        if (-not (Test-Path $from)) { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+        Copy-Item -Path $from -Destination $OutFile -Force
+    }
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $script:SKIP_VERIFY = $false
+
+    # The installed binary says by its help whether it checks signatures
+    $probe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ... verify-release --manifest FILE --signature FILE ...'
+    if (-not (Test-BinaryVerifiesReleases -Path $probe)) { Fail 'a binary with verify-release is taken for an older one' }
+    Set-Content -Path $probe -Value 'upgrade-env --from FILE ...'
+    if (Test-BinaryVerifiesReleases -Path $probe) { Fail 'an older binary is taken for one that checks signatures' }
+
+    # A first install: no installed binary
+    $script:downloads = @()
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "a first install with a matching SHA-256 installed nothing: $out" }
+    if ($out -notmatch 'checked from the second install on') { Fail "a first install does not say when the signature is checked: $out" }
+    if ($script:downloads -contains 'manifest.sig') { Fail 'a first install fetched a signature it cannot check' }
+
+    # An installed binary with verify-release checks the download
+    function Get-ServerBinaryPath { 'fake-verify' }
+    function Test-BinaryVerifiesReleases { param($Path) $Path -eq 'fake-verify' }
+    function fake-verify {
+        $script:verifyArgs = @($args | ForEach-Object { "$_" })
+        if ($script:refuse) { Write-Output 'betterdesk-server verify-release: the signature of the manifest does not verify against the release key'; $global:LASTEXITCODE = 1; return }
+        Write-Output "verified: betterdesk-server 3.6.0 (0123456), $($args[6])"
+        $global:LASTEXITCODE = 0
+    }
+    $script:refuse = $false
+    Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "a release the installed binary checked was not installed: $out" }
+    $want = "verify-release --manifest $(Join-Path $stage 'manifest.json') --signature $(Join-Path $stage 'manifest.sig') --name $asset $(Join-Path $stage $asset)"
+    if (($script:verifyArgs -join ' ') -ne $want) { Fail "verify-release ran as: $($script:verifyArgs -join ' ')" }
+    if ($out -notmatch 'checked by the installed betterdesk-server') { Fail "the download does not say who checked the signature: $out" }
+    $script:refuse = $true
+    Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail 'a release the installed binary refused was installed' }
+    if ($out -notmatch 'does not verify' -or $out -notmatch '-SkipVerify') { Fail "the refusal does not say why and what to do: $out" }
+    $script:refuse = $false
+    $script:UPDATE_GITHUB_BRANCH = 'dev'
+    Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail "a stable release was installed for the development channel: $out" }
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    Remove-Item -Force (Join-Path $rel 'manifest.sig')
+    Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
+    $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String)
+    if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail 'a release without a signature was installed' }
+    if ($out -notmatch 'no signed manifest') { Fail "a release without a signature says: $out" }
+
+    # An update of an older binary does not run its updater
+    function Test-BinaryVerifiesReleases { param($Path) $false }
+    function Do-BackupSilent { }
+    function Invoke-ServerCommand { param([string[]]$Arguments, $InputText, $Binary) $script:updaterRan = $true; return 1 }
+    function Get-StagedServerBinary { $script:ownDownload = $true; $script:STAGED_SERVER_DIR = Join-Path $dir 'staged'; return $false }
+    $script:updaterRan = $false
+    $script:ownDownload = $false
+    $script:BINARY_FILE = ''
+    $script:FROM_SOURCE = $false
+    Update-GoInstall *> $null
+    if ($script:updaterRan) { Fail "the older binary's updater ran" }
+    if (-not $script:ownDownload) { Fail "the update of an older binary did not download and check the release itself" }
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -731,6 +824,7 @@ Test-FirewallPorts
 Test-CertificateFromTheBinary
 Test-SecretsAreRandom
 Test-DatabaseUrlOnly
+Test-ReleaseSignatureOnWindows
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'
