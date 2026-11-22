@@ -128,7 +128,8 @@ func (s *Service) serveAgent(u *ws.Upgrade) {
 // scope check (403). The id is the path segment as sent, not decoded.
 // After the handshake, a sixth viewer of a device is closed with 1008
 // "Max viewers reached", and the others are checked again every
-// SessionCheck (watchViewer).
+// SessionCheck (watchViewer). A viewer whose account may not use remote
+// control (canControl) watches: its input never reaches the agent.
 func (s *Service) serveViewer(u *ws.Upgrade) {
 	if !u.CheckOrigin("remote-viewer " + u.Path) {
 		return
@@ -163,6 +164,7 @@ func (s *Service) serveViewer(u *ws.Upgrade) {
 		u.Refuse(http.StatusNotFound)
 		return
 	}
+	control := s.canControl(u.R.Context(), sn.UserID(), deviceID)
 	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxViewerMessage})
 	if !ok {
 		return
@@ -207,6 +209,9 @@ read:
 			s.pauseViewerLocked(sess, deviceID, conn)
 			s.mu.Unlock()
 		case forward, tooDeep:
+			if !control {
+				continue
+			}
 			s.mu.Lock()
 			agent := sess.agent
 			s.mu.Unlock()
@@ -377,4 +382,24 @@ func unhex(c byte) byte {
 		return c - 'a' + 10
 	}
 	return c - 'A' + 10
+}
+
+// canControl reports whether the account may use remote control on the
+// device: whether its client features leave remote_control on. A lookup
+// that fails counts as no.
+func (s *Service) canControl(ctx context.Context, userID int64, deviceID string) bool {
+	if s.opts.FeaturesOff == nil {
+		return true
+	}
+	off, err := s.opts.FeaturesOff(ctx, userID)
+	if err != nil {
+		logf("WARN: [RemoteRelay] client features of user %d failed for %s: %v; the viewer only watches", userID, deviceID, err)
+		return false
+	}
+	for _, key := range off {
+		if key == "remote_control" {
+			return false
+		}
+	}
+	return true
 }

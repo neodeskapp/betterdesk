@@ -1,7 +1,10 @@
 package remoterelay
 
 import (
+	"context"
+	"errors"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -54,4 +57,62 @@ func TestViewerInputCannotControlTheStream(t *testing.T) {
 	viewer.Close(1000)
 	stop()
 	check()
+}
+
+// A viewer whose account may not use remote control watches: its input
+// never reaches the agent, also when the lookup of its features fails.
+// The viewer still gets the screen and may stop the stream for itself.
+func TestAViewerWithoutRemoteControlOnlyWatches(t *testing.T) {
+	for _, c := range []struct {
+		name    string
+		off     []string
+		err     error
+		reaches bool
+	}{
+		{"remote control on", []string{"clipboard", "client_actions"}, nil, true},
+		{"remote control off", []string{"remote_control"}, nil, false},
+		{"lookup failed", nil, errors.New("store down"), false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			check := wstest.Goroutines(t)
+			var mu sync.Mutex
+			var asked []int64
+			_, addr, stop := testRelay(t, func(o *Options) {
+				o.FeaturesOff = func(_ context.Context, userID int64) ([]string, error) {
+					mu.Lock()
+					defer mu.Unlock()
+					asked = append(asked, userID)
+					return c.off, c.err
+				}
+			})
+			agent := dial(t, addr, "/ws/remote-agent/dev1?token=tok-dev1-good", nil)
+			viewer := dial(t, addr, "/ws/remote-viewer/dev1", operator)
+			if !agent.Wait(time.Second, func(f []wstest.Frame, _ bool) bool { return len(f) == 1 }) {
+				t.Fatalf("the agent got %q", texts(agent.Frames()))
+			}
+			if err := viewer.Text(`{"type":"input","event_type":"mouse_move","x":1,"y":2}`); err != nil {
+				t.Fatal(err)
+			}
+			if err := viewer.Text(`{"type":"input","kind":"key_down","key":"a"}`); err != nil {
+				t.Fatal(err)
+			}
+			agent.Wait(300*time.Millisecond, func(f []wstest.Frame, _ bool) bool { return len(f) >= 3 })
+			got := texts(agent.Frames()[1:])
+			if c.reaches && len(got) != 2 {
+				t.Errorf("the agent got %q, want both events", got)
+			}
+			if !c.reaches && len(got) != 0 {
+				t.Errorf("the agent got %q from a viewer that may not control", got)
+			}
+			mu.Lock()
+			if len(asked) != 1 || asked[0] != 7 {
+				t.Errorf("features looked up for %v, want once for the viewer's account 7", asked)
+			}
+			mu.Unlock()
+			agent.Close(1000)
+			viewer.Close(1000)
+			stop()
+			check()
+		})
+	}
 }

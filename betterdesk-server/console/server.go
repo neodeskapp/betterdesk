@@ -396,6 +396,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth,
 		DB:           opts.Store,
 		CanAccess:    s.deps.DeviceGroups.UserCanAccessDevice,
+		FeaturesOff:  s.deps.Access.ClientFeaturesOff,
 	})
 	// Server management and its terminal. Relative paths and the console's
 	// folder are CONSOLE_DIR, the old console's working directory. A
