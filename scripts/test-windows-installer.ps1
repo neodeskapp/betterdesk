@@ -270,3 +270,6 @@ Test-MigrationMenusPassOverwrite
 Test-PostgreSQLSwitchMovesTheWholeInstall
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'
+# The stand-ins set LASTEXITCODE, and a caller such as GitHub's pwsh step
+# exits with it when the script ends without an exit of its own.
+exit 0
