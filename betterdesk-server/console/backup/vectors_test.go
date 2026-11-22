@@ -19,7 +19,7 @@ import (
 )
 
 // The vectors are what the Node console's own modules answered
-// (testdata/nodeoracle/vectors.js). Every one is replayed.
+// (testdata/README.md). Every one is replayed.
 
 type jsErr struct {
 	Name    string `json:"name"`
