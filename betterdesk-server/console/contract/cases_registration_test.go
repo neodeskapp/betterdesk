@@ -128,11 +128,23 @@ func init() {
 			Name: "approve-text-body", Method: "PUT", Path: "/api/registrations/{registration}/approve",
 			RawBody: "folder_id=1", ContentType: "text/plain",
 		},
+		// 900100021 is already a device, so since BUGS L55 an approval needs
+		// confirm_existing_device: without it the console answers 409 with
+		// the device and stores nothing (a case recorded from Go, as Node
+		// approved without asking); "approve" confirms it
+		contract.Case{
+			Name: "approve-existing-unconfirmed", Method: "PUT", Path: "/api/registrations/{registration}/approve",
+			Body: map[string]any{
+				"folder_id": "{folder}", "group_guids": []any{"{group}"},
+				"display_name": "Contract kiosk", "tags": "contract-a",
+			},
+		},
 		contract.Case{
 			Name: "approve", Method: "PUT", Path: "/api/registrations/{registration}/approve",
 			Body: map[string]any{
 				"folder_id": "{folder}", "group_guids": []any{"{group}", "not a guid!", 7},
 				"display_name": "  Contract kiosk  ", "tags": " contract-a, ,contract-b ",
+				"confirm_existing_device": true,
 			},
 			Volatile: approval,
 		},

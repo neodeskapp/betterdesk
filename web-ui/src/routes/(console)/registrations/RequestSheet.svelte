@@ -7,11 +7,24 @@
 
   The folders, groups and tags for the form come from the page (loaded once
   per visit when the first sheet opens).
+
+  A LAN request whose ID is already a device (row.existing) says so above
+  the form, and Approve asks a second time, naming that device, before it
+  sends the confirmation the server wants; the server's 409 for an ID that
+  became a device meanwhile asks the same. A device outside the approver's
+  scope cannot be approved: the sheet says so and offers Reject only.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { Folder, DeviceGroup } from '#lib/api/devices.ts';
-	import { approveEnrollment, approveLan, type ApproveInput, type SyncMode } from '#lib/api/registrations.ts';
+	import {
+		approveEnrollment,
+		approveLan,
+		refusedForExisting,
+		type ApproveInput,
+		type ExistingDevice,
+		type SyncMode
+	} from '#lib/api/registrations.ts';
 	import {
 		SOURCE_ENROLLMENT,
 		canDeleteRecord,
@@ -28,6 +41,7 @@
 	import Field from '#lib/ui/Field.svelte';
 	import FormSection from '#lib/ui/FormSection.svelte';
 	import Input from '#lib/ui/Input.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
 	import Platform from '#lib/ui/Platform.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
@@ -36,9 +50,19 @@
 	import Time from '#lib/ui/Time.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import Version from '#lib/ui/Version.svelte';
+	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { createForm } from '#lib/ui/form.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
-	import { around, decidedText, plainly, sourceLabel, statusLabel, statusToneOf } from './labels.ts';
+	import {
+		around,
+		decidedText,
+		existingName,
+		failure,
+		plainly,
+		sourceLabel,
+		statusLabel,
+		statusToneOf
+	} from './labels.ts';
 
 	interface Props {
 		row: RequestRow;
@@ -82,6 +106,8 @@
 	const name = $derived(row.hostname || row.device_id);
 	/** Approving, rejecting and deleting need Registrations at write */
 	const canApprove = $derived(canWrite('enrollment.approve'));
+	/** The ID is a device the approver may not see: the server refuses the approval */
+	const blocked = $derived(pending && !!row.existing && !row.existing.in_scope);
 
 	const SYNC: SyncMode[] = ['standard', 'silent', 'turbo'];
 
@@ -101,16 +127,44 @@
 				folder_id: Number(v.folder_id) || 0,
 				group_guids: v.groups
 			};
-			await plainly(
-				() =>
-					isGo
-						? approveEnrollment(row.rowId, { ...body, sync_mode: v.sync_mode })
-						: approveLan(row.rowId, body),
-				'registrations.approve_failed'
-			);
+			if (isGo) {
+				await plainly(
+					() => approveEnrollment(row.rowId, { ...body, sync_mode: v.sync_mode }),
+					'registrations.approve_failed'
+				);
+			} else if (!(await approveLanRequest(body))) return;
 			onapproved(body.display_name || name);
 		}
 	});
+
+	/** Asks a second time, naming the device the request's ID already is */
+	function confirmExisting(device: ExistingDevice): Promise<boolean> {
+		const named = existingName(device);
+		return confirm({
+			title: t('registrations.existing_confirm_title', { name: named }),
+			message: t('registrations.existing_confirm_text', { id: device.id || row.device_id, name: named }),
+			confirmLabel: t('registrations.existing_confirm_btn'),
+			confirmIcon: ICONS.approve
+		});
+	}
+
+	/** Approves a LAN request; false when the approver said no to the second question */
+	async function approveLanRequest(body: ApproveInput): Promise<boolean> {
+		if (row.existing && !(await confirmExisting(row.existing))) return false;
+		try {
+			await approveLan(row.rowId, row.existing ? { ...body, confirm_existing_device: true } : body);
+			return true;
+		} catch (err) {
+			const device = refusedForExisting(err);
+			if (!device || row.existing) throw failure(err, 'registrations.approve_failed');
+			if (!(await confirmExisting(device))) return false;
+		}
+		await plainly(
+			() => approveLan(row.rowId, { ...body, confirm_existing_device: true }),
+			'registrations.approve_failed'
+		);
+		return true;
+	}
 
 	// The sheet opens on the name, selected, so typing replaces the name the device sent
 	let selected = false;
@@ -209,7 +263,19 @@
 >
 	<Facts items={facts} label={t('registrations.col_device')} />
 
-	{#if pending && canApprove}
+	{#if pending && row.existing}
+		<div class="existing">
+			<Notice
+				tone="warning"
+				class="existing-notice"
+				message={row.existing.in_scope
+					? t('registrations.existing_hint', { name: existingName(row.existing) })
+					: t('registrations.existing_hidden')}
+			/>
+		</div>
+	{/if}
+
+	{#if pending && canApprove && !blocked}
 		<form id={form.id} class="approve-form" onsubmit={form.onsubmit} novalidate aria-busy={!ready}>
 			<Field label={t('registrations.field_name')} hint={t('registrations.field_name_hint')}>
 				{#snippet children(f)}
@@ -321,14 +387,16 @@
 			<Button class="sheet-reject" variant="danger-quiet" icon={ICONS.reject} onclick={onreject}
 				>{t('registrations.reject_btn')}…</Button
 			>
-			<Button
-				class="sheet-approve"
-				variant="primary"
-				icon={ICONS.approve}
-				type="submit"
-				form={form.id}
-				busy={form.busy}>{t('registrations.approve_btn')}</Button
-			>
+			{#if !blocked}
+				<Button
+					class="sheet-approve"
+					variant="primary"
+					icon={ICONS.approve}
+					type="submit"
+					form={form.id}
+					busy={form.busy}>{t('registrations.approve_btn')}</Button
+				>
+			{/if}
 		{:else}
 			{#if actions.includes('open')}
 				<Button class="sheet-open" icon={ICONS.open} onclick={onopen}>{t('registrations.open_device')}</Button
@@ -350,6 +418,9 @@
 <style>
 	.approve-form {
 		margin-top: var(--space-5);
+	}
+	.existing {
+		margin-top: var(--space-4);
 	}
 	.hint {
 		margin: 0;

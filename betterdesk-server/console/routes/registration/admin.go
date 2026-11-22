@@ -1,6 +1,7 @@
 package registration
 
 import (
+	"fmt"
 	"math"
 	"net"
 	"net/http"
@@ -79,7 +80,70 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Get registrations error:", err)
 		return
 	}
+	if err := h.markExisting(r, rows); err != nil {
+		h.serverError(w, r, "Get registrations error:", err)
+		return
+	}
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "data", rows, "total", total))
+}
+
+// markExisting gives each waiting registration whose device id is already
+// a device of the server, also a deleted one, the field existing_device
+// (existingDevice). Approving such a registration moves and renames that
+// device, so the page marks it and asks again. The devices are read once,
+// and only when a waiting registration names a device id.
+func (h *handlers) markExisting(r *http.Request, rows []*goapi.Object) error {
+	waiting := false
+	for _, row := range rows {
+		if row != nil && row.Get("status") == "pending" && goapi.Truthy(row.Get("device_id")) {
+			waiting = true
+			break
+		}
+	}
+	if !waiting {
+		return nil
+	}
+	ctx := r.Context()
+	devices := h.d.Backend.GetAllDevices(ctx, goapi.DeviceFilters{IncludeDeleted: true})
+	byID := make(map[string]*goapi.Object, len(devices))
+	for _, device := range devices {
+		if device != nil {
+			byID[jsreq.String(device.Get("id"))] = device
+		}
+	}
+	scope, err := h.d.DeviceGroups.LimitedScope(ctx, kit.User(r), func() []*goapi.Object { return devices })
+	if err != nil {
+		return fmt.Errorf("device scope: %w", err)
+	}
+	for _, row := range rows {
+		if row == nil || row.Get("status") != "pending" || !goapi.Truthy(row.Get("device_id")) {
+			continue
+		}
+		id := jsreq.String(row.Get("device_id"))
+		if device := byID[id]; device != nil {
+			row.Set("existing_device", existingDevice(device, scope.Has(id)))
+		}
+	}
+	return nil
+}
+
+// existingDevice is what the registration routes say about the device a
+// registration's id already names: its id, its name (display name, else
+// host name, else note), whether it is deleted, and whether the approver
+// may see it. For a device outside the approver's scope only the id is
+// told, with in_scope false.
+func existingDevice(device *goapi.Object, inScope bool) *goapi.Object {
+	id := jsreq.String(device.Get("id"))
+	if !inScope {
+		return goapi.NewObject("id", id, "name", "", "deleted", false, "in_scope", false)
+	}
+	name := ""
+	for _, field := range []string{"display_name", "hostname", "note"} {
+		if name = jsbind.Trim(device.Str(field)); name != "" {
+			break
+		}
+	}
+	return goapi.NewObject("id", id, "name", name, "deleted", device.Bool("soft_deleted"), "in_scope", true)
 }
 
 // count answers GET /api/registrations/count: the pending LAN
@@ -166,7 +230,10 @@ func (h *handlers) one(w http.ResponseWriter, r *http.Request) {
 // gets the display name and the tags when the API server knows it. A
 // display name or tags that are truthy but no text answer 400 before
 // anything is stored, so an approval always has its event and its audit
-// entry.
+// entry. A registration whose device id is already a device, also a
+// deleted one, needs confirm_existing_device true in the body: without it
+// the route answers 409 with code existing_device and the device
+// (existingDevice) before anything is stored.
 func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id, ok := registrationID(r)
@@ -198,13 +265,22 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 		failure(w, r, http.StatusBadRequest, "Invalid tags")
 		return
 	}
-	allowed, err := h.mayApproveFor(r, reg.Get("device_id"))
+	device, allowed, err := h.knownDevice(r, reg.Get("device_id"))
 	if err != nil {
 		h.serverError(w, r, "Approve registration error:", err)
 		return
 	}
 	if !allowed {
 		failure(w, r, http.StatusForbidden, kit.T(r, "errors.forbidden", nil))
+		return
+	}
+	if device != nil && jsreq.Prop(body, "confirm_existing_device") != true {
+		kit.JSON(w, r, http.StatusConflict, goapi.NewObject(
+			"success", false,
+			"error", kit.T(r, "registrations.approve_existing_refused", nil),
+			"code", "existing_device",
+			"existing_device", existingDevice(device, true),
+		))
 		return
 	}
 	cfg := h.serverConfig(r)
@@ -262,21 +338,24 @@ func unassignedMessage(parts []string) string {
 	return "Approved, but the " + strings.Join(parts, " and ") + " could not be assigned"
 }
 
-// mayApproveFor reports whether the approver may approve a registration
-// for the device id: always for a device the API server does not know (a
-// new machine), and for a device it knows only when the device is in the
-// approver's device scope. An approval puts that device into a folder and
-// device groups and gives it a name and tags, so an approver must not
-// reach a device outside its scope this way.
-func (h *handlers) mayApproveFor(r *http.Request, deviceID any) (bool, error) {
+// knownDevice returns the device the server already has under the device
+// id, also a deleted one (nil for a new machine), and whether the
+// approver may approve a registration for the id: always for a new
+// machine, and for a device only when it is in the approver's device
+// scope. An approval puts that device into a folder and device groups and
+// gives it a name and tags, so an approver must not reach a device
+// outside its scope this way, and must confirm that it means a device in
+// it (confirm_existing_device).
+func (h *handlers) knownDevice(r *http.Request, deviceID any) (*goapi.Object, bool, error) {
 	if !goapi.Truthy(deviceID) {
-		return true, nil
+		return nil, true, nil
 	}
-	device := h.d.Backend.GetDeviceByID(r.Context(), jsreq.String(deviceID), false)
+	device := h.d.Backend.GetDeviceByID(r.Context(), jsreq.String(deviceID), true)
 	if device == nil {
-		return true, nil
+		return nil, true, nil
 	}
-	return h.d.DeviceGroups.UserCanAccessDevice(r.Context(), kit.User(r), device)
+	allowed, err := h.d.DeviceGroups.UserCanAccessDevice(r.Context(), kit.User(r), device)
+	return device, allowed, err
 }
 
 // nullable is a row for JSON: null when there is none.

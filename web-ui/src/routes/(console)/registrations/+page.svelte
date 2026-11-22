@@ -8,7 +8,9 @@
   Data: the three lists in parallel on load, again on Refresh and whenever
   a request arrives or is decided elsewhere (/ws/panel-events, through the
   shell). The count in the sidebar is asked for again after each decision.
-  Rows decided here keep their new status until the filter changes.
+  Rows decided here keep their new status until the filter changes. A
+  waiting LAN request whose ID is already a device carries a mark; its
+  sheet explains it and asks again before approving.
 
   Needs enrollment.approve (the route and every call); deleting a record
   needs enrollment.manage; the link to change the mode needs server.config.
@@ -79,7 +81,15 @@
 	import { ICONS } from '#lib/util/display.ts';
 	import RejectDialog from './RejectDialog.svelte';
 	import RequestSheet from './RequestSheet.svelte';
-	import { around, decidedText, failure, sourceLabel, statusLabel, statusToneOf } from './labels.ts';
+	import {
+		around,
+		decidedText,
+		existingName,
+		failure,
+		sourceLabel,
+		statusLabel,
+		statusToneOf
+	} from './labels.ts';
 
 	const allowed = can('enrollment.approve');
 
@@ -386,7 +396,16 @@
 
 {#snippet deviceCell(r: RequestRow)}{#if r.hostname}<span class="row-name">{r.hostname}</span>{:else}<span
 			class="row-name is-missing">{t('registrations.no_name')}</span
-		>{/if}<span class="cell-sub mono">{r.device_id}</span>{/snippet}
+		>{/if}<span class="cell-sub mono">{r.device_id}</span
+	>{#if r.existing && r.status === 'pending' && !decided.has(r.key)}<span class="existing-mark"
+			><Tag
+				label={t('registrations.existing_mark')}
+				icon={ICONS.link}
+				title={r.existing.in_scope
+					? t('registrations.existing_hint', { name: existingName(r.existing) })
+					: t('registrations.existing_hidden')}
+			/></span
+		>{/if}{/snippet}
 
 {#snippet platformCell(r: RequestRow)}<Platform platform={r.platform} />{#if r.version}{@const [pre, post] =
 			around(t('registrations.client_version'), '{version}')}<span class="cell-sub"
@@ -607,6 +626,10 @@
 	.row-name.is-missing {
 		color: var(--text-muted);
 		font-weight: 400;
+	}
+	.existing-mark {
+		display: block;
+		margin-top: 2px;
 	}
 	.cell-sub {
 		display: block;

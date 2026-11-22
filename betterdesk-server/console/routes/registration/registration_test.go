@@ -410,9 +410,9 @@ func TestClientAPIPort(t *testing.T) {
 // The device groups of an approval: an account with a limited device scope
 // (operator, given enrollment.approve) is refused for a device it may not
 // see (BUGS RV6), and changes only the manual groups it may see for one it
-// may; a guid
-// of the wrong form counts as not named, a guid named twice once, and a
-// folder of id 0 is no folder.
+// may; a guid of the wrong form counts as not named, a guid named twice
+// once, and a folder of id 0 is no folder. Every device is one the API
+// server knows, so the approvals confirm it (BUGS L55).
 func TestApprovalDeviceGroups(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		api := routetest.NewAPI()
@@ -473,7 +473,7 @@ func TestApprovalDeviceGroups(t *testing.T) {
 		if got := members(); got != "dg-closed:DEV-HID dg-closed:DEV-SEE dg-mine:DEV-SEE odd guid:DEV-ADM" {
 			t.Fatalf("a device the operator may not see: %s", got)
 		}
-		approve(operator, "/api/bd/api/registrations/2/approve", `{"group_guids":["dg-open"]}`)
+		approve(operator, "/api/bd/api/registrations/2/approve", `{"group_guids":["dg-open"],"confirm_existing_device":true}`)
 		if got := members(); got != "dg-closed:DEV-HID dg-closed:DEV-SEE dg-open:DEV-SEE odd guid:DEV-ADM" {
 			t.Fatalf("a device the operator may see: %s", got)
 		}
@@ -483,11 +483,11 @@ func TestApprovalDeviceGroups(t *testing.T) {
 		}
 		guids = append(guids, `"dg-open"`)
 		admin := w.As("admin")
-		approve(admin, "/api/registrations/3/approve", `{"group_guids":[`+strings.Join(guids, ",")+`]}`)
+		approve(admin, "/api/registrations/3/approve", `{"confirm_existing_device":true,"group_guids":[`+strings.Join(guids, ",")+`]}`)
 		if got := members(); got != "dg-closed:DEV-HID dg-closed:DEV-SEE dg-open:DEV-ADM dg-open:DEV-SEE" {
 			t.Fatalf("a guid of the wrong form and guids named twice: %s", got)
 		}
-		approve(admin, "/api/registrations/4/approve", `{"folder_id":0}`)
+		approve(admin, "/api/registrations/4/approve", `{"folder_id":0,"confirm_existing_device":true}`)
 		var n int
 		if err := db.QueryRow(ctx, "SELECT COUNT(*) FROM device_folder_assignments").Scan(&n); err != nil || n != 0 {
 			t.Fatalf("folder 0: %d assignments, %v", n, err)

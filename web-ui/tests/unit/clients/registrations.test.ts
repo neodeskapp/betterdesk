@@ -41,6 +41,7 @@ const lan = (over: Partial<Parameters<typeof fromLan>[0]> = {}) =>
 		rejected_reason: '',
 		created_at: '2026-11-08T10:00:00Z',
 		updated_at: '',
+		existing_device: null,
 		...over
 	});
 
@@ -88,6 +89,14 @@ describe('rows from the two queues', () => {
 		expect(r.decided_at).toBe('2026-11-09T08:00:00Z');
 		expect(lan({ status: 'approved', approved_at: 'A', updated_at: 'U' }).decided_at).toBe('A');
 		expect(lan({ status: 'weird' }).status).toBe('pending');
+	});
+
+	test('a waiting LAN request keeps the device its ID already is; a decided one does not', () => {
+		const device = { id: '900300001', name: 'Front desk', deleted: false, in_scope: true };
+		expect(lan({ existing_device: device }).existing).toEqual(device);
+		expect(lan({ existing_device: device, status: 'approved' }).existing).toBeNull();
+		expect(lan().existing).toBeNull();
+		expect(pending('900200001').existing).toBeNull();
 	});
 
 	test('the Go server records its API key, not a person: no "by" then', () => {

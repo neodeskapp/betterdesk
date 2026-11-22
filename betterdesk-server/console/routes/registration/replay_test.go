@@ -688,8 +688,30 @@ func (p *replayer) send(step recordedStep) (int, string) {
 		if contentType == "" {
 			contentType = "application/json"
 		}
+		body = confirmedApproval(step, body, contentType)
 	}
 	return p.do(a, step.Method, target, body, contentType, headers, step.Host)
+}
+
+// confirmedApproval adds confirm_existing_device true to the JSON object
+// body of an approval of a LAN registration. Since BUGS L55 an approval
+// for an id that is already a device needs it; Node approved such ids
+// without asking, and the approvals of the recording are approvals the
+// approver means. Other bodies stay as recorded.
+func confirmedApproval(step recordedStep, body []byte, contentType string) []byte {
+	if step.Method != http.MethodPut || !strings.HasSuffix(step.Path, "/approve") || !strings.HasPrefix(contentType, "application/json") {
+		return body
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(body, &fields); err != nil || fields == nil {
+		return body
+	}
+	fields["confirm_existing_device"] = json.RawMessage("true")
+	confirmed, err := json.Marshal(fields)
+	if err != nil {
+		return body
+	}
+	return confirmed
 }
 
 func (p *replayer) do(a *agent, method, target string, body []byte, contentType string, headers map[string]string, host string) (int, string) {
