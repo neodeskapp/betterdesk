@@ -212,10 +212,98 @@ FAKE
     merge_console_env true >/dev/null
     grep -qx 'INIT_ADMIN_PASS=Fresh-Admin-Pass-1' "$CONSOLE_PATH/.env" \
         || fail "a fresh .env has no INIT_ADMIN_PASS of the admin password: $(grep -c INIT_ADMIN_PASS "$CONSOLE_PATH/.env") lines"
-    grep -qx "DB_URL=$RUSTDESK_PATH/db_v2.sqlite3" "$CONSOLE_PATH/.env" || fail "DB_URL of a fresh SQLite install"
+    # The binary stands in for an older one, which reads DB_URL
+    grep -qx "DB_URL=$RUSTDESK_PATH/db_v2.sqlite3" "$CONSOLE_PATH/.env" || fail "DB_URL of a fresh SQLite install on an older binary"
     # L65: a fresh install starts in Managed; .env is only the first
     # default, a mode saved in the console wins
     grep -qx 'ENROLLMENT_MODE=managed' "$CONSOLE_PATH/.env" || fail "a fresh .env does not start in Managed"
+    rm -rf "$TEST_DIR"
+)
+
+# database_lines FILE: the lines of an env file that name the database.
+database_lines() {
+    grep -E '^(DATABASE_URL|DB_URL|DB_TYPE|DB_PATH)=' "$1" | tr '\n' ' '
+}
+
+# L70: the installer writes the database once, as DATABASE_URL, for a
+# binary that reads it; older env files are read as the server reads them.
+test_database_url_only() (
+    load
+    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+#!/bin/bash
+# Stands in for the binary: upgrade-env --from FILE (the commands it has),
+# and the server's warning "Remove DB_TYPE to use DATABASE_URL". env merge
+# writes the template's lines, or appends those the file lacks
+if [ "$1 $2" = "env merge" ]; then
+    case " $* " in *" --fresh "*) : > "$4" ;; esac
+    grep -q '^DEFAULT_ADMIN_PASSWORD=' "$4" 2>/dev/null || printf 'DEFAULT_ADMIN_PASSWORD=%s\n' "$BD_SUBST_DEFAULT_ADMIN_PASSWORD" >> "$4"
+    grep -q '^DATABASE_URL=' "$4" 2>/dev/null || printf 'DATABASE_URL=%s\n' "$BD_SUBST_DATABASE_URL" >> "$4"
+    echo '{"success":true,"mode":"merge","added":[]}'
+fi
+exit 0
+FAKE
+    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    ADMIN_PASSWORD='Database-Url-Pass-1'
+    USE_POSTGRESQL=false
+    merge_console_env true >/dev/null
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=$RUSTDESK_PATH/db_v2.sqlite3 " ] \
+        || fail "a fresh SQLite install names its database as: $(database_lines "$CONSOLE_PATH/.env")"
+    local pg='postgres://bd:p&w|d@127.0.0.1:5432/bd?sslmode=disable'
+    rm -f "$CONSOLE_PATH/.env"
+    USE_POSTGRESQL=true
+    POSTGRESQL_URI="$pg"
+    merge_console_env true >/dev/null
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=$pg " ] \
+        || fail "a fresh PostgreSQL install names its database as: $(database_lines "$CONSOLE_PATH/.env")"
+
+    # A move between databases leaves DATABASE_URL alone, also in an older
+    # file (one without its last line end)
+    printf 'SESSION_SECRET=kept\nDB_TYPE=sqlite\nDB_PATH=/old/db.sqlite3\nDATABASE_URL=\nDB_URL=/old/db.sqlite3' > "$CONSOLE_PATH/.env"
+    use_database_in_env postgres "$pg"
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=$pg " ] \
+        || fail "the move to PostgreSQL names the database as: $(database_lines "$CONSOLE_PATH/.env")"
+    grep -qx 'SESSION_SECRET=kept' "$CONSOLE_PATH/.env" || fail "the move lost another line of .env"
+    use_database_in_env sqlite /data/db_v2.sqlite3
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=/data/db_v2.sqlite3 " ] \
+        || fail "the move back to SQLite names the database as: $(database_lines "$CONSOLE_PATH/.env")"
+
+    # An update keeps an older file as it is, and preserves its database
+    printf 'DB_TYPE=postgres\nDATABASE_URL=%s\nDB_URL=%s\n' "$pg" "$pg" > "$CONSOLE_PATH/.env"
+    USE_POSTGRESQL=false
+    POSTGRESQL_URI=""
+    preserve_database_config
+    [ "$USE_POSTGRESQL" = true ] && [ "$POSTGRESQL_URI" = "$pg" ] || fail "an older PostgreSQL install is not seen as one"
+    merge_console_env false >/dev/null
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DB_TYPE=postgres DATABASE_URL=$pg DB_URL=$pg " ] \
+        || fail "an update changed an older file's database: $(database_lines "$CONSOLE_PATH/.env")"
+    # A file of this installer names PostgreSQL by its address alone
+    printf 'DATABASE_URL=%s\n' "$pg" > "$CONSOLE_PATH/.env"
+    USE_POSTGRESQL=false
+    preserve_database_config
+    [ "$USE_POSTGRESQL" = true ] && [ "$POSTGRESQL_URI" = "$pg" ] || fail "DATABASE_URL alone is not seen as PostgreSQL"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    USE_POSTGRESQL=false
+    merge_console_env false >/dev/null
+    [ "$(database_lines "$CONSOLE_PATH/.env")" = "DATABASE_URL=$RUSTDESK_PATH/db_v2.sqlite3 " ] \
+        || fail "an update of a file that names no database writes: $(database_lines "$CONSOLE_PATH/.env")"
+
+    # Read as the server reads them (envvar.DatabaseFrom)
+    local file="$TEST_DIR/read.env" want text
+    while IFS='|' read -r want text; do
+        printf '%b' "$text" > "$file"
+        [ "$(env_database_type "$file") $(env_database_url "$file")" = "$want" ] \
+            || fail "$text is read as '$(env_database_type "$file") $(env_database_url "$file")', want '$want'"
+    done <<'CASES'
+postgres postgres://a@h/d|DB_TYPE=postgres\nDATABASE_URL=postgres://a@h/d\nDB_URL=postgres://a@h/d\n
+sqlite /old/db|DB_TYPE=sqlite\nDATABASE_URL=\nDB_URL=/old/db\n
+sqlite /old/db|DB_TYPE=sqlite\nDATABASE_URL=postgres://a@h/d\nDB_URL=/old/db\n
+sqlite |DB_TYPE=SQLite\nDATABASE_URL=postgres://a@h/d\nDB_URL=postgresql://a@h/d\n
+postgres postgresql://a@h/d|DATABASE_URL=postgresql://a@h/d\n
+postgres postgres://a@h/d|DATABASE_URL=\nDB_URL=postgres://a@h/d\n
+sqlite /srv/db.sqlite3|DATABASE_URL=sqlite:///srv/db.sqlite3\nDB_URL=/other\n
+sqlite /srv/db.sqlite3|DATABASE_URL=SQLite:/srv/db.sqlite3\n
+sqlite |SESSION_SECRET=x\n
+CASES
     rm -rf "$TEST_DIR"
 )
 
@@ -611,6 +699,7 @@ test_write_server_unit
 test_node_era_detection
 test_kill_stale_processes
 test_fresh_env_admin_password
+test_database_url_only
 test_update_channel_in_env
 test_update_channel_before_server_update
 test_update_channel_kept_without_one

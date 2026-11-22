@@ -23,3 +23,23 @@ func TestTemplateDefaults(t *testing.T) {
 		}
 	}
 }
+
+// L70: a new env file names its database once, in DATABASE_URL; the
+// server takes the type from the address.
+func TestTemplateNamesTheDatabaseOnce(t *testing.T) {
+	var found []string
+	for _, line := range strings.Split(Template(), "\n") {
+		line = strings.TrimSpace(line)
+		key, _, ok := strings.Cut(line, "=")
+		if !ok || strings.HasPrefix(key, "#") {
+			continue
+		}
+		switch key {
+		case "DATABASE_URL", "DB_URL", "DB_TYPE", "DB_PATH":
+			found = append(found, line)
+		}
+	}
+	if len(found) != 1 || found[0] != "DATABASE_URL=__DATABASE_URL__" {
+		t.Errorf("the template's database lines are %q, want only DATABASE_URL=__DATABASE_URL__", found)
+	}
+}

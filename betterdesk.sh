@@ -2432,16 +2432,9 @@ detect_installation() {
         fi
         
         # Check database (SQLite file or PostgreSQL connection)
-        local detected_db_type="sqlite"
-        if [ -f "$CONSOLE_PATH/.env" ]; then
-            detected_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-            detected_db_type="${detected_db_type:-sqlite}"
-        fi
-
-        if [ "$detected_db_type" = "postgres" ]; then
-            # PostgreSQL: check via systemd service config or .env
+        if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
             local pg_uri
-            pg_uri=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+            pg_uri=$(env_database_url "$CONSOLE_PATH/.env")
             if [ -n "$pg_uri" ]; then
                 if PGCONNECT_TIMEOUT=3 psql "$pg_uri" -c "SELECT 1" &>/dev/null 2>&1; then
                     DATABASE_OK=true
@@ -2498,15 +2491,11 @@ detect_installation() {
 # to prevent switching from PostgreSQL to SQLite
 preserve_database_config() {
     if [ -f "$CONSOLE_PATH/.env" ]; then
-        local existing_db_type existing_db_url
-        existing_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-        existing_db_url=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
-        
-        if [ "$existing_db_type" = "postgres" ] && [ -n "$existing_db_url" ]; then
+        if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
             USE_POSTGRESQL="true"
-            POSTGRESQL_URI="$existing_db_url"
+            POSTGRESQL_URI=$(env_database_url "$CONSOLE_PATH/.env")
             print_info "Preserving PostgreSQL configuration from existing .env"
-        elif [ "$existing_db_type" = "sqlite" ]; then
+        else
             USE_POSTGRESQL="false"
             POSTGRESQL_URI=""
             print_info "Preserving SQLite configuration from existing .env"
@@ -2541,6 +2530,8 @@ merge_console_env() {
     if [ "$USE_POSTGRESQL" = "true" ] && [ -n "$POSTGRESQL_URI" ]; then
         db_type="postgres"
         database_url="$POSTGRESQL_URI"
+    else
+        database_url="$RUSTDESK_PATH/db_v2.sqlite3"
     fi
 
     if [ "$fresh_install" = "true" ]; then
@@ -2590,13 +2581,13 @@ merge_console_env() {
         return 1
     fi
 
-    # The server's database: DB_URL (the old units passed it as -db)
-    if ! grep -q '^DB_URL=' "$env_file"; then
-        if [ "$db_type" = "postgres" ]; then
-            printf 'DB_URL=%s\n' "$database_url" >> "$env_file"
-        else
-            printf 'DB_URL=%s\n' "$RUSTDESK_PATH/db_v2.sqlite3" >> "$env_file"
-        fi
+    # The server's database is DATABASE_URL (the template's, filled above).
+    # A file that names none gets it; an older binary reads DB_URL instead
+    # (its template still writes DB_TYPE), which the old units passed as -db
+    if ! binary_reads_database_url "$bin"; then
+        grep -q '^DB_URL=' "$env_file" || printf 'DB_URL=%s\n' "$database_url" >> "$env_file"
+    elif [ -z "$(env_database_url "$env_file")" ]; then
+        use_database_in_env "$db_type" "$database_url"
     fi
     # The server makes the first admin before the console starts, and the
     # console keeps an admin it did not make: both take the same password
@@ -2827,14 +2818,9 @@ print_status() {
     echo -e "  Console:      ${CYAN}$CONSOLE_PATH${NC}"
     
     # Show database type and path/URI
-    local diag_db_type="sqlite"
-    if [ -f "$CONSOLE_PATH/.env" ]; then
-        diag_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-        diag_db_type="${diag_db_type:-sqlite}"
-    fi
-    if [ "$diag_db_type" = "postgres" ]; then
+    if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
         local diag_pg_uri
-        diag_pg_uri=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+        diag_pg_uri=$(env_database_url "$CONSOLE_PATH/.env")
         # Mask password in URI for display
         local diag_pg_display
         diag_pg_display=$(echo "$diag_pg_uri" | sed 's|://[^:]*:[^@]*@|://***:***@|')
@@ -3804,18 +3790,27 @@ migrate_sqlite_to_postgresql() {
 }
 
 # use_database_in_env postgres URI | sqlite PATH: points the console's .env
-# (DB_TYPE, DATABASE_URL, DB_URL) at the database the server is to use.
+# at the database the server is to use: DATABASE_URL alone, its type from
+# the scheme; the DB_TYPE, DB_URL and DB_PATH of an older install go. For
+# an installed binary that reads only DB_URL and DB_TYPE, those are written
+# as it reads them.
 use_database_in_env() {
-    local env_file="$CONSOLE_PATH/.env" key url=""
+    local env_file="$CONSOLE_PATH/.env" key url="" current=true
     [ -f "$env_file" ] || return 0
     [ "$1" = postgres ] && url="$2"
+    binary_reads_database_url || current=false
     # The lines are written anew instead of edited with sed, so an address
     # with & or | in it stays as it is
     for key in DB_TYPE DATABASE_URL DB_URL; do
         _remove_env_line "$env_file" "$key"
     done
+    [ "$current" = true ] && _remove_env_line "$env_file" DB_PATH
     [ -z "$(tail -c1 "$env_file")" ] || echo >> "$env_file"
-    printf 'DB_TYPE=%s\nDATABASE_URL=%s\nDB_URL=%s\n' "$1" "$url" "$2" >> "$env_file"
+    if [ "$current" = true ]; then
+        printf 'DATABASE_URL=%s\n' "$2" >> "$env_file"
+    else
+        printf 'DB_TYPE=%s\nDATABASE_URL=%s\nDB_URL=%s\n' "$1" "$url" "$2" >> "$env_file"
+    fi
 }
 
 # keep_sqlite_install PATH: the install stays on its SQLite file after the
@@ -4210,6 +4205,56 @@ env_file_value() {
     { grep -m1 "^$2=" "$1" 2>/dev/null || true; } | cut -d= -f2- | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
 }
 
+# is_postgres_url ADDRESS: true for a postgres:// or postgresql:// address.
+is_postgres_url() {
+    case "${1,,}" in
+        postgres://*|postgresql://*) return 0 ;;
+    esac
+    return 1
+}
+
+# env_database_url FILE: the database the server opens with this env file,
+# read as the server reads it: DATABASE_URL, a postgres:// address or the
+# SQLite file (sqlite:// before it allowed), else DB_URL of an older
+# install. DB_TYPE=sqlite of an older install keeps it on SQLite where
+# DATABASE_URL still names PostgreSQL. Empty when the file names none: the
+# server then opens db_v2.sqlite3 in its folder.
+env_database_url() {
+    local url legacy type
+    url=$(env_file_value "$1" DATABASE_URL)
+    legacy=$(env_file_value "$1" DB_URL)
+    type=$(env_file_value "$1" DB_TYPE)
+    if [ -n "$url" ] && is_postgres_url "$url" && [ "${type,,}" = sqlite ]; then
+        url=""
+        is_postgres_url "$legacy" && legacy=""
+    fi
+    url="${url:-$legacy}"
+    if ! is_postgres_url "$url"; then
+        case "${url,,}" in
+            sqlite://*) url="${url:9}" ;;
+            sqlite:*) url="${url:7}" ;;
+        esac
+    fi
+    printf '%s\n' "$url"
+}
+
+# env_database_type FILE: postgres when the server opens PostgreSQL with
+# this env file, else sqlite.
+env_database_type() {
+    if is_postgres_url "$(env_database_url "$1")"; then
+        echo postgres
+    else
+        echo sqlite
+    fi
+}
+
+# binary_reads_database_url [BIN]: true when the binary takes its database
+# from DATABASE_URL; older ones read DB_URL and DB_TYPE only.
+binary_reads_database_url() {
+    local bin="${1:-$(server_binary_path)}"
+    [ -f "$bin" ] && grep -a -q -F 'Remove DB_TYPE to use DATABASE_URL' "$bin" 2>/dev/null
+}
+
 # unit_environment UNIT: the KEY=VALUE pairs of a unit's Environment= lines,
 # one per line, with systemd's quotes and its $$ and %% escapes undone.
 unit_environment() {
@@ -4354,14 +4399,10 @@ setup_services() {
 
     # The database settings from an existing .env, so a reinstall keeps
     # PostgreSQL
-    if [ "$USE_POSTGRESQL" != "true" ] && [ -f "$CONSOLE_PATH/.env" ]; then
-        if [ "$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)" = "postgres" ]; then
-            POSTGRESQL_URI=$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)
-            if [ -n "$POSTGRESQL_URI" ]; then
-                USE_POSTGRESQL="true"
-                print_info "Recovered PostgreSQL config from existing .env"
-            fi
-        fi
+    if [ "$USE_POSTGRESQL" != "true" ] && [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
+        POSTGRESQL_URI=$(env_database_url "$CONSOLE_PATH/.env")
+        USE_POSTGRESQL="true"
+        print_info "Recovered PostgreSQL config from existing .env"
     fi
 
     # Relay address: RELAY_SERVERS, else the mode (auto = public IP, local =
@@ -4614,7 +4655,7 @@ upgrade_backup() {
         echo "from=$(timeout 10 "${old_bin:-$(server_binary_path)}" -version 2>/dev/null || echo unknown)"
         echo "rustdesk_path=$RUSTDESK_PATH"
         echo "console_path=$CONSOLE_PATH"
-        echo "db_type=$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)"
+        echo "db_type=$(env_database_type "$CONSOLE_PATH/.env")"
         echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     } > "$dir/manifest.txt"
 }
@@ -4623,10 +4664,9 @@ upgrade_backup() {
 # are stopped: SQLite with .backup (and auth.db), PostgreSQL with pg_dump
 # when it is installed.
 upgrade_snapshot_database() {
-    local dir="$1" db_type db_url
-    db_type=$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)
-    if [ "$db_type" = "postgres" ]; then
-        db_url=$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)
+    local dir="$1" db_url
+    if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
+        db_url=$(env_database_url "$CONSOLE_PATH/.env")
         if command -v pg_dump &>/dev/null && [ -n "$db_url" ]; then
             if pg_dump -Fc -f "$dir/postgres.dump" "$db_url" 2>"$dir/pg_dump.log"; then
                 print_info "  PostgreSQL snapshot: $dir/postgres.dump"
@@ -4852,7 +4892,7 @@ rollback_go_upgrade() {
             cp -a "$backup/db_v2.sqlite3" "$DB_PATH"
             [ -f "$backup/auth.db" ] && cp -a "$backup/auth.db" "$CONSOLE_PATH/data/auth.db"
         else
-            pg_restore --clean --if-exists -d "$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)" "$backup/postgres.dump" \
+            pg_restore --clean --if-exists -d "$(env_database_url "$CONSOLE_PATH/.env")" "$backup/postgres.dump" \
                 || print_warning "pg_restore reported errors"
         fi
         print_info "Database restored from $backup"
@@ -5478,7 +5518,7 @@ repair_binaries() {
 # file's integrity.
 repair_database() {
     print_step "Checking the database..."
-    if [ "$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)" = "postgres" ]; then
+    if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
         print_info "PostgreSQL: betterdesk-server migrates its tables at start"
         return 0
     fi
@@ -5624,15 +5664,9 @@ do_validate() {
     
     # Check database
     echo -n "  Database: "
-    local validate_db_type="sqlite"
-    if [ -f "$CONSOLE_PATH/.env" ]; then
-        validate_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-        validate_db_type="${validate_db_type:-sqlite}"
-    fi
-
-    if [ "$validate_db_type" = "postgres" ]; then
+    if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
         local pg_uri
-        pg_uri=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+        pg_uri=$(env_database_url "$CONSOLE_PATH/.env")
         if [ -n "$pg_uri" ] && PGCONNECT_TIMEOUT=3 psql "$pg_uri" -c "SELECT 1" &>/dev/null 2>&1; then
             echo -e "${GREEN}✓ PostgreSQL${NC}"
             # Check tables in PostgreSQL
@@ -6325,16 +6359,14 @@ do_diagnostics() {
     echo -e "${WHITE}${BOLD}═══ Database statistics ═══${NC}"
     echo ""
     
-    # Determine the active database type the SAME way the rest of the script does:
-    # read DB_TYPE from the console .env first (source of truth), and only fall back
-    # to SQLite file detection. This prevents a stale db_v2.sqlite3 left over from a
-    # previous install from masking an active PostgreSQL backend.
-    local diag_db_type="sqlite"
-    local diag_pg_uri=""
-    if [ -f "$CONSOLE_PATH/.env" ]; then
-        diag_db_type=$(grep -m1 '^DB_TYPE=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]')
-        diag_db_type="${diag_db_type:-sqlite}"
-        diag_pg_uri=$(grep -m1 '^DATABASE_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+    # The database the server opens with the console's .env (DATABASE_URL,
+    # or DB_URL and DB_TYPE of an older install), and only then a SQLite
+    # file: a stale db_v2.sqlite3 of an earlier install does not hide
+    # PostgreSQL.
+    local diag_db_type diag_pg_uri=""
+    diag_db_type=$(env_database_type "$CONSOLE_PATH/.env")
+    if [ "$diag_db_type" = postgres ]; then
+        diag_pg_uri=$(env_database_url "$CONSOLE_PATH/.env")
     fi
     # The Go server may also carry the DSN in its systemd unit (-db postgres://...)
     if [ "$diag_db_type" != "postgres" ] && [ -f /etc/systemd/system/betterdesk-server.service ]; then
@@ -7701,7 +7733,7 @@ do_migrate_database() {
             # The install's own database: the server stops for the copy and
             # starts again on the new database
             local own_pg=false
-            [ -f "$CONSOLE_PATH/.env" ] && [ "$(env_file_value "$CONSOLE_PATH/.env" DATABASE_URL)" = "$pg_uri" ] \
+            [ -f "$CONSOLE_PATH/.env" ] && [ "$(env_database_url "$CONSOLE_PATH/.env")" = "$pg_uri" ] \
                 && [ "$dst_db" = "$RUSTDESK_PATH/db_v2.sqlite3" ] && own_pg=true
             [ "$own_pg" = true ] && systemctl stop "$SERVER_SERVICE" 2>/dev/null
 
@@ -7937,7 +7969,7 @@ auto_action() {
     elif is_node_era_install; then
         echo upgrade
     elif is_go_only_install && [ -x "$(server_binary_path)" ] && [ -f "$CONSOLE_PATH/.env" ] \
-        && { [ "$USE_POSTGRESQL" != true ] || [ "$(env_file_value "$CONSOLE_PATH/.env" DB_TYPE)" = postgres ]; }; then
+        && { [ "$USE_POSTGRESQL" != true ] || [ "$(env_database_type "$CONSOLE_PATH/.env")" = postgres ]; }; then
         echo update
     elif [ "$MINIMAL_MODE" = true ]; then
         echo minimal

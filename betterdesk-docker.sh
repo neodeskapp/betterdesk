@@ -717,6 +717,13 @@ new_secret() {
 # postgres_url PASSWORD: the server's address of the postgres service
 postgres_url() { printf 'postgres://betterdesk:%s@postgres:5432/betterdesk?sslmode=disable\n' "$1"; }
 
+# use_database ADDRESS: the server's database in .env, DATABASE_URL alone
+# (the type follows from the address); the DB_TYPE of an older .env goes
+use_database() {
+    env_unset DB_TYPE
+    env_set DATABASE_URL "$1"
+}
+
 # postgres_settings: the settings of the postgres service with a new
 # password (kept when .env has one)
 postgres_settings() {
@@ -725,8 +732,7 @@ postgres_settings() {
     [ -n "$pass" ] || pass=$(new_secret 24)
     env_set POSTGRES_PASSWORD "$pass"
     profile_on postgres
-    env_set DB_TYPE postgres
-    env_set DATABASE_URL "$(postgres_url "$pass")"
+    use_database "$(postgres_url "$pass")"
 }
 
 do_install() {
@@ -1235,8 +1241,7 @@ do_postgres() {
 
     step "Starting BetterDesk on PostgreSQL"
     profile_on postgres
-    env_set DB_TYPE postgres
-    env_set DATABASE_URL "$(postgres_url "$pass")"
+    use_database "$(postgres_url "$pass")"
     compose_quiet up -d || true
     if ! wait_healthy; then
         local log

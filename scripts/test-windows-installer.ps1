@@ -629,6 +629,90 @@ function Test-SecretsAreRandom {
     if ((Get-Content $installer -Raw) -match 'Get-Random -Count') { Fail 'the installer still draws secrets with Get-Random -Count' }
 }
 
+# L70: for a binary that reads DATABASE_URL the installer names the
+# database there alone; an older binary gets DB_TYPE and DB_URL as it reads
+# them, and older .env files are read as the server reads them.
+function Test-DatabaseUrlOnly {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    function Get-DatabaseLines { (@(Get-Content $envFile | Where-Object { $_ -match '^(DATABASE_URL|DB_URL|DB_TYPE|DB_PATH)=' }) -join ' ') }
+
+    # The binary says by its warning text whether it reads DATABASE_URL
+    $exe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $exe -Value 'upgrade-env --from FILE ... Remove DB_TYPE to use DATABASE_URL ...'
+    if (-not (Test-BinaryReadsDatabaseUrl -Path $exe)) { Fail 'a binary with the DATABASE_URL warning is taken for an older one' }
+    Set-Content -Path $exe -Value 'upgrade-env --from FILE ...'
+    if (Test-BinaryReadsDatabaseUrl -Path $exe) { Fail 'an older binary is taken for one that reads DATABASE_URL' }
+
+    function Get-ServerBinaryPath { 'fake-server' }
+    function Test-BinaryHasSubcommands { param($Path) $true }
+    function Test-BinaryReadsDatabaseUrl { param($Path) $true }
+    function fake-server {
+        if ($args[0] -eq 'env' -and $args[1] -eq 'merge') {
+            $target = $args[3]
+            if ($args -contains '--fresh') { Set-Content -Path $target -Value @() }
+            foreach ($pair in @(@('DEFAULT_ADMIN_PASSWORD', $env:BD_SUBST_DEFAULT_ADMIN_PASSWORD), @('DATABASE_URL', $env:BD_SUBST_DATABASE_URL))) {
+                if (-not (Get-Content $target | Where-Object { $_ -like "$($pair[0])=*" })) { Add-Content -Path $target -Value "$($pair[0])=$($pair[1])" }
+            }
+            Write-Output '{"success":true}'
+        }
+        $global:LASTEXITCODE = 0
+    }
+    $sqlite = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
+    $uri = 'postgres://bd:p&w|d@127.0.0.1:5432/bd?sslmode=disable'
+    $env:ADMIN_PASSWORD = 'Database-Url-Pass-1'
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    Merge-ConsoleEnv -FreshInstall $true *> $null
+    if ((Get-DatabaseLines) -ne "DATABASE_URL=$sqlite") { Fail "a fresh SQLite install names its database as: $(Get-DatabaseLines)" }
+    Remove-Item -Force $envFile
+    $script:USE_POSTGRESQL = $true
+    $script:POSTGRESQL_URI = $uri
+    Merge-ConsoleEnv -FreshInstall $true *> $null
+    if ((Get-DatabaseLines) -ne "DATABASE_URL=$uri") { Fail "a fresh PostgreSQL install names its database as: $(Get-DatabaseLines)" }
+    $env:ADMIN_PASSWORD = $null
+
+    # A move between databases leaves DATABASE_URL alone, also in an older file
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'DB_TYPE=sqlite', 'DB_PATH=C:\old\db.sqlite3', 'DATABASE_URL=', 'DB_URL=C:\old\db.sqlite3')
+    Use-DatabaseInEnv -Type postgres -Address $uri
+    if ((Get-DatabaseLines) -ne "DATABASE_URL=$uri") { Fail "the move to PostgreSQL names the database as: $(Get-DatabaseLines)" }
+    if ((Get-ConsoleEnvValue -Key 'SESSION_SECRET') -ne 'kept') { Fail 'the move lost another line of .env' }
+    Use-SQLiteInstall 'C:\data\db_v2.sqlite3'
+    if ((Get-DatabaseLines) -ne 'DATABASE_URL=C:\data\db_v2.sqlite3') { Fail "the move back to SQLite names the database as: $(Get-DatabaseLines)" }
+
+    # An update keeps an older file as it is and keeps it on PostgreSQL; a
+    # file of this installer names PostgreSQL by its address alone
+    Set-Content -Path $envFile -Value @('DB_TYPE=postgres', "DATABASE_URL=$uri", "DB_URL=$uri")
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    Preserve-DatabaseConfig *> $null
+    if (-not $script:USE_POSTGRESQL -or $script:POSTGRESQL_URI -ne $uri) { Fail 'an older PostgreSQL install is not seen as one' }
+    Merge-ConsoleEnv -FreshInstall $false *> $null
+    if ((Get-DatabaseLines) -ne "DB_TYPE=postgres DATABASE_URL=$uri DB_URL=$uri") { Fail "an update changed an older file's database: $(Get-DatabaseLines)" }
+    Set-Content -Path $envFile -Value @("DATABASE_URL=$uri")
+    $script:USE_POSTGRESQL = $false
+    Preserve-DatabaseConfig *> $null
+    if (-not $script:USE_POSTGRESQL -or $script:POSTGRESQL_URI -ne $uri) { Fail 'DATABASE_URL alone is not seen as PostgreSQL' }
+
+    # Read as the server reads them (envvar.DatabaseFrom)
+    foreach ($case in @(
+            @('postgres postgres://a@h/d', @('DB_TYPE=postgres', 'DATABASE_URL=postgres://a@h/d', 'DB_URL=postgres://a@h/d')),
+            @('sqlite C:\old\db', @('DB_TYPE=sqlite', 'DATABASE_URL=', 'DB_URL=C:\old\db')),
+            @('sqlite C:\old\db', @('DB_TYPE=sqlite', 'DATABASE_URL=postgres://a@h/d', 'DB_URL=C:\old\db')),
+            @('sqlite ', @('DB_TYPE=SQLite', 'DATABASE_URL=postgres://a@h/d', 'DB_URL=postgresql://a@h/d')),
+            @('postgres postgresql://a@h/d', @('DATABASE_URL=postgresql://a@h/d')),
+            @('postgres postgres://a@h/d', @('DATABASE_URL=', 'DB_URL=postgres://a@h/d')),
+            @('sqlite C:\srv\db.sqlite3', @('DATABASE_URL=sqlite://C:\srv\db.sqlite3', 'DB_URL=C:\other')),
+            @('sqlite ', @('SESSION_SECRET=x')))) {
+        Set-Content -Path $envFile -Value $case[1]
+        $got = "$(Get-EnvDatabaseType) $(Get-EnvDatabaseUrl)"
+        if ($got -ne $case[0]) { Fail "$($case[1] -join ' ') is read as '$got', want '$($case[0])'" }
+    }
+    $script:USE_POSTGRESQL = $false
+    $script:POSTGRESQL_URI = ''
+    Remove-Item -Recurse -Force $dir
+}
+
 Test-TaskLauncherLoops
 Test-UpdateRewritesOldLauncher
 Test-NssmServiceIsSupervised
@@ -646,6 +730,7 @@ Test-UpdateAsksTheFork
 Test-FirewallPorts
 Test-CertificateFromTheBinary
 Test-SecretsAreRandom
+Test-DatabaseUrlOnly
 Test-FreshInstallStartsManaged
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'

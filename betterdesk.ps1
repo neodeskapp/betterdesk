@@ -657,7 +657,7 @@ function Merge-ConsoleEnv {
 
     $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
     $dbType = "sqlite"
-    $databaseUrl = ""
+    $databaseUrl = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
     if ($script:USE_POSTGRESQL -and $script:POSTGRESQL_URI) {
         $dbType = "postgres"
         $databaseUrl = $script:POSTGRESQL_URI
@@ -720,10 +720,14 @@ function Merge-ConsoleEnv {
         return $false
     }
 
-    # The server's database: DB_URL (the old services passed it in their environment)
-    if (-not (Get-ConsoleEnvValue -Key "DB_URL")) {
-        if ($dbType -eq "postgres") { Set-ConsoleEnvValue -Key "DB_URL" -Value $databaseUrl }
-        else { Set-ConsoleEnvValue -Key "DB_URL" -Value $subst.DB_PATH }
+    # The server's database is DATABASE_URL (the template's, filled above).
+    # A file that names none gets it; an older binary reads DB_URL instead
+    # (its template still writes DB_TYPE), which the old services passed in
+    # their environment
+    if (-not (Test-BinaryReadsDatabaseUrl -Path $bin)) {
+        if (-not (Get-ConsoleEnvValue -Key "DB_URL")) { Set-ConsoleEnvValue -Key "DB_URL" -Value $databaseUrl }
+    } elseif (-not (Get-EnvDatabaseUrl)) {
+        Use-DatabaseInEnv -Type $dbType -Address $databaseUrl
     }
     # The server makes the first admin before the console starts, and the
     # console keeps an admin it did not make: both take the same password
@@ -768,6 +772,61 @@ function Get-ConsoleEnvValue {
         if ($line -match "^$([regex]::Escape($Key))=(.*)$") { return $Matches[1].Trim() }
     }
     return ""
+}
+
+# True for a postgres:// or postgresql:// address.
+function Test-PostgresUrl {
+    param([string]$Address)
+    return [bool]($Address -match '^(?i)postgres(ql)?://')
+}
+
+# The database the server opens with the console's .env, read as the
+# server reads it: DATABASE_URL, a postgres:// address or the SQLite file
+# (sqlite:// before it allowed), else DB_URL of an older install.
+# DB_TYPE=sqlite of an older install keeps it on SQLite where DATABASE_URL
+# still names PostgreSQL. "" when .env names none: the server then opens
+# db_v2.sqlite3 in its folder.
+function Get-EnvDatabaseUrl {
+    $url = Get-ConsoleEnvValue -Key "DATABASE_URL"
+    $legacy = Get-ConsoleEnvValue -Key "DB_URL"
+    if ($url -and (Test-PostgresUrl $url) -and (Get-ConsoleEnvValue -Key "DB_TYPE") -eq "sqlite") {
+        $url = ""
+        if (Test-PostgresUrl $legacy) { $legacy = "" }
+    }
+    if (-not $url) { $url = $legacy }
+    if (-not (Test-PostgresUrl $url)) { $url = $url -replace '^(?i)sqlite:(//)?', '' }
+    return $url
+}
+
+# "postgres" when the server opens PostgreSQL with the console's .env,
+# else "sqlite".
+function Get-EnvDatabaseType {
+    if (Test-PostgresUrl (Get-EnvDatabaseUrl)) { return "postgres" }
+    return "sqlite"
+}
+
+# True when the binary takes its database from DATABASE_URL; older ones
+# read DB_URL and DB_TYPE only.
+function Test-BinaryReadsDatabaseUrl {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'Remove DB_TYPE to use DATABASE_URL' -SimpleMatch -Quiet)
+}
+
+# Points the console's .env at the database the server is to use:
+# DATABASE_URL alone, its type from the scheme; the DB_TYPE, DB_URL and
+# DB_PATH of an older install go. For an installed binary that reads only
+# DB_URL and DB_TYPE, those are written as it reads them.
+function Use-DatabaseInEnv {
+    param([ValidateSet('postgres', 'sqlite')][string]$Type, [string]$Address)
+    if (Test-BinaryReadsDatabaseUrl) {
+        Remove-ConsoleEnvValue -Keys @("DB_TYPE", "DB_URL", "DB_PATH")
+        Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $Address
+    } else {
+        Set-ConsoleEnvValue -Key "DB_TYPE" -Value $Type
+        Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $(if ($Type -eq "postgres") { $Address } else { "" })
+        Set-ConsoleEnvValue -Key "DB_URL" -Value $Address
+    }
 }
 #===============================================================================
 # The server with its web console: binary, console folder, service
@@ -1366,15 +1425,15 @@ function Invoke-GoUpgrade {
     Print-Step "[3/8] Stopping $($script:CONSOLE_SERVICE) and $($script:SERVER_SERVICE)..."
     Stop-AllServices
     $dbFile = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
-    if ((Get-ConsoleEnvValue -Key "DB_TYPE") -ne "postgres" -and (Test-Path $dbFile)) {
+    if ((Get-EnvDatabaseType) -ne "postgres" -and (Test-Path $dbFile)) {
         Copy-Item -Path $dbFile -Destination (Join-Path $backup "db_v2.sqlite3") -Force
         foreach ($side in @("-wal", "-shm")) {
             if (Test-Path "$dbFile$side") { Copy-Item -Path "$dbFile$side" -Destination (Join-Path $backup "db_v2.sqlite3$side") -Force }
         }
-    } elseif ((Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres") {
+    } elseif ((Get-EnvDatabaseType) -eq "postgres") {
         $pgDump = Get-Command pg_dump -ErrorAction SilentlyContinue
         if ($pgDump) {
-            & $pgDump.Source -Fc -f (Join-Path $backup "postgres.dump") (Get-ConsoleEnvValue -Key "DATABASE_URL") 2>$null
+            & $pgDump.Source -Fc -f (Join-Path $backup "postgres.dump") (Get-EnvDatabaseUrl) 2>$null
         } else {
             Print-Warning "pg_dump is not installed: there is no database snapshot"
         }
@@ -1813,13 +1872,10 @@ function Setup-Services {
 
     # The database settings from an existing .env, so a reinstall keeps
     # PostgreSQL
-    if (-not $script:USE_POSTGRESQL -and (Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres") {
-        $url = Get-ConsoleEnvValue -Key "DATABASE_URL"
-        if ($url) {
-            $script:USE_POSTGRESQL = $true
-            $script:POSTGRESQL_URI = $url
-            Print-Info "Recovered PostgreSQL config from existing .env"
-        }
+    if (-not $script:USE_POSTGRESQL -and (Get-EnvDatabaseType) -eq "postgres") {
+        $script:USE_POSTGRESQL = $true
+        $script:POSTGRESQL_URI = Get-EnvDatabaseUrl
+        Print-Info "Recovered PostgreSQL config from existing .env"
     }
 
     # Relay address: RELAY_SERVERS, else the mode (auto = public IP, local =
@@ -2258,16 +2314,7 @@ function Detect-Installation {
     }
     
     # Check database (SQLite file or PostgreSQL)
-    $detectedDbType = "sqlite"
-    $envFile = Join-Path $script:CONSOLE_PATH ".env"
-    if (Test-Path $envFile) {
-        $dbTypeLine = Select-String -Path $envFile -Pattern '^DB_TYPE=' -SimpleMatch | Select-Object -First 1
-        if ($dbTypeLine) {
-            $detectedDbType = ($dbTypeLine.Line -split '=', 2)[1].Trim()
-        }
-    }
-
-    if ($detectedDbType -eq "postgres") {
+    if ((Get-EnvDatabaseType) -eq "postgres") {
         # PostgreSQL: we trust the config -- full validation is done by Do-Validate
         $script:DATABASE_OK = $true
     } elseif (Test-Path "$script:RUSTDESK_PATH\db_v2.sqlite3") {
@@ -2323,19 +2370,11 @@ function Preserve-DatabaseConfig {
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
     
     if (Test-Path $envFile) {
-        # Read existing DB_TYPE
-        $dbTypeLine = Select-String -Path $envFile -Pattern '^DB_TYPE=' -SimpleMatch | Select-Object -First 1
-        $existingDbType = if ($dbTypeLine) { ($dbTypeLine.Line -split '=', 2)[1].Trim() } else { "" }
-        
-        # Read existing DATABASE_URL
-        $dbUrlLine = Select-String -Path $envFile -Pattern '^DATABASE_URL=' -SimpleMatch | Select-Object -First 1
-        $existingDbUrl = if ($dbUrlLine) { ($dbUrlLine.Line -split '=', 2)[1].Trim() } else { "" }
-        
-        if ($existingDbType -eq "postgres" -and $existingDbUrl) {
+        if ((Get-EnvDatabaseType) -eq "postgres") {
             $script:USE_POSTGRESQL = $true
-            $script:POSTGRESQL_URI = $existingDbUrl
+            $script:POSTGRESQL_URI = Get-EnvDatabaseUrl
             Print-Info "Preserving PostgreSQL configuration from existing .env"
-        } elseif ($existingDbType -eq "sqlite") {
+        } else {
             $script:USE_POSTGRESQL = $false
             $script:POSTGRESQL_URI = ""
             Print-Info "Preserving SQLite configuration from existing .env"
@@ -2723,9 +2762,7 @@ function Migrate-SQLiteToPostgreSQL {
     Print-Step "Moving the SQLite install to PostgreSQL..."
     & $migrateBin @migrateArgs 2>&1 | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -eq 0) {
-        Set-ConsoleEnvValue -Key "DB_TYPE" -Value "postgres"
-        Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $script:POSTGRESQL_URI
-        Set-ConsoleEnvValue -Key "DB_URL" -Value $script:POSTGRESQL_URI
+        Use-DatabaseInEnv -Type postgres -Address $script:POSTGRESQL_URI
         Print-Success "The install now runs on PostgreSQL"
     } else {
         Print-Warning "The move to PostgreSQL failed (output above): the server keeps using $sqliteDb"
@@ -2739,9 +2776,7 @@ function Use-SQLiteInstall {
     param([string]$Path)
     $script:USE_POSTGRESQL = $false
     $script:POSTGRESQL_URI = ""
-    Set-ConsoleEnvValue -Key "DB_TYPE" -Value "sqlite"
-    Set-ConsoleEnvValue -Key "DATABASE_URL" -Value ""
-    Set-ConsoleEnvValue -Key "DB_URL" -Value $Path
+    Use-DatabaseInEnv -Type sqlite -Address $Path
 }
 
 function Set-ConsoleEnvValue {
@@ -2761,6 +2796,19 @@ function Set-ConsoleEnvValue {
     if (-not $found) { $updated += "$Key=$Value" }
     # UTF-8 without BOM: the console reads the first key literally
     [System.IO.File]::WriteAllLines($envFile, [string[]]$updated, (New-Object System.Text.UTF8Encoding($false)))
+}
+
+# Removes the lines that set any of $Keys from the console's .env.
+function Remove-ConsoleEnvValue {
+    param([string[]]$Keys)
+    $envFile = Join-Path $script:CONSOLE_PATH ".env"
+    if (-not (Test-Path $envFile)) { return }
+    $pattern = '^\s*(' + (($Keys | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')='
+    $lines = @(Get-Content $envFile -ErrorAction SilentlyContinue)
+    $kept = @($lines | Where-Object { $_ -notmatch $pattern })
+    if ($kept.Count -ne $lines.Count) {
+        [System.IO.File]::WriteAllLines($envFile, [string[]]$kept, (New-Object System.Text.UTF8Encoding($false)))
+    }
 }
 
 # Install-FlaskConsole removed in v2.3.0 - Flask support deprecated
@@ -3314,13 +3362,7 @@ function Do-Validate {
     
     # Check database (SQLite or PostgreSQL)
     Write-Host "  Database: " -NoNewline
-    $valDbType = "sqlite"
-    $envFilePath = Join-Path $script:CONSOLE_PATH ".env"
-    if (Test-Path $envFilePath) {
-        $dbLine = Select-String -Path $envFilePath -Pattern '^DB_TYPE=' -SimpleMatch | Select-Object -First 1
-        if ($dbLine) { $valDbType = ($dbLine.Line -split '=', 2)[1].Trim() }
-    }
-    if ($valDbType -eq "postgres") {
+    if ((Get-EnvDatabaseType) -eq "postgres") {
         Write-Host "[OK] (PostgreSQL)" -ForegroundColor Green
     } elseif (Test-Path $script:DB_PATH) {
         Write-Host "[OK] (SQLite)" -ForegroundColor Green
@@ -5190,9 +5232,7 @@ function Do-MigrateDatabase {
             if ($LASTEXITCODE -eq 0) {
                 Print-Success "SQLite -> PostgreSQL migration completed successfully!"
                 if ($ownDb) {
-                    Set-ConsoleEnvValue -Key "DB_TYPE" -Value "postgres"
-                    Set-ConsoleEnvValue -Key "DATABASE_URL" -Value $pgUri
-                    Set-ConsoleEnvValue -Key "DB_URL" -Value $pgUri
+                    Use-DatabaseInEnv -Type postgres -Address $pgUri
                     Print-Success "The install now runs on PostgreSQL"
                 }
             } else {
@@ -5226,7 +5266,7 @@ function Do-MigrateDatabase {
 
             # The install's own database: the server stops for the copy and
             # starts again on the new database
-            $ownPg = ((Get-ConsoleEnvValue -Key "DATABASE_URL") -eq $pgUri) -and ($dstDb -eq (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"))
+            $ownPg = ((Get-EnvDatabaseUrl) -eq $pgUri) -and ($dstDb -eq (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"))
             if ($ownPg) { Stop-ServerService }
 
             Print-Step "Running PostgreSQL -> SQLite migration..."
@@ -5315,7 +5355,7 @@ function Get-AutoAction {
     if ($script:UNINSTALL_MODE) { return "uninstall" }
     if (Test-NodeEraInstall) { return "upgrade" }
     if ((Test-GoOnlyInstall) -and (Test-Path (Get-ServerBinaryPath)) -and (Test-Path (Join-Path $script:CONSOLE_PATH ".env")) -and
-        (-not $script:USE_POSTGRESQL -or (Get-ConsoleEnvValue -Key "DB_TYPE") -eq "postgres")) { return "update" }
+        (-not $script:USE_POSTGRESQL -or (Get-EnvDatabaseType) -eq "postgres")) { return "update" }
     if ($script:MINIMAL_MODE) { return "minimal" }
     return "install"
 }

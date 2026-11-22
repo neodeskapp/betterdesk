@@ -211,6 +211,8 @@ test_fresh_install_on_postgres() (
     [ "$(env_get DATABASE_URL)" = "postgres://betterdesk:${pass}@postgres:5432/betterdesk?sslmode=disable" ] \
         || fail "DATABASE_URL is $(env_get DATABASE_URL)"
     [ "$(env_get COMPOSE_PROFILES)" = postgres ] || fail "the postgres service is not on"
+    # L70: the address alone names the database
+    if grep -q '^DB_TYPE=' "$BETTERDESK_DIR/.env"; then fail "the settings name the database type besides DATABASE_URL"; fi
     if printf '%s' "$out" | grep -qF "$pass"; then fail "the PostgreSQL password was printed"; fi
     grep -qE '^  postgres:' "$BETTERDESK_DIR/docker-compose.yml" || fail "the compose file has no postgres service"
     rm -rf "$TEST_DIR"
@@ -297,9 +299,13 @@ test_postgres_switch_moves_the_data() (
     load
     mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
     env_set COMPOSE_PROFILES guacd
+    # An older .env names its type
+    env_set DB_TYPE sqlite
     : > "$CALLS"
     local out pass stop_line run_line
     out=$(mgr 'ASSUME_YES=true; do_postgres' 2>&1) || fail "the switch failed: $out"
+    # L70: the address alone names the database
+    if grep -q '^DB_TYPE=' "$BETTERDESK_DIR/.env"; then fail "after the switch .env still names a type: $(grep '^DB_TYPE=' "$BETTERDESK_DIR/.env")"; fi
     pass=$(env_get POSTGRES_PASSWORD)
     [ "${#pass}" -ge 32 ] || fail "no PostgreSQL password made"
     [ "$(env_get DATABASE_URL)" = "postgres://betterdesk:${pass}@postgres:5432/betterdesk?sslmode=disable" ] \
