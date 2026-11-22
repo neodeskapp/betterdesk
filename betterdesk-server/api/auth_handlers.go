@@ -257,6 +257,21 @@ func (s *Server) requireOrgMembership(paramName string, handler http.HandlerFunc
 	}
 }
 
+// refuseOrgSignIn refuses a caller signed in at /api/org/login, an
+// organization's client sign-in: it reads only its organization and the
+// address book (DECISIONS A169), not the members, invitations, devices,
+// settings, stored passwords or policies, whatever organization role it
+// has stored. Server accounts pass on to handler.
+func refuseOrgSignIn(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if getRoleFromCtx(r) == orgTokenRole {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "An organization sign-in reads only its organization and the address book"})
+			return
+		}
+		handler(w, r)
+	}
+}
+
 // callerOrgUser is the caller's organization user row in orgID: the row an
 // organization token was issued for, or the membership of a server account.
 // nil when the caller is no member.

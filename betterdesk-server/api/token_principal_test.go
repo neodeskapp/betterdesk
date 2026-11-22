@@ -118,16 +118,14 @@ func TestOrgTokenIsNoServerRole(t *testing.T) {
 		t.Errorf("an org user named like a server account read its address book: %d %s", status, body)
 	}
 
-	// An org user with the role user sees only its own row of the org's users.
-	status, body = listenerCall(t, srv, http.MethodGet, "/api/org/org-a/users", "", bearer(victim))
-	if status != http.StatusOK || !strings.Contains(body, `"victim"`) || strings.Contains(body, `"orgboss"`) {
-		t.Errorf("org users with the token of an org user: %d %s, want its own row only", status, body)
-	}
-	if status, body := listenerCall(t, srv, http.MethodGet, "/api/org/org-a/invitations", "", bearer(victim)); status != http.StatusForbidden {
-		t.Errorf("invitations with the token of an org user: %d %s, want 403", status, body)
-	}
-	if status, body := listenerCall(t, srv, http.MethodGet, "/api/org/org-a/invitations", "", bearer(boss)); status != http.StatusOK {
-		t.Errorf("invitations with the token of an org admin: %d %s, want 200", status, body)
+	// An organization sign-in reads its organization and the address book
+	// only, also one whose stored organization role is admin (A169).
+	for name, token := range map[string]string{"an org user": victim, "an org admin": boss} {
+		for _, path := range []string{"/api/org/org-a/users", "/api/org/org-a/invitations"} {
+			if status, body := listenerCall(t, srv, http.MethodGet, path, "", bearer(token)); status != http.StatusForbidden {
+				t.Errorf("%s with the token of %s: %d %s, want 403", path, name, status, body)
+			}
+		}
 	}
 
 	status, body = listenerCall(t, srv, http.MethodGet, "/api/org", "", bearer(boss))
