@@ -158,6 +158,24 @@ type Tx struct {
 	dialect Dialect
 }
 
+// InSnapshot runs fn in a read-only transaction that sees one state of the
+// database from its first read on, whatever other connections write
+// meanwhile: REPEATABLE READ on PostgreSQL, a read transaction on one of
+// the read-only connections on SQLite (WAL keeps its snapshot). fn must
+// not write. A backup reads every table in it.
+func (d *DB) InSnapshot(ctx context.Context, fn func(tx *Tx) error) error {
+	opts := &sql.TxOptions{}
+	if d.dialect == Postgres {
+		opts = &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true}
+	}
+	sqlTx, err := d.read.BeginTx(ctx, opts)
+	if err != nil {
+		return fmt.Errorf("begin a snapshot: %w", err)
+	}
+	defer func() { _ = sqlTx.Rollback() }()
+	return fn(&Tx{tx: sqlTx, dialect: d.dialect})
+}
+
 // InTx runs fn in a transaction: committed when fn returns nil, rolled back
 // when it returns an error or panics.
 func (d *DB) InTx(ctx context.Context, fn func(tx *Tx) error) (err error) {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -92,11 +93,13 @@ type guestAPI struct {
 	hold     chan struct{}
 	revoked  bool
 	consumes int
+	// creator is the created_by_id of the link, none when 0
+	creator int64
 }
 
 func (a *guestAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a.mu.Lock()
-	hold, revoked := a.hold, a.revoked
+	hold, revoked, creator := a.hold, a.revoked, a.creator
 	if strings.HasSuffix(r.URL.Path, "/consume") {
 		a.consumes++
 	}
@@ -106,6 +109,10 @@ func (a *guestAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case strings.HasSuffix(r.URL.Path, "/validate"):
 		if revoked {
 			_, _ = w.Write([]byte(`{"valid":false}`))
+			return
+		}
+		if creator != 0 {
+			_, _ = fmt.Fprintf(w, `{"valid":true,"id":"g1","peer_ids":["TARGET01"],"expires_at":"2999-01-01T00:00:00Z","created_by":"anna","created_by_id":%d}`, creator)
 			return
 		}
 		_, _ = w.Write([]byte(`{"valid":true,"id":"g1","peer_ids":["TARGET01"],"expires_at":"2999-01-01T00:00:00Z"}`))

@@ -1,4 +1,4 @@
-package main
+package migrate
 
 // sqlite2pg and pg2sqlite move a whole install: every table of the
 // server and the console, every column, ids kept. The destination's tables
@@ -57,7 +57,7 @@ var knownMissingColumns = map[string]map[string]string{
 // database dstDSN.
 func runSQLite2PG(srcPath, dstDSN string, opts moveOptions) error {
 	if srcPath == "" || dstDSN == "" || !isPG(dstDSN) {
-		return errors.New("usage: migrate -mode sqlite2pg -src <sqlite-path> -dst <postgres://...> [-overwrite] [-skip-leftovers]")
+		return errors.New("usage: betterdesk-server migrate -mode sqlite2pg -src <sqlite-path> -dst <postgres://...> [-overwrite] [-skip-leftovers]")
 	}
 	if err := requireFile(srcPath); err != nil {
 		return err
@@ -124,7 +124,7 @@ func runSQLite2PG(srcPath, dstDSN string, opts moveOptions) error {
 // at dstPath.
 func runPG2SQLite(srcDSN, dstPath string, opts moveOptions) error {
 	if srcDSN == "" || !isPG(srcDSN) || dstPath == "" {
-		return errors.New("usage: migrate -mode pg2sqlite -src <postgres://...> -dst <sqlite-path> [-overwrite] [-skip-leftovers]")
+		return errors.New("usage: betterdesk-server migrate -mode pg2sqlite -src <postgres://...> -dst <sqlite-path> [-overwrite] [-skip-leftovers]")
 	}
 	if err := checkSQLiteDst(dstPath, opts.overwrite); err != nil {
 		return err

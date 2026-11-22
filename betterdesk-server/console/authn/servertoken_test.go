@@ -55,9 +55,10 @@ func TestServerDeviceTokensProveTheirDevice(t *testing.T) {
 }
 
 // TestEveryNewDeviceTokenEndsTheOthers: a device token the console issues
-// in device_tokens ends the device's console token, and a console token
-// ends the device_tokens one; RevokeDeviceTokens ends both kinds. The row
-// keeps only the token's hash and its first eight characters (L46).
+// goes into device_tokens on behalf of no account and ends the device's
+// earlier tokens, the ones in device_tokens and one an older console kept
+// in access_tokens; RevokeDeviceTokens ends both kinds. The row keeps only
+// the token's hash and its first eight characters (L46, L146).
 func TestEveryNewDeviceTokenEndsTheOthers(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		db = storetest.Prepare(t, db, storetest.GoServerFirst)
@@ -69,42 +70,49 @@ func TestEveryNewDeviceTokenEndsTheOthers(t *testing.T) {
 			got, err := s.RequireDeviceToken(ctx, "Bearer "+token)
 			return err == nil && got.DeviceID == "both-kinds"
 		}
+		older := func() string {
+			t.Helper()
+			token, err := s.issue(ctx, TokenKindDevice, id, "both-kinds", "", "", store.DeviceTokenExpiry())
+			if err != nil {
+				t.Fatal(err)
+			}
+			return token
+		}
 
-		console, err := s.IssueDeviceToken(ctx, id, "both-kinds", "")
+		console := older()
+		first, err := s.IssueDeviceToken(ctx, "both-kinds", "test")
+		if err != nil || first == "" {
+			t.Fatalf("issue a device token: %q, %v", first, err)
+		}
+		if passes(console) || !passes(first) {
+			t.Errorf("after the new token: the older console token passes %v, the new token %v; want false, true", passes(console), passes(first))
+		}
+		var prefix, createdBy, note string
+		if err := db.QueryRow(ctx, `SELECT token_prefix, created_by, note FROM device_tokens WHERE token_hash = ?`, HashDeviceToken(first)).Scan(&prefix, &createdBy, &note); err != nil ||
+			prefix != first[:8] || createdBy != ServerDeviceTokenCreator || note != "test" {
+			t.Errorf("stored prefix %q, created_by %q, note %q (%v), want %q, system, test", prefix, createdBy, note, err, first[:8])
+		}
+		var held int
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM access_tokens WHERE token_hash = ?`, HashAccessToken(first)).Scan(&held); err != nil || held != 0 {
+			t.Errorf("the new device token has %d rows in access_tokens (%v), want none", held, err)
+		}
+
+		again, err := s.IssueDeviceToken(ctx, "both-kinds", "test")
 		if err != nil {
 			t.Fatal(err)
 		}
-		server, err := s.IssueServerDeviceToken(ctx, "both-kinds", "test")
-		if err != nil || server == "" {
-			t.Fatalf("issue a device token in device_tokens: %q, %v", server, err)
-		}
-		if passes(console) || !passes(server) {
-			t.Errorf("after the device_tokens token: console token passes %v, new token %v; want false, true", passes(console), passes(server))
-		}
-		var prefix string
-		if err := db.QueryRow(ctx, `SELECT token_prefix FROM device_tokens WHERE token_hash = ?`, HashDeviceToken(server)).Scan(&prefix); err != nil || prefix != server[:8] {
-			t.Errorf("stored prefix %q (%v), want %q", prefix, err, server[:8])
+		if passes(first) || !passes(again) {
+			t.Errorf("after a second token: the first passes %v, the second %v; want false, true", passes(first), passes(again))
 		}
 
-		again, err := s.IssueDeviceToken(ctx, id, "both-kinds", "")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if passes(server) || !passes(again) {
-			t.Errorf("after a new console token: device_tokens token passes %v, new token %v; want false, true", passes(server), passes(again))
-		}
-
-		last, err := s.IssueServerDeviceToken(ctx, "both-kinds", "test")
-		if err != nil {
-			t.Fatal(err)
-		}
+		console = older()
 		if err := s.RevokeDeviceTokens(ctx, "both-kinds"); err != nil {
 			t.Fatal(err)
 		}
-		if passes(again) || passes(last) {
+		if passes(again) || passes(console) {
 			t.Error("a token of the device passes after RevokeDeviceTokens")
 		}
-		if ok, err := s.VerifyDeviceWSAuth(ctx, "both-kinds", last); ok || err != nil {
+		if ok, err := s.VerifyDeviceWSAuth(ctx, "both-kinds", again); ok || err != nil {
 			t.Errorf("device socket with a revoked device_tokens token: %v, %v", ok, err)
 		}
 	})
@@ -124,7 +132,7 @@ func TestServerChangesEndTheServersDeviceTokens(t *testing.T) {
 		tokens := map[string]string{}
 		for _, device := range devices {
 			mustExec(t, db, `INSERT INTO peers (id) VALUES (?)`, device)
-			token, err := s.IssueServerDeviceToken(ctx, device, "test")
+			token, err := s.IssueDeviceToken(ctx, device, "test")
 			if err != nil || token == "" {
 				t.Fatalf("issue for %s: %q, %v", device, token, err)
 			}

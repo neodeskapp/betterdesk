@@ -16,24 +16,32 @@ func testProof(userID int64) []byte {
 
 // TestTheSignalServerGetsTheProofFirst: with Options.SignalProof a
 // bridge's connection to the signal server starts with the proof, before
-// the browser's first frame: the proof of the signed-in account, or a
-// guest's. A connection to the relay never carries it.
+// the browser's first frame: the proof of the signed-in account, or for a
+// guest the proof of the account that made the link (created_by_id), so
+// that account's client features hold the guest's session too (L164); a
+// link without a creator id gives a guest's proof. A connection to the
+// relay never carries it.
 func TestTheSignalServerGetsTheProofFirst(t *testing.T) {
 	punch := framedBytes(rendezvousBytes(8, "TARGET01"))
 	for _, who := range []struct {
-		name   string
-		path   string
-		header http.Header
-		userID int64
+		name    string
+		path    string
+		header  http.Header
+		creator int64
+		userID  int64
 	}{
-		{"account", "/ws/rendezvous", adminHeader(), 1},
-		{"guest", "/ws/rendezvous?guest=tok&peer_id=TARGET01&guest_session=s1", nil, 0},
+		{"account", "/ws/rendezvous", adminHeader(), 0, 1},
+		{"guest", "/ws/rendezvous?guest=tok&peer_id=TARGET01&guest_session=s1", nil, 7, 7},
+		{"guest of a link without a creator id", "/ws/rendezvous?guest=tok&peer_id=TARGET01&guest_session=s1", nil, 0, 0},
 	} {
 		t.Run(who.name, func(t *testing.T) {
 			check := wstest.Goroutines(t)
 			defer check()
 			h := newHarness(t, Options{SignalProof: testProof})
 			defer h.close()
+			h.api.mu.Lock()
+			h.api.creator = who.creator
+			h.api.mu.Unlock()
 			c := h.dial(who.path, who.header)
 			_ = c.Binary(punch)
 			want := append(testProof(who.userID), punch...)

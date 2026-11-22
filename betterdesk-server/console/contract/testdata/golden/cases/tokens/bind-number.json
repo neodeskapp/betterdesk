@@ -41,7 +41,7 @@
       "message": "Token bound to peer",
       "peer_id": "900100001",
       "success": true,
-      "token_id": 4
+      "token_id": 10
      },
      "success": true
     }
@@ -79,7 +79,7 @@
       "message": "Token bound to peer",
       "peer_id": "900100001",
       "success": true,
-      "token_id": 11
+      "token_id": 17
      },
      "success": true
     }

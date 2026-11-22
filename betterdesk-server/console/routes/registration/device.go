@@ -2,7 +2,6 @@ package registration
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"regexp"
 
@@ -191,25 +190,19 @@ func (h *handlers) registerStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 // deviceToken is the access token of an approved registration's status:
-// a device token issued now for the device on behalf of the approver when
-// the registration's token is due (registrations.DeliverToken), else what
-// registrations.DeliveredToken shows for the stored value. A token that
-// cannot be issued (the approver's account is gone, the id is no device
-// id) is logged and stays due; the answer then carries "".
+// a device token issued now for the device when the registration's token
+// is due (registrations.DeliverToken), else what
+// registrations.DeliveredToken shows for the stored value. The token is
+// held by no account, so the approver's account may be gone. A token that
+// cannot be issued (the id is no device id) is logged and stays due; the
+// answer then carries "".
 func (h *handlers) deviceToken(r *http.Request, deviceID string, stored any) string {
 	if !registrations.TokenDue(stored) {
 		return registrations.DeliveredToken(stored)
 	}
 	ctx := r.Context()
-	token, err := h.regs.DeliverToken(ctx, deviceID, func(approvedBy string) (string, error) {
-		approver, err := h.d.Authn.UserByUsername(ctx, approvedBy)
-		if err != nil {
-			return "", err
-		}
-		if approver == nil {
-			return "", fmt.Errorf("the approver %q has no account", approvedBy)
-		}
-		return h.d.Authn.IssueDeviceToken(ctx, approver.ID.V, deviceID, clientIP(r))
+	token, err := h.regs.DeliverToken(ctx, deviceID, func(string) (string, error) {
+		return h.d.Authn.IssueDeviceToken(ctx, deviceID, "Issued at the approval of its registration")
 	})
 	if err != nil {
 		h.log.Error("Register status error:", err)

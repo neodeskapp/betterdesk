@@ -12,6 +12,7 @@ import (
 	"github.com/unitronix/betterdesk-server/cli"
 	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
 	"github.com/unitronix/betterdesk-server/console/updater"
+	"github.com/unitronix/betterdesk-server/migrate"
 )
 
 // subcommand is a command of betterdesk-server besides running the
@@ -60,6 +61,16 @@ var subcommands = map[string]subcommand{
 	"verify-release": {
 		usage: verifyReleaseUsage,
 		run:   runVerifyRelease,
+	},
+	"backup": {
+		usage: backupUsage,
+		run:   runBackup,
+	},
+	"migrate": {
+		usage: "migrate -mode sqlite2pg|pg2sqlite|rust2go|nodejs2go|backup -src X [-dst Y] [-overwrite]   move or back up the database",
+		run: func(args []string, _ io.Reader, stdout, stderr io.Writer) int {
+			return migrate.Main(args, stdout, stderr)
+		},
 	},
 }
 

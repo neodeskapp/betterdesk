@@ -1,7 +1,7 @@
 // Package replay runs route groups in tests the way the console runs
 // them, behind the whole request pipeline, and replays what the Node
-// console answered to the same requests on the same rows (the recordings
-// a group keeps in testdata, made by its testdata/nodeoracle scripts).
+// console answered to the same requests on the same rows (the fixed
+// recordings a group keeps in testdata, made while Node still ran).
 package replay
 
 import (
@@ -323,8 +323,8 @@ func newRequest(method, target string, body io.Reader) (*http.Request, error) {
 	return req, nil
 }
 
-// Recording is a file a nodeoracle script wrote: rows to start from, and
-// requests with the Node console's answers.
+// Recording is a recorded file of a group's testdata: rows to start from,
+// and requests with the Node console's answers.
 type Recording struct {
 	Dialect string `json:"dialect"`
 	Seed    []Seed `json:"seed"`

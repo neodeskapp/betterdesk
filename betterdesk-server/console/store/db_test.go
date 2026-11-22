@@ -183,3 +183,42 @@ func TestConcurrentWriters(t *testing.T) {
 		}
 	})
 }
+
+// InSnapshot reads one state of the database: rows another connection
+// writes after the first read are not seen until the snapshot ends, on
+// both databases (a backup of a running server, L73).
+func TestInSnapshotSeesOneState(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		if _, err := db.Exec(ctx, `CREATE TABLE snap (n INTEGER)`); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.Exec(ctx, `INSERT INTO snap (n) VALUES (1)`); err != nil {
+			t.Fatal(err)
+		}
+		count := func(q store.Querier) int {
+			t.Helper()
+			var n int
+			if err := q.QueryRow(ctx, `SELECT COUNT(*) FROM snap`).Scan(&n); err != nil {
+				t.Fatal(err)
+			}
+			return n
+		}
+		err := db.InSnapshot(ctx, func(tx *store.Tx) error {
+			before := count(tx)
+			if _, err := db.Exec(ctx, `INSERT INTO snap (n) VALUES (2)`); err != nil {
+				return err
+			}
+			if after := count(tx); after != before {
+				t.Errorf("the snapshot saw %d rows, then %d after another write", before, after)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n := count(db); n != 2 {
+			t.Errorf("after the snapshot: %d rows, want 2", n)
+		}
+	})
+}

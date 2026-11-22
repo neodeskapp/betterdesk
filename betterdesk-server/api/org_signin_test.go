@@ -115,23 +115,9 @@ var orgTokenReads = []string{
 	// its organization: id, name, slug, logo address, created
 	"/api/org",
 	"/api/org/{id}",
-	// its own row of the member list (an account with an organization
-	// role above the default, stored earlier, gets every member)
-	"/api/org/{id}/users",
-	// the ids of the devices assigned to the organization, with
-	// department, location, building and tags
-	"/api/org/{id}/devices",
-	// every value stored for the organization
-	"/api/org/{id}/settings",
-	// the shared address book and whether it is shared
+	// the shared address book and whether it is shared. Members, devices,
+	// settings, stored passwords and policies are refused (A169).
 	"/api/org/{id}/address-book",
-	// which contacts have a stored password (ids only)
-	"/api/org/{id}/peer-credentials",
-	// the organization's policies, the policy of one of its devices, and
-	// the policy changes
-	"/api/org/{id}/policy",
-	"/api/org/{id}/policy/effective/{deviceId}",
-	"/api/org/{id}/policy/audit",
 	// the RustDesk client's account routes: its name, its address book
 	// with the shared one merged in (host name and platform of each
 	// contact), its personal book and tags; groups and peer lists answer
@@ -164,7 +150,7 @@ var orgTokenReads = []string{
 // TestWhatAnOrganizationSignInReads walks every GET route of the API
 // server with the token of an organization account and pins the ones
 // that answer: a route that starts to answer such a token fails here
-// (BUGS L120, for the docs).
+// (BUGS L120, for the docs; DECISIONS A169).
 func TestWhatAnOrganizationSignInReads(t *testing.T) {
 	srv, database := newInternalServer(t, nil)
 	srv.SetJWTManager(auth.NewJWTManager("org-reach-test-secret", time.Hour))

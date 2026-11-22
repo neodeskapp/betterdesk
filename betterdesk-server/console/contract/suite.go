@@ -226,10 +226,12 @@ func (s *Suite) golden(file string) (*Golden, error) {
 
 // recordable says what a recording does with an answer, by who gave it.
 //
-// Only an answer of the Node console is recorded. A request the Go console
-// answers has a frozen golden: it was recorded from the Node console before
-// the route moved and is the specification, so the file stays as it is
-// (record false, no problem). The request is still sent, because later
+// Only an answer of the Node console is recorded: a spec recording of a
+// tree that still has it (CONTRACT_NODE_ONLY, contract.sh spec). A request
+// the Go console answers has a frozen golden: it was recorded from the
+// Node console before the route moved and is the specification, so the
+// file stays as it is (record false, no problem); a fix rewrites the
+// goldens it names with CONTRACT_REWRITE. The request is still sent, because later
 // steps of a case group may need what it creates. An answer nobody stands
 // for, or one the routing report says nothing about, is a problem and is
 // not written either.
@@ -240,7 +242,7 @@ func recordable(handler string) (record bool, problem string) {
 	case HandlerGo:
 		return false, ""
 	case HandlerNone:
-		return false, "nobody answers it. Goldens are recorded from the Node console behind a Go console (STACK_MODE=front)"
+		return false, "nobody answers it. Goldens come from the Node console of a spec tree, or from Go with CONTRACT_REWRITE"
 	}
 	return false, "the routing report does not say who answers it, so its golden may be frozen and stays as it is"
 }
@@ -252,7 +254,7 @@ func (s *Suite) recordingBlocked() string {
 	if s.Settings.Record == Compare || s.Settings.NodeOnly || s.Client.HasRouting() {
 		return ""
 	}
-	return "recording needs a Go console with the routing report in front of the Node console (STACK_MODE=front): " +
+	return "recording needs the Go console's routing report (CONSOLE_DEBUG_ROUTING=1): " +
 		"it says which routes the Go console answers, and their goldens are frozen"
 }
 

@@ -298,14 +298,19 @@ func grantLabel(g *guestGrant) string {
 // to the browser: as it comes, or with ?transport=message one message per
 // RustDesk frame without its header. A connection to the signal server
 // gets the panel proof first, before any message of the browser: the one
-// of the bridge's account, or a guest's.
+// of the bridge's account, for a guest the one of the account that made
+// the link, so its client features hold the guest's session as well, and
+// a guest's without an account for a link that names none.
 func (b *bridge) dialAndRead(ctx context.Context) {
 	defer b.wg.Done()
 	tcp, err := b.s.opts.Dial(ctx, "tcp", b.target)
 	if err == nil && b.label == "rendezvous" && b.s.opts.SignalProof != nil {
 		var userID int64
-		if b.account != nil {
+		switch {
+		case b.account != nil:
 			userID = b.account.userID
+		case b.guest != nil:
+			userID = b.guest.creatorID()
 		}
 		if proof := b.s.opts.SignalProof(userID); len(proof) > 0 {
 			if _, err = tcp.Write(proof); err != nil {

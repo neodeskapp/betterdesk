@@ -45,11 +45,23 @@ func isSafeIdent(name string) bool { return safeIdent.MatchString(name) }
 // quoteIdent quotes a name for SQL.
 func quoteIdent(name string) string { return `"` + strings.ReplaceAll(name, `"`, `""`) + `"` }
 
-// DumpAllTables returns the dump as JSON text.
+// DumpAllTables returns the dump as JSON text. Every table is read in one
+// snapshot (store.DB.InSnapshot), so the dump of a running server is one
+// state of it.
 func DumpAllTables(ctx context.Context, db *store.DB) ([]byte, error) {
+	var dump []byte
+	err := db.InSnapshot(ctx, func(tx *store.Tx) error {
+		var err error
+		dump, err = dumpAllTables(ctx, tx)
+		return err
+	})
+	return dump, err
+}
+
+func dumpAllTables(ctx context.Context, db store.Querier) ([]byte, error) {
 	engine := "sqlite"
 	query := `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`
-	if db.IsPostgres() {
+	if db.Dialect() == store.Postgres {
 		engine = "postgres"
 		query = `SELECT table_name FROM information_schema.tables
 			WHERE table_schema = current_schema() AND table_type = 'BASE TABLE' ORDER BY table_name`
@@ -65,7 +77,7 @@ func DumpAllTables(ctx context.Context, db *store.DB) ([]byte, error) {
 		if !isSafeIdent(name) {
 			continue
 		}
-		rows, err := dumpTable(ctx, db, name)
+		rows, err := dumpTableAlone(ctx, db, name)
 		if err != nil {
 			continue
 		}
@@ -98,9 +110,30 @@ func readStrings(ctx context.Context, q store.Querier, query string, args ...any
 	return out, rows.Err()
 }
 
+// dumpTableAlone is dumpTable for one table of the snapshot. On
+// PostgreSQL it runs behind a savepoint, so a table that fails leaves the
+// transaction good for the next one, as each table stood alone before.
+func dumpTableAlone(ctx context.Context, db store.Querier, table string) ([]byte, error) {
+	if db.Dialect() != store.Postgres {
+		return dumpTable(ctx, db, table)
+	}
+	if _, err := db.Exec(ctx, `SAVEPOINT dump_table`); err != nil {
+		return nil, err
+	}
+	rows, err := dumpTable(ctx, db, table)
+	end := `RELEASE SAVEPOINT dump_table`
+	if err != nil {
+		end = `ROLLBACK TO SAVEPOINT dump_table`
+	}
+	if _, endErr := db.Exec(ctx, end); endErr != nil && err == nil {
+		err = endErr
+	}
+	return rows, err
+}
+
 // dumpTable returns the rows of one table as a JSON array.
-func dumpTable(ctx context.Context, db *store.DB, table string) ([]byte, error) {
-	if db.IsPostgres() {
+func dumpTable(ctx context.Context, db store.Querier, table string) ([]byte, error) {
+	if db.Dialect() == store.Postgres {
 		return dumpPostgresTable(ctx, db, table)
 	}
 	return dumpSQLiteTable(ctx, db, table)
@@ -110,7 +143,7 @@ func dumpTable(ctx context.Context, db *store.DB, table string) ([]byte, error) 
 // value as stored but takes away the declared type: the SQLite driver
 // turns text in a DATETIME column into a time otherwise, and the dump
 // needs the text.
-func dumpSQLiteTable(ctx context.Context, db *store.DB, table string) ([]byte, error) {
+func dumpSQLiteTable(ctx context.Context, db store.Querier, table string) ([]byte, error) {
 	probe, err := db.Query(ctx, `SELECT * FROM `+quoteIdent(table)+` LIMIT 0`)
 	if err != nil {
 		return nil, err
@@ -197,7 +230,7 @@ func bufJSON(b []byte) []byte {
 
 // dumpPostgresTable reads a table with SELECT * and turns each value into
 // what node-postgres made of its type.
-func dumpPostgresTable(ctx context.Context, db *store.DB, table string) ([]byte, error) {
+func dumpPostgresTable(ctx context.Context, db store.Querier, table string) ([]byte, error) {
 	rows, err := store.Select(ctx, db, `SELECT * FROM `+quoteIdent(table))
 	if err != nil {
 		return nil, err

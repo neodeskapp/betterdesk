@@ -65,10 +65,13 @@ func (h *handlers) connect(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusBadRequest, "target_id is required")
 		return
 	}
-	token := callerOf(r).token
+	c := callerOf(r)
 	source := ""
-	if token.IsDeviceToken() {
-		source = token.ClientID.String
+	switch {
+	case c.token.IsDeviceToken():
+		source = c.token.ClientID.String
+	case c.byDeviceToken:
+		source = c.deviceID
 	}
 	if source == "" {
 		fail(w, r, http.StatusForbidden, "A device-bound access token is required")

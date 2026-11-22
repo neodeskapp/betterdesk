@@ -59,12 +59,13 @@ type Service struct {
 }
 
 type pendingRelay struct {
-	OrgID      string
-	DeviceID   string
-	OperatorID string
-	ContractID string
-	Currency   string
-	createdAt  time.Time
+	OrgID        string
+	DeviceID     string
+	OperatorID   string
+	OperatorName string
+	ContractID   string
+	Currency     string
+	createdAt    time.Time
 }
 
 type activeSession struct {
@@ -206,7 +207,9 @@ func (s *Service) CheckConnection(deviceID string) ConnectionCheckResult {
 }
 
 // PrepareRelay registers billing metadata when signal assigns a relay UUID.
-func (s *Service) PrepareRelay(relayUUID, deviceID, operatorID string) error {
+// operatorID is the client that opened the session, operatorName the
+// console account behind it ("" for none); the session records both.
+func (s *Service) PrepareRelay(relayUUID, deviceID, operatorID, operatorName string) error {
 	if relayUUID == "" {
 		return nil
 	}
@@ -231,12 +234,13 @@ func (s *Service) PrepareRelay(relayUUID, deviceID, operatorID string) error {
 	}
 	s.mu.Lock()
 	s.pending[relayUUID] = &pendingRelay{
-		OrgID:      check.OrgID,
-		DeviceID:   deviceID,
-		OperatorID: operatorID,
-		ContractID: contract.ID,
-		Currency:   contract.Currency,
-		createdAt:  time.Now(),
+		OrgID:        check.OrgID,
+		DeviceID:     deviceID,
+		OperatorID:   operatorID,
+		OperatorName: operatorName,
+		ContractID:   contract.ID,
+		Currency:     contract.Currency,
+		createdAt:    time.Now(),
 	}
 	s.mu.Unlock()
 	return nil
@@ -287,6 +291,7 @@ func (s *Service) ActivateRelay(relayUUID string) {
 		OrgID:                meta.OrgID,
 		ContractID:           meta.ContractID,
 		OperatorID:           meta.OperatorID,
+		OperatorName:         meta.OperatorName,
 		DeviceID:             meta.DeviceID,
 		RelayUUID:            relayUUID,
 		Transport:            "rustdesk",

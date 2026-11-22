@@ -35,21 +35,35 @@ func (s *Service) GenerateSignInToken(ctx context.Context, userID int64, clientI
 }
 
 // IssueDeviceToken issues a device token: a token the console gives a
-// device it admitted, bound to its id, which the device guards
-// (RequireDeviceToken, VerifyDeviceWSAuth) accept. It revokes the device
-// tokens the device had. userID is the account on whose behalf the token
-// is issued; the token never counts as that account's sign-in. The token
-// does not expire by time (store.DeviceTokenExpiry): a delete, a ban, a
-// change of the device's id and the next token issued for the device end
-// it.
-func (s *Service) IssueDeviceToken(ctx context.Context, userID int64, deviceID, ip string) (string, error) {
+// device it admitted (an approved registration, a join with an invite, an
+// agent template, the proof of its key), bound to its id, which the device
+// guards (RequireDeviceToken, VerifyDeviceWSAuth) accept. It is stored in
+// device_tokens the way the API server stores the one it issues at an
+// enrollment (created_by "system"), on behalf of no account, so deleting
+// an account ends none. It ends the device tokens the device had, the
+// console's and the server's. The row keeps only the token's hash and its
+// first eight characters, and note says where it was issued. The token
+// does not expire by time: a delete, a ban, a change of the device's id
+// and the next token issued for the device end it. A database without the
+// signal server's device_tokens issues none: the token is "".
+func (s *Service) IssueDeviceToken(ctx context.Context, deviceID, note string) (string, error) {
 	if !IsDeviceID(deviceID) {
 		return "", fmt.Errorf("device token: %q is no device id", deviceID)
+	}
+	token, err := s.randomHex(32)
+	if err != nil {
+		return "", fmt.Errorf("device token: %w", err)
 	}
 	if err := revokeDeviceTokens(ctx, s.db, deviceID); err != nil {
 		return "", err
 	}
-	return s.issue(ctx, TokenKindDevice, userID, deviceID, "", ip, store.DeviceTokenExpiry())
+	if err := createServerDeviceToken(ctx, s.db, deviceID, token, note); err != nil {
+		if missingTable(s.db, err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return token, nil
 }
 
 // RevokeDeviceTokens revokes the device tokens issued for the device, for

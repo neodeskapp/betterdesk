@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/netip"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/unitronix/betterdesk-server/console/httpx"
@@ -124,8 +125,12 @@ func (s *Service) DefaultServerHost() string {
 }
 
 // DefaultUseHTTPS reports whether the configured API address is an https
-// address.
+// address; while the console listens on the client API port, whether that
+// port has TLS.
 func (s *Service) DefaultUseHTTPS() bool {
+	if s.opts.ClientAPIPort != 0 {
+		return s.opts.ClientAPIHTTPS
+	}
 	u, ok := s.apiURL()
 	return ok && u.protocol == "https:"
 }
@@ -322,8 +327,12 @@ func (s *Service) ResolveRustDeskEndpoints(req *RequestHost, queryHost string) R
 
 // DefaultAPIPort returns the port of the configured API address as text:
 // the one in the address, else "443" for https and "21114" for anything
-// else, also for an address that cannot be read.
+// else, also for an address that cannot be read. While the console
+// listens on the client API port it is that port.
 func (s *Service) DefaultAPIPort() string {
+	if s.opts.ClientAPIPort != 0 {
+		return strconv.Itoa(s.opts.ClientAPIPort)
+	}
 	u, ok := s.apiURL()
 	switch {
 	case !ok:

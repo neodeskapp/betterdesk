@@ -53,6 +53,12 @@ type Options struct {
 	// APIPort is the client API port (config.apiPort): API_PORT, default
 	// 21121. Zero falls back on 21114.
 	APIPort int
+	// ClientAPIPort is the client API port while the console listens on
+	// it (API_PORT while API_ENABLED is on), 0 when it does not. Clients
+	// are then given this port as the API address on every install type,
+	// at https only when ClientAPIHTTPS says the port has TLS.
+	ClientAPIPort  int
+	ClientAPIHTTPS bool
 	// DataDir is the console's data folder (config.dataDir): DATA_DIR. The
 	// public endpoints file lives in it.
 	DataDir string

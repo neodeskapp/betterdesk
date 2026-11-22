@@ -305,7 +305,7 @@ test_postgres_switch_moves_the_data() (
     [ "$(env_get DATABASE_URL)" = "postgres://betterdesk:${pass}@postgres:5432/betterdesk?sslmode=disable" ] \
         || fail "DATABASE_URL after the switch: $(env_get DATABASE_URL)"
     [ "$(env_get COMPOSE_PROFILES)" = guacd,postgres ] || fail "COMPOSE_PROFILES after the switch: $(env_get COMPOSE_PROFILES)"
-    grep -q 'compose run --rm --no-deps -T --user 10001:10001 --entrypoint sh betterdesk -c exec /usr/local/bin/betterdesk-migrate -mode sqlite2pg -src /opt/rustdesk/db_v2.sqlite3' "$CALLS" \
+    grep -q 'compose run --rm --no-deps -T --user 10001:10001 --entrypoint sh betterdesk -c exec /usr/local/bin/betterdesk-server migrate -mode sqlite2pg -src /opt/rustdesk/db_v2.sqlite3' "$CALLS" \
         || fail "the data was not moved with sqlite2pg: $(cat "$CALLS")"
     [ "$(cat "$TEST_DIR/run-env")" = "$(env_get DATABASE_URL)" ] || fail "the tool did not get the address in its environment"
     if grep -qF "$pass" "$CALLS"; then fail "the PostgreSQL password is on a command line"; fi

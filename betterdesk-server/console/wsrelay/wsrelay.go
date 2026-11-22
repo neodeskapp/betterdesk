@@ -22,7 +22,8 @@
 // the signal server lets the bridge start connections as the panel's web
 // client without a registered peer. The proof of a signed-in account's
 // bridge names the account, so the signal server applies the account's
-// client features to the sessions it starts. A signal server in another
+// client features to the sessions it starts; a guest's names the account
+// that made the link (the link's created_by_id). A signal server in another
 // process does not know the secret and treats the bridge as any client. The relay
 // counts and pairs connections by their remote address, so a connection
 // handed over in memory would change its decisions; for the same reason a
@@ -111,8 +112,9 @@ type Options struct {
 	SignalPort int
 	// SignalProof returns the frame a bridge writes to the signal server
 	// before anything of the browser's (signal.Server.PanelProofFor of
-	// this process), for the bridge of the account with the id, 0 for a
-	// guest: by it the signal server takes the connection for the panel's
+	// this process), for the bridge of the account with the id, the link's
+	// creator for a guest, 0 for none: by it the signal server takes the
+	// connection for the panel's
 	// web client, which needs no registered peer, and knows the account.
 	// nil, or an empty frame, writes none, and the signal server treats
 	// the bridge as any client.

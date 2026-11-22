@@ -7,8 +7,9 @@ import (
 )
 
 // zoneTable is every time zone name Intl.DateTimeFormat of the Node
-// console took, with the name Intl reported for it (zones.txt, written
-// from Node by testdata/nodeoracle/zones.js).
+// console took, with the name Intl reported for it (zones.txt). The
+// table is a fixed recording of the old console and cannot be made
+// again (testdata/README.md).
 //
 //go:embed zones.txt
 var zoneTable string

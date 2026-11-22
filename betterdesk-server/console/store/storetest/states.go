@@ -16,8 +16,8 @@ import (
 )
 
 // The schema the Node console created on an empty database, dumped from a
-// real run. They are how tests get a database "as Node left it" without
-// Node, and they go away with the Node console.
+// real run. They are how tests get a database "as Node left it", the
+// state an install upgraded from the old console starts in.
 var (
 	//go:embed dumps/node-sqlite.sql
 	nodeSQLiteDump string
@@ -139,6 +139,14 @@ func openGoServer(t *testing.T, sdb *store.DB) db.Database {
 		t.Fatalf("signal server client sessions schema: %v", err)
 	}
 	return gdb
+}
+
+// DSN is the address of the test database for another program, such as
+// a command of betterdesk-server: the file path on SQLite, the server's
+// address with the test's schema as search path on PostgreSQL.
+func DSN(t *testing.T, sdb *store.DB) string {
+	t.Helper()
+	return goServerDSN(t, sdb)
 }
 
 // goServerDSN returns what the signal server needs to open the same

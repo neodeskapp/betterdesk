@@ -24,6 +24,17 @@ type guestGrant struct {
 // id is grant.id as the API server sent it (any JSON value).
 func (g *guestGrant) id() any { return goapi.Dig(g.data, "id") }
 
+// creatorID is grant.created_by_id: the id of the account that made the
+// link, whose client features hold the guest's sessions. It is 0 when the
+// API server sent none or no whole number above 0.
+func (g *guestGrant) creatorID() int64 {
+	n, ok := goapi.Dig(g.data, "created_by_id").(float64)
+	if !ok || n < 1 || n >= math.MaxInt64 || n != math.Trunc(n) {
+		return 0
+	}
+	return int64(n)
+}
+
 // expiresAt is new Date(grant.expires_at).getTime(); ok is false for NaN,
 // which a missing expires_at gives (null gives 0).
 func (g *guestGrant) expiresAt() (int64, bool) {

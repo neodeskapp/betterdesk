@@ -27,7 +27,6 @@ import (
 	"github.com/unitronix/betterdesk-server/crypto/peervault"
 	"github.com/unitronix/betterdesk-server/db"
 	eventsModule "github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/internal/clientaddr"
 	"github.com/unitronix/betterdesk-server/meshcentral"
 	"github.com/unitronix/betterdesk-server/metrics"
 	"github.com/unitronix/betterdesk-server/peer"
@@ -440,24 +439,24 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/org/{id}", s.requireOrgMembership("id", s.handleGetOrg))
 	mux.HandleFunc("PUT /api/org/{id}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleUpdateOrg)))
 	mux.HandleFunc("DELETE /api/org/{id}", s.requirePermission(auth.PermOrgDelete, s.handleDeleteOrg))
-	mux.HandleFunc("GET /api/org/{id}/users", s.requireOrgMembership("id", s.handleListOrgUsers))
+	mux.HandleFunc("GET /api/org/{id}/users", s.requireOrgMembership("id", refuseOrgSignIn(s.handleListOrgUsers)))
 	mux.HandleFunc("POST /api/org/{id}/users", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleCreateOrgUser)))
 	mux.HandleFunc("PUT /api/org/{id}/users/{uid}", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleUpdateOrgUser)))
 	mux.HandleFunc("DELETE /api/org/{id}/users/{uid}", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleDeleteOrgUser)))
 	mux.HandleFunc("POST /api/org/{id}/invite", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleCreateOrgInvitation)))
-	mux.HandleFunc("GET /api/org/{id}/invitations", s.requireOrgMembership("id", s.requireOrgManager("id", s.handleListOrgInvitations)))
+	mux.HandleFunc("GET /api/org/{id}/invitations", s.requireOrgMembership("id", refuseOrgSignIn(s.requireOrgManager("id", s.handleListOrgInvitations))))
 	mux.HandleFunc("DELETE /api/org/{id}/invitations/{invId}", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleRevokeOrgInvitation)))
 	// Redeeming an invitation: the console's /invite page, through the console only
 	mux.HandleFunc("POST /api/org-invitations/lookup", s.requireConsoleCaller(s.handleLookupOrgInvitation))
 	mux.HandleFunc("POST /api/org-invitations/redeem", s.requireConsoleCaller(s.handleRedeemOrgInvitation))
 	mux.HandleFunc("POST /api/org/{id}/devices", s.requirePermission(auth.PermOrgManageDevices, s.requireOrgMembership("id", s.handleAssignOrgDevice)))
-	mux.HandleFunc("GET /api/org/{id}/devices", s.requireOrgMembership("id", s.handleListOrgDevices))
+	mux.HandleFunc("GET /api/org/{id}/devices", s.requireOrgMembership("id", refuseOrgSignIn(s.handleListOrgDevices)))
 	mux.HandleFunc("DELETE /api/org/{id}/devices/{did}", s.requirePermission(auth.PermOrgManageDevices, s.requireOrgMembership("id", s.handleUnassignOrgDevice)))
-	mux.HandleFunc("GET /api/org/{id}/settings", s.requireOrgMembership("id", s.handleListOrgSettings))
+	mux.HandleFunc("GET /api/org/{id}/settings", s.requireOrgMembership("id", refuseOrgSignIn(s.handleListOrgSettings)))
 	mux.HandleFunc("PUT /api/org/{id}/settings", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleSetOrgSetting)))
 	mux.HandleFunc("GET /api/org/{id}/address-book", s.requireOrgMembership("id", s.handleGetOrgAddressBook))
 	mux.HandleFunc("PUT /api/org/{id}/address-book", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleSetOrgAddressBook)))
-	mux.HandleFunc("GET /api/org/{id}/peer-credentials", s.requireOrgMembership("id", s.handleListOrgPeerCredentials))
+	mux.HandleFunc("GET /api/org/{id}/peer-credentials", s.requireOrgMembership("id", refuseOrgSignIn(s.handleListOrgPeerCredentials)))
 	mux.HandleFunc("PUT /api/org/{id}/peer-credentials/{peerId}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleSetOrgPeerCredential)))
 	mux.HandleFunc("DELETE /api/org/{id}/peer-credentials/{peerId}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleClearOrgPeerCredential)))
 	mux.HandleFunc("GET /api/peers/{id}/connect-password", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleGetPeerConnectPassword)))
@@ -469,10 +468,10 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("DELETE /api/org/{id}/members/{userId}", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleUnlinkUserFromOrg)))
 
 	// Organization Policies (stored as org_settings with policy_ prefix)
-	mux.HandleFunc("GET /api/org/{id}/policy", s.requireOrgMembership("id", s.handleGetOrgPolicy))
+	mux.HandleFunc("GET /api/org/{id}/policy", s.requireOrgMembership("id", refuseOrgSignIn(s.handleGetOrgPolicy)))
 	mux.HandleFunc("PUT /api/org/{id}/policy/{category}", s.requirePermission(auth.PermOrgEdit, s.requireOrgMembership("id", s.handleSetOrgPolicy)))
-	mux.HandleFunc("GET /api/org/{id}/policy/effective/{deviceId}", s.requireOrgMembership("id", s.handleGetEffectivePolicy))
-	mux.HandleFunc("GET /api/org/{id}/policy/audit", s.requireOrgMembership("id", s.handleGetPolicyAudit))
+	mux.HandleFunc("GET /api/org/{id}/policy/effective/{deviceId}", s.requireOrgMembership("id", refuseOrgSignIn(s.handleGetEffectivePolicy)))
+	mux.HandleFunc("GET /api/org/{id}/policy/audit", s.requireOrgMembership("id", refuseOrgSignIn(s.handleGetPolicyAudit)))
 
 	// Audit (audit.view permission required)
 	mux.HandleFunc("GET /api/audit/events", s.requirePermission(auth.PermAuditView, s.handleAuditEvents))
@@ -2102,30 +2101,12 @@ func (s *Server) forwardedHeader(r *http.Request, name string) string {
 	return r.Header.Get(name)
 }
 
-// remoteIP is the client's address. Behind a trusted proxy (TRUST_PROXY
-// and TRUSTED_PROXIES) it is the rightmost X-Forwarded-For entry that is
-// not a trusted proxy (clientaddr.Rightmost), else X-Real-IP; the socket's
-// address otherwise, and when neither header holds an address.
+// remoteIP is the client's address (config's ClientIP): behind a trusted
+// proxy (TRUST_PROXY and TRUSTED_PROXIES) the rightmost X-Forwarded-For
+// entry that is not a trusted proxy, else X-Real-IP; the socket's address
+// otherwise, and when neither header holds an address.
 func (s *Server) remoteIP(r *http.Request) string {
-	socket := r.RemoteAddr
-	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
-		socket = host
-	}
-	if s.cfg == nil || !s.cfg.ShouldHonorForwardedHeaders(r.RemoteAddr) {
-		return socket
-	}
-	if forwarded := clientaddr.Forwarded(r.Header); len(forwarded) > 0 {
-		client := clientaddr.Rightmost(socket, forwarded, func(addr string, _ int) bool {
-			return s.cfg.RemoteAddrIsTrustedProxy(addr)
-		})
-		if ip := forwardedIP(client); ip != "" {
-			return ip
-		}
-	}
-	if ip := forwardedIP(r.Header.Get("X-Real-IP")); ip != "" {
-		return ip
-	}
-	return socket
+	return s.cfg.ClientIP(r)
 }
 
 // eventActor names who acted, for a server event: the account the console
@@ -2137,22 +2118,6 @@ func (s *Server) eventActor(r *http.Request) string {
 		return actor
 	}
 	return s.remoteIP(r)
-}
-
-// forwardedIP is the address of a forwarded entry with or without a port,
-// "" when it is no address or names port 0.
-func forwardedIP(entry string) string {
-	entry = strings.TrimSpace(entry)
-	if host, port, err := net.SplitHostPort(entry); err == nil {
-		if port == "0" {
-			return ""
-		}
-		entry = host
-	}
-	if ip := net.ParseIP(entry); ip != nil {
-		return ip.String()
-	}
-	return ""
 }
 
 // --- Tags Handlers ---

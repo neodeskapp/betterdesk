@@ -248,7 +248,7 @@ func sqliteSteps() []step {
 	s = append(s, seedDefaultGroup("user_groups", "Default user group"), seedDefaultGroup("device_groups", "Default device group"))
 	s = append(s, accessTokenHashes())
 	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin(), deviceTokensWithoutExpiry())
-	s = append(s, userDisabled("INTEGER NOT NULL DEFAULT 0"))
+	s = append(s, userDisabled("INTEGER NOT NULL DEFAULT 0"), deviceTokensHeldByNoAccount())
 	return s
 }
 
@@ -334,7 +334,7 @@ func postgresSteps() []step {
 	s = append(s, addColumns(lenient, "settings", "updated_at", "TIMESTAMPTZ DEFAULT NOW()")...)
 	s = append(s, widenConditionValue())
 	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin(), deviceTokensWithoutExpiry())
-	s = append(s, userDisabled("BOOLEAN NOT NULL DEFAULT FALSE"))
+	s = append(s, userDisabled("BOOLEAN NOT NULL DEFAULT FALSE"), deviceTokensHeldByNoAccount())
 	return s
 }
 
@@ -759,6 +759,45 @@ func deviceTokensWithoutExpiry() step {
 			}
 			if n, err := res.RowsAffected(); err == nil && n > 0 {
 				logging.Logf(logComponent, "Migration: kept %d device tokens without an expiry", n)
+			}
+			return nil
+		},
+	}
+}
+
+// liveConsoleDeviceToken picks the access_tokens rows of device tokens an
+// older console issued that still prove their device.
+const liveConsoleDeviceToken = `token_kind = 'device' AND NOT revoked
+	AND token_hash IS NOT NULL AND token_hash <> '' AND client_id IS NOT NULL AND client_id <> ''`
+
+// deviceTokensHeldByNoAccount moves the device tokens an older console
+// kept in access_tokens, on behalf of the account that admitted the
+// device, into the signal server's device_tokens, where the console issues
+// them now (BUGS L146): there no account holds them, so deleting an
+// account ends none. Each keeps its hash and its device, active, without a
+// limit of uses or an expiry. Revoked rows stay where they are. A database
+// without device_tokens, which the signal server makes at its start, keeps
+// its rows until a start finds the table. Running it again changes
+// nothing.
+func deviceTokensHeldByNoAccount() step {
+	return step{
+		name: "move device tokens out of access_tokens",
+		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+			if ok, err := hasTable(ctx, tx, "device_tokens"); err != nil || !ok {
+				return err
+			}
+			if _, err := tx.Exec(ctx, `INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, created_by, note)
+				SELECT token_hash, '', 'Auto-' || client_id, client_id, 'active', 0, 0, 'system', 'Issued by the console'
+				FROM access_tokens a WHERE `+liveConsoleDeviceToken+`
+				AND NOT EXISTS (SELECT 1 FROM device_tokens d WHERE d.token_hash = a.token_hash)`); err != nil {
+				return err
+			}
+			res, err := tx.Exec(ctx, `DELETE FROM access_tokens WHERE `+liveConsoleDeviceToken)
+			if err != nil {
+				return err
+			}
+			if n, err := res.RowsAffected(); err == nil && n > 0 {
+				logging.Logf(logComponent, "Migration: moved %d device tokens into device_tokens", n)
 			}
 			return nil
 		},

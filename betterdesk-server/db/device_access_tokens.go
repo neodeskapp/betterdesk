@@ -8,11 +8,12 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// A device's device tokens are the console's, in access_tokens, a table
-// the console creates and migrates in the database it shares with this
-// server (rows whose token_kind is "device", bound to a device by
-// client_id), and the ones the server issued for it in device_tokens
-// (created_by DeviceCredentialCreator). The console's device routes and
+// A device's device tokens are the ones the server and the console issue
+// for it in device_tokens (created_by DeviceCredentialCreator), and the
+// ones an older console kept in access_tokens, a table the console creates
+// and migrates in the database it shares with this server (rows whose
+// token_kind is "device", bound to a device by client_id), until the
+// console's migration moves them into device_tokens. The console's device routes and
 // sockets accept both. They do not expire by time. A delete, soft or hard,
 // a ban and a change of the device's id revoke both kinds in the same
 // transaction as the change to peers, whichever port or command made it; a

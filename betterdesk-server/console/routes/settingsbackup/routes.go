@@ -73,12 +73,19 @@ func NewBackups(d *kit.Deps, serverDB string) *backup.Service {
 	if d.Avatars != nil {
 		pictures = d.Avatars
 	}
-	return backup.New(backup.Options{
-		Store:      d.Store,
-		Branding:   b,
-		Groups:     groups,
-		GoAPI:      api,
-		Avatars:    pictures,
+	o := FileOptions(cfg, serverDB)
+	o.Store, o.Branding, o.Groups, o.GoAPI, o.Avatars = d.Store, b, groups, api, pictures
+	o.Limits = archiveLimits(cfg.Getenv, d.Log.Child("SETTINGS").Warn)
+	return backup.New(o)
+}
+
+// FileOptions are the files and folders of the console's backup by its
+// configuration, and the server's database DSN as for NewBackups: what a
+// full backup holds besides the database. The console's backup service
+// and betterdesk-server backup both take them, so both make the same
+// archive.
+func FileOptions(cfg *config.Config, serverDB string) backup.Options {
+	return backup.Options{
 		DataDir:    cfg.DataDir,
 		EnvPath:    cfg.EnvPath,
 		KeysPath:   cfg.KeysPath,
@@ -96,8 +103,7 @@ func NewBackups(d *kit.Deps, serverDB string) *backup.Service {
 		CAFile:         cfg.CAFile,
 		EndpointsFile:  filepath.Join(cfg.DataDir, serverinfo.DurableBasename),
 		AppVersion:     cfg.Version,
-		Limits:         archiveLimits(cfg.Getenv, d.Log.Child("SETTINGS").Warn),
-	})
+	}
 }
 
 // attachmentsDir is the folder of the ticket attachments, as the ticket

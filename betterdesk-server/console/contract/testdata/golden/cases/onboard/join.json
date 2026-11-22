@@ -52,6 +52,7 @@
      "console": "<base>",
      "device": {
       "folder_id": null,
+      "folder_name": "",
       "id": "900400001",
       "name": "Contract desk"
      },

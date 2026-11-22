@@ -310,7 +310,9 @@ func TestJoinCodeIntoAFolder(t *testing.T) {
 		t.Fatalf("create: %d %s", res.status, res.body)
 	}
 	code := str(res.json(t), "code")
-	if joined := w.app().do(http.MethodPost, "/api/onboard/join", `{"code":"`+code+`","device_id":"323456789","hostname":"desk-1"}`); joined.status != http.StatusOK {
+	// The join answer names the folder, so the client can show it (L204)
+	joined := w.app().do(http.MethodPost, "/api/onboard/join", `{"code":"`+code+`","device_id":"323456789","hostname":"desk-1"}`)
+	if joined.status != http.StatusOK || str(joined.json(t), "device", "folder_name") != "Front office" {
 		t.Fatalf("join: %d %s", joined.status, joined.body)
 	}
 	var folder int64

@@ -4,8 +4,53 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"strings"
+
+	"github.com/unitronix/betterdesk-server/internal/clientaddr"
 )
+
+// ForwardedClient is the forwarded entry that names a request's client,
+// as it stands (it may carry a port). Behind a trusted proxy
+// (ShouldHonorForwardedHeaders) it is the rightmost X-Forwarded-For entry
+// that is not a trusted proxy (clientaddr.Rightmost) when that entry is an
+// address, else X-Real-IP when that is one. It is "" when the request did
+// not come through a trusted proxy or neither header names an address.
+func (c *Config) ForwardedClient(r *http.Request) string {
+	if !c.ShouldHonorForwardedHeaders(r.RemoteAddr) {
+		return ""
+	}
+	socket := r.RemoteAddr
+	if host, _, err := net.SplitHostPort(socket); err == nil {
+		socket = host
+	}
+	if forwarded := clientaddr.Forwarded(r.Header); len(forwarded) > 0 {
+		client := clientaddr.Rightmost(socket, forwarded, func(addr string, _ int) bool {
+			return c.RemoteAddrIsTrustedProxy(addr)
+		})
+		if clientaddr.EntryIP(client) != "" {
+			return strings.TrimSpace(client)
+		}
+	}
+	if realIP := r.Header.Get("X-Real-IP"); clientaddr.EntryIP(realIP) != "" {
+		return strings.TrimSpace(realIP)
+	}
+	return ""
+}
+
+// ClientIP is a request's client address without a port: the address of
+// ForwardedClient, else the socket's address. The API, the CDAP and
+// MeshCentral gateways and the websocket relay and signal endpoints count
+// clients by it.
+func (c *Config) ClientIP(r *http.Request) string {
+	if ip := clientaddr.EntryIP(c.ForwardedClient(r)); ip != "" {
+		return ip
+	}
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		return host
+	}
+	return r.RemoteAddr
+}
 
 // ParseTrustedProxies parses a comma-separated list of CIDRs or single IPs
 // into IPNet entries. Bare IPs become /32 (IPv4) or /128 (IPv6).

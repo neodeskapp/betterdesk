@@ -68,8 +68,9 @@ logs/
 *.db-wal
 
 # --- Runtime state (must NEVER be committed; corrupts user installs on update) ---
-web-nodejs/data/
-!web-nodejs/data/.gitkeep
+# The old Node console's folder is gone from the tree; what an older
+# checkout left in it (data, uploads, wallpapers) stays out of git
+web-nodejs/
 .session_secret
 .update_sha
 .api_key
@@ -127,7 +128,6 @@ htmlcov/
 test_*.sh
 verify_*.sh
 TESTING.local.md
-web-nodejs/test-db.js
 
 # --- Test screenshots (moved from root to screenshots/tests/) ---
 screenshots/tests/
@@ -158,10 +158,6 @@ templates/
 test_api.sh
 build_windows.sh
 _write_readme.py
-
-# --- Dev scripts with potential sensitive data ---
-web-nodejs/_test_*.sh
-web-nodejs/_fix_*.sh
 
 # --- BetterDesk desktop clients / agents (legacy local trees — not shipped via panel) ---
 # Active sources may live only on disk as *_old after local renames; keep out of git.
@@ -216,16 +212,12 @@ betterdesk-server/_test_*
 # --- Screenshots ---
 screenshots/*.png
 !screenshots/.gitkeep
-web-nodejs/uploads/
 
 # --- Deployment temporary files & artifacts ---
 _deploy_tmp/
 _server_checksums.txt
 deploy_console.tar.gz
 *.tar.gz
-
-# --- Wallpapers (128MB+ — too large for git, ship separately) ---
-web-nodejs/wallpapers/
 
 # --- Operator-only runbooks (copy from *.example.md into docs/private/) ---
 docs/private/

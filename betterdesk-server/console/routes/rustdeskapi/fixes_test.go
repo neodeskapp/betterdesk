@@ -363,6 +363,7 @@ func TestSignInTakesOnlyADeviceIDAsClientID(t *testing.T) {
 // and signs no account in (BUGS RV1).
 func TestASignInTokenProvesNoDevice(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		storetest.GoServerMigrate(t, db)
 		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000", "LOGIN_RATE_LIMIT_MAX": "1000"}})
 		ctx := context.Background()
 		authn := w.Server.Deps().Authn
@@ -379,7 +380,7 @@ func TestASignInTokenProvesNoDevice(t *testing.T) {
 			t.Fatalf("sign-in: %d %s", got.Status, got.Body)
 		}
 		account := []string{"Authorization", "Bearer " + signedIn.Token}
-		device, err := authn.IssueDeviceToken(ctx, 6, "900100001", "")
+		device, err := authn.IssueDeviceToken(ctx, "900100001", "test")
 		if err != nil {
 			t.Fatal(err)
 		}

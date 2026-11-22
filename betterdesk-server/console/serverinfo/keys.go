@@ -173,7 +173,9 @@ func NormalizeHostInput(serverHost string) string {
 
 // APIURLForHost returns the address of the server's API on host: http or
 // https, with the API port unless it is the scheme's own, and an IPv6
-// address in brackets.
+// address in brackets. While the console listens on the client API port
+// (Options.ClientAPIPort) it is that port, at https only when the port has
+// TLS, whatever useHTTPS says.
 func (s *Service) APIURLForHost(host string, useHTTPS bool) string {
 	host = HostForURL(host)
 	port := s.opts.GoAPIPort
@@ -182,6 +184,9 @@ func (s *Service) APIURLForHost(host string, useHTTPS bool) string {
 	}
 	if port == 0 {
 		port = 21114
+	}
+	if s.opts.ClientAPIPort != 0 {
+		port, useHTTPS = s.opts.ClientAPIPort, s.opts.ClientAPIHTTPS
 	}
 	switch {
 	case useHTTPS && port == 443:

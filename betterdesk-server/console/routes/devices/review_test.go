@@ -460,6 +460,7 @@ func TestStrategyRoutesKeepTheScope(t *testing.T) {
 // leaves the token live (BUGS RV227).
 func TestDeleteAndBanRevokeTheDeviceTokens(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		storetest.GoServerMigrate(t, db)
 		w, api := world(t, db, nil, nil)
 		ctx := context.Background()
 		authn := w.Server.Deps().Authn
@@ -467,7 +468,7 @@ func TestDeleteAndBanRevokeTheDeviceTokens(t *testing.T) {
 		tokens := map[string]string{}
 		for _, id := range devices {
 			api.On("GET /api/peers/"+id, 200, `{"id":"`+id+`","hostname":"h"}`)
-			token, err := authn.IssueDeviceToken(ctx, 1, id, "")
+			token, err := authn.IssueDeviceToken(ctx, id, "test")
 			if err != nil {
 				t.Fatal(err)
 			}

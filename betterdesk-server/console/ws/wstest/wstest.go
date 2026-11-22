@@ -489,11 +489,11 @@ func (s oracleSession) User() *session.User {
 	return u
 }
 
-// squeezed is a run that squeeze.js put into a recording, as it stands in
-// the JSON text: \u0001RUN:<count>:<piece>\u0001.
+// squeezed is a run of repeated text a recording holds in short form, as
+// it stands in the JSON text: \u0001RUN:<count>:<piece>\u0001.
 var squeezed = regexp.MustCompile(`\\u0001RUN:(\d+):(.*?)\\u0001`)
 
-// Expand undoes squeeze.js on the text of a recording: each run marker
+// Expand writes the runs of a recording out in full: each run marker
 // becomes its piece repeated, still JSON-escaped, so the result parses as
 // the recording did before it was squeezed.
 func Expand(raw []byte) []byte {

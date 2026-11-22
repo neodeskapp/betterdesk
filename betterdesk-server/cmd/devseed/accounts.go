@@ -119,13 +119,13 @@ func makeAccounts(ctx context.Context, db *database, svc *authn.Service, passwor
 	return nil
 }
 
-// issueTokens issues the tokens of the owner's account: the device
-// tokens, as the console issues them for a device it admitted
-// (IssueDeviceToken), and the operator token, as the console issues it when
-// a desktop client signs in as an operator (GenerateSignInToken). Each is
-// 64 hex characters, stored as its SHA-256 only and valid for
-// API_TOKEN_EXPIRY_DAYS (7) days. A token file that exists is kept. A
-// token is written only to its file (mode 0600), never printed.
+// issueTokens issues the device tokens, as the console issues them for a
+// device it admitted (IssueDeviceToken, held by no account and without an
+// expiry), and the operator token of the owner's account, as the console
+// issues it when a desktop client signs in as an operator
+// (GenerateSignInToken, valid for API_TOKEN_EXPIRY_DAYS (7) days). Each is
+// 64 hex characters, stored as its SHA-256 only. A token file that exists
+// is kept. A token is written only to its file (mode 0600), never printed.
 func issueTokens(ctx context.Context, svc *authn.Service, owner, dir string, out io.Writer) error {
 	account, err := svc.UserByUsername(ctx, owner)
 	if err != nil {
@@ -136,7 +136,7 @@ func issueTokens(ctx context.Context, svc *authn.Service, owner, dir string, out
 	}
 	ownerID := account.ID.V
 	for _, t := range deviceTokens {
-		issue := func() (string, error) { return svc.IssueDeviceToken(ctx, ownerID, t.DeviceID, "") }
+		issue := func() (string, error) { return svc.IssueDeviceToken(ctx, t.DeviceID, "Issued by devseed") }
 		if err := writeToken(dir, t.File, issue, out, "the device token "+t.File+" for "+t.DeviceID); err != nil {
 			return err
 		}
