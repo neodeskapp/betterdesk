@@ -10,7 +10,8 @@ import (
 )
 
 // Tags are free text on devices. Renaming or deleting a tag rewrites the
-// tags of the devices the caller may see, one device after the other.
+// tags of the devices the caller may see, one device after the other, and
+// the filter of the tag groups that select by it.
 
 // SanitizeTagName cleans a submitted tag name like SanitizeTag. A value
 // that is no text is "".
@@ -212,15 +213,18 @@ type DeleteResult struct {
 	UpdatedDevices int      `json:"updatedDevices"`
 	Skipped        int      `json:"skipped"`
 	Errors         []string `json:"errors"`
-	// AffectedGroups counts the tag groups that select by the deleted
-	// tag. Their filter stays.
+	// AffectedGroups counts the tag groups that selected by the deleted
+	// tag. Their filter is now empty.
 	AffectedGroups int    `json:"affectedGroups"`
 	Tag            string `json:"tag"`
 }
 
 // DeleteTagAcrossScope takes a tag off the devices given, which are the
-// ones the caller may see. Devices are changed in place.
-func DeleteTagAcrossScope(ctx context.Context, devices []*goapi.Object, groups []*access.DeviceGroup, tag any, setPeerTags SetPeerTags) (DeleteResult, error) {
+// ones the caller may see, and empties the filter of every tag group given
+// that selects by it, so the group no longer takes in a device that gets
+// the tag again. Devices and groups are changed in place.
+func DeleteTagAcrossScope(ctx context.Context, devices []*goapi.Object, groups []*access.DeviceGroup, tag any,
+	setPeerTags SetPeerTags, updateDeviceGroup func(ctx context.Context, guid string, tagFilter string) error) (DeleteResult, error) {
 	res := DeleteResult{Errors: []string{}, Tag: SanitizeTagName(tag)}
 	if res.Tag == "" {
 		res.Errors = []string{"invalid_tag"}
@@ -248,9 +252,16 @@ func DeleteTagAcrossScope(ctx context.Context, devices []*goapi.Object, groups [
 		res.UpdatedDevices++
 	}
 	for _, group := range groups {
-		if group != nil && group.SourceType == "tag" && TagsEqual(group.TagFilter, res.Tag) {
-			res.AffectedGroups++
+		if group == nil || group.SourceType != "tag" || !TagsEqual(group.TagFilter, res.Tag) {
+			continue
 		}
+		if updateDeviceGroup != nil {
+			if err := updateDeviceGroup(ctx, group.GUID, ""); err != nil {
+				return res, err
+			}
+			group.TagFilter = ""
+		}
+		res.AffectedGroups++
 	}
 	return res, nil
 }

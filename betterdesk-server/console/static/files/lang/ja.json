@@ -506,7 +506,7 @@
     "delete_tag": "タグを削除",
     "rename_tag_prompt": "新しいタグ名",
     "rename_tag_hint": "表示中のすべてのデバイスでこのタグ名を変更し、一致する動的グループを更新します。",
-    "delete_tag_confirm": "タグ \"{tag}\" を {count} 台のデバイスから削除しますか？このタグを使う動的グループは更新まで空になります。",
+    "delete_tag_confirm": "タグ \"{tag}\" を {count} 台のデバイスから削除しますか？このタグを使う動的グループからもタグが外れ、別のタグを設定するまで空になります。",
     "tag_renamed": "タグ名を変更しました",
     "tag_deleted": "タグを削除しました",
     "tag_name_required": "タグ名は必須です",

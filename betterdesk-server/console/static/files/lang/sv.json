@@ -512,7 +512,7 @@
     "delete_tag": "Ta bort tagg",
     "rename_tag_prompt": "Nytt taggnamn",
     "rename_tag_hint": "Byter namn på denna tagg på alla synliga enheter och uppdaterar matchande dynamiska grupper.",
-    "delete_tag_confirm": "Ta bort taggen \"{tag}\" från {count} enhet(er)? Dynamiska grupper som använder den blir tomma tills de uppdateras.",
+    "delete_tag_confirm": "Ta bort taggen \"{tag}\" från {count} enhet(er)? Dynamiska grupper som använder den förlorar den och förblir tomma tills du ger dem en annan tagg.",
     "tag_renamed": "Tagg omdöpt",
     "tag_deleted": "Tagg borttagen",
     "tag_name_required": "Taggnamn krävs",

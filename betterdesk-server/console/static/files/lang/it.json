@@ -506,7 +506,7 @@
     "delete_tag": "Elimina tag",
     "rename_tag_prompt": "Nuovo nome tag",
     "rename_tag_hint": "Rinomina questo tag su tutti i dispositivi visibili e aggiorna i gruppi dinamici corrispondenti.",
-    "delete_tag_confirm": "Rimuovere il tag \"{tag}\" da {count} dispositivo/i? I gruppi dinamici che lo usano resteranno vuoti fino all’aggiornamento.",
+    "delete_tag_confirm": "Rimuovere il tag \"{tag}\" da {count} dispositivo/i? I gruppi dinamici che lo usano lo perdono e restano vuoti finché non assegni loro un altro tag.",
     "tag_renamed": "Tag rinominato",
     "tag_deleted": "Tag eliminato",
     "tag_name_required": "Il nome del tag è obbligatorio",

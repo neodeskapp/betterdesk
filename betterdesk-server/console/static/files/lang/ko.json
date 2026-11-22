@@ -506,7 +506,7 @@
     "delete_tag": "태그 삭제",
     "rename_tag_prompt": "새 태그 이름",
     "rename_tag_hint": "볼 수 있는 모든 장치에서 이 태그 이름을 바꾸고 일치하는 동적 그룹을 업데이트합니다.",
-    "delete_tag_confirm": "태그 \"{tag}\"을(를) {count}개 장치에서 제거할까요? 이 태그를 쓰는 동적 그룹은 업데이트될 때까지 비어 있습니다.",
+    "delete_tag_confirm": "태그 \"{tag}\"을(를) {count}개 장치에서 제거할까요? 이 태그를 쓰는 동적 그룹은 태그를 잃고 다른 태그를 지정할 때까지 비어 있습니다.",
     "tag_renamed": "태그 이름이 바뀌었습니다",
     "tag_deleted": "태그가 삭제되었습니다",
     "tag_name_required": "태그 이름이 필요합니다",

@@ -14,8 +14,9 @@ import (
 )
 
 // Tags are free text on devices, kept by the server. Renaming or deleting
-// a tag works on the devices the account may see, and a rename also
-// changes the filter of the tag groups that select by the old name.
+// a tag works on the devices the account may see and on the filter of the
+// tag groups it may see that select by the tag: a rename gives them the
+// new name, a delete empties their filter.
 
 // tags answers GET /api/tags: every tag of the devices the account may
 // see, once, sorted.
@@ -87,6 +88,12 @@ func tagName(r *http.Request, name string) string {
 	return devicegroups.SanitizeTagName(kit.Body(r).Text(name, ""))
 }
 
+// setTagFilter stores the tag filter of a device group.
+func (h *handlers) setTagFilter(ctx context.Context, guid, tagFilter string) error {
+	_, err := h.groups.UpdateDeviceGroup(ctx, guid, devicegroups.GroupData{TagFilter: jsbind.String(tagFilter)})
+	return err
+}
+
 // renameTag answers POST /api/tags/rename with {from, to}.
 func (h *handlers) renameTag(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -109,11 +116,7 @@ func (h *handlers) renameTag(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Rename tag error:", err)
 		return
 	}
-	result, err := devicegroups.RenameTagAcrossScope(ctx, devices, scopeGroups(groups), from, to, h.setPeerTags,
-		func(ctx context.Context, guid, tagFilter string) error {
-			_, err := h.groups.UpdateDeviceGroup(ctx, guid, devicegroups.GroupData{TagFilter: jsbind.String(tagFilter)})
-			return err
-		})
+	result, err := devicegroups.RenameTagAcrossScope(ctx, devices, scopeGroups(groups), from, to, h.setPeerTags, h.setTagFilter)
 	if err != nil {
 		h.serverError(w, r, "Rename tag error:", err)
 		return
@@ -162,7 +165,7 @@ func (h *handlers) deleteTag(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Delete tag error:", err)
 		return
 	}
-	result, err := devicegroups.DeleteTagAcrossScope(ctx, devices, scopeGroups(groups), tag, h.setPeerTags)
+	result, err := devicegroups.DeleteTagAcrossScope(ctx, devices, scopeGroups(groups), tag, h.setPeerTags, h.setTagFilter)
 	if err != nil {
 		h.serverError(w, r, "Delete tag error:", err)
 		return

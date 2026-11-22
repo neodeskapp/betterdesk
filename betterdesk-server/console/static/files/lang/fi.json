@@ -512,7 +512,7 @@
     "delete_tag": "Poista tagi",
     "rename_tag_prompt": "Uusi tagin nimi",
     "rename_tag_hint": "Nimeää tämän tagin uudelleen kaikilla näkyvillä laitteilla ja päivittää vastaavat dynaamiset ryhmät.",
-    "delete_tag_confirm": "Poistetaanko tagi \"{tag}\" {count} laitteelta? Dynaamiset ryhmät, jotka käyttävät sitä, ovat tyhjiä päivitykseen asti.",
+    "delete_tag_confirm": "Poistetaanko tagi \"{tag}\" {count} laitteelta? Sitä käyttävät dynaamiset ryhmät menettävät sen ja pysyvät tyhjinä, kunnes annat niille toisen tagin.",
     "tag_renamed": "Tagi nimetty uudelleen",
     "tag_deleted": "Tagi poistettu",
     "tag_name_required": "Tagin nimi on pakollinen",

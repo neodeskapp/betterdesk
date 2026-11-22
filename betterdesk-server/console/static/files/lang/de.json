@@ -506,7 +506,7 @@
     "delete_tag": "Tag löschen",
     "rename_tag_prompt": "Neuer Tagname",
     "rename_tag_hint": "Benennt diesen Tag auf allen sichtbaren Geräten um und aktualisiert passende dynamische Gruppen.",
-    "delete_tag_confirm": "Tag \"{tag}\" von {count} Gerät(en) entfernen? Dynamische Gruppen mit diesem Tag bleiben bis zur Aktualisierung leer.",
+    "delete_tag_confirm": "Tag \"{tag}\" von {count} Gerät(en) entfernen? Dynamische Gruppen mit diesem Tag verlieren es und bleiben leer, bis Sie ihnen ein anderes Tag geben.",
     "tag_renamed": "Tag umbenannt",
     "tag_deleted": "Tag gelöscht",
     "tag_name_required": "Tagname ist erforderlich",

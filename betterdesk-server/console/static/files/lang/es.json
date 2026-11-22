@@ -506,7 +506,7 @@
     "delete_tag": "Eliminar etiqueta",
     "rename_tag_prompt": "Nuevo nombre de etiqueta",
     "rename_tag_hint": "Renombra esta etiqueta en todos los dispositivos visibles y actualiza los grupos dinámicos coincidentes.",
-    "delete_tag_confirm": "¿Quitar la etiqueta \"{tag}\" de {count} dispositivo(s)? Los grupos dinámicos que la usan quedarán vacíos hasta actualizarlos.",
+    "delete_tag_confirm": "¿Quitar la etiqueta \"{tag}\" de {count} dispositivo(s)? Los grupos dinámicos que la usan la pierden y quedan vacíos hasta que les asigne otra etiqueta.",
     "tag_renamed": "Etiqueta renombrada",
     "tag_deleted": "Etiqueta eliminada",
     "tag_name_required": "El nombre de etiqueta es obligatorio",

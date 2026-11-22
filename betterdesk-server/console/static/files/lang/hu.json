@@ -512,7 +512,7 @@
     "delete_tag": "Címke törlése",
     "rename_tag_prompt": "Új címkenév",
     "rename_tag_hint": "Átnevezi ezt a címkét minden látható eszközön, és frissíti a megfelelő dinamikus csoportokat.",
-    "delete_tag_confirm": "Eltávolítja a(z) \"{tag}\" címkét {count} eszközről? A címkét használó dinamikus csoportok üresek maradnak a frissítésig.",
+    "delete_tag_confirm": "Eltávolítja a(z) \"{tag}\" címkét {count} eszközről? A címkét használó dinamikus csoportok elveszítik, és üresek maradnak, amíg másik címkét nem ad nekik.",
     "tag_renamed": "Címke átnevezve",
     "tag_deleted": "Címke törölve",
     "tag_name_required": "A címkenév kötelező",

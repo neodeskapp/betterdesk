@@ -510,7 +510,7 @@
     "delete_tag": "Supprimer la balise",
     "rename_tag_prompt": "Nouveau nom de balise",
     "rename_tag_hint": "Renomme cette balise sur tous les appareils visibles et met à jour les groupes dynamiques correspondants.",
-    "delete_tag_confirm": "Retirer la balise \"{tag}\" de {count} appareil(s) ? Les groupes dynamiques qui l’utilisent seront vides jusqu’à mise à jour.",
+    "delete_tag_confirm": "Retirer la balise \"{tag}\" de {count} appareil(s) ? Les groupes dynamiques qui l’utilisent la perdent et restent vides jusqu’à ce que vous leur donniez une autre balise.",
     "tag_renamed": "Balise renommée",
     "tag_deleted": "Balise supprimée",
     "tag_name_required": "Le nom de balise est requis",

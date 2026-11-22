@@ -506,7 +506,7 @@
     "delete_tag": "Tag verwijderen",
     "rename_tag_prompt": "Nieuwe tagnaam",
     "rename_tag_hint": "Hernoemt deze tag op alle zichtbare apparaten en werkt bijpassende dynamische groepen bij.",
-    "delete_tag_confirm": "Tag \"{tag}\" van {count} apparaat/apparaten verwijderen? Dynamische groepen die deze tag gebruiken blijven leeg tot bijgewerkt.",
+    "delete_tag_confirm": "Tag \"{tag}\" van {count} apparaat/apparaten verwijderen? Dynamische groepen die deze tag gebruiken, verliezen hem en blijven leeg tot u ze een andere tag geeft.",
     "tag_renamed": "Tag hernoemd",
     "tag_deleted": "Tag verwijderd",
     "tag_name_required": "Tagnaam is verplicht",

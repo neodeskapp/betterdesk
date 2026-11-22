@@ -389,7 +389,7 @@
         "delete_tag": "Delete tag",
         "rename_tag_prompt": "New tag name",
         "rename_tag_hint": "Renames this tag on all devices you can see and updates matching dynamic groups.",
-        "delete_tag_confirm": "Remove tag \"{tag}\" from {count} device(s)? Dynamic groups that use this tag will become empty until updated.",
+        "delete_tag_confirm": "Remove tag \"{tag}\" from {count} device(s)? Dynamic groups that use this tag lose it and stay empty until you give them another tag.",
         "tag_renamed": "Tag renamed",
         "tag_deleted": "Tag deleted",
         "tag_name_required": "Tag name is required",

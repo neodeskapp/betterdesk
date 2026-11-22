@@ -512,7 +512,7 @@
     "delete_tag": "Slet tag",
     "rename_tag_prompt": "Nyt tagnavn",
     "rename_tag_hint": "Omdøber dette tag på alle synlige enheder og opdaterer matchende dynamiske grupper.",
-    "delete_tag_confirm": "Fjern tagget \"{tag}\" fra {count} enhed(er)? Dynamiske grupper der bruger det bliver tomme indtil opdatering.",
+    "delete_tag_confirm": "Fjern tagget \"{tag}\" fra {count} enhed(er)? Dynamiske grupper der bruger det, mister det og forbliver tomme, indtil du giver dem et andet tag.",
     "tag_renamed": "Tag omdøbt",
     "tag_deleted": "Tag slettet",
     "tag_name_required": "Tagnavn er påkrævet",

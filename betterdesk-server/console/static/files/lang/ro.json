@@ -512,7 +512,7 @@
     "delete_tag": "Șterge eticheta",
     "rename_tag_prompt": "Nume nou pentru etichetă",
     "rename_tag_hint": "Redenumește această etichetă pe toate dispozitivele vizibile și actualizează grupurile dinamice potrivite.",
-    "delete_tag_confirm": "Eliminați eticheta \"{tag}\" de pe {count} dispozitiv(e)? Grupurile dinamice care o folosesc vor fi goale până la actualizare.",
+    "delete_tag_confirm": "Eliminați eticheta \"{tag}\" de pe {count} dispozitiv(e)? Grupurile dinamice care o folosesc o pierd și rămân goale până le dați altă etichetă.",
     "tag_renamed": "Etichetă redenumită",
     "tag_deleted": "Etichetă ștearsă",
     "tag_name_required": "Numele etichetei este obligatoriu",

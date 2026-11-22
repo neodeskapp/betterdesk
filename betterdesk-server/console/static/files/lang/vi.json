@@ -512,7 +512,7 @@
     "delete_tag": "Xóa thẻ",
     "rename_tag_prompt": "Tên thẻ mới",
     "rename_tag_hint": "Đổi tên thẻ này trên tất cả thiết bị bạn thấy và cập nhật nhóm động khớp.",
-    "delete_tag_confirm": "Gỡ thẻ \"{tag}\" khỏi {count} thiết bị? Nhóm động dùng thẻ này sẽ trống cho đến khi cập nhật.",
+    "delete_tag_confirm": "Gỡ thẻ \"{tag}\" khỏi {count} thiết bị? Nhóm động dùng thẻ này sẽ mất thẻ và trống cho đến khi bạn gán cho chúng thẻ khác.",
     "tag_renamed": "Đã đổi tên thẻ",
     "tag_deleted": "Đã xóa thẻ",
     "tag_name_required": "Tên thẻ là bắt buộc",

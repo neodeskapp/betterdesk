@@ -506,7 +506,7 @@
     "delete_tag": "删除标签",
     "rename_tag_prompt": "新标签名称",
     "rename_tag_hint": "在您可见的所有设备上重命名此标签，并更新匹配的动态组。",
-    "delete_tag_confirm": "从 {count} 台设备移除标签 \"{tag}\"？使用此标签的动态组在更新前将为空。",
+    "delete_tag_confirm": "从 {count} 台设备移除标签 \"{tag}\"？使用此标签的动态组也会失去它，在您为其设置其他标签之前将为空。",
     "tag_renamed": "标签已重命名",
     "tag_deleted": "标签已删除",
     "tag_name_required": "标签名称为必填项",

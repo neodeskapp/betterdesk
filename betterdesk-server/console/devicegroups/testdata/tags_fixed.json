@@ -3707,6 +3707,71 @@
    ]
   }
  },
+ "run 13": {
+  "bug": "L99",
+  "answer": {
+   "calls": [],
+   "devicesAfter": [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,z,οδοσ",
+    [
+     "Büro",
+     null,
+     "Büro"
+    ],
+    [
+     "Lab"
+    ],
+    "[\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"]",
+    1e+21,
+    "x",
+    "[\"ǅ\",\"Lab\"]"
+   ],
+   "filtersAfter": [
+    "a b",
+    "",
+    "tag\u0001x",
+    "BÜRO"
+   ],
+   "result": {
+    "updatedDevices": 0,
+    "skipped": 0,
+    "errors": [],
+    "affectedGroups": 1,
+    "tag": "σας"
+   },
+   "updates": [
+    [
+     "g-1",
+     ""
+    ]
+   ]
+  }
+ },
+ "run 143": {
+  "bug": "L99",
+  "answer": {
+   "calls": [],
+   "devicesAfter": [],
+   "filtersAfter": [
+    "",
+    "İstanbul",
+    "LAB"
+   ],
+   "result": {
+    "updatedDevices": 0,
+    "skipped": 0,
+    "errors": [],
+    "affectedGroups": 1,
+    "tag": "Z"
+   },
+   "updates": [
+    [
+     "g-0",
+     ""
+    ]
+   ]
+  }
+ },
  "run 164": {
   "bug": "DGR4",
   "answer": {
@@ -3904,6 +3969,147 @@
     "to": "K"
    },
    "updates": []
+  }
+ },
+ "run 209": {
+  "bug": "L99",
+  "answer": {
+   "calls": [],
+   "devicesAfter": [
+    ""
+   ],
+   "filtersAfter": [
+    "",
+    "z",
+    " Büro ",
+    "3"
+   ],
+   "result": {
+    "updatedDevices": 0,
+    "skipped": 0,
+    "errors": [],
+    "affectedGroups": 1,
+    "tag": "BÜRO"
+   },
+   "updates": [
+    [
+     "g-0",
+     ""
+    ]
+   ]
+  }
+ },
+ "run 215": {
+  "bug": "L99",
+  "answer": {
+   "calls": [
+    {
+     "id": 2,
+     "tags": [
+      "t0",
+      "t1",
+      "t2",
+      "t3",
+      "t4",
+      "t5",
+      "t6",
+      "t7",
+      "t8",
+      "t9",
+      "t10",
+      "t11",
+      "t12",
+      "t13",
+      "t14",
+      "t15",
+      "t16",
+      "t17",
+      "t18",
+      "t19",
+      "t20",
+      "t21",
+      "t22",
+      "t23",
+      "t24",
+      "Büro",
+      "a"
+     ]
+    }
+   ],
+   "devicesAfter": [
+    {
+     "guid": "g1"
+    },
+    "null",
+    [
+     "t0",
+     "t1",
+     "t2",
+     "t3",
+     "t4",
+     "t5",
+     "t6",
+     "t7",
+     "t8",
+     "t9",
+     "t10",
+     "t11",
+     "t12",
+     "t13",
+     "t14",
+     "t15",
+     "t16",
+     "t17",
+     "t18",
+     "t19",
+     "t20",
+     "t21",
+     "t22",
+     "t23",
+     "t24",
+     "Büro",
+     "LAB",
+     "lab",
+     "a"
+    ],
+    false,
+    "line\nbreak",
+    "σας",
+    [
+     "ΣΑΣ",
+     "ΣΑΣ",
+     "emoji😀",
+     "3",
+     "ΣΑΣ",
+     [],
+     "ΣΑΣ",
+     "ΣΑΣ",
+     "emoji😀",
+     "3",
+     "ΣΑΣ"
+    ]
+   ],
+   "filtersAfter": [
+    "",
+    "z",
+    "İstanbul",
+    "ｆｕｌｌ"
+   ],
+   "result": {
+    "updatedDevices": 0,
+    "skipped": 1,
+    "errors": [
+     "2"
+    ],
+    "affectedGroups": 1,
+    "tag": "LAB"
+   },
+   "updates": [
+    [
+     "g-0",
+     ""
+    ]
+   ]
   }
  },
  "run 218": {
@@ -4915,6 +5121,87 @@
    "updates": []
   }
  },
+ "run 343": {
+  "bug": "L99",
+  "answer": {
+   "calls": [],
+   "devicesAfter": [
+    [
+     "t0",
+     "t1",
+     "t2",
+     "t3",
+     "t4",
+     "t5",
+     "t6",
+     "t7",
+     "t8",
+     "t9",
+     "t10",
+     "t11",
+     "t12",
+     "t13",
+     "t14",
+     "t15",
+     "t16",
+     "t17",
+     "t18",
+     "t19",
+     "t20",
+     "t21",
+     "t22",
+     "t23",
+     "t24",
+     "ΟΔΟΣ",
+     "lab",
+     "ǆ"
+    ],
+    [
+     "t0",
+     "t1",
+     "t2",
+     "t3",
+     "t4",
+     "t5",
+     "t6",
+     "t7",
+     "t8",
+     "t9",
+     "t10",
+     "t11",
+     "t12",
+     "t13",
+     "t14",
+     "t15",
+     "t16",
+     "t17",
+     "t18",
+     "t19",
+     "t20",
+     "t21",
+     "t22",
+     "t23",
+     "t24"
+    ]
+   ],
+   "filtersAfter": [
+    ""
+   ],
+   "result": {
+    "updatedDevices": 0,
+    "skipped": 0,
+    "errors": [],
+    "affectedGroups": 1,
+    "tag": "a"
+   },
+   "updates": [
+    [
+     "g-0",
+     ""
+    ]
+   ]
+  }
+ },
  "run 352": {
   "bug": "DGR4",
   "answer": {
@@ -5688,6 +5975,44 @@
    "updates": []
   }
  },
+ "run 569": {
+  "bug": "L99",
+  "answer": {
+   "calls": [],
+   "devicesAfter": [
+    "[\"a b\",\"\\ttabbed\\t\",\"οδοσ\",\"SS\",\"3\"]",
+    "i̇stanbul",
+    [
+     "lab",
+     "",
+     "lab"
+    ],
+    [],
+    [
+     "3"
+    ]
+   ],
+   "filtersAfter": [
+    " ٣ ",
+    "οδος",
+    "istanbul",
+    ""
+   ],
+   "result": {
+    "updatedDevices": 0,
+    "skipped": 0,
+    "errors": [],
+    "affectedGroups": 1,
+    "tag": "Z"
+   },
+   "updates": [
+    [
+     "g-3",
+     ""
+    ]
+   ]
+  }
+ },
  "run 70": {
   "bug": "DGR4",
   "answer": {
@@ -5838,6 +6163,92 @@
     "to": "ΣΑΣ"
    },
    "updates": []
+  }
+ },
+ "run 79": {
+  "bug": "L99",
+  "answer": {
+   "calls": [],
+   "devicesAfter": [
+    [
+     "SS",
+     "İstanbul",
+     "i̇stanbul",
+     "",
+     "SS",
+     "İstanbul",
+     "i̇stanbul"
+    ],
+    " nbsp ",
+    "ΣΑΣ",
+    ""
+   ],
+   "filtersAfter": [
+    "",
+    ""
+   ],
+   "result": {
+    "updatedDevices": 0,
+    "skipped": 0,
+    "errors": [],
+    "affectedGroups": 2,
+    "tag": "LAB"
+   },
+   "updates": [
+    [
+     "g-0",
+     ""
+    ],
+    [
+     "g-1",
+     ""
+    ]
+   ]
+  }
+ },
+ "run 99": {
+  "bug": "L99",
+  "answer": {
+   "calls": [
+    {
+     "id": "dev-5",
+     "tags": []
+    }
+   ],
+   "devicesAfter": [
+    [
+     "Lab",
+     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀b",
+     "Lab"
+    ],
+    "[\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"A\"]",
+    [
+     "3",
+     " ",
+     2.5,
+     "3",
+     " "
+    ],
+    "",
+    [],
+    []
+   ],
+   "filtersAfter": [
+    ""
+   ],
+   "result": {
+    "updatedDevices": 1,
+    "skipped": 0,
+    "errors": [],
+    "affectedGroups": 1,
+    "tag": "é"
+   },
+   "updates": [
+    [
+     "g-0",
+     ""
+    ]
+   ]
   }
  }
 }

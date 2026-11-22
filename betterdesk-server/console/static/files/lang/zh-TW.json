@@ -510,7 +510,7 @@
     "delete_tag": "刪除標籤",
     "rename_tag_prompt": "新標籤名稱",
     "rename_tag_hint": "在您可見的所有裝置上重新命名此標籤，並更新相符的動態群組。",
-    "delete_tag_confirm": "從 {count} 台裝置移除標籤 \"{tag}\"？使用此標籤的動態群組在更新前將為空。",
+    "delete_tag_confirm": "從 {count} 台裝置移除標籤 \"{tag}\"？使用此標籤的動態群組也會失去它，在您為其設定其他標籤之前將為空。",
     "tag_renamed": "標籤已重新命名",
     "tag_deleted": "標籤已刪除",
     "tag_name_required": "標籤名稱為必填",

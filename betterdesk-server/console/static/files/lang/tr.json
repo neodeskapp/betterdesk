@@ -512,7 +512,7 @@
     "delete_tag": "Etiketi sil",
     "rename_tag_prompt": "Yeni etiket adı",
     "rename_tag_hint": "Bu etiketi görebildiğiniz tüm cihazlarda yeniden adlandırır ve eşleşen dinamik grupları günceller.",
-    "delete_tag_confirm": "\"{tag}\" etiketi {count} cihazdan kaldırılsın mı? Bu etiketi kullanan dinamik gruplar güncellenene kadar boş kalır.",
+    "delete_tag_confirm": "\"{tag}\" etiketi {count} cihazdan kaldırılsın mı? Bu etiketi kullanan dinamik gruplar onu kaybeder ve siz başka bir etiket verene kadar boş kalır.",
     "tag_renamed": "Etiket yeniden adlandırıldı",
     "tag_deleted": "Etiket silindi",
     "tag_name_required": "Etiket adı gerekli",
