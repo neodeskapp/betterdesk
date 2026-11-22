@@ -466,8 +466,9 @@ container_dir() {
 
 real_dir() { (cd "$1" 2>/dev/null && pwd -P) || printf '%s\n' "$1"; }
 
-# install_state: "new", "ours" (this folder's install) or "foreign" (a
-# BetterDesk container of another install)
+# install_state: "new", "ours" (this folder's install, its container made)
+# or "foreign" (a BetterDesk container of another install). A folder whose
+# container was never made (a first install that stopped early) is new.
 install_state() {
     local c dir own
     own=$(real_dir "$BETTERDESK_DIR")
@@ -481,8 +482,6 @@ install_state() {
         return 0
     done
     if container_exists "$CONTAINER"; then
-        printf 'ours\n'
-    elif [ -f "$(env_file)" ] && [ -f "$(compose_file)" ]; then
         printf 'ours\n'
     else
         printf 'new\n'

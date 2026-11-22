@@ -51,7 +51,8 @@ docker() {
         compose)
             case "$2" in
                 version) [ "${3:-}" = --short ] && printf '2.29.1\n'; return 0 ;;
-                pull) return 0 ;;
+                pull) if [ -f "$TEST_DIR/pull-fails" ]; then printf 'manifest unknown
+' >&2; return 1; fi; return 0 ;;
                 up)
                     touch "$TEST_DIR/exists" "$TEST_DIR/running"
                     cp "$TEST_DIR/pulled" "$TEST_DIR/current-image" ;;
@@ -340,6 +341,23 @@ test_postgres_failed_move_keeps_sqlite() (
     rm -rf "$TEST_DIR"
 )
 
+# A first install that stopped before the container ran (here: the image
+# was not found) is a fresh install when run again: it starts the
+# container and prints the first password.
+test_failed_first_install_resumes() (
+    load
+    printf 'first-pass-0123
+' > "$TEST_DIR/first-password"
+    touch "$TEST_DIR/pull-fails"
+    local out
+    if out=$( (COMMAND=install; do_install) 2>&1 ); then fail "an install without its image reported success"; fi
+    rm -f "$TEST_DIR/pull-fails"
+    out=$( (COMMAND=install; do_install) 2>&1 ) || fail "the second try failed: $out"
+    printf '%s' "$out" | grep -q 'first-pass-0123' || fail "the second try did not print the first password: $out"
+    if printf '%s' "$out" | grep -q 'updating it'; then fail "the second try took the half-made install for one to update"; fi
+    rm -rf "$TEST_DIR"
+)
+
 test_fresh_install
 test_update_goes_back_when_unhealthy
 test_update_keeps_compose_edits
@@ -351,5 +369,6 @@ test_help_lists_every_option
 test_postgres_switch_moves_the_data
 test_postgres_declined_keeps_sqlite
 test_postgres_failed_move_keeps_sqlite
+test_failed_first_install_resumes
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"
