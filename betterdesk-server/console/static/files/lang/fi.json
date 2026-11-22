@@ -45,6 +45,7 @@
     "none": "Ei mitään",
     "copy_value": "Kopioi {value}",
     "copy_failed": "Kopiointi epäonnistui. Valitse teksti ja kopioi se itse.",
+    "read_only_page": "Voit katsoa tätä sivua, mutta et muuttaa sitä.",
     "opens_in_new_tab": "avautuu uuteen välilehteen"
   },
   "nav": {
@@ -1260,7 +1261,6 @@
       "dev_build": "Kehitysversio"
     },
     "appearance": {
-      "read_only": "Vain järjestelmänvalvojat voivat muuttaa ulkoasua.",
       "theme_note": "Oletusulkoasu kaikille tämän konsolin käyttäjille.",
       "mode_system": "Vaalea tai tumma kunkin käyttäjän laitteen asetuksen mukaan.",
       "mode_light": "Aina vaalea.",

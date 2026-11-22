@@ -29,6 +29,7 @@
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Presence from '#lib/ui/Presence.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import Select from '#lib/ui/Select.svelte';
@@ -482,6 +483,7 @@
 			message={tf('chat.needs_access', 'Your role cannot use chat. Ask an administrator if you need it.')}
 		/>
 	{:else}
+		<ReadOnlyHint writes={['chat.access']} />
 		{#if failed && status !== 'open'}
 			<Notice tone="warning" role="status" message={t('chat.not_connected')} />
 		{/if}

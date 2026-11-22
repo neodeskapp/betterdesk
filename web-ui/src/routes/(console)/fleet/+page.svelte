@@ -30,6 +30,7 @@
 	import { setPageTitle } from '#lib/shell/page.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Notice from '#lib/ui/Notice.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Tabs from '#lib/ui/Tabs.svelte';
 	import ComplianceTab from './ComplianceTab.svelte';
@@ -117,6 +118,7 @@
 			<h1>{t('nav.fleet')}</h1>
 			<p class="page-description">{t('fleet.page_description')}</p>
 		</div>
+		<ReadOnlyHint writes={['org.manage_devices']} />
 
 		<!-- The notice above the tabs depends on the answer: drawn after it, so the
 		     tabs don't move down when it arrives -->

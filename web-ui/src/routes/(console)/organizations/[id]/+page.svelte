@@ -44,6 +44,7 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Facts from '#lib/ui/Facts.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
@@ -292,6 +293,9 @@
 		{/if}
 		<p class="page-description">{t('organizations.detail_description')}</p>
 	</div>
+	<ReadOnlyHint
+		writes={['org.edit', 'org.delete', 'org.manage_users', 'org.manage_devices', 'device.edit']}
+	/>
 
 	{#if headerError}
 		<States kind="error" message={headerError} onretry={() => void loadAll()} />

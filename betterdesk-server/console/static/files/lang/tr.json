@@ -45,6 +45,7 @@
     "none": "Yok",
     "copy_value": "{value} kopyala",
     "copy_failed": "Kopyalanamadı. Metni seçip kendiniz kopyalayın.",
+    "read_only_page": "Bu sayfayı görüntüleyebilirsiniz ama değiştiremezsiniz.",
     "opens_in_new_tab": "yeni sekmede açılır"
   },
   "nav": {
@@ -1260,7 +1261,6 @@
       "dev_build": "Geliştirme sürümü"
     },
     "appearance": {
-      "read_only": "Görünümü yalnızca yöneticiler değiştirebilir.",
       "theme_note": "Bu konsolu kullanan herkes için varsayılan görünüm.",
       "mode_system": "Her kişinin cihaz ayarına göre açık veya koyu.",
       "mode_light": "Her zaman açık.",

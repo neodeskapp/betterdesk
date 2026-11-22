@@ -39,6 +39,7 @@
     "none": "Geen",
     "copy_value": "{value} kopiëren",
     "copy_failed": "Kopiëren is mislukt. Selecteer de tekst en kopieer hem zelf.",
+    "read_only_page": "U kunt deze pagina bekijken, maar niet wijzigen.",
     "opens_in_new_tab": "opent in een nieuw tabblad"
   },
   "nav": {
@@ -1254,7 +1255,6 @@
       "dev_build": "Ontwikkelversie"
     },
     "appearance": {
-      "read_only": "Alleen beheerders kunnen de weergave wijzigen.",
       "theme_note": "De standaardweergave voor iedereen die deze console gebruikt.",
       "mode_system": "Licht of donker, volgens de apparaatinstelling van elke gebruiker.",
       "mode_light": "Altijd licht.",

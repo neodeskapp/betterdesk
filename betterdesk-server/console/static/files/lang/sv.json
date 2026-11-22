@@ -45,6 +45,7 @@
     "none": "Ingen",
     "copy_value": "Kopiera {value}",
     "copy_failed": "Det gick inte att kopiera. Markera texten och kopiera den själv.",
+    "read_only_page": "Du kan visa den här sidan men inte ändra den.",
     "opens_in_new_tab": "öppnas i en ny flik"
   },
   "nav": {
@@ -1260,7 +1261,6 @@
       "dev_build": "Utvecklingsversion"
     },
     "appearance": {
-      "read_only": "Bara administratörer kan ändra utseendet.",
       "theme_note": "Standardutseendet för alla som använder den här konsolen.",
       "mode_system": "Ljust eller mörkt, enligt inställningen på varje persons enhet.",
       "mode_light": "Alltid ljust.",

@@ -75,6 +75,7 @@
 	import Time from '#lib/ui/Time.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import type { Column, SortState } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
@@ -683,6 +684,19 @@
 			{/if}
 		</div>
 	</div>
+	<ReadOnlyHint
+		writes={[
+			'device.edit',
+			'device.delete',
+			'device.ban',
+			'device.change_id',
+			'device.connection_mode',
+			'guest.create',
+			'remote_target.edit',
+			'remote_target.delete',
+			'billing.manage'
+		]}
+	/>
 
 	<div class="devices-layout">
 		<div class="devices-toolbar">

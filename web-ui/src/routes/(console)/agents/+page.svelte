@@ -26,6 +26,7 @@
 	import FormStatus from '#lib/ui/FormStatus.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Steps from '#lib/ui/Steps.svelte';
@@ -115,6 +116,7 @@
 			<h1>{t('nav.agents')}</h1>
 			<p class="page-description">{t('agents.page_description')}</p>
 		</div>
+		<ReadOnlyHint writes={['enrollment.manage', 'enrollment.approve']} />
 
 		<div class="page-cols">
 			<div class="page-main">

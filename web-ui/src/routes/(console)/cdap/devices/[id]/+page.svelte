@@ -61,6 +61,7 @@
 	import Facts from '#lib/ui/Facts.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
@@ -309,6 +310,7 @@
 			<a href={link('/cdap')}>{t('cdap.back_to_list')}</a>
 		</p>
 	{:else}
+		<ReadOnlyHint writes={['cdap.command', 'cdap.terminal', 'cdap.files']} />
 		<div class="page-cols">
 			<div class="page-main">
 				<div class="device-facts"><Facts items={facts} label={name} /></div>

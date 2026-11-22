@@ -39,6 +39,7 @@
         "none": "None",
         "copy_value": "Copy {value}",
         "copy_failed": "Could not copy. Select the text and copy it yourself.",
+        "read_only_page": "You can view this page but not change it.",
         "opens_in_new_tab": "opens in a new tab"
     },
     "nav": {
@@ -1262,7 +1263,6 @@
             "dev_build": "Development build"
         },
         "appearance": {
-            "read_only": "Only administrators can change the appearance.",
             "theme_note": "The default look for everyone who uses this console.",
             "mode_system": "Light or dark, following each person's device setting.",
             "mode_light": "Always light.",

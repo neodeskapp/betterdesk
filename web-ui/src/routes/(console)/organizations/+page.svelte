@@ -26,6 +26,7 @@
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import Table from '#lib/ui/Table.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
@@ -212,6 +213,7 @@
 		{/if}
 		<p class="page-description">{t('organizations.page_description')}</p>
 	</div>
+	<ReadOnlyHint writes={['org.create', 'org.edit', 'org.delete']} />
 
 	<section class="section" aria-labelledby="org-list-title">
 		<h2 id="org-list-title" class="sr-only">{t('nav.organizations')}</h2>

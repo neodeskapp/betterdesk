@@ -39,6 +39,7 @@
     "none": "Nenhum",
     "copy_value": "Copiar {value}",
     "copy_failed": "Não foi possível copiar. Selecione o texto e copie-o manualmente.",
+    "read_only_page": "Pode ver esta página, mas não a pode alterar.",
     "opens_in_new_tab": "abre num novo separador"
   },
   "nav": {
@@ -1254,7 +1255,6 @@
       "dev_build": "Versão de desenvolvimento"
     },
     "appearance": {
-      "read_only": "Apenas os administradores podem alterar o aspeto.",
       "theme_note": "O aspeto predefinido para todos os que utilizam esta consola.",
       "mode_system": "Claro ou escuro, de acordo com a definição do dispositivo de cada pessoa.",
       "mode_light": "Sempre claro.",

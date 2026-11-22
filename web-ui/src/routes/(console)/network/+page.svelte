@@ -51,6 +51,7 @@
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import States from '#lib/ui/States.svelte';
@@ -378,6 +379,7 @@
 			</div>
 		{/if}
 	</div>
+	<ReadOnlyHint writes={['server.config']} />
 
 	<div class="page-cols">
 		<section class="section page-main" aria-label={t('network.targets')}>

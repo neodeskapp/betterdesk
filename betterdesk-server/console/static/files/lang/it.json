@@ -39,6 +39,7 @@
     "none": "Nessuno",
     "copy_value": "Copia {value}",
     "copy_failed": "Impossibile copiare. Selezioni il testo e lo copi manualmente.",
+    "read_only_page": "Può vedere questa pagina, ma non modificarla.",
     "opens_in_new_tab": "si apre in una nuova scheda"
   },
   "nav": {
@@ -1254,7 +1255,6 @@
       "dev_build": "Versione di sviluppo"
     },
     "appearance": {
-      "read_only": "Solo gli amministratori possono modificare l'aspetto.",
       "theme_note": "L'aspetto predefinito per tutti coloro che usano questa console.",
       "mode_system": "Chiaro o scuro, in base all'impostazione del dispositivo di ciascuno.",
       "mode_light": "Sempre chiaro.",

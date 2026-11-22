@@ -39,6 +39,7 @@
     "none": "Brak",
     "copy_value": "Kopiuj {value}",
     "copy_failed": "Nie udało się skopiować. Zaznacz tekst i skopiuj go samodzielnie.",
+    "read_only_page": "Możesz wyświetlić tę stronę, ale nie możesz jej zmienić.",
     "opens_in_new_tab": "otwiera się w nowej karcie"
   },
   "nav": {
@@ -1254,7 +1255,6 @@
       "dev_build": "Wersja deweloperska"
     },
     "appearance": {
-      "read_only": "Tylko administratorzy mogą zmieniać wygląd.",
       "theme_note": "Domyślny wygląd dla wszystkich użytkowników tej konsoli.",
       "mode_system": "Jasny lub ciemny, zgodnie z ustawieniem urządzenia każdej osoby.",
       "mode_light": "Zawsze jasny.",

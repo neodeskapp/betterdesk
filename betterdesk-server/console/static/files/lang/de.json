@@ -39,6 +39,7 @@
     "none": "Keine Angabe",
     "copy_value": "{value} kopieren",
     "copy_failed": "Kopieren nicht möglich. Bitte markieren Sie den Text und kopieren Sie ihn selbst.",
+    "read_only_page": "Sie können diese Seite ansehen, aber nicht ändern.",
     "opens_in_new_tab": "öffnet sich in einem neuen Tab"
   },
   "nav": {
@@ -1254,7 +1255,6 @@
       "dev_build": "Entwicklungsversion"
     },
     "appearance": {
-      "read_only": "Nur Administratoren können das Erscheinungsbild ändern.",
       "theme_note": "Das Standard-Erscheinungsbild für alle, die diese Konsole verwenden.",
       "mode_system": "Hell oder dunkel, je nach Einstellung des Geräts der jeweiligen Person.",
       "mode_light": "Immer hell.",

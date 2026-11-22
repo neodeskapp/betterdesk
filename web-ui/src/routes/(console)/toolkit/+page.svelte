@@ -23,6 +23,7 @@
 	import Input from '#lib/ui/Input.svelte';
 	import Meter from '#lib/ui/Meter.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Status from '#lib/ui/Status.svelte';
 	import Table from '#lib/ui/Table.svelte';
@@ -398,6 +399,7 @@
 		<h1>{t('nav.toolkit')}</h1>
 		<p class="page-description">{t('toolkit.page_description')}</p>
 	</div>
+	<ReadOnlyHint writable={sectionWritable()} />
 
 	{#if !groups.length}
 		<Notice tone="info" message={t('toolkit.none_allowed')} />

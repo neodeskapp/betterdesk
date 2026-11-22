@@ -46,6 +46,7 @@
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
 	import ShareBar from '#lib/ui/ShareBar.svelte';
 	import Status from '#lib/ui/Status.svelte';
@@ -439,6 +440,7 @@
 			<h1>{t('nav.automation')}</h1>
 			<p class="page-description">{t('automation.page_description')}</p>
 		</div>
+		<ReadOnlyHint writes={['server.config']} />
 
 		<Tabs {tabs} value={tab} label={t('nav.automation')} onchange={selectTab}>
 			{#snippet children(id)}

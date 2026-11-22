@@ -39,6 +39,7 @@
     "none": "无",
     "copy_value": "复制 {value}",
     "copy_failed": "无法复制。请选中文本后手动复制。",
+    "read_only_page": "您可以查看此页面，但无法更改。",
     "opens_in_new_tab": "在新标签页中打开"
   },
   "nav": {
@@ -1254,7 +1255,6 @@
       "dev_build": "开发版本"
     },
     "appearance": {
-      "read_only": "只有管理员可以更改外观。",
       "theme_note": "所有使用此控制台的人默认看到的外观。",
       "mode_system": "浅色或深色，跟随每个人的设备设置。",
       "mode_light": "始终浅色。",

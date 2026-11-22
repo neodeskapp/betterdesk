@@ -45,6 +45,7 @@
     "none": "Nincs",
     "copy_value": "{value} másolása",
     "copy_failed": "A másolás nem sikerült. Jelölje ki a szöveget, és másolja ki kézzel.",
+    "read_only_page": "Ezt az oldalt megtekintheti, de nem módosíthatja.",
     "opens_in_new_tab": "új lapon nyílik meg"
   },
   "nav": {
@@ -1260,7 +1261,6 @@
       "dev_build": "Fejlesztői változat"
     },
     "appearance": {
-      "read_only": "A megjelenést csak a rendszergazdák módosíthatják.",
       "theme_note": "Az alapértelmezett megjelenés mindenkinek, aki ezt a konzolt használja.",
       "mode_system": "Világos vagy sötét, mindenkinél az eszköze beállítása szerint.",
       "mode_light": "Mindig világos.",

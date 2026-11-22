@@ -39,6 +39,7 @@
     "none": "Žádné",
     "copy_value": "Kopírovat {value}",
     "copy_failed": "Kopírování se nezdařilo. Označte text a zkopírujte ho ručně.",
+    "read_only_page": "Tuto stránku můžete zobrazit, ale ne měnit.",
     "opens_in_new_tab": "otevře se na nové kartě"
   },
   "nav": {
@@ -1254,7 +1255,6 @@
       "dev_build": "Vývojové sestavení"
     },
     "appearance": {
-      "read_only": "Vzhled mohou měnit pouze správci.",
       "theme_note": "Výchozí vzhled pro všechny, kdo tuto konzoli používají.",
       "mode_system": "Světlý nebo tmavý podle nastavení zařízení každého uživatele.",
       "mode_light": "Vždy světlý.",

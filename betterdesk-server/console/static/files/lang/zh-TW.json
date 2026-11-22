@@ -43,6 +43,7 @@
     "none": "無",
     "copy_value": "複製 {value}",
     "copy_failed": "無法複製。請選取文字後自行複製。",
+    "read_only_page": "您可以檢視此頁面，但無法變更。",
     "opens_in_new_tab": "在新分頁中開啟"
   },
   "nav": {
@@ -1258,7 +1259,6 @@
       "dev_build": "開發版本"
     },
     "appearance": {
-      "read_only": "只有管理員可以變更外觀。",
       "theme_note": "所有使用此主控台的人預設看到的外觀。",
       "mode_system": "淺色或深色，依每個人的裝置設定而定。",
       "mode_light": "一律淺色。",

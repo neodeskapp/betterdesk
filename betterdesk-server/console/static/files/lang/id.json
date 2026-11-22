@@ -45,6 +45,7 @@
     "none": "Tidak ada",
     "copy_value": "Salin {value}",
     "copy_failed": "Tidak dapat menyalin. Pilih teksnya dan salin sendiri.",
+    "read_only_page": "Anda dapat melihat halaman ini, tetapi tidak dapat mengubahnya.",
     "opens_in_new_tab": "terbuka di tab baru"
   },
   "nav": {
@@ -1260,7 +1261,6 @@
       "dev_build": "Build pengembangan"
     },
     "appearance": {
-      "read_only": "Hanya administrator yang dapat mengubah tampilan.",
       "theme_note": "Tampilan default untuk semua orang yang menggunakan konsol ini.",
       "mode_system": "Terang atau gelap, mengikuti pengaturan perangkat masing-masing orang.",
       "mode_light": "Selalu terang.",

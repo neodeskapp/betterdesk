@@ -40,6 +40,7 @@
 	import DangerZone from '#lib/ui/DangerZone.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
 	import Status from '#lib/ui/Status.svelte';
@@ -250,6 +251,7 @@
 		<h1>{t('nav.cdap')}</h1>
 		<p class="page-description">{t('cdap.page_description')}</p>
 	</div>
+	<ReadOnlyHint writes={['server.config']} />
 
 	<div class={['page-cols', off && 'is-off']}>
 		<div class="page-main">

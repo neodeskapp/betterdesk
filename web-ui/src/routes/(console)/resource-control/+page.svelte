@@ -22,6 +22,7 @@
 	import Facts from '#lib/ui/Facts.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Platform from '#lib/ui/Platform.svelte';
+	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import ShareBar from '#lib/ui/ShareBar.svelte';
 	import States from '#lib/ui/States.svelte';
@@ -158,6 +159,7 @@
 			<h1>{t('nav.resource_control')}</h1>
 			<p class="page-description">{t('resource_control.page_description')}</p>
 		</div>
+		<ReadOnlyHint writes={['server.config']} />
 
 		<Notice tone="warning" class="rc-gap" message={t('resource_control.unavailable_note')} />
 

@@ -45,6 +45,7 @@
     "none": "Không có",
     "copy_value": "Sao chép {value}",
     "copy_failed": "Không sao chép được. Hãy chọn văn bản và tự sao chép.",
+    "read_only_page": "Bạn có thể xem trang này nhưng không thể thay đổi.",
     "opens_in_new_tab": "mở trong thẻ mới"
   },
   "nav": {
@@ -1260,7 +1261,6 @@
       "dev_build": "Bản phát triển"
     },
     "appearance": {
-      "read_only": "Chỉ quản trị viên mới có thể thay đổi giao diện.",
       "theme_note": "Giao diện mặc định cho mọi người dùng bảng điều khiển này.",
       "mode_system": "Sáng hoặc tối, theo cài đặt thiết bị của từng người.",
       "mode_light": "Luôn sáng.",
