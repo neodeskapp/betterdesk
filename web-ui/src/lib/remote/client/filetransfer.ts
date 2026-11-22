@@ -175,6 +175,8 @@ export interface RDDownloadTransfer extends RDTransferBase {
 	localDir: string | null;
 	absolutePath: string | null;
 	writeChain: Promise<unknown>;
+	/** The blocks and the done of the device, applied one after the other in the order they came */
+	receiveChain: Promise<void>;
 	_writeBatch?: Uint8Array[];
 	_writeBatchLen?: number;
 	_lastProgressEmit?: number;
@@ -929,6 +931,7 @@ export class RDFileTransfer {
 			absolutePath: options.absolutePath || null,
 			folderJobId: options.folderJobId || null,
 			writeChain: Promise.resolve(),
+			receiveChain: Promise.resolve(),
 			startTime: Date.now(),
 			status: 'pending',
 			fileNum: 0,
@@ -2087,15 +2090,22 @@ export class RDFileTransfer {
 		};
 
 		const raw = block.data;
-		if (block.compressed && raw && raw.length) {
-			this._decompressBlock(raw)
-				.then(applyBlock)
-				.catch((err: unknown) => {
+		const compressed = !!(block.compressed && raw && raw.length);
+		// A compressed block takes a while to inflate: the blocks after it wait, so the file keeps their order
+		const active = () => this._transfers.get(id) === transfer && transfer.status !== 'error';
+		transfer.receiveChain = transfer.receiveChain.then(async () => {
+			if (!active()) return;
+			let data = raw;
+			if (compressed) {
+				try {
+					data = await this._decompressBlock(raw);
+				} catch (err) {
 					this._failTransfer(id, 'Failed to decompress block: ' + (errorMessage(err) || String(err)));
-				});
-			return;
-		}
-		applyBlock(raw);
+					return;
+				}
+			}
+			if (active()) applyBlock(data);
+		});
 	}
 
 	/**
@@ -2112,7 +2122,20 @@ export class RDFileTransfer {
 		const id = Number(done.id);
 		const transfer = this._transfers.get(id);
 		if (!transfer) return;
+		if (transfer.type === 'download') {
+			// The done follows the last block: it waits until every block before it is applied
+			transfer.receiveChain = transfer.receiveChain.then(() => {
+				if (this._transfers.get(id) === transfer && transfer.status !== 'error')
+					this._finishTransfer(transfer);
+			});
+			return;
+		}
+		this._finishTransfer(transfer);
+	}
 
+	/** The device's done of a transfer: save a download, report the transfer complete */
+	_finishTransfer(transfer: RDTransfer): void {
+		const id = transfer.id;
 		this._clearTransferTimeout(id);
 		transfer.status = 'complete';
 		const elapsed = (Date.now() - transfer.startTime) / 1000;
