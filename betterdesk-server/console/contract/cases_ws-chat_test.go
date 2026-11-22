@@ -42,6 +42,10 @@ func init() {
 		c.Roles = contract.Roles("viewer", "operator", "global_admin", "super_admin", "admin")
 		return c
 	}
+	withVolatile := func(c contract.Case, marks ...string) contract.Case {
+		c.Volatile = append(c.Volatile, marks...)
+		return c
+	}
 	room := "/ws/chat-operator/900100001"
 	panel := "/ws/chat-operator/panel"
 	contract.Group("ws-chat",
@@ -135,10 +139,13 @@ func init() {
 		contract.Case{Name: "panel-sees-agent-leave", Path: panel, Socket: sock("panel", contract.Socket{Expect: 4, Close: true})},
 
 		// A frame over 8 KiB closes the socket with 1009. These come last:
-		// a new agent socket would replace the turn's agent
-		agentCase("agent-too-big", "a_big", contract.Socket{Send: []any{
+		// a new agent socket would replace the turn's agent. What the
+		// console sends a new agent (history, contacts) comes when the API
+		// server answers, before the close or not at all, so the agent's
+		// messages are free here.
+		withVolatile(agentCase("agent-too-big", "a_big", contract.Socket{Send: []any{
 			`{"type":"hello","pad":"` + strings.Repeat("x", 8192-24) + `"}`,
-		}, WaitClose: true}),
+		}, WaitClose: true}), "~messages"),
 		contract.Case{Name: "operator-too-big", Path: room, Socket: sock("o_big", contract.Socket{Send: []any{
 			`{"type":"hello","pad":"` + strings.Repeat("x", 8192-24) + `"}`,
 		}, WaitClose: true})},
