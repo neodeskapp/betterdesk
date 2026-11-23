@@ -13,6 +13,8 @@ beforeEach(() => {
 	vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 	vi.stubGlobal('requestAnimationFrame', () => 1);
 	vi.stubGlobal('cancelAnimationFrame', () => {});
+	// A secure context: the browser plays the VP9 the devices below send
+	vi.stubGlobal('VideoDecoder', vi.fn());
 });
 afterEach(() => {
 	vi.unstubAllGlobals();
