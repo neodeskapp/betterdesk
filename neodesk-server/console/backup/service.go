@@ -334,8 +334,8 @@ type Manifest struct {
 //	README.txt                       how to restore by hand
 //
 // A part whose file is missing or unreadable is left out; the dump is
-// left out when it fails. Files are mode 0600 in the archive, uploads,
-// chat files, attachments and the rest 0644.
+// left out when it fails. Files and the two dumps are mode 0600 in the
+// archive, uploads, chat files, attachments and the rest 0644.
 func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) {
 	timestamp := s.isoNow()
 	p := s.paths()
@@ -343,7 +343,9 @@ func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) 
 	var present []string
 
 	if dump, err := DumpAllTables(ctx, s.o.Store); err == nil {
-		entries = append(entries, Entry{Name: "console/data.json", Data: dump})
+		// The dumps hold password hashes, second-factor secrets and
+		// recovery codes: readable by their owner only (L409)
+		entries = append(entries, Entry{Name: "console/data.json", Data: dump, Mode: 0o600})
 		present = append(present, "console/data.json")
 	}
 	if goServer := s.goServerData(ctx); goServer != nil {
@@ -351,7 +353,7 @@ func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) 
 		if err != nil {
 			return nil, "", err
 		}
-		entries = append(entries, Entry{Name: "goserver/data.json", Data: raw})
+		entries = append(entries, Entry{Name: "goserver/data.json", Data: raw, Mode: 0o600})
 		present = append(present, "goserver/data.json")
 	}
 
@@ -477,28 +479,31 @@ func indentJSON(v any) ([]byte, error) {
 
 func recoveryReadme(m Manifest) string {
 	return strings.Join([]string{
-		"NeoDesk Console \u2014 Full Disaster-Recovery Backup",
-		"==================================================",
+		"NeoDesk full backup",
+		"===================",
 		"",
 		"Created:          " + m.Created,
 		"Console version:  " + m.ConsoleVersion,
 		"Database engine:  " + m.DBType,
 		"Components:        " + strings.Join(m.Components, ", "),
 		"",
-		"WARNING: This archive contains SECRETS (Ed25519 server keys, .env with",
-		"SESSION_SECRET / API key / database credentials, user password hashes and",
-		"2FA secrets). Store it securely and never share it.",
+		"WARNING: This archive holds SECRETS: the server's Ed25519 keys, the API",
+		"key, the session secret, the console's .env (database credentials),",
+		"password hashes and two-factor secrets. Keep it where only you can read",
+		"it and never share it.",
 		"",
-		"How to restore on a fresh machine",
-		"---------------------------------",
-		"1. Install NeoDesk using the ALL-IN-ONE installer (neodesk.sh / .ps1).",
-		"2. Stop the console and Go server services.",
-		"3. Open the web console Settings page and use \"Restore from backup\",",
-		"   OR extract this archive manually with: tar -xzf <backup>.tar.gz",
-		"   and copy each component back to its location:",
-		"     console/.env            -> web-nodejs/.env",
+		"How to restore",
+		"--------------",
+		"1. Install NeoDesk of the same version: install.sh, or the Docker image.",
+		"2. Open Settings > Backup in the web console and choose Restore, which",
+		"   puts every part back and asks for the restart.",
+		"",
+		"To restore by hand instead, stop the server, extract the archive with",
+		"umask 077 so the files stay private (umask 077; tar -xzf <backup>.tar.gz)",
+		"and copy each part back:",
+		"     console/.env            -> the console's .env (none on Docker)",
 		"     console/.session_secret -> <dataDir>/.session_secret",
-		"     console/auth.db         -> <dataDir>/auth.db   (SQLite backend only)",
+		"     console/auth.db         -> <dataDir>/auth.db   (SQLite only)",
 		"     console/uploads/*       -> <dataDir>/uploads/",
 		"     console/chat-files/*    -> <consoleDir>/data/chat-files/",
 		"     console/attachments/*   -> <consoleDir>/data/attachments/",
@@ -509,11 +514,13 @@ func recoveryReadme(m Manifest) string {
 		"     goserver/id_ed25519.pub -> <keysPath>/id_ed25519.pub",
 		"     goserver/.api_key       -> <keysPath>/.api_key",
 		"     goserver/mesh_agent_server.pem -> <keysPath>/mesh_agent_server.pem",
-		"     goserver/db_v2.sqlite3  -> Go server DB path (SQLite backend only)",
-		"4. For PostgreSQL backends, the logical dump in console/data.json is",
-		"   re-imported through the console Restore action.",
-		"5. Restart both services. Clients keep trusting the server because the",
-		"   Ed25519 identity key was preserved.",
+		"     goserver/db_v2.sqlite3  -> DB_PATH (SQLite only)",
+		"On Docker <dataDir> and <keysPath> are /app/data and /opt/rustdesk.",
+		"With PostgreSQL the dump in console/data.json goes back only through",
+		"the console's Restore.",
+		"",
+		"Start the server again. Clients keep trusting it because the Ed25519 key",
+		"is the same.",
 		"",
 	}, "\n")
 }

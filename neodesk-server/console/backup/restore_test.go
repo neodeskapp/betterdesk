@@ -69,7 +69,7 @@ func TestFullBackupHoldsEveryPart(t *testing.T) {
 		if strings.Join(names, ",") != strings.Join(want, ",") {
 			t.Fatalf("entries:\n %q\nwant\n %q", names, want)
 		}
-		for name, mode := range map[string]string{"manifest.json": "0000644", "console/data.json": "0000644", "console/.env": "0000600",
+		for name, mode := range map[string]string{"manifest.json": "0000644", "console/data.json": "0000600", "console/.env": "0000600",
 			"goserver/id_ed25519": "0000600", "console/uploads/bg/nested.jpg": "0000644", "README.txt": "0000644"} {
 			if modes[name] != mode {
 				t.Errorf("%s: mode %q, want %q", name, modes[name], mode)
@@ -704,5 +704,35 @@ func TestExtractStopsOnALoop(t *testing.T) {
 		}
 	case <-time.After(10 * time.Second):
 		t.Fatal("the reader loops")
+	}
+}
+
+// TestBackupFilesWithSecretsArePrivate: the dumps that hold password
+// hashes, second-factor secrets and recovery codes are mode 0600 in the
+// archive, so extracting it by hand as README.txt says leaves them
+// readable by their owner only; README.txt names this server's install
+// and no longer the old console's files (L409).
+func TestBackupFilesWithSecretsArePrivate(t *testing.T) {
+	in := newInstall(t, "sqlite")
+	in.seed(t)
+	archive, _, err := in.service(t, "3.6.0").CreateFullBackup(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	entries := tarEntries(t, archive)
+	modes := map[string]string{}
+	for _, e := range entries {
+		modes[e.name] = string(e.header[100:107])
+	}
+	for _, name := range []string{"console/data.json", "goserver/data.json"} {
+		if modes[name] != "0000600" {
+			t.Errorf("%s: mode %q, want 0000600", name, modes[name])
+		}
+	}
+	readme := string(entries[len(entries)-1].data)
+	for _, old := range []string{"web-nodejs", "neodesk.sh", "ALL-IN-ONE"} {
+		if strings.Contains(readme, old) {
+			t.Errorf("README.txt still names %s:\n%s", old, readme)
+		}
 	}
 }
