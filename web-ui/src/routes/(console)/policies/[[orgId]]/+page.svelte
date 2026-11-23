@@ -77,7 +77,6 @@
 
 	const allowed = $derived(isAdminRole(session.user?.role));
 	const canEdit = $derived(canWrite('org.edit'));
-	$effect(() => setPageTitle(t('nav.policies')));
 
 	/* ── Organizations ── */
 
@@ -104,6 +103,10 @@
 		urlOrg ?? (orgsState === 'ready' && orgs.length === 1 ? (orgs[0]?.id ?? null) : null)
 	);
 	const org = $derived(orgs.find((o) => o.id === orgId) ?? null);
+	/* Title and heading name the organization once one is open, so its
+	   policies are not one more page called Policies */
+	const heading = $derived(org?.name ? `${t('nav.policies')}: ${org.name}` : t('nav.policies'));
+	$effect(() => setPageTitle(heading));
 	const notFound = $derived(orgsState === 'ready' && !!urlOrg && !org);
 
 	/* ── The open organization's policies ── */
@@ -430,7 +433,7 @@
 {:else}
 	<div class="page page-wide policy-page">
 		<div class="page-head">
-			<h1>{t('nav.policies')}</h1>
+			<h1>{heading}</h1>
 			<p class="page-description">{t('policies.page_description')}</p>
 		</div>
 		<ReadOnlyHint writes={['org.edit']} />
