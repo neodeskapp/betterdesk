@@ -932,6 +932,7 @@
     "advanced_error_invalid": "Ungültiger Dateiinhalt",
     "advanced_error_not_writable": "Datei ist nicht vom Konsolenprozess beschreibbar",
     "advanced_error_weak_secret": "Der Sitzungsschlüssel muss mindestens 32 Zeichen lang sein und darf keine Leerzeichen enthalten. Ein leerer oder kurzer Schlüssel würde die Konsole beim nächsten Neustart anhalten.",
+    "advanced_error_host_only_key": "Diese Änderung würde einen Schlüssel ändern, der nur auf dem Server selbst gesetzt wird: die Release-Schlüssel und Signaturschalter, den Build-Befehl und die Geheimnisse (UPDATE_MANIFEST_PUBLIC_KEY, SESSION_SECRET und andere). Ändern Sie diese in der Datei auf dem Server.",
     "advanced_file_console-env": "Konsolenumgebung (.env)",
     "advanced_file_console-env-local": "Konsolen-Überschreibungen (.env.local)",
     "advanced_file_go-blocklist": "Sperrliste des Servers (blocklist.txt)",

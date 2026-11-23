@@ -60,6 +60,7 @@ var (
 	ErrNotWritable    = errors.New("not_writable")
 	ErrInvalidBackup  = errors.New("invalid_backup")
 	ErrWeakSecret     = errors.New("weak_secret")
+	ErrHostOnlyKey    = errors.New("host_only_key")
 )
 
 // Options are the settings of a Service.
@@ -88,8 +89,8 @@ type Options struct {
 // concurrent use; one write or restore runs at a time.
 type Service struct {
 	// noContentChecks lets a write through that the content checks of
-	// L399 refuse: the replay of the old console's vectors, which saved
-	// such content, turns it on to check the rest of their steps.
+	// L399 and L410 refuse: the replay of the old console's vectors, which
+	// saved such content, turns it on to check the rest of their steps.
 	noContentChecks bool
 	opts            Options
 	// writable is fs.access(path, W_OK); tests replace it, because a test
@@ -152,6 +153,24 @@ var catalog = []definition{
 		path: func(s *Service) string { return filepath.Join(s.opts.ConsoleDir, "..", "docker", "supervisord.conf") }},
 	{id: "docker-compose", category: "console", requiresRestart: "console",
 		path: func(s *Service) string { return filepath.Join(s.opts.ConsoleDir, "..", "docker-compose.yml") }},
+}
+
+// changesHostOnlyKeys reports whether saving text over the env file at
+// path would add, change or remove a key that is set on the host only
+// (managedconfig.HostOnlyKeys). A file that cannot be read counts as
+// empty.
+func changesHostOnlyKeys(path, text string) bool {
+	old, _ := os.ReadFile(resolve(path))
+	before, after := managedconfig.HostOnlyValues(string(old)), managedconfig.HostOnlyValues(text)
+	if len(before) != len(after) {
+		return true
+	}
+	for key, value := range before {
+		if got, ok := after[key]; !ok || got != value {
+			return true
+		}
+	}
+	return false
 }
 
 // MinSecretLength is the shortest session secret the editor saves.
@@ -401,6 +420,12 @@ func (s *Service) WriteFile(id string, content any) (*Written, error) {
 		}
 		if def.id == "console-session-secret" && !strongSecret(text) {
 			return nil, ErrWeakSecret
+		}
+	}
+	// The keys set on the host only stay as the env file has them (L410)
+	if !s.noContentChecks && (def.id == "console-env" || def.id == "console-env-local") {
+		if changesHostOnlyKeys(def.path(s), text) {
+			return nil, ErrHostOnlyKey
 		}
 	}
 

@@ -293,3 +293,22 @@ func TestApplyKeepsTheFiveNewestBackups(t *testing.T) {
 		t.Errorf("restore the last write's backup: %v", err)
 	}
 }
+
+// TestHostOnlyKeysAreNotWrittenFromTheConsole: the keys that decide which
+// releases and code the server trusts, and the secrets, are not written
+// through the console's management API, though the template lists them: a
+// hijacked admin session could otherwise add its own release key (L410).
+// The other keys still are.
+func TestHostOnlyKeysAreNotWrittenFromTheConsole(t *testing.T) {
+	c := New(Options{})
+	for _, key := range []string{"UPDATE_MANIFEST_PUBLIC_KEY", "UPDATE_REQUIRE_SIGNED_MANIFEST", "NEODESK_SUPPORT_RELEASE_PUBLIC_KEY",
+		"NEODESK_CUSTOM_CLIENT_SIGNING_SEED", "NEODESK_CLIENT_BUILD_COMMAND", "SESSION_SECRET", "PANEL_TRUST_SECRET",
+		"ORG_PEER_VAULT_KEY", "REMOTE_TARGET_VAULT_KEY", "UPDATE_GITHUB_TOKEN", "NEODESK_GITHUB_TOKEN"} {
+		if _, msg := validate(c, changes(key, "x")); msg == "" {
+			t.Errorf("%s is written from the console", key)
+		}
+	}
+	if _, msg := validate(c, changes("LOG_LEVEL", "debug")); msg != "" {
+		t.Errorf("LOG_LEVEL: %s", msg)
+	}
+}

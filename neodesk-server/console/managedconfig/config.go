@@ -136,6 +136,35 @@ func resolve(p string) string {
 	return abs
 }
 
+// HostOnlyKeys are the keys of the template the console never writes:
+// the ones that decide which releases and code the server trusts or runs,
+// and the secrets that sign sessions or unlock what the server keeps. They
+// are set on the server's host. Through the console a hijacked admin
+// session could add its own release key and have the updater trust a
+// binary it signed (L410).
+var HostOnlyKeys = setOf(
+	"UPDATE_MANIFEST_PUBLIC_KEY", "UPDATE_REQUIRE_SIGNED_MANIFEST", "NEODESK_SUPPORT_RELEASE_PUBLIC_KEY",
+	"NEODESK_CUSTOM_CLIENT_SIGNING_SEED", "NEODESK_CLIENT_BUILD_COMMAND",
+	"SESSION_SECRET", "PANEL_TRUST_SECRET", "ORG_PEER_VAULT_KEY", "REMOTE_TARGET_VAULT_KEY",
+	"UPDATE_GITHUB_TOKEN", "NEODESK_GITHUB_TOKEN",
+)
+
+// HostOnlyValues are the values an env file's text gives the host-only
+// keys, the last line of a key winning; a line may start with "export".
+func HostOnlyValues(text string) map[string]string {
+	values := map[string]string{}
+	for _, line := range splitLines(text) {
+		trimmed := strings.TrimLeftFunc(line, jsbind.IsSpace)
+		if rest, ok := strings.CutPrefix(trimmed, "export"); ok && rest != "" && jsbind.IsSpace(rune(rest[0])) {
+			trimmed = rest
+		}
+		if key, value, ok := envLine(trimmed); ok && HostOnlyKeys[key] {
+			values[key] = strings.TrimSpace(value)
+		}
+	}
+	return values
+}
+
 // AllowedKeys lists the allowlist, sorted.
 func (c *Config) AllowedKeys() []string {
 	keys := make([]string, 0, len(c.allowed))
@@ -227,6 +256,9 @@ func (c *Config) Validate(changes []Change, isObject bool) ([]Setting, error) {
 				name = "(empty)"
 			}
 			return nil, invalid("Environment key is not allowlisted: %s", name)
+		}
+		if HostOnlyKeys[change.Key] {
+			return nil, invalid("%s is set on the server's host only, not in the console", change.Key)
 		}
 		value, err := c.validateValue(change.Key, change.Value)
 		if err != nil {

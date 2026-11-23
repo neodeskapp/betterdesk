@@ -440,8 +440,15 @@ func TestManagementConfig(t *testing.T) {
 			t.Errorf("%s: %d %s", body, res.Status, res.Body)
 		}
 	}
-	dry := admin.Do("PUT", "/api/settings/management/config", `{"changes":{"SESSION_SECRET":"x","PORT":5001},"dryRun":"true"}`)
-	if !strings.HasPrefix(dry.Body, `{"success":true,"data":{"dryRun":true,"changes":{"SESSION_SECRET":"********","PORT":"5001"},"capabilities":{`) {
+	// The secrets and the release keys are set on the host only (L410)
+	for _, key := range []string{"SESSION_SECRET", "UPDATE_MANIFEST_PUBLIC_KEY", "UPDATE_REQUIRE_SIGNED_MANIFEST"} {
+		refused := admin.Do("PUT", "/api/settings/management/config", `{"changes":{"`+key+`":"x","PORT":5001},"dryRun":"true"}`)
+		if want := `{"success":false,"error":"` + key + ` is set on the server's host only, not in the console"}`; refused.Status != 400 || refused.Body != want {
+			t.Errorf("%s: %d %s, want 400 %s", key, refused.Status, refused.Body, want)
+		}
+	}
+	dry := admin.Do("PUT", "/api/settings/management/config", `{"changes":{"SMTP_PASS":"x","PORT":5001},"dryRun":"true"}`)
+	if !strings.HasPrefix(dry.Body, `{"success":true,"data":{"dryRun":true,"changes":{"SMTP_PASS":"********","PORT":"5001"},"capabilities":{`) {
 		t.Errorf("dry run %s", dry.Body)
 	}
 	if text, _ := os.ReadFile(env); !strings.Contains(string(text), "PORT=5000") {

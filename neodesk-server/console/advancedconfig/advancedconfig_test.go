@@ -475,3 +475,34 @@ func TestNoFileIsSavedThatStopsTheServer(t *testing.T) {
 		t.Errorf("a blocklist with a NUL byte: %v, want ErrBinary", err)
 	}
 }
+
+// TestTheEnvEditorKeepsHostOnlyKeys: the Console environment editor saves
+// no change of a key that is set on the host only (L410), and still saves
+// the other keys.
+func TestTheEnvEditorKeepsHostOnlyKeys(t *testing.T) {
+	s, root := testService(t, nil)
+	env := filepath.Join(root, "web-nodejs", ".env")
+	if err := os.MkdirAll(filepath.Dir(env), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	const before = "PORT=5000\nUPDATE_MANIFEST_PUBLIC_KEY=trusted\n"
+	if err := os.WriteFile(env, []byte(before), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, content := range []string{
+		"PORT=5000\nUPDATE_MANIFEST_PUBLIC_KEY=attackers-key\n",
+		"PORT=5000\nUPDATE_MANIFEST_PUBLIC_KEY=trusted,attackers-key\n",
+		"PORT=5000\n",
+		"PORT=5000\nUPDATE_MANIFEST_PUBLIC_KEY=trusted\nexport UPDATE_REQUIRE_SIGNED_MANIFEST=false\n",
+	} {
+		if _, err := s.WriteFile("console-env", content); !errors.Is(err, ErrHostOnlyKey) {
+			t.Errorf("%q: %v, want ErrHostOnlyKey", content, err)
+		}
+	}
+	if got, _ := os.ReadFile(env); string(got) != before {
+		t.Errorf("the file holds %q after refused saves", got)
+	}
+	if _, err := s.WriteFile("console-env", "PORT=5001\nUPDATE_MANIFEST_PUBLIC_KEY=trusted\n"); err != nil {
+		t.Errorf("a change of PORT: %v", err)
+	}
+}
