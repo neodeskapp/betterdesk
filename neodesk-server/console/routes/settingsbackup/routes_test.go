@@ -547,3 +547,34 @@ func TestNoNetworkShareLogin(t *testing.T) {
 		t.Errorf("stored shares: %d %v", n, err)
 	}
 }
+
+// TestFullBackupIsForSuperAdmins: a full backup holds every secret of the
+// server: the database with the token signing secret, the password hashes
+// and the API keys, the key pair and the API key file. Downloading one,
+// restoring one or sending one to a destination is for the roles that
+// already hold every permission; a server admin with server.config would
+// otherwise read its way to a super admin's token (L387).
+func TestFullBackupIsForSuperAdmins(t *testing.T) {
+	w := newWorld(t, nil, nil)
+	serverAdmin := w.As("server_admin")
+	const refusal = `{"success":false,"error":"Only a super admin can download, restore or send a full backup: it holds every secret of the server"}`
+	for _, r := range []struct{ method, path, body string }{
+		{"GET", "/api/settings/backup", ""},
+		{"POST", "/api/settings/restore", `{}`},
+		{"PUT", "/api/settings/backup/schedule", `{"enabled":true}`},
+		{"POST", "/api/settings/backup/schedule/run", `{}`},
+		{"POST", "/api/settings/backup/destination/test", `{}`},
+	} {
+		if res := serverAdmin.Do(r.method, r.path, r.body); res.Status != http.StatusForbidden || res.Body != refusal {
+			t.Errorf("%s %s as server_admin: %d %s", r.method, r.path, res.Status, shown(res))
+		}
+	}
+	if res := serverAdmin.Do("GET", "/api/settings/backup/schedule", ""); res.Status != http.StatusOK {
+		t.Errorf("server_admin reads the schedule: %d", res.Status)
+	}
+	for _, role := range []string{"super_admin", "admin"} {
+		if res := w.As(role).Do("GET", "/api/settings/backup", ""); res.Status != http.StatusOK {
+			t.Errorf("%s downloads a backup: %d %s", role, res.Status, shown(res))
+		}
+	}
+}

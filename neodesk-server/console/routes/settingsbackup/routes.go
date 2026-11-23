@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
@@ -149,15 +150,30 @@ func register(d *kit.Deps, backups *backup.Service, scheduled *scheduledbackup.S
 	auth, config := d.RequireAuth, d.RequirePermission("server.config")
 	r := d.Router
 	r.Get("/api/settings/backup/stats", h.stats, auth, config)
-	r.Get("/api/settings/backup", h.download, auth, config)
+	r.Get("/api/settings/backup", h.download, auth, config, onlySuperAdmins)
 	r.Get("/api/settings/backup/schedule", h.schedule, auth, config)
 	r.Get("/api/settings/backup/schedule/status", h.scheduleStatus, auth, config)
-	r.Put("/api/settings/backup/schedule", h.saveSchedule, auth, config)
-	r.Post("/api/settings/backup/schedule/run", h.runSchedule, auth, config)
-	r.Post("/api/settings/backup/destination/test", h.testDestination, auth, config)
-	r.Post("/api/settings/restore", h.restore, auth, config)
+	r.Put("/api/settings/backup/schedule", h.saveSchedule, auth, config, onlySuperAdmins)
+	r.Post("/api/settings/backup/schedule/run", h.runSchedule, auth, config, onlySuperAdmins)
+	r.Post("/api/settings/backup/destination/test", h.testDestination, auth, config, onlySuperAdmins)
+	r.Post("/api/settings/restore", h.restore, auth, config, onlySuperAdmins)
 	r.Get("/api/settings/backup/retention", h.retention, auth, config)
 	r.Put("/api/settings/backup/retention", h.saveRetention, auth, config)
+}
+
+// onlySuperAdmins lets through the roles that hold every permission. A
+// full backup holds every secret of the server (the database with the
+// token signing secret, password hashes and API keys, the key pair, the
+// API key file): downloading, restoring or sending one elsewhere would
+// lift a server admin with server.config above its role (L387).
+func onlySuperAdmins(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !access.IsSuperAdminRole(kit.Access(r).Role) {
+			kit.Fail(w, r, http.StatusForbidden, "Only a super admin can download, restore or send a full backup: it holds every secret of the server")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // body is req.body || {} in the values of package branding.
