@@ -524,11 +524,12 @@ func TestOnlyKnownParametersGoOn(t *testing.T) {
 		return jsonAnswer(200, `{"relay_id":"r1"}`)
 	})
 	for _, c := range []struct{ target, status, sent string }{
-		{"GET /api/mesh/download.msh?name=n&evil=1&mesh_id=m&mesh_server=s", "200", "GET /mesh/download.msh?name=n&mesh_id=m&mesh_server=s"},
+		// mesh_server in the link is never taken: the console's address goes on (L383)
+		{"GET /api/mesh/download.msh?name=n&evil=1&mesh_id=m&mesh_server=s", "200", "GET /mesh/download.msh?name=n&mesh_id=m&mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
 		{"GET /api/mesh/download.msh?name=a&name=b", "400 name", ""},
 		{"GET /api/mesh/download.msh?name[]=a", "400 name", ""},
 		{"GET /api/mesh/download.msh?mesh_id[x]=1", "400 mesh_id", ""},
-		{"GET /api/mesh/download.msh?mesh_server[toString]=x", "400 mesh_server", ""},
+		{"GET /api/mesh/download.msh?mesh_server[toString]=x", "200", "GET /mesh/download.msh?mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
 		{"GET /api/mesh/download.msh?other[]=1&name=n", "200", "GET /mesh/download.msh?name=n&mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
 		{"GET /api/mesh/share/validate?token=t&peer_id=p&relay_base=x", "200", "GET /mesh/share/validate?token=t&peer_id=p"},
 		{"GET /api/mesh/share/validate?token[]=abc", "400 token", ""},
