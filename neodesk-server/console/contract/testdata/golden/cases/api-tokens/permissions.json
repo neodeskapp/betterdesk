@@ -114,6 +114,8 @@
     "json": {
      "data": {
       "all": [
+       "agent.files",
+       "agent.terminal",
        "audit.view",
        "billing.export",
        "billing.manage",
@@ -190,6 +192,8 @@
        "mesh.terminal",
        "mesh.files",
        "mesh.power",
+       "agent.terminal",
+       "agent.files",
        "enrollment.manage",
        "enrollment.approve",
        "chat.access",
@@ -237,6 +241,8 @@
     "json": {
      "data": {
       "all": [
+       "agent.files",
+       "agent.terminal",
        "audit.view",
        "billing.export",
        "billing.manage",
@@ -334,6 +340,8 @@
     "json": {
      "data": {
       "all": [
+       "agent.files",
+       "agent.terminal",
        "audit.view",
        "billing.export",
        "billing.manage",
@@ -414,6 +422,8 @@
        "mesh.terminal",
        "mesh.files",
        "mesh.power",
+       "agent.terminal",
+       "agent.files",
        "enrollment.manage",
        "enrollment.approve",
        "chat.access",
