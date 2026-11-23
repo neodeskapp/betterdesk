@@ -61,6 +61,38 @@ func isSessionAccount(r *http.Request, id int64) bool {
 // errRoleAboveOwn is the reply to a role the caller may not give.
 var errRoleAboveOwn = say(http.StatusForbidden, "Cannot assign a role higher than your own")
 
+// errOwnAccess is the reply to an account that changes what it may reach.
+var errOwnAccess = say(http.StatusForbidden, "You cannot change your own device access")
+
+// accessFields are the members of an account change that decide what the
+// account may reach: its user groups, Direct devices, Folder access and
+// strategy.
+var accessFields = []string{"groupGuids", "folderIds", "peerIds", "strategyGuid"}
+
+// ownAccessUnchanged refuses a change of the caller's own access fields
+// unless the caller could change the account as someone else's: an
+// account may change its own password and email, but no account widens
+// what it may reach (L390).
+func (h *handlers) ownAccessUnchanged(r *http.Request, user *account, body middleware.JSONObject) error {
+	if !isSessionAccount(r, user.ID.V) {
+		return nil
+	}
+	for _, field := range accessFields {
+		if !body.Has(field) {
+			continue
+		}
+		ok, err := h.canAssignRole(r, user.role())
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return errOwnAccess
+		}
+		return nil
+	}
+	return nil
+}
+
 // refusedOr is err when a role check failed, else errRoleAboveOwn.
 func refusedOr(err error) error {
 	if err != nil {
@@ -420,6 +452,9 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	}
 	if ok, err := h.mayChange(r, user); err != nil || !ok {
 		return nil, refusedOr(err)
+	}
+	if err := h.ownAccessUnchanged(r, user, body); err != nil {
+		return nil, err
 	}
 	provider, err := providerOf(user)
 	if err != nil {

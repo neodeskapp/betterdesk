@@ -610,6 +610,18 @@ func (s *Server) handlePanelUserGrantsPut(w http.ResponseWriter, r *http.Request
 	if !ok {
 		return
 	}
+	// The grants decide which devices the account reaches: only an account
+	// that may give the account's role changes them, its own included, so
+	// no account widens its own access (L390)
+	target, err := s.db.GetUserByID(id)
+	if err != nil || target == nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
+		return
+	}
+	if !s.mayGiveRole(r, target.Role) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot change the device access of this account"})
+		return
+	}
 	var body struct {
 		Peers []string `json:"peers"`
 	}

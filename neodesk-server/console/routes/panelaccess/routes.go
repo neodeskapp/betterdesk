@@ -162,6 +162,22 @@ func submitted(r *http.Request) (sections, features any, err error) {
 // with the users routes' answer.
 var errNotYours = &access.StatusError{Status: http.StatusForbidden, Message: "Cannot assign a role higher than your own"}
 
+// refusal is err when a role check failed, else errNotYours.
+func refusal(err error) error {
+	if err != nil {
+		return err
+	}
+	return errNotYours
+}
+
+// widenedOr is err when the check failed, else errWidensOwn.
+func widenedOr(err error) error {
+	if err != nil {
+		return err
+	}
+	return errWidensOwn
+}
+
 // keepsOwnWrite reports whether the caller keeps write access to Users,
 // where panel access is saved, once the subject's section rows are
 // replaced by sections. It answers 400 with the reason, or the error,
@@ -182,14 +198,34 @@ func (h *handlers) keepsOwnWrite(w http.ResponseWriter, r *http.Request, subject
 	return keeps
 }
 
-// mayChange reports whether the caller may change the account
-// (access.MayChangeAccount).
-func mayChange(r *http.Request, target access.PolicyUser) bool {
+// mayChange reports whether the caller may change the account's panel
+// access: an account whose role the caller may give
+// (access.Service.MayGiveRole), the rule of the users routes. The caller's
+// own account is the caller's: own reports it, and the save then goes on
+// only when it keeps or lowers the caller's own access (ownSaveWidens).
+func (h *handlers) mayChange(r *http.Request, target access.PolicyUser) (ok, own bool, err error) {
 	role := ""
 	if user := kit.User(r); user != nil {
 		role = user.Role
 	}
-	return access.MayChangeAccount(kit.UserID(r), role, target)
+	if ok, err = h.d.Access.MayGiveRole(r.Context(), role, target.Role); err != nil || ok {
+		return ok, false, err
+	}
+	return false, kit.UserID(r) != 0 && kit.UserID(r) == target.ID, nil
+}
+
+// errWidensOwn refuses a save that would give the caller more than it has.
+var errWidensOwn = &access.StatusError{Status: http.StatusForbidden, Message: "You cannot widen your own panel access"}
+
+// ownSaveWidens reports whether a save of the subject's rows would give
+// the caller, an account that may not give its own role, more panel
+// access or client features than it has (L390).
+func (h *handlers) ownSaveWidens(r *http.Request, subjectType, subjectID string, sections, features any) (bool, error) {
+	user := kit.User(r)
+	if user == nil {
+		return true, nil
+	}
+	return h.d.Access.WidensOwn(r.Context(), access.PolicyUser{ID: kit.UserID(r), Role: user.Role}, subjectType, subjectID, sections, features)
 }
 
 // saveUser answers PUT /api/panel/access/users/{id} with the body
@@ -202,8 +238,9 @@ func (h *handlers) saveUser(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if !mayChange(r, *user) {
-		h.fail(w, r, errNotYours)
+	may, own, err := h.mayChange(r, *user)
+	if err != nil || !may && !own {
+		h.fail(w, r, refusal(err))
 		return
 	}
 	subject := jsreq.String(float64(user.ID))
@@ -211,6 +248,12 @@ func (h *handlers) saveUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.fail(w, r, err)
 		return
+	}
+	if own {
+		if widens, err := h.ownSaveWidens(r, access.SubjectUser, subject, sections, features); err != nil || widens {
+			h.fail(w, r, widenedOr(err))
+			return
+		}
 	}
 	if !h.keepsOwnWrite(w, r, access.SubjectUser, subject, sections) {
 		return
@@ -288,17 +331,26 @@ func (h *handlers) saveGroup(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, r, err)
 		return
 	}
-	for _, member := range members {
-		if !mayChange(r, member) {
-			h.fail(w, r, errNotYours)
+	member := false
+	for _, m := range members {
+		may, own, err := h.mayChange(r, m)
+		if err != nil || !may && !own {
+			h.fail(w, r, refusal(err))
 			return
 		}
+		member = member || own
 	}
 	guid := r.PathValue("guid")
 	sections, features, err := submitted(r)
 	if err != nil {
 		h.fail(w, r, err)
 		return
+	}
+	if member {
+		if widens, err := h.ownSaveWidens(r, access.SubjectGroup, guid, sections, features); err != nil || widens {
+			h.fail(w, r, widenedOr(err))
+			return
+		}
 	}
 	if !h.keepsOwnWrite(w, r, access.SubjectGroup, guid, sections) {
 		return

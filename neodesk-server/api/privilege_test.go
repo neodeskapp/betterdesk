@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -232,5 +233,40 @@ func TestAPIKeyRoleIsWhatItWas(t *testing.T) {
 	var peers any
 	if err := json.Unmarshal([]byte(body), &peers); err != nil {
 		t.Fatalf("device list is no JSON: %v", err)
+	}
+}
+
+// TestNoAccountWidensItsOwnAccessOnTheAPIPort: the API port's device
+// grants of an account change only for an account whose role the caller
+// may give, its own included: a viewer given user.edit grants itself no
+// device, and global_admin changes no super admin's grants (L390).
+func TestNoAccountWidensItsOwnAccessOnTheAPIPort(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	for _, p := range []string{auth.PermUserView, auth.PermUserEdit} {
+		if err := database.SetRolePermission(auth.RoleViewer, p, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+	people := signedIn(t, srv, database)
+	viewer, err := database.GetUser("person_" + auth.RoleViewer)
+	if err != nil || viewer == nil {
+		t.Fatal(err)
+	}
+	root, err := database.GetUser("person_" + auth.RoleSuperAdmin)
+	if err != nil || root == nil {
+		t.Fatal(err)
+	}
+	grants := func(id int64) string { return fmt.Sprintf("/api/panel/users/%d/grants", id) }
+	if status, body := listenerCall(t, srv, http.MethodPut, grants(viewer.ID), `{"peers":["PEERAAA1","PEERBBB2"]}`, people[auth.RoleViewer]); status != http.StatusForbidden {
+		t.Errorf("a viewer grants itself devices: %d %s, want 403", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodPut, grants(root.ID), `{"peers":["PEERAAA1"]}`, people[auth.RoleGlobalAdmin]); status != http.StatusForbidden {
+		t.Errorf("global_admin changes a super admin's grants: %d %s, want 403", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodGet, grants(viewer.ID), "", people[auth.RoleSuperAdmin]); status != http.StatusOK || !strings.Contains(body, `"total":0`) {
+		t.Errorf("the viewer's grants: %d %s, want none", status, body)
+	}
+	if status, body := listenerCall(t, srv, http.MethodPut, grants(viewer.ID), `{"peers":["PEERAAA1"]}`, people[auth.RoleGlobalAdmin]); status != http.StatusOK {
+		t.Errorf("global_admin grants a viewer a device: %d %s, want 200", status, body)
 	}
 }
