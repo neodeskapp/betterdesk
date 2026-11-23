@@ -1,0 +1,306 @@
+{
+ "id": "api-tokens/create",
+ "request": {
+  "method": "POST",
+  "path": "/api/panel/api-tokens",
+  "body": {
+   "allow_list": [],
+   "expires_in_days": 1,
+   "name": "Contract token",
+   "permissions": [
+    "audit.view"
+   ]
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.api_token.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.api_token.expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.api_token.hint",
+     "pattern": "^[9aA+/_=-]{17}…$"
+    },
+    {
+     "path": "data.api_token.id",
+     "pattern": "^[9aA+/_=-]{12}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "api_token": {
+       "allow_list": [],
+       "created_at": "<volatile>",
+       "expires_at": "<volatile>",
+       "hint": "<volatile>",
+       "id": "<volatile>",
+       "last_used_at": null,
+       "last_used_ip": null,
+       "name": "Contract token",
+       "permissions": [
+        "audit.view"
+       ],
+       "read_only": true,
+       "revoked_at": null,
+       "revoked_by": null,
+       "state": "active",
+       "user_id": 8,
+       "username": "e2e_global_admin"
+      },
+      "token": "{secret:api_token}"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.api_token.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.api_token.expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.api_token.hint",
+     "pattern": "^[9aA+/_=-]{17}…$"
+    },
+    {
+     "path": "data.api_token.id",
+     "pattern": "^[9aA+/_=-]{12}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "api_token": {
+       "allow_list": [],
+       "created_at": "<volatile>",
+       "expires_at": "<volatile>",
+       "hint": "<volatile>",
+       "id": "<volatile>",
+       "last_used_at": null,
+       "last_used_ip": null,
+       "name": "Contract token",
+       "permissions": [
+        "audit.view"
+       ],
+       "read_only": true,
+       "revoked_at": null,
+       "revoked_by": null,
+       "state": "active",
+       "user_id": 7,
+       "username": "e2e_server_admin"
+      },
+      "token": "{secret:api_token}"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.api_token.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.api_token.expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.api_token.hint",
+     "pattern": "^[9aA+/_=-]{17}…$"
+    },
+    {
+     "path": "data.api_token.id",
+     "pattern": "^[9aA+/_=-]{12}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "api_token": {
+       "allow_list": [],
+       "created_at": "<volatile>",
+       "expires_at": "<volatile>",
+       "hint": "<volatile>",
+       "id": "<volatile>",
+       "last_used_at": null,
+       "last_used_ip": null,
+       "name": "Contract token",
+       "permissions": [
+        "audit.view"
+       ],
+       "read_only": true,
+       "revoked_at": null,
+       "revoked_by": null,
+       "state": "active",
+       "user_id": 6,
+       "username": "e2e_super_admin"
+      },
+      "token": "{secret:api_token}"
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.api_token.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.api_token.expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.api_token.hint",
+     "pattern": "^[9aA+/_=-]{17}…$"
+    },
+    {
+     "path": "data.api_token.id",
+     "pattern": "^[9aA+/_=-]{12}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "api_token": {
+       "allow_list": [],
+       "created_at": "<volatile>",
+       "expires_at": "<volatile>",
+       "hint": "<volatile>",
+       "id": "<volatile>",
+       "last_used_at": null,
+       "last_used_ip": null,
+       "name": "Contract token",
+       "permissions": [
+        "audit.view"
+       ],
+       "read_only": true,
+       "revoked_at": null,
+       "revoked_by": null,
+       "state": "active",
+       "user_id": 5,
+       "username": "e2e_admin"
+      },
+      "token": "{secret:api_token}"
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,330 @@
+{
+ "id": "api-tokens/list-one",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/api-tokens"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.tokens[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[*].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[*].hint",
+     "pattern": "^[9aA+/_=-]{17}…$"
+    },
+    {
+     "path": "data.tokens[*].id",
+     "pattern": "^[9aA+/_=-]{12}$"
+    },
+    {
+     "path": "data.tokens[*].last_used_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "tokens": [
+       {
+        "allow_list": [],
+        "created_at": "<volatile>",
+        "expires_at": "<volatile>",
+        "hint": "<volatile>",
+        "id": "<volatile>",
+        "last_used_at": "<volatile>",
+        "last_used_ip": "<client-ip>",
+        "name": "Contract token",
+        "permissions": [
+         "audit.view"
+        ],
+        "read_only": true,
+        "revoked_at": null,
+        "revoked_by": null,
+        "state": "active",
+        "user_id": 8,
+        "username": "e2e_global_admin"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.tokens[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[*].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[*].hint",
+     "pattern": "^[9aA+/_=-]{17}…$"
+    },
+    {
+     "path": "data.tokens[*].id",
+     "pattern": "^[9aA+/_=-]{12}$"
+    },
+    {
+     "path": "data.tokens[*].last_used_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "tokens": [
+       {
+        "allow_list": [],
+        "created_at": "<volatile>",
+        "expires_at": "<volatile>",
+        "hint": "<volatile>",
+        "id": "<volatile>",
+        "last_used_at": "<volatile>",
+        "last_used_ip": "<client-ip>",
+        "name": "Contract token",
+        "permissions": [
+         "audit.view"
+        ],
+        "read_only": true,
+        "revoked_at": null,
+        "revoked_by": null,
+        "state": "active",
+        "user_id": 7,
+        "username": "e2e_server_admin"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.tokens[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[*].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[*].hint",
+     "pattern": "^[9aA+/_=-]{17}…$"
+    },
+    {
+     "path": "data.tokens[*].id",
+     "pattern": "^[9aA+/_=-]{12}$"
+    },
+    {
+     "path": "data.tokens[*].last_used_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "tokens": [
+       {
+        "allow_list": [],
+        "created_at": "<volatile>",
+        "expires_at": "<volatile>",
+        "hint": "<volatile>",
+        "id": "<volatile>",
+        "last_used_at": "<volatile>",
+        "last_used_ip": "<client-ip>",
+        "name": "Contract token",
+        "permissions": [
+         "audit.view"
+        ],
+        "read_only": true,
+        "revoked_at": null,
+        "revoked_by": null,
+        "state": "active",
+        "user_id": 6,
+        "username": "e2e_super_admin"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.tokens[*].created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[*].expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.tokens[*].hint",
+     "pattern": "^[9aA+/_=-]{17}…$"
+    },
+    {
+     "path": "data.tokens[*].id",
+     "pattern": "^[9aA+/_=-]{12}$"
+    },
+    {
+     "path": "data.tokens[*].last_used_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "tokens": [
+       {
+        "allow_list": [],
+        "created_at": "<volatile>",
+        "expires_at": "<volatile>",
+        "hint": "<volatile>",
+        "id": "<volatile>",
+        "last_used_at": "<volatile>",
+        "last_used_ip": "<client-ip>",
+        "name": "Contract token",
+        "permissions": [
+         "audit.view"
+        ],
+        "read_only": true,
+        "revoked_at": null,
+        "revoked_by": null,
+        "state": "active",
+        "user_id": 5,
+        "username": "e2e_admin"
+       }
+      ]
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}
