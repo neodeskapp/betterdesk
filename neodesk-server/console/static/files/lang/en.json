@@ -5147,7 +5147,7 @@
         "logo_url_invalid": "Enter a web address that starts with https:// or http://, or leave it empty.",
         "delete_org": "Delete organization",
         "delete_org_button": "Delete organization…",
-        "delete_confirm_named": "Delete {name}? Accounts created only for this organization are deleted, server accounts stay. Its devices stay on the server but are no longer assigned to it. Invitations, settings, the shared address book and preset passwords are deleted. This cannot be undone.",
+        "delete_confirm_named": "Delete {name}? Accounts created only for this organization are deleted, server accounts stay. Its devices stay on the server but are no longer assigned to it. Its device group stays with its members and billing packages. Invitations, settings, the shared address book and preset passwords are deleted. This cannot be undone.",
         "delete_org_desc": "Deletes its own accounts, invitations, settings, shared address book and preset passwords. Devices and server accounts stay.",
         "delete_failed": "Could not delete the organization.",
         "detail_description": "Who belongs to this organization, which devices it has, its shared address book and settings.",

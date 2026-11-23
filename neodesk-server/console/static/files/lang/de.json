@@ -4952,7 +4952,7 @@
     "logo_url_invalid": "Geben Sie eine Webadresse ein, die mit https:// oder http:// beginnt, oder lassen Sie das Feld leer.",
     "delete_org": "Organisation löschen",
     "delete_org_button": "Organisation löschen…",
-    "delete_confirm_named": "{name} löschen? Konten, die nur für diese Organisation angelegt wurden, werden gelöscht, Serverkonten bleiben. Ihre Geräte bleiben auf dem Server, sind ihr aber nicht mehr zugeordnet. Einladungen, Einstellungen, das gemeinsame Adressbuch und hinterlegte Passwörter werden gelöscht. Das lässt sich nicht rückgängig machen.",
+    "delete_confirm_named": "{name} löschen? Konten, die nur für diese Organisation angelegt wurden, werden gelöscht, Serverkonten bleiben. Ihre Geräte bleiben auf dem Server, sind ihr aber nicht mehr zugeordnet. Ihre Gerätegruppe bleibt mit ihren Mitgliedern und Abrechnungspaketen bestehen. Einladungen, Einstellungen, das gemeinsame Adressbuch und hinterlegte Passwörter werden gelöscht. Das lässt sich nicht rückgängig machen.",
     "delete_org_desc": "Löscht ihre eigenen Konten, Einladungen, Einstellungen, das gemeinsame Adressbuch und hinterlegte Passwörter. Geräte und Serverkonten bleiben.",
     "delete_failed": "Die Organisation konnte nicht gelöscht werden.",
     "detail_description": "Wer zu dieser Organisation gehört, welche Geräte sie hat, ihr gemeinsames Adressbuch und ihre Einstellungen.",

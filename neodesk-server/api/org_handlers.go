@@ -321,6 +321,9 @@ func (s *Server) handleDeleteOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !s.orgFound(w, id) {
+		return
+	}
 	if err := s.db.DeleteOrganization(id); err != nil {
 		log.Printf("[org] DeleteOrganization error: %v", err)
 		http.Error(w, `{"error":"failed to delete"}`, http.StatusInternalServerError)
