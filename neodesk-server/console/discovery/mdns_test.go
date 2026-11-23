@@ -369,7 +369,9 @@ func (h *harness) stop(t *testing.T, noTimer bool) {
 }
 
 // runUntilSent fires each timer Run asks for until it has sent as many
-// datagrams as the socket waits for.
+// datagrams as the socket waits for. A timer asked for after the last of
+// them is left for the test: Run asks for it right after that send, so
+// both cases of the select can be ready, and select picks one at random.
 func (h *harness) runUntilSent(t *testing.T) {
 	t.Helper()
 	for {
@@ -377,6 +379,12 @@ func (h *harness) runUntilSent(t *testing.T) {
 		case <-h.sock.enough:
 			return
 		case req := <-h.clock.requests:
+			select {
+			case <-h.sock.enough:
+				h.clock.requests <- req
+				return
+			default:
+			}
 			h.clock.mu.Lock()
 			h.clock.now += req.d
 			h.clock.mu.Unlock()
@@ -596,11 +604,24 @@ func TestMDNSSaysGoodbyeAtStop(t *testing.T) {
 	h.runUntilSent(t)
 	h.stop(t, false)
 	h.sock.mu.Lock()
-	sent := h.sock.sent
+	sent := append([]sentPacket(nil), h.sock.sent...)
 	h.sock.mu.Unlock()
-	if len(sent) != probeCount+2 || string(sent[len(sent)-1].bytes) != string(nodeGoodbye) {
-		t.Fatalf("%d datagrams, the last %x; want the goodbye %x after the first announcement", len(sent), sent[len(sent)-1].bytes, nodeGoodbye)
+	// The goodbye comes last, after the probe queries and the
+	// announcements: the first one, and any later one Run sent before the
+	// stop reached it, each as Node sent it
+	n := len(sent)
+	if n < probeCount+2 || string(sent[n-1].bytes) != string(nodeGoodbye) {
+		var last []byte
+		if n > 0 {
+			last = sent[n-1].bytes
+		}
+		t.Fatalf("%d datagrams, the last %x; want the goodbye %x after the first announcement", n, last, nodeGoodbye)
 	}
+	want := localized(t, nodeSends(s.Events), s.Hostname)
+	if n-1 > len(want) {
+		t.Fatalf("%d datagrams before the goodbye, Node sent %d", n-1, len(want))
+	}
+	compareSends(t, "before the goodbye", sent[:n-1], want[:n-1])
 
 	h = startHarness(settings, s.Random, 2)
 	h.clock.fire(t)
