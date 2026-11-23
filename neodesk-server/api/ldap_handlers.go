@@ -327,7 +327,7 @@ func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
 // POST /api/auth/ldap/verify
 func (s *Server) handleLDAPVerifyCredentials(w http.ResponseWriter, r *http.Request) {
 	clientIP := s.signInIP(r)
-	if s.loginLimiter != nil && !s.loginLimiter.Allow(clientIP) {
+	if s.signInBlocked(clientIP) {
 		writeJSON(w, http.StatusTooManyRequests, map[string]string{
 			"error": "Too many login attempts. Please try again later.",
 		})
@@ -347,14 +347,17 @@ func (s *Server) handleLDAPVerifyCredentials(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if s.loginLimiter != nil && !s.loginLimiter.Allow("user:"+strings.ToLower(body.Username)) {
+	userKey := "user:" + strings.ToLower(body.Username)
+	if s.signInBlocked(userKey) {
 		writeJSON(w, http.StatusTooManyRequests, map[string]string{
 			"error": "Too many login attempts. Please try again later.",
 		})
 		return
 	}
 
+	// Every check but one the directory accepts counts against the address
 	if s.ldapProvider == nil || !s.ldapProvider.IsEnabled() {
+		s.countFailedSignIn(clientIP, userKey)
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "LDAP is not enabled"})
 		return
 	}
@@ -368,11 +371,15 @@ func (s *Server) handleLDAPVerifyCredentials(w http.ResponseWriter, r *http.Requ
 	}
 	if err != nil {
 		log.Printf("[LDAP] Verify error for %s: %v", body.Username, err)
+		s.countFailedSignIn(clientIP, userKey)
 		writeJSON(w, http.StatusOK, map[string]any{"authenticated": false})
 		return
 	}
 
 	authenticated := result != nil && result.Authenticated
+	if !authenticated {
+		s.countFailedSignIn(clientIP, userKey)
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"authenticated": authenticated})
 }
 

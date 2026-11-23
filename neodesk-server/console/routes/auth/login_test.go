@@ -649,3 +649,21 @@ func TestSignInKeepsTheFormOfTheAccountID(t *testing.T) {
 		}
 	})
 }
+
+// When the server refuses a directory sign-in because of too many failed
+// ones from the address, the console says so instead of calling the right
+// password wrong, and it doesn't count it as a wrong password (L352).
+func TestDirectorySignInRefusedForTooManyAttempts(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		w.api.json("GET /api/auth/sso/status", 200, `{"ldap_enabled":true,"oidc_enabled":false,"any_enabled":true}`)
+		w.api.json("POST /api/auth/login", http.StatusTooManyRequests, `{"error":"Too many login attempts. Please try again later."}`)
+		w.addUser(user{name: "dora", provider: "ldap"})
+		want(t, "known account", w.agent().post("/api/auth/login", login("dora", password)), http.StatusTooManyRequests,
+			`{"success":false,"error":"Too many sign-in attempts. Please try again later."}`)
+		want(t, "new account", w.agent().post("/api/auth/login", login("erin", password), "Accept-Language", "de"), http.StatusTooManyRequests,
+			`{"success":false,"error":"Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut."}`)
+		if got := w.attempts(); len(got) != 0 {
+			t.Errorf("attempts: %v; a refusal of the server is no wrong password", got)
+		}
+	})
+}

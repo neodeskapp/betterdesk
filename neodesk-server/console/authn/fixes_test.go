@@ -42,6 +42,7 @@ var scenarioFixes = []scenarioFix{
 	{"RV1", signInTokensProveNoDevice},
 	{"RV128", tokensKeptAsTheirHash},
 	{"L351", stopAtOtherServerNames},
+	{"L352", stopAtServerSignInLimits},
 }
 
 // recordedLogins are the answers to /api/auth/login a step's stand-in of
@@ -99,6 +100,22 @@ func stopAtOtherServerNames(sc *scenarioVector) bool {
 		}
 		for _, answer := range recordedLogins(step) {
 			if name, ok := answer.Body["username"].(string); ok && name != "" && name != strings.ToLower(strings.TrimSpace(typed)) {
+				return true
+			}
+		}
+		return false
+	})
+}
+
+// stopAtServerSignInLimits: a directory sign-in the signal server refuses
+// with 429 is refused as too many attempts (L352); Node called the
+// password wrong. A recording ends before the first sign-in whose stand-in
+// answers 429; TestDirectorySignInRefusedForTooManyAttempts of the sign-in
+// routes holds the rule.
+func stopAtServerSignInLimits(sc *scenarioVector) bool {
+	return stopAtFirstSignIn(sc, func(step *stepVector) bool {
+		for _, answer := range recordedLogins(step) {
+			if answer.Status == 429 {
 				return true
 			}
 		}

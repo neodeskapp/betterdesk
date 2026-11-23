@@ -36,6 +36,11 @@ const FailureUsernameCollision = "username_collision"
 // for an account of the role "pro".
 const FailureProOnly = "pro_only"
 
+// FailureTooManyAttempts is the failure code of a sign-in the signal
+// server refused for too many failed sign-ins from the address, without
+// looking at the password.
+const FailureTooManyAttempts = "too_many_attempts"
+
 // FailureAccountDisabled is the failure code of a sign-in with the right
 // credentials for an account that is disabled.
 const FailureAccountDisabled = "account_disabled"
@@ -108,7 +113,8 @@ type Outcome struct {
 	// User is the account that signed in, nil when sign-in was refused.
 	User *User
 	// Failure is the code of a refusal that has its own answer:
-	// FailureUsernameCollision, FailureProOnly or FailureAccountDisabled.
+	// FailureUsernameCollision, FailureProOnly, FailureAccountDisabled or
+	// FailureTooManyAttempts.
 	// Empty otherwise.
 	Failure string
 }
@@ -152,6 +158,9 @@ type goAccept struct {
 	// timedOut says the directory did not answer before the sign-in's
 	// deadline: the server signed nobody in and made no account.
 	timedOut bool
+	// rateLimited says the server refused to check the credentials: too
+	// many failed sign-ins from the address.
+	rateLimited bool
 }
 
 // tryGoServerAuth asks the signal server to check the credentials. It
@@ -160,6 +169,9 @@ func (s *Service) tryGoServerAuth(ctx context.Context, username, password string
 	answer := s.goAPI.TryGoServerAuth(ctx, username, password)
 	if answer == nil {
 		return nil
+	}
+	if answer.Bool("rate_limited") {
+		return &goAccept{rateLimited: true}
 	}
 	accept := &goAccept{requires2FA: answer.Bool("requires2fa"), disabled: answer.Bool("account_disabled"), timedOut: answer.Bool("directory_timeout")}
 	if role, ok := answer.Get("role").(string); ok {
@@ -477,6 +489,10 @@ func (s *Service) Authenticate(ctx context.Context, username, password string) (
 			s.log.Info(fmt.Sprintf("[AUTH] Login failed: LDAP credentials rejected for '%s'", logName(username)))
 			return Outcome{}, nil
 		}
+		if accept.rateLimited {
+			s.log.Info(fmt.Sprintf("[AUTH] Login refused: too many failed sign-ins for '%s' at the server", logName(username)))
+			return Outcome{Failure: FailureTooManyAttempts}, nil
+		}
 		if accept.timedOut {
 			return s.directoryTimeout(username), nil
 		}
@@ -517,6 +533,11 @@ func (s *Service) authenticateLocal(ctx context.Context, user *Account, username
 
 	if !valid {
 		accept := s.tryGoServerAuth(ctx, username, password)
+		// The local password was wrong; a server that would not check it
+		// changes nothing about that
+		if accept != nil && accept.rateLimited {
+			accept = nil
+		}
 		if accept != nil && !accept.timedOut {
 			ctx = context.WithoutCancel(ctx)
 		}
@@ -562,6 +583,9 @@ func (s *Service) authenticateUnknown(ctx context.Context, username, password st
 	if s.set.AutoCreate || sso.any {
 		if accept := s.tryGoServerAuth(ctx, username, password); accept != nil && accept.timedOut {
 			return s.directoryTimeout(username), nil
+		} else if accept != nil && accept.rateLimited {
+			s.log.Info(fmt.Sprintf("[AUTH] Login refused: too many failed sign-ins for '%s' at the server", logName(username)))
+			return Outcome{Failure: FailureTooManyAttempts}, nil
 		} else if accept != nil && accept.disabled {
 			return Outcome{Failure: FailureAccountDisabled}, nil
 		} else if accept != nil {

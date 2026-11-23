@@ -464,7 +464,7 @@ func TestSignInAgainstAPIServer(t *testing.T) {
 	}
 	wantJSON(t, "GetGoSSOStatus", c.GetGoSSOStatus(ctx), `{"ldap":false,"oidc":false,"any":false}`)
 
-	// Call 1 of 5: a good sign-in.
+	// A good sign-in.
 	good := c.TryGoServerAuth(ctx, apitest.AdminUser, apitest.AdminPassword)
 	wantAt(t, "TryGoServerAuth", good, `"admin"`, "role")
 	// Call 2: a directory check, refused because there is no directory.
@@ -483,13 +483,18 @@ func TestSignInAgainstAPIServer(t *testing.T) {
 		t.Errorf("AuthenticateViaGo = %s, want a token", toJSON(t, full))
 	}
 
-	// The sixth call from the console's address is over the limit, also
-	// with the right password and for a name not tried before.
-	limited := c.AuthenticateViaGo(ctx, "user-six", "wrong")
-	wantAt(t, "AuthenticateViaGo over the limit", limited, `true`, "rateLimited")
-	if got := c.TryGoServerAuth(ctx, apitest.AdminUser, apitest.AdminPassword); got != nil {
-		t.Errorf("TryGoServerAuth over the limit = %s, want nil", toJSON(t, got))
+	// Only failed sign-ins count (L352): the two good ones did not, the
+	// directory check and the two wrong passwords did. Two more wrong ones
+	// make five, and then the address is over the limit, also with the
+	// right password and for a name not tried before.
+	for _, name := range []string{"user-six", "user-seven"} {
+		if got := c.AuthenticateViaGo(ctx, name, "wrong"); Dig(got, "rateLimited") == true {
+			t.Errorf("AuthenticateViaGo for %s under the limit = %s", name, toJSON(t, got))
+		}
 	}
+	limited := c.AuthenticateViaGo(ctx, "user-eight", "wrong")
+	wantAt(t, "AuthenticateViaGo over the limit", limited, `true`, "rateLimited")
+	wantJSON(t, "TryGoServerAuth over the limit", c.TryGoServerAuth(ctx, apitest.AdminUser, apitest.AdminPassword), `{"rate_limited":true}`)
 	limitedTOTP := c.VerifyTOTPViaGo(ctx, "partial", "123456")
 	wantAt(t, "VerifyTOTPViaGo over the limit", limitedTOTP, `true`, "rateLimited")
 }

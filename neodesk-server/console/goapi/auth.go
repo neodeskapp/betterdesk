@@ -187,8 +187,10 @@ func (c *Client) GetGoSSOStatus(ctx context.Context) *Object {
 // when it asks for a second factor (that answer names neither role nor
 // provider), {account_disabled:true} when the credentials are right and
 // the account is disabled, {directory_timeout:true} when the directory
-// did not answer in time, and nil for everything else: wrong credentials,
-// the sign-in limit (429) and a missing answer look the same.
+// did not answer in time, {rate_limited:true} when the server refused to
+// check the password after too many failed sign-ins from the address (429),
+// and nil for everything else: wrong credentials and a missing answer look
+// the same.
 func (c *Client) TryGoServerAuth(ctx context.Context, username, password string) *Object {
 	status, parsed, ok := c.signIn(ctx, "/api/auth/login",
 		NewObject("username", username, "password", password), c.signInWait)
@@ -197,6 +199,10 @@ func (c *Client) TryGoServerAuth(ctx context.Context, username, password string)
 	}
 	if ok && directoryTimedOut(status, parsed) {
 		return NewObject("directory_timeout", true)
+	}
+	// Too many failed sign-ins from the address: no verdict on the password
+	if ok && status == http.StatusTooManyRequests {
+		return NewObject("rate_limited", true)
 	}
 	if !ok || status != http.StatusOK || parsed == nil {
 		return nil

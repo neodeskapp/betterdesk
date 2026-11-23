@@ -253,6 +253,13 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The signal server would not check the password: too many failed
+	// sign-ins from the address. No verdict, so no attempt is recorded
+	if outcome.Failure == authn.FailureTooManyAttempts {
+		kit.Fail(w, r, http.StatusTooManyRequests, kit.T(r, "auth.too_many_attempts", nil))
+		return
+	}
+
 	if outcome.IsFailure() || outcome.User == nil {
 		h.recordAttempt(r, name, false)
 		details := "Username: " + jsString(username) + client

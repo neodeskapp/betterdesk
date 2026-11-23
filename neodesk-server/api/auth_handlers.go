@@ -409,9 +409,10 @@ func (s *Server) canReadDeviceOrg(r *http.Request, orgID string) bool {
 // If TOTP is enabled, returns a partial token requiring 2FA completion.
 // POST /api/auth/login
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
-	// Per-IP login rate limiting (S8)
+	// Per-IP login rate limiting (S8). Only failed sign-ins count: people
+	// behind one office address sign in all day (L352)
 	clientIP := s.signInIP(r)
-	if s.loginLimiter != nil && !s.loginLimiter.Allow(clientIP) {
+	if s.signInBlocked(clientIP) {
 		writeJSON(w, http.StatusTooManyRequests, map[string]string{
 			"error": "Too many login attempts. Please try again later.",
 		})
@@ -434,7 +435,8 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// SECURITY (audit fix H-03, 2026-04-10): per-username rate limiting in
 	// addition to per-IP. Defeats credential-stuffing from a rotating IP pool
 	// hammering a single high-value account (e.g. "admin").
-	if s.loginLimiter != nil && !s.loginLimiter.Allow("user:"+strings.ToLower(body.Username)) {
+	userKey := "user:" + strings.ToLower(body.Username)
+	if s.signInBlocked(userKey) {
 		writeJSON(w, http.StatusTooManyRequests, map[string]string{
 			"error": "Too many login attempts. Please try again later.",
 		})
@@ -450,9 +452,11 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeDirectoryTimeout(w)
 		return
 	case passwordLoginOIDC:
+		s.countFailedSignIn(clientIP, userKey)
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "This account uses single sign-on. Please log in with your identity provider."})
 		return
 	case passwordLoginInvalid:
+		s.countFailedSignIn(clientIP, userKey)
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid credentials"})
 		return
 	case passwordLoginDisabled:
@@ -490,6 +494,23 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	_ = s.db.UpdateUserLogin(user.ID)
 	writeLoginSuccess(w, user, token)
+}
+
+// signInBlocked reports whether too many failed sign-ins came from an
+// address, or for an account ("user:<name>"), in the limiter's window.
+func (s *Server) signInBlocked(key string) bool {
+	return s.loginLimiter != nil && s.loginLimiter.IsBlocked(key)
+}
+
+// countFailedSignIn counts a failed sign-in against an address and an
+// account. Sign-ins that succeed are not counted.
+func (s *Server) countFailedSignIn(keys ...string) {
+	if s.loginLimiter == nil {
+		return
+	}
+	for _, key := range keys {
+		s.loginLimiter.Allow(key)
+	}
 }
 
 func writeLoginSuccess(w http.ResponseWriter, user *db.User, token string, extra ...map[string]any) {
