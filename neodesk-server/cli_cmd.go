@@ -3,7 +3,6 @@ package main
 import (
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/ndcli"
@@ -15,7 +14,8 @@ import (
 
 // cliName reports whether the program was started as neodesk.
 func cliName(arg0 string) bool {
-	name := strings.ToLower(filepath.Base(arg0))
+	// Either separator: a Windows path reads the same on every system
+	name := strings.ToLower(arg0[strings.LastIndexAny(arg0, `/\`)+1:])
 	name = strings.TrimSuffix(name, ".exe")
 	return name == "neodesk"
 }
