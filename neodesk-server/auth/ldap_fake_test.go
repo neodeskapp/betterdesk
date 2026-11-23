@@ -26,6 +26,9 @@ type fakeEntry struct {
 	dn       string
 	password string
 	attrs    map[string][]string
+	// readers, when set, are the DNs a connection must be bound as to
+	// find the entry, like a directory whose ACL hides groups from users
+	readers []string
 }
 
 func newFakeDirectory(t *testing.T, entries ...fakeEntry) *fakeDirectory {
@@ -63,6 +66,7 @@ func (d *fakeDirectory) serve() {
 
 func (d *fakeDirectory) handle(conn net.Conn) {
 	defer conn.Close()
+	bound := "" // the DN the connection is bound as; "" is anonymous
 	for {
 		packet, err := ber.ReadPacket(conn)
 		if err != nil || len(packet.Children) < 2 {
@@ -78,8 +82,10 @@ func (d *fakeDirectory) handle(conn net.Conn) {
 			d.binds = append(d.binds, dn)
 			d.mu.Unlock()
 			code := int64(ldapv3.LDAPResultInvalidCredentials)
+			bound = ""
 			if e := d.find(dn); e != nil && e.password == password {
 				code = ldapv3.LDAPResultSuccess
+				bound = e.dn
 			}
 			d.write(conn, id, ldapResult(ldapv3.ApplicationBindResponse, code))
 		case ldapv3.ApplicationSearchRequest:
@@ -87,7 +93,7 @@ func (d *fakeDirectory) handle(conn net.Conn) {
 			scope := op.Children[1].Value.(int64)
 			filter, _ := ldapv3.DecompileFilter(op.Children[6])
 			for _, e := range d.entries {
-				if d.matches(e, base, scope, filter) {
+				if d.matches(e, base, scope, filter) && readable(e, bound) {
 					d.write(conn, id, searchEntry(e))
 				}
 			}
@@ -96,6 +102,19 @@ func (d *fakeDirectory) handle(conn net.Conn) {
 			return
 		}
 	}
+}
+
+// readable reports whether a connection bound as bound may find e.
+func readable(e fakeEntry, bound string) bool {
+	if len(e.readers) == 0 {
+		return true
+	}
+	for _, r := range e.readers {
+		if strings.EqualFold(r, bound) {
+			return true
+		}
+	}
+	return false
 }
 
 func (d *fakeDirectory) find(dn string) *fakeEntry {

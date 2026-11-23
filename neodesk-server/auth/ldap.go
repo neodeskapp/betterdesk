@@ -401,6 +401,14 @@ func (p *LDAPProvider) resolveGroups(conn *ldapv3.Conn, cfg *LDAPConfig, result 
 		if groupBaseDN == "" {
 			groupBaseDN = cfg.BaseDN
 		}
+		// The search runs as the service account where there is one: the
+		// connection is bound as the person now, and many directories
+		// don't let people read group entries
+		if !cfg.DirectBind && cfg.BindDN != "" {
+			if err := conn.Bind(cfg.BindDN, cfg.BindPassword); err != nil {
+				log.Printf("[LDAP] Warning: service account bind for the group search failed: %v", err)
+			}
+		}
 		groupFilter := strings.ReplaceAll(cfg.GroupFilter, "{{dn}}", ldapv3.EscapeFilter(result.DN))
 		groupFilter = strings.ReplaceAll(groupFilter, "{{username}}", ldapv3.EscapeFilter(result.Username))
 

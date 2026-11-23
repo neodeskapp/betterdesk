@@ -188,3 +188,38 @@ func TestLDAPConnectionTimeoutCoversConnecting(t *testing.T) {
 		})
 	}
 }
+
+const (
+	serviceDN  = "cn=svc,dc=corp,dc=example"
+	groupsBase = "ou=groups,dc=corp,dc=example"
+)
+
+var serviceEntry = fakeEntry{dn: serviceDN, password: "svc-pw", attrs: map[string][]string{"cn": {"svc"}}}
+
+// A directory whose groups only the service account may read, as with
+// OpenLDAP's default ACL: the group search runs as the service account
+// (Bind DN), not as the person signing in, so the role map still applies
+// (L348).
+func TestLDAPGroupSearchRunsAsTheServiceAccount(t *testing.T) {
+	admins := fakeEntry{
+		dn:      "cn=neodesk-admins," + groupsBase,
+		attrs:   map[string][]string{"cn": {"neodesk-admins"}, "member": {aliceEntry.dn}},
+		readers: []string{serviceDN},
+	}
+	dir := newFakeDirectory(t, serviceEntry, aliceEntry, admins)
+	cfg := dir.config()
+	cfg.BindDN, cfg.BindPassword = serviceDN, "svc-pw"
+	cfg.BaseDN = "dc=corp,dc=example"
+	cfg.UserFilter = "(uid={{username}})"
+	cfg.UserAttrID = "uid"
+	cfg.GroupBaseDN = groupsBase
+	cfg.GroupFilter = "(member={{dn}})"
+	cfg.GroupRoleMap = "neodesk-admins=admin"
+	result, err := NewLDAPProvider(cfg).Authenticate("alice", "secret")
+	if err != nil || result == nil || !result.Authenticated {
+		t.Fatalf("sign-in: %+v, %v", result, err)
+	}
+	if result.Role != RoleAdmin {
+		t.Errorf("role %q with groups %v, want admin", result.Role, result.Groups)
+	}
+}
