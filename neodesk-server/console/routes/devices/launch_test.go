@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	apiserver "github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 	serverconfig "github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
@@ -112,6 +113,73 @@ func TestConnectPasswordNeedsTheDevicesOrganization(t *testing.T) {
 		}
 		if got := get("operator"); got.Status != http.StatusOK || !strings.Contains(got.Body, `"password":"l216-stored-pw"`) {
 			t.Errorf("operator in the organization: %d %s, want 200 with the password", got.Status, got.Body)
+		}
+	})
+}
+
+// TestReadOnlyAccountQueuesNoCommand: a device's live views (services,
+// processes, events, activity) of an agent that is offline queue a
+// collection for the device only for an account that may send it commands
+// (device.edit, which POST /api/devices/{id}/telemetry/command asks). A
+// read-only account gets the snapshot the server keeps, else
+// agent_offline, and the device gets no command (BUGS L310).
+func TestReadOnlyAccountQueuesNoCommand(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, sdb *store.DB) {
+		gdb := storetest.GoServer(t, sdb)
+		srv := apiserver.New(serverconfig.DefaultConfig(), gdb, peer.NewMap(), nil, "test")
+		log := audit.NewLogger("")
+		t.Cleanup(func() { _ = log.Close() })
+		srv.SetAuditLogger(log)
+		w := routetest.New(t, routetest.Options{DB: sdb, API: srv.InternalHandler(), Env: raisedLimits, Config: nodeLanguages})
+		const id = "L310PEER"
+		if err := gdb.UpsertPeer(&db.Peer{ID: id, UUID: "u-l310peer"}); err != nil {
+			t.Fatal(err)
+		}
+		queued := func() []string {
+			t.Helper()
+			commands, err := gdb.GetPendingTelemetryCommands(id, 50)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var names []string
+			for _, c := range commands {
+				names = append(names, c.Command)
+			}
+			return names
+		}
+
+		viewer := w.As("viewer")
+		for _, view := range []string{"services", "processes", "events", "activity"} {
+			got := viewer.Do(http.MethodGet, "/api/devices/"+id+"/"+view, "")
+			if got.Status != http.StatusServiceUnavailable || got.Body != `{"success":false,"error":"agent_offline"}` {
+				t.Errorf("viewer, %s: %d %s, want 503 agent_offline", view, got.Status, got.Body)
+			}
+		}
+		if names := queued(); len(names) != 0 {
+			t.Errorf("the viewer's reads queued commands for the device: %v", names)
+		}
+
+		if err := gdb.SaveTelemetrySnapshot(&db.TelemetrySnapshot{DeviceID: id, Kind: "activity", Status: "ok",
+			Payload: `{"idle_seconds":7}`, CollectedAt: "2026-11-20T10:00:00Z"}); err != nil {
+			t.Fatal(err)
+		}
+		got := viewer.Do(http.MethodGet, "/api/devices/"+id+"/activity", "")
+		if got.Status != http.StatusOK || !strings.Contains(got.Body, `"cached":true`) || !strings.Contains(got.Body, `"idle_seconds":7`) {
+			t.Errorf("viewer, activity with a snapshot: %d %s, want 200 with the snapshot", got.Status, got.Body)
+		}
+		if names := queued(); len(names) != 0 {
+			t.Errorf("the viewer's read of a snapshot queued commands: %v", names)
+		}
+		if events := log.RecentByAction(audit.ActionTelemetryCommandQueued, 10); len(events) != 0 {
+			t.Errorf("the viewer's reads left %d telemetry_command_queued entries", len(events))
+		}
+
+		got = w.As("operator").Do(http.MethodGet, "/api/devices/"+id+"/events", "")
+		if got.Status != http.StatusAccepted || !strings.Contains(got.Body, `"command":"collect.events"`) {
+			t.Errorf("operator, events: %d %s, want 202 with the queued collection", got.Status, got.Body)
+		}
+		if names := queued(); strings.Join(names, ",") != "collect.events" {
+			t.Errorf("queued for the operator: %v, want collect.events", names)
 		}
 	})
 }

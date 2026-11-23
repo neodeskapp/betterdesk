@@ -21,7 +21,10 @@ import (
 // answers {"success":true,"data":...} with what the agent sent. An agent
 // that is not connected gets the snapshot the server keeps, when there is
 // one for the request, else a collection queued for when it comes back,
-// else 503 agent_offline. An agent that does not answer in time is 504
+// else 503 agent_offline. A collection is a command to the device, so only
+// an account that may send it commands queues one (device.edit, which POST
+// /api/devices/{id}/telemetry/command asks); a read-only account gets the
+// snapshot or agent_offline. An agent that does not answer in time is 504
 // agent_timeout, one that answers with an error 502 and its error, also
 // when the agent's error reads agent_offline or agent_timeout.
 
@@ -93,7 +96,7 @@ func (h *handlers) agentRequest(w http.ResponseWriter, r *http.Request, typ stri
 				return
 			}
 		}
-		if command, ok := commandFor[typ]; ok {
+		if command, ok := commandFor[typ]; ok && kit.HasPermission(r, "device.edit") {
 			args := payload
 			if !goapi.Truthy(args) {
 				args = goapi.NewObject()

@@ -1,4 +1,40 @@
 {
+ "151 GET /api/devices/C1003/processes as viewer": {
+  "bug": "L310",
+  "answer": {
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "calls": [
+    "GET /api/peers/C1003",
+    "GET /api/peers/C1003",
+    "GET /api/peers/C1003/telemetry"
+   ]
+  }
+ },
+ "152 GET /api/devices/C1003/events as viewer": {
+  "bug": "L310",
+  "answer": {
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "calls": [
+    "GET /api/peers/C1003",
+    "GET /api/peers/C1003",
+    "GET /api/peers/C1003/telemetry"
+   ]
+  }
+ },
+ "153 GET /api/devices/C1003/activity as viewer": {
+  "bug": "L310",
+  "answer": {
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "calls": [
+    "GET /api/peers/C1003",
+    "GET /api/peers/C1003",
+    "GET /api/peers/C1003/telemetry"
+   ]
+  }
+ },
  "154 GET /api/devices/C1003/clipboard as viewer": {
   "bug": "RV67",
   "answer": {
@@ -58,6 +94,18 @@
    ],
    "agent": [
     "{\"protocol_version\":1,\"type\":\"clipboard.get\",\"request_id\":\"<id>\",\"payload\":null}"
+   ]
+  }
+ },
+ "36 GET /api/devices/C1003/services as viewer": {
+  "bug": "L310",
+  "answer": {
+   "status": 503,
+   "answer": "{\"success\":false,\"error\":\"agent_offline\"}",
+   "calls": [
+    "GET /api/peers/C1003",
+    "GET /api/peers/C1003",
+    "GET /api/peers/C1003/telemetry"
    ]
   }
  },
