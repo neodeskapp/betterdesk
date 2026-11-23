@@ -20,7 +20,9 @@ import {
 	nextBackup,
 	restoreFields,
 	restoreHint,
-	restoreNeedsRestart
+	restoreNeedsRestart,
+	restoreOutcome,
+	restoredPartLabel
 } from '../../../src/lib/settings-b/backup.ts';
 import {
 	buildRows,
@@ -150,6 +152,40 @@ describe('backup', () => {
 			restoreEnv: true,
 			restoreGoDb: false
 		});
+	});
+
+	test('a restore that brought back nothing, or not every chosen part, does not say Restored (BUGS L408)', () => {
+		const full = (restored: string[], skipped: string[], warnings: string[] = []) => ({
+			type: 'full',
+			restored,
+			skipped,
+			warnings
+		});
+		const picked = new Set(['restoreDatabase', 'restoreEnv'] as const);
+		expect(restoreOutcome(full(['database (52 tables)', '.env'], ['uploads']), picked)).toBe('ok');
+		// the archive of a Docker install has no .env
+		expect(restoreOutcome(full(['database (52 tables)'], ['uploads', '.env']), picked)).toBe('partial');
+		expect(restoreOutcome(full([], ['database', 'uploads', '.env']), picked)).toBe('none');
+		expect(restoreOutcome(full(['database (52 tables)', '.env'], [], ['Table x: failed']), picked)).toBe(
+			'partial'
+		);
+		// a settings file restores what it has
+		expect(
+			restoreOutcome({ type: 'config', restored: ['settings'], skipped: ['users'], warnings: [] }, new Set())
+		).toBe('ok');
+		expect(
+			restoreOutcome({ type: 'config', restored: [], skipped: ['users'], warnings: [] }, new Set())
+		).toBe('none');
+	});
+
+	test('restored parts are named as the choices above name them (BUGS L419)', () => {
+		const t = (key: string) => `<${key}>`;
+		expect(restoredPartLabel('database (52 tables)', t)).toBe('<settings.backup_tab.opt_database>');
+		expect(restoredPartLabel('uploads (1 files)', t)).toBe('<settings.backup_tab.opt_uploads>');
+		expect(restoredPartLabel('secrets/keys', t)).toBe('<settings.backup_tab.opt_secrets>');
+		expect(restoredPartLabel('.env', t)).toBe('<settings.backup_tab.opt_env>');
+		expect(restoredPartLabel('goserver-db', t)).toBe('<settings.backup_tab.opt_godb>');
+		expect(restoredPartLabel('fonts', t)).toBe('fonts');
 	});
 
 	test('keys, the env file and the server database need a restart; console data does not', () => {

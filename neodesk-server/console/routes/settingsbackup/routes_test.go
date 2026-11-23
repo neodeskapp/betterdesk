@@ -215,6 +215,10 @@ func TestRestore(t *testing.T) {
 			{"broken archive", post("backup", "b.tar.gz", archive[:len(archive)/2], nil), 400,
 				`{"success":false,"error":"Invalid backup archive: Not a valid gzip/tar archive: unexpected end of file"}`},
 			{"other field", post("file", "b.json", []byte("{}"), nil), 500, ""},
+			// an archive's name on a file that is no gzip file: it was read
+			// as a settings file and refused as "not valid JSON" (BUGS L408)
+			{"named an archive, not gzip", post("backup", "b.tar.gz", []byte(`{"_format":"neodesk-backup"}`), nil), 400,
+				`{"success":false,"error":"settings.backup_tab.not_archive"}`},
 			{"snapshot, nothing chosen", post("backup", "b.json", []byte(`{"_format":"neodesk-backup","_version":1,"_created":null,"console":{}}`),
 				map[string]string{"restoreSettings": "false", "restoreBranding": "false", "restoreFolders": "false", "restoreGroups": "false", "restoreAddressBooks": "false"}), 200,
 				`{"success":true,"data":{"type":"config","restored":[],"skipped":["settings","branding","users","folders","groups","addressBooks"],"warnings":[],"backupDate":null}}`},

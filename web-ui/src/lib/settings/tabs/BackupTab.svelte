@@ -31,6 +31,8 @@
 		restoreFields,
 		restoreHint,
 		restoreNeedsRestart,
+		restoreOutcome,
+		restoredPartLabel,
 		type RestorePart
 	} from '#lib/settings-b/backup.ts';
 	import TabCols from '#lib/settings-b/TabCols.svelte';
@@ -239,7 +241,17 @@
 		restoreLine = NONE;
 		try {
 			result = await restoreBackup(file, restoreFields(kind === 'archive' ? picked : new Set()));
-			restoreLine = ok(t('backup.restore_success'));
+			const outcome = restoreOutcome(result, kind === 'archive' ? picked : new Set());
+			restoreLine =
+				outcome === 'ok'
+					? ok(t('backup.restore_success'))
+					: {
+							message:
+								outcome === 'none'
+									? t('settings.backup_tab.restore_nothing')
+									: t('settings.backup_tab.restore_partial'),
+							tone: 'error'
+						};
 		} catch (err) {
 			restoreLine = fail(err);
 		} finally {
@@ -529,11 +541,11 @@
 								<dl class="facts">
 									{#if result.restored.length}
 										<dt>{t('backup.restored')}</dt>
-										<dd>{result.restored.join(', ')}</dd>
+										<dd>{result.restored.map((p) => restoredPartLabel(p, t)).join(', ')}</dd>
 									{/if}
 									{#if result.skipped.length}
 										<dt>{t('backup.skipped')}</dt>
-										<dd>{result.skipped.join(', ')}</dd>
+										<dd>{result.skipped.map((p) => restoredPartLabel(p, t)).join(', ')}</dd>
 									{/if}
 									{#if result.backupDate}
 										<dt>{t('backup.backup_date')}</dt>

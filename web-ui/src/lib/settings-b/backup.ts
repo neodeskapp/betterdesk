@@ -92,6 +92,43 @@ export function restoreFields(picked: ReadonlySet<RestorePart['field']>): Record
 	return Object.fromEntries(RESTORE_PARTS.map((p) => [p.field, picked.has(p.field)]));
 }
 
+/** The name the server gives each part of a full backup in its result */
+const PART_IDS: Record<RestorePart['field'], string> = {
+	restoreDatabase: 'database',
+	restoreUploads: 'uploads',
+	restoreSecrets: 'secrets/keys',
+	restoreEnv: '.env',
+	restoreGoDb: 'goserver-db'
+};
+
+/**
+ * What a restore brought back: everything that was chosen (ok), only some
+ * of it or with warnings (partial), or nothing at all (none). A green
+ * "Restored." for a restore that skipped every part misled (BUGS L408).
+ */
+export function restoreOutcome(
+	result: {
+		type?: string | undefined;
+		restored: readonly string[];
+		skipped: readonly string[];
+		warnings: readonly string[];
+	},
+	picked: ReadonlySet<RestorePart['field']>
+): 'ok' | 'partial' | 'none' {
+	if (!result.restored.length) return 'none';
+	if (result.warnings.length) return 'partial';
+	if (result.type !== 'full') return 'ok';
+	const skipped = [...picked].some((field) => result.skipped.includes(PART_IDS[field]));
+	return skipped ? 'partial' : 'ok';
+}
+
+/** A part of the server's result as the choices name it; others as the server wrote them */
+export function restoredPartLabel(part: string, t: (key: string) => string): string {
+	const id = part.replace(/ \(.*\)$/, '');
+	const found = RESTORE_PARTS.find((p) => PART_IDS[p.field] === id);
+	return found ? t(found.label) : part;
+}
+
 export function restoreNeedsRestart(kind: FileKind, picked: ReadonlySet<RestorePart['field']>): boolean {
 	return kind === 'archive' && RESTORE_PARTS.some((p) => p.restart && picked.has(p.field));
 }

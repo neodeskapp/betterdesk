@@ -114,7 +114,14 @@ func (h *handlers) restore(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	r = r.WithContext(ctx)
 
-	if len(buf) > 2 && buf[0] == 0x1f && buf[1] == 0x8b {
+	gzipped := len(buf) > 2 && buf[0] == 0x1f && buf[1] == 0x8b
+	if name := strings.ToLower(upload.File.OriginalName); !gzipped && (strings.HasSuffix(name, ".gz") || strings.HasSuffix(name, ".tgz")) {
+		// named as an archive, but no gzip file: reading it as a settings
+		// file would answer "not valid JSON" (BUGS L408)
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "settings.backup_tab.not_archive", nil))
+		return
+	}
+	if gzipped {
 		result, err := h.backups.RestoreFullBackup(ctx, buf, backup.RestoreOptions{
 			Database: notFalse("restoreDatabase"),
 			Uploads:  notFalse("restoreUploads"),
