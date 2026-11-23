@@ -271,6 +271,35 @@ func TestAVersionSuffixKeepsTheFormat(t *testing.T) {
 	}
 }
 
+// A volatile value made from the product version fits a golden recorded at
+// a version with fewer digits in a part: the cache version of 3.6.10 fits
+// the format recorded at 3.6.9, and a recording at 3.6.10 gives that same
+// format. Other numbers in the value keep their digits (L437).
+func TestAVersionPartWithMoreDigitsKeepsTheFormat(t *testing.T) {
+	saved := productVersion
+	defer func() { productVersion = saved }()
+	recordedAt369 := newGoldenAnswer(jsonAnswer(200, `{"data": {"cacheVersion": "<volatile>"}}`),
+		[]VolatileMark{{Path: "data.cacheVersion", Format: "9.9.9.9999999999999"}}, nil)
+
+	for _, version := range []string{"3.6.10", "3.10.0", "10.0.0", "3.6.10-rc.1"} {
+		productVersion = func() string { return version }
+		value := version + ".1795409105554"
+		if diffs := CompareAnswers(recordedAt369, jsonAnswer(200, `{"data": {"cacheVersion": "`+value+`"}}`)); len(diffs) > 0 {
+			t.Errorf("%s against the golden of 3.6.9: %q", value, diffStrings(diffs))
+		}
+		if format, pattern := deriveFormat([]string{value, version + ".1795409105912"}); format != "9.9.9.9999999999999" || pattern != "" {
+			t.Errorf("format recorded at %s: %q, %q", version, format, pattern)
+		}
+	}
+
+	productVersion = func() string { return "3.6.10" }
+	for _, other := range []string{"3.6.100.1795409105554", "13.6.10.1795409105554", "3.6.10.17954091055x4", "3.6.10.179540910555"} {
+		if diffs := CompareAnswers(recordedAt369, jsonAnswer(200, `{"data": {"cacheVersion": "`+other+`"}}`)); len(diffs) != 1 {
+			t.Errorf("%s fits the format of the product version: %q", other, diffStrings(diffs))
+		}
+	}
+}
+
 func TestMessagesDoNotShowSecrets(t *testing.T) {
 	for _, text := range []string{"data.csrfToken", "data.api_key", "user.Password", "data.clientSecret", "data.cookies[0].value", "sessions[2].sid", `data["API-KEY"]`} {
 		p, err := parsePath(text)

@@ -142,19 +142,27 @@ func formatClass(s string) string {
 	return b.String()
 }
 
-// withoutVersionSuffix writes the product version as the version without
-// its suffix where it has one ("3.6.0-rc.2" as "3.6.0"), so a value made
-// from it has the same class on a release candidate as on a release: the
-// cache version "3.6.0-rc.2.1795409105554" of restart-status (L302). A
-// version inside a longer one is left alone.
+// withoutVersionSuffix writes the product version as one digit per part
+// and without its suffix ("3.6.10" and "3.6.0-rc.2" both as "0.0.0"), so
+// a value made from it has the same class whatever the version: the cache
+// version of restart-status, "3.6.10.1795409105554", fits the format
+// recorded at 3.6.9, and "3.6.0-rc.2.1795409105554" the one recorded at
+// the release (L302, L437). A version inside a longer one is left alone.
 func withoutVersionSuffix(s string) string {
 	version := productVersion()
-	cut := strings.IndexAny(version, "-+")
-	if cut <= 0 || !strings.Contains(s, version) {
+	if version == "" || !strings.Contains(s, version) {
 		return s
 	}
+	release := version
+	if cut := strings.IndexAny(version, "-+"); cut > 0 {
+		release = version[:cut]
+	}
+	parts := strings.Split(release, ".")
+	for i := range parts {
+		parts[i] = "0"
+	}
 	pattern := regexp.MustCompile(`(^|[^0-9.])` + regexp.QuoteMeta(version) + `($|[^0-9A-Za-z])`)
-	return replaceAddress(s, pattern, version[:cut])
+	return replaceAddress(s, pattern, strings.Join(parts, "."))
 }
 
 // classRun is a piece of a class: a run of 9, a or A, or one other character.
