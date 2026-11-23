@@ -46,12 +46,12 @@
     "kind": "json",
     "json": {
      "data": {
-      "content": "contract-throwaway-file\n",
+      "content": "contract-throwaway-session-secret-0123456789\n",
       "id": "console-session-secret",
       "mtime": "<volatile>",
       "path": "/app/data/.session_secret",
       "requiresRestart": "console",
-      "size": 24
+      "size": 45
      },
      "success": true
     }

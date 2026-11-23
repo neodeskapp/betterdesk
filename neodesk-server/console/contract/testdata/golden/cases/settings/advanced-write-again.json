@@ -4,7 +4,7 @@
   "method": "PUT",
   "path": "/api/settings/advanced/files/console-session-secret",
   "body": {
-   "content": "contract-throwaway-file, second\n"
+   "content": "contract-throwaway-session-secret-second-01\n"
   }
  },
  "recordings": 2,
@@ -84,7 +84,7 @@
        "status": "pending",
        "updatedAt": "<volatile>"
       },
-      "size": 32
+      "size": 44
      },
      "message": "Configuration file saved",
      "restartRequired": {

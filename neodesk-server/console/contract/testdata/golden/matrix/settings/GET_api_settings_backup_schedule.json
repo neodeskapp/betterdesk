@@ -79,7 +79,8 @@
   },
   {
    "roles": [
-    "server_admin"
+    "server_admin",
+    "super_admin"
    ],
    "status": 200,
    "headers": {
@@ -131,7 +132,6 @@
   },
   {
    "roles": [
-    "super_admin",
     "admin"
    ],
    "status": 200,

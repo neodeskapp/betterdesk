@@ -4,7 +4,7 @@
   "method": "PUT",
   "path": "/api/settings/advanced/files/console-session-secret",
   "body": {
-   "content": "contract-throwaway-file\n"
+   "content": "contract-throwaway-session-secret-0123456789\n"
   },
   "notes": [
    "sent as admin in every role's turn"

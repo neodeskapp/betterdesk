@@ -170,6 +170,8 @@
        "mesh.terminal",
        "mesh.files",
        "mesh.power",
+       "agent.terminal",
+       "agent.files",
        "enrollment.manage",
        "enrollment.approve",
        "chat.access",
@@ -187,6 +189,8 @@
         "level": 5,
         "name": "super_admin",
         "permissions": [
+         "agent.files",
+         "agent.terminal",
          "audit.view",
          "billing.export",
          "billing.manage",
@@ -239,6 +243,8 @@
         "level": 5,
         "name": "admin",
         "permissions": [
+         "agent.files",
+         "agent.terminal",
          "audit.view",
          "billing.export",
          "billing.manage",
@@ -313,6 +319,8 @@
         "level": 4,
         "name": "global_admin",
         "permissions": [
+         "agent.files",
+         "agent.terminal",
          "audit.view",
          "billing.export",
          "billing.manage",

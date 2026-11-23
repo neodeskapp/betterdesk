@@ -44,8 +44,9 @@ func init() {
 
 	const secretFile = "/api/settings/advanced/files/console-session-secret"
 	// The content the file editor writes. It is no secret: the instance
-	// never reads the file.
-	const fileContent = "contract-throwaway-file\n"
+	// never reads the file. It is as long as a session secret the editor
+	// saves (L399).
+	const fileContent = "contract-throwaway-session-secret-0123456789\n"
 
 	contract.Group("settings",
 		// Liveness and the public status of a restart
@@ -369,6 +370,11 @@ func init() {
 			Name: "advanced-write-missing", Method: "PUT", Path: "/api/settings/advanced/files/console-env",
 			Body: map[string]any{"content": "X=1\n"}, Roles: admin,
 		},
+		// A session secret the console could not start with is not saved
+		contract.Case{
+			Name: "advanced-write-weak-secret", Method: "PUT", Path: secretFile,
+			Body: map[string]any{"content": "too-short\n"}, Roles: admin,
+		},
 		contract.Case{
 			Name: "advanced-write-create", Method: "PUT", Path: secretFile,
 			Body:    map[string]any{"content": fileContent},
@@ -410,7 +416,7 @@ func init() {
 		},
 		contract.Case{
 			Name: "advanced-write-again", Method: "PUT", Path: secretFile,
-			Body:    map[string]any{"content": "contract-throwaway-file, second\n"},
+			Body:    map[string]any{"content": "contract-throwaway-session-secret-second-01\n"},
 			Capture: map[string]string{"tx2": "data.restartRequired.id"},
 			Roles:   writers,
 		},

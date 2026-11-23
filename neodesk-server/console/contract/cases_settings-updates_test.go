@@ -99,6 +99,14 @@ func init() {
 			Roles:    contract.Roles("operator", "admin"),
 			Volatile: capabilities("data.capabilities."),
 		},
+		// A secret the console may write goes out masked; SESSION_SECRET
+		// above is set on the host only (L410)
+		contract.Case{
+			Name: "config-dry-run-masked", Method: "PUT", Path: "/api/settings/management/config",
+			Body:     map[string]any{"changes": map[string]any{"SMTP_PASS": "not-saved", "PORT": 5001}, "dryRun": true},
+			Roles:    admin,
+			Volatile: capabilities("data.capabilities."),
+		},
 		contract.Case{
 			Name: "config-dry-run-as-text", Method: "PUT", Path: "/api/settings/management/config",
 			Body:     map[string]any{"changes": map[string]any{"LOG_LEVEL": "debug"}, "dryRun": "true"},

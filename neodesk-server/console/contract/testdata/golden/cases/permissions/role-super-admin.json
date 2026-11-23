@@ -47,6 +47,8 @@
     "json": {
      "data": {
       "permissions": [
+       "agent.files",
+       "agent.terminal",
        "audit.view",
        "billing.export",
        "billing.manage",

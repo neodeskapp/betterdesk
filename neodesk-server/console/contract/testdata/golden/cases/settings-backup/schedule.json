@@ -81,7 +81,8 @@
   },
   {
    "roles": [
-    "server_admin"
+    "server_admin",
+    "admin"
    ],
    "status": 200,
    "headers": {
@@ -128,76 +129,6 @@
        "lastSha256": null,
        "lastSuccessAt": null,
        "lastValidation": null
-      }
-     },
-     "success": true
-    }
-   }
-  },
-  {
-   "roles": [
-    "admin"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
-    "content-encoding": "gzip",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "application/json; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "vary": "Accept-Encoding",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatile": [
-    "data.status.lastAttemptAt",
-    "data.status.lastFile",
-    "data.status.lastSha256",
-    "data.status.lastSuccessAt",
-    "data.status.lastValidation.components",
-    {
-     "path": "data.status.lastValidation.sizeBytes",
-     "integer": true
-    }
-   ],
-   "body": {
-    "kind": "json",
-    "json": {
-     "data": {
-      "schedule": {
-       "destinationPath": "",
-       "destinationType": "local",
-       "enabled": false,
-       "intervalHours": 12,
-       "retentionCount": 3
-      },
-      "status": {
-       "lastAttemptAt": "<volatile>",
-       "lastError": null,
-       "lastFile": "<volatile>",
-       "lastPruned": 0,
-       "lastSha256": "<volatile>",
-       "lastSuccessAt": "<volatile>",
-       "lastValidation": {
-        "components": [],
-        "sizeBytes": 0,
-        "valid": true
-       }
       }
      },
      "success": true

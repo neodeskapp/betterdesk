@@ -124,7 +124,7 @@
        "writable": true
       },
       {
-       "canCreate": true,
+       "canCreate": false,
        "category": "goserver",
        "exists": false,
        "id": "go-audit-log",
@@ -133,7 +133,7 @@
        "readable": false,
        "requiresRestart": "goserver",
        "size": 0,
-       "writable": true
+       "writable": false
       },
       {
        "canCreate": false,

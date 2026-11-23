@@ -38,18 +38,6 @@
     {
      "path": "data.lastAttemptAt",
      "format": "9999-99-99A99:99:99.999A"
-    },
-    {
-     "path": "data.lastFile",
-     "format": "/aaa/aaaa/aaaaaaaaa-aaaaaaa/aaaaaaa-aaaaaa-9999-99-99-99-99-99.aaa.aa"
-    },
-    {
-     "path": "data.lastSha256",
-     "pattern": "^[9aA+/_=-]{64}$"
-    },
-    {
-     "path": "data.lastSuccessAt",
-     "format": "9999-99-99A99:99:99.999A"
     }
    ],
    "body": {
@@ -58,10 +46,9 @@
      "data": {
       "lastAttemptAt": "<volatile>",
       "lastError": "ENOTDIR: not a directory, mkdir '/etc/hostname/bk-contract'",
-      "lastFile": "<volatile>",
-      "lastPruned": 0,
-      "lastSha256": "<volatile>",
-      "lastSuccessAt": "<volatile>",
+      "lastFile": null,
+      "lastSha256": null,
+      "lastSuccessAt": null,
       "lastValidation": {
        "valid": false
       }
