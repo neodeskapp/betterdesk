@@ -153,6 +153,7 @@
     "totp_recovery_code": "恢復碼",
     "totp_back_to_login": "返回登錄",
     "totp_invalid_code": "驗證碼無效，請重試。",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "請輸入 6 位驗證碼",
     "totp_enter_recovery": "請輸入恢復碼",
     "totp_session_expired": "會話已過期，請重新登錄。",

@@ -157,6 +157,7 @@
         "totp_recovery_code": "Recovery code",
         "totp_back_to_login": "Back to login",
         "totp_invalid_code": "Invalid verification code. Please try again.",
+        "current_password_wrong": "Current password is incorrect",
         "totp_enter_code": "Please enter a 6-digit code",
         "totp_enter_recovery": "Please enter a recovery code",
         "totp_session_expired": "Session expired. Please log in again.",

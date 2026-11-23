@@ -379,8 +379,8 @@ func TestTwoFactorEnrolment(t *testing.T) {
 		// Off again, with the password
 		want(t, "disable without password", a.post("/api/auth/totp/disable", `{}`), http.StatusBadRequest, `{"success":false,"error":"Password is required"}`)
 		want(t, "disable with an empty password", a.post("/api/auth/totp/disable", `{"password":""}`), http.StatusBadRequest, `{"success":false,"error":"Password is required"}`)
-		want(t, "disable with a wrong password", a.post("/api/auth/totp/disable", `{"password":"wrong"}`), http.StatusUnauthorized, invalidCredentials)
-		want(t, "disable with a number", a.post("/api/auth/totp/disable", `{"password":12345}`), http.StatusUnauthorized, invalidCredentials)
+		want(t, "disable with a wrong password", a.post("/api/auth/totp/disable", `{"password":"wrong"}`), http.StatusBadRequest, wrongPassword)
+		want(t, "disable with a number", a.post("/api/auth/totp/disable", `{"password":12345}`), http.StatusBadRequest, wrongPassword)
 		want(t, "status still enabled", a.get("/api/auth/totp/status"), http.StatusOK, on)
 		want(t, "disable", a.post("/api/auth/totp/disable", fmt.Sprintf(`{"password":%q}`, password)), http.StatusOK, `{"success":true}`)
 		want(t, "status disabled", a.get("/api/auth/totp/status"), http.StatusOK, off)
@@ -412,9 +412,9 @@ func TestTOTPDisableCountsWrongPasswords(t *testing.T) {
 		a.signIn("bob")
 		w.exec(`UPDATE users SET totp_enabled = `+w.db.Pick("1", "TRUE")+` WHERE id = ?`, bob)
 		w.exec(`DELETE FROM login_attempts`)
-		want(t, "a number", a.post("/api/auth/totp/disable", `{"password":12345}`), http.StatusUnauthorized, invalidCredentials)
+		want(t, "a number", a.post("/api/auth/totp/disable", `{"password":12345}`), http.StatusBadRequest, wrongPassword)
 		for i := 0; i < 9; i++ {
-			want(t, "a wrong password", a.post("/api/auth/totp/disable", `{"password":"wrong"}`), http.StatusUnauthorized, invalidCredentials)
+			want(t, "a wrong password", a.post("/api/auth/totp/disable", `{"password":"wrong"}`), http.StatusBadRequest, wrongPassword)
 		}
 		if got := w.attempts(); len(got) != 10 || got[0] != "bob|127.0.0.1|0" || got[9] != "bob|127.0.0.1|0" {
 			t.Errorf("attempts: %v", got)

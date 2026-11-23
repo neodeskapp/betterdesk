@@ -141,6 +141,7 @@
     "totp_recovery_code": "Wiederherstellungscode",
     "totp_back_to_login": "Zurück zur Anmeldung",
     "totp_invalid_code": "Ungültiger Bestätigungscode. Bitte versuchen Sie es erneut.",
+    "current_password_wrong": "Das aktuelle Passwort ist falsch.",
     "totp_enter_code": "Bitte geben Sie einen 6-stelligen Code ein",
     "totp_enter_recovery": "Bitte geben Sie einen Wiederherstellungscode ein",
     "totp_session_expired": "Sitzung abgelaufen. Bitte melden Sie sich erneut an.",

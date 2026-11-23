@@ -143,6 +143,7 @@
     "totp_recovery_code": "Gendannelseskode",
     "totp_back_to_login": "Tilbage til login",
     "totp_invalid_code": "Ugyldig bekræftelseskode. Prøv venligst igen.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Indtast venligst en 6-cifret kode",
     "totp_enter_recovery": "Indtast venligst en gendannelseskode",
     "totp_session_expired": "Session udløb. Log venligst ind igen.",

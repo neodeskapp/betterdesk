@@ -137,6 +137,7 @@
     "totp_recovery_code": "Herstelcode",
     "totp_back_to_login": "Terug naar inloggen",
     "totp_invalid_code": "Ongeldige verificatiecode. Probeer het opnieuw.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Voer een 6-cijferige code in",
     "totp_enter_recovery": "Voer een herstelcode in",
     "totp_session_expired": "Sessie verlopen. Log opnieuw in.",

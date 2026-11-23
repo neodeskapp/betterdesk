@@ -143,6 +143,7 @@
     "totp_recovery_code": "Gjenopprettingskode",
     "totp_back_to_login": "Tilbake til innlogging",
     "totp_invalid_code": "Ugyldig bekreftelseskode. Vennligst prøv igjen.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Vennligst skriv inn en 6-sifret kode",
     "totp_enter_recovery": "Vennligst skriv inn en gjenopprettingskode",
     "totp_session_expired": "Økten er utløpt. Logg på igjen.",

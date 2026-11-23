@@ -137,6 +137,7 @@
     "totp_recovery_code": "Záchranný kód",
     "totp_back_to_login": "Zpět na přihlášení",
     "totp_invalid_code": "Neplatný ověřovací kód. Zkuste to prosím znovu.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Zadejte prosím 6místný kód",
     "totp_enter_recovery": "Zadejte prosím záchranný kód",
     "totp_session_expired": "Relace vypršela. Přihlaste se prosím znovu.",

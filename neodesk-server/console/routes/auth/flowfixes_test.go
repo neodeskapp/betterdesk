@@ -23,6 +23,21 @@ var flowFixes = []flowFix{
 	{"S19", wholeNameInSignInEntries},
 	{"S1", signOutClearsOnlySessionCookies},
 	{"UM27", signOutPageAllowsPost},
+	{"L344", wrongPasswordKeepsTheSession},
+}
+
+// wrongPasswordKeepsTheSession: a wrong password to turn the second factor
+// off is a 400 that names the password, not the 401 of a lost session.
+func wrongPasswordKeepsTheSession(t *testing.T, steps []flowStep) bool {
+	changed := false
+	for i := range steps {
+		if steps[i].Name == "disable-wrong-password" && steps[i].Answer.Status == 401 {
+			steps[i].Answer.Status = 400
+			steps[i].Answer.Body.JSON = json.RawMessage(`{"error":"Current password is incorrect","success":false}`)
+			changed = true
+		}
+	}
+	return changed
 }
 
 // signOutPageAllowsPost: the 405 that GET /logout gives a signed-in

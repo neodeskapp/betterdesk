@@ -143,6 +143,7 @@
     "totp_recovery_code": "รหัสการกู้คืน",
     "totp_back_to_login": "กลับสู่การเข้าสู่ระบบ",
     "totp_invalid_code": "รหัสยืนยันไม่ถูกต้อง โปรดลองอีกครั้ง",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "กรุณากรอกรหัส 6 หลัก",
     "totp_enter_recovery": "กรุณากรอกรหัสกู้คืน",
     "totp_session_expired": "เซสชั่นหมดอายุแล้ว กรุณาเข้าสู่ระบบอีกครั้ง",

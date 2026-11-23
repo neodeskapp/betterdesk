@@ -143,6 +143,7 @@
     "totp_recovery_code": "Mã khôi phục",
     "totp_back_to_login": "Quay lại để đăng nhập",
     "totp_invalid_code": "Mã xác minh không hợp lệ. Vui lòng thử lại.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Vui lòng nhập mã gồm 6 chữ số",
     "totp_enter_recovery": "Vui lòng nhập mã khôi phục",
     "totp_session_expired": "Phiên đã hết hạn. Vui lòng đăng nhập lại.",

@@ -475,6 +475,7 @@ const (
 	invalidCredentials = `{"success":false,"error":"Invalid username or password."}`
 	serverErrorBody    = `{"success":false,"error":"Server error"}`
 	invalidCode        = `{"success":false,"error":"Invalid verification code. Please try again."}`
+	wrongPassword      = `{"success":false,"error":"Current password is incorrect"}`
 	notSignedIn        = `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`
 	clearedGuest       = "nd.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax"
 )

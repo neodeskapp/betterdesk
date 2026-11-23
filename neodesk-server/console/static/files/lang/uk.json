@@ -143,6 +143,7 @@
     "totp_recovery_code": "Код відновлення",
     "totp_back_to_login": "Назад до входу",
     "totp_invalid_code": "Недійсний код підтвердження. Спробуйте ще раз.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Будь ласка, введіть 6-значний код",
     "totp_enter_recovery": "Будь ласка, введіть код відновлення",
     "totp_session_expired": "Сеанс закінчився. Будь ласка, увійдіть знову.",

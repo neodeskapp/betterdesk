@@ -143,6 +143,7 @@
     "totp_recovery_code": "Palautuskoodi",
     "totp_back_to_login": "Takaisin kirjautumiseen",
     "totp_invalid_code": "Virheellinen vahvistuskoodi. Yritä uudelleen.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Anna 6-numeroinen koodi",
     "totp_enter_recovery": "Anna palautuskoodi",
     "totp_session_expired": "Istunto vanhentunut. Kirjaudu uudelleen sisään.",

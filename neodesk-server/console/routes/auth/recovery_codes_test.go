@@ -26,7 +26,7 @@ func TestNewRecoveryCodesWithACurrentCode(t *testing.T) {
 		w.exec(`DELETE FROM login_attempts`)
 
 		want(t, "no code", a.post("/api/auth/totp/recovery-codes", `{}`), http.StatusBadRequest, `{"success":false,"error":"Invalid verification code. Please try again."}`)
-		want(t, "a wrong code", a.post("/api/auth/totp/recovery-codes", fmt.Sprintf(`{"code":%q}`, wrongCode(t, totpSecret))), http.StatusUnauthorized, invalidCode)
+		want(t, "a wrong code", a.post("/api/auth/totp/recovery-codes", fmt.Sprintf(`{"code":%q}`, wrongCode(t, totpSecret))), http.StatusBadRequest, invalidCode)
 		if got := w.attempts(); len(got) != 1 || got[0] != "mia|127.0.0.1|0" {
 			t.Errorf("attempts after a wrong code: %v", got)
 		}
@@ -50,7 +50,7 @@ func TestNewRecoveryCodesWithACurrentCode(t *testing.T) {
 		if stored == old || strings.Contains(stored, out.RecoveryCodes[0]) {
 			t.Errorf("stored codes: %s (the old list, or a code as it was shown)", stored)
 		}
-		want(t, "the same code again", a.post("/api/auth/totp/recovery-codes", fmt.Sprintf(`{"code":%q}`, code)), http.StatusUnauthorized, invalidCode)
+		want(t, "the same code again", a.post("/api/auth/totp/recovery-codes", fmt.Sprintf(`{"code":%q}`, code)), http.StatusBadRequest, invalidCode)
 		if rows := w.audit(); len(rows) == 0 || rows[len(rows)-1] != fmt.Sprintf("totp_recovery_codes|New recovery codes|127.0.0.1|%d", mia) {
 			t.Errorf("audit: %v", rows)
 		}

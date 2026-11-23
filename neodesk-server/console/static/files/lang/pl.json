@@ -149,6 +149,7 @@
     "totp_recovery_code": "Kod odzyskiwania",
     "totp_back_to_login": "Powrót do logowania",
     "totp_invalid_code": "Nieprawidłowy kod weryfikacyjny. Spróbuj ponownie.",
+    "current_password_wrong": "Obecne hasło jest nieprawidłowe",
     "totp_enter_code": "Wprowadź 6-cyfrowy kod",
     "totp_enter_recovery": "Wprowadź kod odzyskiwania",
     "totp_session_expired": "Sesja wygasła. Zaloguj się ponownie.",

@@ -145,11 +145,13 @@ func (h *handlers) totpDisable(w http.ResponseWriter, r *http.Request) {
 			h.serverError(w, r, "TOTP disable error:", err)
 			return
 		}
+		// 400, not 401: the person is still signed in, and a 401 would
+		// make the console end the session instead of saying what was wrong
 		if withCode {
-			kit.Fail(w, r, http.StatusUnauthorized, kit.T(r, "auth.totp_invalid_code", nil))
+			kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.totp_invalid_code", nil))
 			return
 		}
-		kit.Fail(w, r, http.StatusUnauthorized, kit.T(r, "auth.invalid_credentials", nil))
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.current_password_wrong", nil))
 		return
 	}
 	if err = h.authn.DisableTOTP(r.Context(), userID); err == nil {
@@ -203,7 +205,7 @@ func (h *handlers) totpRecoveryCodes(w http.ResponseWriter, r *http.Request) {
 			h.serverError(w, r, "TOTP recovery codes error:", err)
 			return
 		}
-		kit.Fail(w, r, http.StatusUnauthorized, kit.T(r, "auth.totp_invalid_code", nil))
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.totp_invalid_code", nil))
 		return
 	case errors.Is(err, authn.ErrTOTPNotSetUp):
 		refuse(w, r, authn.ErrTOTPNotSetUp)

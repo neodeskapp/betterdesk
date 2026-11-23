@@ -143,6 +143,7 @@
     "totp_recovery_code": "Helyreállítási kód",
     "totp_back_to_login": "Vissza a bejelentkezéshez",
     "totp_invalid_code": "Érvénytelen ellenőrző kód. Kérjük, próbálja újra.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Adjon meg egy 6 számjegyű kódot",
     "totp_enter_recovery": "Adjon meg egy helyreállítási kódot",
     "totp_session_expired": "A munkamenet lejárt. Kérjük, jelentkezzen be újra.",

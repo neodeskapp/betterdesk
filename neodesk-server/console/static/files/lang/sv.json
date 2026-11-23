@@ -143,6 +143,7 @@
     "totp_recovery_code": "Återställningskod",
     "totp_back_to_login": "Tillbaka till inloggning",
     "totp_invalid_code": "Ogiltig verifieringskod. Försök igen.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Ange en 6-siffrig kod",
     "totp_enter_recovery": "Ange en återställningskod",
     "totp_session_expired": "Sessionen har löpt ut. Logga in igen.",

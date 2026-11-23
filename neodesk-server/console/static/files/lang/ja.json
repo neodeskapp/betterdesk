@@ -137,6 +137,7 @@
     "totp_recovery_code": "リカバリーコード",
     "totp_back_to_login": "ログインに戻る",
     "totp_invalid_code": "無効な認証コードです。もう一度お試しください。",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "6 桁のコードを入力してください",
     "totp_enter_recovery": "リカバリーコードを入力してください",
     "totp_session_expired": "セッションの有効期限が切れました。再度ログインしてください。",

@@ -143,6 +143,7 @@
     "totp_recovery_code": "Kurtarma Kodu",
     "totp_back_to_login": "Girişe geri dön",
     "totp_invalid_code": "Geçersiz doğrulama kodu. Lütfen tekrar deneyin.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Lütfen 6 haneli kodu girin",
     "totp_enter_recovery": "Lütfen bir kurtarma kodu girin",
     "totp_session_expired": "Oturumun süresi doldu. Lütfen tekrar giriş yapın.",

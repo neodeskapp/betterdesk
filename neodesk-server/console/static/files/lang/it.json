@@ -137,6 +137,7 @@
     "totp_recovery_code": "Codice di recupero",
     "totp_back_to_login": "Torna all'accesso",
     "totp_invalid_code": "Codice di verifica non valido. Riprova.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Inserisci un codice a 6 cifre",
     "totp_enter_recovery": "Inserisci un codice di recupero",
     "totp_session_expired": "Sessione scaduta. Accedi di nuovo.",

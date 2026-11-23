@@ -145,6 +145,7 @@
     "totp_recovery_code": "恢复码",
     "totp_back_to_login": "返回登录",
     "totp_invalid_code": "验证码无效，请重试。",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "请输入 6 位验证码",
     "totp_enter_recovery": "请输入恢复码",
     "totp_session_expired": "会话已过期，请重新登录。",

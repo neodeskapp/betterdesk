@@ -137,6 +137,7 @@
     "totp_recovery_code": "복구 코드",
     "totp_back_to_login": "로그인으로 돌아가기",
     "totp_invalid_code": "유효하지 않은 인증 코드입니다. 다시 시도하세요.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "6자리 코드를 입력하세요",
     "totp_enter_recovery": "복구 코드를 입력하세요",
     "totp_session_expired": "세션이 만료되었습니다. 다시 로그인하세요.",

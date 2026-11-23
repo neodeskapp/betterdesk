@@ -143,6 +143,7 @@
     "totp_recovery_code": "Kode Pemulihan",
     "totp_back_to_login": "Kembali untuk masuk",
     "totp_invalid_code": "Kode verifikasi tidak valid. Silakan coba lagi.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Silakan masukkan kode 6 digit",
     "totp_enter_recovery": "Silakan masukkan kode pemulihan",
     "totp_session_expired": "Sesi berakhir. Silakan masuk lagi.",

@@ -153,6 +153,7 @@
     "totp_recovery_code": "Code de récupération",
     "totp_back_to_login": "Retour à la connexion",
     "totp_invalid_code": "Code de vérification invalide. Veuillez réessayer.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "Veuillez entrer un code à 6 chiffres",
     "totp_enter_recovery": "Veuillez entrer un code de récupération",
     "totp_session_expired": "Session expirée. Veuillez vous reconnecter.",

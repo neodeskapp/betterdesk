@@ -144,6 +144,7 @@
     "totp_recovery_code": "رمز الاسترداد",
     "totp_back_to_login": "العودة لتسجيل الدخول",
     "totp_invalid_code": "رمز التحقق غير صالح. يرجى المحاولة مرة أخرى.",
+    "current_password_wrong": "Current password is incorrect",
     "totp_enter_code": "الرجاء إدخال رمز مكون من 6 أرقام",
     "totp_enter_recovery": "الرجاء إدخال رمز الاسترداد",
     "totp_session_expired": "انتهت صلاحية الجلسة. الرجاء تسجيل الدخول مرة أخرى.",
