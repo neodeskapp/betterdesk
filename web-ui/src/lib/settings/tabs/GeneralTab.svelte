@@ -37,6 +37,7 @@
 		type ServerInfo
 	} from '#lib/api/settings.ts';
 	import type { RestartItem } from '#lib/api/restart.ts';
+	import { ApiError } from '#lib/api/client.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { formatBytes, formatDuration, formatNumber } from '#lib/i18n/format.ts';
 	import { link } from '#lib/nav.ts';
@@ -138,7 +139,13 @@
 	let busy = $state(false);
 	let status = $state<SaveStatus>({ state: 'idle', message: '' });
 	/** Numbers a save refused, shown at their field */
-	let fieldErrors = $state<{ fallback?: string; retention?: string }>({});
+	let fieldErrors = $state<{
+		fallback?: string;
+		retention?: string;
+		public_server_id?: string;
+		public_relay_server?: string;
+		public_api_url?: string;
+	}>({});
 	let connAdvancedOpen = $state(false);
 
 	const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -162,8 +169,12 @@
 	let connProblem = $state('');
 	let connRuntime = $state('');
 
+	/** Addresses the server's environment sets at every start: shown, not editable */
+	let envLocked = $state.raw<readonly string[]>([]);
+
 	async function loadEndpoints(force = false) {
 		const e = await getPublicEndpoints();
+		envLocked = e.env_locked;
 		setBaseline(
 			'endpoints',
 			{
@@ -235,11 +246,21 @@
 				confirmLabel: t('settings.public_endpoints_save')
 			});
 			if (!ok) return false;
-			await savePublicEndpoints({
-				public_server_id: v.endpoints.public_server_id.trim(),
-				public_relay_server: v.endpoints.public_relay_server.trim(),
-				public_api_url: v.endpoints.public_api_url.trim()
-			});
+			fieldErrors.public_server_id = fieldErrors.public_relay_server = fieldErrors.public_api_url = undefined;
+			try {
+				await savePublicEndpoints({
+					public_server_id: v.endpoints.public_server_id.trim(),
+					public_relay_server: v.endpoints.public_relay_server.trim(),
+					public_api_url: v.endpoints.public_api_url.trim()
+				});
+			} catch (err) {
+				// The server names the address it refused
+				const field = err instanceof ApiError ? (err.data as { field?: unknown } | null)?.field : undefined;
+				if (field === 'public_server_id' || field === 'public_relay_server' || field === 'public_api_url') {
+					fieldErrors[field] = err instanceof Error ? err.message : '';
+				}
+				throw err;
+			}
 			await loadEndpoints(true);
 			void loadClientConfig();
 			return { restart: null };
@@ -682,10 +703,15 @@
 						<h2 id="public-endpoints-title">{t('settings.public_endpoints_title')}</h2>
 						<p class="section-note">{t('settings.public_endpoints_desc')}</p>
 						<div class="form-column" id="public-endpoints-form">
+							{#if envLocked.length}<Notice
+									id="public-endpoints-env-locked"
+									message={t('settings.public_endpoints_env_locked')}
+								/>{/if}
 							<Field
 								id="public-server-id"
 								label={t('settings.public_endpoints_server_id')}
 								hint={t('settings.general.endpoint_id_hint')}
+								error={fieldErrors.public_server_id}
 								width="host"
 							>
 								{#snippet children(f)}
@@ -693,6 +719,7 @@
 										{...f}
 										class="mono"
 										bind:value={values.endpoints.public_server_id}
+										disabled={envLocked.includes('public_server_id')}
 										autocomplete="off"
 										spellcheck={false}
 										placeholder={t('settings.public_endpoints_server_id_placeholder')}
@@ -703,6 +730,7 @@
 								id="public-relay-server"
 								label={t('settings.public_endpoints_relay')}
 								hint={t('settings.general.endpoint_relay_hint')}
+								error={fieldErrors.public_relay_server}
 								width="host"
 							>
 								{#snippet children(f)}
@@ -710,6 +738,7 @@
 										{...f}
 										class="mono"
 										bind:value={values.endpoints.public_relay_server}
+										disabled={envLocked.includes('public_relay_server')}
 										autocomplete="off"
 										spellcheck={false}
 										placeholder={t('settings.public_endpoints_relay_placeholder')}
@@ -720,6 +749,7 @@
 								id="public-api-url"
 								label={t('settings.public_endpoints_api_url')}
 								hint={t('settings.general.endpoint_api_hint')}
+								error={fieldErrors.public_api_url}
 								width="host"
 							>
 								{#snippet children(f)}
@@ -727,6 +757,7 @@
 										{...f}
 										class="mono"
 										bind:value={values.endpoints.public_api_url}
+										disabled={envLocked.includes('public_api_url')}
 										autocomplete="off"
 										spellcheck={false}
 										placeholder={t('settings.public_endpoints_api_url_placeholder')}

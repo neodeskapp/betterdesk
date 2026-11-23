@@ -115,6 +115,13 @@ func (h *handlers) mode(w http.ResponseWriter, r *http.Request) {
 }
 
 // setMode answers PUT /api/panel/enrollment/mode with the body {mode}.
+// A mode the server's environment forces is refused with 409, said in the
+// console's language.
 func (h *handlers) setMode(w http.ResponseWriter, r *http.Request) {
-	answer(w, r, h.api.SetEnrollmentMode(r.Context(), jsreq.Prop(jsreq.Body(r), "mode")))
+	result := h.api.SetEnrollmentMode(r.Context(), jsreq.Prop(jsreq.Body(r), "mode"))
+	if status, _, refused := jsreq.Refusal(result); refused && status == http.StatusConflict {
+		kit.Fail(w, r, http.StatusConflict, kit.T(r, "tokens.mode_env_locked", nil))
+		return
+	}
+	answer(w, r, result)
 }

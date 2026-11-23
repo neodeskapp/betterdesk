@@ -124,13 +124,17 @@ func yn(value bool) string {
 type publicEndpointsData struct {
 	serverinfo.PublicEndpoints
 	EnvOverrideActive bool `json:"env_override_active"`
+	// EnvLocked names the addresses the server's environment sets at every
+	// start (BUGS L386)
+	EnvLocked []string `json:"env_locked"`
 }
 
 // getPublicEndpoints answers GET /api/settings/public-endpoints: the ID
 // server, relay and API address clients are given, where set.
 func (g *general) getPublicEndpoints(w http.ResponseWriter, r *http.Request) {
 	settings := g.d.ServerInfo.GetPublicEndpointSettings()
-	kit.OK(w, r, publicEndpointsData{PublicEndpoints: settings, EnvOverrideActive: serverinfo.IsEnvOverrideActive(settings)})
+	kit.OK(w, r, publicEndpointsData{PublicEndpoints: settings, EnvOverrideActive: serverinfo.IsEnvOverrideActive(settings),
+		EnvLocked: g.d.ServerInfo.EnvLockedEndpoints()})
 }
 
 // setPublicEndpoints answers PUT /api/settings/public-endpoints with
@@ -141,6 +145,12 @@ func (g *general) setPublicEndpoints(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	if refuseNothingToSave(w, r, body, "public_server_id", "public_relay_server", "public_api_url") {
 		return
+	}
+	for _, field := range []string{"public_server_id", "public_relay_server"} {
+		if problem := serverinfo.PublicHostProblem(serverinfo.Field(body, field)); problem != "" {
+			kit.JSON(w, r, http.StatusBadRequest, fieldFailure{Error: kit.T(r, "settings.public_endpoints_host_"+problem, nil), Field: field})
+			return
+		}
 	}
 	saved, err := g.d.ServerInfo.SavePublicEndpointSettings(serverinfo.PublicEndpointsInput{
 		PublicServerID:    serverinfo.Field(body, "public_server_id"),
@@ -156,9 +166,12 @@ func (g *general) setPublicEndpoints(w http.ResponseWriter, r *http.Request) {
 	case err == nil:
 		kit.JSON(w, r, http.StatusOK, answerMessage{
 			Success: true,
-			Data:    publicEndpointsData{PublicEndpoints: saved, EnvOverrideActive: serverinfo.IsEnvOverrideActive(saved)},
+			Data: publicEndpointsData{PublicEndpoints: saved, EnvOverrideActive: serverinfo.IsEnvOverrideActive(saved),
+				EnvLocked: g.d.ServerInfo.EnvLockedEndpoints()},
 			Message: kit.T(r, "settings.public_endpoints_saved", nil),
 		})
+	case errors.Is(err, serverinfo.ErrEndpointEnvLocked):
+		kit.Fail(w, r, http.StatusConflict, kit.T(r, "settings.public_endpoints_env_locked", nil))
 	case errors.Is(err, serverinfo.ErrInvalidPublicHost):
 		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "settings.public_endpoints_invalid_host", nil))
 	case errors.Is(err, serverinfo.ErrInvalidPublicAPIURL):
@@ -167,6 +180,13 @@ func (g *general) setPublicEndpoints(w http.ResponseWriter, r *http.Request) {
 		g.log.Error("Save public endpoints error:", err)
 		kit.Fail(w, r, http.StatusInternalServerError, messageOr(err, kit.T(r, "errors.server_error", nil)))
 	}
+}
+
+// fieldFailure is a refusal that names the field it is about.
+type fieldFailure struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+	Field   string `json:"field"`
 }
 
 func orDash(value string) string {

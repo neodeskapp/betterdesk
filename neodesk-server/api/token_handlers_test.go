@@ -93,3 +93,30 @@ func TestUpdateDeviceTokenClearsNoteAndLimit(t *testing.T) {
 		t.Errorf("after max_uses 0 and an empty note: %+v, want unlimited without a note", got)
 	}
 }
+
+// With ENROLLMENT_MODE_ENV_OVERRIDE=Y the mode comes from the environment
+// at every start: a read says so and a change is refused, where it was
+// saved and undone by the next restart (BUGS L386).
+func TestEnrollmentModeForcedByTheEnvironment(t *testing.T) {
+	srv, _ := newInternalServer(t, nil)
+	srv.cfg.EnrollmentMode, srv.cfg.EnrollmentModeEnvOverride = "managed", true
+	status, body := asConsole(t, srv, http.MethodGet, "/api/enrollment/mode", "")
+	var read struct {
+		Mode        string `json:"mode"`
+		EnvOverride bool   `json:"env_override"`
+	}
+	if err := json.Unmarshal([]byte(body), &read); status != http.StatusOK || err != nil || read.Mode != "managed" || !read.EnvOverride {
+		t.Errorf("read: %d %s", status, body)
+	}
+	status, body = asConsole(t, srv, http.MethodPut, "/api/enrollment/mode", `{"mode":"open"}`)
+	if status != http.StatusConflict {
+		t.Errorf("change: %d %s", status, body)
+	}
+	if srv.cfg.EnrollmentMode != "managed" {
+		t.Errorf("the mode changed to %s", srv.cfg.EnrollmentMode)
+	}
+	srv.cfg.EnrollmentModeEnvOverride = false
+	if status, body = asConsole(t, srv, http.MethodPut, "/api/enrollment/mode", `{"mode":"open"}`); status != http.StatusOK {
+		t.Errorf("change without the override: %d %s", status, body)
+	}
+}

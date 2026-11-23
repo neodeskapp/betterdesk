@@ -15,15 +15,30 @@ export function isEnrollmentMode(m: unknown): m is EnrollmentMode {
 	return typeof m === 'string' && MODES.includes(m);
 }
 
-/** The current mode; null when the server sends something else */
-export async function getEnrollmentMode(signal?: AbortSignal): Promise<EnrollmentMode | null> {
+/**
+ * The current mode (null when the server sends something else), and
+ * whether the server's environment sets it at every start
+ * (ENROLLMENT_MODE_ENV_OVERRIDE), so that it can't be changed here.
+ */
+export async function getEnrollmentModeInfo(
+	signal?: AbortSignal
+): Promise<{ mode: EnrollmentMode | null; envOverride: boolean }> {
 	const out = await api(
-		v.looseObject({ data: v.optional(v.nullable(v.looseObject({ mode: v.optional(v.unknown()) }))) }),
+		v.looseObject({
+			data: v.optional(
+				v.nullable(v.looseObject({ mode: v.optional(v.unknown()), env_override: v.optional(v.unknown()) }))
+			)
+		}),
 		'/api/panel/enrollment/mode',
 		{ signal }
 	);
 	const mode = out.data?.mode;
-	return isEnrollmentMode(mode) ? mode : null;
+	return { mode: isEnrollmentMode(mode) ? mode : null, envOverride: out.data?.env_override === true };
+}
+
+/** The current mode; null when the server sends something else */
+export async function getEnrollmentMode(signal?: AbortSignal): Promise<EnrollmentMode | null> {
+	return (await getEnrollmentModeInfo(signal)).mode;
 }
 
 export async function setEnrollmentMode(mode: EnrollmentMode): Promise<void> {

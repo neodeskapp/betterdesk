@@ -10,7 +10,7 @@
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { getEnrollmentMode, setEnrollmentMode, type EnrollmentMode } from '#lib/api/enrollment.ts';
+	import { getEnrollmentModeInfo, setEnrollmentMode, type EnrollmentMode } from '#lib/api/enrollment.ts';
 	import { listTokens, revokeToken, type DeviceToken, type NewToken } from '#lib/api/tokens.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import {
@@ -86,11 +86,15 @@
 
 	/** The first mode request has answered, either way */
 	let modeSettled = $state(false);
+	/** The server's environment sets the mode at every start (ENROLLMENT_MODE_ENV_OVERRIDE) */
+	let modeLocked = $state(false);
 
 	async function loadMode(): Promise<void> {
 		if (!allowed) return;
 		try {
-			mode = savedMode = (await getEnrollmentMode()) ?? 'open';
+			const info = await getEnrollmentModeInfo();
+			modeLocked = info.envOverride;
+			mode = savedMode = info.mode ?? 'open';
 			modeStatus = { message: '', tone: 'neutral' };
 		} catch (err) {
 			modeStatus = {
@@ -323,11 +327,12 @@
 					<section class="section" aria-labelledby="enrollment-mode-title">
 						<div class="section-head"><h2 id="enrollment-mode-title">{t('tokens.enrollment_mode')}</h2></div>
 						<p class="section-note">{t('tokens.enrollment_mode_note')}</p>
+						{#if modeLocked}<Notice message={t('tokens.mode_env_locked')} />{/if}
 						<ChoiceList
 							choices={modeChoices}
 							labelledby="enrollment-mode-title"
 							name="enrollment_mode"
-							disabled={modeBusy}
+							disabled={modeBusy || modeLocked}
 							bind:value={mode}
 							onchange={(v, on) => {
 								if (on) void changeMode(v);

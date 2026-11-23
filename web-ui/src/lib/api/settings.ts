@@ -57,7 +57,9 @@ export function getClientConfig(signal?: AbortSignal): Promise<ClientConfig> {
 export const PublicEndpoints = v.looseObject({
 	public_server_id: Text,
 	public_relay_server: Text,
-	public_api_url: Text
+	public_api_url: Text,
+	/** The addresses the server's environment sets at every start (PUBLIC_ENDPOINTS_ENV_OVERRIDE) */
+	env_locked: v.optional(v.array(v.string()), [])
 });
 export type PublicEndpoints = v.InferOutput<typeof PublicEndpoints>;
 

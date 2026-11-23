@@ -56,6 +56,36 @@ func NormalizeServerHost(input string) HostResult {
 	return HostResult{Valid: true, Host: host}
 }
 
+// dottedQuad is text in the shape of an IPv4 address.
+var dottedQuad = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$`)
+
+// PublicHostProblem says what is wrong with an ID or relay server address
+// typed for the public endpoints that NormalizeServerHost would cut down
+// or take without a word (BUGS L378): "extra" for a scheme, a port or a
+// path, which clients would never get, "invalid_ip" for an IPv4 address
+// out of range, "" for an address taken as typed or one the save refuses
+// anyway.
+func PublicHostProblem(value any) string {
+	raw := ""
+	if truthy(value) {
+		raw = jsTrim(jsString(value))
+	}
+	normalized := NormalizeServerHost(raw)
+	if raw == "" || !normalized.Valid {
+		return ""
+	}
+	if dottedQuad.MatchString(normalized.Host) {
+		if _, err := netip.ParseAddr(normalized.Host); err != nil {
+			return "invalid_ip"
+		}
+	}
+	bare := strings.TrimSuffix(strings.TrimPrefix(raw, "["), "]")
+	if normalized.Host != raw && normalized.Host != bare {
+		return "extra"
+	}
+	return ""
+}
+
 // ipv6Host reads an IPv6 address without a zone, bare ("2001:db8::1") or
 // in brackets with a port or without ("[2001:db8::1]:21116"), and returns
 // it without the brackets.

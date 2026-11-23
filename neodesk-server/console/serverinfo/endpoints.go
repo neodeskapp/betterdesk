@@ -61,6 +61,9 @@ var (
 	ErrInvalidPublicHost = errors.New("invalid_public_host")
 	// ErrInvalidPublicAPIURL: the API address is not an http or https URL.
 	ErrInvalidPublicAPIURL = errors.New("invalid_public_api_url")
+	// ErrEndpointEnvLocked: the save changes an address the environment
+	// sets while PUBLIC_ENDPOINTS_ENV_OVERRIDE is on (EnvLockedEndpoints).
+	ErrEndpointEnvLocked = errors.New("public_endpoint_env_locked")
 
 	// The errors of NormalizeSettings, which ValidateSettings turns into
 	// the two above.
@@ -406,7 +409,58 @@ func (s *Service) storePublicEndpoints(in PublicEndpointsInput) (PublicEndpoints
 }
 
 // SavePublicEndpointSettings is WritePublicEndpointSettingsToEnv under the
-// name the settings route calls.
+// name the settings route calls, but a save that changes an address the
+// environment sets while PUBLIC_ENDPOINTS_ENV_OVERRIDE is on fails with
+// ErrEndpointEnvLocked: the next start would put the environment's value
+// back (BUGS L386).
 func (s *Service) SavePublicEndpointSettings(in PublicEndpointsInput) (PublicEndpoints, error) {
+	if locked := s.EnvLockedEndpoints(); len(locked) > 0 {
+		next, err := ValidateSettings(in)
+		if err != nil {
+			return PublicEndpoints{}, err
+		}
+		env, _ := NormalizeSettings(PublicEndpointsInput{
+			PublicServerID:    jsTrim(s.getenv(EnvPublicServerID)),
+			PublicRelayServer: jsTrim(s.getenv(EnvPublicRelayServer)),
+			PublicAPIURL:      jsTrim(s.getenv(EnvPublicAPIURL)),
+		})
+		for _, field := range locked {
+			if next.field(field) != env.field(field) {
+				return PublicEndpoints{}, ErrEndpointEnvLocked
+			}
+		}
+	}
 	return s.WritePublicEndpointSettingsToEnv(in)
+}
+
+// EnvLockedEndpoints names the addresses (public_server_id,
+// public_relay_server, public_api_url) the environment sets while
+// PUBLIC_ENDPOINTS_ENV_OVERRIDE is on: the server takes them from there
+// at every start, whatever the console saved.
+func (s *Service) EnvLockedEndpoints() []string {
+	locked := []string{}
+	if !envvar.SwitchOr(s.getenv(EnvPublicEndpointsOverride), false) {
+		return locked
+	}
+	for _, f := range [][2]string{
+		{"public_server_id", EnvPublicServerID},
+		{"public_relay_server", EnvPublicRelayServer},
+		{"public_api_url", EnvPublicAPIURL},
+	} {
+		if jsTrim(s.getenv(f[1])) != "" {
+			locked = append(locked, f[0])
+		}
+	}
+	return locked
+}
+
+// field is one of the three addresses by its name in a request.
+func (p PublicEndpoints) field(name string) string {
+	switch name {
+	case "public_server_id":
+		return p.PublicServerID
+	case "public_relay_server":
+		return p.PublicRelayServer
+	}
+	return p.PublicAPIURL
 }

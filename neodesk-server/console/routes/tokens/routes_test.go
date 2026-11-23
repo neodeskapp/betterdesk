@@ -216,3 +216,20 @@ func TestARefusalKeepsTheAPIServersStatus(t *testing.T) {
 		}
 	}
 }
+
+// A mode the server's environment forces (ENROLLMENT_MODE_ENV_OVERRIDE)
+// is refused with 409, which the console says in its own language
+// instead of the API server's text (BUGS L386, L419).
+func TestModeForcedByTheEnvironment(t *testing.T) {
+	api := routetest.NewAPI()
+	api.On("GET /api/enrollment/mode", 200, `{"mode":"managed","description":"d","env_override":true}`)
+	api.OnText("PUT /api/enrollment/mode", 409, "The enrollment mode is set by ENROLLMENT_MODE_ENV_OVERRIDE\n")
+	admin := routetest.New(t, routetest.Options{API: api}).As("admin")
+	if res := admin.Do("GET", "/api/panel/enrollment/mode", ""); res.Body != `{"success":true,"data":{"mode":"managed","description":"d","env_override":true}}` {
+		t.Errorf("read: %s", res.Body)
+	}
+	res := admin.Do("PUT", "/api/panel/enrollment/mode", `{"mode":"open"}`)
+	if res.Status != 409 || res.Body != `{"success":false,"error":"tokens.mode_env_locked"}` {
+		t.Errorf("change: %d %s", res.Status, res.Body)
+	}
+}

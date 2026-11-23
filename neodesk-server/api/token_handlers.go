@@ -473,8 +473,9 @@ func (s *Server) handleGetEnrollmentMode(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"mode":        mode,
-		"description": getEnrollmentModeDescription(mode),
+		"mode":         mode,
+		"description":  getEnrollmentModeDescription(mode),
+		"env_override": s.cfg.EnrollmentModeEnvOverride,
 	})
 }
 
@@ -492,6 +493,12 @@ func (s *Server) handleSetEnrollmentMode(w http.ResponseWriter, r *http.Request)
 	mode := req.Mode
 	if mode != "open" && mode != "managed" && mode != "locked" {
 		http.Error(w, "Invalid mode (open, managed, locked)", http.StatusBadRequest)
+		return
+	}
+	// The environment sets the mode at every start: a change here would
+	// be undone by the next one (BUGS L386)
+	if s.cfg.EnrollmentModeEnvOverride {
+		http.Error(w, "The enrollment mode is set by ENROLLMENT_MODE_ENV_OVERRIDE in the server's environment", http.StatusConflict)
 		return
 	}
 

@@ -467,7 +467,7 @@ func TestConnectionModeAndPublicEndpoints(t *testing.T) {
 		t.Errorf("get without the server: %d %s", res.Status, res.Body)
 	}
 
-	if res := admin.Do("GET", "/api/settings/public-endpoints", ""); res.Body != `{"success":true,"data":{"public_server_id":"","public_relay_server":"","public_api_url":"","env_override_active":false}}` {
+	if res := admin.Do("GET", "/api/settings/public-endpoints", ""); res.Body != `{"success":true,"data":{"public_server_id":"","public_relay_server":"","public_api_url":"","env_override_active":false,"env_locked":[]}}` {
 		t.Errorf("get endpoints: %s", res.Body)
 	}
 	for _, c := range []struct{ body, want string }{
@@ -482,7 +482,7 @@ func TestConnectionModeAndPublicEndpoints(t *testing.T) {
 		}
 	}
 	res = admin.Do("PUT", "/api/settings/public-endpoints", `{"public_server_id":"ID.example.org","public_api_url":"https://api.example.org:21114/"}`)
-	if res.Body != `{"success":true,"data":{"public_server_id":"ID.example.org","public_relay_server":"","public_api_url":"https://api.example.org:21114","env_override_active":true},"message":"settings.public_endpoints_saved"}` {
+	if res.Body != `{"success":true,"data":{"public_server_id":"ID.example.org","public_relay_server":"","public_api_url":"https://api.example.org:21114","env_override_active":true,"env_locked":[]},"message":"settings.public_endpoints_saved"}` {
 		t.Errorf("save endpoints: %s", res.Body)
 	}
 	if row := lastAudit(t, s.World); row != "public_endpoints_changed|RustDesk public endpoints updated (ID=ID.example.org, relay=-, api=https://api.example.org:21114)|127.0.0.1|1" {
@@ -574,4 +574,52 @@ func TestEnrollmentModeChangeAsksEnrollmentManage(t *testing.T) {
 			t.Errorf("change as admin: %d %s", res.Status, res.Body)
 		}
 	})
+}
+
+// With PUBLIC_ENDPOINTS_ENV_OVERRIDE on, the next start takes an address
+// the environment sets from there: the page says which ones and a save
+// that changes one is refused, where it said Saved and the restart put
+// the old value back (BUGS L386).
+func TestPublicEndpointsTheEnvironmentSets(t *testing.T) {
+	s := newSite(t, nil, nil, map[string]string{"PUBLIC_ENDPOINTS_ENV_OVERRIDE": "Y", "PUBLIC_SERVER_ID": "id.example.org"})
+	admin := s.As("admin")
+	res := admin.Do("GET", "/api/settings/public-endpoints", "")
+	if !strings.Contains(res.Body, `"public_server_id":"id.example.org"`) || !strings.Contains(res.Body, `"env_locked":["public_server_id"]`) {
+		t.Errorf("get: %s", res.Body)
+	}
+	res = admin.Do("PUT", "/api/settings/public-endpoints", `{"public_server_id":"other.example.org","public_relay_server":"","public_api_url":""}`)
+	if res.Status != http.StatusConflict || res.Body != `{"success":false,"error":"settings.public_endpoints_env_locked"}` {
+		t.Errorf("save over the environment: %d %s", res.Status, res.Body)
+	}
+	if res := admin.Do("GET", "/api/settings/public-endpoints", ""); !strings.Contains(res.Body, `"public_server_id":"id.example.org"`) {
+		t.Errorf("a refused save changed the address: %s", res.Body)
+	}
+	// the other addresses can still be saved, the locked one sent back as it is
+	res = admin.Do("PUT", "/api/settings/public-endpoints", `{"public_server_id":"id.example.org","public_relay_server":"relay.example.org","public_api_url":""}`)
+	if res.Status != http.StatusOK || !strings.Contains(res.Body, `"public_relay_server":"relay.example.org"`) {
+		t.Errorf("save of the others: %d %s", res.Status, res.Body)
+	}
+}
+
+// A port, a scheme or a path in the ID or relay server was dropped with
+// Saved, and clients got the standard port; an IPv4 address out of range
+// was taken. Both are refused at their field now (BUGS L378).
+func TestPublicEndpointsRefuseWhatTheyWouldCut(t *testing.T) {
+	s := newSite(t, nil, nil, nil)
+	admin := s.As("admin")
+	for _, c := range []struct{ body, want string }{
+		{`{"public_relay_server":"relay.example.com:31117"}`, `{"success":false,"error":"settings.public_endpoints_host_extra","field":"public_relay_server"}`},
+		{`{"public_server_id":"[2001:db8::1]:31116"}`, `{"success":false,"error":"settings.public_endpoints_host_extra","field":"public_server_id"}`},
+		{`{"public_server_id":"https://id.example.com/x"}`, `{"success":false,"error":"settings.public_endpoints_host_extra","field":"public_server_id"}`},
+		{`{"public_server_id":"999.999.999.999"}`, `{"success":false,"error":"settings.public_endpoints_host_invalid_ip","field":"public_server_id"}`},
+	} {
+		if res := admin.Do("PUT", "/api/settings/public-endpoints", c.body); res.Status != http.StatusBadRequest || res.Body != c.want {
+			t.Errorf("%s: %d %s", c.body, res.Status, res.Body)
+		}
+	}
+	for _, body := range []string{`{"public_server_id":"id.example.com","public_relay_server":"[2001:db8::1]"}`, `{"public_server_id":"203.0.113.7"}`} {
+		if res := admin.Do("PUT", "/api/settings/public-endpoints", body); res.Status != http.StatusOK {
+			t.Errorf("%s: %d %s", body, res.Status, res.Body)
+		}
+	}
 }
