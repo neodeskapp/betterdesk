@@ -31,6 +31,18 @@ type CustomTxtOptions struct {
 	RelayPort func() string
 }
 
+// supportAppName is the app-name of custom.txt for the name given: the
+// name trimmed, or NeoDesk Support Agent without one. The client takes it
+// as its name.
+func supportAppName(name any) string {
+	if truthy(name) {
+		if text := jsTrim(jsString(name)); text != "" {
+			return text
+		}
+	}
+	return "NeoDesk Support Agent"
+}
+
 // BuildSupportCustomTxt builds the JSON of custom.txt
 // (customTxtBuilder.buildSupportCustomTxt).
 func BuildSupportCustomTxt(o CustomTxtOptions) *goapi.Object {
@@ -46,14 +58,8 @@ func BuildSupportCustomTxt(o CustomTxtOptions) *goapi.Object {
 	} else if o.DisableSettings == true || o.DisableSettings == "Y" || o.DisableSettings == "y" {
 		disable = "Y"
 	}
-	appName := "NeoDesk Support Agent"
-	if truthy(o.AppName) {
-		if name := jsTrim(jsString(o.AppName)); name != "" {
-			appName = name
-		}
-	}
 	return goapi.NewObject(
-		"app-name", appName,
+		"app-name", supportAppName(o.AppName),
 		"conn-type", "incoming",
 		"disable-settings", disable,
 		"override-settings", goapi.NewObject(

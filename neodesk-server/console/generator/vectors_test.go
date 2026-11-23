@@ -327,6 +327,26 @@ func TestBase64AndKeysMatchNode(t *testing.T) {
 	}
 }
 
+// windowsInstallerAsFixed is a Windows installer Node wrote with the
+// change of L293: the service and the tray shortcut have the client's
+// name from custom.txt, NeoDesk Support Agent when a build gives none,
+// where Node's took the name of the executable.
+func windowsInstallerAsFixed(t *testing.T, node string) string {
+	t.Helper()
+	fixed := strings.NewReplacer(
+		"$serviceName = $appName\n",
+		"# The client names its service and its tray shortcut after the app name in\n"+
+			"# custom.txt, given here in base64 (UTF-8)\n"+
+			"$clientName = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('"+base64.StdEncoding.EncodeToString([]byte("NeoDesk Support Agent"))+"'))\n"+
+			"$serviceName = $clientName\n",
+		`Startup\$appName Tray.lnk"`, `Startup\$clientName Tray.lnk"`,
+	).Replace(node)
+	if strings.Count(fixed, "$clientName") != 3 {
+		t.Fatalf("the Node installer has not the lines L293 changes:\n%s", node)
+	}
+	return fixed
+}
+
 func TestInstallerScriptsMatchNode(t *testing.T) {
 	var cases []struct {
 		Kind           string `json:"kind"`
@@ -342,7 +362,7 @@ func TestInstallerScriptsMatchNode(t *testing.T) {
 		o := InstallerOptions{InstallService: truthyJSON(c.InstallService), Autostart: truthyJSON(c.Autostart)}
 		switch {
 		case c.Text != "":
-			if got := WindowsInstallerScript(o); got != c.Text {
+			if got, want := WindowsInstallerScript(o), windowsInstallerAsFixed(t, c.Text); got != want {
 				t.Errorf("windows %v %v differs", c.InstallService, c.Autostart)
 			}
 		default:

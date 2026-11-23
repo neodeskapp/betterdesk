@@ -770,6 +770,12 @@ func (s *Service) buildAPIServer(branding any) string {
 	return scheme + "://" + address + ":" + port
 }
 
+// brandingAppName is the name a bundle's profile gives the client;
+// supportAppName makes the app-name of custom.txt from it.
+func brandingAppName(branding any) any {
+	return or(or(or(prop(branding, "app_name"), prop(branding, "company_name")), prop(branding, "product_name")), "NeoDesk Support Agent")
+}
+
 // BuildCustomTxtContent signs the custom.txt of a bundle's profile with
 // the install's seed.
 func (s *Service) BuildCustomTxtContent(ctx context.Context, branding any) (Signed, error) {
@@ -781,9 +787,8 @@ func (s *Service) BuildCustomTxtContent(ctx context.Context, branding any) (Sign
 	if !truthy(key) {
 		key = or(string(s.opts.ServerInfo.ResolvePublicKey(ctx)), "")
 	}
-	appName := or(or(or(prop(branding, "app_name"), prop(branding, "company_name")), prop(branding, "product_name")), "NeoDesk Support Agent")
 	signed, _, err := BuildAndSignSupportCustomTxt(CustomTxtOptions{
-		AppName:            appName,
+		AppName:            brandingAppName(branding),
 		Host:               host,
 		Relay:              or(or(prop(branding, "relay_host"), prop(branding, "relay_server")), host),
 		API:                s.buildAPIServer(branding),
@@ -970,7 +975,8 @@ func (s *Service) runOne(ctx context.Context, c *claim) error {
 		if nested := findFile(stageDir, ".custom-txt-here"); nested != "" {
 			_ = os.Remove(nested)
 		}
-		installer := InstallerOptions{InstallService: truthy(prop(branding, "install_service")), Autostart: truthy(prop(branding, "autostart"))}
+		installer := InstallerOptions{InstallService: truthy(prop(branding, "install_service")), Autostart: truthy(prop(branding, "autostart")),
+			ClientName: supportAppName(brandingAppName(branding))}
 		if row.Platform == "windows" {
 			err = writeWindowsInstallers(stageDir, installer)
 		} else {

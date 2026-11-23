@@ -66,6 +66,56 @@ func must(t *testing.T, err error) {
 	}
 }
 
+// installerValues reads the names a Windows installer script sets, by
+// variable: a name given in base64 decoded, the client's executable as
+// neodesk, the names it already read put into the text of the others.
+func installerValues(script string) map[string]string {
+	const fromBase64 = "[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('"
+	values := map[string]string{}
+	for _, line := range strings.Split(script, "\n") {
+		name, expr, ok := strings.Cut(line, " = ")
+		if !ok || !strings.HasPrefix(name, "$") || strings.Contains(name, " ") {
+			continue
+		}
+		if text, ok := strings.CutPrefix(expr, fromBase64); ok {
+			if raw, err := base64.StdEncoding.DecodeString(strings.TrimSuffix(text, "'))")); err == nil {
+				values[name] = string(raw)
+				continue
+			}
+		}
+		if expr == "[IO.Path]::GetFileNameWithoutExtension($app)" {
+			values[name] = "neodesk"
+			continue
+		}
+		values[name] = strings.NewReplacer("$clientName", values["$clientName"], "$appName", values["$appName"]).Replace(expr)
+	}
+	return values
+}
+
+// Whatever name the client has reaches the Windows installer whole, and
+// the script stays ASCII, which Windows PowerShell reads the same in any
+// code page (L293).
+func TestTheWindowsInstallerHasTheClientsName(t *testing.T) {
+	for name, want := range map[string]string{
+		"Acme":                              "Acme",
+		"Müller's \"Support\" $env:x `n 支持": "Müller's \"Support\" $env:x `n 支持",
+		"Line\nbreak'))":                    "Line\nbreak'))",
+		"":                                  "NeoDesk Support Agent",
+	} {
+		script := WindowsInstallerScript(InstallerOptions{InstallService: true, ClientName: name})
+		values := installerValues(script)
+		if values["$serviceName"] != want || !strings.HasSuffix(values["$startupShortcut"], `\Startup\`+want+` Tray.lnk"`) {
+			t.Errorf("%q: service %q, shortcut %s", name, values["$serviceName"], values["$startupShortcut"])
+		}
+		for i, r := range script {
+			if r > 127 {
+				t.Errorf("%q: the script has %q at %d", name, r, i)
+				break
+			}
+		}
+	}
+}
+
 // templateTree writes a complete template tree below root: the six
 // portable templates with binaries over 100 KB.
 func templateTree(t *testing.T, root string) {
@@ -221,8 +271,26 @@ func TestTemplateBuilds(t *testing.T) {
 				zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 				must(t, err)
 				names := map[string]bool{}
+				var installer string
 				for _, f := range zr.File {
 					names[f.Name] = true
+					if strings.HasSuffix(f.Name, "/Install-NeoDesk.ps1") {
+						rc, err := f.Open()
+						must(t, err)
+						text, err := io.ReadAll(rc)
+						rc.Close()
+						must(t, err)
+						installer = string(text)
+					}
+				}
+				// The client takes its name from custom.txt and names its
+				// service and its tray shortcut after it (L293)
+				values := installerValues(installer)
+				if got := values["$serviceName"]; got != "Acme" {
+					t.Errorf("%s: the installer waits for the service %q, the client names it %q", p.Key(), got, "Acme")
+				}
+				if got := values["$startupShortcut"]; !strings.HasSuffix(got, `\Startup\Acme Tray.lnk"`) {
+					t.Errorf("%s: the installer removes the tray shortcut %s, the client names it Acme Tray.lnk", p.Key(), got)
 				}
 				root := "neodesk-support-windows-" + p.Arch + "/"
 				for _, want := range []string{"custom.txt", "neodesk.exe", "Install-NeoDesk.ps1", "Uninstall-NeoDesk.ps1"} {

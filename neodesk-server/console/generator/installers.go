@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"encoding/base64"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,9 +29,12 @@ if (-not $app) {
 }
 
 $appName = [IO.Path]::GetFileNameWithoutExtension($app)
-$serviceName = $appName
+# The client names its service and its tray shortcut after the app name in
+# custom.txt, given here in base64 (UTF-8)
+$clientName = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('__CLIENT_NAME__'))
+$serviceName = $clientName
 $taskName = "$appName Tray"
-$startupShortcut = Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs\Startup\$appName Tray.lnk"
+$startupShortcut = Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs\Startup\$clientName Tray.lnk"
 $isUninstall = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name) -match 'Uninstall'
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = [Security.Principal.WindowsPrincipal]::new($identity)
@@ -90,6 +94,10 @@ if (-not $profileInstallsService -and -not $profileAutostarts) {
 type InstallerOptions struct {
 	InstallService bool
 	Autostart      bool
+	// ClientName is the app-name of the build's custom.txt. The Windows
+	// client names its service and its tray shortcut after it; empty is
+	// the name custom.txt has then (supportAppName).
+	ClientName string
 }
 
 func psBool(v bool) string {
@@ -101,9 +109,14 @@ func psBool(v bool) string {
 
 // WindowsInstallerScript is the PowerShell installer for a Windows build.
 // The same script uninstalls when its file name has "Uninstall" in it.
+// The client's name goes in as base64 of its UTF-8, so no character of it
+// can end the string, and Windows PowerShell, which reads a script without
+// a byte order mark in the ANSI code page, reads it right.
 func WindowsInstallerScript(o InstallerOptions) string {
 	script := strings.Replace(windowsInstallerScript, "__INSTALL_SERVICE__", psBool(o.InstallService), 1)
-	return strings.Replace(script, "__AUTOSTART__", psBool(o.Autostart), 1)
+	script = strings.Replace(script, "__AUTOSTART__", psBool(o.Autostart), 1)
+	name := base64.StdEncoding.EncodeToString([]byte(supportAppName(o.ClientName)))
+	return strings.Replace(script, "__CLIENT_NAME__", name, 1)
 }
 
 // writeWindowsInstallers writes Install-NeoDesk.ps1 and
