@@ -235,7 +235,9 @@ func TestBdMgmtReconnectStaysConnected(t *testing.T) {
 	if !mgmtHub.IsConnected("BDMRV183") {
 		t.Fatal("the device is not listed while its second socket is open")
 	}
-	if a := f.overListener(t, http.MethodPost, "/api/nd/mgmt/BDMRV183/send", `{"type":"ping"}`, testOperatorKey); a.status != http.StatusOK {
+	// The send asks the agent's terminal permission (L388), which the
+	// operator does not hold: the admin key sends
+	if a := f.overListener(t, http.MethodPost, "/api/nd/mgmt/BDMRV183/send", `{"type":"ping"}`, testAPIKey); a.status != http.StatusOK {
 		t.Errorf("send to the reconnected device: %d %s, want 200", a.status, a.body)
 	}
 }

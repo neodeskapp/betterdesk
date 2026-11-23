@@ -8,8 +8,9 @@ import (
 )
 
 // TestRoleLevelRoutesAskAPermission: wake-on-LAN, telemetry commands,
-// session grants, CDAP video and audio, mesh share links and the
-// management channel ask device.connect, the access policy read asks
+// session grants, CDAP video and audio and mesh share links ask
+// device.connect, the management channel agent.terminal, the access
+// policy read asks
 // device.view, and pairing codes and the enrollment lists ask
 // enrollment.approve, so the role map and its overrides decide them
 // instead of the role level (RV170, A99).
@@ -21,11 +22,14 @@ func TestRoleLevelRoutesAskAPermission(t *testing.T) {
 	}{
 		{auth.PermDeviceConnect, []route{
 			{http.MethodPost, "/api/peers/PEERAAA1/wol", `{}`},
-			{http.MethodPost, "/api/peers/PEERAAA1/telemetry/command", `{"command":"files.browse"}`},
+			{http.MethodPost, "/api/peers/PEERAAA1/telemetry/command", `{"command":"collect.metrics"}`},
 			{http.MethodPost, "/api/peers/PEERAAA1/session-grant", `{}`},
 			{http.MethodGet, "/api/cdap/devices/PEERAAA1/video", ""},
 			{http.MethodGet, "/api/cdap/devices/PEERAAA1/audio", ""},
 			{http.MethodPost, "/api/mesh/devices/PEERAAA1/share", `{}`},
+		}},
+		// The management channel hands the agent any message (L388)
+		{auth.PermAgentTerminal, []route{
 			{http.MethodPost, "/api/nd/mgmt/PEERAAA1/send", `{"type":"ping"}`},
 		}},
 		{auth.PermDeviceView, []route{
