@@ -3799,6 +3799,7 @@
         "type_screen_share": "Screen sharing",
         "type_file_transfer": "File transfer",
         "page_description": "Block or record data leaving devices through USB drives, file transfers, the clipboard or screen sharing. Devices fetch the enabled policies from the server and report each blocked or logged transfer as an event.",
+        "client_note": "Only the NeoDesk client fetches and applies these policies. The stock RustDesk client ignores them, so a device that runs it is not covered.",
         "views_label": "Data loss prevention views",
         "transfer_type": "Transfer type",
         "loading_policies": "Loading policies…",

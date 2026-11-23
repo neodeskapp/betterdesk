@@ -478,11 +478,32 @@ func countEventsPerPolicy(ctx context.Context, db *store.DB) (map[string]int64, 
 	return out, nil
 }
 
-// activePolicy is a policy as a device gets it.
+// activePolicy is a policy as a device gets it: what it covers
+// (policy_type), what the device does (action) and the devices it is for
+// (scope, device ids separated by commas, empty for all), which the page
+// says devices go by (L413).
 type activePolicy struct {
-	ID    jsbind.Cell     `json:"id"`
-	Name  jsbind.Cell     `json:"name"`
-	Rules json.RawMessage `json:"rules"`
+	ID         jsbind.Cell     `json:"id"`
+	Name       jsbind.Cell     `json:"name"`
+	PolicyType string          `json:"policy_type"`
+	Action     string          `json:"action"`
+	Scope      string          `json:"scope"`
+	Rules      json.RawMessage `json:"rules"`
+}
+
+// appliesTo reports whether a policy's scope takes in the device: an empty
+// scope or "all" is every device, else the scope must name the device.
+func appliesTo(scope, deviceID string) bool {
+	scope = strings.TrimSpace(scope)
+	if scope == "" || strings.EqualFold(scope, "all") {
+		return true
+	}
+	for _, id := range strings.Split(scope, ",") {
+		if strings.TrimSpace(id) == deviceID {
+			return true
+		}
+	}
+	return false
 }
 
 // isOn reads a policy's enabled as one flag on both databases: on is
@@ -496,10 +517,12 @@ func isOn(enabled jsbind.Value) bool {
 	return false
 }
 
-// listActivePolicies returns the policies that are on, by id, with their
-// rules parsed. Rules that are no list, or no JSON, go out as no rules.
-func listActivePolicies(ctx context.Context, db *store.DB) ([]activePolicy, error) {
-	rows, err := store.Select(ctx, db, "SELECT id, name, enabled, rules FROM dlp_policies ORDER BY id")
+// listActivePolicies returns the policies that are on and apply to the
+// device, by id, with their rules parsed. Rules that are no list, or no
+// JSON, go out as no rules. A policy without a transfer type or action
+// goes out with "" and "log".
+func listActivePolicies(ctx context.Context, db *store.DB, deviceID string) ([]activePolicy, error) {
+	rows, err := store.Select(ctx, db, "SELECT id, name, enabled, rules, policy_type, action, scope FROM dlp_policies ORDER BY id")
 	if err != nil {
 		return nil, fmt.Errorf("list the policies that are on: %w", err)
 	}
@@ -511,13 +534,18 @@ func listActivePolicies(ctx context.Context, db *store.DB) ([]activePolicy, erro
 	var on []candidate
 	for rows.Next() {
 		var id, name, enabled jsbind.Cell
-		var rules store.NullString
-		if err := rows.Scan(&id, &name, &enabled, &rules); err != nil {
+		var rules, policyType, action, scope store.NullString
+		if err := rows.Scan(&id, &name, &enabled, &rules, &policyType, &action, &scope); err != nil {
 			return nil, fmt.Errorf("read a policy: %w", err)
 		}
-		if isOn(enabled.Value()) {
-			on = append(on, candidate{activePolicy{ID: id, Name: name}, document{text: rules.String, null: !rules.Valid, jsonb: db.IsPostgres()}})
+		if !isOn(enabled.Value()) || !appliesTo(scope.String, deviceID) {
+			continue
 		}
+		if action.String == "" {
+			action.String = "log"
+		}
+		policy := activePolicy{ID: id, Name: name, PolicyType: policyType.String, Action: action.String, Scope: strings.TrimSpace(scope.String)}
+		on = append(on, candidate{policy, document{text: rules.String, null: !rules.Valid, jsonb: db.IsPostgres()}})
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("list the policies that are on: %w", err)

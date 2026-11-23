@@ -3720,6 +3720,7 @@
     "type_screen_share": "Bildschirmfreigabe",
     "type_file_transfer": "Dateiübertragung",
     "page_description": "Blockiert oder protokolliert Daten, die Geräte über USB-Laufwerke, Dateiübertragungen, die Zwischenablage oder Bildschirmfreigabe verlassen. Geräte holen die aktiven Richtlinien vom Server und melden jede blockierte oder protokollierte Übertragung als Ereignis.",
+    "client_note": "Nur der NeoDesk-Client ruft diese Richtlinien ab und wendet sie an. Der normale RustDesk-Client ignoriert sie, ein Gerät mit diesem Client ist also nicht abgedeckt.",
     "views_label": "Ansichten zum Schutz vor Datenabfluss",
     "transfer_type": "Art der Übertragung",
     "loading_policies": "Richtlinien werden geladen…",

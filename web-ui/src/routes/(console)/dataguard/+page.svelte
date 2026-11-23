@@ -272,6 +272,8 @@
 		<div class="page-head">
 			<h1>{t('nav.dataguard')}</h1>
 			<p class="page-description">{t('dataguard.page_description')}</p>
+			<!-- Only the NeoDesk client fetches the policies (L413) -->
+			<p class="page-description">{t('dataguard.client_note')}</p>
 		</div>
 
 		<Tabs {tabs} value={shownTab} label={t('dataguard.views_label')} onchange={selectTab}>

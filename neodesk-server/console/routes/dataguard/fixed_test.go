@@ -190,7 +190,8 @@ var _ = deviceFixes.Add("DV7", map[string]replay.Fix{
 })
 
 var (
-	dv7Has   = []string{`{"id":1,"name":"usb block","rules":[{"type":"usb","action":"block"}]}`}
+	// with the policy's transfer type, action and scope since L413
+	dv7Has   = []string{`{"id":1,"name":"usb block","policy_type":"","action":"log","scope":"","rules":[{"type":"usb","action":"block"}]}`}
 	dv7Lacks = []string{`"rules":{`, `"rules":0`, `"rules":null`, `"rules":"`, `"name":"enabled text"`}
 )
 

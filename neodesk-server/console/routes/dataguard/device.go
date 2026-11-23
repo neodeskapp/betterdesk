@@ -13,10 +13,11 @@ import (
 // passes the CSRF gate without a CSRF token when no one is signed in; with
 // a session it needs one like any other write.
 
-// activePolicies answers GET dlp-policies: the policies that are on, each
-// as {id, name, rules}. The rules of a policy that is off are not read.
+// activePolicies answers GET dlp-policies: the policies that are on and
+// apply to the token's device, each as {id, name, policy_type, action,
+// scope, rules}. The rules of a policy that is off are not read.
 func (h *handlers) activePolicies(w http.ResponseWriter, r *http.Request) {
-	policies, err := listActivePolicies(r.Context(), h.db)
+	policies, err := listActivePolicies(r.Context(), h.db, kit.Device(r).DeviceID)
 	if err != nil {
 		h.log.Error("GET /dlp-policies error:", err)
 		fail(w, r, http.StatusInternalServerError, "Failed to fetch policies")

@@ -199,7 +199,9 @@ func TestActivePoliciesSkipABadRow(t *testing.T) {
 			w.Exec("INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (4, 'enabled yes', 'yes', '[2]')", nil)
 		}
 		got := w.Do(replay.Request{Path: "/api/nd/dlp-policies", Headers: map[string]string{"Authorization": "Bearer tok-device-a"}})
-		want := `[{"id":1,"name":"list","rules":[1]},{"id":2,"name":"broken","rules":[]},{"id":3,"name":"object","rules":[]}]`
+		// Each with its transfer type, action and scope (L413); none set is
+		// "", "log" and every device
+		want := `[{"id":1,"name":"list","policy_type":"","action":"log","scope":"","rules":[1]},{"id":2,"name":"broken","policy_type":"","action":"log","scope":"","rules":[]},{"id":3,"name":"object","policy_type":"","action":"log","scope":"","rules":[]}]`
 		if got.Status != 200 || got.Body != want {
 			t.Errorf("the policies of a device: %d %s, want %s", got.Status, got.Body, want)
 		}
