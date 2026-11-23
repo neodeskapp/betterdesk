@@ -160,6 +160,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The release notes list the commits since the release before
+          fetch-depth: 0
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
           go-version-file: ${{ env.SERVER_DIR }}/go.mod
@@ -203,6 +206,13 @@ jobs:
           [ -f dist/manifest.sig ] && files+=(dist/manifest.sig)
           # A new release is made as a draft with all its files and published
           # afterwards: the updater sees no release or a whole one.
+          # A tag's notes are release-notes/<tag>.md with every commit since
+          # the release before (release-notes/body.sh), else GitHub's own.
+          notes=(--generate-notes)
+          if [ "${TAG}" != dev ] && [ -f "release-notes/${TAG}.md" ]; then
+            bash release-notes/body.sh "${TAG}" > "${RUNNER_TEMP}/release-notes.md"
+            notes=(--notes-file "${RUNNER_TEMP}/release-notes.md")
+          fi
           if [ "${TAG}" = dev ]; then
             # The rolling pre-release is replaced, with its tag, at this commit.
             gh release delete dev --cleanup-tag --yes || true
@@ -215,9 +225,9 @@ jobs:
           elif [ "${PRERELEASE}" = true ]; then
             # A release candidate stays a pre-release: the stable channel
             # takes it only while there is no stable release
-            gh release create "${TAG}" "${files[@]}" --draft --prerelease --verify-tag --title "NeoDesk ${VERSION}" --generate-notes
+            gh release create "${TAG}" "${files[@]}" --draft --prerelease --verify-tag --title "NeoDesk ${VERSION}" "${notes[@]}"
             gh release edit "${TAG}" --draft=false
           else
-            gh release create "${TAG}" "${files[@]}" --draft --verify-tag --title "NeoDesk ${VERSION}" --generate-notes
+            gh release create "${TAG}" "${files[@]}" --draft --verify-tag --title "NeoDesk ${VERSION}" "${notes[@]}"
             gh release edit "${TAG}" --draft=false --latest
           fi

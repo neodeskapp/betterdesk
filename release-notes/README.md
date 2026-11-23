@@ -1,0 +1,3 @@
+One file per release, `<tag>.md`, committed before the tag: the release workflow publishes `bash release-notes/body.sh <tag>` (the file, then every commit since the release before, folded), and GitHub's generated notes when there is no file. For a release that is out already: `bash release-notes/body.sh <tag> > body.md && gh release edit <tag> -R neodeskapp/neodesk --notes-file body.md`.
+
+The first image is the release card, from git: in neodeskapp/website run `node release-card.ts <this checkout> <tag> "<title>"`, commit and push `public/img/releases/<tag>/`, and link it as `https://raw.githubusercontent.com/neodeskapp/website/<commit>/public/img/releases/<tag>/card.png` with `width="800"` and alt text.

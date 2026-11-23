@@ -634,6 +634,49 @@ test_release_workflow_publishes_candidates_as_prereleases() (
     rm -rf "$dir"
 )
 
+# A tag with release-notes/<tag>.md is published with that file, then every
+# commit since the release before, folded, and the compare link; a tag
+# without one gets GitHub's generated notes.
+test_release_workflow_takes_the_notes_file() (
+    local dir publish tag
+    dir=$(mktemp -d)
+    publish=$(workflow_step 'name: Publish')
+    [ -n "$publish" ] || fail "release-go.yml has no Publish step"
+    mkdir -p "$dir/repo/release-notes" "$dir/repo/dist" "$dir/tmp"
+    cp "$SCRIPT_ROOT/release-notes/body.sh" "$dir/repo/release-notes/"
+    (
+        cd "$dir/repo"
+        export GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@localhost GIT_COMMITTER_NAME=test GIT_COMMITTER_EMAIL=test@localhost
+        git init -q .
+        git commit -q --allow-empty -m 'chore: release 3.6.0-rc.1' && git tag v3.6.0-rc.1
+        git commit -q --allow-empty -m 'fix: keep the console signed in' && git tag v3.6.0-rc.2
+        printf 'What this release is.\n' > release-notes/v3.6.0-rc.2.md
+        touch dist/neodesk-server-linux-amd64 dist/manifest.json dist/SHA256SUMS
+        export GH_LOG="$dir/gh"
+        gh() {
+            printf '%s\n' "$*" >> "$GH_LOG"
+            local a
+            for a in "$@"; do case "$a" in *.md) cp "$a" "$GH_LOG.notes" ;; esac; done
+            [ "$1 $2" != "release view" ]
+        }
+        export -f gh
+        for tag in v3.6.0-rc.2 v3.6.0-rc.1; do
+            TAG=$tag VERSION=${tag#v} PRERELEASE=true RUNNER_TEMP="$dir/tmp" GITHUB_REPOSITORY=neodeskapp/neodesk \
+                GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 bash -c "$publish" || exit 1
+        done
+    ) || fail "the release steps failed"
+    grep -q -- "^release create v3.6.0-rc.2 .*--notes-file $dir/tmp/release-notes.md\$" "$dir/gh" \
+        || fail "v3.6.0-rc.2 is not published with its notes file: $(cat "$dir/gh")"
+    if grep -q -- '^release create v3.6.0-rc.2 .*--generate-notes' "$dir/gh"; then fail "v3.6.0-rc.2 also gets generated notes: $(cat "$dir/gh")"; fi
+    [ "$(head -n 1 "$dir/gh.notes")" = 'What this release is.' ] || fail "the notes do not start with the file: $(cat "$dir/gh.notes")"
+    grep -q '^- fix: keep the console signed in (' "$dir/gh.notes" || fail "the notes lack the commits since v3.6.0-rc.1: $(cat "$dir/gh.notes")"
+    if grep -q 'chore: release 3.6.0-rc.1' "$dir/gh.notes"; then fail "the notes list a commit of the release before: $(cat "$dir/gh.notes")"; fi
+    grep -q '^<summary>All changes since v3.6.0-rc.1</summary>$' "$dir/gh.notes" || fail "the commits are not folded: $(cat "$dir/gh.notes")"
+    grep -q 'https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.1...v3.6.0-rc.2' "$dir/gh.notes" || fail "the notes lack the compare link: $(cat "$dir/gh.notes")"
+    grep -q -- '^release create v3.6.0-rc.1 .*--generate-notes$' "$dir/gh" || fail "a tag without a notes file does not get generated notes: $(cat "$dir/gh")"
+    rm -rf "$dir"
+)
+
 # L210 (A183): while the repository has no stable release, the stable
 # channel installs the newest pre-release that is not the rolling dev one
 # (a release candidate), also with --channel stable or the channel saved in
@@ -1198,6 +1241,7 @@ test_runs_without_term
 test_apt_source_failure_goes_on
 test_backup_uses_the_servers_backup
 test_release_workflow_publishes_candidates_as_prereleases
+test_release_workflow_takes_the_notes_file
 test_no_stable_release_installs_the_newest_prerelease
 test_no_stable_release_installs_dev
 test_rerun_updates_and_forgets_the_password
