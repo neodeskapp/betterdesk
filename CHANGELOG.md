@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Added
+- Docker: HTTPS for the web console with Let's Encrypt. `--domain` and
+  `--email` (`--letsencrypt-email` in install.sh) put a small Traefik
+  container in front of the console that gets the certificate and renews it
+  by itself; the console's own port then answers on the host only.
+  `--letsencrypt-staging` uses Let's Encrypt's staging server, and
+  `--no-traefik` turns it off again. The compose file has it as the profile
+  `traefik`.
+
 ### Changed
 - _(none yet)_
 
