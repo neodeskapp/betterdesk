@@ -278,3 +278,22 @@ func TestGuestCookieWithoutATextIsRefused(t *testing.T) {
 		}
 	}
 }
+
+// TestDevMockScenarios: ?scenario= picks a scenario the mock knows, the
+// older device that switches its displays one at a time among them;
+// another name gets "ok".
+func TestDevMockScenarios(t *testing.T) {
+	h := &handlers{src: sources{mockOn: true}}
+	for query, want := range map[string]string{
+		"mock=1&scenario=one-at-a-time": "one-at-a-time",
+		"mock=1&scenario=One-At-A-Time": "one-at-a-time",
+		"mock=1&scenario=dropped":       "dropped",
+		"mock=1&scenario=two-at-once":   "ok",
+	} {
+		r := httptest.NewRequest("GET", "/api/remote/viewer/900100012?"+query, nil)
+		got, bad := h.mockFor(r, "900100012")
+		if s, ok := got.(mockSettings); bad != "" || !ok || s.Scenario != want {
+			t.Errorf("%s: %#v (bad %q), want scenario %q", query, got, bad, want)
+		}
+	}
+}
