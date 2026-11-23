@@ -82,6 +82,7 @@
 		splitHostPort,
 		type GeneralPart
 	} from '../general.ts';
+	import { wholeInRange } from '../numbers.ts';
 	import { onRestartCanceled, showRestartPrompt } from '../restart.svelte.ts';
 	import SettingsGrid from '../SettingsGrid.svelte';
 	import SettingsLayout from '../SettingsLayout.svelte';
@@ -136,6 +137,9 @@
 	let loaded = $state(false);
 	let busy = $state(false);
 	let status = $state<SaveStatus>({ state: 'idle', message: '' });
+	/** Numbers a save refused, shown at their field */
+	let fieldErrors = $state<{ fallback?: string; retention?: string }>({});
+	let connAdvancedOpen = $state(false);
 
 	const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 	const partDirty = (p: GeneralPart) => !same($state.snapshot(values[p]), baseline[p]);
@@ -242,11 +246,14 @@
 		}
 		if (part === 'connection') {
 			if (!connWritable) throw new Error(t('settings.general.conn_readonly_short'));
-			const fallback = Number(v.connection.p2p_fallback_ms);
-			const restart = await saveConnectionMode({
-				...v.connection,
-				p2p_fallback_ms: Number.isFinite(fallback) ? Math.round(fallback) : 2000
-			});
+			const fallback = wholeInRange(v.connection.p2p_fallback_ms, 0, 30000);
+			if (fallback === null) {
+				fieldErrors.fallback = t('settings.general.conn_fallback_error');
+				connAdvancedOpen = true;
+				throw new Error(fieldErrors.fallback);
+			}
+			fieldErrors.fallback = undefined;
+			const restart = await saveConnectionMode({ ...v.connection, p2p_fallback_ms: fallback });
 			await loadConnection(true);
 			return { restart };
 		}
@@ -255,9 +262,12 @@
 			setBaseline('scope', v.scope, true);
 			return { restart: null };
 		}
-		let days = Math.round(Number(v.availability.retention_days));
-		if (!Number.isFinite(days) || days < 1) days = 30;
-		days = Math.min(days, 3650);
+		const days = wholeInRange(v.availability.retention_days, 1, 3650);
+		if (days === null) {
+			fieldErrors.retention = t('settings.general.retention_error');
+			throw new Error(fieldErrors.retention);
+		}
+		fieldErrors.retention = undefined;
 		await saveAvailabilityHistory(v.availability.enabled, days);
 		setBaseline('availability', { enabled: v.availability.enabled, retention_days: days }, true);
 		return { restart: null };
@@ -753,12 +763,17 @@
 										}
 									]}
 								/>
-								<Disclosure title={t('settings.connection_mode_advanced')} level={3}>
+								<Disclosure
+									title={t('settings.connection_mode_advanced')}
+									level={3}
+									bind:open={connAdvancedOpen}
+								>
 									<div class="disclosure-body">
 										<Field
 											id="conn-p2p-fallback-ms"
 											label={t('settings.general.conn_fallback_label')}
 											hint={t('settings.general.conn_fallback_hint')}
+											error={fieldErrors.fallback}
 											width="short"
 										>
 											{#snippet children(f)}
@@ -860,6 +875,7 @@
 									id="availability-history-retention"
 									label={t('settings.general.retention_label')}
 									hint={t('settings.general.retention_hint')}
+									error={fieldErrors.retention}
 									width="short"
 								>
 									{#snippet children(f)}

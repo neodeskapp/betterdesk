@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -127,10 +128,21 @@ func TestScheduleMatchesNode(t *testing.T) {
 	db := storetest.Migrated(t)
 	s := New(Options{Store: db, DataDir: v.DataDir, AppDir: v.AppDir})
 	ctx := context.Background()
+	refused := 0
 	for i, c := range v.Save {
 		putSetting(t, db, ConfigKey, nil)
-		got, err := s.SaveConfig(ctx, parse(t, c.Body))
+		body := parse(t, c.Body)
+		got, err := s.SaveConfig(ctx, body)
 		stored := storedSetting(t, s, ConfigKey)
+		if keep := prop(body, "retentionCount"); keep != branding.Undefined && !retentionGiven(keep) {
+			// BUGS L418: a number of archives Node turned into 1, 7 or 365
+			// is refused, and nothing is stored
+			if !errors.Is(err, ErrRetention) || stored != nil {
+				t.Errorf("save %d %s: %v, stored %s, want ErrRetention and nothing stored", i, c.Body, err, show(stored))
+			}
+			refused++
+			continue
+		}
 		if c.Error != nil {
 			if err == nil || err.Error() != c.Error.Message {
 				t.Errorf("save %d %s: want error %q, got %v", i, c.Body, c.Error.Message, err)
@@ -141,6 +153,9 @@ func TestScheduleMatchesNode(t *testing.T) {
 		if !same(stored, c.Stored) {
 			t.Errorf("save %d %s: stored %s, want %s", i, c.Body, show(stored), show(c.Stored))
 		}
+	}
+	if refused == 0 {
+		t.Error("no vector saves a number of archives the save refuses (L418)")
 	}
 	for i, c := range v.Get {
 		putSetting(t, db, ConfigKey, c.Stored)

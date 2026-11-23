@@ -975,6 +975,7 @@
       "smtp_test_success": "Verbindung erfolgreich",
       "smtp_test_failed": "Verbindung fehlgeschlagen",
       "port_hint": "Meist 587 mit STARTTLS oder 465 mit TLS.",
+      "port_error": "Geben Sie einen Port von 1 bis 65535 ein.",
       "secure_hint": "Für Port 465 einschalten. Für Port 587 aus lassen; STARTTLS wird verwendet, wenn der Server es anbietet.",
       "pass_hint": "Leer lassen, um das gespeicherte Passwort zu behalten.",
       "effect": "Gilt sofort für die nächste E-Mail. „Verbindung testen“ prüft die gespeicherten Einstellungen, speichern Sie also zuerst.",
@@ -1144,7 +1145,7 @@
       "period_hint": "Nutzung und Mehrverbrauch der Pakete werden pro Zeitraum gezählt. Hier gilt die im Formular gewählte Zeitzone, auch vor dem Speichern.",
       "error_timezone": "Dieser Zeitzonenname ist nicht bekannt. Wählen Sie einen aus der Liste oder prüfen Sie die Schreibweise.",
       "error_servers": "Geben Sie mindestens einen Zeitserver ein: Hostnamen oder IP-Adressen, durch Kommas getrennt.",
-      "error_skew": "Geben Sie eine erlaubte Abweichung zwischen 100 und 600000 Millisekunden ein."
+      "error_skew": "Geben Sie eine erlaubte Abweichung zwischen 1 und 600000 Millisekunden ein."
     },
     "page": {
       "general_desc": "Einstellungen für den ganzen Server: die Adressen der Clients, wie sie sich verbinden und was Benutzer standardmäßig sehen.",
@@ -1176,6 +1177,7 @@
       "conn_p2p": "Zuerst direkt (empfohlen)",
       "conn_relay": "Immer über das Relay",
       "conn_fallback_hint": "Wie lange ein Client eine direkte Verbindung versucht, bevor er das Relay verwendet.",
+      "conn_fallback_error": "Geben Sie eine ganze Zahl von 0 bis 30000 Millisekunden ein.",
       "conn_effect": "Gilt für neue Verbindungen. Wenn der Server die Änderung nicht direkt übernehmen kann, werden Sie nach dem Speichern um einen Neustart des Servers gebeten.",
       "conn_save": "Verbindungsstrategie speichern",
       "conn_saved_in": "Gespeichert in {place}.",
@@ -1218,6 +1220,7 @@
       "availability_enable_hint": "Der Server vermerkt jede Statusänderung eines Geräts, zum Beispiel von online zu offline.",
       "retention_label": "Verlauf aufbewahren (Tage)",
       "retention_hint": "Ältere Einträge werden automatisch gelöscht. Standard: 30 Tage.",
+      "retention_error": "Geben Sie eine ganze Zahl von 1 bis 3650 Tagen ein.",
       "mesh_note2": "Geräte mit MeshAgent, dem Agenten von MeshCentral, können sich ebenfalls mit diesem Server verbinden.",
       "mesh_off": "MeshCentral ist auf diesem Server ausgeschaltet, daher können sich MeshAgent-Geräte nicht verbinden. Es ist eingeschaltet, sofern der Server nicht mit MESH_ENABLED=N gestartet wird.",
       "mesh_agents": "Jetzt verbundene Agenten",
@@ -1363,6 +1366,7 @@
       "create_note": "Eine .tar.gz-Datei mit den Konsolendaten, Serverschlüsseln, der Umgebungsdatei, hochgeladenen Bildern und der Serverdatenbank. Sie können sie auf diesem oder einem neuen Server wiederherstellen.",
       "downloaded": "{name} heruntergeladen.",
       "retention_hint": "Ältere Sicherungen werden nach jeder neuen gelöscht.",
+      "retention_error": "Geben Sie eine ganze Zahl von 1 bis 365 Archiven ein.",
       "schedule_effect": "Gilt sofort. Die nächste Sicherung läuft nach dem neuen Zeitplan.",
       "run_now": "Jetzt sichern",
       "smb_effect": "Beim Speichern werden nur die Anmeldedaten gespeichert. Die Freigabe muss auf dem Server eingebunden sein, um als Ziel zu dienen.",

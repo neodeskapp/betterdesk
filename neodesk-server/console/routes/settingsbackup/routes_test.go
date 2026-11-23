@@ -493,8 +493,19 @@ func TestSchedule(t *testing.T) {
 		t.Errorf("default: %s", got)
 	}
 	dest := filepath.Join(w.DataDir, "scheduled-backups")
-	if got := admin.Do("PUT", "/api/settings/backup/schedule", `{"enabled":"true","intervalHours":"2.5","retentionCount":0}`).Body; got != `{"success":true,"data":{"enabled":true,"intervalHours":3,"retentionCount":1,"destinationType":"local","destinationPath":"`+dest+`"}}` {
+	if got := admin.Do("PUT", "/api/settings/backup/schedule", `{"enabled":"true","intervalHours":"2.5","retentionCount":"2"}`).Body; got != `{"success":true,"data":{"enabled":true,"intervalHours":3,"retentionCount":2,"destinationType":"local","destinationPath":"`+dest+`"}}` {
 		t.Errorf("save: %s", got)
+	}
+	// Archives to keep that isn't a whole number from 1 to 365 is refused
+	// with what is wrong, not saved as 1, 7 or 365 (L418)
+	for _, keep := range []string{`0`, `400`, `-3`, `2.5`, `"abc"`, `""`, `null`} {
+		res := admin.Do("PUT", "/api/settings/backup/schedule", `{"enabled":true,"retentionCount":`+keep+`}`)
+		if res.Status != 400 || res.Body != `{"success":false,"error":"settings.backup_tab.retention_error"}` {
+			t.Errorf("keep %s: %d %s", keep, res.Status, res.Body)
+		}
+	}
+	if got := admin.Do("GET", "/api/settings/backup/schedule", "").Body; !strings.Contains(got, `"retentionCount":2,`) {
+		t.Errorf("a refused save changed the schedule: %s", got)
 	}
 	if res := admin.Do("PUT", "/api/settings/backup/schedule", `{"destinationType":"path","destinationPath":"rel"}`); res.Status != 400 || res.Body != `{"success":false,"error":"Backup destination path must be absolute"}` {
 		t.Errorf("relative: %d %s", res.Status, res.Body)

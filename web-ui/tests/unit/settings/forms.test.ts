@@ -20,6 +20,7 @@ import {
 	textOn
 } from '#lib/settings/appearance.ts';
 import { connectionFacts, savedLine, splitHostPort } from '#lib/settings/general.ts';
+import { wholeInRange } from '#lib/settings/numbers.ts';
 import {
 	ldapFromServer,
 	ldapPayload,
@@ -32,6 +33,18 @@ import {
 
 describe('General', () => {
 	const conn = (o: Record<string, unknown>) => connectionFacts(v.parse(ConnectionMode, o));
+
+	test('numbers outside their range are refused, not turned into the default or the limit (L418)', () => {
+		expect(wholeInRange(2000, 0, 30000)).toBe(2000);
+		expect(wholeInRange('0', 0, 30000)).toBe(0);
+		expect(wholeInRange(30000, 0, 30000)).toBe(30000);
+		for (const bad of [30001, -1, 2.5, '', null, undefined, 'abc', Number.NaN]) {
+			expect(wholeInRange(bad, 0, 30000)).toBeNull();
+		}
+		expect(wholeInRange(0, 1, 3650)).toBeNull();
+		expect(wholeInRange(99999, 1, 3650)).toBeNull();
+		expect(wholeInRange(7, 1, 3650)).toBe(7);
+	});
 
 	test('the strategy can be saved only when the console found the service settings', () => {
 		expect(conn({ mode: 'relay_only', source: 'systemd' }).writable).toBe(true);

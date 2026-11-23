@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"math"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -122,6 +123,33 @@ func NormalizeConnectionMode(in ConnectionInput) ConnectionMode {
 		OperatorOnlyOutbound:    isTrue(in.OperatorOnlyOutbound),
 	}
 }
+
+// FallbackGiven reports whether a request gave a fallback time that a save
+// takes as it is: a whole number of milliseconds from 0 to 30000, as a
+// number or as text. A request without one keeps the default. Anything
+// else is refused, where the settings used to turn it into 2000 without
+// a word (L418).
+func FallbackGiven(v any) bool {
+	var n float64
+	switch t := v.(type) {
+	case undefinedValue:
+		return true
+	case float64:
+		n = t
+	case string:
+		text := jsTrim(t)
+		if text == "" {
+			return false
+		}
+		n = stringToNumber(text)
+	default:
+		return false
+	}
+	return n == math.Trunc(n) && n >= 0 && n <= maxP2PFallbackMs
+}
+
+// maxP2PFallbackMs is the longest fallback time the server takes.
+const maxP2PFallbackMs = 30000
 
 // EnvVars are the server's environment variables for a connection mode.
 // An empty value is not written.

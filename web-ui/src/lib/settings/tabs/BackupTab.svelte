@@ -57,6 +57,7 @@
 	import Time from '#lib/ui/Time.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { createForm } from '#lib/ui/form.svelte.ts';
+	import { wholeInRange } from '../numbers.ts';
 
 	const allowed = can('server.config');
 
@@ -129,11 +130,15 @@
 	const schedule = createForm<ScheduleValues>({
 		id: 'scheduled-backup-form',
 		initial: fromSchedule(null),
+		validate: (v) => ({
+			retentionCount:
+				wholeInRange(v.retentionCount, 1, 365) === null ? t('settings.backup_tab.retention_error') : undefined
+		}),
 		submit: async (v) => {
 			await saveBackupSchedule({
 				enabled: v.enabled,
 				intervalHours: v.intervalHours,
-				retentionCount: Number(v.retentionCount) || 7,
+				retentionCount: Number(v.retentionCount),
 				destinationType: v.destinationType,
 				destinationPath: v.destinationPath
 			});
@@ -404,6 +409,7 @@
 									id="scheduled-backup-retention"
 									label={t('backup.schedule_retention')}
 									hint={t('settings.backup_tab.retention_hint')}
+									error={schedule.errors.retentionCount}
 									width="short"
 								>
 									{#snippet children(f)}

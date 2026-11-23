@@ -297,6 +297,31 @@ func Normalize(v any) (Config, error) {
 	return c, nil
 }
 
+// ErrRetention refuses a save whose number of archives to keep is not a
+// whole number from 1 to 365, which Normalize would turn into 1, 7 or 365
+// without a word (L418).
+var ErrRetention = errors.New("retentionCount must be a whole number from 1 to 365")
+
+// retentionGiven reports whether a save gave a number of archives to keep
+// that it takes as it is: a whole number from 1 to 365, as a number or as
+// text of its digits.
+func retentionGiven(v any) bool {
+	var n float64
+	switch x := v.(type) {
+	case float64:
+		n = x
+	case string:
+		text := strings.TrimSpace(x)
+		if text == "" || strings.Trim(text, "0123456789") != "" {
+			return false
+		}
+		n, _ = strconv.ParseFloat(text, 64)
+	default:
+		return false
+	}
+	return n == math.Trunc(n) && n >= 1 && n <= maxRetention
+}
+
 // Public is publicConfig: a local destination is named by its folder.
 func (s *Service) Public(c Config) Config {
 	if c.DestinationType == "local" {
@@ -349,6 +374,9 @@ func (s *Service) GetConfig(ctx context.Context) (Config, error) {
 // SaveConfig stores a schedule and returns it as Public shows it. A path
 // destination is checked first.
 func (s *Service) SaveConfig(ctx context.Context, v any) (Config, error) {
+	if keep := prop(v, "retentionCount"); keep != branding.Undefined && !retentionGiven(keep) {
+		return Config{}, ErrRetention
+	}
 	c, err := Normalize(v)
 	if err != nil {
 		return Config{}, err

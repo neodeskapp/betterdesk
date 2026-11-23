@@ -95,3 +95,16 @@ describe('certificate check', () => {
 		expect(vi.mocked(api.saveSmtp).mock.calls[0]![0]).not.toHaveProperty('tlsVerify');
 	});
 });
+
+/** Port 0 was sent as 587 with "Saved" (BUGS L418): it is refused at the field */
+describe('port', () => {
+	test('a port outside 1 to 65535 is refused at its field and nothing is sent', async () => {
+		const user = await setup();
+		const port = screen.getByLabelText('settings.email.smtp_port');
+		await user.clear(port);
+		await user.type(port, '0');
+		await user.click(screen.getByRole('button', { name: 'settings.email.smtp_save' }));
+		await vi.waitFor(() => expect(screen.getAllByText('settings.email.port_error').length).toBeGreaterThan(0));
+		expect(api.saveSmtp).not.toHaveBeenCalled();
+	});
+});

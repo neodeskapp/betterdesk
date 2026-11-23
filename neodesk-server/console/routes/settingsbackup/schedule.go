@@ -1,6 +1,7 @@
 package settingsbackup
 
 import (
+	"errors"
 	"math"
 	"net/http"
 
@@ -43,6 +44,10 @@ func (h *handlers) scheduleStatus(w http.ResponseWriter, r *http.Request) {
 // saveSchedule answers PUT /api/settings/backup/schedule.
 func (h *handlers) saveSchedule(w http.ResponseWriter, r *http.Request) {
 	config, err := h.scheduled.SaveConfig(r.Context(), body(r))
+	if errors.Is(err, scheduledbackup.ErrRetention) {
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "settings.backup_tab.retention_error", nil))
+		return
+	}
 	if err != nil {
 		kit.Fail(w, r, http.StatusBadRequest, errText(err))
 		return

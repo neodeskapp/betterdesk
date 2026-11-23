@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/advancedconfig"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
@@ -113,17 +114,23 @@ func (g *general) getAvailabilityHistory(w http.ResponseWriter, r *http.Request)
 }
 
 // setAvailabilityHistory answers POST /api/settings/availability-history
-// with {enabled, retention_days}: days below 1 or no number are 30, more
-// than 3650 are 3650. When the server refuses the days, the switch it
-// took is put back as it was, so a failed save changes nothing.
+// with {enabled, retention_days}: without days they are 30; days that are
+// not a whole number from 1 to 3650 are refused with 400 (L418: they were
+// turned into 30 or 3650 with "Saved"). When the server refuses the days,
+// the switch it took is put back as it was, so a failed save changes
+// nothing.
 func (g *general) setAvailabilityHistory(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	enabled := goapi.Truthy(jsreq.Prop(body, "enabled"))
-	days, ok := jsreq.ParseInt(jsreq.Prop(body, "retention_days"), 10)
-	if !ok || math.IsInf(days, 0) || days < 1 {
-		days = defaultRetentionDays
+	days := float64(defaultRetentionDays)
+	if given := jsreq.Prop(body, "retention_days"); given != nil {
+		n, ok := wholeNumber(given)
+		if !ok || n < 1 || n > maxRetentionDays {
+			kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "settings.general.retention_error", nil))
+			return
+		}
+		days = n
 	}
-	days = math.Min(days, maxRetentionDays)
 
 	daysText := jsreq.String(days)
 	if res, ok := g.setConfigs(r, []configPair{{availabilityEnabledKey, strconv.FormatBool(enabled)}, {availabilityRetentionKey, daysText}}); !ok {
@@ -136,6 +143,28 @@ func (g *general) setAvailabilityHistory(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	kit.OK(w, r, availabilityData{Enabled: enabled, RetentionDays: days})
+}
+
+// wholeNumber reads a number a request gave as a JSON number or as text;
+// ok is false for anything else and for a number with a fraction.
+func wholeNumber(v any) (float64, bool) {
+	var n float64
+	switch t := v.(type) {
+	case float64:
+		n = t
+	case string:
+		parsed, err := strconv.ParseFloat(strings.TrimSpace(t), 64)
+		if err != nil {
+			return 0, false
+		}
+		n = parsed
+	default:
+		return 0, false
+	}
+	if math.IsInf(n, 0) || math.IsNaN(n) || n != math.Trunc(n) {
+		return 0, false
+	}
+	return n, true
 }
 
 // configPair is a key of the server's configuration with a value.

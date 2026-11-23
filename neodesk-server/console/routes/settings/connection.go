@@ -52,6 +52,10 @@ func (g *general) getConnectionMode(w http.ResponseWriter, r *http.Request) {
 // written.
 func (g *general) setConnectionMode(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
+	if !serverinfo.FallbackGiven(serverinfo.Field(body, "p2p_fallback_ms")) {
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "settings.general.conn_fallback_error", nil))
+		return
+	}
 	input := serverinfo.ConnectionInput{
 		Mode:                    serverinfo.Field(body, "mode"),
 		P2PFallbackMs:           serverinfo.Field(body, "p2p_fallback_ms"),

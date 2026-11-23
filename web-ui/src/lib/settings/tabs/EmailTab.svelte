@@ -26,6 +26,7 @@
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { createForm } from '#lib/ui/form.svelte.ts';
 	import { trackDirty } from '#lib/settings/dirty.ts';
+	import { wholeInRange } from '#lib/settings/numbers.ts';
 
 	const allowed = can('server.config');
 
@@ -71,13 +72,16 @@
 	const form = createForm<Values>({
 		id: 'email-smtp-form',
 		initial: toValues(null),
+		validate: (v) => ({
+			port: wholeInRange(v.port, 1, 65535) === null ? t('settings.email.port_error') : undefined
+		}),
 		submit: async (v) => {
 			// Without a sign-in an empty user name goes out, which the server reads as "no sign-in".
 			// The certificate check has no switch here: the saved one goes back as it was.
 			const tlsVerify = config?.tlsVerify;
 			await saveSmtp({
 				host: v.host.trim(),
-				port: Number(v.port) || 587,
+				port: Number(v.port),
 				secure: v.secure,
 				user: v.auth ? v.user.trim() : '',
 				pass: v.auth ? v.pass : '',
@@ -182,6 +186,7 @@
 						id="email-smtp-port"
 						label={t('settings.email.smtp_port')}
 						hint={t('settings.email.port_hint')}
+						error={form.errors.port}
 						width="short"
 					>
 						{#snippet children(f)}

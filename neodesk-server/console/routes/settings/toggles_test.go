@@ -94,12 +94,24 @@ func TestAvailabilityHistory(t *testing.T) {
 
 	s.API.On("PUT /api/config/availability_history_enabled", http.StatusOK, `{"status":"ok"}`)
 	s.API.On("PUT /api/config/availability_history_retention_days", http.StatusOK, `{"status":"ok"}`)
+	// Days that aren't a whole number from 1 to 3650 are refused with what
+	// is wrong instead of saved as 30 or 3650 (L418)
+	for _, body := range []string{`{"enabled":"x","retention_days":"45.9"}`, `{"enabled":0,"retention_days":-3}`, `{"retention_days":1e9}`,
+		`{"retention_days":[7,8]}`, `{"retention_days":0.5}`, `{"retention_days":0}`, `{"retention_days":"abc"}`, `{"retention_days":3651}`} {
+		res := admin.Do("POST", "/api/settings/availability-history", body)
+		if res.Status != http.StatusBadRequest || res.Body != `{"success":false,"error":"settings.general.retention_error"}` {
+			t.Errorf("%s: %d %s", body, res.Status, res.Body)
+		}
+		if calls := s.API.Calls(); len(calls) != 0 {
+			t.Errorf("%s: calls %v", body, calls)
+		}
+	}
 	for _, c := range []struct{ body, want, calls string }{
-		{`{"enabled":"x","retention_days":"45.9"}`, `{"enabled":true,"retention_days":45}`, `"true"|"45"`},
-		{`{"enabled":0,"retention_days":-3}`, `{"enabled":false,"retention_days":30}`, `"false"|"30"`},
-		{`{"retention_days":1e9}`, `{"enabled":false,"retention_days":3650}`, `"false"|"3650"`},
-		{`{"retention_days":[7,8]}`, `{"enabled":false,"retention_days":7}`, `"false"|"7"`},
-		{`{"retention_days":0.5}`, `{"enabled":false,"retention_days":30}`, `"false"|"30"`},
+		{`{"enabled":"x","retention_days":"45"}`, `{"enabled":true,"retention_days":45}`, `"true"|"45"`},
+		{`{"enabled":0,"retention_days":3650}`, `{"enabled":false,"retention_days":3650}`, `"false"|"3650"`},
+		{`{"retention_days":1}`, `{"enabled":false,"retention_days":1}`, `"false"|"1"`},
+		{`{"enabled":true}`, `{"enabled":true,"retention_days":30}`, `"true"|"30"`},
+		{`{"retention_days":null}`, `{"enabled":false,"retention_days":30}`, `"false"|"30"`},
 	} {
 		res := admin.Do("POST", "/api/settings/availability-history", c.body)
 		if want := `{"success":true,"data":` + c.want + `}`; res.Body != want {
@@ -434,6 +446,19 @@ func TestConnectionModeAndPublicEndpoints(t *testing.T) {
 	}
 	if calls := s.API.Calls(); len(calls) != 2 || !strings.HasPrefix(calls[1], `PUT /api/connection/config {"mode":"relay_only","p2p_fallback_ms":3000,`) {
 		t.Errorf("save through the server: calls %v", calls)
+	}
+	// A fallback time the server can't take is refused with what is wrong,
+	// not turned into 2000 (L418)
+	before := len(s.AuditRows())
+	for _, body := range []string{`{"mode":"p2p_first","p2p_fallback_ms":99999}`, `{"p2p_fallback_ms":-1}`, `{"p2p_fallback_ms":2.5}`,
+		`{"p2p_fallback_ms":"abc"}`, `{"p2p_fallback_ms":""}`, `{"p2p_fallback_ms":null}`} {
+		res = admin.Do("PUT", "/api/settings/connection-mode", body)
+		if res.Status != http.StatusBadRequest || res.Body != `{"success":false,"error":"settings.general.conn_fallback_error"}` {
+			t.Errorf("%s: %d %s", body, res.Status, res.Body)
+		}
+	}
+	if len(s.AuditRows()) != before || len(s.API.Calls()) != 0 {
+		t.Error("a refused save was audited or sent")
 	}
 	// When the server doesn't answer the page says so instead of showing
 	// defaults as what it runs with (L376)
