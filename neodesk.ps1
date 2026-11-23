@@ -1,7 +1,7 @@
 ﻿#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    NeoDesk Console Manager v3.6.5 - All-in-One Interactive Tool for Windows
+    NeoDesk Console Manager v3.6.6 - All-in-One Interactive Tool for Windows
 
 .DESCRIPTION
     Features:
@@ -178,7 +178,7 @@ if ($Help) {
 # Configuration
 #===============================================================================
 
-$script:VERSION = "3.6.5"
+$script:VERSION = "3.6.6"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 # This file; empty when the script runs from Invoke-Expression
 $script:SELF_PATH = $MyInvocation.MyCommand.Path
