@@ -412,9 +412,9 @@
 	.logo-section:focus-visible {
 		outline-offset: -2px;
 	}
-	/* The full logo almost fills the section: its width, at most 30 px high (815.9 x 132.92) */
+	/* The full logo almost fills the section: its width, at most 30 px high (679.18 x 132.92) */
 	.logo-section > :global(.brand-logo-full) {
-		width: min(100%, calc(30px * 815.9 / 132.92));
+		width: min(100%, calc(30px * 679.18 / 132.92));
 	}
 	.logo-section > :global(.material-icons) {
 		color: var(--accent);
