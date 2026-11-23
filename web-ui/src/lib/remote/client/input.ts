@@ -6,11 +6,32 @@ import type { MessageInit } from './generated/protos.ts';
 import { RDKeyboardEncoder, type RDKeyboardMode } from './keyboard-encoder.ts';
 import { RDKeyboardScancode } from './keyboard-scancode.ts';
 
-/** What RDInput needs of the renderer (RDRenderer): the remote screen's size and the canvas → remote mapping */
+/**
+ * What RDInput needs of the renderer (RDRenderer): the remote screen's size,
+ * the canvas → picture mapping, and where the display sits on the device's
+ * desktop (mouse events carry desktop points; by default 0, 0 and one unit
+ * per picture pixel)
+ */
 export interface RDInputRenderer {
 	remoteWidth: number;
 	remoteHeight: number;
 	canvasToRemote(canvasX: number, canvasY: number): { x: number; y: number };
+	origin?: { x: number; y: number };
+	units?: number;
+}
+
+/** The desktop point of a picture pixel of the renderer's display */
+export function toDesktop(renderer: RDInputRenderer, pos: { x: number; y: number }): RDRemotePoint {
+	const units = renderer.units ?? 1;
+	return {
+		x: (renderer.origin?.x ?? 0) + (units === 1 ? pos.x : Math.round(pos.x * units)),
+		y: (renderer.origin?.y ?? 0) + (units === 1 ? pos.y : Math.round(pos.y * units))
+	};
+}
+
+export interface RDInputOptions {
+	/** Whether this input takes the keyboard of its window too (one input per window does) */
+	keyboard?: boolean;
 }
 
 /** A position on the remote screen */
@@ -22,6 +43,11 @@ export interface RDRemotePoint {
 export class RDInput {
 	/** The canvas element to capture events from */
 	canvas: HTMLCanvasElement;
+	/** The canvas' document and window: keys and releases are listened for there */
+	doc: Document;
+	win: Window;
+	/** Takes the keyboard of its window, not only the mouse on its canvas */
+	keyboard: boolean;
 	/** Renderer for coordinate mapping */
 	renderer: RDInputRenderer;
 	/** Callback to send protocol messages */
@@ -66,8 +92,16 @@ export class RDInput {
 	 * @param renderer - Renderer for coordinate mapping
 	 * @param sendMessage - Callback to send protocol messages
 	 */
-	constructor(canvas: HTMLCanvasElement, renderer: RDInputRenderer, sendMessage: (msg: MessageInit) => void) {
+	constructor(
+		canvas: HTMLCanvasElement,
+		renderer: RDInputRenderer,
+		sendMessage: (msg: MessageInit) => void,
+		opts: RDInputOptions = {}
+	) {
 		this.canvas = canvas;
+		this.doc = canvas.ownerDocument ?? document;
+		this.win = this.doc.defaultView ?? window;
+		this.keyboard = opts.keyboard !== false;
 		this.renderer = renderer;
 		this.sendMessage = sendMessage;
 
@@ -126,23 +160,27 @@ export class RDInput {
 		if (this.enabled) return;
 
 		const c = this.canvas;
+		const doc = this.doc;
+		const win = this.win;
 		c.addEventListener('mousemove', this._onMouseMove);
 		c.addEventListener('mousedown', this._onMouseDown);
 		// A button pressed on the screen may be let go anywhere: listen on the window
-		window.addEventListener('mouseup', this._onMouseUp);
+		win.addEventListener('mouseup', this._onMouseUp);
 		c.addEventListener('wheel', this._onWheel, { passive: false });
 		c.addEventListener('contextmenu', this._onContextMenu);
 
-		document.addEventListener('keydown', this._onKeyDown);
-		document.addEventListener('keyup', this._onKeyUp);
-		document.addEventListener('compositionstart', this._onCompositionStart);
-		document.addEventListener('compositionend', this._onCompositionEnd);
-		document.addEventListener('pointerlockchange', this._onPointerLockChange);
-		window.addEventListener('blur', this._onWindowBlur);
-		document.addEventListener('visibilitychange', this._onVisibilityChange);
+		if (this.keyboard) {
+			doc.addEventListener('keydown', this._onKeyDown);
+			doc.addEventListener('keyup', this._onKeyUp);
+			doc.addEventListener('compositionstart', this._onCompositionStart);
+			doc.addEventListener('compositionend', this._onCompositionEnd);
+		}
+		doc.addEventListener('pointerlockchange', this._onPointerLockChange);
+		win.addEventListener('blur', this._onWindowBlur);
+		doc.addEventListener('visibilitychange', this._onVisibilityChange);
 
 		c.tabIndex = 0;
-		c.focus();
+		if (this.keyboard) c.focus();
 
 		this.enabled = true;
 	}
@@ -154,22 +192,24 @@ export class RDInput {
 		this._releaseAllButtons();
 
 		const c = this.canvas;
+		const doc = this.doc;
+		const win = this.win;
 		c.removeEventListener('mousemove', this._onMouseMove);
 		c.removeEventListener('mousedown', this._onMouseDown);
-		window.removeEventListener('mouseup', this._onMouseUp);
+		win.removeEventListener('mouseup', this._onMouseUp);
 		c.removeEventListener('wheel', this._onWheel);
 		c.removeEventListener('contextmenu', this._onContextMenu);
 
-		document.removeEventListener('keydown', this._onKeyDown);
-		document.removeEventListener('keyup', this._onKeyUp);
-		document.removeEventListener('compositionstart', this._onCompositionStart);
-		document.removeEventListener('compositionend', this._onCompositionEnd);
-		document.removeEventListener('pointerlockchange', this._onPointerLockChange);
-		window.removeEventListener('blur', this._onWindowBlur);
-		document.removeEventListener('visibilitychange', this._onVisibilityChange);
+		doc.removeEventListener('keydown', this._onKeyDown);
+		doc.removeEventListener('keyup', this._onKeyUp);
+		doc.removeEventListener('compositionstart', this._onCompositionStart);
+		doc.removeEventListener('compositionend', this._onCompositionEnd);
+		doc.removeEventListener('pointerlockchange', this._onPointerLockChange);
+		win.removeEventListener('blur', this._onWindowBlur);
+		doc.removeEventListener('visibilitychange', this._onVisibilityChange);
 
 		if (this.pointerLocked) {
-			document.exitPointerLock();
+			doc.exitPointerLock();
 		}
 
 		this.pressedKeys.clear();
@@ -184,7 +224,7 @@ export class RDInput {
 
 	exitPointerLock(): void {
 		if (this.pointerLocked) {
-			document.exitPointerLock();
+			this.doc.exitPointerLock();
 		}
 	}
 
@@ -298,10 +338,16 @@ export class RDInput {
 	/** A left click on the device at a point of the canvas (CSS pixels from its top left corner) */
 	clickAtCanvas(x: number, y: number): void {
 		if (!this.enabled) return;
-		const pos = this.renderer.canvasToRemote(x, y);
-		if (pos.x < 0 || pos.y < 0 || pos.x > this.renderer.remoteWidth || pos.y > this.renderer.remoteHeight) {
+		const local = this.renderer.canvasToRemote(x, y);
+		if (
+			local.x < 0 ||
+			local.y < 0 ||
+			local.x > this.renderer.remoteWidth ||
+			local.y > this.renderer.remoteHeight
+		) {
 			return;
 		}
+		const pos = toDesktop(this.renderer, local);
 		const left = RDInput.MOUSE_BUTTON_LEFT << 3;
 		this.sendMessage({
 			mouseEvent: { mask: RDInput.MOUSE_TYPE_DOWN | left, x: pos.x, y: pos.y, modifiers: [] }
@@ -454,7 +500,7 @@ export class RDInput {
 	}
 
 	_handleVisibilityChange(): void {
-		if (this.enabled && typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+		if (this.enabled && this.doc.visibilityState === 'hidden') {
 			this._releaseAllKeys(false);
 		}
 	}
@@ -537,7 +583,7 @@ export class RDInput {
 	}
 
 	_handlePointerLockChange(): void {
-		this.pointerLocked = document.pointerLockElement === this.canvas;
+		this.pointerLocked = this.doc.pointerLockElement === this.canvas;
 	}
 
 	_getRemotePosition(e: { clientX: number; clientY: number }): RDRemotePoint | null {
@@ -551,17 +597,17 @@ export class RDInput {
 			return null;
 		}
 
-		return pos;
+		return toDesktop(this.renderer, pos);
 	}
 
 	/** The remote position of a pointer event, moved onto the screen's edge when it is outside */
 	_getClampedRemotePosition(e: { clientX: number; clientY: number }): RDRemotePoint {
 		const rect = this.canvas.getBoundingClientRect();
 		const pos = this.renderer.canvasToRemote(e.clientX - rect.left, e.clientY - rect.top);
-		return {
+		return toDesktop(this.renderer, {
 			x: Math.max(0, Math.min(this.renderer.remoteWidth, pos.x)),
 			y: Math.max(0, Math.min(this.renderer.remoteHeight, pos.y))
-		};
+		});
 	}
 
 	_getMouseModifiers(e: {
@@ -580,7 +626,7 @@ export class RDInput {
 	}
 
 	_isInputFocused(): boolean {
-		const el = document.activeElement;
+		const el = this.doc.activeElement;
 		if (!el || el === this.canvas) return false;
 		if ('isContentEditable' in el && el.isContentEditable) return true;
 		const tag = el.tagName?.toLowerCase();

@@ -18,6 +18,9 @@ import { RDCliprdr } from './cliprdr.ts';
 import { RDConnection } from './connection.ts';
 import { RDConnectionParams, type RDConnectionSettings } from './connection-params.ts';
 import { RDCrypto } from './crypto.ts';
+import type { DisplayZoom } from './display-layout.ts';
+import { RDDisplayStreams, type BackgroundMode, type RDDisplayTraffic } from './display-streams.ts';
+import { canShowDisplaysTogether, displaysOf, pointScale, type RDDisplay } from './displays.ts';
 import { RDFileConnection } from './file-connection.ts';
 import { RDFileTransfer } from './filetransfer.ts';
 import { RDInput } from './input.ts';
@@ -186,6 +189,21 @@ interface QualityTier {
 	fps: number;
 }
 
+/** What a display shown on its own keeps besides its decoder: its screen and its input */
+interface DisplayViewParts {
+	renderer: RDRenderer;
+	input: RDInput;
+}
+
+/** How a display shown on its own is drawn */
+export interface RDShowDisplayOptions {
+	zoom?: DisplayZoom;
+	/** The window the canvas is in, when it is not this one (a display in a window of its own) */
+	win?: Window;
+	/** Whether its input takes its window's keyboard (a window of its own does; tiles leave it to the session) */
+	keyboard?: boolean;
+}
+
 /** err.message or err.stack as the JS read them: undefined when the caught value has none */
 function errorField(err: unknown, key: 'message' | 'stack'): unknown {
 	return typeof err === 'object' && err !== null ? Reflect.get(err, key) : undefined;
@@ -246,6 +264,10 @@ export class RDClient {
 	_lastDecodedCount?: number;
 	_lastDecodeProgressTime?: number;
 	_currentDisplay?: number;
+	/** The device's displays (peer info) */
+	_displayList: RDDisplay[];
+	/** Which display's video goes where, and which displays the device streams */
+	displays: RDDisplayStreams<DisplayViewParts>;
 	_virtualDisplay?: RDClientVirtualDisplaySupport;
 	_recorder?: MediaRecorder | null;
 	_recordedChunks?: Blob[];
@@ -275,6 +297,13 @@ export class RDClient {
 		this.audio = new RDAudio();
 		this.renderer = new RDRenderer(canvas);
 		this.input = new RDInput(canvas, this.renderer, (msg) => this._sendPeerMessage(msg));
+		this._displayList = [];
+		this.displays = new RDDisplayStreams<DisplayViewParts>({
+			main: this.video,
+			capture: (set) =>
+				this._sendPeerMessage(this.proto.buildMisc('captureDisplays', { add: [], sub: [], set })),
+			refresh: (idx) => this._sendPeerMessage(this.proto.buildMisc('refreshVideoDisplay', idx))
+		});
 		this._fileConnection = null;
 		this._sessionPassword = '';
 		this.fileTransfer = new RDFileTransfer({
@@ -1109,15 +1138,17 @@ export class RDClient {
 
 		// Cursor data (cursor image)
 		if (msg.cursorData) {
-			this.renderer.updateCursor(msg.cursorData).catch(() => {
-				// Handled inside updateCursor — ignore unhandled promise rejection
-			});
+			for (const r of this._screens()) {
+				r.updateCursor(msg.cursorData).catch(() => {
+					// Handled inside updateCursor — ignore unhandled promise rejection
+				});
+			}
 			return;
 		}
 
-		// Cursor position
+		// Cursor position (a desktop point: each screen draws it when it is on its display)
 		if (msg.cursorPosition) {
-			this.renderer.updateCursorPosition(msg.cursorPosition);
+			for (const r of this._screens()) r.updateCursorPosition(msg.cursorPosition);
 			return;
 		}
 
@@ -1347,11 +1378,17 @@ export class RDClient {
 			return;
 		}
 
+		// Each display's frames go to the decoder of the screen that shows it (display-streams.ts)
+		const frames = this.proto.getEncodedFrames(videoFrame);
+		const bytes = frames.reduce((n, f) => n + (f.data?.length ?? 0), 0);
+		const video = this.displays.decoderFor(Number(videoFrame.display) || 0, bytes);
+		if (!video) return;
+
 		// Initialize video decoder if needed
-		if (!this.video.initialized || this.video.currentCodec !== codec) {
+		if (!video.initialized || video.currentCodec !== codec) {
 			try {
-				await this.video.init(codec);
-				this._emit('log', `Video codec: ${codec.toUpperCase()}`);
+				await video.init(codec);
+				if (video === this.video) this._emit('log', `Video codec: ${codec.toUpperCase()}`);
 			} catch (err) {
 				this._emit('log', `Video codec ${codec} not supported: ${errorField(err, 'message')}`);
 				return;
@@ -1359,9 +1396,8 @@ export class RDClient {
 		}
 
 		// Decode each encoded frame
-		const frames = this.proto.getEncodedFrames(videoFrame);
 		for (const frame of frames) {
-			await this.video.decode(frame);
+			await video.decode(frame);
 		}
 	}
 
@@ -1455,6 +1491,7 @@ export class RDClient {
 		if (misc.switchDisplay) {
 			if (typeof misc.switchDisplay.display === 'number') {
 				this._currentDisplay = misc.switchDisplay.display;
+				this._placeScreens();
 			}
 			this._emit('switch_display', misc.switchDisplay);
 			return;
@@ -1591,8 +1628,14 @@ export class RDClient {
 		this._stallCheckInterval = setInterval(() => {
 			if (this._state !== 'streaming') return;
 			const now = Date.now();
+			// Every display paused (their windows hidden): a quiet connection is no stall
+			if (!this.displays.streamingAny) {
+				this._lastVideoFrameTime = now;
+				this._lastDecodeProgressTime = now;
+				return;
+			}
 
-			const decoded = this.video ? this.video.frameCount : 0;
+			const decoded = this.displays.decodedFrames;
 			if (decoded !== this._lastDecodedCount) {
 				this._lastDecodedCount = decoded;
 				this._lastDecodeProgressTime = now;
@@ -1608,9 +1651,7 @@ export class RDClient {
 			if (noPeerFrames || peerFramesButNoDecode) {
 				this._emit('log', 'Video stall detected, requesting keyframe');
 				this._sendPeerMessage(this.proto.buildMisc('refreshVideo', true));
-				if (this.video) {
-					this.video._needKeyframe = true;
-				}
+				this.displays.needKeyframes();
 				this._lastVideoFrameTime = now; // prevent rapid retries
 				this._lastDecodeProgressTime = now;
 			}
@@ -1832,6 +1873,11 @@ export class RDClient {
 
 		this.input.stop();
 		this.renderer.stopRenderLoop();
+		this.renderer.releaseFrames();
+		for (const view of this.displays.close()) {
+			view.extra.input.stop();
+			view.extra.renderer.close();
+		}
 		this.video.close();
 		this.audio.close();
 		this.fileTransfer.disable();
@@ -2118,6 +2164,7 @@ export class RDClient {
 	 */
 	switchMonitor(monitorIdx: number): void {
 		if (this._state !== 'streaming') return;
+		const before = this.getCurrentDisplay();
 		this._currentDisplay = monitorIdx;
 		this._sendPeerMessage(
 			this.proto.buildMisc('switchDisplay', {
@@ -2126,6 +2173,20 @@ export class RDClient {
 				height: 0
 			})
 		);
+		if (this.displays.together) {
+			// The device streams this display beside the ones shown on their own
+			this.video._needKeyframe = true;
+			this.displays.mainDisplay = monitorIdx;
+			// The switch stops the display switched from (the device takes this viewer for one
+			// older than 1.2.4) and starts the new one; the capture set brings back the others
+			const streamed = (this.displays._streaming ?? []).filter((d) => d !== before);
+			this.displays._streaming = [...new Set([...streamed, monitorIdx])].sort((a, b) => a - b);
+			this.displays.sync();
+			this._sendPeerMessage(this.proto.buildMisc('refreshVideoDisplay', monitorIdx));
+			this._placeScreens();
+			this._emit('display_switched', monitorIdx);
+			return;
+		}
 		this._sendPeerMessage(
 			this.proto.buildMisc('captureDisplays', {
 				add: [],
@@ -2135,7 +2196,141 @@ export class RDClient {
 		);
 		if (this.video) this.video._needKeyframe = true;
 		this.sendRefreshScreen();
+		// Clicks and the cursor are desktop points: the new display's place counts
+		this._placeScreens();
 		this._emit('display_switched', monitorIdx);
+	}
+
+	// ---- Several displays at once (display-streams.ts) ----
+
+	/** The device's displays: name, place on its desktop, size, scale */
+	getDisplays(): RDDisplay[] {
+		return this._displayList.slice();
+	}
+
+	/** Whether the device streams several displays to this session (its peer info says so) */
+	canShowDisplaysTogether(): boolean {
+		return this.displays.together;
+	}
+
+	/** Every screen of the session: its own canvas and each display shown on its own */
+	_screens(): RDRenderer[] {
+		return [this.renderer, ...[...this.displays.views.values()].map((v) => v.extra.renderer)];
+	}
+
+	/** Tell each screen where its display sits on the device's desktop */
+	_placeScreens(): void {
+		const current = this.getCurrentDisplay();
+		const platform = this._peerInfo?.platform || '';
+		const place = (r: RDRenderer, idx: number) => {
+			const d = this._displayList[idx];
+			if (d) r.setPlace(d, pointScale(d, current, platform));
+		};
+		place(this.renderer, this.displays.together ? (this.displays.mainDisplay ?? current) : current);
+		for (const v of this.displays.views.values()) place(v.extra.renderer, v.idx);
+	}
+
+	/** A decoder for one display shown on its own */
+	_displayDecoder(idx: number): RDVideo {
+		const v = new RDVideo();
+		v.getAudioContext = () => this.audio.audioCtx;
+		v.onError = (err) =>
+			this._emit('log', `Video error on display ${idx + 1}: ${errorField(err, 'message') || err}`);
+		v.onNeedKeyframe = () => {
+			if (this._state === 'streaming')
+				this._sendPeerMessage(this.proto.buildMisc('refreshVideoDisplay', idx));
+		};
+		v.onCodecFailed = (failedCodec) => this._handleCodecFallback(failedCodec);
+		return v;
+	}
+
+	/**
+	 * Show a display on its own canvas (a tile, or a window of its own): it
+	 * gets its own decoder, screen and mouse, and the device streams it.
+	 */
+	showDisplay(idx: number, canvas: HTMLCanvasElement, opts: RDShowDisplayOptions = {}): void {
+		if (!this.displays.together) return;
+		this.hideDisplay(idx);
+		const renderer = new RDRenderer(canvas, opts.win ? { win: opts.win } : {});
+		renderer.setScaleMode(opts.zoom ?? 'fit');
+		renderer.showCursor = this.renderer.showCursor;
+		renderer.onResizeRefresh = () => {
+			if (this._state === 'streaming')
+				this._sendPeerMessage(this.proto.buildMisc('refreshVideoDisplay', idx));
+		};
+		renderer.onCursorReady = (ready) => canvas.parentElement?.classList.toggle('has-remote-cursor', !!ready);
+		const input = new RDInput(canvas, renderer, (msg) => this._sendPeerMessage(msg), {
+			keyboard: !!opts.keyboard
+		});
+		if (this._peerInfo?.platform) input.setPeerPlatform(this._peerInfo.platform);
+		input.setKeyboardMode(this.input.keyboardMode);
+		const decoder = this._displayDecoder(idx);
+		this.displays.attach(idx, decoder, renderer, { renderer, input });
+		this._placeScreens();
+		renderer.resize();
+		if (this._streamThrottledActive === false) decoder.setBackgroundMode(true);
+		else renderer.startRenderLoop();
+		this._syncInputCapture();
+	}
+
+	/** Stop showing a display on its own canvas */
+	hideDisplay(idx: number): void {
+		const view = this.displays.detach(idx);
+		if (!view) return;
+		view.extra.input.stop();
+		view.extra.renderer.close();
+	}
+
+	/** Fitted, or at its own size */
+	setDisplayZoom(idx: number, zoom: DisplayZoom): void {
+		this.displays.views.get(idx)?.extra.renderer.setScaleMode(zoom);
+	}
+
+	/** The window of a display shown on its own shows, or is hidden or minimised */
+	setDisplayVisible(idx: number, visible: boolean): void {
+		this.displays.setVisible(idx, visible);
+	}
+
+	/** Another display is the one being worked on */
+	setDisplayBackground(idx: number, background: boolean): void {
+		this.displays.setBackground(idx, background);
+	}
+
+	/** How displays in the background stream: live, slow (a picture now and then) or paused */
+	setBackgroundDisplays(mode: BackgroundMode): void {
+		this.displays.setBackgroundMode(mode);
+	}
+
+	/** The display the session's own canvas shows; null while each display shows on its own */
+	setMainDisplay(idx: number | null): void {
+		if (!this.displays.together) return;
+		if (idx !== null && idx !== this.displays.mainDisplay) this.video._needKeyframe = true;
+		this.displays.setMainDisplay(idx);
+		this._placeScreens();
+	}
+
+	/** The session's own canvas shows, or its window is hidden or minimised */
+	setMainVisible(visible: boolean): void {
+		this.displays.setMainVisible(visible);
+	}
+
+	/** Size each display's canvas to its box again (the layout changed) */
+	resizeDisplays(): void {
+		for (const v of this.displays.views.values()) v.extra.renderer.resize();
+	}
+
+	/** Pictures and video per display over the last second */
+	getDisplayTraffic(): RDDisplayTraffic[] {
+		return this.displays.traffic(this._displayList.length);
+	}
+
+	/** The canvas a display shows on, its own or the session's */
+	displayCanvas(idx: number): HTMLCanvasElement | null {
+		const view = this.displays.views.get(idx);
+		if (view) return view.extra.renderer.canvas;
+		return idx === (this.displays.together ? this.displays.mainDisplay : this.getCurrentDisplay())
+			? this.renderer.canvas
+			: null;
 	}
 
 	// ---- Virtual Displays (RustDesk IDD / Amyuni IDD) ----
@@ -2151,15 +2346,16 @@ export class RDClient {
 		} else if (typeof this._currentDisplay !== 'number') {
 			this._currentDisplay = 0;
 		}
+		this._displayList = displaysOf(info);
+		this.displays.setTogether(canShowDisplaysTogether(info), this.getCurrentDisplay());
+		this._placeScreens();
 		this._virtualDisplay = this._parseVirtualDisplaySupport(info);
 		if (info.encoding) {
 			this._peerEncoding = info.encoding;
 		}
 		this._windowsSessions = this._parseWindowsSessions(info);
-		if (this.input && info.platform) {
-			if (typeof this.input.setPeerPlatform === 'function') {
-				this.input.setPeerPlatform(info.platform);
-			}
+		if (info.platform) {
+			for (const input of this._inputs()) input.setPeerPlatform(info.platform);
 		}
 	}
 
@@ -2209,18 +2405,19 @@ export class RDClient {
 	 * Release stuck remote modifiers / keys (toolbar recovery).
 	 */
 	resetKeyboard(): void {
-		if (this.input && typeof this.input.resetKeyboard === 'function') {
-			this.input.resetKeyboard();
-		}
+		for (const input of this._inputs()) input.resetKeyboard();
 	}
 
 	/**
 	 * @param mode 'Legacy' | 'Map' | 'Auto'
 	 */
 	setKeyboardMode(mode: string): void {
-		if (this.input && typeof this.input.setKeyboardMode === 'function') {
-			this.input.setKeyboardMode(mode);
-		}
+		for (const input of this._inputs()) input.setKeyboardMode(mode);
+	}
+
+	/** The session's input and each display's own */
+	_inputs(): RDInput[] {
+		return [this.input, ...[...this.displays.views.values()].map((v) => v.extra.input)];
 	}
 
 	/**
@@ -2361,8 +2558,8 @@ export class RDClient {
 				supportedDecoding: { abilities: this._codecAbilities, prefer: name }
 			})
 		);
-		// The encoder restarts with a fresh keyframe; force our decoder to wait for it.
-		if (this.video) this.video._needKeyframe = true;
+		// The encoder restarts with a fresh keyframe; force our decoders to wait for it.
+		this.displays.needKeyframes();
 		this._sendPeerMessage(this.proto.buildMisc('refreshVideo', true));
 		this.opts.preferCodec = name;
 		this._emit('codec_changed', name);
@@ -2541,10 +2738,11 @@ export class RDClient {
 		if (!this._savedActiveFps) {
 			this._savedActiveFps = this._getActiveStreamFps();
 		}
-		this.renderer.stopRenderLoop();
+		for (const r of this._screens()) r.stopRenderLoop();
 		if (this.video.setBackgroundMode) {
 			this.video.setBackgroundMode(true);
 		}
+		this.displays.setDecodersBackground(true);
 		this.setCustomFps(this._backgroundFps || 1);
 	}
 
@@ -2552,7 +2750,8 @@ export class RDClient {
 		if (this.video.setBackgroundMode) {
 			this.video.setBackgroundMode(false);
 		}
-		this.renderer.startRenderLoop();
+		this.displays.setDecodersBackground(false);
+		for (const r of this._screens()) r.startRenderLoop();
 		const fps = this._getActiveStreamFps();
 		this.setCustomFps(fps);
 		this._sendPeerMessage(this.proto.buildMisc('refreshVideo', true));
@@ -2561,10 +2760,9 @@ export class RDClient {
 	/** Sync input listeners with session/tab and view-only state */
 	_syncInputCapture(): void {
 		const shouldCapture = this._sessionActive && !this._viewOnly && this._state === 'streaming';
-		if (shouldCapture) {
-			this.input.start();
-		} else {
-			this.input.stop();
+		for (const input of this._inputs()) {
+			if (shouldCapture) input.start();
+			else input.stop();
 		}
 	}
 

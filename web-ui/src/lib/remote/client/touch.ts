@@ -2,7 +2,7 @@
  * NeoDesk Web Remote Client — touch and touchpad input for tablet / fold devices.
  */
 import type { MessageInit } from './generated/protos.ts';
-import { RDInput, type RDInputRenderer, type RDRemotePoint } from './input.ts';
+import { RDInput, toDesktop, type RDInputRenderer, type RDRemotePoint } from './input.ts';
 
 /** A finger as RDTouch reads it: a Touch, or a plain object with the same fields */
 export interface RDTouchPoint {
@@ -123,19 +123,23 @@ export class RDTouch {
 		return pos;
 	}
 
+	/** A move to a picture pixel (sent as its desktop point) */
 	_sendMove(x: number, y: number): void {
 		const now = performance.now();
 		if (now - this._lastMoveTime < this._moveThrottleMs) return;
 		this._lastMoveTime = now;
+		const at = toDesktop(this.renderer, { x, y });
 		this.sendMessage({
-			mouseEvent: { mask: 0, x, y, modifiers: [] }
+			mouseEvent: { mask: 0, x: at.x, y: at.y, modifiers: [] }
 		});
 	}
 
+	/** A press or release at a picture pixel (sent as its desktop point) */
 	_sendButton(type: number, button: number, x: number, y: number): void {
 		const mask = type | (button << 3);
+		const at = toDesktop(this.renderer, { x, y });
 		this.sendMessage({
-			mouseEvent: { mask, x, y, modifiers: [] }
+			mouseEvent: { mask, x: at.x, y: at.y, modifiers: [] }
 		});
 	}
 
