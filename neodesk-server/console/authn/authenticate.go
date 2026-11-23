@@ -141,6 +141,9 @@ type goAccept struct {
 	role string
 	// provider is its auth_provider, empty when it sent none.
 	provider string
+	// username is the account it signed in, empty when it sent none: a
+	// directory names it by the entry, not by what was typed.
+	username string
 	// requires2FA says it asks for a second factor.
 	requires2FA bool
 	// disabled says the credentials are right and the account is
@@ -164,6 +167,9 @@ func (s *Service) tryGoServerAuth(ctx context.Context, username, password string
 	}
 	if provider, ok := answer.Get("auth_provider").(string); ok {
 		accept.provider = provider
+	}
+	if name, ok := answer.Get("username").(string); ok {
+		accept.username = strings.TrimSpace(name)
 	}
 	return accept
 }
@@ -277,11 +283,17 @@ func roleText(role string, local *Account) string {
 // row, with the server's role (else "viewer") and provider. A local
 // account gets the hash of the password it signed in with, any other an
 // unusable hash. A directory or single sign-on account is named as the
-// signal server names it: lower-cased and without spaces at the ends.
+// signal server names it: the name in its answer, else the typed name
+// lower-cased and without spaces at the ends.
 func (s *Service) provisionLocalUserFromGo(ctx context.Context, username, password string, accept *goAccept, sso ssoStatus) (*Account, error) {
 	provider := inferAuthProvider(accept, sso)
 	if provider != providerLocal {
 		username = strings.ToLower(strings.TrimSpace(username))
+		// The server's name for the account, which its own sign-in made a
+		// row of: one account, whatever the User name attribute is
+		if accept.username != "" {
+			username = accept.username
+		}
 	}
 	role := accept.role
 	if role == "" {

@@ -41,6 +41,69 @@ var scenarioFixes = []scenarioFix{
 	{"RV123", noPasswordsTheSignInRefuses},
 	{"RV1", signInTokensProveNoDevice},
 	{"RV128", tokensKeptAsTheirHash},
+	{"L351", stopAtOtherServerNames},
+}
+
+// recordedLogins are the answers to /api/auth/login a step's stand-in of
+// the signal server gives: status and body, the body's fields decoded.
+func recordedLogins(step *stepVector) []struct {
+	Status int
+	Body   map[string]any
+} {
+	var out []struct {
+		Status int
+		Body   map[string]any
+	}
+	if step.Go == nil {
+		return out
+	}
+	for _, raw := range step.Go.Login {
+		var answer struct {
+			Status int            `json:"status"`
+			Body   map[string]any `json:"body"`
+		}
+		if json.Unmarshal(raw, &answer) == nil {
+			out = append(out, struct {
+				Status int
+				Body   map[string]any
+			}{answer.Status, answer.Body})
+		}
+	}
+	return out
+}
+
+// stopAtFirstSignIn ends the recording before the first sign-in step whose
+// stand-in answers match, and leaves the rows at the end uncompared.
+func stopAtFirstSignIn(sc *scenarioVector, match func(step *stepVector) bool) bool {
+	for i := range sc.Steps {
+		step := &sc.Steps[i]
+		if step.Fn == "authenticate" && match(step) {
+			sc.Steps, sc.skipTables = sc.Steps[:i], true
+			return true
+		}
+	}
+	return false
+}
+
+// stopAtOtherServerNames: a directory sign-in is the account the signal
+// server names in its answer (L351); Node kept the typed name and made a
+// second account. The recordings' stand-in names every account
+// "someone", so a recording ends before the first sign-in whose answer
+// names another account than the one typed;
+// TestDirectorySignInUsesTheServersAccountName holds the rule.
+func stopAtOtherServerNames(sc *scenarioVector) bool {
+	return stopAtFirstSignIn(sc, func(step *stepVector) bool {
+		var typed string
+		if len(step.Args) == 0 || json.Unmarshal(step.Args[0], &typed) != nil {
+			return false
+		}
+		for _, answer := range recordedLogins(step) {
+			if name, ok := answer.Body["username"].(string); ok && name != "" && name != strings.ToLower(strings.TrimSpace(typed)) {
+				return true
+			}
+		}
+		return false
+	})
 }
 
 // fixScenario applies every fix to sc and counts the ones that changed it.

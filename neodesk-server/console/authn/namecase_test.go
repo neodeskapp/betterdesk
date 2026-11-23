@@ -83,3 +83,36 @@ func TestNewDirectoryAccountsAreLowerCase(t *testing.T) {
 		}
 	})
 }
+
+// With a User name attribute other than the typed name (mail), the server
+// names the account by the directory entry: the console signs in to that
+// account and makes no second one under the typed name (L351).
+func TestDirectorySignInUsesTheServersAccountName(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		s, stub, _ := testService(t, db, nil)
+		byMail := `{"status":200,"body":{"token":"t","role":"operator","username":"hank@example.org","auth_provider":"ldap"}}`
+		// The server made its row in the shared table during its sign-in
+		hank := addUser(t, s, "hank@example.org", "pw", "operator", "ldap")
+		for _, typed := range []string{"hank", "Hank"} {
+			stub.load(&goScript{SSO: json.RawMessage(ldapOn), Login: []json.RawMessage{json.RawMessage(byMail)}})
+			outcome, err := s.Authenticate(ctx, typed, "pw")
+			if err != nil || outcome.User == nil || outcome.User.ID.V != hank || outcome.User.Username != "hank@example.org" {
+				t.Errorf("%q: %+v, %v; want the account hank@example.org", typed, outcome.User, err)
+			}
+		}
+		var n int
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users`).Scan(&n); err != nil || n != 1 {
+			t.Errorf("%d accounts afterwards, want 1: %v", n, err)
+		}
+		// Where the server made no row, the new one has the server's name too
+		ivy := `{"status":200,"body":{"token":"t","role":"viewer","username":"ivy@example.org","auth_provider":"ldap"}}`
+		stub.load(&goScript{SSO: json.RawMessage(ldapOn), Login: []json.RawMessage{json.RawMessage(ivy)}})
+		if outcome, err := s.Authenticate(ctx, "ivy", "pw"); err != nil || outcome.User == nil || outcome.User.Username != "ivy@example.org" {
+			t.Errorf("ivy: %+v, %v", outcome.User, err)
+		}
+		if row, err := getUserByUsername(ctx, db, "ivy"); err != nil || row != nil {
+			t.Errorf("a row under the typed name: %+v, %v", row, err)
+		}
+	})
+}

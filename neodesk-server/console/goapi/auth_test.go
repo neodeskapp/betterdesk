@@ -145,6 +145,8 @@ func TestTryGoServerAuth(t *testing.T) {
 	}{
 		{200, `{"token":"t","role":"operator","auth_provider":"ldap"}`, `{"role":"operator","auth_provider":"ldap"}`},
 		{200, `{"token":"t","role":"viewer"}`, `{"role":"viewer"}`},
+		// The account's name as the server has it (L351)
+		{200, `{"token":"t","role":"viewer","username":"hank@example.org","auth_provider":"ldap"}`, `{"role":"viewer","auth_provider":"ldap","username":"hank@example.org"}`},
 		{200, `{"requires_2fa":true,"partial_token":"p"}`, `{"requires2fa":true}`},
 		{200, `{"token":"t"}`, `null`},
 		{200, `{}`, `null`},

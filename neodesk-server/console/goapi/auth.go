@@ -206,6 +206,11 @@ func (c *Client) TryGoServerAuth(ctx context.Context, username, password string)
 		if body, isObject := parsed.(*Object); isObject && body.Has("auth_provider") {
 			o.Set("auth_provider", body.Get("auth_provider"))
 		}
+		// The account the server signed in: a directory names it by the
+		// entry's User name attribute, which may differ from what was typed
+		if name, isText := prop(parsed, "username").(string); isText && name != "" {
+			o.Set("username", name)
+		}
 		return o
 	}
 	if Truthy(prop(parsed, "requires_2fa")) {
