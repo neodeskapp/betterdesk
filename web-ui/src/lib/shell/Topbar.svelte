@@ -5,6 +5,12 @@
   refresh, theme, accessibility, language, and the account menu below
   1100 px. On phones (767 px and below) those last actions fold behind a
   "More" button into a row under the bar; menus open from there.
+
+  The bar never gets wider than the screen: its buttons keep their width
+  and their one line, the breadcrumb takes the room that is left, and the
+  search field gives way first (down to its icon). A short breadcrumb shows
+  only the current page. On phones Quick support and search show only their
+  icon; their names stay for screen readers.
 -->
 <script lang="ts">
 	import { t } from '#lib/i18n/i18n.svelte.ts';
@@ -137,8 +143,6 @@
 		{/each}
 	</nav>
 
-	<span class="topbar-spacer"></span>
-
 	<button
 		type="button"
 		class="search-trigger"
@@ -146,9 +150,11 @@
 		aria-keyshortcuts="Control+K Meta+K /"
 		onclick={onsearch}
 	>
-		<Icon name="search" />
-		<span class="search-label">{t('search.placeholder')}</span>
-		<kbd class="search-kbd" aria-hidden="true">{kbd}</kbd>
+		<span class="search-field">
+			<Icon name="search" />
+			<span class="search-label">{t('search.placeholder')}</span>
+			<kbd class="search-kbd" aria-hidden="true">{kbd}</kbd>
+		</span>
 	</button>
 
 	<div class="topbar-actions">
@@ -157,6 +163,7 @@
 				type="button"
 				class="topbar-text-btn quick-support-btn"
 				aria-haspopup="dialog"
+				title={t('onboard.support.button')}
 				onclick={() => openQuickSupport()}
 				><Icon name={ICONS.help_request} /><span class="quick-support-label"
 					>{t('onboard.support.button')}</span
@@ -238,12 +245,17 @@
 		padding-inline: var(--space-1);
 		color: var(--text);
 	}
+	/* The breadcrumb takes the room the buttons leave. Its own text never
+	   counts (it is a size container), so it never pushes them off the
+	   screen; when room is short the search field shrinks first */
 	.shell-breadcrumb {
 		display: flex;
+		flex: 1 1 10rem;
 		align-items: center;
 		gap: var(--space-2);
 		min-width: 0;
 		overflow: hidden;
+		container: crumbs / inline-size;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 		white-space: nowrap;
@@ -257,33 +269,49 @@
 		color: var(--text);
 		text-overflow: ellipsis;
 	}
-	.topbar-spacer {
-		flex: 1;
+	@container crumbs (max-width: 180px) {
+		.crumb:not(.current),
+		.crumb-sep {
+			display: none;
+		}
 	}
 
-	/* Global search: looks like a field, opens the search dialog */
+	/* Global search: looks like a field, opens the search dialog. When the
+	   bar is short of room it shrinks, and below about 120 px it is an icon
+	   button like the others */
 	.search-trigger {
 		display: inline-flex;
-		flex: none;
+		flex: 0 10 min(320px, 28vw);
 		align-items: center;
-		gap: var(--space-2);
-		box-sizing: border-box;
-		width: min(320px, 28vw);
-		min-height: var(--control-h-sm);
+		min-width: var(--control-h);
 		margin-inline-end: var(--space-3);
-		padding: 0 var(--space-2);
-		border: 1px solid var(--border);
+		padding: 0;
+		border: 0;
 		border-radius: var(--radius);
-		background: var(--bg);
+		background: transparent;
 		color: var(--text-muted);
 		font: inherit;
 		text-align: start;
 		cursor: pointer;
+		container: search-trigger / inline-size;
 	}
-	.search-trigger:hover {
+	.search-field {
+		display: flex;
+		flex: 1;
+		align-items: center;
+		gap: var(--space-2);
+		box-sizing: border-box;
+		min-width: 0;
+		min-height: var(--control-h-sm);
+		padding: 0 var(--space-2);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--bg);
+	}
+	.search-trigger:hover .search-field {
 		border-color: var(--text-muted);
 	}
-	.search-trigger > :global(.material-icons) {
+	.search-field > :global(.material-icons) {
 		font-size: 20px;
 	}
 	.search-label {
@@ -294,6 +322,7 @@
 		white-space: nowrap;
 	}
 	.search-kbd {
+		flex: none;
 		padding: 0 var(--space-1);
 		border: 1px solid var(--rule);
 		border-radius: var(--radius-sm);
@@ -301,15 +330,41 @@
 		font-family: var(--font);
 		font-size: var(--text-xs);
 	}
+	@container search-trigger (max-width: 120px) {
+		.search-field {
+			justify-content: center;
+			min-height: var(--control-h);
+			padding: 0;
+			border-color: transparent;
+			background: transparent;
+		}
+		.search-trigger:hover .search-field {
+			border-color: transparent;
+			background: var(--hover);
+			color: var(--text);
+		}
+		.search-label {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+		}
+		.search-kbd {
+			display: none;
+		}
+	}
 
 	.topbar-actions,
 	.action-list {
 		display: flex;
+		flex: none;
 		align-items: center;
 		gap: 2px;
 	}
 	/* Help: the one top bar control with a word, since it opens a panel, not a setting */
 	.topbar-text-btn {
+		flex: none;
 		min-height: var(--control-h);
 		padding: 0 var(--space-3);
 		border: 0;
@@ -317,6 +372,7 @@
 		background: transparent;
 		color: var(--text);
 		font: inherit;
+		white-space: nowrap;
 		cursor: pointer;
 	}
 	.topbar-text-btn:hover,
@@ -370,22 +426,23 @@
 			display: none;
 		}
 		.search-trigger {
-			justify-content: center;
+			flex: none;
 			width: var(--control-h);
-			min-height: var(--control-h);
 			margin-inline-end: 0;
-			padding: 0;
-			border-color: transparent;
-			background: transparent;
 		}
 		/* Hidden but still the button's name */
-		.search-label {
+		.quick-support-label {
 			position: absolute;
 			width: 1px;
 			height: 1px;
 			overflow: hidden;
 			clip: rect(0, 0, 0, 0);
 			white-space: nowrap;
+		}
+		.quick-support-btn {
+			justify-content: center;
+			width: var(--icon-btn-size);
+			padding: 0;
 		}
 		.more-btn {
 			display: inline-flex;
