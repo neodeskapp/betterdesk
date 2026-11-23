@@ -164,7 +164,7 @@
         "textPrimary": "#1f2328",
         "textSecondary": "#656d76"
        },
-       "mode": "system",
+       "mode": "light",
        "semantic": {
         "border": "#828990",
         "danger": "#cf222e",
@@ -189,7 +189,7 @@
         "warningMuted": "#fff8c5"
        }
       },
-      "revision": "ce72a45e",
+      "revision": "334dd834",
       "surfaces": {
        "glassBlur": "16",
        "glassColor": "#161b22",
@@ -312,7 +312,7 @@
       "rdclientBgSize": "cover",
       "rdclientBgType": "inherit",
       "showPoweredBy": "true",
-      "themeMode": "system"
+      "themeMode": "light"
      },
      "type": "neodesk-theme",
      "version": "2.0"

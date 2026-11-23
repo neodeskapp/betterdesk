@@ -10,13 +10,13 @@
    "retentionCount": "0x10"
   }
  },
- "recordings": 3,
+ "recordings": 2,
  "answers": [
   {
    "roles": [
     "admin"
    ],
-   "status": 200,
+   "status": 400,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -40,14 +40,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "data": {
-      "destinationPath": "/app/data/scheduled-backups",
-      "destinationType": "local",
-      "enabled": true,
-      "intervalHours": 1,
-      "retentionCount": 16
-     },
-     "success": true
+     "error": "Enter a whole number of archives from 1 to 365.",
+     "success": false
     }
    }
   }

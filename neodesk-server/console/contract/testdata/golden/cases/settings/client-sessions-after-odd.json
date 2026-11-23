@@ -38,9 +38,9 @@
     "kind": "json",
     "json": {
      "data": {
-      "expiry_days": 12,
-      "max_days": 365,
-      "sliding": true
+      "expiry_days": 9,
+      "max_days": 40,
+      "sliding": false
      },
      "success": true
     }

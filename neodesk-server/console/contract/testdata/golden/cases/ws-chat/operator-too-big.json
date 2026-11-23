@@ -36,7 +36,8 @@
     "viewer",
     "operator",
     "global_admin",
-    "super_admin"
+    "super_admin",
+    "admin"
    ],
    "status": 101,
    "body": {
@@ -54,27 +55,6 @@
        },
        "order": "type agent_connected"
       }
-     ]
-    }
-   }
-  },
-  {
-   "roles": [
-    "admin"
-   ],
-   "status": 101,
-   "volatile": [
-    "messages[#]"
-   ],
-   "body": {
-    "kind": "json",
-    "json": {
-     "closed": {
-      "code": 1009,
-      "reason": ""
-     },
-     "messages": [
-      {}
      ]
     }
    }

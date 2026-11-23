@@ -37,7 +37,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Profile name already exists",
+     "error": "A saved appearance with this name exists already.",
      "success": false
     }
    }

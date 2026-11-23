@@ -104,7 +104,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Request failed with status code 400",
+     "error": "Enter the directory's host name or address.",
+     "field": "host",
      "success": false
     }
    }

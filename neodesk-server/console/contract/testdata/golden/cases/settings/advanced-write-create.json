@@ -102,7 +102,7 @@
        "changes": [
         {
          "key": "advanced:console-session-secret",
-         "label": "Advanced configuration: console-session-secret"
+         "label": "Console session secret (.session_secret)"
         }
        ],
        "error": null,
@@ -121,7 +121,7 @@
       "changes": [
        {
         "key": "advanced:console-session-secret",
-        "label": "Advanced configuration: console-session-secret"
+        "label": "Console session secret (.session_secret)"
        }
       ],
       "error": null,

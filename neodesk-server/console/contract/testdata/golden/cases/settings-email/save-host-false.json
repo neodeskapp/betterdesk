@@ -69,7 +69,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "SMTP host is required"
+     "error": "Enter the address of the mail server.",
+     "field": "host"
     }
    }
   }

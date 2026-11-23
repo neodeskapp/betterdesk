@@ -78,7 +78,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid host"
+     "error": "Enter the address of the mail server.",
+     "field": "host"
     }
    }
   }

@@ -128,8 +128,8 @@
        "same_nat_relay": true
       },
       "same_nat_relay": true,
-      "source": "defaults",
-      "writable": false
+      "source": "go-api",
+      "writable": true
      },
      "success": true
     }

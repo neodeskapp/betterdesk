@@ -38,7 +38,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Request failed with status code 400",
+     "error": "Enter the client ID from your identity provider.",
+     "field": "client_id",
      "success": false
     }
    }

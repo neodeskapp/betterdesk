@@ -107,7 +107,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid theme preset file",
+     "error": "This is not an appearance file of the console.",
      "success": false
     }
    }

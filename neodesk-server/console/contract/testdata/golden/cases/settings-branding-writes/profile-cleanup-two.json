@@ -71,7 +71,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Cannot delete the active profile",
+     "error": "The appearance in use can't be deleted. Apply another one first.",
      "success": false
     }
    }

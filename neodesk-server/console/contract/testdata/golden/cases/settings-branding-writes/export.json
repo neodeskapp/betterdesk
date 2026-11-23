@@ -113,7 +113,7 @@
     "json": {
      "appearance": {
       "advanced": {
-       "customCssEnabled": true
+       "customCssEnabled": false
       },
       "backgrounds": {
        "agent": {
@@ -131,12 +131,12 @@
         "imageUrl": "",
         "overlay": "",
         "size": "cover",
-        "type": "image"
+        "type": "none"
        },
        "login": {
         "color": "",
         "gradient": "",
-        "imageUrl": "/wallpapers/b.jpg",
+        "imageUrl": "",
         "overlay": "",
         "size": "cover",
         "type": "inherit"
@@ -153,17 +153,17 @@
       "footer": {
        "agentShowPoweredBy": true,
        "showPoweredBy": true,
-       "text": "true"
+       "text": ""
       },
       "identity": {
        "appDescription": "NeoDesk Server Management",
-       "appName": "42",
+       "appName": "Nested Name",
        "faviconSvg": "",
        "logoIcon": "dns",
-       "logoSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"4\" height=\"4\"/></svg>",
+       "logoSvg": "",
        "logoText": "",
        "logoTextAccent": "",
-       "logoType": "svg",
+       "logoType": "default",
        "logoUrl": ""
       },
       "login": {
@@ -211,7 +211,7 @@
       },
       "palette": {
        "colors": {
-        "accentBlue": "alert(1))",
+        "accentBlue": "#123456",
         "accentBlueHover": "",
         "accentBlueMuted": "",
         "accentGreen": "",
@@ -227,7 +227,7 @@
         "accentYellowHover": "",
         "accentYellowMuted": "",
         "bgElevated": "",
-        "bgPrimary": "#0a0a0a",
+        "bgPrimary": "",
         "bgSecondary": "",
         "bgTertiary": "",
         "borderPrimary": "",
@@ -244,7 +244,7 @@
         "info": "",
         "infoHover": "",
         "infoMuted": "",
-        "primary": "alert(1))",
+        "primary": "#123456",
         "primaryHover": "",
         "primaryMuted": "",
         "success": "",
@@ -260,7 +260,7 @@
         "warningMuted": ""
        }
       },
-      "revision": "bff75f24",
+      "revision": "399b40d1",
       "surfaces": {
        "glassBlur": "16",
        "glassColor": "#ffffff",
@@ -270,7 +270,7 @@
       "type": "neodesk-appearance",
       "typography": {
        "fontBody": "",
-       "fontHeading": "Inter"
+       "fontHeading": ""
       },
       "version": "2.0"
      },
@@ -281,7 +281,7 @@
       "agentBgType": "none",
       "agentShowPoweredBy": "true",
       "appDescription": "NeoDesk Server Management",
-      "appName": "42",
+      "appName": "Nested Name",
       "appearanceSchemaVersion": "2",
       "bgBlur": "",
       "bgColor": "",
@@ -289,9 +289,9 @@
       "bgImageUrl": "",
       "bgOverlay": "",
       "bgSize": "cover",
-      "bgType": "image",
+      "bgType": "none",
       "colors": {
-       "accentBlue": "alert(1))",
+       "accentBlue": "#123456",
        "accentBlueHover": "",
        "accentBlueMuted": "",
        "accentGreen": "",
@@ -307,7 +307,7 @@
        "accentYellowHover": "",
        "accentYellowMuted": "",
        "bgElevated": "",
-       "bgPrimary": "#0a0a0a",
+       "bgPrimary": "",
        "bgSecondary": "",
        "bgTertiary": "",
        "borderPrimary": "",
@@ -315,18 +315,18 @@
        "textPrimary": "",
        "textSecondary": ""
       },
-      "customCss": " .x { color: red; }",
+      "customCss": "",
       "faviconSvg": "",
       "fontBody": "",
-      "fontHeading": "Inter",
-      "footerText": "true",
+      "fontHeading": "",
+      "footerText": "",
       "glassBlur": "16",
       "glassColor": "#ffffff",
       "glassEnabled": "false",
       "glassOpacity": "55",
       "loginBgColor": "",
       "loginBgGradient": "",
-      "loginBgImageUrl": "/wallpapers/b.jpg",
+      "loginBgImageUrl": "",
       "loginBgOverlay": "",
       "loginBgType": "inherit",
       "loginPromoMode": "classic",
@@ -371,10 +371,10 @@
       "loginSubtitle": "",
       "loginTitle": "",
       "logoIcon": "dns",
-      "logoSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"4\" height=\"4\"/></svg>",
+      "logoSvg": "",
       "logoText": "",
       "logoTextAccent": "",
-      "logoType": "svg",
+      "logoType": "default",
       "logoUrl": "",
       "rdclientBgColor": "",
       "rdclientBgGradient": "",

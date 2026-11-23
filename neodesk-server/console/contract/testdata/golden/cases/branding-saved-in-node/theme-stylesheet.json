@@ -12,7 +12,7 @@
    ],
    "status": 200,
    "headers": {
-    "cache-control": "public, max-age=60",
+    "cache-control": "no-cache",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/css; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -30,8 +30,8 @@
    "body": {
     "kind": "bytes",
     "type": "text/css",
-    "length": 4359,
-    "sha256": "331ebfdb4cfcea92d2cf17a89d55d6b92483ed3bcc5b9ecca3041849e25f7873",
+    "length": 4980,
+    "sha256": "a848db1ce699d291847703ca4f52a465f92547bc99723cd785a4800c8b34d8e4",
     "head": ":root {\n    --bg-primary: #141616;\n    --bg-secondary: #1b1e1e;\n    --bg-tertiary: #262a2a;\n    --bg-elevated: #1f2323;\n    --text-primary: #e4e7e7;\n    --text-secondary: #a3abad;\n    --accent-blue: #58a6ff;\n    --accent-blue-hover: #79b8ff;\n    --accent-blue-muted: rgba(88, 166, 255, 0.15);\n    --a"
    }
   },
@@ -44,7 +44,7 @@
    ],
    "status": 200,
    "headers": {
-    "cache-control": "public, max-age=60",
+    "cache-control": "no-cache",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/css; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -65,8 +65,8 @@
    "body": {
     "kind": "bytes",
     "type": "text/css",
-    "length": 4359,
-    "sha256": "331ebfdb4cfcea92d2cf17a89d55d6b92483ed3bcc5b9ecca3041849e25f7873",
+    "length": 4980,
+    "sha256": "a848db1ce699d291847703ca4f52a465f92547bc99723cd785a4800c8b34d8e4",
     "head": ":root {\n    --bg-primary: #141616;\n    --bg-secondary: #1b1e1e;\n    --bg-tertiary: #262a2a;\n    --bg-elevated: #1f2323;\n    --text-primary: #e4e7e7;\n    --text-secondary: #a3abad;\n    --accent-blue: #58a6ff;\n    --accent-blue-hover: #79b8ff;\n    --accent-blue-muted: rgba(88, 166, 255, 0.15);\n    --a"
    }
   }

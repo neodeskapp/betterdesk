@@ -107,7 +107,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Profile name is required",
+     "error": "Enter a name for the appearance.",
      "success": false
     }
    }

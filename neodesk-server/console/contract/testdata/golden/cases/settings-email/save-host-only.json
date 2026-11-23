@@ -70,7 +70,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "SMTP sender is required"
+     "error": "Enter the address mails are sent from.",
+     "field": "from"
     }
    }
   }

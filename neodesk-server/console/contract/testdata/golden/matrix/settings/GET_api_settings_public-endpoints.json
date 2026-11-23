@@ -111,6 +111,7 @@
     "kind": "json",
     "json": {
      "data": {
+      "env_locked": [],
       "env_override_active": false,
       "public_api_url": "",
       "public_relay_server": "",

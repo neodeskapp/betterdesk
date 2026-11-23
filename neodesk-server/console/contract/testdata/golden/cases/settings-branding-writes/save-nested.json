@@ -47,7 +47,7 @@
     "json": {
      "appearance": {
       "advanced": {
-       "customCssEnabled": true
+       "customCssEnabled": false
       },
       "backgrounds": {
        "agent": {
@@ -65,12 +65,12 @@
         "imageUrl": "",
         "overlay": "",
         "size": "cover",
-        "type": "image"
+        "type": "none"
        },
        "login": {
         "color": "",
         "gradient": "",
-        "imageUrl": "/wallpapers/b.jpg",
+        "imageUrl": "",
         "overlay": "",
         "size": "cover",
         "type": "inherit"
@@ -94,10 +94,10 @@
        "appName": "Nested Name",
        "faviconSvg": "",
        "logoIcon": "dns",
-       "logoSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"4\" height=\"4\"/></svg>",
+       "logoSvg": "",
        "logoText": "",
        "logoTextAccent": "",
-       "logoType": "svg",
+       "logoType": "default",
        "logoUrl": ""
       },
       "login": {
@@ -145,7 +145,7 @@
       },
       "palette": {
        "colors": {
-        "accentBlue": "alert(1))",
+        "accentBlue": "#123456",
         "accentBlueHover": "",
         "accentBlueMuted": "",
         "accentGreen": "",
@@ -161,7 +161,7 @@
         "accentYellowHover": "",
         "accentYellowMuted": "",
         "bgElevated": "",
-        "bgPrimary": "#0a0a0a",
+        "bgPrimary": "",
         "bgSecondary": "",
         "bgTertiary": "",
         "borderPrimary": "",
@@ -178,7 +178,7 @@
         "info": "",
         "infoHover": "",
         "infoMuted": "",
-        "primary": "alert(1))",
+        "primary": "#123456",
         "primaryHover": "",
         "primaryMuted": "",
         "success": "",
@@ -194,7 +194,7 @@
         "warningMuted": ""
        }
       },
-      "revision": "0fc25ec3",
+      "revision": "399b40d1",
       "surfaces": {
        "glassBlur": "16",
        "glassColor": "#ffffff",
@@ -204,7 +204,7 @@
       "type": "neodesk-appearance",
       "typography": {
        "fontBody": "",
-       "fontHeading": "Inter"
+       "fontHeading": ""
       },
       "version": "2.0"
      },
@@ -223,9 +223,9 @@
       "bgImageUrl": "",
       "bgOverlay": "",
       "bgSize": "cover",
-      "bgType": "image",
+      "bgType": "none",
       "colors": {
-       "accentBlue": "alert(1))",
+       "accentBlue": "#123456",
        "accentBlueHover": "",
        "accentBlueMuted": "",
        "accentGreen": "",
@@ -241,7 +241,7 @@
        "accentYellowHover": "",
        "accentYellowMuted": "",
        "bgElevated": "",
-       "bgPrimary": "#0a0a0a",
+       "bgPrimary": "",
        "bgSecondary": "",
        "bgTertiary": "",
        "borderPrimary": "",
@@ -249,10 +249,10 @@
        "textPrimary": "",
        "textSecondary": ""
       },
-      "customCss": " .x { color: red; }",
+      "customCss": "",
       "faviconSvg": "",
       "fontBody": "",
-      "fontHeading": "Inter",
+      "fontHeading": "",
       "footerText": "",
       "glassBlur": "16",
       "glassColor": "#ffffff",
@@ -260,7 +260,7 @@
       "glassOpacity": "55",
       "loginBgColor": "",
       "loginBgGradient": "",
-      "loginBgImageUrl": "/wallpapers/b.jpg",
+      "loginBgImageUrl": "",
       "loginBgOverlay": "",
       "loginBgType": "inherit",
       "loginPromoMode": "classic",
@@ -305,10 +305,10 @@
       "loginSubtitle": "",
       "loginTitle": "",
       "logoIcon": "dns",
-      "logoSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"4\" height=\"4\"/></svg>",
+      "logoSvg": "",
       "logoText": "",
       "logoTextAccent": "",
-      "logoType": "svg",
+      "logoType": "default",
       "logoUrl": "",
       "rdclientBgColor": "",
       "rdclientBgGradient": "",
@@ -320,21 +320,10 @@
       "themeMode": "dark"
      },
      "readability": {
-      "issues": [
-       {
-        "id": "console-background",
-        "message": "console-background uses image with a low overlay; text may be hard to read.",
-        "messageKey": "branding.readability_background",
-        "messageParams": {
-         "item": "console-background",
-         "type": "image"
-        },
-        "severity": "warning"
-       }
-      ],
+      "issues": [],
       "ok": true
      },
-     "revision": "0fc25ec3",
+     "revision": "399b40d1",
      "success": true
     }
    }

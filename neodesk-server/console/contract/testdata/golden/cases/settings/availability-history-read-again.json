@@ -38,8 +38,8 @@
     "kind": "json",
     "json": {
      "data": {
-      "enabled": false,
-      "retention_days": 30
+      "enabled": true,
+      "retention_days": 90
      },
      "success": true
     }

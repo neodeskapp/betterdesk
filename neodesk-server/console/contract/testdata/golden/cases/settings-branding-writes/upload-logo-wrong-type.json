@@ -37,7 +37,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid file type",
+     "error": "This is not a picture. Upload a PNG, JPG, GIF or WebP file.",
      "success": false
     }
    }

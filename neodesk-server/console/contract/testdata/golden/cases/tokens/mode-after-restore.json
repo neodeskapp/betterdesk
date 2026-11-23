@@ -40,6 +40,7 @@
     "json": {
      "data": {
       "description": "All devices can register (backward compatible)",
+      "env_override": false,
       "mode": "open"
      },
      "success": true

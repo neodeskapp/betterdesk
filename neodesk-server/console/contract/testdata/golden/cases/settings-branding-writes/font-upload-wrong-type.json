@@ -37,7 +37,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid font file type",
+     "error": "This is not a font file. Upload a .woff2 or .ttf file.",
      "success": false
     }
    }

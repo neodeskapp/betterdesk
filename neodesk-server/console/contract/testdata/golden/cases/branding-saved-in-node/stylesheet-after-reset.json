@@ -12,7 +12,7 @@
    ],
    "status": 200,
    "headers": {
-    "cache-control": "public, max-age=60",
+    "cache-control": "no-cache",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/css; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -20,7 +20,7 @@
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-    "x-branding-revision": "mwb4g5ez",
+    "x-branding-revision": "e3b0c442",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -41,119 +41,14 @@
   },
   {
    "roles": [
-    "guest_issuer"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "public, max-age=60",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "text/css; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "x-branding-revision": "mwb4g5n2",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatileHeaders": [
-    "x-branding-revision"
-   ],
-   "body": {
-    "kind": "bytes",
-    "type": "text/css",
-    "length": 4118,
-    "sha256": "f84158589030ebb59da612414d7e18519a791c06d4c8f242a3de1bac5fbea4cd",
-    "head": ":root {\n    --bg-primary: #ffffff;\n    --bg-secondary: #f3f4f4;\n    --bg-tertiary: #e8ebeb;\n    --bg-elevated: #ffffff;\n    --text-primary: #1b1e1f;\n    --text-secondary: #566064;\n    --accent-blue: #1b62cf;\n    --accent-blue-hover: #1854b3;\n    --accent-blue-muted: rgba(27, 98, 207, 0.15);\n    --ac"
-   }
-  },
-  {
-   "roles": [
-    "viewer"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "public, max-age=60",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "text/css; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "x-branding-revision": "mwb4g5vn",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatileHeaders": [
-    "x-branding-revision"
-   ],
-   "body": {
-    "kind": "bytes",
-    "type": "text/css",
-    "length": 4118,
-    "sha256": "f84158589030ebb59da612414d7e18519a791c06d4c8f242a3de1bac5fbea4cd",
-    "head": ":root {\n    --bg-primary: #ffffff;\n    --bg-secondary: #f3f4f4;\n    --bg-tertiary: #e8ebeb;\n    --bg-elevated: #ffffff;\n    --text-primary: #1b1e1f;\n    --text-secondary: #566064;\n    --accent-blue: #1b62cf;\n    --accent-blue-hover: #1854b3;\n    --accent-blue-muted: rgba(27, 98, 207, 0.15);\n    --ac"
-   }
-  },
-  {
-   "roles": [
-    "operator"
-   ],
-   "status": 200,
-   "headers": {
-    "cache-control": "public, max-age=60",
-    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
-    "content-type": "text/css; charset=utf-8",
-    "cross-origin-resource-policy": "same-origin",
-    "etag": "<present>",
-    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": [
-     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
-    ],
-    "x-branding-revision": "mwb4g64r",
-    "x-content-type-options": "nosniff",
-    "x-dns-prefetch-control": "off",
-    "x-download-options": "noopen",
-    "x-frame-options": "DENY",
-    "x-permitted-cross-domain-policies": "none",
-    "x-xss-protection": "0"
-   },
-   "volatileHeaders": [
-    "x-branding-revision"
-   ],
-   "body": {
-    "kind": "bytes",
-    "type": "text/css",
-    "length": 4118,
-    "sha256": "f84158589030ebb59da612414d7e18519a791c06d4c8f242a3de1bac5fbea4cd",
-    "head": ":root {\n    --bg-primary: #ffffff;\n    --bg-secondary: #f3f4f4;\n    --bg-tertiary: #e8ebeb;\n    --bg-elevated: #ffffff;\n    --text-primary: #1b1e1f;\n    --text-secondary: #566064;\n    --accent-blue: #1b62cf;\n    --accent-blue-hover: #1854b3;\n    --accent-blue-muted: rgba(27, 98, 207, 0.15);\n    --ac"
-   }
-  },
-  {
-   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
     "admin"
    ],
    "status": 200,
    "headers": {
-    "cache-control": "public, max-age=60",
+    "cache-control": "no-cache",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/css; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -164,7 +59,7 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
-    "x-branding-revision": "mwb4g678",
+    "x-branding-revision": "e3b0c442",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

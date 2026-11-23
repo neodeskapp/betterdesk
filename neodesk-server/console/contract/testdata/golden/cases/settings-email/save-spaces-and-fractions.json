@@ -76,7 +76,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid port"
+     "error": "Enter a port from 1 to 65535.",
+     "field": "port"
     }
    }
   }
