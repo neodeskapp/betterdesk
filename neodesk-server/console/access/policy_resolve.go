@@ -237,6 +237,12 @@ func mergeGroupPolicy(groupGUID string, sectionRows []SectionRow, featureRows []
 // Client features: the account's row, else on when any of its groups turns
 // the feature on, else on; a hard locked feature is always off.
 func (s *Service) ResolveForUser(ctx context.Context, user PolicyUser) (*Policy, error) {
+	return s.resolveForUser(ctx, user, "")
+}
+
+// resolveForUser is ResolveForUser as if the account were not in the user
+// group with the guid without ("" for none).
+func (s *Service) resolveForUser(ctx context.Context, user PolicyUser, without string) (*Policy, error) {
 	if user.ID == 0 {
 		return nil, &StatusError{Status: 404, Message: "User not found"}
 	}
@@ -254,6 +260,15 @@ func (s *Service) ResolveForUser(ctx context.Context, user PolicyUser) (*Policy,
 	}
 	if rows.groups, err = s.data.UserGroupsForUser(ctx, user.ID); err != nil {
 		return nil, err
+	}
+	if without != "" {
+		kept := rows.groups[:0:0]
+		for _, group := range rows.groups {
+			if group.GUID != without {
+				kept = append(kept, group)
+			}
+		}
+		rows.groups = kept
 	}
 	for _, group := range rows.groups {
 		sections, err := s.data.PanelAccessPolicies(ctx, SubjectGroup, group.GUID)
@@ -288,4 +303,102 @@ func (s *Service) ResolveForGroup(ctx context.Context, groupGUID string) (*Polic
 		return nil, err
 	}
 	return mergeGroupPolicy(groupGUID, sectionRows, featureRows), nil
+}
+
+// KeepGroupLimits hands the limits a user group puts on its members to
+// the members themselves, before the group goes: a section a member
+// reaches at a lower level with the group than without it gets that level
+// as the member's own row, and a client feature the group turns off for a
+// member gets an own row that keeps it off. Deleting a group then lifts no
+// limit: a limit that pointed at the group stays a limit (L391).
+func (s *Service) KeepGroupLimits(ctx context.Context, groupGUID string) error {
+	group, err := s.UserGroupByGUID(ctx, groupGUID)
+	if err != nil || group == nil {
+		return err
+	}
+	members, err := s.UserGroupMembers(ctx, group.ID)
+	if err != nil {
+		return err
+	}
+	for _, member := range members {
+		if err := s.keepLimitsOf(ctx, member, groupGUID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// keepLimitsOf is KeepGroupLimits for one member.
+func (s *Service) keepLimitsOf(ctx context.Context, member PolicyUser, groupGUID string) error {
+	with, err := s.resolveForUser(ctx, member, "")
+	if err != nil {
+		return err
+	}
+	without, err := s.resolveForUser(ctx, member, groupGUID)
+	if err != nil {
+		return err
+	}
+	subjectID := strconv.FormatInt(member.ID, 10)
+	sections, err := s.data.PanelAccessPolicies(ctx, SubjectUser, subjectID)
+	if err != nil {
+		return err
+	}
+	features, err := s.ClientFeatureRows(ctx, SubjectUser, subjectID)
+	if err != nil {
+		return err
+	}
+	sectionsChanged, featuresChanged := false, false
+	for _, key := range with.Sections.Keys() {
+		now, _ := with.Sections.Get(key)
+		then, _ := without.Sections.Get(key)
+		if rank(then.Access) <= rank(now.Access) {
+			continue
+		}
+		sections = setSectionRow(sections, key, string(now.Access))
+		sectionsChanged = true
+	}
+	for _, key := range with.Features.Keys() {
+		now, _ := with.Features.Get(key)
+		then, _ := without.Features.Get(key)
+		if now.Enabled || !then.Enabled {
+			continue
+		}
+		features = setFeatureRow(features, key, false)
+		featuresChanged = true
+	}
+	if sectionsChanged {
+		if err := s.setPanelAccessPolicies(ctx, SubjectUser, subjectID, sections); err != nil {
+			return err
+		}
+	}
+	if featuresChanged {
+		if err := s.setClientFeaturePolicies(ctx, SubjectUser, subjectID, features); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// setSectionRow sets the level of a section key in rows, adding the row
+// when there is none.
+func setSectionRow(rows []SectionRow, key, level string) []SectionRow {
+	for i := range rows {
+		if rows[i].ResourceKey == key {
+			rows[i].AccessLevel = level
+			return rows
+		}
+	}
+	return append(rows, SectionRow{ResourceKey: key, AccessLevel: level})
+}
+
+// setFeatureRow sets a client feature in rows, adding the row when there
+// is none.
+func setFeatureRow(rows []FeatureRow, key string, enabled bool) []FeatureRow {
+	for i := range rows {
+		if rows[i].FeatureKey == key {
+			rows[i].Enabled = enabled
+			return rows
+		}
+	}
+	return append(rows, FeatureRow{FeatureKey: key, Enabled: enabled})
 }

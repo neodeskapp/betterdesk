@@ -182,8 +182,11 @@ func (h *handlers) updateUserGroup(w http.ResponseWriter, r *http.Request) {
 	answer(w, r, http.StatusOK, groupAnswer{Success: true, Data: groupAnswerData{Group: serializeUserGroup(group)}})
 }
 
-// deleteUserGroup answers DELETE /api/panel/user-groups/{guid}. The
-// group's panel access policy is emptied first.
+// deleteUserGroup answers DELETE /api/panel/user-groups/{guid}, for a
+// caller who may change every member of the group, as saving its panel
+// access needs (L391). The limits the group puts on its members stay with
+// them (access.Service.KeepGroupLimits), then the group's panel access
+// policy is emptied.
 func (h *handlers) deleteUserGroup(w http.ResponseWriter, r *http.Request) {
 	guid, ok := groupGUID(r)
 	if !ok {
@@ -200,6 +203,17 @@ func (h *handlers) deleteUserGroup(w http.ResponseWriter, r *http.Request) {
 		failKey(w, r, http.StatusNotFound, "users.user_group_not_found")
 		return
 	}
+	if ok, err := h.mayChangeMembers(r, guid); err != nil {
+		h.serverError(w, r, "Delete user group error:", err)
+		return
+	} else if !ok {
+		sent(w, r, errRoleAboveOwn)
+		return
+	}
+	if err := h.d.Access.KeepGroupLimits(ctx, guid); err != nil {
+		h.serverError(w, r, "Delete user group error:", err)
+		return
+	}
 	if _, err := h.d.Access.SavePolicy(ctx, access.SubjectGroup, guid, nil, nil); err != nil {
 		h.serverError(w, r, "Delete user group error:", err)
 		return
@@ -213,4 +227,26 @@ func (h *handlers) deleteUserGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	answer(w, r, http.StatusOK, done{Success: true})
+}
+
+// mayChangeMembers reports whether the caller may give every member of the
+// user group its role (access.Service.MayGiveRole), its own account
+// included: no account lifts limits of an account it may not change, nor
+// its own.
+func (h *handlers) mayChangeMembers(r *http.Request, guid string) (bool, error) {
+	group, err := h.d.Access.UserGroupByGUID(r.Context(), guid)
+	if err != nil || group == nil {
+		return group == nil && err == nil, err
+	}
+	members, err := h.d.Access.UserGroupMembers(r.Context(), group.ID)
+	if err != nil {
+		return false, err
+	}
+	for _, member := range members {
+		ok, err := h.d.Access.MayGiveRole(r.Context(), callerRole(r), member.Role)
+		if err != nil || !ok {
+			return false, err
+		}
+	}
+	return true, nil
 }
