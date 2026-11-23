@@ -250,7 +250,7 @@ func TestStylesheetsAndFavicon(t *testing.T) {
 		css := visitor.Do("GET", "/css/branding.css", "")
 		revision := w.Server.Deps().Branding.Revision()
 		if css.Status != http.StatusOK || css.Header.Get("Content-Type") != "text/css; charset=utf-8" ||
-			css.Header.Get("Cache-Control") != "public, max-age=60" || css.Header.Get("X-Branding-Revision") != revision ||
+			css.Header.Get("Cache-Control") != "no-cache" || css.Header.Get("X-Branding-Revision") != revision ||
 			!strings.HasPrefix(css.Body, ":root {") || css.Header.Get("ETag") == "" {
 			t.Errorf("branding.css: %d %v %.40s", css.Status, css.Header, css.Body)
 		}
@@ -258,8 +258,18 @@ func TestStylesheetsAndFavicon(t *testing.T) {
 		if again.Status != http.StatusNotModified || again.Body != "" || again.Header.Get("X-Branding-Revision") != revision {
 			t.Errorf("branding.css with its ETag: %d %v", again.Status, again.Header)
 		}
+		// The browser asks again at every page load (no-cache), so a saved
+		// change shows at the next reload, not up to a minute later (BUGS
+		// L373); an unchanged stylesheet costs a 304
+		if res := w.As("admin").Do("POST", "/api/settings/branding", `{"customCss":".l373 { color: red }"}`); res.Status != http.StatusOK {
+			t.Fatalf("save: %d %s", res.Status, res.Body)
+		}
+		if changed := visitor.Do("GET", "/css/branding.css", "", "If-None-Match", css.Header.Get("ETag")); changed.Status != http.StatusOK || !strings.Contains(changed.Body, ".l373") {
+			t.Errorf("branding.css after a save, with the old ETag: %d %.80s", changed.Status, changed.Body)
+		}
+		css = visitor.Do("GET", "/css/branding.css", "")
 		theme := visitor.Do("GET", "/css/theme.css", "")
-		if theme.Body != css.Body || theme.Header.Get("X-Branding-Revision") != "" || theme.Header.Get("Cache-Control") != "public, max-age=60" {
+		if theme.Body != css.Body || theme.Header.Get("X-Branding-Revision") != "" || theme.Header.Get("Cache-Control") != "no-cache" {
 			t.Errorf("theme.css: %v", theme.Header)
 		}
 		icon := visitor.Do("GET", "/branding/favicon.svg", "")

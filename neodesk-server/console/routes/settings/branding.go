@@ -164,7 +164,10 @@ func (h *handlers) localFonts(w http.ResponseWriter, r *http.Request) {
 }
 
 // brandingCSS answers GET /css/branding.css: the stylesheet made from the
-// settings, for everyone, cached for a minute. X-Branding-Revision names
+// settings, for everyone. The browser asks again at every page load
+// (no-cache) and gets 304 while the settings are the same, so a saved
+// change shows at the next reload; with a minute's cache it showed up to
+// a minute later, also to the admin who saved it (BUGS L373). X-Branding-Revision names
 // the settings it was made from. When it cannot be made the answer is
 // still 200, with a comment as the body.
 func (h *handlers) brandingCSS(w http.ResponseWriter, r *http.Request) {
@@ -174,7 +177,7 @@ func (h *handlers) brandingCSS(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteBody(w, r, http.StatusOK, "", []byte("/* branding error */"))
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=60")
+	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("X-Branding-Revision", h.d.Branding.Revision())
 	httpx.WriteBody(w, r, http.StatusOK, "", []byte(css))
 }
@@ -188,7 +191,7 @@ func (h *handlers) themeCSS(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteBody(w, r, http.StatusOK, "", []byte("/* theme error */"))
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=60")
+	w.Header().Set("Cache-Control", "no-cache")
 	httpx.WriteBody(w, r, http.StatusOK, "", []byte(css))
 }
 
