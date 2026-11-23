@@ -219,6 +219,10 @@
 	:global(.displays-menu) {
 		width: min(560px, calc(100vw - 2 * var(--space-4)));
 	}
+	/* Two columns: long labels (German, French) wrap instead of being cut */
+	:global(.displays-menu .menu-item) {
+		white-space: normal;
+	}
 	.displays-grid {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
