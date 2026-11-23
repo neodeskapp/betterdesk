@@ -22,6 +22,7 @@
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
+	import { lazy } from '#lib/util/lazy.ts';
 
 	let { groups, devices }: { groups: DeviceGroup[]; devices: Device[] } = $props();
 
@@ -32,6 +33,8 @@
 	let userGroups = $state.raw<UserGroup[]>([]);
 	/** "3 devices, 1 user, 0 groups" per rule, loaded when the section is open */
 	let applied = $state.raw<Record<string, string>>({});
+	const strategySheet = lazy(() => import('./StrategySheet.svelte'));
+	const assignSheet = lazy(() => import('./StrategyAssignSheet.svelte'));
 	let editing = $state<{ rule: Strategy | null } | null>(null);
 	let assigning = $state.raw<Strategy | null>(null);
 
@@ -192,7 +195,7 @@
 
 <!-- The sheets load when they open, so the device list's first load stays small -->
 {#if editing}
-	{#await import('./StrategySheet.svelte') then { default: StrategySheet }}
+	{#await strategySheet.open(() => (editing = null)) then { default: StrategySheet }}
 		<StrategySheet
 			rule={editing.rule}
 			{groups}
@@ -206,7 +209,7 @@
 {/if}
 
 {#if assigning}
-	{#await import('./StrategyAssignSheet.svelte') then { default: StrategyAssignSheet }}
+	{#await assignSheet.open(() => (assigning = null)) then { default: StrategyAssignSheet }}
 		<StrategyAssignSheet
 			rule={assigning}
 			{groups}

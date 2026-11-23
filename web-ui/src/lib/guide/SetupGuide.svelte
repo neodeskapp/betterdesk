@@ -27,6 +27,7 @@
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import { lazy } from '#lib/util/lazy.ts';
 	import { guide, guideAvailable, loadGuide, setGuideOpen } from './guide.svelte.ts';
 	import { STEP_TARGETS, stepHintKey, stepTitleKey } from './steps.ts';
 
@@ -58,6 +59,7 @@
 
 	/* ── Add a computer, on this page ── */
 
+	const addComputer = lazy(() => import('#lib/onboard/AddComputerDialog.svelte'));
 	let addOpen = $state(false);
 	let folders = $state.raw<Folder[]>([]);
 
@@ -126,7 +128,7 @@
 {/if}
 
 {#if addOpen}
-	{#await import('#lib/onboard/AddComputerDialog.svelte') then { default: AddComputerDialog }}
+	{#await addComputer.open(() => (addOpen = false)) then { default: AddComputerDialog }}
 		<AddComputerDialog {folders} onclose={closeAddComputer} />
 	{/await}
 {/if}

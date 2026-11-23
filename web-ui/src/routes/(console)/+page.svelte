@@ -67,6 +67,7 @@
 	import ValueField from '#lib/ui/ValueField.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
+	import { lazy } from '#lib/util/lazy.ts';
 
 	let { data }: { data: PageData } = $props();
 
@@ -209,6 +210,12 @@
 
 	/* ── Dialogs (their code loads on first use) ── */
 
+	const qrDialog = lazy(() => import('#lib/devices-area/ConfigQrDialog.svelte'));
+	const scriptSheet = lazy(() => import('#lib/devices-area/InstallScriptSheet.svelte'));
+	const pairDialog = lazy(() => import('#lib/devices-area/PairCodeDialog.svelte'));
+	const activation = lazy(() => import('#lib/devices-area/AgentActivation.svelte'));
+	const trends = lazy(() => import('#lib/people/Trends.svelte'));
+
 	let qrOpen = $state(false);
 	let scriptOpen = $state(false);
 	let pairOpen = $state(false);
@@ -342,7 +349,7 @@
 
 			{#if canTrends}
 				<!-- Two weeks of remote sessions and help requests, as on the reports page -->
-				{#await import('#lib/people/Trends.svelte') then { default: Trends }}<Trends />{/await}
+				{#await trends.optional() then { default: Trends }}<Trends />{/await}
 			{/if}
 		</div>
 
@@ -503,19 +510,19 @@
 </div>
 
 {#if qrOpen && config}
-	{#await import('#lib/devices-area/ConfigQrDialog.svelte') then { default: ConfigQrDialog }}
+	{#await qrDialog.open(() => (qrOpen = false)) then { default: ConfigQrDialog }}
 		<ConfigQrDialog {config} onclose={() => (qrOpen = false)} />
 	{/await}
 {/if}
 
 {#if scriptOpen && config}
-	{#await import('#lib/devices-area/InstallScriptSheet.svelte') then { default: InstallScriptSheet }}
+	{#await scriptSheet.open(() => (scriptOpen = false)) then { default: InstallScriptSheet }}
 		<InstallScriptSheet {config} onclose={() => (scriptOpen = false)} />
 	{/await}
 {/if}
 
 {#if pairOpen}
-	{#await import('#lib/devices-area/PairCodeDialog.svelte') then { default: PairCodeDialog }}
+	{#await pairDialog.open(() => (pairOpen = false)) then { default: PairCodeDialog }}
 		<PairCodeDialog
 			host={pairHost}
 			onclose={() => (pairOpen = false)}
@@ -528,7 +535,7 @@
 {/if}
 
 {#if activationOpen}
-	{#await import('#lib/devices-area/AgentActivation.svelte') then { default: AgentActivation }}
+	{#await activation.open(() => (activationOpen = false)) then { default: AgentActivation }}
 		<AgentActivation onclose={() => (activationOpen = false)} />
 	{/await}
 {/if}

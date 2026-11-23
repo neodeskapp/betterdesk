@@ -27,6 +27,7 @@
 	import { openLayer, openLayers } from '#lib/ui/layers.ts';
 	import { closePopups } from '#lib/ui/popups.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import { lazy } from '#lib/util/lazy.ts';
 	import A11yPanel from './A11yPanel.svelte';
 	import BottomNav from './BottomNav.svelte';
 	import HelpPanel from './HelpPanel.svelte';
@@ -49,6 +50,7 @@
 	const sidebarId = `${uid}-sidebar`;
 	const helpId = `${uid}-help`;
 	const DRAWER_QUERY = '(max-width: 1099px)';
+	const restartPrompt = lazy(() => import('#lib/settings/RestartPrompt.svelte'));
 
 	let drawer = $state(typeof window !== 'undefined' && window.matchMedia(DRAWER_QUERY).matches);
 	let drawerOpen = $state(false);
@@ -256,8 +258,9 @@
 <IdleWarning />
 <DialogHost />
 {#if can('server.config')}
-	<!-- "Restart required" after a save, and a restart still waiting from before; loaded only for those who can restart -->
-	{#await import('#lib/settings/RestartPrompt.svelte') then prompt}<prompt.default />{/await}
+	<!-- "Restart required" after a save, and a restart still waiting from before; loaded only for those who can restart.
+	     Leaving the page cuts the load off: no error, the next page loads it -->
+	{#await restartPrompt.optional() then prompt}<prompt.default />{/await}
 {/if}
 <ToastHost />
 <DevicePanelHost />

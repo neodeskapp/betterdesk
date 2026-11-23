@@ -80,6 +80,7 @@
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import AddComputerDialog from '#lib/onboard/AddComputerDialog.svelte';
 	import { ICONS } from '#lib/util/display.ts';
+	import { lazy } from '#lib/util/lazy.ts';
 	import { readJsonPref, readPref, writeJsonPref, writePref } from '#lib/util/storage.ts';
 	import AccessRules from './AccessRules.svelte';
 	import ScopeList, { type DropTarget } from './ScopeList.svelte';
@@ -534,6 +535,11 @@
 
 	/* ── Page actions, folders, groups, tags ── */
 
+	const folderDialogCode = lazy(() => import('./FolderDialog.svelte'));
+	const groupSheetCode = lazy(() => import('./GroupSheet.svelte'));
+	const billingSheetCode = lazy(() => import('./GroupBillingSheet.svelte'));
+	const tagsSheetCode = lazy(() => import('./ManageTagsSheet.svelte'));
+
 	let folderDialog = $state<{ folder: Folder | null } | null>(null);
 	let groupSheet = $state<{ group: DeviceGroup | null } | null>(null);
 	let billingFor = $state.raw<DeviceGroup | null>(null);
@@ -841,7 +847,7 @@
 
 <!-- Dialogs and sheets that open on demand load then, so the list's first load stays small -->
 {#if folderDialog}
-	{#await import('./FolderDialog.svelte') then { default: FolderDialog }}
+	{#await folderDialogCode.open(() => (folderDialog = null)) then { default: FolderDialog }}
 		<FolderDialog
 			folder={folderDialog.folder}
 			onclose={() => (folderDialog = null)}
@@ -854,7 +860,7 @@
 {/if}
 
 {#if groupSheet}
-	{#await import('./GroupSheet.svelte') then { default: GroupSheet }}
+	{#await groupSheetCode.open(() => (groupSheet = null)) then { default: GroupSheet }}
 		<GroupSheet
 			group={groupSheet.group}
 			tags={knownTags}
@@ -868,13 +874,13 @@
 {/if}
 
 {#if billingFor}
-	{#await import('./GroupBillingSheet.svelte') then { default: GroupBillingSheet }}
+	{#await billingSheetCode.open(() => (billingFor = null)) then { default: GroupBillingSheet }}
 		<GroupBillingSheet group={billingFor} onclose={() => (billingFor = null)} />
 	{/await}
 {/if}
 
 {#if manageTags}
-	{#await import('./ManageTagsSheet.svelte') then { default: ManageTagsSheet }}
+	{#await tagsSheetCode.open(() => (manageTags = false)) then { default: ManageTagsSheet }}
 		<ManageTagsSheet
 			tags={knownTags}
 			{devices}

@@ -15,6 +15,7 @@
  */
 
 import { mount } from 'svelte';
+import { lazy } from '#lib/util/lazy.ts';
 import type { AccessPolicy, AccessPolicyInput, DeviceGroup, Folder } from '#lib/api/devices.ts';
 import type { RemoteTargetInput, RemoteTargetReadiness } from '#lib/api/remoteTargets.ts';
 import type { GuestLinkInput } from '#lib/api/guest.ts';
@@ -106,28 +107,21 @@ export const askRequests = new AskRequests();
 let nextId = 1;
 let hosted = false;
 
-let loading: Promise<typeof import('./DeviceDialogs.svelte')> | null = null;
+const dialogs = lazy(() => import('./DeviceDialogs.svelte'));
 
 /**
  * Fetch the dialogs' code ahead of the first use (the device list does this
  * once it shows). Leaving the page cuts the fetch off, and Firefox then
- * fails the stylesheets it was loading ("Unable to preload CSS"). Nothing
- * waits for a preload, so that is no error: the code is forgotten, and the
- * first dialog fetches it again.
+ * fails the stylesheets it was loading ("Unable to preload CSS"); the first
+ * dialog then fetches the code again (lazy).
  */
 export function preloadDialogs(): void {
-	if (typeof document === 'undefined' || loading) return;
-	const pending = import('./DeviceDialogs.svelte');
-	loading = pending;
-	pending.catch(() => {
-		if (loading === pending) loading = null;
-	});
+	dialogs.preload();
 }
 
 async function ensureHost(): Promise<void> {
 	if (hosted || typeof document === 'undefined') return;
-	preloadDialogs();
-	const { default: DeviceDialogs } = await (loading as Promise<typeof import('./DeviceDialogs.svelte')>);
+	const { default: DeviceDialogs } = await dialogs.load();
 	if (hosted) return;
 	hosted = true;
 	mount(DeviceDialogs, { target: document.body });
