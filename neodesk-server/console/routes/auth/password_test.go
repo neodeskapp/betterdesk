@@ -182,3 +182,23 @@ func TestPasswordChangeRefusalsInTheirLanguage(t *testing.T) {
 			http.StatusBadRequest, `{"success":false,"error":"Das Passwort muss mindestens 8 Zeichen lang sein."}`)
 	})
 }
+
+// A directory or single sign-on account has no password of the console's:
+// a change is refused with a message that says where the password is
+// managed, not that the current one is wrong (L345).
+func TestPasswordChangeOfAnExternalAccount(t *testing.T) {
+	for _, provider := range []string{"ldap", "oidc"} {
+		t.Run(provider, func(t *testing.T) {
+			eachWorld(t, setup{}, func(t *testing.T, w *world) {
+				hank := w.addUser(user{name: "hank"})
+				a := w.agent()
+				a.signIn("hank")
+				w.exec(`UPDATE users SET auth_provider = ? WHERE id = ?`, provider, hank)
+				want(t, "change", a.post("/api/auth/password", change(password, otherPassword, otherPassword)), http.StatusBadRequest,
+					`{"success":false,"error":"This account signs in through a directory or single sign-on. Change its password there."}`)
+				want(t, "in German", a.post("/api/auth/password", change(password, otherPassword, otherPassword), "Accept-Language", "de"), http.StatusBadRequest,
+					`{"success":false,"error":"Dieses Konto meldet sich über ein Verzeichnis oder Single Sign-on an. Ändern Sie das Passwort dort."}`)
+			})
+		})
+	}
+}

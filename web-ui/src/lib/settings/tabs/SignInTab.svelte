@@ -142,7 +142,11 @@
 	type TotpView = 'loading' | 'error' | 'off' | 'on' | 'setup' | 'codes' | 'disable' | 'renew';
 	let totpView = $state<TotpView>('loading');
 	let totpOn = $state<boolean | null>(null);
-	/** Turning it off asks the password, or a current code where the account has none here */
+	/**
+	 * Turning it off asks the password, or a current code where the account
+	 * has none here: a directory or single sign-on account, which has no
+	 * password to change here either
+	 */
 	let disableWithCode = $state(false);
 	let totpError = $state('');
 	let totpNote = $state<Line>(NO_LINE);
@@ -625,51 +629,72 @@
 
 		<SettingsGrid>
 			{#snippet start()}
-				<form id={password.id} class="form-column settings-subgroup" onsubmit={password.onsubmit} novalidate>
-					<h3 id="account-password">{t('settings.change_password')}</h3>
-					<Field id="current-password" label={t('settings.current_password')} error={password.errors.current}>
-						{#snippet children(f)}
-							<Input
-								{...f}
-								type="password"
-								autocomplete="current-password"
-								bind:value={password.values.current}
-							/>
-						{/snippet}
-					</Field>
-					<Field id="new-password" label={t('settings.new_password')} error={password.errors.next}>
-						{#snippet children(f)}
-							<Input
-								{...f}
-								describedby={[f.describedby, 'password-requirements'].filter(Boolean).join(' ')}
-								type="password"
-								autocomplete="new-password"
-								minlength={8}
-								bind:value={password.values.next}
-							/>
-							<div class="password-requirements" id="password-requirements">
-								<p class="form-hint">{t('settings.password_requirements')}:</p>
-								<ul>
-									{#each rules as rule (rule.id)}
-										<li id="req-{rule.id}" class={{ valid: rule.met }}>{t(RULE_LABEL[rule.id] ?? '')}</li>
-									{/each}
-								</ul>
-							</div>
-						{/snippet}
-					</Field>
-					<Field id="confirm-password" label={t('settings.confirm_password')} error={password.errors.confirm}>
-						{#snippet children(f)}
-							<Input
-								{...f}
-								type="password"
-								autocomplete="new-password"
-								bind:value={password.values.confirm}
-							/>
-						{/snippet}
-					</Field>
-					<p class="field-effect">{t('settings.signin.password_effect')}</p>
-					<SaveBar form={password} label={t('settings.save_password')} />
-				</form>
+				{#if disableWithCode}
+					<!-- A directory or single sign-on account has no password of the console's -->
+					<div class="form-column settings-subgroup">
+						<h3 id="account-password">{t('settings.change_password')}</h3>
+						<p class="form-hint">{t('settings.signin.password_external')}</p>
+					</div>
+				{:else}
+					<form
+						id={password.id}
+						class="form-column settings-subgroup"
+						onsubmit={password.onsubmit}
+						novalidate
+					>
+						<h3 id="account-password">{t('settings.change_password')}</h3>
+						<Field
+							id="current-password"
+							label={t('settings.current_password')}
+							error={password.errors.current}
+						>
+							{#snippet children(f)}
+								<Input
+									{...f}
+									type="password"
+									autocomplete="current-password"
+									bind:value={password.values.current}
+								/>
+							{/snippet}
+						</Field>
+						<Field id="new-password" label={t('settings.new_password')} error={password.errors.next}>
+							{#snippet children(f)}
+								<Input
+									{...f}
+									describedby={[f.describedby, 'password-requirements'].filter(Boolean).join(' ')}
+									type="password"
+									autocomplete="new-password"
+									minlength={8}
+									bind:value={password.values.next}
+								/>
+								<div class="password-requirements" id="password-requirements">
+									<p class="form-hint">{t('settings.password_requirements')}:</p>
+									<ul>
+										{#each rules as rule (rule.id)}
+											<li id="req-{rule.id}" class={{ valid: rule.met }}>{t(RULE_LABEL[rule.id] ?? '')}</li>
+										{/each}
+									</ul>
+								</div>
+							{/snippet}
+						</Field>
+						<Field
+							id="confirm-password"
+							label={t('settings.confirm_password')}
+							error={password.errors.confirm}
+						>
+							{#snippet children(f)}
+								<Input
+									{...f}
+									type="password"
+									autocomplete="new-password"
+									bind:value={password.values.confirm}
+								/>
+							{/snippet}
+						</Field>
+						<p class="field-effect">{t('settings.signin.password_effect')}</p>
+						<SaveBar form={password} label={t('settings.save_password')} />
+					</form>
+				{/if}
 			{/snippet}
 			{#snippet end()}
 				<div class="form-column settings-subgroup" id="auth-panel-totp">

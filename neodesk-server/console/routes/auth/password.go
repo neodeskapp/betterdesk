@@ -68,8 +68,19 @@ func (h *handlers) changePassword(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.passwords_mismatch", nil))
 		return
 	}
+	// A directory or single sign-on account signs in with the password of
+	// its directory or provider; one stored here would never be asked for
+	user, err := h.authn.UserByID(r.Context(), kit.UserID(r))
+	if err != nil {
+		h.serverError(w, r, "Password change error:", err)
+		return
+	}
+	if authn.IsExternalAccount(user) {
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "auth.password_external_account", nil))
+		return
+	}
 
-	err := h.replacePassword(r, current, next)
+	err = h.replacePassword(r, current, next)
 	var refusal authn.Refusal
 	switch {
 	case errors.As(err, &refusal):
