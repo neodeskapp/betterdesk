@@ -67,27 +67,27 @@ func hexPrefix(data []byte, max int) string {
 }
 
 func (c *WSConn) logFirstReadFrame(typ websocket.MessageType, data []byte) {
-	if !WSDebugFrames() || c.gotRead {
+	if !WSDebugFrames() || c.gotRead.Swap(true) {
 		return
 	}
-	c.gotRead = true
 	log.Printf("[signal] WS debug first recv from %s: %s len=%d kind=%s hex=%s",
 		c.Addr, describeWSFrameType(typ), len(data), describeRendezvousPayload(data), hexPrefix(data, 32))
 }
 
 func (c *WSConn) logFirstWriteFrame(data []byte) {
-	if !WSDebugFrames() || c.gotWrite {
+	if !WSDebugFrames() || c.gotWrite.Swap(true) {
 		return
 	}
-	c.gotWrite = true
 	log.Printf("[signal] WS debug first send to %s: binary len=%d kind=%s hex=%s",
 		c.Addr, len(data), describeRendezvousPayload(data), hexPrefix(data, 32))
 }
 
 // SessionSummary returns connection stats for EOF diagnostics.
 func (c *WSConn) SessionSummary() (since time.Duration, readFrames, writeFrames int, readAny, writeAny bool) {
-	if c.connectedAt.IsZero() {
-		return 0, c.framesRead, c.framesWrite, c.gotRead, c.gotWrite
+	readFrames, writeFrames = int(c.framesRead.Load()), int(c.framesWrite.Load())
+	readAny, writeAny = c.gotRead.Load(), c.gotWrite.Load()
+	if !c.connectedAt.IsZero() {
+		since = time.Since(c.connectedAt)
 	}
-	return time.Since(c.connectedAt), c.framesRead, c.framesWrite, c.gotRead, c.gotWrite
+	return since, readFrames, writeFrames, readAny, writeAny
 }

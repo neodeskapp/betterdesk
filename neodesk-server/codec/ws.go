@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/coder/websocket"
@@ -25,10 +26,14 @@ type WSConn struct {
 	keepAliveHandler func()
 	readTimeout      time.Duration
 	connectedAt      time.Time
-	framesRead       int
-	framesWrite      int
-	gotRead          bool
-	gotWrite         bool
+	// The counts are read from other goroutines than the one that reads
+	// or writes: the signal server's keepalive loop asks FramesRead while
+	// the read loop counts, and the read loop asks SessionSummary while
+	// the keepalive loop writes.
+	framesRead  atomic.Int64
+	framesWrite atomic.Int64
+	gotRead     atomic.Bool
+	gotWrite    atomic.Bool
 }
 
 // NewWSConn creates a WSConn from an accepted WebSocket connection.
@@ -67,7 +72,7 @@ func (c *WSConn) ReadMessage() (*pb.RendezvousMessage, error) {
 		if typ != websocket.MessageBinary {
 			return nil, fmt.Errorf("ws: expected binary frame, got %v", typ)
 		}
-		c.framesRead++
+		c.framesRead.Add(1)
 		c.logFirstReadFrame(typ, data)
 		if len(data) == 0 {
 			if c.keepAliveHandler != nil {
@@ -97,7 +102,7 @@ func (c *WSConn) WriteMessage(msg *pb.RendezvousMessage) error {
 func (c *WSConn) WriteRaw(data []byte) error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
-	c.framesWrite++
+	c.framesWrite.Add(1)
 	c.logFirstWriteFrame(data)
 	return c.WS.Write(c.Ctx, websocket.MessageBinary, data)
 }
@@ -129,7 +134,7 @@ func (c *WSConn) RemoteAddr() string {
 // Used by signal keepalive to avoid sending empty frames on ephemeral
 // RequestRelay sessions that already exchanged real protobuf (issue #276).
 func (c *WSConn) FramesRead() int {
-	return c.framesRead
+	return int(c.framesRead.Load())
 }
 
 // Close closes the WebSocket connection with a normal closure status.
