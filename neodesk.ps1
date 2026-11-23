@@ -359,7 +359,7 @@ function Get-ConsoleWidth {
 }
 
 # Write-Logo TITLE: the NeoDesk logo, drawn in half blocks, with TITLE
-# under it, starting under the wordmark. The lines carry colour tokens
+# on the line under the wordmark. The lines carry colour tokens
 # {N}: $vtCodes[N] is the code in 24-bit, $fgNames[N] and $bgNames[N]
 # the console colours. A console narrower than the logo gets the name
 # and TITLE on one line.
@@ -392,15 +392,16 @@ function Write-Logo {
     }
     $vt = (Get-ColorMode) -eq 'vt'
     $esc = [char]27
-    foreach ($line in $lines) {
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $after = if ($i -eq 11) { '            ' + $Title } else { '' }
         # Text and token numbers take turns: text, number, text, ...
-        $parts = [regex]::Split($line, '\{(\d+)\}')
+        $parts = [regex]::Split($lines[$i], '\{(\d+)\}')
         if ($vt) {
             $text = $parts[0]
             for ($p = 1; $p -lt $parts.Count; $p += 2) {
                 $text += "$esc[0m$esc[$($vtCodes[[int]$parts[$p]])m" + $parts[$p + 1]
             }
-            Write-Host "$text$esc[0m"
+            Write-Host "$text$esc[0m$after"
             continue
         }
         Write-Host $parts[0] -NoNewline
@@ -411,9 +412,8 @@ function Write-Logo {
             if ($bgNames[$n]) { $colours.BackgroundColor = $bgNames[$n] }
             Write-Host $parts[$p + 1] -NoNewline @colours
         }
-        Write-Host ''
+        Write-Host $after
     }
-    Write-Host ((' ' * 33) + $Title)
 }
 
 # Print-Header: clears the console and shows the NeoDesk logo with
