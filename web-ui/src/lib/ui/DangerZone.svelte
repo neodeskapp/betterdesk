@@ -3,7 +3,8 @@
   a heading in the danger colour, then rows with a title, the consequence in
   one plain sentence and a quiet danger button (its label ends in "…" when
   it asks for confirmation, which the page does with a danger dialog). The
-  button is described by the consequence sentence.
+  button is described by the consequence sentence. When the row is too
+  narrow for both, the button moves under the text (as in ListRow).
 
     <DangerZone title={t('x.reset')} rows={[{ title, consequence, action: t('x.regenerate'), onclick }]} />
 -->
@@ -92,15 +93,16 @@
 	}
 	.list-row {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--space-3);
+		gap: var(--space-2) var(--space-3);
 		min-height: var(--row-h);
 		padding: var(--row-pad-y) var(--row-pad-x);
 		border-bottom: 1px solid var(--rule);
 		color: var(--text);
 	}
 	.row-main {
-		flex: 1;
+		flex: 1 1 12rem;
 		min-width: 0;
 	}
 	.row-title {
@@ -115,6 +117,7 @@
 		display: flex;
 		flex-shrink: 0;
 		align-items: center;
+		margin-inline-start: auto;
 		gap: var(--space-2);
 		color: var(--text-muted);
 	}

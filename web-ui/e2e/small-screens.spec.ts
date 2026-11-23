@@ -328,3 +328,40 @@ for (const size of [
 		});
 	});
 }
+
+test.describe('list rows in German at 360', () => {
+	test.use({ viewport: { width: 360, height: 640 } });
+
+	// BUGS L321: "Schlüsseldatei herunterladen" covered the row's text, which was one word per line
+	test('a long button at the end of a row neither covers nor squeezes the text', async ({
+		page,
+		baseURL
+	}) => {
+		await useLanguage(page, 'de', baseURL);
+		const bad: string[] = [];
+		for (const path of ['/keys', '/permissions', '/settings?tab=branding']) {
+			await open(page, path, 'de');
+			bad.push(
+				...(await page.evaluate(() =>
+					[...document.querySelectorAll<HTMLElement>('li.list-row')].flatMap((row) => {
+						const main = row.querySelector<HTMLElement>('.row-main');
+						const end = row.querySelector<HTMLElement>('.row-end, .row-actions');
+						if (!main || !end || !end.getBoundingClientRect().width) return [];
+						const text = document.createRange();
+						text.selectNodeContents(main);
+						const t = text.getBoundingClientRect();
+						const e = end.getBoundingClientRect();
+						const title = main.querySelector('.row-title')?.textContent?.trim() ?? '';
+						const overlap =
+							t.right > e.left + 1 && t.left < e.right - 1 && t.bottom > e.top + 1 && t.top < e.bottom - 1;
+						const squeezed = main.getBoundingClientRect().width < 160;
+						return overlap || squeezed
+							? [`${location.pathname}: ${title}${overlap ? ' covered' : ''}${squeezed ? ' squeezed' : ''}`]
+							: [];
+					})
+				))
+			);
+		}
+		expect(bad, 'rows whose text is covered or squeezed').toEqual([]);
+	});
+});
