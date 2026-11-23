@@ -441,10 +441,13 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login := s.authenticatePasswordLogin(body.Username, body.Password, clientIP)
+	login := s.authenticatePasswordLoginContext(r.Context(), body.Username, body.Password, clientIP)
 	switch login.Status {
 	case passwordLoginInternal:
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal error"})
+		return
+	case passwordLoginTimeout:
+		writeDirectoryTimeout(w)
 		return
 	case passwordLoginOIDC:
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "This account uses single sign-on. Please log in with your identity provider."})

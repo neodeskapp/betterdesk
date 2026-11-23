@@ -127,6 +127,7 @@
     "remember_me": "Husk mig",
     "login_failed": "Login mislykkedes. Tjek venligst dine legitimationsoplysninger.",
     "invalid_credentials": "Ugyldigt brugernavn eller adgangskode.",
+    "directory_timeout": "Katalogserveren var for længe om at svare. Prøv igen om et øjeblik.",
     "username_collision": "En lokal konto med dette brugernavn findes allerede. Log ind med din lokale adgangskode, eller bed en administrator om at omdøbe eller fjerne den konfliktende konto.",
     "sso_username_collision": "Dette navn tilhører en konto, der logger ind med en adgangskode eller via kataloget, så single sign-on kan ikke logge dig ind. Kontakt en administrator.",
     "fill_all_fields": "Udfyld venligst alle felter",

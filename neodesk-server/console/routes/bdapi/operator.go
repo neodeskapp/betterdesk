@@ -65,6 +65,10 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 		refuse(http.StatusConflict, goapi.NewObject(
 			"error", "Username collision: a local account with this name already exists", "code", "username_collision"))
 		return
+	case outcome.Failure == authn.FailureDirectoryTimeout:
+		kit.JSON(w, r, http.StatusGatewayTimeout, goapi.NewObject(
+			"error", "The directory server took too long to answer", "code", authn.FailureDirectoryTimeout))
+		return
 	case outcome.Failure == authn.FailureAccountDisabled:
 		refuse(http.StatusForbidden, goapi.NewObject("error", "This account is disabled", "code", authn.FailureAccountDisabled))
 		return

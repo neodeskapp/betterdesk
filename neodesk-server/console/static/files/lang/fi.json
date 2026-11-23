@@ -127,6 +127,7 @@
     "remember_me": "Muista minut",
     "login_failed": "Kirjautuminen epäonnistui. Tarkista kirjautumistietosi.",
     "invalid_credentials": "Virheellinen käyttäjätunnus tai salasana.",
+    "directory_timeout": "Hakemistopalvelin vastasi liian hitaasti. Yritä hetken kuluttua uudelleen.",
     "username_collision": "Paikallinen tili tällä käyttäjätunnuksella on jo olemassa. Kirjaudu paikallisella salasanallasi tai pyydä järjestelmänvalvojaa nimeämään ristiriitainen tili uudelleen tai poistamaan se.",
     "sso_username_collision": "Tämä nimi kuuluu tilille, joka kirjautuu salasanalla tai hakemiston kautta, joten kertakirjautuminen ei voi kirjata sinua sisään. Ota yhteyttä ylläpitäjään.",
     "fill_all_fields": "Täytä kaikki kentät",

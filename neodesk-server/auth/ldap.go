@@ -5,14 +5,19 @@
 //   - Direct bind (user DN template, no service account needed)
 //   - Group → role mapping (configurable AD/LDAP group → NeoDesk role)
 //   - StartTLS and LDAPS
-//   - Connection pooling with health checks
 //   - Auto-provisioning of local user accounts on first LDAP login
+//
+// Every sign-in opens its own connection: connect (and TLS), the service
+// account's bind, the search for the user, the user's bind, and the group
+// search when the role map needs it.
 package auth
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -97,6 +102,14 @@ func (p *LDAPProvider) IsEnabled() bool {
 // Returns nil result and error if LDAP is unreachable or misconfigured.
 // Returns result with Authenticated=false if credentials are invalid.
 func (p *LDAPProvider) Authenticate(username, password string) (*LDAPResult, error) {
+	return p.AuthenticateContext(context.Background(), username, password)
+}
+
+// AuthenticateContext is Authenticate within ctx: the connect and every
+// request wait at most until ctx's deadline, and the connection closes
+// when ctx ends, which ends a bind or search on its way. It returns ctx's
+// error when ctx ended before the directory answered.
+func (p *LDAPProvider) AuthenticateContext(ctx context.Context, username, password string) (*LDAPResult, error) {
 	cfg := p.Config()
 	if !cfg.Enabled {
 		return nil, fmt.Errorf("ldap: provider is disabled")
@@ -106,16 +119,40 @@ func (p *LDAPProvider) Authenticate(username, password string) (*LDAPResult, err
 		return &LDAPResult{Authenticated: false}, nil
 	}
 
-	conn, err := p.dial(&cfg)
+	conn, err := p.dial(ctx, &cfg)
 	if err != nil {
+		if ended := contextEnded(ctx); ended != nil {
+			return nil, ended
+		}
 		return nil, fmt.Errorf("ldap: connect: %w", err)
 	}
 	defer conn.Close()
+	stop := context.AfterFunc(ctx, func() { _ = conn.Close() })
+	defer stop()
 
+	var result *LDAPResult
 	if cfg.DirectBind {
-		return p.authenticateDirectBind(conn, &cfg, username, password)
+		result, err = p.authenticateDirectBind(conn, &cfg, username, password)
+	} else {
+		result, err = p.authenticateBindSearch(conn, &cfg, username, password)
 	}
-	return p.authenticateBindSearch(conn, &cfg, username, password)
+	if ended := contextEnded(ctx); ended != nil {
+		return nil, ended
+	}
+	return result, err
+}
+
+// contextEnded is ctx's error once it ended or its deadline passed: a
+// request whose own timeout is the time left can fail a moment before ctx
+// reports its end.
+func contextEnded(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if deadline, ok := ctx.Deadline(); ok && !time.Now().Before(deadline) {
+		return context.DeadlineExceeded
+	}
+	return nil
 }
 
 // TestConnection verifies connectivity and bind credentials.
@@ -125,7 +162,7 @@ func (p *LDAPProvider) TestConnection() error {
 		return fmt.Errorf("ldap: provider is disabled")
 	}
 
-	conn, err := p.dial(&cfg)
+	conn, err := p.dial(context.Background(), &cfg)
 	if err != nil {
 		return fmt.Errorf("ldap: connect: %w", err)
 	}
@@ -141,38 +178,46 @@ func (p *LDAPProvider) TestConnection() error {
 	return nil
 }
 
-// dial establishes a connection to the LDAP server.
-func (p *LDAPProvider) dial(cfg *LDAPConfig) (*ldapv3.Conn, error) {
+// dial establishes a connection to the LDAP server. The connect, the TLS
+// handshake and every request wait at most the connection timeout
+// (ConnTimeoutSec, 10 seconds without one), and never past ctx's
+// deadline.
+func (p *LDAPProvider) dial(ctx context.Context, cfg *LDAPConfig) (*ldapv3.Conn, error) {
 	timeout := time.Duration(cfg.ConnTimeoutSec) * time.Second
 	if timeout <= 0 {
 		timeout = 10 * time.Second
 	}
+	dialer := &net.Dialer{Timeout: timeout}
+	if deadline, ok := ctx.Deadline(); ok {
+		dialer.Deadline = deadline
+		if left := time.Until(deadline); left < timeout {
+			timeout = max(left, time.Millisecond)
+		}
+	}
 
-	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+	addr := net.JoinHostPort(cfg.Host, fmt.Sprint(cfg.Port))
 
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: cfg.SkipTLSVerify,
 		ServerName:         cfg.Host,
 	}
 
-	var conn *ldapv3.Conn
-	var err error
-
+	scheme := "ldap://"
 	if cfg.UseTLS {
 		// LDAPS (TLS from the start)
-		conn, err = ldapv3.DialTLS("tcp", addr, tlsConfig)
-	} else {
-		// Plain LDAP
-		conn, err = ldapv3.DialURL(fmt.Sprintf("ldap://%s", addr))
-		if err == nil && cfg.StartTLS {
-			err = conn.StartTLS(tlsConfig)
-		}
+		scheme = "ldaps://"
 	}
+	conn, err := ldapv3.DialURL(scheme+addr, ldapv3.DialWithDialer(dialer), ldapv3.DialWithTLSConfig(tlsConfig))
 	if err != nil {
 		return nil, err
 	}
-
 	conn.SetTimeout(timeout)
+	if !cfg.UseTLS && cfg.StartTLS {
+		if err := conn.StartTLS(tlsConfig); err != nil {
+			conn.Close()
+			return nil, err
+		}
+	}
 	return conn, nil
 }
 

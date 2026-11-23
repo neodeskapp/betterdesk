@@ -121,6 +121,7 @@
     "remember_me": "Zapamatovat mě",
     "login_failed": "Přihlášení selhalo. Zkontrolujte prosím své přihlašovací údaje.",
     "invalid_credentials": "Neplatné uživatelské jméno nebo heslo.",
+    "directory_timeout": "Adresářovému serveru trvala odpověď příliš dlouho. Zkuste to za chvíli znovu.",
     "username_collision": "Místní účet s tímto uživatelským jménem již existuje. Přihlaste se místním heslem nebo požádejte správce o přejmenování či odstranění konfliktního účtu.",
     "sso_username_collision": "Toto jméno patří účtu, který se přihlašuje heslem nebo přes adresář, takže jednotné přihlášení vás nemůže přihlásit. Obraťte se na správce.",
     "fill_all_fields": "Vyplňte prosím všechna pole",

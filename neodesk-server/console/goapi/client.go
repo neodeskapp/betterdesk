@@ -59,6 +59,9 @@ type Client struct {
 	// signInCap is the most a sign-in call with a capped timeout may take.
 	// Tests that sign in against real password hashing raise it.
 	signInCap time.Duration
+	// signInWait is how long a sign-in call that may ask the directory
+	// waits (WithSignInWait).
+	signInWait time.Duration
 
 	cacheMu     sync.Mutex
 	healthAt    time.Time
@@ -96,6 +99,16 @@ func WithTimeout(d time.Duration) Option {
 	return func(c *Client) { c.timeout = d }
 }
 
+// WithSignInWait sets how long a sign-in call that may ask the directory
+// (TryGoServerAuth, TryLDAPVerifyOnGo) waits, api.SignInDeadline without
+// it. The call carries it as its deadline, and the API server stops
+// waiting for the directory before it, so that it makes an account only
+// for a sign-in answered in time. The client's timeout for other calls
+// (NEODESK_API_TIMEOUT) does not apply: a directory may take longer.
+func WithSignInWait(d time.Duration) Option {
+	return func(c *Client) { c.signInWait = d }
+}
+
 // WithActor names the person a call acts for: actor gets the call's
 // context (the request's, for Handler and ForwardHandler) and returns the
 // signed-in account's name, "" for none. The API server records the name
@@ -121,6 +134,7 @@ func New(handler http.Handler, opts ...Option) *Client {
 		timeout:    DefaultTimeout,
 		now:        time.Now,
 		signInCap:  signInTimeout,
+		signInWait: api.SignInDeadline,
 	}
 	for _, opt := range opts {
 		opt(c)

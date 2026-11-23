@@ -546,6 +546,27 @@ func TestLoginThroughTheSignalServer(t *testing.T) {
 	})
 }
 
+// TestLoginSaysTheDirectoryTookTooLong: a directory that did not answer in
+// time is said as such, not as a wrong password, and does not count
+// towards a lockout (L336).
+func TestLoginSaysTheDirectoryTookTooLong(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		w.api.json("GET /api/auth/sso/status", 200, `{"ldap_enabled":true,"oidc_enabled":false,"any_enabled":true}`)
+		w.api.on("POST /api/auth/login", func(rw http.ResponseWriter, _ *http.Request, _ string) {
+			rw.Header().Set("Content-Type", "application/json")
+			rw.WriteHeader(http.StatusGatewayTimeout)
+			_, _ = rw.Write([]byte(`{"error":"The directory server took too long to answer","code":"directory_timeout"}`))
+		})
+		res := w.agent().post("/api/auth/login", login("test-operator", "dir-pass"))
+		want(t, "directory timeout", res, http.StatusGatewayTimeout,
+			`{"success":false,"error":"The directory server took too long to answer. Try again in a moment.","code":"directory_timeout"}`)
+		if n := w.text(`SELECT COUNT(*) FROM users WHERE username = 'test-operator'`); n != "0" {
+			t.Errorf("the failed sign-in made %s account(s)", n)
+		}
+		equal(t, "attempts", w.attempts(), []string(nil))
+	})
+}
+
 func TestLoginOverHTTPS(t *testing.T) {
 	w := newWorld(t, nil, setup{https: true, trustProxy: "loopback"})
 	w.addUser(user{name: "alice"})

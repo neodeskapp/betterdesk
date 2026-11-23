@@ -565,8 +565,9 @@ var nodeReadAsOff = map[string]bool{"1": true, "TRUE": true}
 
 func (r *scenarioRun) newClient() *goapi.Client {
 	// Long enough that a busy machine does not turn an answer into a
-	// timeout; every scripted timeout waits this long.
-	return goapi.New(r.stub, goapi.WithTimeout(200*time.Millisecond))
+	// timeout; every scripted timeout waits this long. Node waited as long
+	// for a sign-in call as for any other.
+	return goapi.New(r.stub, goapi.WithTimeout(200*time.Millisecond), goapi.WithSignInWait(200*time.Millisecond))
 }
 
 func (r *scenarioRun) settings() Settings {

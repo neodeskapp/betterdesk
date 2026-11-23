@@ -129,6 +129,7 @@
     "oidc_error": "SSO 登录时发生错误。",
     "oidc_no_account": "未找到您的帐户，且自动注册已禁用。",
     "invalid_credentials": "用户名或密码无效。",
+    "directory_timeout": "目录服务器响应时间过长。请稍后再试。",
     "username_collision": "已存在使用此用户名的本地账户。请使用本地密码登录，或请管理员重命名或删除冲突账户。",
     "sso_username_collision": "此名称属于使用密码或目录登录的账户，因此单点登录无法让您登录。请联系管理员。",
     "fill_all_fields": "请填写所有字段",

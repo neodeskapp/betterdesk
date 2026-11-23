@@ -127,6 +127,7 @@
     "remember_me": "Beni hatırla",
     "login_failed": "Giriş başarısız oldu. Lütfen kimlik bilgilerinizi kontrol edin.",
     "invalid_credentials": "Geçersiz kullanıcı adı veya şifre.",
+    "directory_timeout": "Dizin sunucusu yanıt vermekte çok gecikti. Biraz sonra yeniden deneyin.",
     "username_collision": "Bu kullanıcı adına sahip yerel bir hesap zaten mevcut. Yerel şifrenizle giriş yapın veya yöneticiden çakışan hesabı yeniden adlandırmasını ya da kaldırmasını isteyin.",
     "sso_username_collision": "Bu ad, parolayla veya dizin üzerinden oturum açan bir hesaba ait; bu nedenle çoklu oturum açma sizi oturum açtıramaz. Bir yöneticiye başvurun.",
     "fill_all_fields": "Lütfen tüm alanları doldurun",

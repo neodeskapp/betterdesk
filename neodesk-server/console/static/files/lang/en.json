@@ -137,6 +137,7 @@
         "oidc_error": "An error occurred during SSO login.",
         "oidc_no_account": "Your account was not found and auto-registration is disabled.",
         "invalid_credentials": "Invalid username or password.",
+        "directory_timeout": "The directory server took too long to answer. Try again in a moment.",
         "username_collision": "A local account with this username already exists. Sign in with your local password, or ask an administrator to rename or remove the conflicting account.",
         "sso_username_collision": "This name belongs to an account that signs in with a password or through the directory, so single sign-on cannot sign you in. Ask an administrator.",
         "pro_only_account": "This account is for RustDesk desktop client only. Please use the RustDesk app to log in.",

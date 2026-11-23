@@ -133,6 +133,7 @@
     "oidc_error": "Une erreur s'est produite lors de la connexion SSO.",
     "oidc_no_account": "Votre compte est introuvable et l'inscription automatique est désactivée.",
     "invalid_credentials": "Nom d'utilisateur ou mot de passe invalide.",
+    "directory_timeout": "Le serveur d'annuaire a mis trop de temps à répondre. Réessayez dans un instant.",
     "username_collision": "Un compte local avec ce nom d'utilisateur existe déjà. Connectez-vous avec votre mot de passe local ou demandez à un administrateur de renommer ou de supprimer le compte en conflit.",
     "sso_username_collision": "Ce nom appartient à un compte qui se connecte avec un mot de passe ou via l'annuaire, l'authentification unique ne peut donc pas vous connecter. Contactez un administrateur.",
     "pro_only_account": "Ce compte est réservé au client de bureau RustDesk. Veuillez utiliser l'application RustDesk pour vous connecter.",

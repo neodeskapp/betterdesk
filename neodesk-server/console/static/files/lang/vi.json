@@ -127,6 +127,7 @@
     "remember_me": "Ghi nhớ đăng nhập",
     "login_failed": "Đăng nhập không thành công. Vui lòng kiểm tra thông tin đăng nhập của bạn.",
     "invalid_credentials": "Tên người dùng hoặc mật khẩu không hợp lệ.",
+    "directory_timeout": "Máy chủ thư mục trả lời quá lâu. Hãy thử lại sau giây lát.",
     "username_collision": "Đã tồn tại tài khoản cục bộ với tên người dùng này. Đăng nhập bằng mật khẩu cục bộ hoặc yêu cầu quản trị viên đổi tên hoặc xóa tài khoản xung đột.",
     "sso_username_collision": "Tên này thuộc về một tài khoản đăng nhập bằng mật khẩu hoặc qua thư mục, nên đăng nhập một lần không thể đăng nhập cho bạn. Hãy liên hệ quản trị viên.",
     "fill_all_fields": "Vui lòng điền vào tất cả các trường",

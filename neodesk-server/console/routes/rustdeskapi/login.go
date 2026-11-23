@@ -145,6 +145,14 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		kit.JSON(w, r, http.StatusConflict, collisionAnswer{Error: "Username collision: a local account with this name already exists", Code: "username_collision"})
 		return
 	}
+	if outcome.Failure == authn.FailureDirectoryTimeout {
+		if err := h.audit(ctx, 0, "api_login_failed", "Directory timeout: "+username, ip); err != nil {
+			serverError(err)
+			return
+		}
+		kit.JSON(w, r, http.StatusGatewayTimeout, collisionAnswer{Error: "The directory server took too long to answer", Code: authn.FailureDirectoryTimeout})
+		return
+	}
 	if outcome.Failure == authn.FailureAccountDisabled {
 		_ = h.d.Authn.RecordAttempt(ctx, username, ip, false)
 		if err := h.audit(ctx, 0, "api_login_failed", "Account disabled: "+username, ip); err != nil {

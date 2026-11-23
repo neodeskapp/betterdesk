@@ -39,6 +39,12 @@ func (c *Client) cappedTimeout() time.Duration {
 	return c.timeout
 }
 
+// directoryTimedOut reports whether an answer is the API server's
+// "the directory server took too long to answer".
+func directoryTimedOut(status int, parsed any) bool {
+	return status == http.StatusGatewayTimeout && prop(parsed, "code") == "directory_timeout"
+}
+
 // ownTimeout is the client's timeout, or three seconds when it has none.
 func (c *Client) ownTimeout() time.Duration {
 	if c.timeout <= 0 {
@@ -175,18 +181,22 @@ func (c *Client) GetGoSSOStatus(ctx context.Context) *Object {
 	return value.Clone()
 }
 
-// TryGoServerAuth calls POST /api/auth/login with {username, password}. It
-// returns {role, auth_provider} when the API server signed the user in,
-// {requires2fa:true} when it asks for a second factor (that answer names
-// neither role nor provider), {account_disabled:true} when the credentials
-// are right and the account is disabled, and nil for everything else:
-// wrong credentials, the sign-in limit (429) and a missing answer look the
-// same.
+// TryGoServerAuth calls POST /api/auth/login with {username, password},
+// with the deadline of a sign-in (WithSignInWait). It returns {role,
+// auth_provider} when the API server signed the user in, {requires2fa:true}
+// when it asks for a second factor (that answer names neither role nor
+// provider), {account_disabled:true} when the credentials are right and
+// the account is disabled, {directory_timeout:true} when the directory
+// did not answer in time, and nil for everything else: wrong credentials,
+// the sign-in limit (429) and a missing answer look the same.
 func (c *Client) TryGoServerAuth(ctx context.Context, username, password string) *Object {
 	status, parsed, ok := c.signIn(ctx, "/api/auth/login",
-		NewObject("username", username, "password", password), c.ownTimeout())
+		NewObject("username", username, "password", password), c.signInWait)
 	if ok && status == http.StatusForbidden && prop(parsed, "code") == "account_disabled" {
 		return NewObject("account_disabled", true)
+	}
+	if ok && directoryTimedOut(status, parsed) {
+		return NewObject("directory_timeout", true)
 	}
 	if !ok || status != http.StatusOK || parsed == nil {
 		return nil
@@ -205,10 +215,10 @@ func (c *Client) TryGoServerAuth(ctx context.Context, username, password string)
 }
 
 // TryLDAPVerifyOnGo calls POST /api/auth/ldap/verify with {username,
-// password} and reports whether the API server answered 200 with
-// "authenticated" set.
+// password}, with the deadline of a sign-in (WithSignInWait), and
+// reports whether the API server answered 200 with "authenticated" set.
 func (c *Client) TryLDAPVerifyOnGo(ctx context.Context, username, password string) bool {
 	status, parsed, ok := c.signIn(ctx, "/api/auth/ldap/verify",
-		NewObject("username", username, "password", password), c.ownTimeout())
+		NewObject("username", username, "password", password), c.signInWait)
 	return ok && status == http.StatusOK && parsed != nil && Truthy(prop(parsed, "authenticated"))
 }

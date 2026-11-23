@@ -242,6 +242,17 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The directory did not answer in time: not a wrong password, so it
+	// does not count towards a lockout
+	if outcome.Failure == authn.FailureDirectoryTimeout {
+		if err := h.audit(r, 0, "login_failed", "Directory timeout: "+auditlog.RedactUsername(jsString(username))+client); err != nil {
+			h.serverError(w, r, "Login error:", err)
+			return
+		}
+		kit.FailCode(w, r, http.StatusGatewayTimeout, kit.T(r, "auth.directory_timeout", nil), authn.FailureDirectoryTimeout)
+		return
+	}
+
 	if outcome.IsFailure() || outcome.User == nil {
 		h.recordAttempt(r, name, false)
 		details := "Username: " + jsString(username) + client

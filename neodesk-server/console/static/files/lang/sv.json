@@ -127,6 +127,7 @@
     "remember_me": "Kom ihåg mig",
     "login_failed": "Inloggningen misslyckades. Kontrollera dina referenser.",
     "invalid_credentials": "Ogiltigt användarnamn eller lösenord.",
+    "directory_timeout": "Katalogservern tog för lång tid på sig att svara. Försök igen om en stund.",
     "username_collision": "Ett lokalt konto med detta användarnamn finns redan. Logga in med ditt lokala lösenord eller be en administratör att byta namn på eller ta bort det kolliderande kontot.",
     "sso_username_collision": "Det här namnet tillhör ett konto som loggar in med lösenord eller via katalogen, så enkel inloggning kan inte logga in dig. Kontakta en administratör.",
     "fill_all_fields": "Vänligen fyll i alla fält",

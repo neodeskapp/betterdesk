@@ -40,6 +40,11 @@ const FailureProOnly = "pro_only"
 // credentials for an account that is disabled.
 const FailureAccountDisabled = "account_disabled"
 
+// FailureDirectoryTimeout is the failure code of a sign-in whose directory
+// (LDAP) did not answer before the sign-in's deadline. No account was made
+// for it.
+const FailureDirectoryTimeout = "directory_timeout"
+
 // rolePro marks accounts for the RustDesk desktop client only. They cannot
 // sign in to the console.
 const rolePro = "pro"
@@ -141,6 +146,9 @@ type goAccept struct {
 	// disabled says the credentials are right and the account is
 	// disabled: the server signs nobody in.
 	disabled bool
+	// timedOut says the directory did not answer before the sign-in's
+	// deadline: the server signed nobody in and made no account.
+	timedOut bool
 }
 
 // tryGoServerAuth asks the signal server to check the credentials. It
@@ -150,7 +158,7 @@ func (s *Service) tryGoServerAuth(ctx context.Context, username, password string
 	if answer == nil {
 		return nil
 	}
-	accept := &goAccept{requires2FA: answer.Bool("requires2fa"), disabled: answer.Bool("account_disabled")}
+	accept := &goAccept{requires2FA: answer.Bool("requires2fa"), disabled: answer.Bool("account_disabled"), timedOut: answer.Bool("directory_timeout")}
 	if role, ok := answer.Get("role").(string); ok {
 		accept.role = role
 	}
@@ -406,6 +414,14 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 //
 // Authenticate does not look at lockouts and does not record the attempt:
 // CheckBruteForce and RecordAttempt are separate calls.
+//
+// The signal server's check of the credentials has one deadline
+// (api.SignInDeadline): the console's call waits that long, and the signal
+// server stops waiting for the directory before it. A directory that took
+// too long is the failure FailureDirectoryTimeout, and nothing was made
+// for it. Once the signal server accepted, the console finishes the
+// sign-in also when the request goes away: the account may exist there
+// already.
 func (s *Service) Authenticate(ctx context.Context, username, password string) (Outcome, error) {
 	if jsTrim(username) == "" {
 		quoted, _ := store.NullString{String: username, Valid: true}.MarshalJSON()
@@ -449,6 +465,10 @@ func (s *Service) Authenticate(ctx context.Context, username, password string) (
 			s.log.Info(fmt.Sprintf("[AUTH] Login failed: LDAP credentials rejected for '%s'", logName(username)))
 			return Outcome{}, nil
 		}
+		if accept.timedOut {
+			return s.directoryTimeout(username), nil
+		}
+		ctx = context.WithoutCancel(ctx)
 		if accept.disabled {
 			s.log.Info(fmt.Sprintf("[AUTH] Login refused: '%s' is disabled", logName(username)))
 			return Outcome{Failure: FailureAccountDisabled}, nil
@@ -485,7 +505,12 @@ func (s *Service) authenticateLocal(ctx context.Context, user *Account, username
 
 	if !valid {
 		accept := s.tryGoServerAuth(ctx, username, password)
+		if accept != nil && !accept.timedOut {
+			ctx = context.WithoutCancel(ctx)
+		}
 		switch {
+		case accept != nil && accept.timedOut:
+			return s.directoryTimeout(username), nil
 		case accept != nil && accept.disabled:
 			s.log.Info(fmt.Sprintf("[AUTH] Login refused: '%s' is disabled", logName(username)))
 			return Outcome{Failure: FailureAccountDisabled}, nil
@@ -523,9 +548,12 @@ func (s *Service) authenticateUnknown(ctx context.Context, username, password st
 	}
 
 	if s.set.AutoCreate || sso.any {
-		if accept := s.tryGoServerAuth(ctx, username, password); accept != nil && accept.disabled {
+		if accept := s.tryGoServerAuth(ctx, username, password); accept != nil && accept.timedOut {
+			return s.directoryTimeout(username), nil
+		} else if accept != nil && accept.disabled {
 			return Outcome{Failure: FailureAccountDisabled}, nil
 		} else if accept != nil {
+			ctx = context.WithoutCancel(ctx)
 			reason := "OIDC enabled on Go server"
 			switch {
 			case s.set.AutoCreate:
@@ -547,6 +575,13 @@ func (s *Service) authenticateUnknown(ctx context.Context, username, password st
 	}
 	s.log.Info(fmt.Sprintf("[AUTH] Login failed: user '%s' not found in database", logName(username)))
 	return Outcome{}, nil
+}
+
+// directoryTimeout is the outcome of a sign-in whose directory did not
+// answer in time.
+func (s *Service) directoryTimeout(username string) Outcome {
+	s.log.Info(fmt.Sprintf("[AUTH] Login failed: the directory did not answer for '%s' in time", logName(username)))
+	return Outcome{Failure: FailureDirectoryTimeout}
 }
 
 // logName is a user name as the sign-in log lines print it: shortened to

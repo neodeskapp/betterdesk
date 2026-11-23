@@ -32,7 +32,7 @@ func testService(t *testing.T, db *store.DB, mutate func(*Options)) (*Service, *
 	stub, logs := &goStub{}, &logCapture{}
 	opts := Options{
 		DB:    db,
-		GoAPI: goapi.New(stub, goapi.WithTimeout(80*time.Millisecond)),
+		GoAPI: goapi.New(stub, goapi.WithTimeout(80*time.Millisecond), goapi.WithSignInWait(80*time.Millisecond)),
 		QR:    func(text string) (string, error) { return "QR:" + text, nil },
 		Log:   logs,
 		FS:    newMemFS(),

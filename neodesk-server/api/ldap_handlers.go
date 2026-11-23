@@ -4,6 +4,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -356,7 +357,13 @@ func (s *Server) handleLDAPVerifyCredentials(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	result, err := s.ldapProvider.Authenticate(body.Username, body.Password)
+	dirCtx, cancel := directoryContext(r.Context())
+	defer cancel()
+	result, err := s.ldapAuthenticate(dirCtx, body.Username, body.Password)
+	if errors.Is(err, errDirectoryTimeout) {
+		writeDirectoryTimeout(w)
+		return
+	}
 	if err != nil {
 		log.Printf("[LDAP] Verify error for %s: %v", body.Username, err)
 		writeJSON(w, http.StatusOK, map[string]any{"authenticated": false})

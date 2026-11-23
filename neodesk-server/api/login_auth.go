@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
@@ -40,6 +42,86 @@ func (s *Server) signInIP(r *http.Request) string {
 	return s.remoteIP(r)
 }
 
+// SignInDeadline is how long one sign-in may take, the directory's answer
+// included. The console gives the whole sign-in this deadline and passes
+// it on with its call to the API server, which stops waiting for the
+// directory signInAnswerTime before it: an account is made, and a sign-in
+// noted, only for a sign-in that is answered within the deadline. A
+// caller without a deadline (a RustDesk client on the API port) gets this
+// one.
+var SignInDeadline = 30 * time.Second
+
+// signInAnswerTime is the part of the deadline kept for writing the
+// account and answering after the directory answered.
+var signInAnswerTime = 2 * time.Second
+
+// errDirectoryTimeout is a directory that did not answer before the
+// sign-in's deadline.
+var errDirectoryTimeout = errors.New("the directory server took too long to answer")
+
+// directoryTimeoutMessage and directoryTimeoutCode answer a sign-in whose
+// directory took too long.
+const (
+	directoryTimeoutMessage = "The directory server took too long to answer"
+	directoryTimeoutCode    = "directory_timeout"
+)
+
+// writeDirectoryTimeout answers a sign-in whose directory did not answer
+// before the deadline.
+func writeDirectoryTimeout(w http.ResponseWriter) {
+	writeJSON(w, http.StatusGatewayTimeout, map[string]string{"error": directoryTimeoutMessage, "code": directoryTimeoutCode})
+}
+
+// directoryContext is the context the directory work of a sign-in runs
+// in: it ends signInAnswerTime before the deadline of the request (the
+// console's sign-in), or of SignInDeadline from now when the request has
+// none.
+func directoryContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		deadline = time.Now().Add(SignInDeadline)
+	}
+	return context.WithDeadline(ctx, deadline.Add(-signInAnswerTime))
+}
+
+// contextLDAP is a directory that stops when its context ends
+// (auth.LDAPProvider.AuthenticateContext).
+type contextLDAP interface {
+	AuthenticateContext(ctx context.Context, username, password string) (*auth.LDAPResult, error)
+}
+
+// ldapAuthenticate asks the directory within ctx. A directory that has
+// not answered when ctx ends gives errDirectoryTimeout; its late answer
+// is dropped.
+func (s *Server) ldapAuthenticate(ctx context.Context, username, password string) (*auth.LDAPResult, error) {
+	if ctx.Err() != nil {
+		return nil, errDirectoryTimeout
+	}
+	type answer struct {
+		result *auth.LDAPResult
+		err    error
+	}
+	done := make(chan answer, 1)
+	go func() {
+		var a answer
+		if p, ok := s.ldapProvider.(contextLDAP); ok {
+			a.result, a.err = p.AuthenticateContext(ctx, username, password)
+		} else {
+			a.result, a.err = s.ldapProvider.Authenticate(username, password)
+		}
+		done <- a
+	}()
+	select {
+	case a := <-done:
+		if deadline, ok := ctx.Deadline(); ctx.Err() != nil || ok && !time.Now().Before(deadline) {
+			return nil, errDirectoryTimeout
+		}
+		return a.result, a.err
+	case <-ctx.Done():
+		return nil, errDirectoryTimeout
+	}
+}
+
 // passwordLoginStatus classifies the outcome of username+password authentication.
 type passwordLoginStatus int
 
@@ -51,6 +133,9 @@ const (
 	// passwordLoginDisabled: the credentials are right, the account is
 	// disabled.
 	passwordLoginDisabled
+	// passwordLoginTimeout: the directory did not answer before the
+	// sign-in's deadline. Nothing was written.
+	passwordLoginTimeout
 )
 
 // storeProviderFields keeps the email address and display name the
@@ -95,6 +180,13 @@ type passwordLoginResult struct {
 // right is passwordLoginDisabled; a disabled directory account stays as it
 // is, it is neither changed nor made again.
 func (s *Server) authenticatePasswordLogin(username, password, clientIP string) passwordLoginResult {
+	return s.authenticatePasswordLoginContext(context.Background(), username, password, clientIP)
+}
+
+// authenticatePasswordLoginContext is authenticatePasswordLogin within the
+// deadline of ctx (directoryContext): a directory that answers too late
+// gives passwordLoginTimeout, and nothing is written for it.
+func (s *Server) authenticatePasswordLoginContext(ctx context.Context, username, password, clientIP string) passwordLoginResult {
 	user, err := s.db.GetUser(username)
 	if err != nil {
 		return passwordLoginResult{Status: passwordLoginInternal}
@@ -115,7 +207,16 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 	ldapEnabled := s.ldapProvider != nil && s.ldapProvider.IsEnabled()
 
 	if ldapEnabled && (user == nil || provider == db.AuthProviderLDAP) {
-		ldapResult, ldapErr := s.ldapProvider.Authenticate(username, password)
+		dirCtx, cancel := directoryContext(ctx)
+		defer cancel()
+		ldapResult, ldapErr := s.ldapAuthenticate(dirCtx, username, password)
+		if errors.Is(ldapErr, errDirectoryTimeout) {
+			log.Printf("[LDAP] No answer for %s before the sign-in's deadline", username)
+			if s.auditLog != nil {
+				s.auditLog.Log(audit.ActionAuthLoginFailed, clientIP, username, map[string]string{"method": "ldap", "reason": directoryTimeoutCode})
+			}
+			return passwordLoginResult{Status: passwordLoginTimeout}
+		}
 		if ldapErr != nil {
 			log.Printf("[LDAP] Auth error for %s: %v", username, ldapErr)
 			ldapResult = nil
@@ -191,6 +292,11 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 					Role:         role,
 					AuthProvider: db.AuthProviderLDAP,
 				}
+				// Past the deadline the person is told that the sign-in
+				// failed: no account for it
+				if dirCtx.Err() != nil {
+					return passwordLoginResult{Status: passwordLoginTimeout}
+				}
 				if createErr := s.db.CreateUser(newUser); createErr != nil {
 					log.Printf("[LDAP] Failed to auto-create user %s: %v", username, createErr)
 					return passwordLoginResult{Status: passwordLoginInternal}
@@ -202,6 +308,9 @@ func (s *Server) authenticatePasswordLogin(username, password, clientIP string) 
 				log.Printf("[LDAP] Auto-provisioned user %s with role %s", username, role)
 				s.storeProviderFields(user, ldapResult.Email, ldapResult.DisplayName)
 			} else {
+				if dirCtx.Err() != nil {
+					return passwordLoginResult{Status: passwordLoginTimeout}
+				}
 				changed := false
 				if ldapResult.Role != "" && ldapResult.Role != user.Role {
 					user.Role = ldapResult.Role

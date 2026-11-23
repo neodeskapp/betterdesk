@@ -133,6 +133,7 @@
     "oidc_error": "SSO 登錄時發生錯誤。",
     "oidc_no_account": "未找到您的帳戶，且自動註冊已禁用。",
     "invalid_credentials": "用戶名或密碼無效。",
+    "directory_timeout": "目錄伺服器回應時間過長。請稍後再試一次。",
     "username_collision": "已存在使用此用戶名的本地賬戶。請使用本地密碼登錄，或請管理員重命名或刪除衝突賬戶。",
     "sso_username_collision": "此名稱屬於使用密碼或目錄登入的帳戶，因此單一登入無法讓您登入。請聯絡管理員。",
     "pro_only_account": "此賬戶僅適用於 RustDesk 桌面客戶端。請使用 RustDesk 應用登錄。",
