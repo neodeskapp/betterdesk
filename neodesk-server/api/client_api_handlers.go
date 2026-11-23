@@ -1085,9 +1085,23 @@ var rustDeskStrategyOptionKeys = map[string]struct{}{
 	"enable-block-input":    {},
 }
 
-// clientStrategyConfigOptions resolves the direct peer strategy used by the
-// heartbeat. User/group policy is compiled into the same strategy permission
-// shape by the panel, while this path remains safe for stock RustDesk clients.
+// Levels of an access rule for one device, from the weakest: a rule for a
+// device group or user group, one for the device's user, one for the
+// device itself. A stronger level's option wins (device over user over
+// group, as the rule sheet says).
+const (
+	strategyLevelGroup = iota + 1
+	strategyLevelUser
+	strategyLevelDevice
+)
+
+// clientStrategyConfigOptions resolves the access rules the heartbeat hands
+// a device: the enabled rules assigned to the device, to the account
+// signed in on it, or to a device group it is in, and the rules whose Who
+// and where fields (a user group, a device group) take in the device and
+// its account. Options of the device's own rules win over its account's,
+// which win over its groups' (L414). Only the RustDesk option keys pass,
+// so the answer stays safe for stock RustDesk clients.
 func (s *Server) clientStrategyConfigOptions(deviceID string) map[string]string {
 	out := map[string]string{}
 	if s == nil || s.db == nil {
@@ -1101,17 +1115,37 @@ func (s *Server) clientStrategyConfigOptions(deviceID string) map[string]string 
 	if err != nil {
 		return out
 	}
+	deviceGroups, userKey, userGroups := s.strategyTargetsOf(deviceID)
+	var layers [strategyLevelDevice + 1]map[string]string
 	for _, strategy := range strategies {
 		if strategy == nil || !strategy.Enabled {
 			continue
 		}
-		summary, err := s.db.GetStrategyAssignmentSummary(strategy.GUID)
-		if err != nil || summary == nil || !containsString(summary.Peers, peerKey) {
+		level := 0
+		if summary, err := s.db.GetStrategyAssignmentSummary(strategy.GUID); err == nil && summary != nil {
+			switch {
+			case containsString(summary.Peers, peerKey):
+				level = strategyLevelDevice
+			case userKey != "" && containsString(summary.Users, userKey):
+				level = strategyLevelUser
+			case anyIn(summary.Groups, deviceGroups):
+				level = strategyLevelGroup
+			}
+		}
+		if level == 0 && (strategy.DeviceGroupGUID != "" || strategy.UserGroupGUID != "") &&
+			(strategy.DeviceGroupGUID == "" || deviceGroups[strategy.DeviceGroupGUID]) &&
+			(strategy.UserGroupGUID == "" || userGroups[strategy.UserGroupGUID]) {
+			level = strategyLevelGroup
+		}
+		if level == 0 {
 			continue
 		}
 		var permissions map[string]any
 		if json.Unmarshal([]byte(strategy.Permissions), &permissions) != nil {
 			continue
+		}
+		if layers[level] == nil {
+			layers[level] = map[string]string{}
 		}
 		for key, raw := range permissions {
 			if len(key) == 0 || len(key) > maxStrategyPermissionKeyLength {
@@ -1122,11 +1156,58 @@ func (s *Server) clientStrategyConfigOptions(deviceID string) map[string]string 
 			}
 			value, ok := normalizeStrategyOptionValue(raw)
 			if ok {
-				out[key] = value
+				layers[level][key] = value
 			}
 		}
 	}
+	for _, layer := range layers {
+		for key, value := range layer {
+			out[key] = value
+		}
+	}
 	return out
+}
+
+// strategyTargetsOf is what an access rule can name a device by besides
+// its own key: the device groups it is a member of, the assignment key of
+// the account signed in on it, and that account's user groups.
+func (s *Server) strategyTargetsOf(deviceID string) (deviceGroups map[string]bool, userKey string, userGroups map[string]bool) {
+	deviceGroups, userGroups = map[string]bool{}, map[string]bool{}
+	if s.panelStore != nil {
+		if guids, err := s.panelStore.ListDeviceGroupGUIDsForPeer(deviceID); err == nil {
+			for _, guid := range guids {
+				deviceGroups[guid] = true
+			}
+		}
+	}
+	p, err := s.db.GetPeer(deviceID)
+	if err != nil || p == nil || strings.TrimSpace(p.User) == "" {
+		return deviceGroups, "", userGroups
+	}
+	username := strings.TrimSpace(p.User)
+	if key, err := s.db.ResolveUserAssignmentKey(username); err == nil {
+		userKey = key
+	}
+	if s.panelStore != nil {
+		if id, err := s.panelStore.GetUserIDByUsername(username); err == nil && id > 0 {
+			if guids, err := s.panelStore.ListUserGroupGUIDsForUser(id); err == nil {
+				for _, guid := range guids {
+					userGroups[guid] = true
+				}
+			}
+		}
+	}
+	return deviceGroups, userKey, userGroups
+}
+
+// anyIn reports whether one of values is in set.
+func anyIn(values []string, set map[string]bool) bool {
+	for _, v := range values {
+		if set[v] {
+			return true
+		}
+	}
+	return false
 }
 
 func containsString(values []string, wanted string) bool {
