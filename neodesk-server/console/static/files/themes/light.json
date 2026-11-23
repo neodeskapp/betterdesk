@@ -3,6 +3,11 @@
   "type": "neodesk-theme",
   "displayName": "NeoDesk Light",
   "branding": {
+    "themeMode": "light",
+    "logoText": "",
+    "logoTextAccent": "",
+    "fontHeading": "",
+    "fontBody": "",
     "appName": "NeoDesk",
     "appDescription": "NeoDesk Server Management",
     "logoType": "default",

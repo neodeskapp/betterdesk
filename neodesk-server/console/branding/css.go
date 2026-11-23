@@ -309,6 +309,76 @@ func wallpaperRules(scope, surface, background, size string, blur float64, overl
 	return out.String()
 }
 
+// customAccents are the accent colours of a custom theme whose hover and
+// tint shades are made from them.
+var customAccents = [][3]string{
+	{"accentBlue", "--accent-blue-hover", "--accent-blue-muted"},
+	{"accentGreen", "--accent-green-hover", "--accent-green-muted"},
+	{"accentRed", "--accent-red-hover", "--accent-red-muted"},
+	{"accentYellow", "--accent-yellow-hover", "--accent-yellow-muted"},
+	{"accentPurple", "--accent-purple-hover", "--accent-purple-muted"},
+}
+
+// mixHex moves a #rrggbb colour toward black (toward 0) or white (255) by
+// share, each channel rounded.
+func mixHex(hex string, toward int, share float64) (string, bool) {
+	c, ok := hexToRGB(hex)
+	if !ok {
+		return "", false
+	}
+	mix := func(v int) int { return int(float64(v) + float64(toward-v)*share + 0.5) }
+	const digits = "0123456789abcdef"
+	var b strings.Builder
+	b.WriteByte('#')
+	for _, v := range []int{mix(c.r), mix(c.g), mix(c.b)} {
+		b.WriteByte(digits[v>>4])
+		b.WriteByte(digits[v&15])
+	}
+	return b.String(), true
+}
+
+// customShadesCSS gives the accents of a custom theme their own hover and
+// tint shades. The stylesheet lays the custom colours over the built-in
+// dark palette, and the form sets only the accents, so their hover and
+// tint came from the dark palette (light blue on a purple accent). A shade
+// is darker on a light page and lighter on a dark one, as in the built-in
+// palettes; a shade that is stored (a theme file's) stays.
+func customShadesCSS(colors any) string {
+	stored := func(key string) string {
+		if !Truthy(colors) {
+			return ""
+		}
+		return trim(toString(or(property(colors, key), "")))
+	}
+	toward, share := 255, 0.2
+	if bg := stored("bgPrimary"); reHashHex6.MatchString(bg) {
+		if c, ok := hexToRGB(bg); ok && luminance(c) > 0.5 {
+			toward, share = 0, 0.15
+		}
+	}
+	var lines []string
+	for _, accent := range customAccents {
+		color := stored(accent[0])
+		if !reHashHex6.MatchString(color) {
+			continue
+		}
+		if stored(accent[0]+"Hover") == "" {
+			if hover, ok := mixHex(color, toward, share); ok {
+				lines = append(lines, "    "+accent[1]+": "+hover+";")
+			}
+		}
+		if stored(accent[0]+"Muted") == "" {
+			if muted, ok := hexToMutedRGBA(color, 0.15); ok {
+				lines = append(lines, "    "+accent[2]+": "+muted+";")
+			}
+		}
+	}
+	if len(lines) == 0 {
+		return ""
+	}
+	return ":root {\n" + strings.Join(lines, "\n") + "\n}\n"
+}
+
 // consoleCSS are the rules for the pages of this console. The rules Node
 // wrote (backgroundCSS, generateFontCSS) aim at the markup of the old
 // console: body.app-page, body.rd-desk-body and --font-family, which no
@@ -349,6 +419,10 @@ func consoleCSS(branding *Object) string {
 	}
 	if rdBg != "" {
 		out.WriteString(wallpaperRules("body:has(> #bd-root .desk)", "#bd-root .desk", rdBg, rdSize, 0, rdAlpha, rdOverlay))
+	}
+
+	if themeMode := normalizeThemeMode(get("themeMode")); themeMode == "custom" {
+		out.WriteString(customShadesCSS(get("colors")))
 	}
 
 	if font, ok := get("fontBody").(string); ok && trim(font) != "" {

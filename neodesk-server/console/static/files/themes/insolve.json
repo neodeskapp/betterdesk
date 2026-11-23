@@ -3,6 +3,7 @@
   "type": "neodesk-theme",
   "displayName": "insolve Core Server",
   "branding": {
+    "themeMode": "custom",
     "appName": "insolve Core Server",
     "appDescription": "Insolve Device Management",
     "logoType": "text",
