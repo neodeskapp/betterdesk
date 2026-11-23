@@ -365,3 +365,21 @@ test.describe('list rows in German at 360', () => {
 		expect(bad, 'rows whose text is covered or squeezed').toEqual([]);
 	});
 });
+
+test.describe('security checks in German at 360', () => {
+	test.use({ viewport: { width: 360, height: 640 } });
+
+	// BUGS L322: "Was zu tun" was clipped at the right edge mid-word
+	test('the checks table fits the screen', async ({ page, baseURL }) => {
+		await useLanguage(page, 'de', baseURL);
+		await open(page, '/security-audit', 'de');
+		await page.getByRole('tab', { name: 'Sicherheitsprüfungen' }).click();
+		const box = page.locator('.checks .table-scroll');
+		await expect(box.locator('tbody tr').first()).toBeVisible();
+		const { scroll, client } = await box.evaluate((el) => ({
+			scroll: el.scrollWidth,
+			client: el.clientWidth
+		}));
+		expect(scroll, 'width of the checks table in its box').toBeLessThanOrEqual(client);
+	});
+});

@@ -50,11 +50,13 @@
 	const columns = $derived<Column<Check>[]>([
 		{ id: 'check', label: t('security_audit.col_check'), cell: nameCell },
 		{ id: 'status', label: t('security_audit.col_status'), cell: statusCell, class: 'col-status' },
-		{ id: 'todo', label: t('security_audit.col_todo'), cell: todoCell }
+		{ id: 'todo', label: t('security_audit.col_todo'), cell: todoCell, class: 'col-todo' }
 	]);
 </script>
 
-{#snippet nameCell(c: Check)}{translated(`security_audit.check_${c.id}`, c.name)}{/snippet}
+{#snippet nameCell(c: Check)}{translated(`security_audit.check_${c.id}`, c.name)}{#if !c.pass}<span
+			class="cell-sub todo-sub">{translated(`security_audit.fix_${c.id}`, '')}</span
+		>{/if}{/snippet}
 {#snippet statusCell(c: Check)}<Status
 		tone={c.pass ? 'good' : 'danger'}
 		label={c.pass ? t('security_audit.passed') : t('security_audit.failed')}
@@ -162,7 +164,23 @@
 	.summary {
 		margin: 0;
 	}
+	.checks {
+		container: checks / inline-size;
+	}
 	.checks :global(td.col-status) {
 		white-space: nowrap;
+	}
+	/* Narrow: what to do goes under the check's name instead of a third column */
+	.checks .todo-sub {
+		display: none;
+	}
+	@container checks (max-width: 540px) {
+		.checks :global(.col-todo) {
+			display: none;
+		}
+		.checks .todo-sub {
+			display: block;
+			margin-top: var(--space-1);
+		}
 	}
 </style>
