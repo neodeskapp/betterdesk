@@ -59,6 +59,7 @@
      "release_error": "release_unavailable",
      "run_command": "curl -fsSL '<base>/s/{secret:support_code}/run.sh' | sh",
      "server": {
+      "address": "<base>",
       "host": "<hostname>",
       "https": false,
       "name": "NeoDesk"

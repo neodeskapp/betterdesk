@@ -59,6 +59,7 @@
      "publisher": "Rath & Blume GbR",
      "release_error": "release_unavailable",
      "server": {
+      "address": "<base>",
       "host": "<hostname>",
       "https": false,
       "name": "NeoDesk"

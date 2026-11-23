@@ -37,8 +37,8 @@
    "body": {
     "kind": "bytes",
     "type": "text/x-shellscript",
-    "length": 1381,
-    "sha256": "3661d6ef84bd808a62f47bcd3dc38f362983f4cb74eb2a934883640121db592b",
+    "length": 2054,
+    "sha256": "76ecf2590f7fdd1eae175958df896424ff39eff072b0018cd85abeec7dd1ecf2",
     "head": "#!/bin/sh\n# Installs NeoDesk and joins it to <base> with an invite.\n# The script works as long as the invite does.\nset -eu\n\nBASE='<base>'\nCODE='{secret:invite_code}'\n\nif [ \"$(id -u)\" != \"0\" ]; then\n\techo \"Run this as root: curl -fsSL '$BASE/join/$CODE/install.sh' | sudo sh\" >&2\n\texit 1\nfi\n\ncase \"$(u"
    }
   }
