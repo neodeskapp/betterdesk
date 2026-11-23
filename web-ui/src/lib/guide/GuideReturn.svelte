@@ -25,7 +25,7 @@
 	.guide-return {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: baseline;
+		align-items: center;
 		gap: var(--space-1) var(--space-3);
 		margin-bottom: var(--space-4);
 		font-size: var(--text-sm);
