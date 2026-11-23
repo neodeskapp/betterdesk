@@ -137,7 +137,7 @@ docker compose -p "$PROJECT" \
 processes=$(docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" exec -T neodesk ps -o user,args | tr -d '\r')
-printf '%s\n' "$processes" | grep -Eq '^betterde[a-z]* +/usr/local/bin/neodesk-server ' \
+printf '%s\n' "$processes" | grep -Eq '^neodesk +/usr/local/bin/neodesk-server ' \
     || fail "neodesk-server does not run as neodesk: $processes"
 if printf '%s\n' "$processes" | grep -Eq 'node|supervisord'; then
     fail "the container runs more than the server: $processes"
