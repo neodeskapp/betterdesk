@@ -253,7 +253,8 @@ func TestChannelRoute(t *testing.T) {
 		t.Errorf("channel after the refused names: %s", res.Body)
 	}
 	docker := newWorld(t, true)
-	if res := docker.As("admin").Do("POST", "/api/settings/updates/channel", `{"channel":"stable"}`); res.Status != 400 || !strings.Contains(res.Body, `"code":"DOCKER_IMAGE_CHANNEL"`) {
+	if res := docker.As("admin").Do("POST", "/api/settings/updates/channel", `{"channel":"stable"}`); res.Status != 400 || !strings.Contains(res.Body, `"code":"DOCKER_IMAGE_CHANNEL"`) ||
+		!strings.Contains(res.Body, `"error":"settings.updates_tab.channel_docker_note"`) {
 		t.Errorf("docker %d %s", res.Status, res.Body)
 	}
 }

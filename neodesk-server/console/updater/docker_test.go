@@ -26,3 +26,23 @@ func TestDockerInstructionsNameTheOneImage(t *testing.T) {
 		}
 	}
 }
+
+// With NEODESK_IMAGE_TAG pinned to a version, "docker compose pull" fetches
+// that version again and never the new one: the commands first set the
+// tag to the version the check found (BUGS L407).
+func TestDockerCommandsMoveAPinnedTag(t *testing.T) {
+	for _, c := range []struct{ tag, latest, first string }{
+		{"3.6.0-rc.2", "3.6.4", "sed -i 's/^NEODESK_IMAGE_TAG=.*/NEODESK_IMAGE_TAG=3.6.4/' .env"},
+		{"latest", "3.6.4", "docker compose pull"},
+		{"3.6.4", "3.6.4", "docker compose pull"},
+		{"3.6.0", "3.6.4; rm -rf /", "docker compose pull"},
+	} {
+		in := newInstall(t, func(o *Options) { o.Docker = true; o.Version = "3.6.0" })
+		in.env["NEODESK_IMAGE_TAG"] = c.tag
+		out := &CheckResult{LatestVersion: c.latest}
+		New(in.opts).withDeployment(out)
+		if out.DockerUpdate == nil || out.DockerUpdate.Commands[0] != c.first {
+			t.Errorf("tag %s, latest %s: commands %+v", c.tag, c.latest, out.DockerUpdate)
+		}
+	}
+}

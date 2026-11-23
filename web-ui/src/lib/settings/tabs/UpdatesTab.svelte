@@ -586,7 +586,7 @@
 												<Status tone="waiting" label={t('updates.checking_go')} />
 											{/if}
 										</p>
-										<p class="hint">{t('updates.auto_strategy_hint')}</p>
+										{#if !docker}<p class="hint">{t('updates.auto_strategy_hint')}</p>{/if}
 										{#if serverInfo}
 											<Facts items={toolsFacts} />
 											{#if toolchainWillInstall(serverInfo)}<p class="hint">
@@ -597,15 +597,16 @@
 								{/if}
 							{/if}
 							<div class="form-column stack">
-								<Checkbox
-									id="update-backup-toggle"
-									label={t('updates.create_backup')}
-									bind:checked={createBackup}
-								/>
-								<p class="field-effect is-restart">{t('settings.updates_tab.install_effect')}</p>
+								<!-- Docker installs update on the host: no install, backup or restart here (BUGS L407) -->
 								{#if docker}
 									<p class="hint">{t('settings.updates_tab.docker_install_note')}</p>
 								{:else}
+									<Checkbox
+										id="update-backup-toggle"
+										label={t('updates.create_backup')}
+										bind:checked={createBackup}
+									/>
+									<p class="field-effect is-restart">{t('settings.updates_tab.install_effect')}</p>
 									<div class="settings-inline-controls">
 										<Button
 											id="update-install-btn"

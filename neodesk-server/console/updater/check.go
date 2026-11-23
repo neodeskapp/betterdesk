@@ -240,9 +240,20 @@ func (s *Service) withDeployment(out *CheckResult) {
 	}
 	no := false
 	docker := s.DockerInstructions()
+	// A tag pinned to a version makes "docker compose pull" fetch that
+	// version again: set it to the one found first (BUGS L407)
+	if tag := docker.CurrentTag; tag != "latest" && tag != "dev" && versionTag.MatchString(out.LatestVersion) &&
+		tag != out.LatestVersion && CompareVersions(out.LatestVersion, s.opts.Version) > 0 {
+		docker.Commands = append([]string{"sed -i 's/^NEODESK_IMAGE_TAG=.*/NEODESK_IMAGE_TAG=" + out.LatestVersion + "/' .env"}, docker.Commands...)
+		docker.Images = []string{"ghcr.io/" + strings.ToLower(s.Owner()) + "/neodesk:" + out.LatestVersion}
+	}
 	out.DeploymentMode, out.DockerImageMode, out.ImageSHA = "docker-image", true, nullable(s.opts.Commit)
 	out.DockerUpdate, out.InAppUpdateSupported = &docker, &no
 }
+
+// versionTag is a version that can be an image tag and goes into a shell
+// command as it is.
+var versionTag = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$`)
 
 // ChangedFile is a file of the comparison.
 type ChangedFile struct {

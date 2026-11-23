@@ -58,7 +58,7 @@ func (h *handlers) setChannel(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var docker *updater.ErrDockerChannel
 		if errors.As(err, &docker) {
-			kit.JSON(w, r, http.StatusBadRequest, failureCode{Error: docker.Message, Code: "DOCKER_IMAGE_CHANNEL"})
+			kit.JSON(w, r, http.StatusBadRequest, failureCode{Error: kit.T(r, "settings.updates_tab.channel_docker_note", nil), Code: "DOCKER_IMAGE_CHANNEL"})
 			return
 		}
 		h.log.Error("Update channel error:", err)
