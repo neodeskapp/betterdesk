@@ -80,7 +80,7 @@ func TestScriptsCarryTheirLinkAndCode(t *testing.T) {
 	install := InstallScript("https://desk.example.com", "ABCD2345")
 	for _, want := range []string{
 		"BASE='https://desk.example.com'", "CODE='ABCD2345'", `neodesk --join "$BASE/join/$CODE"`,
-		`/api/onboard/public/$CODE/download?os=linux&arch=$arch&format=$format`, "apt-get install -y", "dnf install -y",
+		`/api/onboard/public/$CODE/download?os=linux&arch=$arch&format=$format`, "apt-get install -y --reinstall --allow-downgrades", `"$tool" install -y`,
 	} {
 		if !strings.Contains(install, want) {
 			t.Errorf("install script lacks %q", want)

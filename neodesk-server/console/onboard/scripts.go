@@ -66,15 +66,30 @@ echo "Downloading NeoDesk..."
 curl -fsSL -o "$package" "$BASE/api/onboard/public/$CODE/download?os=linux&arch=$arch&format=$format"
 
 echo "Installing NeoDesk..."
+# The offered package is installed whatever version is there: the builds
+# after a release candidate count as older than it (1.5.0~rc.6 comes
+# before 1.5.0), and the same version is installed again.
 case "$format" in
-	deb) DEBIAN_FRONTEND=noninteractive apt-get install -y "$package" ;;
+	deb) DEBIAN_FRONTEND=noninteractive apt-get install -y --reinstall --allow-downgrades "$package" ;;
 	rpm)
-		if command -v dnf >/dev/null 2>&1; then
-			dnf install -y "$package"
-		elif command -v zypper >/dev/null 2>&1; then
-			zypper --non-interactive install --allow-unsigned-rpm "$package"
+		want=$(rpm -qp --qf '%{NAME}-%{VERSION}-%{RELEASE}' "$package")
+		name=$(rpm -qp --qf '%{NAME}' "$package")
+		installed() { rpm -q --qf '%{NAME}-%{VERSION}-%{RELEASE}' "$name" 2>/dev/null || true; }
+		if command -v zypper >/dev/null 2>&1 && ! command -v dnf >/dev/null 2>&1; then
+			zypper --non-interactive install --allow-unsigned-rpm --oldpackage --force "$package"
 		else
-			yum install -y "$package"
+			tool=yum
+			if command -v dnf >/dev/null 2>&1; then
+				tool=dnf
+			fi
+			if [ "$(installed)" = "$want" ]; then
+				"$tool" reinstall -y "$package"
+			else
+				"$tool" install -y "$package"
+				if [ "$(installed)" != "$want" ]; then
+					"$tool" downgrade -y "$package"
+				fi
+			fi
 		fi
 		;;
 esac
