@@ -368,6 +368,7 @@ func init() {
 		"config":     {"Show where the settings come from (never the token)", runConfig},
 		"api":        {"Send any request to the console's API: neodesk api GET /api/stats", runAPI},
 		"describe":   {"Print every command with its arguments and permissions, as JSON or Markdown", runDescribe},
+		"mcp":        {"Serve the commands as tools to an AI agent over MCP (stdio); read only unless --allow-writes", runMCP},
 		"completion": {"Print a shell completion script: bash, zsh, fish or powershell", runCompletion},
 		"local":      {"Run a command of the server binary on this machine (backup, migrate, ...)", runLocal},
 		"version":    {"Print the version", runVersion},
