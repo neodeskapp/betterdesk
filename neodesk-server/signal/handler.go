@@ -1086,6 +1086,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		return
 	}
 	policy := s.sessionPolicy(msg.GetToken(), raddr, false, msg.GetConnType())
+	s.limitToQuickSupport(&policy, targetID, msg.GetConnType())
 	if policy.refusal != "" {
 		s.refuseForFeature(raddr, initiatorID, targetID, policy)
 		s.sendUDP(featureRefusedPunchResponse(policy.refusal), raddr)
@@ -1315,6 +1316,7 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 		return s.punchHoleUnauthorizedResponse()
 	}
 	policy := s.sessionPolicy(msg.GetToken(), raddr, panel, msg.GetConnType())
+	s.limitToQuickSupport(&policy, targetID, msg.GetConnType())
 	if policy.refusal != "" {
 		s.refuseForFeature(raddr, initiatorID, targetID, policy)
 		return featureRefusedPunchResponse(policy.refusal)
@@ -1702,6 +1704,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		return
 	}
 	policy := s.sessionPolicy(msg.GetToken(), raddr, false, msg.GetConnType())
+	s.limitToQuickSupport(&policy, targetID, msg.GetConnType())
 	if policy.refusal != "" {
 		s.refuseForFeature(raddr, initiatorID, targetID, policy)
 		s.sendUDP(relayRefusedResponse(policy.refusal, relayServer), raddr)
@@ -1862,6 +1865,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 		return s.relayUnauthorizedResponse(relayServer)
 	}
 	policy := s.sessionPolicy(msg.GetToken(), raddr, panel, msg.GetConnType())
+	s.limitToQuickSupport(&policy, targetID, msg.GetConnType())
 	if policy.refusal != "" {
 		s.refuseForFeature(raddr, initiatorID, targetID, policy)
 		return relayRefusedResponse(policy.refusal, relayServer)

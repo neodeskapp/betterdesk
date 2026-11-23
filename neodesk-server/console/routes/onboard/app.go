@@ -198,18 +198,21 @@ func (h *handlers) appDevice(w http.ResponseWriter, r *http.Request) {
 }
 
 // appConsent answers POST /api/support/session/consent with the body
-// {allowed}: the person's answer on their screen. Declined ends the
-// session.
+// {allowed, grants?}: the person's answer on their screen. Declined ends
+// the session. Allowed gives the screen, the mouse and the keyboard, and
+// what grants names of "clipboard" and "file_transfer"; the server turns
+// everything else off for the supporter's sessions.
 func (h *handlers) appConsent(w http.ResponseWriter, r *http.Request) {
 	sess := appSessionOf(r)
 	var body struct {
-		Allowed *bool `json:"allowed"`
+		Allowed *bool    `json:"allowed"`
+		Grants  []string `json:"grants"`
 	}
 	if err := kit.Bind(r, &body); err != nil || body.Allowed == nil {
 		appFail(w, r, http.StatusBadRequest, "invalid_body", "")
 		return
 	}
-	updated, err := h.sessions.Consent(r.Context(), sess.ID, *body.Allowed)
+	updated, err := h.sessions.Consent(r.Context(), sess.ID, *body.Allowed, body.Grants)
 	if errors.Is(err, onboard.ErrState) {
 		appFail(w, r, http.StatusConflict, onboard.ErrState.Error(), "")
 		return

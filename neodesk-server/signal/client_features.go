@@ -2,6 +2,7 @@ package signal
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net"
 	"slices"
@@ -200,5 +201,109 @@ func featureRefusedPunchResponse(refusal string) *pb.RendezvousMessage {
 		Union: &pb.RendezvousMessage_PunchHoleResponse{
 			PunchHoleResponse: &pb.PunchHoleResponse{OtherFailure: refusal},
 		},
+	}
+}
+
+// Quick support gives the supporter what the person allowed on the
+// consent screen of the quick support app: the screen, the mouse and the
+// keyboard. Every other permission of a session is off on a quick support
+// device, a device in an open quick support session or one such a session
+// made, unless the person allowed it on that screen too (the grants
+// "clipboard" and "file_transfer" the app sends with the consent). Kinds
+// of session the person did not allow are refused with a message.
+
+// quickSupportDevicePrefix is the server_config key under which the API
+// server notes the open quick support session of a device, with its grants
+// (handleSupportSessionPut).
+const quickSupportDevicePrefix = "quick_support_device_"
+
+// quickSupportDeviceType is the device type of the device a quick support
+// session made.
+const quickSupportDeviceType = "quick_support"
+
+// quickSupportOff are the permissions a quick support session does not
+// give: all but the keyboard (and the mouse, which it covers) and the
+// screen.
+var quickSupportOff = []pb.ControlPermissions_Permission{
+	pb.ControlPermissions_remote_printer, pb.ControlPermissions_clipboard, pb.ControlPermissions_file,
+	pb.ControlPermissions_audio, pb.ControlPermissions_camera, pb.ControlPermissions_terminal,
+	pb.ControlPermissions_tunnel, pb.ControlPermissions_restart, pb.ControlPermissions_recording,
+	pb.ControlPermissions_block_input, pb.ControlPermissions_remote_modify, pb.ControlPermissions_privacy_mode,
+	pb.ControlPermissions_usb,
+}
+
+// quickSupportGrantPermissions are the permissions a grant of the consent
+// screen leaves on.
+var quickSupportGrantPermissions = map[string][]pb.ControlPermissions_Permission{
+	"clipboard":     {pb.ControlPermissions_clipboard},
+	"file_transfer": {pb.ControlPermissions_file, pb.ControlPermissions_remote_printer},
+}
+
+// quickSupportConnFeature is the grant a kind of session needs on a quick
+// support device; a kind not listed but in quickSupportRefused is never
+// allowed.
+var quickSupportConnFeature = map[pb.ConnType]string{
+	pb.ConnType_FILE_TRANSFER: "file_transfer",
+}
+
+var quickSupportRefused = map[pb.ConnType]bool{
+	pb.ConnType_FILE_TRANSFER: true,
+	pb.ConnType_PORT_FORWARD:  true,
+	pb.ConnType_RDP:           true,
+	pb.ConnType_TERMINAL:      true,
+	pb.ConnType_VIEW_CAMERA:   true,
+}
+
+// quickSupportRefusal is the message of a kind of session the person did
+// not allow in quick support.
+const quickSupportRefusal = "The person did not allow this in their quick support session"
+
+// quickSupportGrants reports whether target is a quick support device and
+// what the person allowed besides the screen, the mouse and the keyboard.
+func (s *Server) quickSupportGrants(target string) (bool, []string) {
+	if s.db == nil || target == "" {
+		return false, nil
+	}
+	if raw, err := s.db.GetConfig(quickSupportDevicePrefix + target); err == nil && raw != "" {
+		var open struct {
+			Grants []string `json:"grants"`
+		}
+		_ = json.Unmarshal([]byte(raw), &open)
+		return true, open.Grants
+	}
+	if p, err := s.db.GetPeer(target); err == nil && p != nil && p.DeviceType == quickSupportDeviceType {
+		return true, nil
+	}
+	return false, nil
+}
+
+// limitToQuickSupport narrows policy for a session at target when target
+// is a quick support device: the permissions the person did not allow are
+// off, and a kind of session they did not allow is refused.
+func (s *Server) limitToQuickSupport(policy *sessionPolicy, target string, connType pb.ConnType) {
+	quick, grants := s.quickSupportGrants(target)
+	if !quick {
+		return
+	}
+	granted := map[pb.ControlPermissions_Permission]bool{}
+	for _, g := range grants {
+		for _, p := range quickSupportGrantPermissions[g] {
+			granted[p] = true
+		}
+	}
+	var bits uint64
+	if policy.permissions != nil {
+		bits = policy.permissions.GetPermissions()
+	}
+	for _, p := range quickSupportOff {
+		if !granted[p] {
+			bits |= permissionOff << (2 * uint(p))
+		}
+	}
+	policy.permissions = &pb.ControlPermissions{Permissions: bits}
+	if quickSupportRefused[connType] && policy.refusal == "" {
+		if need := quickSupportConnFeature[connType]; need == "" || !slices.Contains(grants, need) {
+			policy.refusal, policy.feature = quickSupportRefusal, "quick_support"
+		}
 	}
 }

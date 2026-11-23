@@ -205,7 +205,7 @@ func TestSessionStepsGoInOrder(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Consent(ctx, sess.ID, true); !errors.Is(err, ErrState) {
+	if _, err := s.Consent(ctx, sess.ID, true, nil); !errors.Is(err, ErrState) {
 		t.Fatalf("consent before a device: %v", err)
 	}
 	if err := s.SetPassword(ctx, sess.ID, "pw"); !errors.Is(err, ErrState) {
@@ -217,7 +217,7 @@ func TestSessionStepsGoInOrder(t *testing.T) {
 	if _, err := s.SetDevice(ctx, sess.ID, Device{DeviceID: "223456789"}, true, true); !errors.Is(err, ErrState) {
 		t.Fatalf("a second device: %v", err)
 	}
-	if sess, err = s.Consent(ctx, sess.ID, true); err != nil || sess.Status != StatusAllowed {
+	if sess, err = s.Consent(ctx, sess.ID, true, nil); err != nil || sess.Status != StatusAllowed {
 		t.Fatalf("consent: %+v %v", sess, err)
 	}
 	if err := s.SetPassword(ctx, sess.ID, "pw"); err != nil {
@@ -233,7 +233,7 @@ func TestDeclineEndsTheSession(t *testing.T) {
 	s, _, c := newSessions(t)
 	token, sess, _ := s.Redeem(ctx, supportCode("dddddddddddddddd", 5, c.now))
 	_, _ = s.SetDevice(ctx, sess.ID, Device{DeviceID: "123456789"}, false, false)
-	sess, err := s.Consent(ctx, sess.ID, false)
+	sess, err := s.Consent(ctx, sess.ID, false, nil)
 	if err != nil || sess.Status != StatusDeclined || sess.EndedBy != EndedByCustomer || sess.EndedAt == "" {
 		t.Fatalf("decline: %+v %v", sess, err)
 	}
@@ -247,7 +247,7 @@ func TestPasswordGoesOnceToTheSupporterWhoMadeTheSession(t *testing.T) {
 	s, store, c := newSessions(t)
 	_, sess, _ := s.Redeem(ctx, supportCode("eeeeeeeeeeeeeeee", 5, c.now))
 	_, _ = s.SetDevice(ctx, sess.ID, Device{DeviceID: "123456789"}, true, true)
-	_, _ = s.Consent(ctx, sess.ID, true)
+	_, _ = s.Consent(ctx, sess.ID, true, nil)
 	if err := s.SetPassword(ctx, sess.ID, "s3cret-pw"); err != nil {
 		t.Fatal(err)
 	}

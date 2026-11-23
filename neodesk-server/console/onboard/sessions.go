@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"sort"
 	"sync"
 	"time"
@@ -82,14 +83,18 @@ type Session struct {
 	DeviceRemoved   bool   `json:"device_removed"`
 	// Granted is true when the session gave its supporter the device
 	// (user_peer_grants); the grant goes with the device.
-	Granted    bool   `json:"granted"`
-	EndedBy    string `json:"ended_by"`
-	CreatedAt  string `json:"created_at"`
-	ExpiresAt  string `json:"expires_at"`
-	RedeemedAt string `json:"redeemed_at"`
-	ConsentAt  string `json:"consent_at"`
-	LastSeenAt string `json:"last_seen_at"`
-	EndedAt    string `json:"ended_at"`
+	Granted bool `json:"granted"`
+	// Grants is what the person allowed besides the screen, the mouse and
+	// the keyboard (Grants*): the server turns everything else off for
+	// the session (signal: limitToQuickSupport).
+	Grants     []string `json:"grants,omitempty"`
+	EndedBy    string   `json:"ended_by"`
+	CreatedAt  string   `json:"created_at"`
+	ExpiresAt  string   `json:"expires_at"`
+	RedeemedAt string   `json:"redeemed_at"`
+	ConsentAt  string   `json:"consent_at"`
+	LastSeenAt string   `json:"last_seen_at"`
+	EndedAt    string   `json:"ended_at"`
 }
 
 // Open reports whether the session has not ended.
@@ -355,9 +360,20 @@ func (s *Sessions) SetDevice(ctx context.Context, id string, dev Device, tempora
 	})
 }
 
-// Consent records the person's answer: allowed, or declined, which ends
-// the session.
-func (s *Sessions) Consent(ctx context.Context, id string, allowed bool) (Session, error) {
+// What the person can allow on the consent screen besides the screen, the
+// mouse and the keyboard.
+const (
+	GrantClipboard    = "clipboard"
+	GrantFileTransfer = "file_transfer"
+)
+
+// KnownGrant reports whether g is a grant of the consent screen.
+func KnownGrant(g string) bool { return g == GrantClipboard || g == GrantFileTransfer }
+
+// Consent records the person's answer: allowed, with what they allowed
+// besides the screen, the mouse and the keyboard (grants), or declined,
+// which ends the session.
+func (s *Sessions) Consent(ctx context.Context, id string, allowed bool, grants []string) (Session, error) {
 	now := stamp(s.now())
 	return s.change(ctx, id, func(sess *Session) error {
 		if sess.Status != StatusAsking {
@@ -366,6 +382,12 @@ func (s *Sessions) Consent(ctx context.Context, id string, allowed bool) (Sessio
 		sess.ConsentAt = now
 		if allowed {
 			sess.Status = StatusAllowed
+			sess.Grants = nil
+			for _, g := range grants {
+				if KnownGrant(g) && !slices.Contains(sess.Grants, g) {
+					sess.Grants = append(sess.Grants, g)
+				}
+			}
 			return nil
 		}
 		sess.Status, sess.EndedAt, sess.EndedBy = StatusDeclined, now, EndedByCustomer
