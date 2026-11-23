@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
@@ -69,12 +71,20 @@ func (a *agent) postJSON(target, body string, header ...string) answer {
 	return a.do("POST", target, body, append([]string{"Content-Type", "application/json"}, header...)...)
 }
 
-const allAdmin = `["audit.view","blocklist.edit","branding.edit","billing.export","billing.manage","billing.reports","billing.view",
-"cdap.command","cdap.files","cdap.terminal","cdap.view","chat.access","device.ban","device.change_id","device.connect",
-"device.connection_mode","device.delete","device.edit","device.view","enrollment.approve","enrollment.manage","guest.create",
-"mesh.files","mesh.power","mesh.terminal","metrics.view","org.create","org.delete","org.edit","org.manage_devices","org.manage_users",
-"remote_target.connect","remote_target.delete","remote_target.edit","remote_target.test","remote_target.view",
-"server.attestation","server.config","server.keys","user.create","user.delete","user.edit","user.view"]`
+// allAdmin is every permission there is: what a super admin holds.
+var allAdmin = permsJSON()
+
+// permsJSON is every permission but those named, as a JSON list.
+func permsJSON(except ...string) string {
+	var out []string
+	for _, p := range auth.AllPermissions {
+		if !slices.Contains(except, p) {
+			out = append(out, p)
+		}
+	}
+	b, _ := json.Marshal(out)
+	return string(b)
+}
 
 func code(t *testing.T, a answer) string {
 	t.Helper()
@@ -369,7 +379,7 @@ func TestOnlyAFullTokenPassesRoleChecksAndChangesAccounts(t *testing.T) {
 		t.Errorf("full super admin token lists every account's tokens: %d %s", res.status, res.body)
 	}
 	// All but server.config: past the reports section, not full
-	most, _ := w.makeToken("super_admin", `{"name":"m","permissions":`+strings.Replace(allAdmin, `"server.config",`, "", 1)+`,"read_only":false,"expires_in_days":1}`)
+	most, _ := w.makeToken("super_admin", `{"name":"m","permissions":`+permsJSON("server.config")+`,"read_only":false,"expires_in_days":1}`)
 	if res := w.bearer(most).postJSON("/api/reports/save", `{}`); res.status != 403 {
 		t.Errorf("capped super admin token saves a report: %d %s", res.status, res.body)
 	}
