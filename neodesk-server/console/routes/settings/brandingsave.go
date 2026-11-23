@@ -43,6 +43,10 @@ func (h *handlers) saveBranding(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, "Invalid branding data")
 		return
 	}
+	if problems := branding.CheckSettings(updates, h.d.Branding.GetBranding()); len(problems) > 0 {
+		refuseSettings(w, r, problems)
+		return
+	}
 	b := h.d.Branding
 	if err := b.SaveBranding(r.Context(), updates); err != nil {
 		h.serverError(w, r, "Save branding", err)
@@ -70,6 +74,35 @@ func (h *handlers) saveBranding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, brandingAnswer{Success: true, Data: saved, Appearance: model, Readability: readability, Revision: b.Revision()})
+}
+
+type refusedField struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}
+
+type refusedSettings struct {
+	Success bool           `json:"success"`
+	Error   string         `json:"error"`
+	Field   string         `json:"field"`
+	Fields  []refusedField `json:"fields"`
+}
+
+// refuseSettings answers 400 for values a save would clean or drop
+// (branding.CheckSettings): error and field name the first, fields lists
+// each with its reason in the caller's language. Nothing is stored.
+func refuseSettings(w http.ResponseWriter, r *http.Request, problems []branding.Problem) {
+	answer := refusedSettings{Fields: make([]refusedField, 0, len(problems))}
+	for _, p := range problems {
+		var vars []any
+		for name, value := range p.Params {
+			vars = append(vars, name, value)
+		}
+		message := kit.T(r, "settings.appearance.refused_"+p.Reason, kit.Vars(vars...))
+		answer.Fields = append(answer.Fields, refusedField{Field: p.Field, Message: message})
+	}
+	answer.Error, answer.Field = answer.Fields[0].Message, answer.Fields[0].Field
+	kit.JSON(w, r, http.StatusBadRequest, answer)
 }
 
 // themeOnly reports a body whose keys are all themeMode, colors or

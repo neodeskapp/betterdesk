@@ -85,9 +85,9 @@ func TestSaveBranding(t *testing.T) {
 		if got := lastAudit(t, w); got != "theme_toggle|Theme switched to light|127.0.0.1|1" {
 			t.Errorf("theme save audit: %s", got)
 		}
-		res = admin.Do("POST", "/api/settings/branding", `{"appName":"Saved","logoSvg":"<svg onload=\"x()\"><script>x()</script><rect/></svg>","bgImageUrl":"javascript:alert(1)","themeMode":"dark"}`)
+		res = admin.Do("POST", "/api/settings/branding", `{"appName":"Saved","logoSvg":"<svg><rect/></svg>","bgImageUrl":"/uploads/bg.png","themeMode":"dark"}`)
 		data := decode(t, res.Body)["data"].(map[string]any)
-		if res.Status != http.StatusOK || data["appName"] != "Saved" || strings.Contains(data["logoSvg"].(string), "script") || data["bgImageUrl"] != "" {
+		if res.Status != http.StatusOK || data["appName"] != "Saved" || data["logoSvg"] != "<svg><rect/></svg>" || data["bgImageUrl"] != "/uploads/bg.png" {
 			t.Errorf("save: %d %v", res.Status, data)
 		}
 		if got := lastAudit(t, w); got != "branding_update|Updated branding configuration|127.0.0.1|1" {
@@ -96,9 +96,9 @@ func TestSaveBranding(t *testing.T) {
 		if got := decode(t, res.Body)["revision"]; got != w.Server.Deps().Branding.Revision() {
 			t.Errorf("revision %v, the service has %s", got, w.Server.Deps().Branding.Revision())
 		}
-		// a theme switch with another key, an empty theme, a list and an
-		// empty object are all a branding update
-		for _, body := range []string{`{"themeMode":"light","appName":"Saved"}`, `{"themeMode":""}`, `["themeMode"]`, `{}`} {
+		// a theme switch with another key, a list and an empty object are
+		// all a branding update
+		for _, body := range []string{`{"themeMode":"light","appName":"Saved"}`, `["themeMode"]`, `{}`} {
 			before := len(w.AuditRows())
 			if res := admin.Do("POST", "/api/settings/branding", body); res.Status != http.StatusOK {
 				t.Errorf("%s: %d %s", body, res.Status, res.Body)
@@ -107,8 +107,8 @@ func TestSaveBranding(t *testing.T) {
 				t.Errorf("%s: audit %v", body, rows[before:])
 			}
 		}
-		// a value that cannot be made text, and a theme mode that cannot
-		for _, body := range []string{`{"appName":{"toString":1}}`, `{"themeMode":{"toString":1}}`} {
+		// a value that cannot be made text
+		for _, body := range []string{`{"appName":{"toString":1}}`} {
 			if res := admin.Do("POST", "/api/settings/branding", body); res.Status != http.StatusInternalServerError || res.Body != `{"success":false,"error":"Server error"}` {
 				t.Errorf("%s: %d %s", body, res.Status, res.Body)
 			}
@@ -316,4 +316,64 @@ func TestEveryWriteReachesTheReaders(t *testing.T) {
 			}
 		}
 	})
+}
+
+// A save refuses what it would store otherwise than given, and names the
+// field and the reason (BUGS L366, L367, L368): nothing is stored then.
+func TestSaveRefusesWhatItWouldClean(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := world(t, db)
+		admin := w.As("admin")
+		if res := admin.Do("POST", "/api/settings/branding", `{"appName":"Before","bgColor":"#102030"}`); res.Status != http.StatusOK {
+			t.Fatalf("first save: %d %s", res.Status, res.Body)
+		}
+		before := len(w.AuditRows())
+		for _, c := range []struct{ body, field, reason string }{
+			{`{"bgColor":"red;}"}`, "bgColor", "refused_color"},
+			{`{"colors":{"accentBlue":"#12345g"}}`, "colors.accentBlue", "refused_color"},
+			{`{"rdclientBgGradient":"url(javascript:alert(1))"}`, "rdclientBgGradient", "refused_gradient"},
+			{`{"logoUrl":"javascript:alert(1)"}`, "logoUrl", "refused_address"},
+			{`{"bgImageUrl":"//evil.example/a.png"}`, "bgImageUrl", "refused_address"},
+			{`{"loginBgImageUrl":"https://example.com/a.jpg"}`, "loginBgImageUrl", "refused_outside_address"},
+			{`{"loginSlides":[{"imageUrl":"/img/a.jpg","title":"One"},{"imageUrl":"javascript:alert(1)","title":"Two"}]}`, "loginSlides.1.imageUrl", "refused_address"},
+			{`{"logoSvg":"<svg onload=\"x()\"><script>x()</script><rect/></svg>"}`, "logoSvg", "refused_svg_parts"},
+			{`{"logoSvg":"<svg><a href=\"javascript:x()\"><rect/></a><foreignObject/></svg>"}`, "logoSvg", "refused_svg_parts"},
+			{`{"faviconSvg":"not svg"}`, "faviconSvg", "refused_svg"},
+			{`{"customCss":"@import url(x.css); .a { color: red }"}`, "customCss", "refused_custom_css"},
+			{`{"themeMode":"auto"}`, "themeMode", "refused_choice"},
+			{`{"themeMode":""}`, "themeMode", "refused_choice"},
+			{`{"bgSize":"huge"}`, "bgSize", "refused_choice"},
+		} {
+			res := admin.Do("POST", "/api/settings/branding", c.body)
+			body := decode(t, res.Body)
+			// the test console has no language files: the texts are their keys
+			if res.Status != http.StatusBadRequest || body["field"] != c.field || toText(body["error"]) != "settings.appearance."+c.reason {
+				t.Errorf("%s: %d %s, want 400 for %s: %s", c.body, res.Status, res.Body, c.field, c.reason)
+			}
+		}
+		if rows := w.AuditRows(); len(rows) != before {
+			t.Errorf("refused saves were audited: %v", rows[before:])
+		}
+		b := w.Server.Deps().Branding.GetBranding()
+		if b.Text("appName") != "Before" || b.Text("bgColor") != "#102030" || b.Text("logoSvg") != "" {
+			t.Errorf("a refused save changed the settings: %s", b.Text("bgColor"))
+		}
+
+		// every problem of one save is listed; an editor's SVG data goes without a word
+		res := admin.Do("POST", "/api/settings/branding", `{"bgColor":"nope","customCss":"`+strings.Repeat("a", 20001)+`"}`)
+		if fields, _ := decode(t, res.Body)["fields"].([]any); res.Status != http.StatusBadRequest || len(fields) != 2 {
+			t.Errorf("two problems: %d %s", res.Status, res.Body)
+		}
+		ok := `{"bgColor":"rgb(10, 20, 30)","bgGradient":"linear-gradient(135deg, #1e293b 0%, #0f172a 100%)","colors":{"accentBlue":"#123456"},` +
+			`"logoSvg":"<svg xmlns:inkscape=\"http://www.inkscape.org/namespaces/inkscape\" inkscape:version=\"1\"><metadata>x</metadata><rect/></svg>",` +
+			`"customCss":".a { color: red }","loginSlides":[{"imageUrl":"/img/login-slides/free.jpg","title":"One"}],"themeMode":"custom","bgSize":"contain"}`
+		if res := admin.Do("POST", "/api/settings/branding", ok); res.Status != http.StatusOK {
+			t.Errorf("clean values: %d %s", res.Status, res.Body)
+		}
+	})
+}
+
+func toText(v any) string {
+	s, _ := v.(string)
+	return s
 }

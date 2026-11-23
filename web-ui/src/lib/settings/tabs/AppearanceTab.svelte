@@ -39,6 +39,7 @@
 		type BuiltinTheme,
 		type Readability
 	} from '#lib/api/settings.ts';
+	import { ApiError } from '#lib/api/client.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import { applyTheme, theme } from '#lib/state/theme.svelte.ts';
@@ -68,19 +69,22 @@
 	import States from '#lib/ui/States.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
 	import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
-	import { createForm } from '#lib/ui/form.svelte.ts';
+	import { FormError, createForm } from '#lib/ui/form.svelte.ts';
 	import {
 		COLOR_GROUPS,
 		DEFAULT_SLIDES,
+		LOGO_ICONS,
 		LOGO_MAX,
 		LOGO_TYPES,
 		MAX_SLIDES,
+		appearanceProblems,
 		brandingFromServer,
 		brandingPayload,
 		fileProblem,
 		isHex,
 		moveSlide,
 		paletteColors,
+		valueAt,
 		type BrandingValues,
 		type LogoType,
 		type PromoMode,
@@ -103,7 +107,7 @@
 		logoAccent: 'Core Server',
 		logoIcon: 'dns',
 		svg: '<svg>…</svg>',
-		logoUrl: 'https://example.com/logo.png',
+		logoUrl: '/uploads/logo.png',
 		footer: '© 2026 Example Ltd.',
 		slideImage: '/img/login-slides/free.jpg',
 		css: '.sidebar { … }'
@@ -132,8 +136,54 @@
 	let logoPicker = $state<HTMLInputElement | null>(null);
 	let logoProblem = $state('');
 
+	/**
+	 * Values a save refuses, by field path ("bgColor", "colors.accentBlue",
+	 * "loginSlides.1.imageUrl"): the reason, shown at the field while its
+	 * value is the one refused. The form's own checks fill it before a save,
+	 * the server's refusal after one.
+	 */
+	let refused = $state<Record<string, { message: string; value: string }>>({});
+
+	function setRefused(entries: [string, string][], values: BrandingValues) {
+		refused = Object.fromEntries(
+			entries.map(([field, message]) => [
+				field,
+				{ message, value: JSON.stringify(valueAt(values, field) ?? '') }
+			])
+		);
+		if (refused.customCss) cssOpen = true;
+	}
+
+	function refusedAt(field: string): string | undefined {
+		const r = refused[field];
+		return r && JSON.stringify(valueAt(form.values, field) ?? '') === r.value ? r.message : undefined;
+	}
+
+	/** The fields and reasons of a refused save ({fields: [{field, message}]}) */
+	function refusedFields(err: unknown): [string, string][] {
+		if (!(err instanceof ApiError) || !err.data || typeof err.data !== 'object') return [];
+		const list = (err.data as { fields?: unknown }).fields;
+		if (!Array.isArray(list)) return [];
+		return list.flatMap((x: unknown) => {
+			const f = x as { field?: unknown; message?: unknown };
+			return typeof f.field === 'string' && typeof f.message === 'string'
+				? [[f.field, f.message] as [string, string]]
+				: [];
+		});
+	}
+
 	const form = createForm<BrandingValues>({
 		initial: saved,
+		validate: (v) => {
+			const problems = Object.entries(appearanceProblems(v, saved, { pendingLogo: !!pendingLogo }));
+			setRefused(
+				problems.map(([field, key]) => [field, t(key)]),
+				v
+			);
+			if (!problems.length) return null;
+			form.status = { state: 'error', message: t('settings.appearance.refused_summary') };
+			return Object.fromEntries(problems.map(([field, key]) => [field.split('.')[0], t(key)]));
+		},
 		submit: async (v) => {
 			const waited = uploads.size > 0;
 			await Promise.allSettled([...uploads]);
@@ -145,7 +195,15 @@
 				clearPendingLogo();
 			}
 			const payload = brandingPayload(next);
-			const resp = await saveBranding(payload);
+			let resp;
+			try {
+				resp = await saveBranding(payload);
+			} catch (err) {
+				const fields = refusedFields(err);
+				if (!fields.length) throw err;
+				setRefused(fields, next);
+				throw new FormError(t('settings.appearance.refused_summary'));
+			}
 			readability = resp.readability;
 			savedMode = next.themeMode;
 			saved = next;
@@ -878,11 +936,16 @@
 								<fieldset class="color-group">
 									<legend>{t(group.legend)}</legend>
 									{#each group.colors as [key, labelKey] (key)}
-										<Field id="color-{key}" label={t(`settings.appearance.${labelKey}`)}>
+										<Field
+											id="color-{key}"
+											label={t(`settings.appearance.${labelKey}`)}
+											error={refusedAt(`colors.${key}`)}
+										>
 											{#snippet children(f)}
 												<ColorField
 													id={f.id}
 													describedby={f.describedby}
+													invalid={f.invalid}
 													label={t(`settings.appearance.${labelKey}`)}
 													bind:value={form.values.colors[key]}
 												/>
@@ -925,7 +988,12 @@
 							</div>
 						</fieldset>
 						<ShowWhen id="logo-text-panel" when={v.logoType === 'text'}>
-							<Field id="logo-text-input" label={t('branding.logo_text')} hint={t('branding.logo_text_hint')}>
+							<Field
+								id="logo-text-input"
+								label={t('branding.logo_text')}
+								hint={t('branding.logo_text_hint')}
+								error={refusedAt('logoText')}
+							>
 								{#snippet children(f)}<Input
 										{...f}
 										maxlength={30}
@@ -951,13 +1019,17 @@
 								id="logo-icon-name"
 								label={t('branding.logo_icon_name')}
 								hint={t('branding.logo_icon_hint')}
+								error={refusedAt('logoIcon')}
 								width="medium"
 							>
-								{#snippet children(f)}<Input
+								{#snippet children(f)}<Select
 										{...f}
-										maxlength={50}
-										placeholder={EX.logoIcon}
 										bind:value={form.values.logoIcon}
+										options={[
+											// A stored name the icon font lacks stays visible, so the refusal can name it
+											...(LOGO_ICONS.includes(v.logoIcon) ? [] : [{ value: v.logoIcon, label: v.logoIcon }]),
+											...LOGO_ICONS.map((name) => ({ value: name, label: name }))
+										]}
 									/>{/snippet}
 							</Field>
 						</ShowWhen>
@@ -966,6 +1038,7 @@
 								id="logo-svg-input"
 								label={t('branding.logo_svg_code')}
 								hint={t('branding.logo_svg_hint')}
+								error={refusedAt('logoSvg')}
 							>
 								{#snippet children(f)}<Textarea
 										{...f}
@@ -999,6 +1072,7 @@
 								id="logo-image-url"
 								label={t('branding.logo_image_url')}
 								hint={t('branding.logo_image_url_hint')}
+								error={refusedAt('logoUrl')}
 							>
 								{#snippet children(f)}<Input
 										{...f}
@@ -1131,6 +1205,11 @@
 						<p class="section-note">{t('branding.background_desc')}</p>
 						<BackgroundFields
 							prefix="bg"
+							errors={{
+								color: refusedAt('bgColor'),
+								gradient: refusedAt('bgGradient'),
+								imageUrl: refusedAt('bgImageUrl')
+							}}
 							types={['none', 'color', 'gradient', 'image']}
 							bind:type={form.values.bgType}
 							bind:color={form.values.bgColor}
@@ -1140,7 +1219,7 @@
 							showSize
 							gradientHint
 							gradientPlaceholder="linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
-							imagePlaceholder="https://example.com/wallpaper.jpg"
+							imagePlaceholder="/uploads/wallpaper.jpg"
 							target="bgImageUrl"
 							upload={uploadBg}
 							library={bgLibrary}
@@ -1240,9 +1319,25 @@
 												onchange={(e) => void onSlideFile(i, e.currentTarget)}
 											/>
 											<label class="sr-only" for="{p}-url">{t('branding.bg_image_url')}</label>
-											<Input id="{p}-url" placeholder={EX.slideImage} bind:value={slide.imageUrl} />
+											<Input
+												id="{p}-url"
+												placeholder={EX.slideImage}
+												invalid={!!refusedAt(`loginSlides.${i}.imageUrl`)}
+												describedby={refusedAt(`loginSlides.${i}.imageUrl`) ? `${p}-url-error` : undefined}
+												bind:value={slide.imageUrl}
+											/>
+											{#if refusedAt(`loginSlides.${i}.imageUrl`)}<p
+													class="form-hint form-error"
+													id="{p}-url-error"
+												>
+													{refusedAt(`loginSlides.${i}.imageUrl`)}
+												</p>{/if}
 										</div>
-										<Field id="{p}-title" label={t('branding.login_slide_title')}>
+										<Field
+											id="{p}-title"
+											label={t('branding.login_slide_title')}
+											error={refusedAt(`loginSlides.${i}.title`)}
+										>
 											{#snippet children(f)}
 												<Input
 													{...f}
@@ -1252,7 +1347,11 @@
 												/>
 											{/snippet}
 										</Field>
-										<Field id="{p}-body" label={t('branding.login_slide_body')}>
+										<Field
+											id="{p}-body"
+											label={t('branding.login_slide_body')}
+											error={refusedAt(`loginSlides.${i}.body`)}
+										>
 											{#snippet children(f)}
 												<Textarea
 													{...f}
@@ -1294,13 +1393,18 @@
 							<h3>{t('settings.appearance.login_background')}</h3>
 							<BackgroundFields
 								prefix="login-bg"
+								errors={{
+									color: refusedAt('loginBgColor'),
+									gradient: refusedAt('loginBgGradient'),
+									imageUrl: refusedAt('loginBgImageUrl')
+								}}
 								types={['inherit', 'color', 'gradient', 'image']}
 								bind:type={form.values.loginBgType}
 								bind:color={form.values.loginBgColor}
 								bind:gradient={form.values.loginBgGradient}
 								bind:imageUrl={form.values.loginBgImageUrl}
 								gradientPlaceholder="linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
-								imagePlaceholder="https://example.com/login-bg.jpg"
+								imagePlaceholder="/uploads/login-bg.jpg"
 								target="loginBgImageUrl"
 								upload={uploadBg}
 								fileNote={currentImage(v.loginBgType, v.loginBgImageUrl)}
@@ -1329,13 +1433,18 @@
 						<p class="section-note">{t('branding.agent_desc')}</p>
 						<BackgroundFields
 							prefix="agent-bg"
+							errors={{
+								color: refusedAt('agentBgColor'),
+								gradient: refusedAt('agentBgGradient'),
+								imageUrl: refusedAt('agentBgImageUrl')
+							}}
 							types={['none', 'color', 'gradient', 'image']}
 							bind:type={form.values.agentBgType}
 							bind:color={form.values.agentBgColor}
 							bind:gradient={form.values.agentBgGradient}
 							bind:imageUrl={form.values.agentBgImageUrl}
 							gradientPlaceholder="linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)"
-							imagePlaceholder="https://example.com/agent-bg.jpg"
+							imagePlaceholder="/uploads/agent-bg.jpg"
 							target="agentBgImageUrl"
 							upload={uploadBg}
 							fileNote={currentImage(v.agentBgType, v.agentBgImageUrl)}
@@ -1357,6 +1466,11 @@
 						<p class="section-note">{t('settings.appearance.rdclient_note')}</p>
 						<BackgroundFields
 							prefix="rdclient-bg"
+							errors={{
+								color: refusedAt('rdclientBgColor'),
+								gradient: refusedAt('rdclientBgGradient'),
+								imageUrl: refusedAt('rdclientBgImageUrl')
+							}}
 							types={['inherit', 'none', 'color', 'gradient', 'image']}
 							bind:type={form.values.rdclientBgType}
 							bind:color={form.values.rdclientBgColor}
@@ -1365,7 +1479,7 @@
 							bind:size={form.values.rdclientBgSize}
 							showSize
 							gradientPlaceholder="linear-gradient(135deg, #0d1117 0%, #172554 100%)"
-							imagePlaceholder="https://example.com/rdclient-bg.jpg"
+							imagePlaceholder="/uploads/rdclient-bg.jpg"
 							target="rdclientBgImageUrl"
 							upload={uploadBg}
 							fileNote={currentImage(v.rdclientBgType, v.rdclientBgImageUrl)}
@@ -1397,6 +1511,7 @@
 									id="custom-css"
 									label={t('branding.custom_css_title')}
 									hint={t('branding.custom_css_hint')}
+									error={refusedAt('customCss')}
 								>
 									{#snippet children(f)}
 										<Textarea
@@ -1686,6 +1801,9 @@
 		color: var(--text-muted);
 	}
 	.state.is-error {
+		color: var(--danger);
+	}
+	.form-error {
 		color: var(--danger);
 	}
 	.form-column :global(.line-status:empty) {

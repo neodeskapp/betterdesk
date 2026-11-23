@@ -45,7 +45,7 @@ const SKIP_DIRS = new Set(['node_modules', '.git', 'coverage', 'vendor', 'genera
 
 /**
  * Names that only arrive as data at run time. The branding logo icon is
- * free text; its hint (branding.logo_icon_hint) suggests these three.
+ * one of LOGO_ICONS (src/lib/settings/appearance.ts), which are in the font.
  */
 export const EXTRA_ICONS: readonly string[] = ['dns', 'cloud', 'security'];
 

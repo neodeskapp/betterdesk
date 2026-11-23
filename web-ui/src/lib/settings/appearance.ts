@@ -125,6 +125,8 @@ const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T):
 const BG4: readonly BgType[] = ['none', 'color', 'gradient', 'image'];
 const BG_LOGIN: readonly BgType[] = ['inherit', 'none', 'color', 'gradient', 'image'];
 const HEX = /^#[0-9a-fA-F]{6}$/;
+/** A colour the form takes: #rgb or #rrggbb */
+const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 export function isHex(v: string): boolean {
 	return HEX.test(v.trim());
@@ -196,7 +198,7 @@ export function brandingPayload(v: BrandingValues): Record<string, unknown> {
 	const colors: Record<string, string> = {};
 	for (const k of COLOR_KEYS) {
 		const c = (v.colors[k] ?? '').trim();
-		if (isHex(c)) colors[k] = c;
+		if (HEX_COLOR.test(c)) colors[k] = c;
 	}
 	return {
 		appName: v.appName || 'NeoDesk',
@@ -249,6 +251,133 @@ export function brandingPayload(v: BrandingValues): Record<string, unknown> {
 		showPoweredBy: v.showPoweredBy ? 'true' : 'false',
 		customCss: v.customCss
 	};
+}
+
+/**
+ * The logo icons to pick from: names the console's icon font has (the font
+ * is a subset, scripts/icon-names.ts), so each draws its symbol.
+ */
+export const LOGO_ICONS: readonly string[] = [
+	'dns',
+	'cloud',
+	'security',
+	'shield',
+	'verified_user',
+	'support_agent',
+	'desktop_windows',
+	'devices',
+	'monitor',
+	'router',
+	'storage',
+	'settings_ethernet',
+	'cell_tower',
+	'home',
+	'business',
+	'workspaces',
+	'apps',
+	'dashboard',
+	'lock',
+	'key',
+	'language',
+	'build',
+	'code',
+	'terminal',
+	'developer_board',
+	'electrical_services',
+	'favorite',
+	'volunteer_activism'
+];
+
+const GRADIENT = /^(?:repeating-)?(?:linear|radial|conic)-gradient\(.+\)$/i;
+/** What the server keeps of a colour or gradient (sanitizeCSSColorValue) */
+const GRADIENT_CHARS = /^[A-Za-z0-9\s#%.,()/-]*$/;
+// eslint-disable-next-line no-control-regex -- control characters are what it looks for
+const CONTROL = /[\x00-\x1f\x7f]/;
+
+/** Why a picture address is refused: the server's check (validateBrandingURL), and only this server's pictures load (img-src 'self') */
+function addressProblem(url: string): string | null {
+	const u = url.trim();
+	if (!u) return null;
+	if (u.startsWith('/') && !u.startsWith('//')) {
+		return u.includes('..') || CONTROL.test(u) ? 'refused_address' : null;
+	}
+	return /^https?:\/\/[^/]/i.test(u) ? 'refused_outside_address' : 'refused_address';
+}
+
+/**
+ * The values a save would refuse, by field ("bgColor", "colors.accentBlue",
+ * "loginSlides.1.imageUrl"), each with the key of its reason: what the
+ * server would otherwise clean or drop without a word (server:
+ * branding.CheckSettings), and a logo kind without its content. Only what
+ * the form shows is checked, and a value that is still the saved one
+ * passes, as on the server. SVG code and custom CSS are left to the server.
+ */
+export function appearanceProblems(
+	v: BrandingValues,
+	saved: BrandingValues,
+	opts: { pendingLogo: boolean }
+): Record<string, string> {
+	const out: Record<string, string> = {};
+	const refuse = (field: string, reason: string | null) => {
+		if (reason) out[field] = `settings.appearance.${reason}`;
+	};
+	const changed = (a: string, b: string | undefined) => a.trim() !== (b ?? '').trim();
+
+	if (v.themeMode === 'custom') {
+		for (const k of COLOR_KEYS) {
+			const c = (v.colors[k] ?? '').trim();
+			if (c && !HEX_COLOR.test(c) && changed(c, saved.colors[k])) refuse(`colors.${k}`, 'refused_color');
+		}
+	}
+	const backgrounds = [
+		['bgType', 'bgColor', 'bgGradient', 'bgImageUrl'],
+		['loginBgType', 'loginBgColor', 'loginBgGradient', 'loginBgImageUrl'],
+		['agentBgType', 'agentBgColor', 'agentBgGradient', 'agentBgImageUrl'],
+		['rdclientBgType', 'rdclientBgColor', 'rdclientBgGradient', 'rdclientBgImageUrl']
+	] as const;
+	for (const [typeKey, colorKey, gradientKey, urlKey] of backgrounds) {
+		if (typeKey === 'loginBgType' && v.loginPromoMode === 'slides') continue;
+		const type = v[typeKey];
+		const color = v[colorKey].trim();
+		const gradient = v[gradientKey].trim();
+		if (type === 'color' && color && !HEX_COLOR.test(color) && changed(color, saved[colorKey])) {
+			refuse(colorKey, 'refused_color');
+		}
+		const badGradient = !GRADIENT.test(gradient) || !GRADIENT_CHARS.test(gradient) || gradient.length > 400;
+		if (type === 'gradient' && gradient && badGradient && changed(gradient, saved[gradientKey])) {
+			refuse(gradientKey, 'refused_gradient');
+		}
+		if (type === 'image' && changed(v[urlKey], saved[urlKey])) refuse(urlKey, addressProblem(v[urlKey]));
+	}
+	if (v.loginPromoMode === 'slides') {
+		v.loginSlides.forEach((slide, i) => refuse(`loginSlides.${i}.imageUrl`, addressProblem(slide.imageUrl)));
+	}
+	switch (v.logoType) {
+		case 'text':
+			if (!v.logoText.trim()) refuse('logoText', 'refused_logo_text');
+			break;
+		case 'svg':
+			if (!v.logoSvg.trim()) refuse('logoSvg', 'refused_logo_svg');
+			break;
+		case 'image':
+			if (!v.logoUrl.trim() && !opts.pendingLogo) refuse('logoUrl', 'refused_logo_image');
+			else if (changed(v.logoUrl, saved.logoUrl)) refuse('logoUrl', addressProblem(v.logoUrl));
+			break;
+		case 'icon':
+			if (!LOGO_ICONS.includes(v.logoIcon.trim())) refuse('logoIcon', 'refused_icon');
+			break;
+	}
+	return out;
+}
+
+/** The value at a field path of the form ("colors.accentBlue", "loginSlides.1.imageUrl") */
+export function valueAt(values: unknown, path: string): unknown {
+	let at: unknown = values;
+	for (const part of path.split('.')) {
+		if (at === null || typeof at !== 'object') return undefined;
+		at = (at as Record<string, unknown>)[part];
+	}
+	return at;
 }
 
 /** The colours a palette (light, dark, or the console's own for system) gives the custom fields */

@@ -149,9 +149,29 @@ type svgCleaner struct {
 	pending bool
 	root    bool
 	css     strings.Builder
+	// removed names what was left out that draws or does something: an
+	// element of the SVG namespace that is not allowed, an attribute
+	// without a prefix that is not allowed, a link, an unsafe style sheet.
+	// Comments, metadata and what an editor adds under its own prefix
+	// (inkscape:, sodipodi:) are left out without a mention.
+	removed []string
 }
 
 func cleanSVG(markup string) (string, error) {
+	out, _, err := cleanSVGReporting(markup)
+	return out, err
+}
+
+// SVGRemovals cleans markup as SanitizeSVG does and also names the parts
+// it left out that draw or do something ("<script>", "onload",
+// "href"), for a save that refuses them. ok is false for markup that is
+// not an SVG image at all.
+func SVGRemovals(markup string) (removed []string, ok bool) {
+	out, removed, err := cleanSVGReporting(markup)
+	return removed, err == nil && out != ""
+}
+
+func cleanSVGReporting(markup string) (string, []string, error) {
 	// a byte order mark before the markup is not part of it
 	d := xml.NewDecoder(strings.NewReader(strings.TrimPrefix(markup, byteOrderMark)))
 	d.Strict = true
@@ -165,7 +185,7 @@ func cleanSVG(markup string) (string, error) {
 			break
 		}
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 		switch t := token.(type) {
 		case xml.StartElement:
@@ -176,13 +196,23 @@ func cleanSVG(markup string) (string, error) {
 			err = c.text(t)
 		}
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 	}
 	if !c.root || len(c.open) > 0 {
-		return "", errNotSVG
+		return "", nil, errNotSVG
 	}
-	return c.out.String(), nil
+	return c.out.String(), c.removed, nil
+}
+
+// drop notes a part that is left out, once per name.
+func (c *svgCleaner) drop(what string) {
+	for _, seen := range c.removed {
+		if seen == what {
+			return
+		}
+	}
+	c.removed = append(c.removed, what)
 }
 
 func (c *svgCleaner) start(t xml.StartElement) error {
@@ -221,6 +251,9 @@ func (c *svgCleaner) start(t xml.StartElement) error {
 	element := svgOpen{name: t.Name, kept: keep, xlink: xlink, start: c.out.Len(), parentPending: c.pending}
 	c.open = append(c.open, element)
 	if !keep {
+		if c.skip == 0 && t.Name.Space == "" && t.Name.Local != "metadata" {
+			c.drop("<" + t.Name.Local + ">")
+		}
 		c.skip++
 		return nil
 	}
@@ -229,6 +262,12 @@ func (c *svgCleaner) start(t xml.StartElement) error {
 	c.out.WriteString(t.Name.Local)
 	for _, a := range t.Attr {
 		if !keepSVGAttr(t.Name.Local, a, xlink) {
+			switch {
+			case a.Name.Space == "" && a.Name.Local != "xmlns":
+				c.drop(a.Name.Local)
+			case a.Name.Space == "xlink" && a.Name.Local == "href":
+				c.drop("xlink:href")
+			}
 			continue
 		}
 		c.out.WriteByte(' ')
@@ -262,6 +301,7 @@ func (c *svgCleaner) end(t xml.EndElement) error {
 		return nil
 	}
 	if element.name.Local == "style" && unsafeCSS(c.css.String()) {
+		c.drop("<style>")
 		c.out.Truncate(element.start)
 		c.pending = element.parentPending
 		return nil

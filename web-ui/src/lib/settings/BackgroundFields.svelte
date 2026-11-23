@@ -43,6 +43,8 @@
 		/** Picked from the uploaded pictures (console background) */
 		library?: Snippet;
 		effects?: readonly string[];
+		/** Why a save refused the colour, the gradient or the picture address */
+		errors?: { color?: string | undefined; gradient?: string | undefined; imageUrl?: string | undefined };
 		children?: Snippet;
 	}
 
@@ -63,6 +65,7 @@
 		fileNote = '',
 		library,
 		effects = [],
+		errors = {},
 		children
 	}: Props = $props();
 
@@ -143,9 +146,15 @@
 
 {#if types.includes('color')}
 	<ShowWhen id={panel('color')} when={type === 'color'}>
-		<Field id="{prefix}-color" label={t('branding.bg_color')}>
+		<Field id="{prefix}-color" label={t('branding.bg_color')} error={errors.color}>
 			{#snippet children(f)}
-				<ColorField id={f.id} describedby={f.describedby} label={t('branding.bg_color')} bind:value={color} />
+				<ColorField
+					id={f.id}
+					describedby={f.describedby}
+					invalid={f.invalid}
+					label={t('branding.bg_color')}
+					bind:value={color}
+				/>
 			{/snippet}
 		</Field>
 	</ShowWhen>
@@ -157,6 +166,7 @@
 			id="{prefix}-gradient"
 			label={t('branding.bg_gradient')}
 			hint={gradientHint ? t('branding.bg_gradient_hint') : undefined}
+			error={errors.gradient}
 		>
 			{#snippet children(f)}
 				<Input {...f} class="mono" maxlength={400} placeholder={gradientPlaceholder} bind:value={gradient} />
@@ -194,7 +204,7 @@
 			{/if}
 			<p class="field-effect" id="{prefix}-image-file-effect">{t('settings.appearance.bg_upload_effect')}</p>
 		</div>
-		<Field id="{prefix}-image-url" label={t('branding.bg_image_url')}>
+		<Field id="{prefix}-image-url" label={t('branding.bg_image_url')} error={errors.imageUrl}>
 			{#snippet children(f)}
 				<Input {...f} placeholder={imagePlaceholder} bind:value={imageUrl} />
 			{/snippet}
