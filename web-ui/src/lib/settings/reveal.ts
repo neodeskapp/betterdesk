@@ -161,7 +161,6 @@ export const ID_ALIASES: Readonly<Record<string, string>> = {
 	'font-upload-name': '#font-source',
 	'font-upload-file': '#font-source',
 	'bg-color-picker': '#bg-color',
-	'glass-color-picker': '#glass-color',
 	'login-bg-color-picker': '#login-bg-color',
 	'agent-bg-color-picker': '#agent-bg-color',
 	'rdclient-bg-color-picker': '#rdclient-bg-color',

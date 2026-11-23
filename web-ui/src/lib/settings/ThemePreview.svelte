@@ -14,7 +14,6 @@
 		palette: Record<string, string>;
 		mode: ThemeMode;
 		name: string;
-		description: string;
 		logoType: LogoType;
 		/** An image to show as the logo (a picked file before upload, or the logo URL) */
 		logoSrc: string;
@@ -22,7 +21,7 @@
 		fontBody: string;
 	}
 
-	let { palette, mode, name, description, logoType, logoSrc, fontHeading, fontBody }: Props = $props();
+	let { palette, mode, name, logoType, logoSrc, fontHeading, fontBody }: Props = $props();
 
 	const shownName = $derived(name.trim() || 'NeoDesk');
 	const isDefault = $derived(logoType === 'default');
@@ -73,7 +72,7 @@
 			<span>{t('settings.side.preview_device')}</span>
 			<span class="ok">{t('status.online')}</span>
 		</span>
-		{#if description.trim()}<span class="muted">{description}</span>{/if}
+		<span class="muted">{t('settings.side.preview_muted')}</span>
 		<span class="btn">{t('actions.connect')}</span>
 	</div>
 </div>

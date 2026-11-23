@@ -71,7 +71,6 @@ export const DEFAULT_SLIDES: readonly Slide[] = ['free', 'remote', 'secure', 'pl
 
 export interface BrandingValues {
 	appName: string;
-	appDescription: string;
 	logoType: LogoType;
 	logoIcon: string;
 	logoSvg: string;
@@ -89,10 +88,6 @@ export interface BrandingValues {
 	bgBlur: number;
 	bgOverlay: number;
 	bgSize: string;
-	glassEnabled: boolean;
-	glassColor: string;
-	glassBlur: number;
-	glassOpacity: number;
 	loginTitle: string;
 	loginSubtitle: string;
 	loginPromoMode: PromoMode;
@@ -153,7 +148,6 @@ export function brandingFromServer(d: Record<string, unknown>): BrandingValues {
 	const mode = d.themeMode === 'auto' ? 'dark' : d.themeMode;
 	return {
 		appName: s(d.appName),
-		appDescription: s(d.appDescription),
 		logoType: pick(d.logoType, ['default', 'text', 'icon', 'svg', 'image'], 'default'),
 		logoIcon: s(d.logoIcon, 'dns'),
 		logoSvg: s(d.logoSvg),
@@ -171,10 +165,6 @@ export function brandingFromServer(d: Record<string, unknown>): BrandingValues {
 		bgBlur: n(d.bgBlur, 0),
 		bgOverlay: n(d.bgOverlay, 0),
 		bgSize: s(d.bgSize, 'cover'),
-		glassEnabled: d.glassEnabled !== 'false' && d.glassEnabled !== false,
-		glassColor: s(d.glassColor, '#161b22'),
-		glassBlur: n(d.glassBlur, 16),
-		glassOpacity: n(d.glassOpacity, 55),
 		loginTitle: s(d.loginTitle),
 		loginSubtitle: s(d.loginSubtitle),
 		loginPromoMode: pick(d.loginPromoMode, ['classic', 'single', 'slides'], 'slides'),
@@ -210,7 +200,6 @@ export function brandingPayload(v: BrandingValues): Record<string, unknown> {
 	}
 	return {
 		appName: v.appName || 'NeoDesk',
-		appDescription: v.appDescription,
 		logoType: v.logoType,
 		logoIcon: v.logoIcon || 'dns',
 		logoSvg: v.logoSvg,
@@ -228,10 +217,6 @@ export function brandingPayload(v: BrandingValues): Record<string, unknown> {
 		bgBlur: String(v.bgBlur),
 		bgOverlay: String(v.bgOverlay),
 		bgSize: v.bgSize || 'cover',
-		glassEnabled: v.glassEnabled ? 'true' : 'false',
-		glassColor: v.glassColor.trim(),
-		glassBlur: String(v.glassBlur),
-		glassOpacity: String(v.glassOpacity),
 		loginBgType: v.loginBgType,
 		loginBgColor: v.loginBgColor.trim(),
 		loginBgGradient: v.loginBgGradient.trim(),

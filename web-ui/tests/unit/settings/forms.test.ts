@@ -178,7 +178,6 @@ describe('Appearance', () => {
 		expect(v0.logoIcon).toBe('dns');
 		expect(v0.loginPromoMode).toBe('slides');
 		expect(v0.loginSlides).toEqual(DEFAULT_SLIDES);
-		expect(v0.glassEnabled).toBe(true);
 		expect(v0.showPoweredBy).toBe(true);
 		expect(Object.keys(v0.colors).sort()).toEqual([...COLOR_KEYS].sort());
 	});
@@ -186,7 +185,6 @@ describe('Appearance', () => {
 	test('stored values: auto is dark, "false" switches are off, unknown kinds fall back', () => {
 		const v0 = brandingFromServer({
 			themeMode: 'auto',
-			glassEnabled: 'false',
 			showPoweredBy: 'false',
 			bgType: 'video',
 			loginBgType: 'none',
@@ -194,7 +192,6 @@ describe('Appearance', () => {
 			loginSlides: [{ title: 'Hi', overlay: '30' }]
 		});
 		expect(v0.themeMode).toBe('dark');
-		expect(v0.glassEnabled).toBe(false);
 		expect(v0.showPoweredBy).toBe(false);
 		expect(v0.bgType).toBe('none');
 		expect(v0.loginBgType).toBe('none');
@@ -210,13 +207,11 @@ describe('Appearance', () => {
 			...v0,
 			appName: '',
 			bgBlur: 4,
-			glassEnabled: false,
 			bgColor: '  #000000 '
 		});
 		expect(out.colors).toEqual({ bgPrimary: '#112233' });
 		expect(out.appName).toBe('NeoDesk');
 		expect(out.bgBlur).toBe('4');
-		expect(out.glassEnabled).toBe('false');
 		expect(out.showPoweredBy).toBe('true');
 		expect(out.bgColor).toBe('#000000');
 		expect((out.loginSlides as { order: number; overlay: string }[])[1]).toMatchObject({

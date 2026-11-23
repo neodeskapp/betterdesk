@@ -64,7 +64,7 @@
 	import SaveBar from '#lib/ui/SaveBar.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
 	import Select from '#lib/ui/Select.svelte';
-	import ShowWhen, { showWhenControl } from '#lib/ui/ShowWhen.svelte';
+	import ShowWhen from '#lib/ui/ShowWhen.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
 	import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
@@ -99,7 +99,6 @@
 	/** Examples in empty fields: names, addresses and code, the same in every language */
 	const EX = {
 		appName: 'NeoDesk',
-		appDescription: 'NeoDesk Server Management',
 		logoText: 'insolve',
 		logoAccent: 'Core Server',
 		logoIcon: 'dns',
@@ -209,7 +208,6 @@
 				branding: {
 					...raw.branding,
 					appName: name,
-					appDescription: String(p.appDescription ?? ''),
 					themeMode: String(p.themeMode ?? 'system'),
 					logoType: String(p.logoType ?? 'default'),
 					logoIcon: String(p.logoIcon ?? ''),
@@ -250,9 +248,7 @@
 	}
 
 	function onMode(mode: ThemeMode) {
-		if (mode === 'light' || mode === 'dark') {
-			form.values.glassColor = mode === 'light' ? '#ffffff' : '#161b22';
-		} else if (mode === 'custom' && prevMode !== 'custom' && savedMode !== 'custom') {
+		if (mode === 'custom' && prevMode !== 'custom' && savedMode !== 'custom') {
 			// Start the custom colours from what the console looks like now
 			usePalette(lookPalette(prevMode));
 		}
@@ -749,7 +745,6 @@
 			palette={previewPalette}
 			mode={v.themeMode}
 			name={v.appName}
-			description={v.appDescription}
 			logoType={v.logoType}
 			logoSrc={pendingLogoUrl || v.logoUrl}
 			fontHeading={v.fontHeading}
@@ -912,14 +907,6 @@
 									maxlength={50}
 									placeholder={EX.appName}
 									bind:value={form.values.appName}
-								/>{/snippet}
-						</Field>
-						<Field id="brand-description" label={t('branding.app_description')}>
-							{#snippet children(f)}<Input
-									{...f}
-									maxlength={100}
-									placeholder={EX.appDescription}
-									bind:value={form.values.appDescription}
 								/>{/snippet}
 						</Field>
 						<fieldset class="form-group radio-set">
@@ -1182,49 +1169,6 @@
 								/>
 							</ShowWhen>
 						</BackgroundFields>
-						<fieldset class="settings-subgroup">
-							<legend>{t('branding.glass_title')}</legend>
-							<p class="form-hint">{t('branding.glass_desc')}</p>
-							<Checkbox
-								id="glass-enabled"
-								label={t('branding.glass_enabled')}
-								bind:checked={form.values.glassEnabled}
-								{...showWhenControl('glass-fields', v.glassEnabled)}
-							/>
-							<ShowWhen id="glass-fields" when={v.glassEnabled}>
-								<Field
-									id="glass-color"
-									label={t('branding.glass_color')}
-									hint={t('branding.glass_color_hint')}
-								>
-									{#snippet children(f)}
-										<ColorField
-											id={f.id}
-											describedby={f.describedby}
-											label={t('branding.glass_color')}
-											bind:value={form.values.glassColor}
-										/>
-									{/snippet}
-								</Field>
-								<RangeField
-									id="glass-blur"
-									label={t('branding.glass_blur')}
-									unit="px"
-									min={0}
-									max={40}
-									bind:value={form.values.glassBlur}
-								/>
-								<RangeField
-									id="glass-opacity"
-									label={t('branding.glass_opacity')}
-									unit="%"
-									min={0}
-									max={100}
-									step={5}
-									bind:value={form.values.glassOpacity}
-								/>
-							</ShowWhen>
-						</fieldset>
 					</section>
 
 					<section class="section form-column" id="branding-login" aria-labelledby="branding-login-title">
@@ -1642,20 +1586,6 @@
 	}
 	.form-column > :global(.show-when.settings-subgroup) {
 		gap: var(--space-3);
-	}
-	.settings-subgroup {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3);
-		min-width: 0;
-		margin: 0;
-		padding: 0;
-		border: 0;
-	}
-	.settings-subgroup > legend {
-		margin-bottom: var(--space-2);
-		padding: 0;
-		font-weight: 600;
 	}
 	h3 {
 		margin: 0;
