@@ -278,11 +278,98 @@ func backgroundCSS(branding *Object) string {
 	return out.String()
 }
 
+// consoleRulesMark starts the rules for the console's own pages
+// (consoleCSS) in the stylesheet.
+const consoleRulesMark = "/* --- console pages --- */\n"
+
+// wallpaperRules paints a background behind the page that scope finds:
+// a fixed layer under the page, with blur and a dark overlay, in a stacking
+// context of the body, so it sits above the body's own background and
+// below everything on the page. surface is the page's own element, which
+// loses its solid background so the layer shows through.
+func wallpaperRules(scope, surface, background, size string, blur float64, overlay string, hasOverlay bool) string {
+	var out strings.Builder
+	out.WriteString(scope + " { isolation: isolate; }\n")
+	out.WriteString(scope + "::before {\n" +
+		"    content: '';\n    position: fixed;\n    inset: 0;\n    z-index: -1;\n    pointer-events: none;\n" +
+		"    background: " + background + ";\n")
+	if size != "" {
+		out.WriteString("    " + size + "\n")
+	}
+	if blur != 0 {
+		out.WriteString("    filter: blur(" + numberString(blur) + "px);\n    transform: scale(1.05);\n")
+	}
+	out.WriteString("}\n")
+	if hasOverlay {
+		out.WriteString(scope + "::after {\n" +
+			"    content: '';\n    position: fixed;\n    inset: 0;\n    z-index: -1;\n    pointer-events: none;\n" +
+			"    background: rgba(0, 0, 0, " + overlay + ");\n}\n")
+	}
+	out.WriteString(surface + " { background: transparent; }\n")
+	return out.String()
+}
+
+// consoleCSS are the rules for the pages of this console. The rules Node
+// wrote (backgroundCSS, generateFontCSS) aim at the markup of the old
+// console: body.app-page, body.rd-desk-body and --font-family, which no
+// page has now. These rules paint the console background behind the
+// console's pages (the shell, .shell), the web remote client's background
+// behind its device list (/remote, .desk) and set the text font as the
+// console's --font. They are "" when none of the three is set.
+func consoleCSS(branding *Object) string {
+	get := func(key string) any { return property(branding, key) }
+	var out strings.Builder
+
+	imageSize := func(kind, size any) string {
+		if kind == "image" {
+			return sizeRule(size)
+		}
+		return ""
+	}
+	consoleBg := buildBackgroundValue(get("bgType"), get("bgColor"), get("bgGradient"), get("bgImageUrl"))
+	if consoleBg != "" {
+		blur, ok := clampNumber(get("bgBlur"), 0, 40)
+		if !ok {
+			blur = 0
+		}
+		alpha, hasOverlay := overlayAlpha(get("bgOverlay"))
+		out.WriteString(wallpaperRules("body:has(> #bd-root .shell)", "#bd-root .shell", consoleBg, imageSize(get("bgType"), get("bgSize")), blur, alpha, hasOverlay))
+	}
+
+	rdType := or(get("rdclientBgType"), "inherit")
+	rdBg, rdSize := "", ""
+	rdAlpha, rdOverlay := "", false
+	if rdType == "inherit" {
+		rdBg, rdSize = consoleBg, imageSize(get("bgType"), get("bgSize"))
+		rdAlpha, rdOverlay = overlayAlpha(get("bgOverlay"))
+	} else if rdType != "none" {
+		rdBg = buildBackgroundValue(rdType, get("rdclientBgColor"), get("rdclientBgGradient"), get("rdclientBgImageUrl"))
+		rdSize = imageSize(rdType, or(get("rdclientBgSize"), get("bgSize")))
+		rdAlpha, rdOverlay = overlayAlpha(get("rdclientBgOverlay"))
+	}
+	if rdBg != "" {
+		out.WriteString(wallpaperRules("body:has(> #bd-root .desk)", "#bd-root .desk", rdBg, rdSize, 0, rdAlpha, rdOverlay))
+	}
+
+	if font, ok := get("fontBody").(string); ok && trim(font) != "" {
+		// html:root outweighs the :root of the console's own stylesheet,
+		// which comes after this one
+		out.WriteString("html:root {\n    --font: '" + escapeCSSString(trim(font)) +
+			"', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;\n}\n")
+	}
+
+	if out.Len() == 0 {
+		return ""
+	}
+	return consoleRulesMark + out.String()
+}
+
 // GenerateThemeCSS returns the stylesheet /css/branding.css serves for
 // the current settings: the font rules, the palette as custom properties
 // (with the dark palette under prefers-color-scheme when the theme follows
 // the system), color-scheme, the alias and glass properties, the
-// wallpapers, and the administrator's own CSS at the end.
+// wallpapers, the rules for this console's pages (consoleCSS), and the
+// administrator's own CSS at the end.
 //
 // It fails when a chosen font has a name without any ASCII letter or
 // digit; the route then answers with a comment instead of a stylesheet.
@@ -308,6 +395,7 @@ func (s *Service) GenerateThemeCSS() (css string, err error) {
 	out.WriteString(semanticAliasCSS(themeMode))
 	out.WriteString(glassCSS(branding, themeMode, colors))
 	out.WriteString(backgroundCSS(branding))
+	out.WriteString(consoleCSS(branding))
 	if custom := sanitizeCustomCSS(property(branding, "customCss")); trim(custom) != "" {
 		out.WriteString("\n/* --- custom branding CSS --- */\n" + custom + "\n")
 	}

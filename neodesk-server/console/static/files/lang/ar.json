@@ -1343,6 +1343,7 @@
       "login_background": "خلفية صفحة تسجيل الدخول",
       "slide_n": "الشريحة {n}",
       "rdclient": "عميل الوصول عن بُعد عبر الويب",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "حفظ المظهر",
       "profiles": "المظاهر المحفوظة",
       "profiles_note": "احتفظ بعدة مظاهر وبدّل بينها.",

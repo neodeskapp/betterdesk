@@ -1342,6 +1342,7 @@
       "login_background": "Oturum açma sayfası arka planı",
       "slide_n": "Slayt {n}",
       "rdclient": "Web uzak istemcisi",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "Görünümü kaydet",
       "profiles": "Kayıtlı görünümler",
       "profiles_note": "Birden çok görünüm saklayın ve aralarında geçiş yapın.",

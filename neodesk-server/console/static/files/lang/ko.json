@@ -1336,6 +1336,7 @@
       "login_background": "로그인 페이지 배경",
       "slide_n": "슬라이드 {n}",
       "rdclient": "웹 원격 클라이언트",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "모양 저장",
       "profiles": "저장된 모양",
       "profiles_note": "여러 모양을 저장해 두고 전환할 수 있습니다.",

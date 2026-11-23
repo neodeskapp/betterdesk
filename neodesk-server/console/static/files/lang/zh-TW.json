@@ -1340,6 +1340,7 @@
       "login_background": "登入頁面背景",
       "slide_n": "投影片 {n}",
       "rdclient": "網頁遠端用戶端",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "儲存外觀",
       "profiles": "已儲存的外觀",
       "profiles_note": "保留多種外觀並在其間切換。",

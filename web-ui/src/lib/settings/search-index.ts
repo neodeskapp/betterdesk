@@ -596,7 +596,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'branding-rdclient',
 		'settings.appearance.rdclient',
 		'',
-		['remote_dashboard.subtitle', 'branding.bg_image_hint'],
+		['settings.appearance.rdclient_note', 'branding.bg_image_hint'],
 		''
 	],
 	[

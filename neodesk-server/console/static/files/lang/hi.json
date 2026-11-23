@@ -1342,6 +1342,7 @@
       "login_background": "साइन-इन पेज का बैकग्राउंड",
       "slide_n": "स्लाइड {n}",
       "rdclient": "वेब रिमोट क्लाइंट",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "रूप-रंग सहेजें",
       "profiles": "सहेजे गए रूप-रंग",
       "profiles_note": "कई रूप-रंग रखें और उनके बीच बदलें।",

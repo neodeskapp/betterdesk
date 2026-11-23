@@ -1342,6 +1342,7 @@
       "login_background": "Baggrund på login-siden",
       "slide_n": "Dias {n}",
       "rdclient": "Webfjernklient",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "Gem udseende",
       "profiles": "Gemte udseender",
       "profiles_note": "Gem flere udseender, og skift mellem dem.",

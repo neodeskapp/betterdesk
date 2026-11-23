@@ -223,7 +223,9 @@ func TestOracleStore(t *testing.T) {
 				differ("branding", Stringify(s.GetBranding()), want)
 			}
 			css, cssErr := s.GenerateThemeCSS()
-			var cssValue any = css
+			// the rules for this console's pages come on top of Node's
+			// (BUGS L358, L359, L361; console_css_test.go)
+			var cssValue any = stripConsoleRules(css)
 			if got := outcome(cssValue, cssErr); true {
 				if want, same := sameOutcome(got, property(state, "css")); !same {
 					if fixedCSS(s.GetBranding(), got, property(state, "css")) {

@@ -1336,6 +1336,7 @@
       "login_background": "Pozadí přihlašovací stránky",
       "slide_n": "Snímek {n}",
       "rdclient": "Webový klient vzdáleného přístupu",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "Uložit vzhled",
       "profiles": "Uložené vzhledy",
       "profiles_note": "Uchovávejte několik vzhledů a přepínejte mezi nimi.",

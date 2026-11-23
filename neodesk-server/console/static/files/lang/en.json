@@ -1344,6 +1344,7 @@
             "login_background": "Sign-in page background",
             "slide_n": "Slide {n}",
             "rdclient": "Web remote client",
+            "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
             "save": "Save appearance",
             "profiles": "Saved appearances",
             "profiles_note": "Keep several appearances and switch between them.",

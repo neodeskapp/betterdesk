@@ -1342,6 +1342,7 @@
       "login_background": "Latar belakang halaman masuk",
       "slide_n": "Slide {n}",
       "rdclient": "Klien jarak jauh web",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "Simpan tampilan",
       "profiles": "Tampilan tersimpan",
       "profiles_note": "Simpan beberapa tampilan dan beralih di antaranya.",

@@ -1342,6 +1342,7 @@
       "login_background": "Bakgrund på inloggningssidan",
       "slide_n": "Bild {n}",
       "rdclient": "Webbklient för fjärråtkomst",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "Spara utseende",
       "profiles": "Sparade utseenden",
       "profiles_note": "Spara flera utseenden och växla mellan dem.",

@@ -1336,6 +1336,7 @@
       "login_background": "サインインページの背景",
       "slide_n": "スライド {n}",
       "rdclient": "Web リモートクライアント",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "外観を保存",
       "profiles": "保存済みの外観",
       "profiles_note": "複数の外観を保存して切り替えられます。",

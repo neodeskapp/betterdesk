@@ -1336,6 +1336,7 @@
       "login_background": "Hintergrund der Anmeldeseite",
       "slide_n": "Folie {n}",
       "rdclient": "Web-Fernzugriff",
+      "rdclient_note": "Der Hintergrund hinter der Geräteliste des Remote-Desktops im Browser (/remote).",
       "save": "Erscheinungsbild speichern",
       "profiles": "Gespeicherte Erscheinungsbilder",
       "profiles_note": "Mehrere Erscheinungsbilder aufbewahren und zwischen ihnen wechseln.",

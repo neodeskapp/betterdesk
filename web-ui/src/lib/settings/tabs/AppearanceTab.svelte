@@ -1410,7 +1410,7 @@
 						aria-labelledby="branding-rdclient-title"
 					>
 						<h2 id="branding-rdclient-title">{t('settings.appearance.rdclient')}</h2>
-						<p class="section-note">{t('remote_dashboard.subtitle')}</p>
+						<p class="section-note">{t('settings.appearance.rdclient_note')}</p>
 						<BackgroundFields
 							prefix="rdclient-bg"
 							types={['inherit', 'none', 'color', 'gradient', 'image']}

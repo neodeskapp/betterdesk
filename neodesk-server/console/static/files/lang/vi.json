@@ -1342,6 +1342,7 @@
       "login_background": "Nền trang đăng nhập",
       "slide_n": "Trang chiếu {n}",
       "rdclient": "Máy khách từ xa trên web",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "Lưu giao diện",
       "profiles": "Giao diện đã lưu",
       "profiles_note": "Lưu nhiều giao diện và chuyển đổi giữa chúng.",

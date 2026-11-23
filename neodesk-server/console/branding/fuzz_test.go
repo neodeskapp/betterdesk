@@ -41,6 +41,16 @@ var cssSelectors = map[string]bool{
 	"body.rd-desk-body::after":                                true,
 	"body.rd-desk-body":                                       true,
 	"body.rd-desk-body .rd-desk-app":                          true,
+	// the rules for this console's pages (consoleCSS)
+	"body:has(> #bd-root .shell)":         true,
+	"body:has(> #bd-root .shell)::before": true,
+	"body:has(> #bd-root .shell)::after":  true,
+	"#bd-root .shell":                     true,
+	"body:has(> #bd-root .desk)":          true,
+	"body:has(> #bd-root .desk)::before":  true,
+	"body:has(> #bd-root .desk)::after":   true,
+	"#bd-root .desk":                      true,
+	"html:root":                           true,
 }
 
 var (

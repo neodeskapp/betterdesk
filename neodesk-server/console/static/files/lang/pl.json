@@ -1336,6 +1336,7 @@
       "login_background": "Tło strony logowania",
       "slide_n": "Slajd {n}",
       "rdclient": "Webowy klient zdalny",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "Zapisz wygląd",
       "profiles": "Zapisane wyglądy",
       "profiles_note": "Można przechowywać kilka wyglądów i przełączać się między nimi.",

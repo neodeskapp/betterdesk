@@ -1342,6 +1342,7 @@
       "login_background": "Fundalul paginii de conectare",
       "slide_n": "Diapozitivul {n}",
       "rdclient": "Client web de acces la distanță",
+      "rdclient_note": "The background behind the device list of the remote desktop in the browser (/remote).",
       "save": "Salvați aspectul",
       "profiles": "Aspecte salvate",
       "profiles_note": "Păstrați mai multe aspecte și comutați între ele.",
