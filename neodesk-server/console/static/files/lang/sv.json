@@ -7902,6 +7902,56 @@
       "close": "Stäng"
     }
   },
+  "setup_guide": {
+    "title": "Konfigurera den här servern",
+    "progress": "{done} av {total} klara. Ett steg bockas av automatiskt när servern ser att det är gjort.",
+    "all_done": "Alla steg är klara. Du kan dölja guiden nu.",
+    "hide": "Dölj guiden",
+    "hidden": "Konfigurationsguiden är dold. Du tar fram den igen under Hjälp och Inställningar.",
+    "hide_failed": "Det gick inte att dölja guiden. Försök igen.",
+    "show_failed": "Det gick inte att visa konfigurationsguiden. Försök igen.",
+    "state_done": "Klart",
+    "state_todo": "Inte klart än",
+    "back": "Tillbaka till konfigurationsguiden",
+    "back_step": "Steg: {step}",
+    "link_title": "Konfigurationsguide",
+    "link_note": "De första stegen för den här servern, som en checklista på instrumentbrädan.",
+    "link_button": "Visa konfigurationsguiden",
+    "steps": {
+      "password": {
+        "title": "Byt det första lösenordet",
+        "hint": "Installationen skapade det och skrev ner det. Välj ett som bara du känner till."
+      },
+      "two_factor": {
+        "title": "Slå på tvåstegsinloggning",
+        "hint": "Konsolen ber sedan om en kod från en app i telefonen."
+      },
+      "address": {
+        "title": "Ange adressen som klienterna använder",
+        "hint": "Datorer når servern under det här namnet eller den här IP-adressen. Inbjudningslänkar och installationsskript innehåller den."
+      },
+      "https": {
+        "title": "Sätt HTTPS framför konsolen",
+        "hint": "Fjärrskrivbord i webbläsaren behöver det, och inbjudningslänkarna slutar varna."
+      },
+      "computer": {
+        "title": "Lägg till din första dator",
+        "hint": "En inbjudningslänk installerar NeoDesk på den, och datorn ansluts till den här servern."
+      },
+      "session": {
+        "title": "Öppna en fjärrsession",
+        "hint": "Välj en dator i enhetslistan och anslut, i webbläsaren eller med NeoDesk-appen."
+      },
+      "people": {
+        "title": "Lägg till personerna som hjälper till",
+        "hint": "Ge varje person ett eget konto med en roll, eller slå på enkel inloggning eller LDAP."
+      },
+      "backup": {
+        "title": "Skapa en säkerhetskopia",
+        "hint": "Den innehåller serverns nyckel. Utan nyckeln måste varje dator konfigureras igen."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

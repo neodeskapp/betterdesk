@@ -7896,6 +7896,56 @@
       "close": "关闭"
     }
   },
+  "setup_guide": {
+    "title": "设置此服务器",
+    "progress": "已完成 {done} 步，共 {total} 步。服务器检测到某一步已完成后，会自动勾选该步。",
+    "all_done": "所有步骤均已完成。现在可以隐藏指南。",
+    "hide": "隐藏指南",
+    "hidden": "设置指南已隐藏。可在“帮助”和“设置”中重新显示。",
+    "hide_failed": "无法隐藏指南。请重试。",
+    "show_failed": "无法显示设置指南。请重试。",
+    "state_done": "已完成",
+    "state_todo": "尚未完成",
+    "back": "返回设置指南",
+    "back_step": "步骤：{step}",
+    "link_title": "设置指南",
+    "link_note": "此服务器的最初几步，以清单形式显示在仪表板上。",
+    "link_button": "显示设置指南",
+    "steps": {
+      "password": {
+        "title": "更改初始密码",
+        "hint": "安装程序生成并记录了此密码。请选择一个只有您知道的密码。"
+      },
+      "two_factor": {
+        "title": "开启两步登录",
+        "hint": "之后控制台会要求输入手机应用中的验证码。"
+      },
+      "address": {
+        "title": "设置客户端使用的地址",
+        "hint": "电脑通过此名称或 IP 地址访问服务器。邀请链接和安装脚本都包含此地址。"
+      },
+      "https": {
+        "title": "在控制台前加上 HTTPS",
+        "hint": "在浏览器中使用远程桌面需要 HTTPS，邀请链接也不再显示警告。"
+      },
+      "computer": {
+        "title": "添加第一台电脑",
+        "hint": "邀请链接会在电脑上安装 NeoDesk，然后电脑加入此服务器。"
+      },
+      "session": {
+        "title": "打开远程会话",
+        "hint": "在设备列表中选择一台电脑并连接，可在浏览器中或使用 NeoDesk 应用。"
+      },
+      "people": {
+        "title": "添加协助人员",
+        "hint": "为每个人创建带角色的独立账户，或开启单点登录或 LDAP。"
+      },
+      "backup": {
+        "title": "创建备份",
+        "hint": "备份包含服务器密钥。没有此密钥，每台电脑都必须重新设置。"
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

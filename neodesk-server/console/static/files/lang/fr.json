@@ -7900,6 +7900,56 @@
       "close": "Fermer"
     }
   },
+  "setup_guide": {
+    "title": "Configurer ce serveur",
+    "progress": "Étapes terminées : {done} sur {total}. Une étape se coche toute seule dès que le serveur voit qu'elle est faite.",
+    "all_done": "Toutes les étapes sont terminées. Vous pouvez maintenant masquer le guide.",
+    "hide": "Masquer le guide",
+    "hidden": "Le guide de configuration est masqué. Vous pouvez le réafficher depuis Aide et Paramètres.",
+    "hide_failed": "Impossible de masquer le guide. Réessayez.",
+    "show_failed": "Impossible d'afficher le guide de configuration. Réessayez.",
+    "state_done": "Terminé",
+    "state_todo": "Pas encore fait",
+    "back": "Retour au guide de configuration",
+    "back_step": "Étape : {step}",
+    "link_title": "Guide de configuration",
+    "link_note": "Les premières étapes pour ce serveur, sous forme de liste à cocher sur le tableau de bord.",
+    "link_button": "Afficher le guide de configuration",
+    "steps": {
+      "password": {
+        "title": "Changer le premier mot de passe",
+        "hint": "L'installation l'a créé et noté. Choisissez-en un que personne d'autre ne connaît."
+      },
+      "two_factor": {
+        "title": "Activer la connexion à deux facteurs",
+        "hint": "La console demande ensuite un code d'une appli sur votre téléphone."
+      },
+      "address": {
+        "title": "Définir l'adresse utilisée par les clients",
+        "hint": "Les ordinateurs joignent le serveur sous ce nom ou cette adresse IP. Les liens d'invitation et les scripts d'installation la contiennent."
+      },
+      "https": {
+        "title": "Mettre HTTPS devant la console",
+        "hint": "Le bureau à distance dans le navigateur en a besoin, et les liens d'invitation n'affichent plus d'avertissement."
+      },
+      "computer": {
+        "title": "Ajouter votre premier ordinateur",
+        "hint": "Un lien d'invitation y installe NeoDesk, et l'ordinateur rejoint ce serveur."
+      },
+      "session": {
+        "title": "Ouvrir une session à distance",
+        "hint": "Choisissez un ordinateur dans la liste des appareils et connectez-vous, dans le navigateur ou avec l'application NeoDesk."
+      },
+      "people": {
+        "title": "Ajouter les personnes qui vous aident",
+        "hint": "Donnez à chaque personne son propre compte avec un rôle, ou activez l'authentification unique ou LDAP."
+      },
+      "backup": {
+        "title": "Créer une sauvegarde",
+        "hint": "Elle contient la clé du serveur. Sans cette clé, chaque ordinateur doit être reconfiguré."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

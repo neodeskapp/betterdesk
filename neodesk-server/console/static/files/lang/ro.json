@@ -7902,6 +7902,56 @@
       "close": "Închide"
     }
   },
+  "setup_guide": {
+    "title": "Configurați acest server",
+    "progress": "Gata: {done} din {total}. Un pas se bifează singur imediat ce serverul vede că este făcut.",
+    "all_done": "Toți pașii sunt gata. Acum puteți ascunde ghidul.",
+    "hide": "Ascunde ghidul",
+    "hidden": "Ghidul de configurare este ascuns. Îl puteți readuce din Ajutor și Setări.",
+    "hide_failed": "Ghidul nu a putut fi ascuns. Încercați din nou.",
+    "show_failed": "Ghidul de configurare nu a putut fi afișat. Încercați din nou.",
+    "state_done": "Gata",
+    "state_todo": "Încă nu este gata",
+    "back": "Înapoi la ghidul de configurare",
+    "back_step": "Pas: {step}",
+    "link_title": "Ghid de configurare",
+    "link_note": "Primii pași pentru acest server, ca listă de verificare pe tabloul de bord.",
+    "link_button": "Afișează ghidul de configurare",
+    "steps": {
+      "password": {
+        "title": "Schimbați prima parolă",
+        "hint": "Instalarea a creat-o și a notat-o. Alegeți una pe care doar dumneavoastră o știți."
+      },
+      "two_factor": {
+        "title": "Activați autentificarea în doi pași",
+        "hint": "Consola vă cere apoi un cod dintr-o aplicație de pe telefon."
+      },
+      "address": {
+        "title": "Setați adresa folosită de clienți",
+        "hint": "Computerele ajung la server prin acest nume sau această adresă IP. Linkurile de invitație și scripturile de instalare o conțin."
+      },
+      "https": {
+        "title": "Puneți HTTPS în fața consolei",
+        "hint": "Desktopul la distanță în browser are nevoie de el, iar linkurile de invitație nu mai afișează avertismente."
+      },
+      "computer": {
+        "title": "Adăugați primul computer",
+        "hint": "Un link de invitație instalează NeoDesk pe el, iar computerul se alătură acestui server."
+      },
+      "session": {
+        "title": "Deschideți o sesiune la distanță",
+        "hint": "Alegeți un computer din lista de dispozitive și conectați-vă, în browser sau cu aplicația NeoDesk."
+      },
+      "people": {
+        "title": "Adăugați persoanele care ajută",
+        "hint": "Dați fiecărei persoane propriul cont cu un rol sau activați autentificarea unică ori LDAP."
+      },
+      "backup": {
+        "title": "Creați o copie de rezervă",
+        "hint": "Conține cheia serverului. Fără cheie, fiecare computer trebuie configurat din nou."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

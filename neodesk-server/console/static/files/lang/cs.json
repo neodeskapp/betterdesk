@@ -7896,6 +7896,56 @@
       "close": "Zavřít"
     }
   },
+  "setup_guide": {
+    "title": "Nastavit tento server",
+    "progress": "Hotovo {done} z {total}. Krok se zaškrtne sám, jakmile server zjistí, že je hotový.",
+    "all_done": "Všechny kroky jsou hotové. Průvodce teď můžete skrýt.",
+    "hide": "Skrýt průvodce",
+    "hidden": "Průvodce nastavením je skrytý. Znovu ho zobrazíte v Nápovědě a v Nastavení.",
+    "hide_failed": "Průvodce se nepodařilo skrýt. Zkuste to znovu.",
+    "show_failed": "Průvodce nastavením se nepodařilo zobrazit. Zkuste to znovu.",
+    "state_done": "Hotovo",
+    "state_todo": "Ještě není hotovo",
+    "back": "Zpět k průvodci nastavením",
+    "back_step": "Krok: {step}",
+    "link_title": "Průvodce nastavením",
+    "link_note": "První kroky pro tento server jako kontrolní seznam na nástěnce.",
+    "link_button": "Zobrazit průvodce nastavením",
+    "steps": {
+      "password": {
+        "title": "Změnit první heslo",
+        "hint": "Instalace ho vytvořila a zapsala. Zvolte heslo, které znáte jen vy."
+      },
+      "two_factor": {
+        "title": "Zapnout dvoufázové přihlášení",
+        "hint": "Konzole pak bude chtít kód z aplikace ve vašem telefonu."
+      },
+      "address": {
+        "title": "Nastavit adresu pro klienty",
+        "hint": "Počítače se k serveru připojují přes tento název nebo IP adresu. Odkazy pozvánek a instalační skripty ji obsahují."
+      },
+      "https": {
+        "title": "Nasadit HTTPS před konzoli",
+        "hint": "Vzdálená plocha v prohlížeči ho potřebuje a odkazy pozvánek přestanou varovat."
+      },
+      "computer": {
+        "title": "Přidat první počítač",
+        "hint": "Odkaz pozvánky na něj nainstaluje NeoDesk a počítač se připojí k tomuto serveru."
+      },
+      "session": {
+        "title": "Otevřít vzdálenou relaci",
+        "hint": "Vyberte počítač v seznamu zařízení a připojte se, v prohlížeči nebo v aplikaci NeoDesk."
+      },
+      "people": {
+        "title": "Přidat lidi, kteří pomáhají",
+        "hint": "Dejte každému vlastní účet s rolí, nebo zapněte jednotné přihlášení či LDAP."
+      },
+      "backup": {
+        "title": "Vytvořit zálohu",
+        "hint": "Obsahuje klíč serveru. Bez klíče se musí každý počítač nastavit znovu."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

@@ -7902,6 +7902,56 @@
       "close": "Lukk"
     }
   },
+  "setup_guide": {
+    "title": "Sett opp denne serveren",
+    "progress": "{done} av {total} fullført. Et steg krysses av automatisk når serveren ser at det er gjort.",
+    "all_done": "Alle stegene er fullført. Du kan skjule guiden nå.",
+    "hide": "Skjul guiden",
+    "hidden": "Oppsettsguiden er skjult. Du kan hente den fram igjen under Hjelp og Innstillinger.",
+    "hide_failed": "Guiden kunne ikke skjules. Prøv igjen.",
+    "show_failed": "Oppsettsguiden kunne ikke vises. Prøv igjen.",
+    "state_done": "Fullført",
+    "state_todo": "Ikke gjort ennå",
+    "back": "Tilbake til oppsettsguiden",
+    "back_step": "Steg: {step}",
+    "link_title": "Oppsettsguide",
+    "link_note": "De første stegene for denne serveren, som en sjekkliste på dashbordet.",
+    "link_button": "Vis oppsettsguiden",
+    "steps": {
+      "password": {
+        "title": "Endre det første passordet",
+        "hint": "Installasjonen laget det og skrev det ned. Velg et som bare du kjenner."
+      },
+      "two_factor": {
+        "title": "Slå på totrinnspålogging",
+        "hint": "Konsollen ber da om en kode fra en app på telefonen din."
+      },
+      "address": {
+        "title": "Angi adressen klientene bruker",
+        "hint": "Datamaskiner når serveren under dette navnet eller denne IP-adressen. Invitasjonslenker og installasjonsskript inneholder den."
+      },
+      "https": {
+        "title": "Sett HTTPS foran konsollen",
+        "hint": "Fjernskrivebord i nettleseren trenger det, og invitasjonslenkene slutter å advare."
+      },
+      "computer": {
+        "title": "Legg til din første datamaskin",
+        "hint": "En invitasjonslenke installerer NeoDesk på den, og datamaskinen blir med i denne serveren."
+      },
+      "session": {
+        "title": "Åpne en fjernøkt",
+        "hint": "Velg en datamaskin i enhetslisten og koble til, i nettleseren eller med NeoDesk-appen."
+      },
+      "people": {
+        "title": "Legg til de som hjelper til",
+        "hint": "Gi hver person sin egen konto med en rolle, eller slå på enkel pålogging eller LDAP."
+      },
+      "backup": {
+        "title": "Lag en sikkerhetskopi",
+        "hint": "Den inneholder serverens nøkkel. Uten nøkkelen må hver datamaskin settes opp på nytt."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

@@ -7896,6 +7896,56 @@
       "close": "Zamknij"
     }
   },
+  "setup_guide": {
+    "title": "Skonfiguruj ten serwer",
+    "progress": "Gotowe: {done} z {total}. Krok zaznacza się sam, gdy serwer wykryje, że został wykonany.",
+    "all_done": "Wszystkie kroki są gotowe. Możesz teraz ukryć przewodnik.",
+    "hide": "Ukryj przewodnik",
+    "hidden": "Przewodnik konfiguracji jest ukryty. Przywrócisz go w sekcjach Pomoc i Ustawienia.",
+    "hide_failed": "Nie udało się ukryć przewodnika. Spróbuj ponownie.",
+    "show_failed": "Nie udało się wyświetlić przewodnika konfiguracji. Spróbuj ponownie.",
+    "state_done": "Gotowe",
+    "state_todo": "Do zrobienia",
+    "back": "Wróć do przewodnika konfiguracji",
+    "back_step": "Krok: {step}",
+    "link_title": "Przewodnik konfiguracji",
+    "link_note": "Pierwsze kroki dla tego serwera jako lista kontrolna w panelu.",
+    "link_button": "Pokaż przewodnik konfiguracji",
+    "steps": {
+      "password": {
+        "title": "Zmień pierwsze hasło",
+        "hint": "Instalacja je utworzyła i zapisała. Wybierz hasło, które znasz tylko ty."
+      },
+      "two_factor": {
+        "title": "Włącz logowanie dwuskładnikowe",
+        "hint": "Konsola będzie wtedy prosić o kod z aplikacji w telefonie."
+      },
+      "address": {
+        "title": "Ustaw adres używany przez klientów",
+        "hint": "Komputery docierają do serwera pod tą nazwą lub adresem IP. Linki zaproszeń i skrypty instalacyjne go zawierają."
+      },
+      "https": {
+        "title": "Umieść HTTPS przed konsolą",
+        "hint": "Pulpit zdalny w przeglądarce go wymaga, a linki zaproszeń przestają ostrzegać."
+      },
+      "computer": {
+        "title": "Dodaj pierwszy komputer",
+        "hint": "Link zaproszenia instaluje na nim NeoDesk, a komputer dołącza do tego serwera."
+      },
+      "session": {
+        "title": "Otwórz sesję zdalną",
+        "hint": "Wybierz komputer z listy urządzeń i połącz się w przeglądarce lub w aplikacji NeoDesk."
+      },
+      "people": {
+        "title": "Dodaj osoby, które pomagają",
+        "hint": "Daj każdej osobie własne konto z rolą albo włącz logowanie jednokrotne lub LDAP."
+      },
+      "backup": {
+        "title": "Utwórz kopię zapasową",
+        "hint": "Zawiera klucz serwera. Bez tego klucza każdy komputer trzeba skonfigurować od nowa."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label dla klientów desktop NeoDesk i kompatybilny podzbiór dla RustDesk.",
     "form_title": "Profil Client Branding",

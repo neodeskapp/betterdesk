@@ -7902,6 +7902,56 @@
       "close": "Kapat"
     }
   },
+  "setup_guide": {
+    "title": "Bu sunucuyu kur",
+    "progress": "{total} adımdan {done} tanesi tamam. Sunucu bir adımın yapıldığını gördüğünde o adım kendiliğinden işaretlenir.",
+    "all_done": "Tüm adımlar tamamlandı. Artık rehberi gizleyebilirsiniz.",
+    "hide": "Rehberi gizle",
+    "hidden": "Kurulum rehberi gizlendi. Yardım ve Ayarlar'dan geri getirebilirsiniz.",
+    "hide_failed": "Rehber gizlenemedi. Tekrar deneyin.",
+    "show_failed": "Kurulum rehberi gösterilemedi. Tekrar deneyin.",
+    "state_done": "Tamam",
+    "state_todo": "Henüz yapılmadı",
+    "back": "Kurulum rehberine dön",
+    "back_step": "Adım: {step}",
+    "link_title": "Kurulum rehberi",
+    "link_note": "Bu sunucu için ilk adımlar, kontrol panelinde bir kontrol listesi olarak.",
+    "link_button": "Kurulum rehberini göster",
+    "steps": {
+      "password": {
+        "title": "İlk parolayı değiştir",
+        "hint": "Kurulum onu oluşturdu ve bir yere yazdı. Yalnızca sizin bildiğiniz bir parola seçin."
+      },
+      "two_factor": {
+        "title": "İki adımlı oturum açmayı etkinleştir",
+        "hint": "Konsol bundan sonra telefonunuzdaki bir uygulamadan kod ister."
+      },
+      "address": {
+        "title": "İstemcilerin kullandığı adresi ayarla",
+        "hint": "Bilgisayarlar sunucuya bu ad veya IP adresi üzerinden ulaşır. Davet bağlantıları ve kurulum betikleri bu adresi içerir."
+      },
+      "https": {
+        "title": "Konsolun önüne HTTPS koy",
+        "hint": "Tarayıcıda uzak masaüstü için gereklidir ve davet bağlantıları artık uyarı göstermez."
+      },
+      "computer": {
+        "title": "İlk bilgisayarı ekle",
+        "hint": "Bir davet bağlantısı NeoDesk'i bilgisayara kurar ve bilgisayar bu sunucuya katılır."
+      },
+      "session": {
+        "title": "Bir uzak oturum aç",
+        "hint": "Cihaz listesinden bir bilgisayar seçin ve tarayıcıda ya da NeoDesk uygulamasıyla bağlanın."
+      },
+      "people": {
+        "title": "Yardım eden kişileri ekle",
+        "hint": "Her kişiye rolü olan kendi hesabını verin ya da tek oturum açmayı veya LDAP'ı etkinleştirin."
+      },
+      "backup": {
+        "title": "Yedek oluştur",
+        "hint": "Sunucunun anahtarını içerir. Anahtar olmadan her bilgisayarın yeniden kurulması gerekir."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

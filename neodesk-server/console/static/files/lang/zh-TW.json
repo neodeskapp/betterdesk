@@ -7900,6 +7900,56 @@
       "close": "關閉"
     }
   },
+  "setup_guide": {
+    "title": "設定此伺服器",
+    "progress": "已完成 {done} 步，共 {total} 步。伺服器偵測到某個步驟已完成後，會自動勾選該步驟。",
+    "all_done": "所有步驟皆已完成。現在可以隱藏指南。",
+    "hide": "隱藏指南",
+    "hidden": "設定指南已隱藏。可在「幫助」和「設置」中重新顯示。",
+    "hide_failed": "無法隱藏指南。請再試一次。",
+    "show_failed": "無法顯示設定指南。請再試一次。",
+    "state_done": "已完成",
+    "state_todo": "尚未完成",
+    "back": "返回設定指南",
+    "back_step": "步驟：{step}",
+    "link_title": "設定指南",
+    "link_note": "此伺服器的最初幾個步驟，以檢查清單顯示在儀表板上。",
+    "link_button": "顯示設定指南",
+    "steps": {
+      "password": {
+        "title": "變更初始密碼",
+        "hint": "安裝程式產生並記下了這組密碼。請選擇只有您知道的密碼。"
+      },
+      "two_factor": {
+        "title": "開啟兩步驟登入",
+        "hint": "之後主控台會要求輸入手機應用程式中的驗證碼。"
+      },
+      "address": {
+        "title": "設定用戶端使用的位址",
+        "hint": "電腦透過此名稱或 IP 位址連到伺服器。邀請連結和安裝指令碼都包含此位址。"
+      },
+      "https": {
+        "title": "在主控台前加上 HTTPS",
+        "hint": "在瀏覽器中使用遠端桌面需要 HTTPS，邀請連結也不再顯示警告。"
+      },
+      "computer": {
+        "title": "新增第一台電腦",
+        "hint": "邀請連結會在電腦上安裝 NeoDesk，然後電腦會加入此伺服器。"
+      },
+      "session": {
+        "title": "開啟遠端工作階段",
+        "hint": "在裝置清單中選擇一台電腦並連線，可在瀏覽器中或使用 NeoDesk 應用程式。"
+      },
+      "people": {
+        "title": "新增協助人員",
+        "hint": "為每個人建立具有角色的個人帳戶，或開啟單一登入或 LDAP。"
+      },
+      "backup": {
+        "title": "建立備份",
+        "hint": "備份包含伺服器金鑰。沒有此金鑰，每台電腦都必須重新設定。"
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

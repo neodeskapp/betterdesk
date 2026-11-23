@@ -7902,6 +7902,56 @@
       "close": "Bezárás"
     }
   },
+  "setup_guide": {
+    "title": "A szerver beállítása",
+    "progress": "{total} lépésből {done} kész. Egy lépés magától kipipálódik, amint a szerver észleli, hogy elkészült.",
+    "all_done": "Minden lépés kész. Most már elrejtheti az útmutatót.",
+    "hide": "Útmutató elrejtése",
+    "hidden": "A beállítási útmutató el van rejtve. A Súgóban és a Beállításokban hozhatja vissza.",
+    "hide_failed": "Az útmutatót nem sikerült elrejteni. Próbálja újra.",
+    "show_failed": "A beállítási útmutatót nem sikerült megjeleníteni. Próbálja újra.",
+    "state_done": "Kész",
+    "state_todo": "Még nincs kész",
+    "back": "Vissza a beállítási útmutatóhoz",
+    "back_step": "Lépés: {step}",
+    "link_title": "Beállítási útmutató",
+    "link_note": "A szerver első lépései ellenőrzőlistaként az irányítópulton.",
+    "link_button": "Beállítási útmutató megjelenítése",
+    "steps": {
+      "password": {
+        "title": "Az első jelszó módosítása",
+        "hint": "A telepítés hozta létre és jegyezte fel. Válasszon olyat, amelyet csak Ön ismer."
+      },
+      "two_factor": {
+        "title": "Kétlépcsős bejelentkezés bekapcsolása",
+        "hint": "A konzol ezután egy kódot kér a telefonján lévő alkalmazásból."
+      },
+      "address": {
+        "title": "A kliensek által használt cím beállítása",
+        "hint": "A számítógépek ezen a néven vagy IP-címen érik el a szervert. A meghívó hivatkozások és a telepítőszkriptek tartalmazzák."
+      },
+      "https": {
+        "title": "HTTPS elhelyezése a konzol előtt",
+        "hint": "A távoli asztal a böngészőben igényli, és a meghívó hivatkozások többé nem figyelmeztetnek."
+      },
+      "computer": {
+        "title": "Az első számítógép hozzáadása",
+        "hint": "Egy meghívó hivatkozás telepíti rá a NeoDesk alkalmazást, és a számítógép csatlakozik ehhez a szerverhez."
+      },
+      "session": {
+        "title": "Távoli munkamenet megnyitása",
+        "hint": "Válasszon egy számítógépet az eszközlistában, és csatlakozzon a böngészőben vagy a NeoDesk alkalmazással."
+      },
+      "people": {
+        "title": "Segítők hozzáadása",
+        "hint": "Adjon mindenkinek saját fiókot egy szerepkörrel, vagy kapcsolja be az egyszeri bejelentkezést vagy az LDAP-hitelesítést."
+      },
+      "backup": {
+        "title": "Biztonsági mentés készítése",
+        "hint": "Ez tartalmazza a szerver kulcsát. A kulcs nélkül minden számítógépet újra be kell állítani."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

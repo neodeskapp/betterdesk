@@ -7896,6 +7896,56 @@
       "close": "Chiudi"
     }
   },
+  "setup_guide": {
+    "title": "Configura questo server",
+    "progress": "{done} di {total} completati. Un passaggio si spunta da solo quando il server rileva che è completato.",
+    "all_done": "Tutti i passaggi sono completati. Ora puoi nascondere la guida.",
+    "hide": "Nascondi la guida",
+    "hidden": "La guida di configurazione è nascosta. Puoi mostrarla di nuovo da Aiuto e Impostazioni.",
+    "hide_failed": "Impossibile nascondere la guida. Riprova.",
+    "show_failed": "Impossibile mostrare la guida di configurazione. Riprova.",
+    "state_done": "Completato",
+    "state_todo": "Da fare",
+    "back": "Torna alla guida di configurazione",
+    "back_step": "Passaggio: {step}",
+    "link_title": "Guida di configurazione",
+    "link_note": "I primi passaggi per questo server, come lista di controllo nella panoramica.",
+    "link_button": "Mostra la guida di configurazione",
+    "steps": {
+      "password": {
+        "title": "Cambia la prima password",
+        "hint": "L'installazione l'ha creata e annotata. Scegline una che conosci solo tu."
+      },
+      "two_factor": {
+        "title": "Attiva l'accesso in due passaggi",
+        "hint": "La console poi chiede un codice da un'app sul tuo telefono."
+      },
+      "address": {
+        "title": "Imposta l'indirizzo usato dai client",
+        "hint": "I computer raggiungono il server con questo nome o indirizzo IP. I link di invito e gli script di installazione lo contengono."
+      },
+      "https": {
+        "title": "Metti HTTPS davanti alla console",
+        "hint": "Il desktop remoto nel browser ne ha bisogno, e i link di invito smettono di mostrare avvisi."
+      },
+      "computer": {
+        "title": "Aggiungi il primo computer",
+        "hint": "Un link di invito installa NeoDesk sul computer, che si unisce a questo server."
+      },
+      "session": {
+        "title": "Apri una sessione remota",
+        "hint": "Scegli un computer nell'elenco dei dispositivi e connettiti, nel browser o con l'app NeoDesk."
+      },
+      "people": {
+        "title": "Aggiungi le persone che ti aiutano",
+        "hint": "Dai a ogni persona un account personale con un ruolo, oppure attiva il single sign-on o LDAP."
+      },
+      "backup": {
+        "title": "Crea un backup",
+        "hint": "Contiene la chiave del server. Senza la chiave ogni computer va configurato di nuovo."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

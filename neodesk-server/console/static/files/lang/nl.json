@@ -7896,6 +7896,56 @@
       "close": "Sluiten"
     }
   },
+  "setup_guide": {
+    "title": "Deze server instellen",
+    "progress": "{done} van {total} klaar. Een stap vinkt zichzelf af zodra de server ziet dat hij gedaan is.",
+    "all_done": "Alle stappen zijn klaar. U kunt de handleiding nu verbergen.",
+    "hide": "Handleiding verbergen",
+    "hidden": "De installatiehandleiding is verborgen. Via Hulp en Instellingen haalt u hem terug.",
+    "hide_failed": "De handleiding kon niet worden verborgen. Probeer het opnieuw.",
+    "show_failed": "De installatiehandleiding kon niet worden getoond. Probeer het opnieuw.",
+    "state_done": "Klaar",
+    "state_todo": "Nog te doen",
+    "back": "Terug naar de installatiehandleiding",
+    "back_step": "Stap: {step}",
+    "link_title": "Installatiehandleiding",
+    "link_note": "De eerste stappen voor deze server, als checklist op het overzicht.",
+    "link_button": "Installatiehandleiding tonen",
+    "steps": {
+      "password": {
+        "title": "Eerste wachtwoord wijzigen",
+        "hint": "De installatie heeft het aangemaakt en genoteerd. Kies er een die alleen u kent."
+      },
+      "two_factor": {
+        "title": "Tweestapsaanmelding inschakelen",
+        "hint": "De console vraagt dan om een code uit een app op uw telefoon."
+      },
+      "address": {
+        "title": "Adres voor clients instellen",
+        "hint": "Computers bereiken de server via deze naam of dit IP-adres. Uitnodigingslinks en installatiescripts bevatten het."
+      },
+      "https": {
+        "title": "HTTPS voor de console zetten",
+        "hint": "Extern bureaublad in de browser heeft het nodig, en uitnodigingslinks waarschuwen dan niet meer."
+      },
+      "computer": {
+        "title": "Eerste computer toevoegen",
+        "hint": "Een uitnodigingslink installeert NeoDesk erop, en de computer sluit zich aan bij deze server."
+      },
+      "session": {
+        "title": "Een externe sessie openen",
+        "hint": "Kies een computer in de apparatenlijst en maak verbinding, in de browser of met de NeoDesk-app."
+      },
+      "people": {
+        "title": "Mensen toevoegen die helpen",
+        "hint": "Geef iedereen een eigen account met een rol, of schakel single sign-on of LDAP in."
+      },
+      "backup": {
+        "title": "Een back-up maken",
+        "hint": "Daarin zit de serversleutel. Zonder die sleutel moet elke computer opnieuw worden ingesteld."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

@@ -7896,6 +7896,56 @@
       "close": "Schließen"
     }
   },
+  "setup_guide": {
+    "title": "Diesen Server einrichten",
+    "progress": "{done} von {total} erledigt. Ein Schritt hakt sich selbst ab, sobald der Server ihn erledigt sieht.",
+    "all_done": "Alle Schritte sind erledigt. Sie können die Anleitung jetzt ausblenden.",
+    "hide": "Anleitung ausblenden",
+    "hidden": "Die Einrichtungsanleitung ist ausgeblendet. Unter Hilfe und in den Einstellungen holen Sie sie zurück.",
+    "hide_failed": "Die Anleitung konnte nicht ausgeblendet werden. Versuchen Sie es noch einmal.",
+    "show_failed": "Die Einrichtungsanleitung konnte nicht angezeigt werden. Versuchen Sie es noch einmal.",
+    "state_done": "Erledigt",
+    "state_todo": "Noch offen",
+    "back": "Zurück zur Einrichtungsanleitung",
+    "back_step": "Schritt: {step}",
+    "link_title": "Einrichtungsanleitung",
+    "link_note": "Die ersten Schritte für diesen Server, als Checkliste auf der Übersicht.",
+    "link_button": "Einrichtungsanleitung anzeigen",
+    "steps": {
+      "password": {
+        "title": "Erstes Passwort ändern",
+        "hint": "Die Installation hat es erzeugt und aufgeschrieben. Wählen Sie eines, das nur Sie kennen."
+      },
+      "two_factor": {
+        "title": "Zwei-Faktor-Anmeldung einschalten",
+        "hint": "Die Konsole fragt dann nach einem Code aus einer App auf Ihrem Handy."
+      },
+      "address": {
+        "title": "Adresse für Clients festlegen",
+        "hint": "Unter diesem Namen oder dieser IP-Adresse erreichen Computer den Server. Einladungslinks und Installationsskripte enthalten sie."
+      },
+      "https": {
+        "title": "HTTPS vor die Konsole setzen",
+        "hint": "Fernzugriff im Browser braucht HTTPS, und Einladungslinks warnen dann nicht mehr."
+      },
+      "computer": {
+        "title": "Ersten Computer hinzufügen",
+        "hint": "Ein Einladungslink installiert NeoDesk darauf, und der Computer tritt diesem Server bei."
+      },
+      "session": {
+        "title": "Eine Fernsitzung öffnen",
+        "hint": "Wählen Sie in der Geräteliste einen Computer und verbinden Sie sich, im Browser oder mit der NeoDesk-App."
+      },
+      "people": {
+        "title": "Weitere Personen hinzufügen",
+        "hint": "Geben Sie jeder Person ein eigenes Konto mit einer Rolle, oder schalten Sie Single Sign-on oder LDAP ein."
+      },
+      "backup": {
+        "title": "Sicherung erstellen",
+        "hint": "Sie enthält den Schlüssel des Servers. Ohne ihn muss jeder Computer neu eingerichtet werden."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

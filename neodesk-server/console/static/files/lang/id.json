@@ -7902,6 +7902,56 @@
       "close": "Tutup"
     }
   },
+  "setup_guide": {
+    "title": "Siapkan server ini",
+    "progress": "{done} dari {total} selesai. Langkah dicentang otomatis begitu server melihat langkah itu sudah dikerjakan.",
+    "all_done": "Semua langkah sudah selesai. Anda bisa menyembunyikan panduan sekarang.",
+    "hide": "Sembunyikan panduan",
+    "hidden": "Panduan penyiapan disembunyikan. Anda bisa menampilkannya lagi dari Bantuan dan Pengaturan.",
+    "hide_failed": "Panduan tidak dapat disembunyikan. Coba lagi.",
+    "show_failed": "Panduan penyiapan tidak dapat ditampilkan. Coba lagi.",
+    "state_done": "Selesai",
+    "state_todo": "Belum selesai",
+    "back": "Kembali ke panduan penyiapan",
+    "back_step": "Langkah: {step}",
+    "link_title": "Panduan penyiapan",
+    "link_note": "Langkah pertama untuk server ini, sebagai daftar periksa di dasbor.",
+    "link_button": "Tampilkan panduan penyiapan",
+    "steps": {
+      "password": {
+        "title": "Ganti kata sandi pertama",
+        "hint": "Instalasi membuatnya dan mencatatnya. Pilih kata sandi yang hanya Anda ketahui."
+      },
+      "two_factor": {
+        "title": "Aktifkan masuk dua langkah",
+        "hint": "Setelah itu konsol meminta kode dari aplikasi di ponsel Anda."
+      },
+      "address": {
+        "title": "Atur alamat yang dipakai klien",
+        "hint": "Komputer menjangkau server lewat nama atau alamat IP ini. Tautan undangan dan skrip instalasi memuatnya."
+      },
+      "https": {
+        "title": "Pasang HTTPS di depan konsol",
+        "hint": "Desktop jarak jauh di browser membutuhkannya, dan tautan undangan tidak lagi memberi peringatan."
+      },
+      "computer": {
+        "title": "Tambahkan komputer pertama Anda",
+        "hint": "Tautan undangan memasang NeoDesk di komputer itu, lalu komputer bergabung ke server ini."
+      },
+      "session": {
+        "title": "Buka sesi jarak jauh",
+        "hint": "Pilih komputer di daftar perangkat lalu sambungkan, di browser atau dengan aplikasi NeoDesk."
+      },
+      "people": {
+        "title": "Tambahkan orang yang membantu",
+        "hint": "Beri setiap orang akun sendiri dengan peran, atau aktifkan single sign-on atau LDAP."
+      },
+      "backup": {
+        "title": "Buat cadangan",
+        "hint": "Cadangan menyimpan kunci server. Tanpa kunci itu, setiap komputer harus disiapkan ulang."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

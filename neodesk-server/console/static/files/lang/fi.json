@@ -7902,6 +7902,56 @@
       "close": "Sulje"
     }
   },
+  "setup_guide": {
+    "title": "Määritä tämä palvelin",
+    "progress": "{total} vaiheesta {done} tehty. Vaihe merkitään tehdyksi automaattisesti, kun palvelin havaitsee sen tehdyksi.",
+    "all_done": "Kaikki vaiheet on tehty. Voit nyt piilottaa oppaan.",
+    "hide": "Piilota opas",
+    "hidden": "Käyttöönotto-opas on piilotettu. Saat sen takaisin kohdista Ohje ja Asetukset.",
+    "hide_failed": "Opasta ei voitu piilottaa. Yritä uudelleen.",
+    "show_failed": "Käyttöönotto-opasta ei voitu näyttää. Yritä uudelleen.",
+    "state_done": "Tehty",
+    "state_todo": "Ei vielä tehty",
+    "back": "Takaisin käyttöönotto-oppaaseen",
+    "back_step": "Vaihe: {step}",
+    "link_title": "Käyttöönotto-opas",
+    "link_note": "Tämän palvelimen ensimmäiset vaiheet tarkistuslistana kojelaudalla.",
+    "link_button": "Näytä käyttöönotto-opas",
+    "steps": {
+      "password": {
+        "title": "Vaihda ensimmäinen salasana",
+        "hint": "Asennus loi sen ja kirjoitti sen muistiin. Valitse salasana, jonka vain sinä tiedät."
+      },
+      "two_factor": {
+        "title": "Ota kaksivaiheinen kirjautuminen käyttöön",
+        "hint": "Konsoli kysyy sen jälkeen koodia puhelimesi sovelluksesta."
+      },
+      "address": {
+        "title": "Määritä osoite, jota asiakkaat käyttävät",
+        "hint": "Tietokoneet tavoittavat palvelimen tällä nimellä tai IP-osoitteella. Kutsulinkit ja asennusskriptit sisältävät sen."
+      },
+      "https": {
+        "title": "Laita HTTPS konsolin eteen",
+        "hint": "Etätyöpöytä selaimessa tarvitsee sitä, ja kutsulinkit lakkaavat varoittamasta."
+      },
+      "computer": {
+        "title": "Lisää ensimmäinen tietokone",
+        "hint": "Kutsulinkki asentaa siihen NeoDesk-sovelluksen, ja tietokone liittyy tähän palvelimeen."
+      },
+      "session": {
+        "title": "Avaa etäistunto",
+        "hint": "Valitse tietokone laiteluettelosta ja yhdistä selaimessa tai NeoDesk-sovelluksella."
+      },
+      "people": {
+        "title": "Lisää auttavat henkilöt",
+        "hint": "Anna jokaiselle henkilölle oma tili ja rooli tai ota käyttöön kertakirjautuminen tai LDAP."
+      },
+      "backup": {
+        "title": "Tee varmuuskopio",
+        "hint": "Se sisältää palvelimen avaimen. Ilman avainta jokainen tietokone on määritettävä uudelleen."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

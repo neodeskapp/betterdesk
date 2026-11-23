@@ -7902,6 +7902,56 @@
       "close": "Đóng"
     }
   },
+  "setup_guide": {
+    "title": "Thiết lập máy chủ này",
+    "progress": "Đã xong {done} trên {total} bước. Mỗi bước tự được đánh dấu khi máy chủ thấy bước đó đã xong.",
+    "all_done": "Tất cả các bước đã xong. Giờ bạn có thể ẩn hướng dẫn.",
+    "hide": "Ẩn hướng dẫn",
+    "hidden": "Hướng dẫn thiết lập đã được ẩn. Bạn có thể mở lại trong Trợ giúp và Cài đặt.",
+    "hide_failed": "Không thể ẩn hướng dẫn. Hãy thử lại.",
+    "show_failed": "Không thể hiển thị hướng dẫn thiết lập. Hãy thử lại.",
+    "state_done": "Đã xong",
+    "state_todo": "Chưa xong",
+    "back": "Quay lại hướng dẫn thiết lập",
+    "back_step": "Bước: {step}",
+    "link_title": "Hướng dẫn thiết lập",
+    "link_note": "Các bước đầu tiên cho máy chủ này, dưới dạng danh sách kiểm tra trên trang tổng quan.",
+    "link_button": "Hiện hướng dẫn thiết lập",
+    "steps": {
+      "password": {
+        "title": "Đổi mật khẩu đầu tiên",
+        "hint": "Quá trình cài đặt đã tạo và ghi lại mật khẩu này. Hãy chọn một mật khẩu chỉ bạn biết."
+      },
+      "two_factor": {
+        "title": "Bật đăng nhập hai bước",
+        "hint": "Sau đó bảng điều khiển sẽ hỏi mã từ một ứng dụng trên điện thoại của bạn."
+      },
+      "address": {
+        "title": "Đặt địa chỉ mà máy khách dùng",
+        "hint": "Máy tính kết nối tới máy chủ qua tên hoặc địa chỉ IP này. Liên kết mời và tập lệnh cài đặt đều chứa địa chỉ này."
+      },
+      "https": {
+        "title": "Đặt HTTPS trước bảng điều khiển",
+        "hint": "Máy tính từ xa trong trình duyệt cần HTTPS, và liên kết mời sẽ không còn cảnh báo."
+      },
+      "computer": {
+        "title": "Thêm máy tính đầu tiên",
+        "hint": "Một liên kết mời sẽ cài NeoDesk lên máy, và máy tính tham gia máy chủ này."
+      },
+      "session": {
+        "title": "Mở một phiên từ xa",
+        "hint": "Chọn một máy tính trong danh sách thiết bị rồi kết nối, trong trình duyệt hoặc bằng ứng dụng NeoDesk."
+      },
+      "people": {
+        "title": "Thêm những người hỗ trợ",
+        "hint": "Cấp cho mỗi người một tài khoản riêng với một vai trò, hoặc bật đăng nhập một lần hay LDAP."
+      },
+      "backup": {
+        "title": "Tạo bản sao lưu",
+        "hint": "Bản sao lưu chứa khóa của máy chủ. Không có khóa này, mọi máy tính đều phải thiết lập lại."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",

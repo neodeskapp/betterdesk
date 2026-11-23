@@ -7896,6 +7896,56 @@
       "close": "닫기"
     }
   },
+  "setup_guide": {
+    "title": "이 서버 설정",
+    "progress": "{total}개 중 {done}개 완료. 서버가 완료를 확인하면 해당 단계가 자동으로 체크됩니다.",
+    "all_done": "모든 단계를 완료했습니다. 이제 가이드를 숨길 수 있습니다.",
+    "hide": "가이드 숨기기",
+    "hidden": "설정 가이드가 숨겨졌습니다. 도움말과 설정에서 다시 표시할 수 있습니다.",
+    "hide_failed": "가이드를 숨기지 못했습니다. 다시 시도하세요.",
+    "show_failed": "설정 가이드를 표시하지 못했습니다. 다시 시도하세요.",
+    "state_done": "완료",
+    "state_todo": "아직 완료되지 않음",
+    "back": "설정 가이드로 돌아가기",
+    "back_step": "단계: {step}",
+    "link_title": "설정 가이드",
+    "link_note": "이 서버의 첫 단계를 대시보드에 체크리스트로 보여 줍니다.",
+    "link_button": "설정 가이드 표시",
+    "steps": {
+      "password": {
+        "title": "첫 비밀번호 변경",
+        "hint": "설치 과정에서 만들어져 기록된 비밀번호입니다. 본인만 아는 비밀번호로 바꾸세요."
+      },
+      "two_factor": {
+        "title": "2단계 로그인 켜기",
+        "hint": "이후 콘솔이 휴대폰 앱의 코드를 요구합니다."
+      },
+      "address": {
+        "title": "클라이언트가 사용하는 주소 설정",
+        "hint": "컴퓨터는 이 이름이나 IP 주소로 서버에 연결합니다. 초대 링크와 설치 스크립트에 이 주소가 들어갑니다."
+      },
+      "https": {
+        "title": "콘솔 앞에 HTTPS 두기",
+        "hint": "브라우저 원격 데스크톱에 필요하며, 초대 링크에 더 이상 경고가 표시되지 않습니다."
+      },
+      "computer": {
+        "title": "첫 컴퓨터 추가",
+        "hint": "초대 링크로 컴퓨터에 NeoDesk가 설치되고, 컴퓨터가 이 서버에 가입됩니다."
+      },
+      "session": {
+        "title": "원격 세션 열기",
+        "hint": "장치 목록에서 컴퓨터를 골라 브라우저나 NeoDesk 앱으로 연결합니다."
+      },
+      "people": {
+        "title": "도와줄 사람 추가",
+        "hint": "각 사람에게 역할이 있는 개인 계정을 주거나, 통합 로그인 또는 LDAP를 켭니다."
+      },
+      "backup": {
+        "title": "백업 만들기",
+        "hint": "백업에는 서버 키가 들어 있습니다. 키가 없으면 모든 컴퓨터를 다시 설정해야 합니다."
+      }
+    }
+  },
   "client_branding": {
     "subtitle": "White-label for NeoDesk desktop clients and a compatible subset for RustDesk.",
     "form_title": "Client Branding profile",
