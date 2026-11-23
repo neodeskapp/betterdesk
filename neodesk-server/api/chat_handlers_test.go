@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
@@ -114,4 +115,41 @@ func TestChatContactsOfADeviceAreItsGroups(t *testing.T) {
 	same("a device whose id holds another's", contactIDs(t, srv, "PEERAAA12"), []string{"PEERDDD4", "operator:alice"})
 	same("the panel's inbox", contactIDs(t, srv, "panel"),
 		[]string{"PEERAAA1", "PEERAAA12", "PEERBBB2", "PEERCCC3", "PEERDDD4", "operator:alice"})
+}
+
+// TestChatContactsOnlineAsTheDeviceList: a device is Online in the chat's
+// contacts by the device list's rule (a live signal entry or a heartbeat
+// within the registration timeout), not by the status stored in the
+// database, which stays ONLINE for a device that went away (BUGS L417).
+func TestChatContactsOnlineAsTheDeviceList(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	now := time.Now()
+	for _, p := range []*db.Peer{
+		{ID: "STALE001", Hostname: "stale", Status: "ONLINE", LastOnline: now.Add(-10 * time.Minute)},
+		{ID: "FRESH002", Hostname: "fresh", Status: "ONLINE", LastOnline: now},
+		{ID: "GONE0003", Hostname: "gone", Status: "OFFLINE", LastOnline: now.Add(-time.Hour)},
+	} {
+		if err := database.UpsertPeer(p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	status, body := asConsole(t, srv, http.MethodGet, "/api/chat/contacts/"+chatPanelID, "")
+	var answer struct {
+		Contacts []struct {
+			ID     string `json:"id"`
+			Online bool   `json:"online"`
+		} `json:"contacts"`
+	}
+	if err := json.Unmarshal([]byte(body), &answer); status != http.StatusOK || err != nil {
+		t.Fatalf("contacts: %d %s", status, body)
+	}
+	got := map[string]bool{}
+	for _, c := range answer.Contacts {
+		got[c.ID] = c.Online
+	}
+	for id, want := range map[string]bool{"STALE001": false, "FRESH002": true, "GONE0003": false} {
+		if online, listed := got[id]; !listed || online != want {
+			t.Errorf("%s online %v (listed %v), want %v", id, online, listed, want)
+		}
+	}
 }

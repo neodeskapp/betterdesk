@@ -25,6 +25,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	"github.com/neodeskapp/neodesk/neodesk-server/events"
 )
@@ -249,6 +250,21 @@ func (s *Server) chatGroupMates(deviceID string) (map[string]bool, error) {
 	return mates, nil
 }
 
+// chatPeerOnline says whether a device is online by the device list's
+// rule (GET /api/peers live_online): a live signal entry, a heartbeat
+// within the registration timeout, or a CDAP or MeshCentral connection.
+// The status stored in the database is not enough: it stays ONLINE for a
+// device that went away.
+func (s *Server) chatPeerOnline(p *db.Peer) bool {
+	if s.peers != nil && s.peers.IsOnline(p.ID, config.RegTimeout) {
+		return true
+	}
+	if !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {
+		return true
+	}
+	return (s.cdapGw != nil && s.cdapGw.IsConnected(p.ID)) || (s.meshGw != nil && s.meshGw.IsConnected(p.ID))
+}
+
 // handleChatContacts returns the chat contacts of a device: the operators
 // and the devices it shares a chat group with. The panel's inbox gets every
 // device.
@@ -307,7 +323,7 @@ func (s *Server) handleChatContacts(w http.ResponseWriter, r *http.Request) {
 			ID:          p.ID,
 			Name:        p.Hostname,
 			Hostname:    p.Hostname,
-			Online:      p.Status == "ONLINE" || p.Status == "DEGRADED",
+			Online:      s.chatPeerOnline(p),
 			LastSeen:    p.LastOnline.UnixMilli(),
 			AvatarColor: deviceColor(p.ID),
 			Role:        "device",
