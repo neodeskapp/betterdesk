@@ -5,6 +5,13 @@
 
 ---
 
+## [3.6.2] — 2026-11-23
+
+### Changed
+- _(none yet)_
+
+---
+
 ## [3.6.1] — 2026-11-23
 
 ### Changed
@@ -5674,3 +5681,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.6.0-rc.2]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.1...v3.6.0-rc.2
 [3.6.0-rc.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.2...v3.6.0-rc.3
 [3.6.1]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.3...v3.6.1
+[3.6.2]: https://github.com/neodeskapp/neodesk/compare/v3.6.1...v3.6.2
