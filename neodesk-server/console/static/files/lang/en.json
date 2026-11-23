@@ -826,8 +826,8 @@
         "advanced_new_file": "New file (not created until you save)",
         "advanced_new_file_hint": "New file — add content and save",
         "advanced_backup_created": "backup created",
-        "advanced_restart_console": "Restart the web console service (e.g. systemctl restart neodesk-console) for .env changes to take effect.",
-        "advanced_restart_goserver": "Restart the NeoDesk Go server for blocklist changes to load.",
+        "advanced_restart_console": "The change takes effect after Restart services.",
+        "advanced_restart_goserver": "The server reads the change after Restart services.",
         "advanced_restart_systemd": "After editing systemd units, run: systemctl daemon-reload && systemctl restart <service>",
         "advanced_restart_generic": "Restart the affected service for changes to take effect.",
         "advanced_error_unknown": "Unknown configuration file",
@@ -1481,7 +1481,7 @@
             "status_readonly": "Read only. The console can show it but not change it.",
             "status_file": "{size}, changed {when}",
             "missing_title": "Not on this server ({n})",
-            "missing_note": "These files belong to other kinds of installation and don't exist here."
+            "missing_note": "These files don't exist on this server, so they can't be edited here."
         },
         "side": {
             "general_title": "What clients get now",

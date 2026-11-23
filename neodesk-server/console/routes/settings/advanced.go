@@ -101,7 +101,7 @@ func (g *general) writeFile(w http.ResponseWriter, r *http.Request) {
 			}
 			return restart.Change{
 				Key:      "advanced:" + written.ID,
-				Label:    "Advanced configuration: " + written.ID,
+				Label:    kit.T(r, "settings.advanced_file_"+written.ID, nil),
 				Rollback: goapi.NewObject("type", "advanced-file", "fileId", written.ID, "backupPath", backup, "created", written.Created),
 			}, nil
 		})

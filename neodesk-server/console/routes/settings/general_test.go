@@ -221,6 +221,11 @@ func TestAdvancedFileChain(t *testing.T) {
       }`) {
 			t.Errorf("transaction file: %v %s", err, file)
 		}
+		// The restart prompt names the file as the editor does, not by its
+		// id (BUGS L405)
+		if !strings.Contains(string(file), `"label": "settings.advanced_file_console-session-secret"`) {
+			t.Errorf("transaction file without the file's name: %s", file)
+		}
 
 		// Another operator may not change the file into this transaction:
 		// the answer is 409 and the file stays as it is (BUGS SE2)
