@@ -252,22 +252,12 @@ func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields when enabling
+	// A directory that is on must have settings a sign-in can use: a
+	// broken filter or role map line is refused with its field, not saved
+	// to fail every sign-in later
 	if cfg.Enabled {
-		if cfg.Host == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "LDAP host is required"})
-			return
-		}
-		if cfg.BaseDN == "" && !cfg.DirectBind {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Base DN is required for bind+search mode"})
-			return
-		}
-		if cfg.DirectBind && cfg.DirectBindDN == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Direct bind DN template is required"})
-			return
-		}
-		if cfg.DefaultRole != "" && !auth.ValidRole(cfg.DefaultRole) {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid default role"})
+		if err := auth.CheckLDAPConfig(&cfg, false); err != nil {
+			writeSettingError(w, http.StatusBadRequest, err)
 			return
 		}
 	}
@@ -319,6 +309,12 @@ func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// writeSettingError answers a refused directory or single sign-on
+// setting: its reason and its field.
+func writeSettingError(w http.ResponseWriter, status int, err *auth.SettingError) {
+	writeJSON(w, status, map[string]string{"error": err.Error(), "field": err.Field})
 }
 
 // handleLDAPVerifyCredentials checks username/password against LDAP only.
@@ -404,8 +400,10 @@ func (s *Server) handleTestLDAPConnection(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	if cfg.Host == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "LDAP host is required"})
+	// The test refuses what a save would refuse before it connects, so a
+	// broken filter never tests as successful
+	if err := auth.CheckLDAPConfig(&cfg, true); err != nil {
+		writeJSON(w, http.StatusOK, map[string]any{"success": false, "error": err.Error(), "field": err.Field})
 		return
 	}
 

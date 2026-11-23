@@ -250,7 +250,7 @@ func TestDirectoryAndSingleSignOn(t *testing.T) {
 	s.API.Calls()
 
 	s.API.On("PUT /api/auth/ldap/config", http.StatusOK, `{"status":"ok"}`)
-	body := `{"enabled":true,"host":"ldap.example.org","bind_password":"throwaway"}`
+	body := `{"enabled":true,"host":"ldap.example.org","base_dn":"dc=example,dc=org","bind_password":"throwaway"}`
 	if res := admin.Do("PUT", "/api/settings/ldap", body); res.Body != `{"success":true}` {
 		t.Errorf("ldap save: %s", res.Body)
 	}
@@ -262,7 +262,7 @@ func TestDirectoryAndSingleSignOn(t *testing.T) {
 	}
 	s.API.On("PUT /api/auth/ldap/config", http.StatusBadRequest, `{"error":"LDAP host is required"}`)
 	// the server's reason, not the status of the call (L346)
-	if res := admin.Do("PUT", "/api/settings/ldap", `{"enabled":true}`); res.Status != 400 || res.Body != `{"success":false,"error":"LDAP host is required"}` {
+	if res := admin.Do("PUT", "/api/settings/ldap", `{"enabled":true,"host":"ldap.example.org","base_dn":"dc=example,dc=org"}`); res.Status != 400 || res.Body != `{"success":false,"error":"LDAP host is required"}` {
 		t.Errorf("ldap refused: %d %s", res.Status, res.Body)
 	}
 	s.API.On("POST /api/auth/ldap/test", http.StatusOK, `{"success":false,"error":"dial tcp: refused"}`)
@@ -284,7 +284,7 @@ func TestDirectoryAndSingleSignOn(t *testing.T) {
 		t.Errorf("oidc refused: %d %s", res.Status, res.Body)
 	}
 	s.API.On("POST /api/auth/ldap/test", http.StatusBadRequest, `{"error":"LDAP host is required"}`)
-	if res := admin.Do("POST", "/api/settings/ldap/test", `{}`); res.Status != 200 || res.Body != `{"success":false,"error":"LDAP host is required"}` {
+	if res := admin.Do("POST", "/api/settings/ldap/test", `{"host":"127.0.0.1"}`); res.Status != 200 || res.Body != `{"success":false,"error":"LDAP host is required"}` {
 		t.Errorf("ldap test refused: %d %s", res.Status, res.Body)
 	}
 	s.API.Calls()
@@ -298,8 +298,8 @@ func TestDirectoryAndSingleSignOn(t *testing.T) {
 		{`{"enabled":true,"redirect_url":5}`, false},
 		{`{"enabled":"yes"}`, false},
 		{`{"enabled":true,"redirect_url":"ftp://console.example.org/api/auth/oidc/callback"}`, false},
-		{`{"enabled":true,"redirect_url":" https://console.example.org:5443/api/auth/oidc/callback/ "}`, true},
-		{`{"enabled":true,"redirect_url":"http://10.0.0.5:21114/api/oidc/callback"}`, true},
+		{`{"enabled":true,"client_id":"c","auto_discovery":true,"issuer_url":"https://203.0.113.10","redirect_url":" https://console.example.org:5443/api/auth/oidc/callback/ "}`, true},
+		{`{"enabled":true,"client_id":"c","auto_discovery":true,"issuer_url":"https://203.0.113.10","redirect_url":"http://10.0.0.5:21114/api/oidc/callback"}`, true},
 		{`{"enabled":false,"redirect_url":"anything"}`, true},
 		{`{"enabled":0}`, true},
 	} {
@@ -346,7 +346,7 @@ func TestClientSessions(t *testing.T) {
 		s.API.On("PUT /api/config/client_session_"+key, http.StatusOK, `{"status":"ok"}`)
 	}
 	envPath := filepath.Join(s.Console, ".env")
-	res := admin.Do("PUT", "/api/settings/client-sessions", `{"expiry_days":"12.9","sliding":"false","max_days":1000}`)
+	res := admin.Do("PUT", "/api/settings/client-sessions", `{"expiry_days":12,"sliding":"false","max_days":365}`)
 	if res.Body != `{"success":true}` {
 		t.Errorf("save: %s", res.Body)
 	}

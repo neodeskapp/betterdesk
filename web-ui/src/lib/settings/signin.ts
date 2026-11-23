@@ -21,6 +21,16 @@ const num = (v: unknown, fallback: number): number => {
 	const n = parseInt(String(v ?? ''), 10);
 	return Number.isFinite(n) && n > 0 ? n : fallback;
 };
+/** A number field as typed; an empty one is no value (the server's default) */
+const typed = (v: unknown): number | null =>
+	v === null || v === undefined || v === '' || (typeof v === 'number' && Number.isNaN(v)) ? null : Number(v);
+
+/** A whole number from min to max, or empty when empty may be */
+export function wholeIn(v: unknown, min: number, max: number, emptyOk = false): boolean {
+	const n = typed(v);
+	if (n === null) return emptyOk;
+	return Number.isInteger(n) && n >= min && n <= max;
+}
 
 export interface LdapValues {
 	enabled: boolean;
@@ -75,12 +85,15 @@ export function ldapFromServer(d: Record<string, unknown>): LdapValues {
 	};
 }
 
-/** What PUT /api/settings/ldap and the test take: trimmed text, numbers with their defaults */
+/**
+ * What PUT /api/settings/ldap and the test take: trimmed text, numbers as
+ * typed (the server refuses one out of range; an empty one is its default)
+ */
 export function ldapPayload(v: LdapValues) {
 	return {
 		enabled: v.enabled,
 		host: v.host.trim(),
-		port: num(v.port, 389),
+		port: typed(v.port),
 		use_tls: v.use_tls,
 		start_tls: v.start_tls,
 		skip_tls_verify: v.skip_tls_verify,
@@ -98,9 +111,35 @@ export function ldapPayload(v: LdapValues) {
 		group_role_map: v.group_role_map.trim(),
 		direct_bind: v.direct_bind,
 		direct_bind_dn: v.direct_bind_dn.trim(),
-		conn_timeout_sec: num(v.conn_timeout_sec, 10),
+		conn_timeout_sec: typed(v.conn_timeout_sec),
 		allow_signup: v.allow_signup
 	};
+}
+
+/** The keys of what is wrong with LDAP numbers, by field; the server checks the rest */
+export function ldapNumberProblems(v: Pick<LdapValues, 'enabled' | 'port' | 'conn_timeout_sec'>) {
+	if (!v.enabled) return {};
+	return {
+		port: wholeIn(v.port, 1, 65535, true) ? undefined : 'settings.signin.check_port_range',
+		conn_timeout_sec: wholeIn(v.conn_timeout_sec, 1, 120, true)
+			? undefined
+			: 'settings.signin.check_timeout_range'
+	};
+}
+
+export interface SessionValues {
+	expiry_days: number | null;
+	sliding: boolean;
+	max_days: number | null;
+}
+
+/** The keys of what is wrong with the client session days, by field */
+export function sessionProblems(v: SessionValues) {
+	const expiry = wholeIn(v.expiry_days, 1, 365) ? undefined : 'settings.signin.check_days_range';
+	let max = wholeIn(v.max_days, 1, 365) ? undefined : 'settings.signin.check_days_range';
+	if (!expiry && !max && v.sliding && Number(v.max_days) < Number(v.expiry_days))
+		max = 'settings.signin.check_max_below_duration';
+	return { expiry_days: expiry, max_days: max };
 }
 
 export interface OidcValues {

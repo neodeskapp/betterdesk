@@ -345,6 +345,34 @@ func clampSessionDays(value any, fallback float64) float64 {
 	return math.Min(n, 365)
 }
 
+// checkSessionDays refuses client session days a save would otherwise
+// replace: each given one must be a whole number from 1 to 365, and with
+// renewal on the maximum can't be shorter than the duration.
+func checkSessionDays(body any) (field, code string) {
+	days := map[string]float64{}
+	for _, name := range []string{"expiry_days", "max_days"} {
+		if !hasField(body, name) {
+			continue
+		}
+		n, ok := jsreq.Prop(body, name).(float64)
+		if !ok || n != math.Trunc(n) || n < 1 || n > 365 {
+			return name, "days_range"
+		}
+		days[name] = n
+	}
+	expiry, hasExpiry := days["expiry_days"]
+	max, hasMax := days["max_days"]
+	if hasExpiry && hasMax && max < expiry && parseSessionBool(jsreq.Prop(body, "sliding"), true) {
+		return "max_days", "max_below_duration"
+	}
+	return "", ""
+}
+
+func hasField(body any, name string) bool {
+	o, ok := body.(*goapi.Object)
+	return ok && o.Has(name)
+}
+
 // parseSessionBool is parseClientSessionBool.
 func parseSessionBool(value any, fallback bool) bool {
 	if value == nil || value == "" {
@@ -397,6 +425,10 @@ func (g *general) getClientSessions(w http.ResponseWriter, r *http.Request) {
 func (g *general) setClientSessions(w http.ResponseWriter, r *http.Request) {
 	body := jsreq.Body(r)
 	if refuseNothingToSave(w, r, body, "expiry_days", "sliding", "max_days") {
+		return
+	}
+	if field, code := checkSessionDays(body); field != "" {
+		kit.JSON(w, r, http.StatusBadRequest, fieldFailure{Error: kit.T(r, "settings.signin.check_"+code, nil), Field: field})
 		return
 	}
 	expiryDays := clampSessionDays(jsreq.Prop(body, "expiry_days"), 7)

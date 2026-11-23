@@ -315,7 +315,8 @@ func TestAgainstAPIServer(t *testing.T) {
 	t.Run("directory and single sign-on settings", func(t *testing.T) {
 		wantAt(t, "GetLDAPConfig", c.GetLDAPConfig(ctx), `false`, "data", "enabled")
 		wantJSON(t, "SaveLDAPConfig without a host", c.SaveLDAPConfig(ctx, NewObject("enabled", true)), badRequest400)
-		wantJSON(t, "TestLDAPConnection without a host", c.TestLDAPConnection(ctx, NewObject()), badRequest400)
+		// The test refuses settings it can't use with a reason (L353)
+		wantJSON(t, "TestLDAPConnection without a host", c.TestLDAPConnection(ctx, NewObject()), `{"success":false,"error":"Enter the directory's host name or address."}`)
 		wantAt(t, "GetOIDCConfig", c.GetOIDCConfig(ctx), `false`, "data", "enabled")
 		wantJSON(t, "SaveOIDCConfig without an issuer", c.SaveOIDCConfig(ctx, NewObject("enabled", true)), badRequest400)
 		wantJSON(t, "TestOIDCDiscovery without an issuer", c.TestOIDCDiscovery(ctx, NewObject()), badRequest400)

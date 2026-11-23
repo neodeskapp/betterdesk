@@ -246,23 +246,11 @@ func (s *Server) handleSaveOIDCConfig(w http.ResponseWriter, r *http.Request) {
 		cfg.ClientSecret = existing.ClientSecret
 	}
 
-	// Basic validation
-	if cfg.Enabled {
-		if cfg.ClientID == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Client ID is required when OIDC is enabled"})
-			return
-		}
-		if cfg.IssuerURL == "" && (cfg.AuthorizationURL == "" || cfg.TokenURL == "") {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Issuer URL or manual endpoint URLs are required"})
-			return
-		}
-		if cfg.RedirectURL == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Redirect URL is required"})
-			return
-		}
-	}
-	if err := auth.ValidateOIDCAllowedPrivateCIDRs(cfg.AllowedPrivateCIDRs); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+	// Settings a sign-in can't work with are refused with their field:
+	// an issuer that is no address or that the server may not reach, no
+	// endpoints without Auto-discovery, unknown roles
+	if err := auth.CheckOIDCConfig(r.Context(), &cfg); err != nil {
+		writeSettingError(w, http.StatusBadRequest, err)
 		return
 	}
 

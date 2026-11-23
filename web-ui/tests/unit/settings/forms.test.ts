@@ -127,7 +127,7 @@ describe('Sign-in', () => {
 		);
 	});
 
-	test('LDAP: defaults in, trimmed text and numbers out', () => {
+	test('LDAP: defaults in, trimmed text out, numbers as typed', () => {
 		const v0 = ldapFromServer({});
 		expect(v0.port).toBe(389);
 		expect(v0.conn_timeout_sec).toBe(10);
@@ -140,8 +140,9 @@ describe('Sign-in', () => {
 			enabled: true
 		});
 		expect(out.host).toBe('ldap.example.com');
-		expect(out.port).toBe(389);
-		expect(out.conn_timeout_sec).toBe(10);
+		// Numbers go out as typed: an empty one is no value, a 0 is refused by the form (L418)
+		expect(out.port).toBe(null);
+		expect(out.conn_timeout_sec).toBe(0);
 		expect(out.enabled).toBe(true);
 		expect(ldapFromServer({ port: '636', enabled: 1 })).toMatchObject({ port: 636, enabled: true });
 	});

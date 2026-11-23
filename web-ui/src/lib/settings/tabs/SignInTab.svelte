@@ -60,7 +60,9 @@
 		ldapPayload,
 		oidcFromServer,
 		oidcPayload,
+		ldapNumberProblems,
 		passwordRules,
+		sessionProblems,
 		validOidcRedirect,
 		suggestedRedirect,
 		type LdapValues,
@@ -313,12 +315,16 @@
 
 	const sessions = createForm({
 		initial: { expiry_days: 7 as number | null, sliding: true, max_days: 30 as number | null },
-		submit: async (v) => {
-			const out = {
-				expiry_days: Math.round(Number(v.expiry_days)) || 7,
-				sliding: v.sliding,
-				max_days: Math.round(Number(v.max_days)) || 30
+		// Days out of range are refused on the field, not replaced
+		validate: (v) => {
+			const p = sessionProblems(v);
+			return {
+				expiry_days: p.expiry_days && t(p.expiry_days),
+				max_days: p.max_days && t(p.max_days)
 			};
+		},
+		submit: async (v) => {
+			const out = { expiry_days: Number(v.expiry_days), sliding: v.sliding, max_days: Number(v.max_days) };
 			await saveClientSessions({
 				expiry_days: out.expiry_days,
 				sliding: out.sliding,
@@ -374,6 +380,12 @@
 
 	const ldap = createForm<LdapValues>({
 		initial: ldapFromServer({}),
+		// Numbers out of range are refused here; the server checks the rest
+		// and its refusal lands on the field it names
+		validate: (v) => {
+			const p = ldapNumberProblems(v);
+			return { port: p.port && t(p.port), conn_timeout_sec: p.conn_timeout_sec && t(p.conn_timeout_sec) };
+		},
 		submit: async (v) => {
 			const body = ldapPayload(v);
 			await saveLdap(body);
@@ -416,6 +428,12 @@
 	async function submitLdap(e: SubmitEvent) {
 		e.preventDefault();
 		if (ldap.busy) return;
+		const problems = ldapNumberProblems(ldap.values);
+		if (problems.port || problems.conn_timeout_sec) {
+			// The form's check refuses them and says why at the field
+			await ldap.submit();
+			return;
+		}
 		if (ldap.values.enabled) {
 			const ok = await confirm({
 				title: t('settings.confirm.ldap_save_title'),
@@ -913,6 +931,7 @@
 							label={t('settings.client_sessions_expiry_days')}
 							hint={t('settings.client_sessions_expiry_hint')}
 							width="short"
+							error={sessions.errors.expiry_days}
 						>
 							{#snippet children(f)}
 								<Input {...f} type="number" min="1" max="365" bind:value={sessions.values.expiry_days} />
@@ -931,6 +950,7 @@
 								label={t('settings.client_sessions_max_days')}
 								hint={t('settings.client_sessions_max_days_hint')}
 								width="short"
+								error={sessions.errors.max_days}
 							>
 								{#snippet children(f)}
 									<Input {...f} type="number" min="1" max="365" bind:value={sessions.values.max_days} />
@@ -975,7 +995,7 @@
 						/>
 						<ShowWhen id="ldap-config-fields" class="settings-subfields" when={ldap.values.enabled}>
 							<h4>{t('settings.ldap_connection')}</h4>
-							<Field id="ldap-host" label={t('settings.ldap_host')}>
+							<Field id="ldap-host" label={t('settings.ldap_host')} error={ldap.errors.host}>
 								{#snippet children(f)}<Input
 										{...f}
 										class="mono"
@@ -983,7 +1003,7 @@
 										bind:value={ldap.values.host}
 									/>{/snippet}
 							</Field>
-							<Field id="ldap-port" label={t('settings.ldap_port')} width="short">
+							<Field id="ldap-port" label={t('settings.ldap_port')} width="short" error={ldap.errors.port}>
 								{#snippet children(f)}<Input
 										{...f}
 										type="number"
@@ -1014,6 +1034,7 @@
 								label={t('settings.ldap_timeout')}
 								hint={t('settings.ldap_timeout_hint')}
 								width="short"
+								error={ldap.errors.conn_timeout_sec}
 							>
 								{#snippet children(f)}<Input
 										{...f}
@@ -1058,6 +1079,7 @@
 									id="ldap-base-dn"
 									label={t('settings.ldap_base_dn')}
 									hint={t('settings.ldap_base_dn_hint')}
+									error={ldap.errors.base_dn}
 								>
 									{#snippet children(f)}<Input
 											{...f}
@@ -1070,6 +1092,7 @@
 									id="ldap-user-filter"
 									label={t('settings.ldap_user_filter')}
 									hint={t('settings.ldap_user_filter_hint')}
+									error={ldap.errors.user_filter}
 								>
 									{#snippet children(f)}<Input
 											{...f}
@@ -1084,6 +1107,7 @@
 									id="ldap-direct-bind-dn"
 									label={t('settings.ldap_direct_bind_dn')}
 									hint={t('settings.ldap_direct_bind_dn_hint')}
+									error={ldap.errors.direct_bind_dn}
 								>
 									{#snippet children(f)}<Input
 											{...f}
@@ -1128,6 +1152,7 @@
 								id="ldap-group-base-dn"
 								label={t('settings.ldap_group_base_dn')}
 								hint={t('settings.ldap_group_base_dn_hint')}
+								error={ldap.errors.group_base_dn}
 							>
 								{#snippet children(f)}<Input
 										{...f}
@@ -1136,7 +1161,11 @@
 										bind:value={ldap.values.group_base_dn}
 									/>{/snippet}
 							</Field>
-							<Field id="ldap-group-filter" label={t('settings.ldap_group_filter')}>
+							<Field
+								id="ldap-group-filter"
+								label={t('settings.ldap_group_filter')}
+								error={ldap.errors.group_filter}
+							>
 								{#snippet children(f)}<Input
 										{...f}
 										class="mono"
@@ -1167,6 +1196,7 @@
 								label={t('settings.ldap_default_role')}
 								hint={t('settings.ldap_default_role_hint')}
 								width="medium"
+								error={ldap.errors.default_role}
 							>
 								{#snippet children(f)}<Select
 										{...f}
@@ -1178,6 +1208,7 @@
 								id="ldap-group-role-map"
 								label={t('settings.ldap_group_role_map')}
 								hint={t('settings.ldap_group_role_map_hint')}
+								error={ldap.errors.group_role_map}
 							>
 								{#snippet children(f)}
 									<Textarea
@@ -1228,6 +1259,7 @@
 								id="oidc-issuer-url"
 								label={t('settings.oidc_issuer_url')}
 								hint={t('settings.oidc_issuer_url_hint')}
+								error={oidc.errors.issuer_url}
 							>
 								{#snippet children(f)}<Input
 										{...f}
@@ -1242,6 +1274,7 @@
 								id="oidc-allowed-private-cidrs"
 								label={t('settings.oidc_allowed_private_cidrs')}
 								hint={t('settings.oidc_allowed_private_cidrs_hint')}
+								error={oidc.errors.allowed_private_cidrs}
 							>
 								{#snippet children(f)}<Input
 										{...f}
@@ -1250,7 +1283,7 @@
 										bind:value={oidc.values.allowed_private_cidrs}
 									/>{/snippet}
 							</Field>
-							<Field id="oidc-client-id" label={t('settings.oidc_client_id')}>
+							<Field id="oidc-client-id" label={t('settings.oidc_client_id')} error={oidc.errors.client_id}>
 								{#snippet children(f)}<Input
 										{...f}
 										class="mono"
@@ -1292,6 +1325,7 @@
 								id="oidc-panel-url"
 								label={t('settings.oidc_panel_url')}
 								hint={t('settings.oidc_panel_url_hint')}
+								error={oidc.errors.panel_url}
 							>
 								{#snippet children(f)}<Input
 										{...f}
@@ -1333,7 +1367,11 @@
 
 							<ShowWhen id="oidc-manual-endpoints" class="when-off" when={!oidc.values.auto_discovery}>
 								<h4>{t('settings.oidc_manual_endpoints')}</h4>
-								<Field id="oidc-authorization-url" label={t('settings.oidc_authorization_url')}>
+								<Field
+									id="oidc-authorization-url"
+									label={t('settings.oidc_authorization_url')}
+									error={oidc.errors.authorization_url}
+								>
 									{#snippet children(f)}<Input
 											{...f}
 											type="url"
@@ -1342,7 +1380,7 @@
 											bind:value={oidc.values.authorization_url}
 										/>{/snippet}
 								</Field>
-								<Field id="oidc-token-url" label={t('settings.oidc_token_url')}>
+								<Field id="oidc-token-url" label={t('settings.oidc_token_url')} error={oidc.errors.token_url}>
 									{#snippet children(f)}<Input
 											{...f}
 											type="url"
@@ -1351,7 +1389,11 @@
 											bind:value={oidc.values.token_url}
 										/>{/snippet}
 								</Field>
-								<Field id="oidc-userinfo-url" label={t('settings.oidc_userinfo_url')}>
+								<Field
+									id="oidc-userinfo-url"
+									label={t('settings.oidc_userinfo_url')}
+									error={oidc.errors.userinfo_url}
+								>
 									{#snippet children(f)}<Input
 											{...f}
 											type="url"
@@ -1399,7 +1441,12 @@
 							</div>
 
 							<h4>{t('settings.oidc_role_mapping')}</h4>
-							<Field id="oidc-default-role" label={t('settings.oidc_default_role')} width="medium">
+							<Field
+								id="oidc-default-role"
+								label={t('settings.oidc_default_role')}
+								width="medium"
+								error={oidc.errors.default_role}
+							>
 								{#snippet children(f)}<Select
 										{...f}
 										options={ROLES}
@@ -1410,6 +1457,7 @@
 								id="oidc-group-role-map"
 								label={t('settings.oidc_group_role_map')}
 								hint={t('settings.oidc_group_role_map_hint')}
+								error={oidc.errors.group_role_map}
 							>
 								{#snippet children(f)}
 									<Textarea
