@@ -506,3 +506,67 @@ func TestTheEnvEditorKeepsHostOnlyKeys(t *testing.T) {
 		t.Errorf("a change of PORT: %v", err)
 	}
 }
+
+// TestTheAuditLogIsReadOnly: the server's audit log is listed and read in
+// the editor but neither written nor restored from a backup there: a log a
+// web admin can rewrite is no record (L404).
+func TestTheAuditLogIsReadOnly(t *testing.T) {
+	root := t.TempDir()
+	log := filepath.Join(root, "logs", "audit.jsonl")
+	if err := os.MkdirAll(filepath.Dir(log), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	const record = `{"action":"auth_login"}` + "\n"
+	if err := os.WriteFile(log, []byte(record), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s, _ := testService(t, map[string]string{"AUDIT_LOG_FILE": log})
+	if _, err := s.WriteFile("go-audit-log", "{}\n"); !errors.Is(err, ErrReadOnly) {
+		t.Errorf("write: %v, want ErrReadOnly", err)
+	}
+	if got, _ := os.ReadFile(log); string(got) != record {
+		t.Errorf("the log holds %q", got)
+	}
+	if content, err := s.ReadFile("go-audit-log"); err != nil || string(content.Content) != record {
+		t.Errorf("read: %+v %v", content, err)
+	}
+	for _, f := range s.ListFiles() {
+		if f.ID == "go-audit-log" && (f.Writable || f.CanCreate) {
+			t.Errorf("listed as writable %v, creatable %v", f.Writable, f.CanCreate)
+		}
+	}
+}
+
+// TestAMissingFileIsWritableOnlyWhereItCanBeMade: a file that is not there
+// is listed as one that saving creates only when the nearest folder of it
+// that is there may be written, so the editor no longer offers
+// /etc/neodesk/build.env where the process may not write /etc (L404).
+func TestAMissingFileIsWritableOnlyWhereItCanBeMade(t *testing.T) {
+	root := t.TempDir()
+	etc := filepath.Join(root, "etc")
+	if err := os.MkdirAll(etc, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	s, _ := testService(t, map[string]string{"NEODESK_BUILD_ENV_FILE": filepath.Join(etc, "neodesk", "build.env")})
+	listed := func() bool {
+		for _, f := range s.ListFiles() {
+			if f.ID == "build-env" {
+				return f.Writable
+			}
+		}
+		t.Fatal("no build-env entry")
+		return false
+	}
+	// etc may not be written, as /etc on Docker
+	s.writable = func(p string) bool { return p != etc }
+	if listed() {
+		t.Error("a file in a folder that cannot be made is listed as one saving creates")
+	}
+	if _, err := s.WriteFile("build-env", "A=1\n"); !errors.Is(err, ErrNotWritable) {
+		t.Errorf("saving it: %v, want ErrNotWritable", err)
+	}
+	s.writable = func(string) bool { return true }
+	if !listed() {
+		t.Error("a file in a folder that can be made is not listed as one saving creates")
+	}
+}

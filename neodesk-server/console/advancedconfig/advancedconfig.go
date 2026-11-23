@@ -61,6 +61,7 @@ var (
 	ErrInvalidBackup  = errors.New("invalid_backup")
 	ErrWeakSecret     = errors.New("weak_secret")
 	ErrHostOnlyKey    = errors.New("host_only_key")
+	ErrReadOnly       = errors.New("read_only")
 )
 
 // Options are the settings of a Service.
@@ -88,9 +89,10 @@ type Options struct {
 // Service reads and writes the files of the catalog. It is safe for
 // concurrent use; one write or restore runs at a time.
 type Service struct {
-	// noContentChecks lets a write through that the content checks of
-	// L399 and L410 refuse: the replay of the old console's vectors, which
-	// saved such content, turns it on to check the rest of their steps.
+	// noContentChecks gives the editor the old console's rules: it lets a
+	// write through that the checks of L399, L404 and L410 refuse. The
+	// replay of the old console's vectors, which saved such content and
+	// wrote the audit log, turns it on to check the rest of their steps.
 	noContentChecks bool
 	opts            Options
 	// writable is fs.access(path, W_OK); tests replace it, because a test
@@ -124,6 +126,9 @@ type definition struct {
 	requiresRestart string
 	canCreate       bool
 	linuxOnly       bool
+	// readOnly is a file the editor shows but never writes: the server's
+	// audit log, which a web admin could otherwise rewrite (L404).
+	readOnly bool
 }
 
 // catalog is the fixed list of files, in the order the editor lists them.
@@ -136,7 +141,7 @@ var catalog = []definition{
 		path: func(s *Service) string { return filepath.Join(s.opts.DataDir, ".session_secret") }},
 	{id: "go-blocklist", category: "goserver", requiresRestart: "goserver", canCreate: true,
 		path: (*Service).blocklistPath},
-	{id: "go-audit-log", category: "goserver", requiresRestart: "goserver", canCreate: true,
+	{id: "go-audit-log", category: "goserver", requiresRestart: "goserver", canCreate: true, readOnly: true,
 		path: (*Service).auditLogPath},
 	{id: "systemd-console", category: "system", requiresRestart: "systemd", linuxOnly: true,
 		path: func(*Service) string { return "/etc/systemd/system/neodesk-console.service" }},
@@ -287,17 +292,35 @@ type fileState struct {
 }
 
 func (s *Service) state(def definition, path string) fileState {
+	readOnly := def.readOnly && !s.noContentChecks
 	info, err := os.Stat(path)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			return fileState{writable: def.canCreate}
+			// A file saving creates only where its folder can be made
+			// and written (L404)
+			return fileState{writable: def.canCreate && !readOnly && (s.noContentChecks || s.canMake(path))}
 		}
 		return fileState{err: nodeError(err, "stat", path).Error()}
 	}
 	mtime := mtimeOf(info)
 	return fileState{
-		exists: true, readable: true, writable: s.canWrite(path, info),
+		exists: true, readable: true, writable: !readOnly && s.canWrite(path, info),
 		size: info.Size(), mtime: &mtime,
+	}
+}
+
+// canMake reports whether a file that is not there can be made: the
+// nearest folder of the path that is there is a folder this process may
+// write.
+func (s *Service) canMake(path string) bool {
+	for dir := filepath.Dir(path); ; dir = filepath.Dir(dir) {
+		info, err := os.Stat(dir)
+		if err == nil {
+			return info.IsDir() && s.writable(dir)
+		}
+		if !errors.Is(err, fs.ErrNotExist) || filepath.Dir(dir) == dir {
+			return false
+		}
 	}
 }
 
@@ -324,7 +347,7 @@ func (s *Service) ListFiles() []File {
 		st := s.state(def, path)
 		files = append(files, File{
 			ID: def.id, Path: path, Category: def.category, RequiresRestart: def.requiresRestart,
-			CanCreate: def.canCreate, Exists: st.exists, Size: st.size, Mtime: st.mtime,
+			CanCreate: def.canCreate && (!def.readOnly || s.noContentChecks), Exists: st.exists, Size: st.size, Mtime: st.mtime,
 			Readable: st.readable, Writable: st.writable, Error: st.err,
 		})
 	}
@@ -422,6 +445,9 @@ func (s *Service) WriteFile(id string, content any) (*Written, error) {
 			return nil, ErrWeakSecret
 		}
 	}
+	if def.readOnly && !s.noContentChecks {
+		return nil, ErrReadOnly
+	}
 	// The keys set on the host only stay as the env file has them (L410)
 	if !s.noContentChecks && (def.id == "console-env" || def.id == "console-env-local") {
 		if changesHostOnlyKeys(def.path(s), text) {
@@ -501,6 +527,9 @@ func (s *Service) RestoreBackup(id, backupPath any, created bool) error {
 	def, ok := s.lookup(id)
 	if !ok {
 		return ErrUnknownFile
+	}
+	if def.readOnly && !s.noContentChecks {
+		return ErrReadOnly
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -30,6 +30,7 @@ var fileRefusals = []struct {
 	{advancedconfig.ErrNotWritable, "settings.advanced_error_not_writable", http.StatusBadRequest},
 	{advancedconfig.ErrWeakSecret, "settings.advanced_error_weak_secret", http.StatusBadRequest},
 	{advancedconfig.ErrHostOnlyKey, "settings.advanced_error_host_only_key", http.StatusBadRequest},
+	{advancedconfig.ErrReadOnly, "settings.advanced_error_read_only", http.StatusBadRequest},
 }
 
 // refuseFile answers a refusal of the editor and reports whether err was
