@@ -5,11 +5,11 @@
   "path": "/api/nd/chat/send",
   "body": {
    "content": "hi",
-   "device_id": "900100001",
+   "device_id": "900100002",
    "sender": "Front desk"
   },
   "notes": [
-   "header Authorization: Bearer {secret:device_token}",
+   "header Authorization: Bearer {secret:device_token_other}",
    "no CSRF token",
    "no cookies"
   ]

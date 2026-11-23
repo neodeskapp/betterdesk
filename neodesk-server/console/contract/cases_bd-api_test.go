@@ -161,7 +161,9 @@ func init() {
 		dev(contract.Case{Name: "chat-send-blank", Method: "POST", Path: "/api/nd/chat/send", Headers: device, Body: map[string]any{"device_id": "900100001", "content": " \t "}}),
 		dev(contract.Case{Name: "chat-send-too-long", Method: "POST", Path: "/api/nd/chat/send", Headers: device, Body: map[string]any{"device_id": "900100001", "content": long}}),
 		dev(contract.Case{Name: "chat-send-without-device-id", Method: "POST", Path: "/api/nd/chat/send", Headers: device, Body: map[string]any{"content": "hi"}}),
-		dev(contract.Case{Name: "chat-send", Method: "POST", Path: "/api/nd/chat/send", Headers: device, Body: map[string]any{"device_id": "900100001", "content": "hi", "sender": "Front desk"}}),
+		// The second device's: the chat of 900100001 is the history ws-chat
+		// shows, and that group sends all of it
+		dev(contract.Case{Name: "chat-send", Method: "POST", Path: "/api/nd/chat/send", Headers: other, Body: map[string]any{"device_id": "900100002", "content": "hi", "sender": "Front desk"}}),
 		dev(contract.Case{Name: "chat-history-without-token", Path: "/api/nd/chat/history"}),
 		dev(contract.Case{Name: "chat-history-without-device-id", Path: "/api/nd/chat/history", Headers: device}),
 		dev(contract.Case{Name: "chat-history-other-device", Path: "/api/nd/chat/history", Query: map[string][]string{"device_id": {"900100002"}}, Headers: device}),

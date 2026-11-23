@@ -21,6 +21,10 @@
     {
      "path": "messages[*].json.messages[*].created_at",
      "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "messages[0].json.messages[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -36,7 +40,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "Front desk",
-          "id": 16,
+          "id": 0,
           "read": false,
           "text": "hi"
          },
@@ -45,7 +49,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 17,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -54,7 +58,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 18,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          }
@@ -76,6 +80,10 @@
     {
      "path": "messages[*].json.messages[*].created_at",
      "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "messages[0].json.messages[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -91,7 +99,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "Front desk",
-          "id": 16,
+          "id": 0,
           "read": false,
           "text": "hi"
          },
@@ -100,7 +108,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 17,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -109,7 +117,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 18,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -118,7 +126,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 19,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -127,7 +135,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 20,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          }
@@ -149,6 +157,10 @@
     {
      "path": "messages[*].json.messages[*].created_at",
      "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "messages[0].json.messages[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -164,7 +176,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "Front desk",
-          "id": 16,
+          "id": 0,
           "read": false,
           "text": "hi"
          },
@@ -173,7 +185,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 17,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -182,7 +194,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 18,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -191,7 +203,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 19,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -200,7 +212,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 20,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -209,7 +221,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 21,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -218,7 +230,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 22,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          }
@@ -240,6 +252,10 @@
     {
      "path": "messages[*].json.messages[*].created_at",
      "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "messages[0].json.messages[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -255,7 +271,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "Front desk",
-          "id": 16,
+          "id": 0,
           "read": false,
           "text": "hi"
          },
@@ -264,7 +280,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 17,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -273,7 +289,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 18,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -282,7 +298,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 19,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -291,7 +307,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 20,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -300,7 +316,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 21,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -309,7 +325,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 22,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -318,7 +334,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 23,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -327,7 +343,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 24,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -337,7 +353,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 25,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -346,7 +362,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 26,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -369,6 +385,10 @@
     {
      "path": "messages[*].json.messages[*].created_at",
      "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "messages[0].json.messages[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -384,7 +404,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "Front desk",
-          "id": 16,
+          "id": 0,
           "read": false,
           "text": "hi"
          },
@@ -393,7 +413,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 17,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -402,7 +422,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 18,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -411,7 +431,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 19,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -420,7 +440,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 20,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -429,7 +449,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 21,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -438,7 +458,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 22,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -447,7 +467,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 23,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -456,7 +476,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 24,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -466,7 +486,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 25,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -475,7 +495,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 26,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -485,7 +505,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 28,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -494,7 +514,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 29,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -504,7 +524,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 30,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -513,7 +533,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 31,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -536,6 +556,10 @@
     {
      "path": "messages[*].json.messages[*].created_at",
      "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "messages[0].json.messages[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -551,7 +575,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "Front desk",
-          "id": 16,
+          "id": 0,
           "read": false,
           "text": "hi"
          },
@@ -560,7 +584,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 17,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -569,7 +593,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 18,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -578,7 +602,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 19,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -587,7 +611,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 20,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -596,7 +620,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 21,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -605,7 +629,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 22,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -614,7 +638,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 23,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -623,7 +647,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 24,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -633,7 +657,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 25,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -642,7 +666,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 26,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -652,7 +676,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 28,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -661,7 +685,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 29,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -671,7 +695,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 30,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -680,7 +704,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 31,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -690,7 +714,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 33,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -699,7 +723,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_global_admin",
-          "id": 34,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -709,7 +733,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 35,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -718,7 +742,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_global_admin",
-          "id": 36,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -741,6 +765,10 @@
     {
      "path": "messages[*].json.messages[*].created_at",
      "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "messages[0].json.messages[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -756,7 +784,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "Front desk",
-          "id": 16,
+          "id": 0,
           "read": false,
           "text": "hi"
          },
@@ -765,7 +793,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 17,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -774,7 +802,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 18,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -783,7 +811,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 19,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -792,7 +820,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 20,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -801,7 +829,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 21,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -810,7 +838,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 22,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -819,7 +847,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 23,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -828,7 +856,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 24,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -838,7 +866,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 25,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -847,7 +875,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 26,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -857,7 +885,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 28,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -866,7 +894,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 29,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -876,7 +904,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 30,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -885,7 +913,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 31,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -895,7 +923,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 33,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -904,7 +932,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_global_admin",
-          "id": 34,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -914,7 +942,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 35,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -923,7 +951,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_global_admin",
-          "id": 36,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -933,7 +961,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 38,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -942,7 +970,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 39,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          }
@@ -964,6 +992,10 @@
     {
      "path": "messages[*].json.messages[*].created_at",
      "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "messages[0].json.messages[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -979,7 +1011,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "Front desk",
-          "id": 16,
+          "id": 0,
           "read": false,
           "text": "hi"
          },
@@ -988,7 +1020,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 17,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -997,7 +1029,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 18,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1006,7 +1038,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 19,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1015,7 +1047,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 20,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1024,7 +1056,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 21,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1033,7 +1065,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 22,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1042,7 +1074,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 23,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1051,7 +1083,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 24,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -1061,7 +1093,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 25,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1070,7 +1102,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 26,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -1080,7 +1112,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 28,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1089,7 +1121,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 29,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -1099,7 +1131,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 30,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1108,7 +1140,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 31,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -1118,7 +1150,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 33,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1127,7 +1159,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_global_admin",
-          "id": 34,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -1137,7 +1169,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 35,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1146,7 +1178,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_global_admin",
-          "id": 36,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -1156,7 +1188,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 38,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1165,7 +1197,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 39,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1174,7 +1206,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 40,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1183,7 +1215,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_super_admin",
-          "id": 41,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -1193,7 +1225,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 42,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1202,7 +1234,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_super_admin",
-          "id": 43,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -1225,6 +1257,10 @@
     {
      "path": "messages[*].json.messages[*].created_at",
      "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "messages[0].json.messages[*].id",
+     "integer": true
     }
    ],
    "body": {
@@ -1240,7 +1276,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "Front desk",
-          "id": 16,
+          "id": 0,
           "read": false,
           "text": "hi"
          },
@@ -1249,7 +1285,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 17,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1258,7 +1294,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 18,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1267,7 +1303,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 19,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1276,7 +1312,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 20,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1285,7 +1321,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 21,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1294,7 +1330,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 22,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1303,7 +1339,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 23,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1312,7 +1348,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 24,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -1322,7 +1358,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 25,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1331,7 +1367,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_viewer",
-          "id": 26,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -1341,7 +1377,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 28,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1350,7 +1386,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 29,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -1360,7 +1396,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 30,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1369,7 +1405,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_operator",
-          "id": 31,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -1379,7 +1415,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 33,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1388,7 +1424,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_global_admin",
-          "id": 34,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -1398,7 +1434,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 35,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1407,7 +1443,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_global_admin",
-          "id": 36,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -1417,7 +1453,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 38,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1426,7 +1462,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 39,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1435,7 +1471,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 40,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1444,7 +1480,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_super_admin",
-          "id": 41,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -1454,7 +1490,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 42,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1463,7 +1499,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_super_admin",
-          "id": 43,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"
@@ -1473,7 +1509,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 45,
+          "id": 0,
           "read": false,
           "text": "contract agent message"
          },
@@ -1482,7 +1518,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_admin",
-          "id": 46,
+          "id": 0,
           "read": false,
           "text": "contract operator message",
           "to_id": "900100001"
@@ -1492,7 +1528,7 @@
           "created_at": "<volatile>",
           "from_id": "900100001",
           "from_name": "demo-reception-01",
-          "id": 47,
+          "id": 0,
           "read": false,
           "text": "contract to the panel"
          },
@@ -1501,7 +1537,7 @@
           "created_at": "<volatile>",
           "from_id": "operator",
           "from_name": "e2e_admin",
-          "id": 48,
+          "id": 0,
           "read": false,
           "text": "contract from the panel",
           "to_id": "900100001"

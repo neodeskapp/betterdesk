@@ -3,6 +3,7 @@
 package contract_test
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
@@ -21,6 +22,10 @@ import (
 // when the call returns, so where one event brings several of those
 // messages each step keeps only one type (Filter). Messages are stored on
 // the API server, so each turn's history holds those of the turns before.
+// The group sends every message of the device's history itself, the first
+// through the device API, so the history is the same alone and after the
+// other groups; the IDs of the messages count those of every
+// conversation, so they are free.
 func init() {
 	agentQuery := map[string][]string{"token": {"{secret:device_token}"}}
 	only := func(typ string) map[string]string { return map[string]string{"type": typ} }
@@ -46,9 +51,19 @@ func init() {
 		c.Volatile = append(c.Volatile, marks...)
 		return c
 	}
+	// The step's message at index i is the history
+	history := func(i int, c contract.Case) contract.Case {
+		return withVolatile(c, fmt.Sprintf("messages[%d].json.messages[*].id", i))
+	}
 	room := "/ws/chat-operator/900100001"
 	panel := "/ws/chat-operator/panel"
 	contract.Group("ws-chat",
+		// The first message of the device's history, sent once
+		contract.Case{Name: "device-api-message", Method: "POST", Path: "/api/nd/chat/send", NoCookies: true, NoCSRF: true,
+			Headers: map[string]string{"Authorization": "Bearer {secret:device_token}"},
+			Body:    map[string]any{"device_id": "900100001", "content": "hi", "sender": "Front desk"},
+			Roles:   contract.Roles("signed-out"), Volatile: []string{"~message_id"}},
+
 		// The checks of the agent socket
 		contract.Case{Name: "agent-foreign-origin", Path: "/ws/chat/900100001", Query: agentQuery, NoCookies: true,
 			Socket: sock("a_foreign", contract.Socket{Origin: "https://evil.example"})},
@@ -63,9 +78,9 @@ func init() {
 			Headers: map[string]string{"Authorization": "bearer {secret:device_token}"}, Socket: agent("a_lower", contract.Socket{})},
 		contract.Case{Name: "agent-bad-key", Path: "/ws/chat/900100001", Query: agentQuery, NoCookies: true,
 			Headers: map[string]string{"Sec-WebSocket-Key": "short"}, Socket: agent("a_key", contract.Socket{})},
-		contract.Case{Name: "agent-bearer", Path: "/ws/chat/900100001", NoCookies: true,
+		history(0, contract.Case{Name: "agent-bearer", Path: "/ws/chat/900100001", NoCookies: true,
 			Headers: map[string]string{"Authorization": "Bearer {secret:device_token}"},
-			Socket:  agent("a_bearer", contract.Socket{Expect: 1, Filter: only("history"), Close: true})},
+			Socket:  agent("a_bearer", contract.Socket{Expect: 1, Filter: only("history"), Close: true})}),
 
 		// The checks of the operator socket
 		contract.Case{Name: "operator-foreign-origin", Path: room, Socket: sock("o_foreign", contract.Socket{Origin: "https://evil.example"})},
@@ -74,8 +89,8 @@ func init() {
 		contract.Case{Name: "operator-bad-key", Path: room, Headers: map[string]string{"Sec-WebSocket-Key": "short"}, Socket: sock("o_key", contract.Socket{})},
 
 		// An operator on the device's room, then the device
-		contract.Case{Name: "operator-open", Path: room, Socket: sock("op", contract.Socket{Expect: 2})},
-		agentCase("agent-open", "agent", contract.Socket{Expect: 1, Filter: only("history")}),
+		history(1, contract.Case{Name: "operator-open", Path: room, Socket: sock("op", contract.Socket{Expect: 2})}),
+		history(0, agentCase("agent-open", "agent", contract.Socket{Expect: 1, Filter: only("history")})),
 		contract.Case{Name: "operator-sees-agent", Path: room, Socket: sock("op", contract.Socket{Expect: 2})},
 		agentCase("agent-hello", "agent", contract.Socket{Send: []any{map[string]any{"type": "hello", "device_id": "900100001"}}, Expect: 1, Filter: only("welcome")}),
 		agentCase("agent-message", "agent", contract.Socket{
@@ -96,9 +111,9 @@ func init() {
 		contract.Case{Name: "operator-reaction", Path: room, Socket: sock("op", contract.Socket{
 			Send: []any{map[string]any{"type": "reaction", "message_id": "1", "emoji": "+1"}}, Expect: 1})},
 		withChat(agentCase("agent-gets-reaction", "agent", contract.Socket{Expect: 1, Filter: only("reaction")})),
-		contract.Case{Name: "operator-history", Path: room, Socket: sock("op", contract.Socket{
-			Send: []any{map[string]any{"type": "get_history", "conversation_id": "900100001"}}, Expect: 1})},
-		agentCase("agent-history", "agent", contract.Socket{Send: []any{map[string]any{"type": "get_history"}}, Expect: 1, Filter: only("history")}),
+		history(0, contract.Case{Name: "operator-history", Path: room, Socket: sock("op", contract.Socket{
+			Send: []any{map[string]any{"type": "get_history", "conversation_id": "900100001"}}, Expect: 1})}),
+		history(0, agentCase("agent-history", "agent", contract.Socket{Send: []any{map[string]any{"type": "get_history"}}, Expect: 1, Filter: only("history")})),
 
 		// What the relay leaves alone: binary, text that is not JSON (a
 		// frame at the 8 KiB limit is answered)
@@ -131,7 +146,7 @@ func init() {
 
 		// A second connection of the device replaces the first; text that
 		// is not UTF-8 ends it
-		agentCase("agent-second", "agent2", contract.Socket{Expect: 1, Filter: only("history")}),
+		history(0, agentCase("agent-second", "agent2", contract.Socket{Expect: 1, Filter: only("history")})),
 		agentCase("agent-replaced", "agent", contract.Socket{WaitClose: true}),
 		contract.Case{Name: "operator-sees-second-agent", Path: room, Socket: sock("op", contract.Socket{Expect: 2})},
 		agentCase("agent-not-utf8", "agent2", contract.Socket{Send: []any{"\xc3\x28"}, WaitClose: true}),
@@ -140,14 +155,16 @@ func init() {
 
 		// A frame over 8 KiB closes the socket with 1009. These come last:
 		// a new agent socket would replace the turn's agent. What the
-		// console sends a new agent (history, contacts) comes when the API
-		// server answers, before the close or not at all, so the agent's
-		// messages are free here.
+		// console sends a new socket from the API server (history,
+		// contacts) comes when that answers, before the close or not at
+		// all, so the agent's messages are free here, and the operator's
+		// step keeps only the status, which the console sends before it
+		// reads anything.
 		withVolatile(agentCase("agent-too-big", "a_big", contract.Socket{Send: []any{
 			`{"type":"hello","pad":"` + strings.Repeat("x", 8192-24) + `"}`,
 		}, WaitClose: true}), "~messages"),
 		contract.Case{Name: "operator-too-big", Path: room, Socket: sock("o_big", contract.Socket{Send: []any{
 			`{"type":"hello","pad":"` + strings.Repeat("x", 8192-24) + `"}`,
-		}, WaitClose: true})},
+		}, WaitClose: true, Filter: only("status")})},
 	)
 }

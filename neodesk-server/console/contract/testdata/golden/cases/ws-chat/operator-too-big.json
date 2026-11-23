@@ -6,6 +6,7 @@
   "notes": [
    "websocket o_big, own origin",
    "websocket send text \"{\\\"type\\\":\\\"hello\\\",\\\"pad\\\":\\\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx... (8203 bytes)",
+   "websocket keep only type=status",
    "websocket wait for the close"
   ]
  },
