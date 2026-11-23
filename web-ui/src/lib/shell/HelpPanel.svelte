@@ -53,11 +53,11 @@
 			<h2 class="help-title" id={`${uid}-title`}><Icon name="favorite" />{t('help.panel.title')}</h2>
 			<IconButton bind:element={closeBtn} icon="close" label={t('help.panel.close')} onclick={close} />
 		</div>
-		<div class="help-body"><HelpContent /></div>
+		<div class="help-body"><HelpContent onguide={close} /></div>
 	</aside>
 {:else if open}
 	<Sheet bind:open title={t('help.panel.title')}>
-		<HelpContent />
+		<HelpContent onguide={() => (open = false)} />
 	</Sheet>
 {/if}
 

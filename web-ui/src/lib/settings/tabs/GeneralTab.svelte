@@ -38,6 +38,7 @@
 	} from '#lib/api/settings.ts';
 	import type { RestartItem } from '#lib/api/restart.ts';
 	import { ApiError } from '#lib/api/client.ts';
+	import GuideLink from '#lib/guide/GuideLink.svelte';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { formatBytes, formatDuration, formatNumber } from '#lib/i18n/format.ts';
 	import { link } from '#lib/nav.ts';
@@ -676,6 +677,7 @@
 		{#if connRuntime}<p class="side-line" id="connection-mode-runtime">{connRuntime}</p>{/if}
 	</section>
 	{#if sideSettled}{@render serverInfo()}{/if}
+	<GuideLink />
 {/snippet}
 
 {#snippet meshStatusValue()}<Status tone="good" label={t('mesh.enabled_label')} />{/snippet}

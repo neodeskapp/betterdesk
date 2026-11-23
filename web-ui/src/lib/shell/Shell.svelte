@@ -16,6 +16,7 @@
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import DevicePanelHost from '#lib/devices/DevicePanelHost.svelte';
+	import GuideReturn from '#lib/guide/GuideReturn.svelte';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { appPath } from '#lib/nav.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
@@ -241,6 +242,7 @@
 			/>
 			<div class="shell-body">
 				<main bind:this={main} id="main-content" class="main-content" tabindex="-1">
+					<GuideReturn />
 					{@render children()}
 				</main>
 				<HelpPanel bind:open={helpOpen} docked={!drawer} id={helpId} opener={helpButton} />
