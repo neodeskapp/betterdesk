@@ -30,8 +30,8 @@
 		/** The element the menu opens from; clicks on it don't count as outside */
 		anchor: HTMLElement | null;
 		align?: 'start' | 'end';
-		/** Where focus goes on open */
-		initialFocus?: 'first' | 'last' | 'menu';
+		/** Where focus goes on open; "checked": the checked item of a choice (the first without one) */
+		initialFocus?: 'first' | 'last' | 'menu' | 'checked';
 		id?: string;
 		labelledby?: string;
 		label?: string;
@@ -163,7 +163,16 @@
 			const release = openPopup(() => close(false));
 			place(el);
 			const list = menuItems(el);
-			const first = initialFocus === 'last' ? list.at(-1) : initialFocus === 'first' ? list[0] : undefined;
+			const checked =
+				initialFocus === 'checked'
+					? list.find((item) => item.getAttribute('aria-checked') === 'true')
+					: undefined;
+			const first =
+				initialFocus === 'last'
+					? list.at(-1)
+					: initialFocus === 'first' || initialFocus === 'checked'
+						? (checked ?? list[0])
+						: undefined;
 			(first ?? el).focus();
 
 			const outside = (e: Event) => {

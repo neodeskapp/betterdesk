@@ -4,7 +4,8 @@
   the account (POST /api/i18n/set) and switches the strings, the direction
   and the navigation without a reload. On the sign-in page (trigger
   "label", the current language's flag and name) the page passes its own
-  onchoose, since there is no account or navigation yet.
+  onchoose, since there is no account or navigation yet. The menu opens
+  with focus on the language in use.
 -->
 <script lang="ts">
 	import Button from '#lib/ui/Button.svelte';
@@ -112,6 +113,7 @@
 		{align}
 		id={`${uid}-menu`}
 		label={t('settings.language')}
+		initialFocus="checked"
 		class="lang-menu"
 		{onclose}
 	>
